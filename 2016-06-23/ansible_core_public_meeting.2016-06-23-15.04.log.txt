@@ -1,0 +1,121 @@
+15:04:55 <jimi|ansible> #startmeeting Ansible Core Public Meeting
+15:04:55 <zodbot> Meeting started Thu Jun 23 15:04:55 2016 UTC.  The chair is jimi|ansible. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:04:55 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:04:55 <zodbot> The meeting name has been set to 'ansible_core_public_meeting'
+15:05:05 <jimi|ansible> #topic anything and stuff
+15:05:33 <ryansb> o/
+15:06:11 <kellytk> Hi, thanks for holding this
+15:06:35 <jimi|ansible> hi
+15:06:54 <Qalthos> hello
+15:09:06 <nitzmahone> Yo
+15:09:34 * mattclay waves
+15:10:21 <kellytk> There was a bug I ran into last week on 2.1.0.0 (Mac FWIW) that caused tasks in a role when notifying to not fire a handler defined in a higher, global directory.  It was a known-issue with an existing issue.  I'm looking for it and that's what I'll be asking about
+15:11:25 <jimi|ansible> kellytk: ok, 2.1.1 rc1 (and the stable-2.1 branch) have some fixes specifically related to roles and handlers
+15:11:51 <jimi|ansible> i would suggest giving the rc1 a test, which you can do from source quite easily without having to install anything
+15:12:02 * resmo waves
+15:12:33 <jimi|ansible> git clone --recursive https://github.com/ansible/ansible; git checkout v2.1.1.0-0.1.rc1; . hacking/env-setup
+15:13:09 <jimi|ansible> ^ that modifies the PYTHONPATH for the current shell only, so it's not persistent, then you can just run ansible-playbook from there and test it
+15:13:15 <kellytk> Is it possible to upgrade using pip?  That's how I've installed Ansible
+15:13:28 <jimi|ansible> kellytk: you can, but the rc1 tar isn't on pypi
+15:13:41 <kellytk> That's smart
+15:13:43 * nitzmahone mumbles something
+15:13:43 <jimi|ansible> since it's an rc1, i wouldn't recommend overwriting a working setup
+15:13:55 <jimi|ansible> (i also forgot a cd ansible/ in there after the clone)
+15:14:26 <jimi|ansible> nitzmahone: ?
+15:15:20 <nitzmahone> Just remembering last week's convo about publishing rcs to pypi. ;)
+15:15:46 <jimi|ansible> ahh yeah, heh
+15:16:22 <kellytk> @next on NPM is a useful feature for easily testing latest code
+15:17:20 <jimi|ansible> i think pypi has some kind of support for testing packages like that, i just haven't explored how easy/feasible it is to use that for rc's
+15:18:05 <jimi|ansible> i'd also like to modify sdist to output the tar with the full release name in it
+15:18:24 <jimi|ansible> right now it just does the major/minor, the release string isn't in it
+15:18:52 <jimi|ansible> ie. `make sdist` on the rc1 sha outputs ansible-2.1.1.0.tar.gz, not ansible-2.1.1.0-0.1.rc1.tar.gz
+15:18:56 <kellytk> I've run in a duplicate of my project root for testing and it's downloading
+15:18:58 <nitzmahone> yes please- I'd be happy to take that on...
+15:19:26 <jimi|ansible> nitzmahone: go for it, i hate dealing with setuptools stuff :)
+15:19:27 <kellytk> * git clone --recursive https://github.com/ansible/ansible; git checkout v2.1.1.0-0.1.rc1; . hacking/env-setup
+15:19:46 <jimi|ansible> kellytk: right, like i said i forgot a `cd ansible/` in there after the clone
+15:20:17 <kellytk> I read that but I don't know the purpose.  When the repo is downloaded I'll investigate
+15:20:52 <nitzmahone> #action nitzmahone to work on RC versioning/setuptools/investigate publishing RCs to pypi
+15:21:17 <nitzmahone> Oops, not chaired
+15:21:31 <kellytk> Does that create an issue automatically?
+15:21:44 <jimi|ansible> #chair nitzmahone
+15:21:44 <zodbot> Current chairs: jimi|ansible nitzmahone
+15:21:54 <jimi|ansible> kellytk: no, just records it in the log for the meeting
+15:21:59 <nitzmahone> #action nitzmahone to work on RC versioning/setuptools/investigate publishing RCs to pypi
+15:22:07 <kellytk> Cool
+15:22:12 <jimi|ansible> nitzmahone: this is an old article, but: http://blog.ziade.org/2011/02/15/do-not-upload-dev-releases-at-pypi/
+15:22:27 <jimi|ansible> 5 years old... sheesh 2011 doesn't seem like that long ago
+15:23:04 <ryansb> FWIW I think that's still the recommendation
+15:23:06 <bcoca> https://github.com/ansible/ansible/pull/16387
+15:23:13 <ryansb> Especially since pip can install from git refs now
+15:23:22 <nitzmahone> Yeah, it handles way better now with --pre and the way it understands rc/beta/etc in versions
+15:23:27 <bcoca> considering the problems we've had already with pypi ... i'ld be cautios
+15:23:27 <jimi|ansible> ryansb: yeah i see there are categories for beta/etc. but i don't think they mean anything
+15:23:34 <bcoca> ^ try it out with diff project first
+15:24:01 <nitzmahone> I've been doing with pywinrm for a couple months
+15:24:10 <nitzmahone> Works great
+15:25:20 <jimi|ansible> bcoca: run status from shippable is failed on #16387?
+15:25:28 <jimi|ansible> #chair bcoca ryansb
+15:25:28 <zodbot> Current chairs: bcoca jimi|ansible nitzmahone ryansb
+15:25:30 <kellytk> The error is new at least, "ERROR! The requested handler 'restart system' was found in neither the main handlers list nor the listening handlers list"
+15:25:40 <jimi|ansible> hrm
+15:25:48 <kellytk> Where is the "main list" it's looking in?
+15:25:57 <jimi|ansible> kellytk: can you create a gist which reproduces the issue for you?
+15:26:00 <kellytk> I'm new to Ansible so part of what I'm working through is potential operator error
+15:26:07 <kellytk> I'll work on that
+15:26:20 <jimi|ansible> that can happen if the handler is in an include which is considered dynamic
+15:26:26 <jimi|ansible> but that's the only time
+15:28:20 <bcoca> jimi|ansible: error is about postgresql not sure its related
+15:29:04 <jimi|ansible> maybe, suspicious that it failed across the board
+15:29:30 <jimi|ansible> (item=/root/ansible/test/integration/roles/setup_postgresql_db/vars/default.yml) => {"failed": true, "item": "/root/ansible/test/integration/roles/setup_postgresql_db/vars/default.yml", "message": "Unable to find '/root/ansible/test/integration/roles/setup_postgresql_db/vars/default.yml' in expected paths."}
+15:29:33 <jimi|ansible> ^ def related
+15:29:39 <jimi|ansible> include_vars is failing there
+15:29:47 <bcoca> hmm, but i did not change include_vars ...
+15:30:05 <bcoca> created new function, so old one should still work as was
+15:30:09 <jimi|ansible> bisect?
+15:30:25 <jimi|ansible> other devel builds are not failing
+15:30:57 <jimi|ansible> i see you did change include_vars: https://github.com/ansible/ansible/pull/16387/files#diff-b98d0eb5981eb00d04363dd4d3b5bb43R22
+15:31:20 <bcoca> ah, totally thought i had not
+15:31:30 <bcoca> clearly my issue
+15:32:15 <jimi|ansible> seems like it's doing what it's supposed to do, so must be some bug in _find_needle?
+15:32:36 <nitzmahone> Hmm, what's the coding equivalent of kleptomania (subconsciously changing code)?
+15:32:59 <bcoca> whmm, should not even be an issue as 'first_found' should already return an existing file's full path
+15:39:08 <ryansb> nitzmahone: patchomania?
+15:39:27 <nitzmahone> Heh, wfm
+15:40:05 <jimi|ansible> bcoca: i wonder if it's because of first_found that _raw_params there isn't set, and the old dwim would return whatever was originally passed in?
+15:40:15 <jimi|ansible> so that could have been buggy from the get-go
+15:41:21 <bcoca> ah
+15:41:31 <bcoca> new dwim will return fullpath if this is given
+15:41:46 <bcoca> but i can see it 'worked by accident' in previous case
+15:42:09 <jimi|ansible> yeah looks like it
+15:42:52 <kellytk> I've prepared the test case, it's a zipped up directory ready to run.  May I email it to one of the Ansible team?
+15:43:14 <jimi|ansible> kellytk: i'd prefer if you could just paste it to gist.github.com
+15:43:23 <jimi|ansible> just make sure it doesn't have any sensitive info in it
+15:43:31 <kellytk> That's what I did last time and it wasn't good enough :-P
+15:43:36 <kellytk> Give me a moment
+15:44:12 <jimi|ansible> kellytk: that's odd, that's how i look at 95% of issues, was this an interaction with the core team or the tower support team?
+15:45:36 <bcoca> yeah, core normally does not like zipped emails
+15:45:48 <jimi|ansible> not at all
+15:55:19 <kellytk> jimi|ansible: http://pastie.org/private/ktjmxhsczkcd1z8tjlxq
+15:55:39 * jimi|ansible looks
+15:55:40 <kellytk> I make the assumption here that ./playbooks/handlers/* is picked up with no further configuration, which may be mistaken
+15:55:55 <jimi|ansible> ahh right not without an include statement
+15:55:58 <jimi|ansible> that's only for roles
+15:56:03 <kellytk> You'll see that the handler is called by two tasks in the play, one via role and one via role meta environmental dependency
+15:56:52 <jimi|ansible> so, in the playbook handlers: section, you could do `- include: handlers/restart-system.yaml` and it should work
+15:58:37 <jimi|ansible> there was a bug prior to 2.1.1 where includes which should have been static were not, but that is also fixed in rc1
+15:58:57 <bcoca> weird, first_found is using old dwim and should return same results as before ... does this mean it was not working?
+15:59:34 <jimi|ansible> seems like it
+15:59:50 <bcoca> he
+16:00:09 <bcoca> need to fix lookups also, first_found is 'special'
+16:00:45 <jimi|ansible> first_found at the task level is deprecated isn't it? people should be using with_first_found:
+16:02:29 <kellytk> jimi|ansible: That was the solution
+16:02:37 <jimi|ansible> excellent, glad it was an easy one :)
+16:05:13 <kellytk> I changed handlers: in the play to include handlers/main.yaml, which includes the various handlers I expect in global space
+16:06:36 <kellytk> I've confirmed correct behavior with the role dependency notification to the global handler BTW.  Thank you for fixing this bug Ansible team and thanks jimi|ansible for helping me verify it
+16:07:03 <kellytk> Standard disclaimers apply, is there an ETA when the fixed version can be expected in pip?
+16:08:17 <bcoca> jimi|ansible: this is not task level, its the lookup
+16:28:45 <jimi|ansible> kellytk: sorry wife got home with kids and groceries... we're going to do a rc2 for 2.1.1, and Red Hat Summit is next week, so expect 2.1.1 at the earliest next Friday but more likely the week after
+16:29:14 <kellytk> Thanks jimi|ansible
+16:30:45 <jimi|ansible> ok, we're (way) past the hour, so i'll officially end the meeting
+16:30:48 <jimi|ansible> #endmeeting

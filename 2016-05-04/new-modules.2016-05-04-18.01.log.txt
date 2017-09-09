@@ -1,0 +1,198 @@
+18:01:26 <gregdek> #startmeeting new-modules
+18:01:26 <zodbot> Meeting started Wed May  4 18:01:26 2016 UTC.  The chair is gregdek. Information about MeetBot at http://wiki.debian.org/MeetBot.
+18:01:26 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+18:01:26 <zodbot> The meeting name has been set to 'new-modules'
+18:01:30 * gundalow waves
+18:01:31 <gregdek> #
+18:01:33 <gregdek> Grr
+18:01:39 <gregdek> #topic roll call
+18:01:43 <gregdek> Who's about?
+18:02:03 <gundalow> MichaelBaydoun: you there?
+18:04:18 * rbergeron is about
+18:05:42 <gregdek> OK, anyone have any particular modules to enquire about?
+18:05:54 * gregdek waits a bit
+18:07:01 <gregdek> OK, if anyone has any modules in particular, they can step in.
+18:07:19 <MichaelBaydoun> hello
+18:07:22 <rbergeron> i know kei was looking at other things earlier in the networking meeting, not sure if he needed to follow up here but pretty sure he's got it going where he would like
+18:07:26 <MichaelBaydoun> late, but here now, representing https://github.com/ansible/ansible-modules-extras/pull/1868#issuecomment-216855662
+18:07:43 <gregdek> #topic extras/1868
+18:08:19 <MichaelBaydoun> still  needs a second shipit, having the hardest time finding someone to review/test it
+18:08:36 <gundalow> I'm happy with it, just needs an extra shipit
+18:08:41 <gregdek> Right, and wimnat says "not quite yet"
+18:09:17 <MichaelBaydoun> actually he says don't have time to review
+18:09:33 <gregdek> We can always choose to make a call. MichaelBaydoun has been persistent, and we've got quite a bit of testing, and we know it's gone through correctness checks.
+18:09:40 <MichaelBaydoun> asked me to post output for him showing snake case, which I did
+18:09:57 <rbergeron> yeah -- and i think wimnat just asked for squashing and to show something, and i think all that stuff is taken care of
+18:10:20 <MichaelBaydoun> do you want me to squash, or can you do it during the merge?
+18:10:27 <rbergeron> thaumos might be a little bit more free to review this week - he was in austin with me last week with conference shenanigans, but he may be still travelling
+18:10:27 <gregdek> If wimnat gives ok on the output, is that sufficient? Should we even wait for that?
+18:10:42 <gregdek> (I think we can now squash at merge time)
+18:12:24 <gregdek> I'm inclined to give this one a shipit. I think it's received more eyeballs than most.
+18:12:34 <gundalow> gregdek: aye, I'd agree
+18:12:51 <rbergeron> i am as well -- I think we can assume lots of good faith here
+18:13:16 <gregdek> OK. I'll mark it accordingly. Thanks MichaelBaydoun for your patience.
+18:13:24 * MichaelBaydoun smiles as his first modules receives it's second shipit
+18:13:27 <rbergeron> if wimnat feels like that was unkosher -- i think we all know each other well enough to have that conversation :)
+18:13:29 <gundalow> if wimnat or anyone else comes back with something else then we can just bug fix it
+18:13:44 * ryansb bumbles into meeting late
+18:13:49 <gundalow> rbergeron: all part of the learning process :)
+18:14:12 <rbergeron> MichaelBaydoun: thanks for your persistence :D i'm glad this meeting turned out to be useful for you.
+18:14:19 <rbergeron> (and ansible as a whole, ;D)
+18:14:36 <gundalow> \o/
+18:14:38 <gundalow> woot
+18:14:47 <MichaelBaydoun> thank you all
+18:15:10 <gundalow> what's the process for getting it merged?
+18:15:18 <gregdek> ok. any other modules anyone want to advocate for in particular, or shall we move on the Big Pile?
+18:15:37 <gregdek> gundalow: core team gives it a final review and then merges, ideally within 2 weeks :)
+18:15:45 <jtanner> sorry, i'm late
+18:15:46 <rbergeron> big pile, looks like :)
+18:15:50 <gundalow> https://github.com/ansible/ansible-modules-extras/pull/2151 I added needs_revision, but the bot doesn't seem to have picke dit up
+18:15:52 <MichaelBaydoun> big pile
+18:16:01 <rbergeron> jtanner and ryansb: welcome :)
+18:17:24 <gregdek> How shall we attack the Big Pile this week? Oldest? Newest? Most comments? :)
+18:17:46 <gundalow> I don't think there is much value in looking at oldest
+18:17:48 <gregdek> (I really need a good way to find "new modules with at least one shipit")
+18:18:00 <gundalow> gregdek: oh, that would be cool
+18:18:48 <gregdek> Added as a ticket in ansible/community: https://github.com/ansible/community/issues/88
+18:18:58 <gregdek> In the absence of that, I vote for "most comments".
+18:19:03 <gregdek> Which means:
+18:19:16 <gregdek> https://github.com/ansible/ansible-modules-extras/pulls?q=is%3Aopen+label%3Anew_plugin+is%3Apr+sort%3Acomments-desc
+18:19:23 <gregdek> Any objection?
+18:19:45 <gundalow> sure, so mysql_query first
+18:19:50 <jtanner> oh boy, that one again
+18:20:17 <gundalow> oh is this the using Ansible to poke data into mysql?
+18:20:25 <gregdek> It is!
+18:20:30 <bcoca> -100
+18:20:34 <gregdek> And iirc, it put us into an existential spin. :)
+18:20:43 <gundalow> hey bcoca :)
+18:20:52 <gregdek> So perhaps we should just, uh, bypass that one for today? :)
+18:20:53 * bcoca waves
+18:20:58 <gundalow> or just say NO
+18:20:58 <rbergeron> yesplz
+18:21:13 <bcoca> i think we hve enough consensus on the 'commiters' side to say 'close and point at galaxy'
+18:21:29 <gregdek> gundalow: iirc, we didn't want to say "no" without having a "this is why we're saying no".
+18:21:42 <gregdek> Is there something in the guidelines that allows us to say "no because" to this PR?
+18:21:43 <gundalow> no because brian said NO
+18:21:47 <gregdek> If there is, happy to do it.
+18:21:49 <bcoca> ^ we have plenty 'why', not only from committers, but community
+18:21:59 <bcoca> in the ticket
+18:22:01 <rbergeron> and the "why" documented so nobody else has to go through the same thing again.
+18:22:27 <jtanner> funny ... this is exactly how the last discussion went
+18:22:29 <rbergeron> i think that would at least make someone who went through the actual work feel like something beneficial that didn't exist to benefit him at least came of it.
+18:22:47 * gregdek reads thru the comments to see if there's any actual consensus reflected there that I missed.
+18:22:52 <gregdek> If not, gonna skip it :)
+18:23:16 <gundalow> "Thank you for this PR, we have discussed this here in the PR, as well as in community meetings a number of times, although this module seems to address a problem you have we don't believe it's within the spirit of what we are trying to do with Ansible (as detailed in the various comments above). If you wish to make this more generally available may we suggest you add it to galaxy.ansible.com"
+18:25:00 <gregdek> So.
+18:25:03 <gregdek> Lots of discussion.
+18:25:09 <gregdek> tima asked for some changes to be made.
+18:25:18 <gregdek> nerzhul made those changes in good faith.
+18:25:48 <gregdek> But they are still insufficient.
+18:26:03 <gundalow> Do we need a grown up to just make a decision
+18:26:22 <gregdek> LOL
+18:26:23 <jtanner|t420> pretty sure it was made last time
+18:26:55 <jtanner|t420> jimic said something along the lines of "this isn't state based, so no"
+18:26:58 * gundalow suggest we finish talking about this module in 3 minutes (xx:30)
+18:27:22 <gregdek> I'm deferring discussion.
+18:27:24 <gundalow> Just because we say no doesn't mean they can't use it
+18:27:28 <gregdek> There we are.
+18:27:32 <gundalow> gregdek: \o/
+18:27:34 <gundalow> NEXT
+18:27:36 <gregdek> Kicking the can down the road for another week or two.
+18:27:48 <gregdek> How about 1078?
+18:27:54 <gundalow> https://github.com/ansible/ansible-modules-extras/pull/1078 win win robocopy
+18:28:27 <jtanner|t420> hah, someone is going to love maintaining that one
+18:28:42 <gregdek> The submitter? Since that's the maintainer. :)
+18:28:58 <gregdek> #topic extras/1078
+18:29:05 <abadger1999> gregdek: +1 bypass for now.
+18:29:19 <jtanner|t420> oh, nvm ... it's not actually a synchronize port
+18:29:23 * abadger1999 sorry -- hadn't scrolled down to the end of the meetiing yet... ignore me
+18:30:04 <gregdek> Thanks abadger1999 :)
+18:30:23 <gregdek> So looks like 1078 has been worked to pass guidelines.
+18:30:32 <gregdek> And has one works_for_me that I can see...
+18:30:46 <bcoca> it IS a syncronize port ... just uses robocopy instead of rsync
+18:31:10 <jtanner|t420> it doesn't xfer between machines though
+18:32:06 <bcoca> not the same way, but  \\machine\folder 'should work'
+18:32:07 <gregdek> Is there something fundamentally disqualifying about that?
+18:32:16 <bcoca> gregdek: no, just scary
+18:32:34 <jtanner|t420> synchronize has been a pita to maintain because connection methods make it extremely complicated
+18:32:37 <bcoca> 2 things, a) does not use same transport as ansible to connect so no 'infer from ssh settings issues'
+18:32:53 <bcoca> b) we have no privilege escalation on windows (yet) so that is also a non issue
+18:33:02 <bcoca> ^ those are the 2 BIG problems with syncronize
+18:33:15 <bcoca> which this module does not have (yet)
+18:33:21 <gregdek> :)
+18:33:45 <bcoca> so no opposition, though it is understandable that people freak out when 'syncronize' is mentioned
+18:33:51 <bcoca> or anything 'like it' appears
+18:33:55 <gregdek> Yep.
+18:34:32 <gregdek> Well, it still needs a second 'shipit', and looks like maybe we should ask one of the commenters to provide it.
+18:34:41 <bcoca> nitzmahone ?
+18:35:18 <gregdek> Possible. We can ask nitzmahone and previous commenters, and with luck we'll get either a second shipit or a needs_revision from one of them.
+18:35:34 <abadger1999> or trond or jhawkesworth if they have time. they've already made some comments.
+18:35:34 <gregdek> Make sense?
+18:35:43 <gregdek> I'll ping all of 'em. :)
+18:35:44 <abadger1999> yeah.
+18:36:06 <gregdek> OK. I will do that. One sec.
+18:36:59 <gregdek> OK, done, thank!
+18:37:01 <gregdek> THanks!
+18:37:06 <gregdek> Next up:
+18:37:36 <gregdek> 213 fails, I'll look into that later
+18:38:07 <gregdek> Looks like 1324 is already in shipit...
+18:38:18 <gregdek> #topic extras/1324
+18:39:07 <gregdek> Ah, looks like abadger1999 had some comments, and no response yet.
+18:39:15 <gregdek> I'll put it back into needs_revision.
+18:39:25 <gundalow> missing needs_revision on 1324?
+18:39:40 <gundalow> gregdek: :)
+18:40:14 <gregdek> Moving on!
+18:40:48 <gregdek> 286 breaks and is in pending action, skipping for now...
+18:41:01 <gregdek> 1868 we just shipped...
+18:41:21 <gregdek> 211 in pending action...
+18:41:41 <gregdek> 1502!
+18:41:47 <gregdek> #topic extras/1502
+18:41:54 <gregdek> https://github.com/ansible/ansible-modules-extras/pull/1502
+18:42:28 <gregdek> This one has two recent shipits.
+18:42:34 <gregdek> Anything suspect about it?
+18:43:01 * gregdek afk bbiab
+18:43:54 <gundalow> not one I've looked at before. Looks like it's been well reviewed and sensible code
+18:43:55 <MichaelBaydoun> I'm good with it, not sure why the last comment is ready_for_review
+18:44:02 <jtanner|t420> seems like the boto connection intialization would be in the utils
+18:44:56 <gundalow> jtanner|t420: which functions is that?
+18:45:22 <jtanner|t420> ah, boto3_conn is from utils
+18:47:11 <gundalow> what should version_added be now, 2.2?
+18:47:47 * gregdek is back
+18:48:01 <jtanner> gundalow: yes, matches the current changelog version
+18:48:03 <MichaelBaydoun> yes, the commit will fail it doesn't say 2.2
+18:48:11 <MichaelBaydoun> commit check that is
+18:48:26 <gregdek> So ask him to change version and then shipit?
+18:48:44 <gundalow> I've added a few (very minor) comments
+18:48:53 <gregdek> Or we can just put it in shipit and let core change the version if it's close?
+18:49:02 <gregdek> gundalow: are they worth needs_revision?
+18:49:49 <gregdek> OK, I'll go ahead and put it in needs_revision with a note that he'll basically get a shipit when these changes are made?
+18:49:51 <abadger1999> gregdek: <nod>  anytime it's just version_added, make a note and core can change it... (Core just needs to be aware that that is an issue).
+18:49:55 <gundalow> will take mmochan < 5 minutes to fix,
+18:50:05 <gregdek> If he's making other changes anyway might as well
+18:50:33 <gregdek> okeydoke. that's what i'll do then.
+18:50:36 <gregdek> One sec. :)
+18:50:48 <gundalow> I've added a comment
+18:51:00 <MichaelBaydoun> would be cool if the module developer could put a token there, that would get replaced automatically at merge time with the correct value
+18:51:11 * jtanner takes notes to update modules_changelog.py to also check version added in the module
+18:52:00 <gregdek> MichaelBaydoun: yes, I've asked for that a couple of times :)
+18:52:03 <gregdek> OK.
+18:52:07 <gregdek> Moving on, 8m left:
+18:52:11 <gundalow> ansible-validate-modules (invoked by Travis) should be checking that version_added is there
+18:52:24 <gregdek> 555 is in needs_revision/pending_action...
+18:52:44 <gregdek> #topic extras/1687
+18:52:46 <gregdek> https://github.com/ansible/ansible-modules-extras/pull/1687
+18:53:23 <gregdek> Looks like it's had quite recent changes that no one has had time to test.
+18:53:29 <gregdek> So a reminder to folks will do here.
+18:55:04 <gregdek> #topic extras/1901
+18:55:06 <gregdek> https://github.com/ansible/ansible-modules-extras/pull/1901
+18:55:23 <gregdek> And this will be the last for today.
+18:56:18 <gregdek> Looks like we have one shipit, waiting for a second, and sivel was a -1 originally... so if we can turn that -1 to a +1, we're probably good.
+18:56:28 <gregdek> So I've pinged sivel in the PR.
+18:56:38 <gregdek> (And also in the channel!)
+18:56:51 <gregdek> Progress! Lesson: ignore the sticky ones. :)
+18:56:58 <gundalow> \o/
+18:57:03 <gundalow> successful meeting I think :)
+18:57:09 <gregdek> ok.
+18:57:13 <gundalow> back in 5 for next meeting
+18:57:20 <gregdek> Wrapping this one up. We'll start the community one in 5-ish.
+18:57:23 <gregdek> #endmeeting

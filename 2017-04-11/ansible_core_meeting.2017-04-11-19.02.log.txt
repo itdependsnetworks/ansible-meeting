@@ -1,0 +1,98 @@
+19:02:46 <nitzmahone> #startmeeting Ansible Core Meeting
+19:02:47 <zodbot> Meeting started Tue Apr 11 19:02:46 2017 UTC.  The chair is nitzmahone. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:02:47 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:02:47 <zodbot> The meeting name has been set to 'ansible_core_meeting'
+19:03:02 <nitzmahone> #chair alikins ryansb
+19:03:02 <zodbot> Current chairs: alikins nitzmahone ryansb
+19:03:08 <shertel> hello
+19:03:29 <nitzmahone> #chair shertel
+19:03:29 <zodbot> Current chairs: alikins nitzmahone ryansb shertel
+19:03:35 <nitzmahone> #info Agenda: https://github.com/ansible/community/issues/159
+19:03:57 <abadger1999> Hello
+19:04:04 <nitzmahone> #chair abadger1999
+19:04:04 <zodbot> Current chairs: abadger1999 alikins nitzmahone ryansb shertel
+19:05:21 <nitzmahone> #info 2.3 status: 2.3.0 is at RC6, 2.3.0 final will likely be cut this week barring any major issues
+19:06:11 <nitzmahone> #topic https://github.com/ansible/community/issues/159#issuecomment-291567721
+19:06:49 <abadger1999> Time to get busy bugfixing for 2.3.1 ;-)
+19:07:09 <nitzmahone> Looks like there's still some disagreement on behavior for https://github.com/ansible/ansible/pull/23265
+19:07:35 <nitzmahone> Anything we need to hash out here, or just keep the discussion on the PR?
+19:07:55 <bcoca> scheduled thunderdome for next discussion
+19:07:59 <abadger1999> bcoca and I are both kinda throwing our hands up in the air... It's tricky working out what it really means.
+19:08:37 <nitzmahone> At a glance, seems like one of those issues where *somebody's* going to complain later, regardless of which way we choose.
+19:08:48 <bcoca> before, during and later
+19:08:54 <abadger1999> (easy to tell that fileglob only in the filename means find the first occurence of the directory and then look for matches to the fileglob in that directory... much harder to decide what globs in directories are supposed to mean)
+19:09:08 <abadger1999> yeah.
+19:09:09 <nitzmahone> Yeah
+19:10:14 <nitzmahone> I usually opt for "developer expediency/readability" in cases where the expected behavior is undefined, but that's because I'm lazy. :)
+19:10:18 <abadger1999> */file.conf.... find all occurences of file.conf one dir deep?  Find the first occurrence of file.conf one dir deep? file the first directory and check if it has a file.conf inside?
+19:10:43 <abadger1999> Find the first dwim path that has a subdirectory and check for file.conf inside of any of those subdirectories?
+19:10:53 <bcoca> return rude comment to user
+19:11:08 <nitzmahone> Some glob schemes have wacky double-stars for that kind of thing too
+19:11:47 <nitzmahone> "Hey, looks like you're trying to use a dirglob- please come comment on this PR and tell us what you meant."
+19:12:21 <abadger1999> I think what we'll have to do is lay out all the options, eliminate a few that no one likes, and then vote on the remainder.
+19:12:40 <abadger1999> which ever one wins implement and document.
+19:12:47 <nitzmahone> I'm assuming the first part will happen offline
+19:12:56 <abadger1999> there's just too many "right" answers otherwise.
+19:13:03 <abadger1999> Definitely not in the meeting at least.
+19:13:16 <nitzmahone> Is that you and bcoca then?
+19:13:27 <nitzmahone> (or just bcoca)
+19:14:02 <abadger1999> yeah, bcoca that sound good?  I'll write up an initial list of options and then we can start listing pros cons and eliminate the outright bad ones.
+19:14:33 <nitzmahone> #action tkuratomi to write up options for https://github.com/ansible/ansible/pull/23265 behavior, revisit in future meeting
+19:14:59 <bcoca> agreed
+19:15:29 <nitzmahone> #topic https://github.com/ansible/community/issues/159#issuecomment-291567969
+19:16:02 <nitzmahone> Doesn't look like anything's moved on https://github.com/ansible/proposals/pull/59
+19:16:56 <nitzmahone> Punt again?
+19:17:21 <abadger1999> yeah.  we 're waiting on allanice to incorporate the changes we requested in the ticket.
+19:17:38 <nitzmahone> OK, moving on then...
+19:17:41 <nitzmahone> #topic https://github.com/ansible/community/issues/159#issuecomment-291568339
+19:18:39 <nitzmahone> Looks like this one might be waiting on an enhancement for some kind of variable expansion yet TBD?
+19:20:38 <alikins> looks like it
+19:21:10 <nitzmahone> Yay, a new templating language
+19:21:12 <abadger1999> yeah, afaik bcoca is currently pondering if that's a good idea or not.
+19:22:04 <nitzmahone> Suppose we could just use Jinja again, so long as we render it right there and make it immutable
+19:22:30 <alikins> when it comes to paths (and globs, etc)  removing ambiguity is always nice
+19:23:18 <nitzmahone> OK, doesn't sound like there's a lot we can do today to move that one along any faster...
+19:23:57 <nitzmahone> #topic https://github.com/ansible/community/issues/159#issuecomment-291568454
+19:25:01 <nitzmahone> Looks like this one mainly needs to come up with a synonym for "type" (or a prefix/suffix so it won't conflict with Python names) and determine what we want to do about doc fragments.
+19:25:13 <nitzmahone> (https://github.com/ansible/proposals/issues/58)
+19:26:41 <abadger1999> category?
+19:26:48 <nitzmahone> Maybe "arg_type"?
+19:26:56 <abadger1999> I think it's for plugin type
+19:27:37 <nitzmahone> Nah, plugin_type is already there
+19:28:05 <nitzmahone> I think the question was WRT the "type" value under each option.
+19:28:18 <nitzmahone> "option_type" (if we're sticking with "options")
+19:29:25 <abadger1999> I'd use type for the options and args
+19:29:35 <abadger1999> Since it needs to map to actual python types
+19:30:01 <abadger1999> bcoca: ^ clarification from you?
+19:30:18 <nitzmahone> Maybe- that's a bit of a rabbithole when subspec comes into play
+19:32:10 <abadger1999> not opposed to option_type... but wouldn't change it jsut o not conflict with python types (unlike the plugin_type which made perfect sense to me to change)
+19:32:26 <bcoca> sorry, painting bikeshed fucsia
+19:32:42 <abadger1999> fuscia_type:
+19:34:03 * nitzmahone doesn't have strong feelings
+19:34:12 <nitzmahone> (about this, anyway ;) )
+19:34:55 <abadger1999> anyhow, I think +1 to the proposal as it stands
+19:35:16 <nitzmahone> WFM
+19:35:30 <bcoca> idem
+19:36:53 <nitzmahone> OK, what was the open question about fragments?
+19:37:09 <bcoca> open?
+19:37:23 <bcoca> i reversed inheritance, ticket was merged into 2.4
+19:37:32 <nitzmahone> Dunno, there was a note on the agenda about fragments
+19:37:46 <nitzmahone> OK, so nothing to do there?
+19:38:07 <nitzmahone> If so, +1 from me as-is also
+19:42:18 <nitzmahone> #topic https://github.com/ansible/ansible/pull/9563
+19:46:01 <nitzmahone> Seems awfully special-purpose to me. Every time I've had to do something like this, I've always needed to do filter-fu or just write my own filter. This looks like it'd solve a very specific case (almost a reverse group_by or something)
+19:47:21 <nitzmahone> #topic Open Floor
+19:48:08 <nitzmahone> crickets...
+19:48:18 <nitzmahone> OK, done in 5...
+19:48:22 <nitzmahone> 4
+19:48:23 <abadger1999> 2.4 development is open.
+19:48:43 <abadger1999> Now is the ideal time for people interested in a Proposal to step up and push for discussion in the meetings.
+19:49:12 <abadger1999> EOF
+19:49:23 <nitzmahone> On a related note, stable-2.3 is locked
+19:49:58 <nitzmahone> no backports without authorization until 2.3.0 has shipped- use the 2.3.1 temp staging branch if there are backports needed for 2.3.1.
+19:50:07 <nitzmahone> OK, done in 4
+19:50:11 <nitzmahone> 3
+19:50:15 <nitzmahone> 2
+19:50:19 <nitzmahone> 1
+19:50:22 <nitzmahone> Thanks all!
+19:50:25 <nitzmahone> #endmeeting

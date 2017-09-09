@@ -1,0 +1,254 @@
+16:30:12 <nitzmahone> #startmeeting Windows Working Group
+16:30:12 <zodbot> Meeting started Fri Jun  9 16:30:12 2017 UTC.  The chair is nitzmahone. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:30:12 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:30:12 <zodbot> The meeting name has been set to 'windows_working_group'
+16:30:21 <jhawkesworth_> hey
+16:30:32 <dag> o/
+16:30:33 <nitzmahone> Good $time_in_your_region!
+16:30:56 <dag> lots of things we could be discussing :-)
+16:31:00 <nitzmahone> #chair jhawkesworth dag
+16:31:00 <zodbot> Current chairs: dag jhawkesworth nitzmahone
+16:31:06 <dag> this may be the last meeting before London ?
+16:31:17 <jhawkesworth_> you too.  Long awaited friday afternoon here.
+16:31:19 <nitzmahone> Yes, I believe so- I'll be on PTO
+16:31:24 <nitzmahone> (for the next one)
+16:31:29 <jhawkesworth_> yeah will be
+16:31:44 <nitzmahone> In lovely Iceland on my way to London
+16:31:47 <dag> so let's merge everything Windows :-P
+16:31:54 <nitzmahone> #agenda https://github.com/ansible/community/issues/153
+16:31:56 <jhawkesworth_> :-)
+16:32:23 <dag> John has merge rights, he can then fix everything :-D
+16:32:55 <jhawkesworth_> yeah... and do $dayjob too :-)
+16:33:34 <nitzmahone> Sounds like there will be enough of us that we can plan a little breakout session for Windows stuff for at least an hour or so
+16:33:48 <dag> yup
+16:33:53 * resmo would love to see dag having merge perms
+16:33:54 <dag> go !
+16:34:04 * resmo howdy btw
+16:34:12 <dag> hey resmo
+16:34:37 <jhawkesworth_> I will look at the other integration test PRs though
+16:34:38 <resmo> dag: hi dag, cu in london?
+16:34:43 <dag> resmo: yes !
+16:34:48 <resmo> cool!
+16:35:18 <nitzmahone> #topic https://github.com/ansible/community/issues/153#issuecomment-301216715
+16:35:54 <nitzmahone> So I think a GH wiki is probably the best way to handle the TODO lists and stuff, but we need to keep it tight so it doesn't spiral out of control or become unreadable.
+16:36:35 <dag> that's fine for a tight-knit group of people
+16:36:43 <nitzmahone> I was also messing around with "read-only outside contributors" for more workflow-y things like issue/PR assignment and reviews
+16:37:18 <nitzmahone> I think that's a good way to go, but will require that $powers_that_be give me admin rights on ansible/ansible (or that we have bot workflow for adding folks to that list)
+16:37:34 * gundalow looks up
+16:37:40 <gundalow> oh, other John
+16:37:45 <nitzmahone> Those two would be my vote for "the way forward" for now
+16:37:54 <dag> nitzmahone: the question is how many changes would happen to that list, I doubt there will be a lot
+16:37:55 <jhawkesworth_> as long as there is a 'whats in and what's not on the front page of the wiki, lets give it a stab
+16:38:38 <nitzmahone> Yeah, I think for now basically the regulars at this meeting
+16:38:48 <nitzmahone> (maybe a couple of other module owners)
+16:38:57 <dag> other groups have the same issue, if we can prove this works, this may be the solution for others, e.g. vmware, network...
+16:39:20 <nitzmahone> exactly- and I think that'd be the point to ask for some bot integration to do the list management
+16:39:38 <jhawkesworth_> sounds like a plan
+16:39:40 <dag> nitzmahone: thanks ! Would be nice to have this done before London too, so we can migrate everything and start using it in London
+16:39:54 <dag> or discuss in London
+16:40:04 * jhawkesworth_ brb
+16:40:07 <dag> (I know I am pushing things for London, but like to use the momentum :p)
+16:40:08 <nitzmahone> Yeah, I can create the wiki today and either get the admin rights or have someone do the list
+16:40:25 <dag> I don't mind to move everything over, and start restructuring things
+16:40:56 <nitzmahone> So who needs to be on the list?
+16:41:12 <nitzmahone> dag, jborean93 (at least until he's an employee)
+16:41:43 <dag> everyone still active and interested, but let's ask them first ?
+16:41:46 <nitzmahone> I seem to think there are a couple of other active-ish module owners
+16:41:46 <jhawkesworth_> me i guess unless already covered by ext comitters
+16:42:02 <jhawkesworth_> ditto for trond
+16:42:02 <nitzmahone> You've already got write-access, so you're covered
+16:42:07 <nitzmahone> Oh yeah of course
+16:42:10 <jhawkesworth_> cool
+16:42:18 <nitzmahone> (I always forget because he's rarely in here)
+16:42:40 <nitzmahone> #action nitzmahone to get r/o collab access for dag, trond, jborean
+16:42:48 <nitzmahone> #action nitzmahone to create WWG wiki
+16:42:52 <jhawkesworth_> he has write too, ut een more sparing with it than me
+16:42:59 <nitzmahone> oh ok,
+16:43:11 <jhawkesworth_> great
+16:43:14 * nitzmahone can't see the list
+16:43:52 <nitzmahone> Just going down the agenda, I think https://github.com/ansible/community/issues/153#issuecomment-302923532 would be a good "in person" topic for London
+16:44:00 <dag> the meeting times are also a bit odd for europe, Friday-evening is hard to keep free
+16:44:26 <dag> 2AM is only for the really committed ones :p
+16:44:27 <nitzmahone> I'm happy to change them to whatever works for most folks- this was just a "stake in the ground"
+16:44:45 <dag> let's discuss in London
+16:45:05 <nitzmahone> The original intent wasn't that everyone would be at every meeting, just to have a touch-point with the Ansible team that was accessible to various timezones
+16:45:19 * nitzmahone wonders if dag is a polyphasic sleeper
+16:45:36 <dag> nitzmahone: I understand, but the 2 times we have now don't work that well for people with family ;-)
+16:45:47 * dag stays up for the meeting !
+16:45:58 <dag> (and to have some quiet time in the house)
+16:46:12 <nitzmahone> Yep- happy to move them so long as *I'm* not staying up til 2am to run them ;)
+16:46:23 <jhawkesworth_> don't know how you manage it, but yeah, lets see if another time will work
+16:46:37 <dag> (working from home helps)
+16:47:20 <nitzmahone> #topic
+16:47:22 <nitzmahone> #topic https://github.com/ansible/community/issues/153#issuecomment-303340639
+16:47:59 <nitzmahone> I have no issue with adding magic for config overrides on most of the winrm options in 2.4
+16:48:15 <jhawkesworth_> me neither
+16:48:18 <nitzmahone> Just want to make sure that bcoca's config changes have settled so we're not causing problems or having to rewrite stuff
+16:49:12 <dag> sure, I will annotate that item so we can come back to it
+16:49:19 <nitzmahone> k
+16:49:28 <nitzmahone> #topic https://github.com/ansible/community/issues/153#issuecomment-304104565
+16:49:33 <dag> it would be very convenient as we now have to do it from inventory
+16:49:39 <nitzmahone> (agreed)
+16:50:06 <nitzmahone> Mixed feelings on config script
+16:51:09 <dag> for the -type "dict", it was not clear what was discussed during core meeting (I missed it)
+16:51:10 <nitzmahone> Part of me would like to torch it and start over (including a more accurate name), but it's referenced in so many places (many of which aren't ours) and a lot of folks, for better or worse, have the path to it hardcoded into CI and other things.
+16:51:19 <dag> butah
+16:51:22 <dag> ah
+16:51:24 <dag> sorry
+16:51:58 <dag> what I would do is leave the old script in place, and start over with a new improved script with better defaults (and all options)
+16:52:03 <jhawkesworth_> yeah its hard to get rid of it completely now.  An alternative with a better name might just make for more confusion.  Let's leave it
+16:52:40 <nitzmahone> I think we need to have decent "one stop" coverage of the options necessary to get WinRM configured, but I also don't want to completely reimplement the wsman Powershell provider
+16:52:47 <dag> so it doesn't break with people using it directly, and it doesn't block us from making improvements that are necessary
+16:53:41 <nitzmahone> I think the recent PR that makes "enabled authtypes" a list, for instance, is a great thing (though it had some issues in my cursory review)
+16:54:19 <dag> we need to do something IMO, we can't leave the old defaults as they are
+16:54:56 <nitzmahone> I'm not sure I agree- there's nothing inherently wrong with Basic, you just can't do it over HTTP
+16:55:19 <nitzmahone> It's by far the most peformant if you're doing HTTPS
+16:55:19 <dag> nitzmahone: CredSSP as a default is more versatile
+16:55:35 <nitzmahone> NTLM and CredSSP have significant setup costs on the connection and won't work properly through most proxies
+16:56:05 <nitzmahone> and Kerberos, well... We all know how much fun that one is for n00bz to get started with
+16:56:10 <dag> Basic does not support AD accounts or Credential Delegation
+16:56:53 <jhawkesworth_> needs a matrix of options, pros and cons.  hard to condense to command line switches
+16:57:13 <dag> jhawkesworth_: Let's discuss this in London too !
+16:57:16 <dag> :-)
+16:57:17 <jhawkesworth_> I'll have a go at figuring out what matrix of options are
+16:57:22 <dag> alcohol may solve this one
+16:57:27 <jhawkesworth_> good idea.
+16:57:31 <nitzmahone> Yeah- that's what that doc rewrite I was working on basically did, but with all the pywinrm changes coming, a lot of stuff needs update, so I'd just start over
+16:57:57 <dag> (What winrm changes are coming ?)
+16:58:01 <misc> dag: because  alcohol is a solution ?
+16:58:04 <nitzmahone> I actually have something basic like that in the winrm connection plugin docs (which I still need to convert over now that plugin docs are a thing)
+16:58:14 <dag> misc: because that was a joke :-)
+16:58:17 <nitzmahone> NTLM/Kerberos message encryption over HTTP
+16:58:53 <nitzmahone> Means the default `winrm quickconfig` settings will work out of the box
+16:58:58 <misc> dag: yeah, I made almost the same without understanding :/
+16:59:23 <dag> (meeting is halfway)
+16:59:39 <jhawkesworth_> sorry gotta go, out of power.  See you in london if I don't speak to you before
+16:59:47 <nitzmahone> Later!
+16:59:52 <dag> jhawkesworth_: bye !
+17:01:20 <dag> next topic ?
+17:01:28 <dag> or did we loose quorum ? :-)
+17:01:41 <nitzmahone> Probably- we can talk about the dict thing some more
+17:02:06 <nitzmahone> What was the last you got from the core meeting?
+17:02:08 <dag> Yeah, it was clear we also needed ordered dicts, so proposed "omap" type
+17:03:00 <nitzmahone> Yeah- I suspect it will be difficult to preserve that all the way through, since I think we translate at least once even before it gets to the module (then we have module ser/deser to worry about).
+17:03:36 <dag> https://meetbot.fedoraproject.org/ansible-meeting/2017-06-06/public_core_meeting.2017-06-06-19.00.log.html at 19:24:39
+17:04:10 <nitzmahone> You'd basically have to change everything to be ordereddict internally, since JSON doesn't have a way to signify, so you'd have to have the collusion of the serializer to preserver order and the deserializer to cons up an ordereddict (in whatever platform)
+17:04:25 <dag> it's not that hard to link omap to OrderedDicts (I did it a few years ago for a project)
+17:04:32 <nitzmahone> That part's easy
+17:04:38 <dag> but OrderedDicts was not in python 2.4 IIRC
+17:05:11 <dag> ah right
+17:05:36 <dag> so if everything is OrderedDict it has a performance impact, nothing else ?
+17:05:37 <nitzmahone> It's totally doable, but I'd prefer to fix the underlying issue in win_nssm (which seems like a much easier problem to solve)
+17:06:04 <nitzmahone> Not sure- I'd suspect at least performance
+17:06:16 <nitzmahone> Core team was not on board for that change ATM
+17:06:32 <nitzmahone> I think our time would be better spent fixing win_nssm not to need it
+17:07:07 <dag> ah, so the conclusion was to fix win_nssm :-)
+17:07:13 <nitzmahone> yep
+17:07:15 <dag> aha
+17:07:24 <dag> ok, no problem for me
+17:07:28 <nitzmahone> I haven't dug in yet to see exactly what the issue is, though I have an idea
+17:07:47 <dag> most of the other modules use lists
+17:07:55 <nitzmahone> yep
+17:07:58 <dag> but Unix works differently
+17:08:14 <nitzmahone> transformation's not hard
+17:08:22 <nitzmahone> #topic https://github.com/ansible/community/issues/153#issuecomment-306452743
+17:08:29 <nitzmahone> I'm working my way through these
+17:08:44 <dag> Ok, I was hoping to get this fixed before London too :-P
+17:08:54 <nitzmahone> #action nitzmahone to continue review on PR list from https://github.com/ansible/community/issues/153#issuecomment-306452743
+17:09:08 <dag> so that we can claim 100% tested (not really there though)
+17:09:24 <dag> again, momentum
+17:09:25 <nitzmahone> At least 100% run in CI
+17:09:37 <nitzmahone> #topic https://github.com/ansible/community/issues/153#issuecomment-307415677
+17:09:54 <dag> well, I noticed our list was not complete, win_dns* win_domain* was missing
+17:10:02 <nitzmahone> I have no problem with this change- will consult with our docs folks to make sure they don't before merging
+17:10:17 <dag> so I updated the task-list
+17:10:32 <nitzmahone> #action nitzmahone to consult with docs team on #25482 before merging
+17:10:33 <dag> ok, I don't know if the wording was good enough
+17:10:55 <dag> I also noticed while editing, that some modules also do "See also M(foo) M(bar)"
+17:11:09 <nitzmahone> Yeah, the domain stuff in particular will be extremely difficult without CI support for multi-machine setups
+17:11:11 <dag> and I think we can do that too amongst Windows modules, I was planning to do that as well
+17:11:15 <dag> (indeed)
+17:11:48 <dag> next topic
+17:11:53 <nitzmahone> It's on the pile, but not sure when we'll get to it (mattclay and I might need to co-locate for a few days to get it don)
+17:12:29 <dag> you can write the integration tests to test the new infra then :)
+17:12:41 <dag> kill two birds with one playbook
+17:13:10 <nitzmahone> While I'd really like to keep a simple webserver that can be embedded in the tests for #25420, writing one probably isn't the best use of any of our time. I could probably get it working within an hour or so, though..
+17:13:35 <dag> I think we need gundalow/mattclay's feedback on this on
+17:13:36 <dag> one
+17:14:00 <nitzmahone> Yeah. I don't really want to do something as heavyweight as a go server either though
+17:14:18 <dag> if we are looking for something efficient, maybe the go-option is not that bad if that can be made to run with little effort
+17:14:28 <dag> is that heavy ?
+17:14:31 <nitzmahone> It's basicallly like, "what will be the fastest and most robust", which kinda brings me back to bespoke server on HttpListener
+17:14:42 <dag> hmm
+17:14:45 <nitzmahone> It's a several meg download IIRC, so just one more thing to break
+17:14:54 <dag> ah, leave it then
+17:15:05 <dag> IIS infra is also not an option
+17:15:32 * dag couldn't find anything off-the-shelve that would fit my needs
+17:15:34 <nitzmahone> Yeah, too slow to start up (though if we end up doing tests for the win_iis_* modules anyway ... )
+17:15:51 <nitzmahone> (I mean too slow because of installing the windows features)
+17:15:56 <dag> right
+17:16:18 <nitzmahone> #topic https://github.com/ansible/community/issues/153#issuecomment-307416504
+17:16:31 <nitzmahone> I really don't think there's anything safe we can do here
+17:16:46 <nitzmahone> Sneaky retries are the devil
+17:16:57 <dag> nitzmahone: but these are not really retries
+17:17:03 <dag> in the sense something else may have worked
+17:17:23 <dag> when we get a Connection refused, there was nothing queued IMO
+17:17:34 <nitzmahone> For "connection refused" maybe, but that's not the common case (connection closed is)
+17:17:34 <dag> there's no unknown state
+17:17:42 <sivel> also, fwiw, with the ssh connection, we have a setting for retries, whether or not that is fully applicable here
+17:17:46 <dag> yeah I agree, that's why I opened this one specifically
+17:17:54 <nitzmahone> sivel: yeah, and I raised the same objection there ;)
+17:17:58 <dag> I want to fix this Connection refused issue
+17:18:08 <nitzmahone> Connection Refused is definitely retryable
+17:18:15 <sivel> well, by default it's no-retries, and has to be enabled, so no sneaky retries by default
+17:18:31 <dag> nitzmahone: but I noticed from the error message that we hit max-retries
+17:18:42 <dag> so if there's not retries, you mean we hit 1 :-D
+17:19:08 <nitzmahone> I think the issue is that requests/urllib3 may not always be giving us a new connection object in that case
+17:19:38 <nitzmahone> I don't have a clean repro for that behavior- I've never hit it myself
+17:19:51 <nitzmahone> (so it's hard for me to experiment with fixes)
+17:20:07 <dag> My theory is that when Windows is being installed and we configure WinRM as a runonce script from VM customizations, either our script, or Windows enabled, and then restarts WinRM so if we are unlucky, it appears to work, and when we start to use it suddenly is down briefly
+17:20:17 <nitzmahone> The case I always hear about is the SSL connection getting wedged and timing out
+17:20:38 <nitzmahone> ... and I'll stand firm in my opinion of on no retries in that case
+17:20:44 <dag> well, I am seeing mostly this one, but in our lab environment we recreate VMs a lot
+17:20:54 <dag> why ?
+17:21:16 <dag> Connection refused means it failed to do something, there's nothing lingering
+17:21:20 <nitzmahone> (the hung connection + timeout case, not the refused case)
+17:21:24 <dag> ah ok
+17:21:28 <dag> I agree
+17:21:48 <dag> again, I am only looking for a fix for Connection refused here
+17:22:05 <nitzmahone> So do you think it's a race on the WinRM/HTTP.sys startup?
+17:22:12 <dag> maybe you can show me where I should be testing
+17:22:15 <dag> yes
+17:22:24 <dag> and I think it may solve our issue with SCVMM install too
+17:22:39 <dag> we are using win_psexec there to avoid something similar
+17:23:35 <nitzmahone> IIRC SCVMM install bounces the TCP stack, so unless you're using async there, this could potentially help with one class of failure, but might just expose another
+17:23:57 <dag> bouncing the TCP stack ?
+17:24:05 <nitzmahone> Maybe not, if psexec is working for you (maybe just bounces the HTTP service)
+17:24:47 <dag> so I'd like to give it a try with your guidance
+17:24:57 <dag> then we can see if this holds any merit or not
+17:25:01 <nitzmahone> There are a few Microsoft installers that plug things into the network filter driver stack and bounce the connections to get everything working again, SCVMM is one of them IIRC.
+17:25:18 <dag> or worst case, point people at it if they have the same issue, maybe that feedback might prove useful then too
+17:25:31 <nitzmahone> It'd definitely be something we'd have to do at the pywinrm transport level-
+17:25:50 <dag> yeah, so I talk to jborean93 ?
+17:25:54 <nitzmahone> potentially even deeper into requests/urllib3, depending on how well we can find out
+17:26:02 <nitzmahone> Either way
+17:26:38 <nitzmahone> The important thing is getting a 100% reproducible test, otherwise we'll never know.
+17:28:09 <nitzmahone> Easiest thing there might be to have Ansible run an async command that will return, wait a second, then bounce the TCP stack, followed by a raw task or something.
+17:28:14 <dag> yup
+17:28:50 <dag> reproducing by enabling/disabling the firewall briefly, maybe ?
+17:29:00 <nitzmahone> So like async raw "sleep 1; <#down network adapter#> sleep 10; <# up network adapter #>"
+17:29:29 <nitzmahone> Of course do this on something you can walk up and reenable NIC if necessary. :)
+17:29:40 <dag> VMs :-)
+17:30:10 <nitzmahone> So if you can get a case there that fails reliably with connection refused, we've got something to try fixes against.
+17:30:27 <dag> ok
+17:30:49 <nitzmahone> You might be able to make it *more* reliable, but depending  on what it's doing, there may be downstream failure points you can't see yet
+17:31:02 <dag> my fix currently is to pause 15 seconds after wait_for_connection before doing setup
+17:31:15 <nitzmahone> Willing to give it a shot, anyway, if you can come up with a good repro
+17:31:18 <dag> but that's bandaid
+17:31:22 <nitzmahone> yup
+17:31:45 <nitzmahone> These are real-world issues though, so agree we should have a better answer than "don't do that" or sleeps.
+17:32:05 <nitzmahone> OK, we're at time- anything else burning?
+17:32:28 <dag> nope, not really
+17:32:31 <nitzmahone> #action dag to build "connection refused" reproduction for internal pywinrm retries of connection refusals
+17:32:42 <nitzmahone> Cool- well, have a great weekend, and we'll see you in London!
+17:32:58 <nitzmahone> #endmeeting

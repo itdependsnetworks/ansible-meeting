@@ -1,0 +1,139 @@
+19:00:15 <thaumos> #startmeeting Ansible Core Meeting
+19:00:15 <zodbot> Meeting started Tue Jun 13 19:00:15 2017 UTC.  The chair is thaumos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:00:15 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:00:15 <zodbot> The meeting name has been set to 'ansible_core_meeting'
+19:00:20 <thaumos> #chair thaumos
+19:00:20 <zodbot> Current chairs: thaumos
+19:00:42 * shertel waves
+19:00:46 <thaumos> #chair shertel
+19:00:46 <zodbot> Current chairs: shertel thaumos
+19:00:50 <samdoran> waves back
+19:00:56 <thaumos> #chair samdoran
+19:00:56 <zodbot> Current chairs: samdoran shertel thaumos
+19:01:08 <funzo> o/
+19:01:08 <alikins> bluup
+19:01:22 <thaumos> #chair funzo alikins
+19:01:22 <zodbot> Current chairs: alikins funzo samdoran shertel thaumos
+19:02:04 * gundalow waves
+19:02:07 <thaumos> #chair gundalow
+19:02:07 <zodbot> Current chairs: alikins funzo gundalow samdoran shertel thaumos
+19:03:59 <thaumos> @alikins, do you want more of a quorum, maybe of 12, do talk about your two PR's?
+19:05:12 <thaumos> the fact related ones
+19:05:14 <alikins> maybe... mostly wanted to get a feel if those two prs add 'too much' storage fact info
+19:05:38 <jtanner> 0/
+19:05:44 <thaumos> #chair jtanner
+19:05:44 <zodbot> Current chairs: alikins funzo gundalow jtanner samdoran shertel thaumos
+19:05:51 <thaumos> #topic Open Floor
+19:06:13 <jtanner> for anyone that hasn't seen it yet: http://tannerjc.net/wiki/index.php?title=Ansible_Developer_Lightbulb
+19:06:34 <jtanner> although i think the current list of chairs has seen it
+19:08:01 <jtanner> quiet meeting today
+19:08:23 <thaumos> #info Everyone take a look at the Ansible Developer Lightbulb wiki created by el @jtanner
+19:08:29 <thaumos> #link http://tannerjc.net/wiki/index.php?title=Ansible_Developer_Lightbulb
+19:08:30 <samdoran> On my list.
+19:08:52 <robinro> I got a PR to discuss if there's nothing else: https://github.com/ansible/ansible/pull/25132
+19:08:58 <thaumos> #chair robinro
+19:08:58 <zodbot> Current chairs: alikins funzo gundalow jtanner robinro samdoran shertel thaumos
+19:09:12 <thaumos> #topic ansible/ansible#25132
+19:09:14 <thaumos> #link https://github.com/ansible/ansible/pull/25132
+19:09:35 <robinro> The idea is to automatically tag each role with its name
+19:09:45 <jtanner> i dunno ... that almost seems like it needs a proposal
+19:09:49 <thaumos> @bcoca isn't here.
+19:10:15 * jtanner opens the issue
+19:10:15 <samdoran> Agree it's a common pattern, though.
+19:10:27 <robinro> can anyone here think of a usecase where rolenames are used as tags and not attached to the role?
+19:10:28 <samdoran> Definitely seems proposal-worthy since it's adding a new default behaviour.
+19:10:32 <thaumos> And I agree with @jtanner, @robinro.  Could you draft a proposal and give some more use cases around this.
+19:10:46 <thaumos> Agreed it's a common pattern, but needs more eyes on it.
+19:10:57 <jtanner> do we allow spaces in role names?
+19:11:05 <robinro> ok, I can make it a proposal
+19:11:14 <jtanner> and does quoting around the tag on the cli work?
+19:11:16 <alikins> robinro: +1 on the idea of autotagging role names as tags
+19:11:20 <thaumos> Also, I am leaning more towards bcoca's suggestion of boolean. However, I feel that's even more magical.
+19:11:29 <samdoran> If you had extra pre or post tasks you also wanted to run with the role, you would add the tag to those tasks.
+19:11:36 <thaumos> #action robinro to draft a proposal and link back to the PR.
+19:11:46 <samdoran> That's a way to "augment a role" without modifying it, if you're using an external role, for example.
+19:12:06 <samdoran> But I don't see how that would be problematic to what you're proposing.
+19:12:37 <samdoran> The more appropriate question is: would you ever want tasks in a role to _not_ have the role name tag?
+19:12:37 <jtanner> i'm okay with the concept, but i know some people are really anal about their tagging
+19:13:08 <samdoran> <-- this guy is anal about tagging
+19:13:21 <robinro> :)
+19:13:46 <thaumos> honestly, a lot can be said about tagging + roles + inventory grouping naming... a lot of the times the three go together.
+19:13:59 <alikins> aside from adding tags to role params, is there a preferred way to set a tag on an entire role?
+19:14:03 <jtanner> also, what happens when they use the tags keyword? does it auto-include the role name or exclude?
+19:14:15 <thaumos> I, however got to a point where I had "sub-tags" if you will making tags more action based rather than tagged to a role
+19:14:19 <jtanner> alikins:  - { role: webserver, tags: [ 'webserver' ] }
+19:14:38 <alikins> that is 'adding the tags to role params'
+19:15:21 <samdoran> jtanner: Yes, we allow spaces in role names (at least with 2.3)
+19:15:38 <samdoran> which is a bit crazy, but cool
+19:15:59 <robinro> do spaces in tags work too?
+19:16:34 <jtanner> "you may wish to assign tags to the roles you specify. You can do so inline: [...] Note that this tags all of the tasks in that role with the tags specified, overriding any tags that are specified inside the role. "
+19:16:44 <jtanner> per http://docs.ansible.com/ansible/playbooks_roles.html
+19:17:25 <robinro> the "override" part is wrong afaik
+19:17:28 <jtanner> so if the role name is auto-added, will that overwrite existing tags?
+19:17:28 <samdoran> Interesting. I thought it was additive not exclusive.
+19:17:30 <alikins> could also just add --roles cli option that does the same thing as --tags the_tags_i_add_to_role_params
+19:17:52 <jtanner> well, i never trust the docs to be current or right
+19:17:58 <jtanner> so i have to test
+19:18:04 <jtanner> i would* have to test
+19:18:43 <robinro> I also like `--roles` as an argument; one could also run `ansible --roles foo target` to just run one role quickly, maybe even directly from galaxy
+19:18:54 <samdoran> Spaces in tags appear to work as well. Blowing my mind with the spcaes.
+19:19:02 <jtanner> and someone needs to do an audit on tests to make sure that role tagging continues to function
+19:19:27 <thaumos> spaces seem unnecessary to me, but whatevs
+19:19:40 <thaumos> i digress
+19:19:44 <jtanner> the project has been very anti new cli opts from day 1
+19:20:08 <thaumos> anywho, are we good on this topic?  We have an action item for robinro to draft a proposal.
+19:20:08 <jtanner> things might be different now, but adding a new opt would also entail a proposal imo
+19:20:14 <ryansb> Hold on - direct from galaxy seems like a poor feature
+19:20:25 <ryansb> basically the "curl | sudo bash" of ansible
+19:20:39 <thaumos> #chair ryansb
+19:20:39 <zodbot> Current chairs: alikins funzo gundalow jtanner robinro ryansb samdoran shertel thaumos
+19:20:40 <jtanner> i don't think that's what he was really suggesting
+19:21:03 <jtanner> but, i've written a PR for something similar =P
+19:21:21 <samdoran> Confirmed: tags at the role level are additive.
+19:21:40 <robinro> I'll set up the proposal and we can continue there; I think it's enough input for now
+19:21:40 <jtanner> and we just need to make sure that continues to be the case with the new auto-tag by name feature
+19:22:22 <thaumos> #topic Open Floor
+19:22:31 <jtanner> samdoran: plz file docs bug or PR on playbooks_roles.html
+19:22:55 <thaumos> PR first, bug second 😝
+19:23:11 <jtanner> i can't dictate what people feel comfortable with =P
+19:23:16 <samdoran> I'll just do a PR.
+19:24:05 <thaumos> well you manager types are king of that.
+19:24:10 <thaumos> =P
+19:24:28 <alikins> re https://github.com/ansible/community/issues/162#issuecomment-307135787  (https://github.com/ansible/ansible/pull/25454 and https://github.com/ansible/ansible/pull/25448).  Those are rebases of some community prs to add more info about storage devices.
+19:24:54 <thaumos> so you do want to talk about them @alikins?
+19:25:35 <alikins> the patches themselves seem okay to me, but I haven't tested them with unusual/large amount of storage storage setup.  Is it too much info?
+19:26:01 <alikins> thaumos sure
+19:26:08 <thaumos> I don't think so for #25454
+19:26:15 <thaumos> I think that's valid factual info
+19:26:42 <thaumos> and #25448
+19:26:52 <jtanner> what are these PRs solving? just code cleanup?
+19:27:02 <thaumos> No I think it's adding that info to facts
+19:27:16 <alikins> afaict the info added in #25454 should be there on posix boxes, so compat shouldn't be a problem
+19:27:28 <jtanner> ah, okay first commit in first pr is a cleanup, i see rest are adding stuff
+19:28:22 <jtanner> *shrug*, shipit
+19:28:23 <thaumos> #topic discussing ansible/ansible#25454 and ansible/ansible#25448
+19:29:00 <thaumos> Yeah, I'd say shipit as well.  For instance, having 25454 for /etc/fstab is helpful
+19:29:01 <jtanner> we have freebsd and osx in the ci pipeline, so it's not like we won't know if this busts those
+19:29:35 <alikins> works for me
+19:31:13 <alikins> more concerned about the folks with 2000 LUN's  or other wacky storage setups, but one way to find out...
+19:31:48 <thaumos> heh
+19:31:54 <thaumos> good point
+19:32:02 * jtanner tries not to work with those sorts of people anymore
+19:32:22 <thaumos> just wait till we see the first person nfs mounting ansible
+19:33:55 <alikins> prs merged now
+19:36:02 <thaumos> 👍
+19:36:08 <thaumos> #topic Open Floor
+19:36:41 <thaumos> welcome @samdoran to the other side of madness!
+19:36:59 <samdoran> Happy to be here.
+19:37:24 <nitzmahone> Woot!
+19:37:27 <robinro> Proposal on autotagging roles open if you want to comment: https://github.com/ansible/proposals/issues/66
+19:37:39 <thaumos> thanks @robinro
+19:39:46 <thaumos> Alright, well... if no one has anything else to bring up.  I'll close in 2
+19:40:20 <gundalow> oh
+19:40:44 <gundalow> #info Final agenda for Contributor Summit is live https://public.etherpad-mozilla.org/p/ansible-summit-june-2017-agenda
+19:40:47 <gundalow> #chairs
+19:40:48 <gundalow> #chair
+19:40:48 <zodbot> Current chairs: alikins funzo gundalow jtanner robinro ryansb samdoran shertel thaumos
+19:41:02 * gundalow looks around and doesn't see any non-core people
+19:41:05 <gundalow> that's all I had
+19:41:23 <thaumos> #endmeeting

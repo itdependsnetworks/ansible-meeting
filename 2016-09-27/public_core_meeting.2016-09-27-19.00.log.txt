@@ -1,0 +1,52 @@
+19:00:49 <gundalow> #startmeeting Public Core Meeting
+19:00:49 <zodbot> Meeting started Tue Sep 27 19:00:49 2016 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:00:49 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:00:49 <zodbot> The meeting name has been set to 'public_core_meeting'
+19:01:18 <gundalow> #chair abadger1999 bcoca jimi|ansible nitzmahone
+19:01:18 <zodbot> Current chairs: abadger1999 bcoca gundalow jimi|ansible nitzmahone
+19:02:40 <gundalow> #topic Open Floor
+19:02:43 * jimi|ansible waves
+19:03:21 <gundalow> Nothing in todays agenda (so far)
+19:03:40 <gundalow> Did the discussion arount auauthorized_key.py get resolved from last week https://github.com/ansible/community/issues/124
+19:07:04 <abadger1999> gundalow: I think the consensus was agreement with resmo
+19:07:22 <abadger1999> but no one took the followup.
+19:07:24 <gundalow> abadger1999: cool, I didn't spot anything on the ticket, so wasn't sure if it got covered
+19:09:31 <abadger1999> #action  abadger1999 to close tickets and PRs as wontfix with explanation that we think the authorized_key module should fail rather than create a home dir.  Creating a home dir should be done by another task.
+19:09:38 <abadger1999> #undo
+19:09:38 <zodbot> Removing item from minutes: ACTION by abadger1999 at 19:09:31 : abadger1999 to close tickets and PRs as wontfix with explanation that we think the authorized_key module should fail rather than create a home dir.  Creating a home dir should be done by another task.
+19:09:51 <gundalow> #info https://github.com/ansible/community/issues/124
+19:10:09 <abadger1999> #action  abadger1999 to close tickets and PRs for authorized_keys recursively creating directories as wontfix with explanation that we think the authorized_key module should fail rather than create a home dir.  Creating a home dir should be done by another task.
+19:17:39 <abadger1999> gundalow, jimi|ansible: Do we want to review the dimensiondata module_util PR?
+19:18:05 <abadger1999> I'm guessing that's something that needs to wait until 2.2 branches?
+19:18:29 <gundalow> abadger1999: aye, I was gona ask about that
+19:18:48 <jimi|ansible> abadger1999: i said last week we're not doing any new module reviews until we do rc1 for 2.2
+19:19:02 * gundalow will add a comment
+19:19:06 <abadger1999> Cool.
+19:19:22 <jtanner> i was pinged about this ticket today https://github.com/ansible/ansible-modules-core/issues/1124
+19:20:56 <abadger1999> Is current behaviour, umask dependent?
+19:21:02 <jtanner> checking
+19:22:26 <jtanner> mode not preserved
+19:23:06 <jtanner> should i work on it for 2.2 ?
+19:23:17 <abadger1999> I'm not sure about backwards compat but I would have found preserving mode it more intuitive and useful when I first started out with ansible.
+19:23:27 <abadger1999> Could probably implement it in the action plugin.
+19:23:41 <jtanner> most of the code is probably in the action plugin
+19:23:42 <abadger1999> If mode not in the params: set mode = to mode of the file.
+19:24:34 <jtanner> so ... 2.2 ... 2.3 ?
+19:24:45 <abadger1999> jimi|ansible: ^
+19:26:05 <abadger1999> I guess... if we consider it a bugfix (this is the way it should always have been) then 2.2.  If we think it's a feature (too big a change; add a preserve_mode=(True|False) parameter to implement this) then 2.3.
+19:26:27 <jtanner> i'll work on the PR and then let someone decide when to merge
+19:26:27 <abadger1999> the code should be pretty short and non-invasive
+19:26:28 <jtanner> how about that
+19:26:50 <abadger1999> Works for me.
+19:27:23 <jtanner> assigned to myself
+19:28:11 <jtanner> i have nothing else to add to the agenda
+19:28:35 <abadger1999> If there's enough of us here we can discuss: https://github.com/ansible/ansible/pull/17768/files
+19:30:01 <jtanner> ready for dharmabumstead to review/edit/merge imo
+19:30:03 <gundalow> (I may have to go offline shortly) agenda for Thursday is https://github.com/ansible/community/issues/126
+19:30:05 <abadger1999> Quite a bit of "What branch can this change be applied to right now" has been done by feel.  This would help to set expectations and guidance about that.
+19:31:38 <jtanner> set for 2.2 milestone and assign to scott ?
+19:32:10 <jimi|ansible> if a bugfix requires a minor new feature, i'm ok with that being added at this point btw
+19:32:17 <jimi|ansible> a new param is very very minor
+19:38:52 <jtanner> so ... we done here?
+19:39:16 <gundalow> Agenda for Thursday is https://github.com/ansible/community/issues/126
+19:39:18 <gundalow> #endmeeting

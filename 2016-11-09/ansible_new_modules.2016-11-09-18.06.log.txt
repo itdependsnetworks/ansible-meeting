@@ -1,0 +1,61 @@
+18:06:04 <gundalow> #startmeeting Ansible New Modules
+18:06:04 <zodbot> Meeting started Wed Nov  9 18:06:04 2016 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+18:06:04 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+18:06:04 <zodbot> The meeting name has been set to 'ansible_new_modules'
+18:06:19 <gundalow> #chair abadger1999 alikins bcoca jimi|ansible jtanner mattclay nitzmahone
+18:06:19 <zodbot> Current chairs: abadger1999 alikins bcoca gundalow jimi|ansible jtanner mattclay nitzmahone
+18:06:22 <abadger1999> Greetings
+18:06:30 <nitzmahone> yo
+18:06:43 * mattclay waves
+18:06:52 <ryansb> hi
+18:06:53 <gundalow> #topic AWS ELB modules
+18:06:58 <gundalow> shaharmor: Hi :)
+18:07:01 <shaharmor> Hi
+18:07:07 <gundalow> #info https://github.com/ansible/community/issues/92#issuecomment-259465655
+18:07:23 <shaharmor> As i wrote in the Issue, there are new modules that require some attention
+18:07:52 <shaharmor> I have fixed many bugs locally but wasn't sure if I should wait for the existing PRs maintainers to handle it or create a new one
+18:08:28 <shaharmor> Because I haven't seem any update on their side for a few days now
+18:09:13 <gundalow> "a few days" isn't that long a time for this stuff. People are often doing this in the evenings along side their day jobs
+18:09:20 <ryansb> shaharmor: it's much easier for us to review when the full new module is in one PR (I see you've got two outstanding w/ the original contributor)
+18:09:31 <ryansb> is wimnat here?
+18:09:58 <shaharmor> The original contributor is wimnat, then there are some fixes from naslanidis, and also some fixes from me
+18:10:07 * resmo waves
+18:11:07 <jtanner> hi
+18:11:50 <shaharmor> ryansb: I understand that, so should I open a new PR with all the fixes merged together?
+18:13:03 <ryansb> I think so. Definitely retain authorship w/ wimnat, since they wrote a lot of it based on looking at the PRs
+18:13:30 <shaharmor> Yup
+18:13:45 <shaharmor> Ok I'll do that and come back here next week with the updates :)
+18:13:50 <ryansb> Also, minor thing: the second module is "elb_target_group", but since that is specific to App load balancer, I think it would make more sense to call it "alb_target_group"
+18:14:04 <shaharmor> Regarding that
+18:14:07 <ryansb> shaharmor: also @ me (also ryansb on github) when you open that so I can help review
+18:14:27 <shaharmor> I think that since in AWS it appears under ec2, it should start with ec2_
+18:14:41 <shaharmor> so something like ec2_alb & ec2_target_group
+18:14:58 <shaharmor> I don't think that the target group is specifically under alb
+18:15:26 <shaharmor> ryansb: will do
+18:15:33 <ryansb> So that's a bit of a point of contention, since many AWS services don't fall under ec2 (like, an "ec2_kinesis" module would be odd)
+18:16:03 <ryansb> maybe prefixing with aws_ would be good practice, but honestly we've been bad about that thus far (for example, cloudformation and cloudformation_facts)
+18:16:04 <shaharmor> But kinesis doesn't appear under ec2
+18:16:22 <ryansb> Target groups are under ECS I thought
+18:16:26 <shaharmor> No
+18:16:40 <ryansb> I have to research the new ALB more before I review, obviously
+18:16:59 <shaharmor> http://imgur.com/a/ZyRDJ
+18:17:14 <shaharmor> this is the sidebar of AWS when you're viewing the ec2 section
+18:17:46 <shaharmor> It might appear under ECS as well
+18:17:51 <shaharmor> I didn't check
+18:18:56 <shaharmor> Anyway the name is not the main part here, we can decide about it later
+18:19:07 <ryansb> So yeah, ec2_alb (or ec2_application_load_balancer) and ec2_alb_target_group work for me
+18:19:25 <ryansb> yeah, so the main bit is: consolidate PRs, and then we can get a proper review on
+18:19:35 <shaharmor> Ok thanks
+18:20:09 <shaharmor> Have a good evening
+18:26:00 <ryansb> any other modules?
+18:28:15 <gundalow> Nothing else on the agenda for the last 21 days
+18:28:53 <gundalow> #topic Open FLoor
+18:28:57 <gundalow> #topic Open Floor
+18:30:58 <abadger1999> Merging this meeting into the core public meetings starting next week?
+18:31:45 <gundalow> +1
+18:32:36 <abadger1999> Okay.  That's a thing.  Gonna happen.  So come tuesday/thursday if there's something you need to bring up :-)
+18:33:52 <gundalow> \o/
+18:41:12 <ryansb> alright, if nobody has stuff for open floor
+18:41:15 <ryansb> #endmeeting
+18:41:24 <ryansb> oh, not a chair. gundalow ^
+18:42:31 <gundalow> #endmeeting

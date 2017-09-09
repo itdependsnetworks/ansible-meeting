@@ -1,0 +1,90 @@
+15:07:07 <alikins> #startmeeting Core team meeting 2016-12-01
+15:07:07 <zodbot> Meeting started Thu Dec  1 15:07:07 2016 UTC.  The chair is alikins. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:07:07 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:07:07 <zodbot> The meeting name has been set to 'core_team_meeting_2016-12-01'
+15:08:14 <alikins> #chair abadger1999 bcoca gregdek gundalow jimi|ansible jtanner mattclay mordred nitzmahone rbergeron Shrews
+15:08:14 <zodbot> Current chairs: Shrews abadger1999 alikins bcoca gregdek gundalow jimi|ansible jtanner mattclay mordred nitzmahone rbergeron
+15:08:26 <jtanner> hrm
+15:08:29 * gundalow waves
+15:08:31 <jtanner> guess i forgot about this one
+15:08:34 * bcoca snores
+15:08:56 <bcoca> this is the 'friendly to non USA users but not west coast' meeting
+15:08:57 * nitzmahone blink, blink
+15:09:04 <gundalow> Is there anything left from https://github.com/ansible/community/issues/140
+15:09:29 <gundalow> oh, I wasn't here on Tuesday, did my comment about more user friendly messages make sense
+15:10:07 * mattclay waves
+15:10:15 * resmo_ waves
+15:11:14 <alikins> gundalow: sort of, dont see any #agreed or #action in the logs though
+15:13:06 * mordred waves
+15:13:13 <resmo_> mattclay: I saw your changes in integration testing, is this still WIP?
+15:13:18 <alikins> https://meetbot.fedoraproject.org/ansible-meeting/2016-11-29/ansible_public_core_meeting.2016-11-29-19.10.html  https://meetbot.fedoraproject.org/ansible-meeting/2016-11-29/ansible_public_core_meeting.2016-11-29-19.10.log.html
+15:14:03 <mattclay> resmo_: It's been deployed to ansible/ansible, so it's live.
+15:14:36 <mattclay> resmo_: After the repo merge it will apply to module PRs as well.
+15:15:47 <alikins> gundalow: I think there was some agreement that it would be useful to show sys.executable or ansible_python_path?(sic)
+15:16:02 <gundalow> cool, thanks
+15:16:27 <alikins> ansible-test seems like a good topic
+15:16:38 <resmo_> I would have 1,2 question regarding it. basically for cloud/cloudstack/* integration test against a docker container, in which the api simulator runs
+15:16:39 <gundalow> #topic ansible-test
+15:16:51 <gundalow> alikins: What do you want to know?
+15:17:47 <mattclay> resmo_: It was built with adding support for other tests in mind, so we should be able to add support for cloudstack easily enough.
+15:18:04 <alikins> just an overview and how to use it, future plans, extension points, etc
+15:18:27 <mattclay> If you have a docker container ready for running the cloudstack tests, I'll look at integrating it with ansible-test.
+15:18:46 <alikins> maybe how it will be used during/post repo merge
+15:19:38 <mattclay> I think an overview of how to use it is best handled by docs, which I have on my list to write very soon. :)
+15:20:05 <resmo_> that would be great, ;)
+15:20:42 <mattclay> As for repo merge, there shouldn't be anything special we need to do. It was written with the repo merge in mind.
+15:21:00 <alikins> mattclay: anything you'd like to have people look at and/or test?
+15:21:42 <gundalow> Keeping an eye on it's outputs and if anything looks even slightly wrong have more of a look and let us know
+15:22:28 <gundalow> We'd prefer to write docs and see if that answers all questions, rather than do a demo on it
+15:23:19 <mattclay> Keep an eye out for the correct tests being run on Shippable for PRs, since ansible-test selectively runs tests based on changes.
+15:24:00 <mattclay> This will be more noticeable for module PRs, as they should generally run far fewer tests than code changes to the core of ansible.
+15:24:09 <mattclay> Of course after the repo merge.
+15:24:16 <alikins> #info ansible-test is live in devel branch
+15:24:50 <alikins> #info re ansible-test <mattclay> Keep an eye out for the correct tests being run on Shippable for PRs, since ansible-test selectively runs tests based on changes.
+15:24:54 <mattclay> If you do try out ansible-test, I suggest installing and activating argcomplete. It makes it much nicer to work with.
+15:25:08 <gundalow> +1 to argcomplete
+15:25:24 <alikins> #info <mattclay> If you do try out ansible-test, I suggest installing and activating argcomplete. It makes it much nicer to work with.
+15:25:45 <mattclay> For any questions, issues, etc., please reach out to me on IRC, or gundalow, if I'm not around.
+15:27:18 <mattclay> There are still some incomplete features and known issues I will be working on. I'll try to document those as well over the next week or so.
+15:28:31 <alikins> check out the ansible-test code (test/runner/*) if you get the chance, its quite nice
+15:29:07 <mattclay> Does anyone have questions?
+15:29:19 <jtanner> i probably will once i need to use it
+15:30:52 <mattclay> Eventually the old make based test running will go away. It's being maintained in parallel for a little while, until people have had some time to work with ansible-test.
+15:32:24 <alikins> mattclay: how would I run a subset of unit tests with ansible-test?
+15:33:19 <abadger1999> is that bash arg complete only?
+15:34:01 <abadger1999> bcoca and I both run zsh (but I haven't written any arg completion stuff for it yet... have a book I need to read sometime.)
+15:34:04 <mattclay> ansible-test units test/units/plugins/
+15:34:12 <mattclay> ^ That will test just the plugins unit tests.
+15:34:17 <mattclay> ansible-test units docker
+15:34:19 <bcoca> i run zsh?
+15:34:27 <mattclay> ^ That will run only the docker module unit tests.
+15:34:55 <mattclay> argcomplete should support zsh, but I haven't tested it.
+15:36:06 <mattclay> The docs say "limited support for zsh", but I'm not sure how limited that is.
+15:36:47 <mattclay> If you don't want to install the requirements globally, you can add the "--tox" option to ansible-test to have it use tox when running the unit tests.
+15:37:04 <alikins> gundalow: do you think https://github.com/ansible/community/issues/140#issuecomment-262987471 got covered sufficiently in the last meeting?
+15:37:05 <bcoca> i have zsh, but normally run bash (i have fish installed, but that i would like to forget) docker tests dont work for me anyways due to other issues
+15:37:13 <mattclay> By default that tests against python 2.6, 2.7 and 3.5, but you can choose the python version with the --python option.
+15:37:49 <mattclay> bcoca: What other issues? The docker tests should work on more systems now than the previous implementation.
+15:38:01 <alikins> any other topics to cover? Any agenda additions?
+15:38:25 <gundalow> alikins: the use of with_* and bare variables, I think so. I've seen some PR from agaffney to fix bits already. Thanks agaffney :)
+15:38:37 <bcoca> alikins:  " required for this module" seems to be in almost all of those messages, easy to append python info from controller if we see that
+15:38:48 <abadger1999> bcoca: ah sorry -- during one ticket a while ago I thought you said you ran zsh.
+15:39:15 <bcoca> abadger1999: i might have been running it for that ticket ;-)
+15:39:19 <abadger1999> :-)
+15:39:39 <bcoca> i have used zsh as main shell before, just prefer bash (i normally run what we use commonly, which in this job is 'nothing')
+15:39:50 <jtanner> bash or bust
+15:40:00 <bcoca> if im in zsh shop i run zsh, if in ksh shop i look for new job
+15:40:09 <jtanner> been there ...
+15:40:10 <alikins> gundalow: I don't see a pr related to bare variables, got a link?
+15:40:31 <bcoca> i believe we merged already
+15:42:30 <alikins> #topic Open floor
+15:43:49 <abadger1999> Anyone else have questions, comments, or requests?
+15:43:51 <alikins> anyone have any issues/prs/proposals to discuss? questions? (repo merge? persistent connections? etc?)
+15:49:07 <gundalow> Nothing else from me apart from
+15:49:15 <gundalow> NO IRC MEETINGS NEXT WEEK
+15:50:27 <abadger1999> Anyone want to give a quick review to: https://github.com/ansible/ansible/pull/18698
+15:50:36 <abadger1999> "ssh-keyscan can fail to find keys for a host"
+15:53:08 <abadger1999> Thanks jtanner!
+15:54:30 <alikins> #help <abadger1999> Anyone want to give a quick review to: https://github.com/ansible/ansible/pull/18698 "ssh-keyscan can fail to find keys for a host"
+15:55:44 <alikins> Looks like jtanner resolve https://github.com/ansible/ansible/pull/18698 already.
+16:02:03 <alikins> #endmeeting

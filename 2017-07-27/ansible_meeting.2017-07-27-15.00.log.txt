@@ -1,0 +1,126 @@
+15:00:18 <thaumos> #startmeeting Ansible meeting
+15:00:18 <zodbot> Meeting started Thu Jul 27 15:00:18 2017 UTC.  The chair is thaumos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:00:18 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:00:18 <zodbot> The meeting name has been set to 'ansible_meeting'
+15:00:32 <thaumos> someday I'll stop being trigger happy with that cmd
+15:01:02 <chillysurfer> :-)
+15:01:07 <thaumos> #chair chillysurfer
+15:01:07 <zodbot> Current chairs: chillysurfer thaumos
+15:01:18 * mkrizek here
+15:02:07 <thaumos> #chair mkrizek
+15:02:07 <zodbot> Current chairs: chillysurfer mkrizek thaumos
+15:03:03 <abadger1999> Bom dia!
+15:03:57 <thaumos> #chair abadger1999
+15:03:57 <zodbot> Current chairs: abadger1999 chillysurfer mkrizek thaumos
+15:04:18 <bcoca> ciao
+15:04:25 <thaumos> #chair bcoca
+15:04:25 <zodbot> Current chairs: abadger1999 bcoca chillysurfer mkrizek thaumos
+15:04:34 <thaumos> talofa
+15:04:42 <thaumos> ^^ Samoan 😄
+15:04:49 * mattclay waves
+15:04:57 <thaumos> #chair mattclay
+15:04:57 <zodbot> Current chairs: abadger1999 bcoca chillysurfer mattclay mkrizek thaumos
+15:06:24 * gundalow waves
+15:06:31 <thaumos> #chair gundalow
+15:06:31 <zodbot> Current chairs: abadger1999 bcoca chillysurfer gundalow mattclay mkrizek thaumos
+15:06:31 * bcoca is using bench, not chair
+15:06:40 <gundalow> in another meeting, ping me for attention
+15:06:46 <thaumos> @gundalow
+15:07:13 * gundalow looks
+15:07:16 * thaumos waves
+15:08:03 <thaumos> @abadger1999, I noticed I missed this one on Tues, https://github.com/ansible/ansible/issues/17962
+15:08:40 <abadger1999> You didn't miss it; I added it post-meeting
+15:08:44 <thaumos> gotcha
+15:08:46 <thaumos> kk
+15:08:49 <abadger1999> Good to discuss now, thouhg :-)
+15:08:59 <thaumos> #topic ansible/ansible#17962
+15:09:04 <thaumos> #link https://github.com/ansible/ansible/issues/17962
+15:10:01 <abadger1999> So there's a PR requesting to update the callback plugin API to let the triggers that are errors use stderr instead of stdout.
+15:10:25 <bcoca> well, not errors 'failed', there is a bit of a difference there
+15:10:43 <abadger1999> yeah... something of a difference.
+15:10:56 <abadger1999> i don't think it's precisely correct but there's several different ways we could go with it.
+15:11:10 <abadger1999> Probably best to read what I wrote here: https://github.com/ansible/ansible/pull/17962#issuecomment-317839947
+15:12:42 <abadger1999> We need to first decide if we want callbacks to use stderr, then decide if so, how we want this implementation to be changed.
+15:13:39 <bcoca> i want to extend callbacks to handle all output
+15:13:51 <bcoca> but they cannot in current implementation
+15:14:11 <mattclay> bcoca: +1 to callbacks handling all output
+15:14:51 <bcoca> they need (at least main one) to be loaded earlier, then have most of what we use 'display' for now send an 'event'
+15:15:41 <bcoca> another issue, display is currently very expensive
+15:15:46 <abadger1999> bcoca: <nod> Okay.  And if it's handling all output then it should be able to handle stderr in some shape or form as well.
+15:15:56 <abadger1999> I'm not sure if a callback makes sense though...
+15:16:20 <abadger1999> Debugging, for isntance, isn't conceptually "an event has occurred"... it's more of "here's some info that may be helpful"
+15:16:46 <bcoca> debugging is not normal output, but vvv stuff is
+15:17:03 <abadger1999> yeah,  I think for the most part vvv would be.
+15:17:25 <abadger1999> does vvv need to handle stderr though?
+15:17:26 <bcoca> but can be convinced that all -v + debug be outside of this as it is not normal operation
+15:17:36 <bcoca> no, -v is info, stdout
+15:17:42 <bcoca> warning/deprecation/error is stderr
+15:18:47 <bcoca> but display.display .. we can probably agree should all be changed into 'events'
+15:20:42 <abadger1999> okay.  So you do think warning, deprecation, and error are stderr and should be handled by callbacks i nthe future?
+15:21:58 <bcoca> when possible
+15:22:14 <bcoca> thinking 'top fatal errors' wont be (i.e. initializing cli)
+15:22:27 <abadger1999> bcoca: so when you implement callbacks for the rest of the events, does the proposed changes to the API look compatible with that goal?  Or does it look like it would make it uglier?
+15:23:11 <bcoca> really does not change what he is trying to do, since most of it would be new events and the currrent ones would still be as is
+15:23:53 <bcoca> essentially he wants to force 'failed tasks' to be 'errors' in output, i would not do this by default but fine having a callback that does it
+15:24:34 <abadger1999> <nod>  yeah, I'm okay with a callback doing it too... but it seems like the real question is whether hte API change is a good idea or not.
+15:24:57 <abadger1999> because he could do it 100% in the callback if we don't want to change the API.
+15:25:05 <bcoca> i would say no, no need to change default api to allow for this when callback can do it itself, he just wants it cause its less code on his side
+15:25:33 <abadger1999> Cool.  I'll vote for that as well.
+15:25:48 <mattclay> +1 to not changing the default api
+15:25:57 <abadger1999> Proposal: callbacks using stderr is fine.  But do it without changing the default API
+15:26:08 <abadger1999> Currently for: bcoca, mattclay abadger1999
+15:26:15 <thaumos> +1
+15:27:22 <abadger1999> unanimously +4, I think that's a pretty solid yes.
+15:27:32 <abadger1999> I'll update the PR ticket.
+15:27:36 <thaumos> thx!
+15:27:48 <thaumos> #action abadger1999 to update ticket with decision.
+15:28:29 <thaumos> #topic ansible/ansible#26401
+15:28:40 <thaumos> #link https://github.com/ansible/ansible/pull/26401
+15:30:06 <mattclay> Nice, it has tests. :)
+15:30:34 <thaumos> @bcoca wanted to group_by us into feedback
+15:30:47 <bcoca> meed to write that propsal, i got some code that moves callback to 'cli/__init__ .. but need clear desgin
+15:34:44 <thaumos> This group_by PR lgtm
+15:34:56 <abadger1999> code looks fine.  No opinion on the feature itself.  If bcoca likes the feature then +1 from me.
+15:36:29 <jtanner> shipit
+15:36:48 <thaumos> cool
+15:37:13 <bcoca> k, will merge
+15:37:25 <thaumos> #action bcoca to merge
+15:38:07 <thaumos> #topic ansible/ansible#27312
+15:38:15 <thaumos> #link https://github.com/ansible/ansible/issues/27312
+15:39:20 <bcoca> not sure what the doubt is here
+15:39:20 <abadger1999> In some circumstances the fetch module is currently fetching a file but then reporting that it errored.
+15:39:35 <abadger1999> there's definitely a bug there but we need to decide what that is
+15:39:37 <bcoca> cause checksum fail if dir was specified w/o trailing /?
+15:39:44 <abadger1999> The choices are:
+15:39:55 <abadger1999> * Do not download the ifle in this case
+15:40:03 <abadger1999> * Report success i nthis case.
+15:40:06 <bcoca> if dest is dir w/o slash?
+15:40:25 <abadger1999> Yes... flatten=True dest=/a/directory/with/no/trailing/slash
+15:40:38 <bcoca> i would say 1 as it is not clear if user wants file with that name instead
+15:41:00 <bcoca> but fine with 2 also, since many utilities will 'infer' that you want fiel in dir
+15:41:08 <jtanner> i still think it should check if dir and then fail early
+15:41:09 <bcoca> so +0 either way
+15:41:14 <abadger1999> Cool.  jtanner also thought that was the more obvious option.
+15:41:45 <abadger1999> So looks like a mild +2 for "do not download the file."
+15:41:48 <jtanner> s/obvious/makes fewer assumptions
+15:41:57 <bcoca> true, that is why i slightly lean on that side
+15:42:10 <bcoca> fail early, fail loud
+15:42:27 <thaumos> error on the side of caution.
+15:42:32 <thaumos> loudl
+15:42:33 <thaumos> y
+15:43:05 <abadger1999> Cool.  I'll update the bug report and possibly look at fixing it (depends on how much time I have coming up) with that choice.
+15:43:12 <bcoca> the other option si 'nicer' to most users that forget the /, but is inconvinent to those that meant it to be a file
+15:43:22 <thaumos> 👍 @abadger1999
+15:43:25 <bcoca> abadger1999: yeah, low priority on this one
+15:43:41 <bcoca> abadger1999: mark it easy fix and explain desired fix
+15:43:47 <abadger1999> bcoca: will do
+15:44:11 <thaumos> #action abadger1999 to update issue with discussion details
+15:44:32 <thaumos> #topic Open Floor
+15:44:34 <jtanner> mkrizek might be able to do that one
+15:44:59 <jtanner> or sdoran once he's back
+15:45:13 <abadger1999> SOunds good.
+15:45:49 <bcoca> just following your 'want' for "easy fix"  bugs to throw at new contributors, this is clearly in that category
+15:46:52 <thaumos> anything else anyone want's to cover?
+15:48:48 <thaumos> alrighty, thanks everyone!
+15:48:49 <mkrizek> abadger1999: feel free to throw it at me ;)
+15:48:58 <thaumos> #endmeeting

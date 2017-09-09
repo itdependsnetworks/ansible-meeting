@@ -1,0 +1,348 @@
+17:00:07 <gundalow> #startmeeting Testing Working Group
+17:00:07 <zodbot> Meeting started Thu Jun 29 17:00:07 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+17:00:07 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+17:00:07 <zodbot> The meeting name has been set to 'testing_working_group'
+17:00:14 <gundalow> #chair mattclay
+17:00:14 <zodbot> Current chairs: gundalow mattclay
+17:01:21 * mattclay waves
+17:01:30 <gundalow> dag1: dag_ caphrim007 Pilou Hi
+17:01:37 <caphrim007> hey
+17:01:40 <Pilou> o/
+17:01:46 <shaps> hi
+17:01:49 <gundalow> #chair caphrim007 Pilou shaps
+17:01:49 <zodbot> Current chairs: Pilou caphrim007 gundalow mattclay shaps
+17:02:03 <gundalow> #link Agenda https://github.com/ansible/community/issues/114
+17:02:10 <gundalow> spredzy: Not sure if you are still around or not
+17:02:15 <gundalow> So on the agenda today
+17:02:44 <gundalow> 1) Testing Working Group Structure - Feedback and ideas after Contributors Summit in London
+17:02:51 <gundalow> 2) Use pycodestyle instead of pep8
+17:03:02 <gundalow> 3) Test dependencies test/runner/requirements/integration.txt
+17:03:16 <gundalow> 4) Unit tests and mocking libraries
+17:03:24 <gundalow> 5) Cleaning up test/
+17:03:50 <gundalow> 6) Testing win_url - httptester for Windows
+17:04:09 <gundalow> 7) xml for FeeeBSD & MacOSX
+17:04:24 <gundalow> #1 is the big one, so I think we leave that till last
+17:04:41 <shaps> probably better do them in reverse order 7->1
+17:04:51 <gundalow> +1
+17:05:01 <gundalow> #topic lxml
+17:05:11 <gundalow> #link https://github.com/ansible/community/issues/114#issuecomment-311114266
+17:05:22 <mattclay> This is on my list to take care of this week.
+17:05:25 <gundalow> #info From Dag: For the new xml module, we need lxml provisioned. For the docker images, this is already the case, but for the VMs (FreeBSD, MacOSX) lxml is still missing.
+17:05:44 <gundalow> mattclay: cool, so all in hand?
+17:05:49 * mattclay nods
+17:06:06 <gundalow> #action mattclay to look into lxml
+17:06:30 <gundalow> #topic win_url integration tests (httptester for Windows)
+17:06:47 <gundalow> #link https://github.com/ansible/community/issues/114#issuecomment-311111626
+17:07:04 <gundalow> #info From Dag: For testing the win_uri module (and eventually the uri module as well) we would like to look at using httptester. This was deemed the preferred way during some discussion (don't have a reference at hand).
+17:07:15 <gundalow> #info From Dag: For Windows that would mean that the VMs need to be able to connect the the httptester docker network. As a result, we will leave the idea to set up our own http listener process (#153 (comment)).
+17:07:24 <gundalow> mattclay: I think this is something you've talked about before
+17:07:57 <mattclay> This one is also on my list, although not for this week. I'd like to be able to tunnel requests from the remote Windows instance back to the system running the tests, but this is more difficult on Windows since we're not connecting via ssh.
+17:08:20 <gundalow> Currently is httptester open to the world?
+17:08:40 <mattclay> No, it's not. Also, I'd like this to work when running ansible-test manually, not just on Shippable.
+17:08:48 <gundalow> +1
+17:09:30 <gundalow> #info We'd like to be able to tunnel requests from the remote Windows instance back to the system running the tests, but this is more difficult on Windows since we're not connection via ssh
+17:09:32 <mattclay> I'm thinking we might be able to run a tunnel service (perhaps even ssh) on the Windows instance and connect to it for establishing a connection back to the controller running the tests.
+17:09:52 <gundalow> #info Idealy we want this to work when running ansible-test manually, not just on Shippable.
+17:10:14 <mattclay> I'll chat with nitzmahone about this (we're meeting up soon to discuss other Windows issues) and see what his thoughts are.
+17:10:18 <shaps> mattclay, but then you would be relying on that service to be available
+17:10:19 <nitzmahone> I'm here
+17:10:29 <gundalow> #chair nitzmahone
+17:10:29 <zodbot> Current chairs: Pilou caphrim007 gundalow mattclay nitzmahone shaps
+17:10:38 <mattclay> shaps: Yes, and I'd install it as part of the test if we go that route.
+17:10:47 <gundalow> #action mattclay to investigate this, he's got some ideas
+17:11:01 <gundalow> #topic Cleaning up test/
+17:11:16 <nitzmahone> Powershell-over-SSH actually works under limited circumstances- not to the point that I'd "support" it yet, but that might be the easiest solution to Windows jump-hosting if people are willing to install SSH on the Windows hosts.
+17:11:26 <gundalow> #info Clearing out test_win_group*.yml and some of the Makefile targets
+17:11:42 <gundalow> #info PR has been raised: https://github.com/ansible/ansible/pull/26255
+17:11:59 <gundalow> #info Waiting to check we will not break Ansible Tower testing
+17:12:08 <nitzmahone> Oh, I see the context now, NM
+17:12:44 <gundalow> #info Clearing out these files will make it a lot clearer for people creating tests
+17:13:06 <gundalow> #topic Unit Test and mocking
+17:13:26 * gundalow looks for an example
+17:13:33 <gundalow> mattclay: do you want to give an #info overview
+17:14:02 <mattclay> #info We've been seeing an increasing number of unit test PRs wanting to add more test requirements.
+17:14:19 <gundalow> caphrim007: Thisis one for you as well
+17:14:29 <caphrim007> ok
+17:14:32 <mattclay> #info Instead of adding more requirements for unit testing, we've been suggesting that unit tests mock their dependencies instead.
+17:14:39 <gundalow> #info Example https://github.com/ansible/ansible/pull/24895
+17:15:28 <mattclay> #info This reduces test requirements and focuses testing on modules, not their dependencies.
+17:15:41 <gundalow> #info 2nd example https://github.com/ansible/ansible/pull/26026
+17:16:06 <caphrim007> mattclay: I am +1 on this....provided that it works for the dependencies i use
+17:16:17 <caphrim007> i'd be happy to try it using the provided examples though
+17:16:26 <pdellaert> glad to see i'm an example. And i'm not against mocking, however in regards to PR 24895: The whole module is designed to allow Ansible to use a full SDK with an API behind. Mocking the core of it, will take some time
+17:16:34 <gundalow> For reference caphrim007 is from F5 who's been creating a load of unit tests
+17:16:49 <gundalow> #chair pdellaert
+17:16:49 <zodbot> Current chairs: Pilou caphrim007 gundalow mattclay nitzmahone pdellaert shaps
+17:16:54 <gundalow> pdellaert: Ah Later :)
+17:17:01 <mattclay> If the mocking of dependencies is cumbersome that may be an indication the unit tests are trying to be integration tests instead.
+17:17:06 <Pilou> i remind this commit https://github.com/mikedlr/ansible/commit/25dbdacbe8ad83b62d370c321d7d6afdc22cab7c (AptInstallationTestCase, not merged)
+17:17:16 <pdellaert> decided that i didn't look serious called 'later' in a meeting ;)
+17:17:23 <gundalow> pdellaert: :D
+17:17:45 <gundalow> mikedlr: You around?
+17:17:48 <caphrim007> mattclay: in my case i think my dependency is just written awkward. making it difficult to mock
+17:17:54 <caphrim007> in in any case, i'll give it a go
+17:18:12 <caphrim007> i can report my progress in future test meetings
+17:18:13 <gundalow> caphrim007: Do you think you've got the information you need?
+17:18:16 <caphrim007> but until them i am +1
+17:18:22 <caphrim007> yeah i think so
+17:18:27 <caphrim007> per those 2 examples
+17:18:29 <mattclay> caphrim007: I would hope that it is actually easier to mock the surface area of a dependency in most cases, instead of mocking whatever it is the dependency deals with (HTTP requests, filesystem, etc.)
+17:18:42 <pdellaert> anyway, i do see a good reason for mocking, people should not be required to have modules installed to run tests. My case for PR24895: Without the basic core of the VSPK module, the whole module is useless and any tests preformed on it, is pretty useless as well
+17:19:07 <caphrim007> mattclay: that's why i'm going to give it the good ol college try
+17:19:10 <gundalow> #action caphrim007 to experiment with using mocking some of the F5 unit tests and report back
+17:19:26 <mattclay> pdellaert: That makes me think that perhaps you should be looking at writing an integration test playbook instead.
+17:20:05 <pdellaert> potentially, yes, and if you look at the unit tests i'm doing, these are already in some cases more integration tests
+17:20:26 <pdellaert> for a real integration test, you would need a real Nuage VSP deployment (or at least our Management plane)
+17:20:53 <mattclay> pdellaert: I don't suppose there is a simulator, such as a docker container, available that the tests could run against?
+17:20:57 <pdellaert> which is something i could try and get orchestrated, as we have something open/online for that, but it will lengthen the test significantly
+17:21:02 <pdellaert> no, not at this time
+17:21:39 <pdellaert> the only thing we have available (for customers wanting to test API integration) is NuageX, a platform with a single management plane deployed on demand
+17:21:43 <caphrim007> gundalow: should i find that mocking isn't a problem, I would be delaying converting all the existing unit tests until after 2.4
+17:22:11 <pdellaert> (but that platform does not have an API to request/run the deployment of that test env itself, yet, which is a good RFE ;))
+17:22:29 <gundalow> pdellaert: I (as part of the Networking Team) have started a POC on how to run distributed tests, so you can host Nuage test equipment in your lab, and we (ansible) can look at the results. More details on the in the coming month
+17:22:52 <gundalow> caphrim007: Sure, that's the pragmatic thing. Do you have more modules to add?
+17:22:54 <caphrim007> gundalow: i would be keen to be a part of that for F5 gear
+17:23:06 <caphrim007> not yet gundalow
+17:23:06 <mattclay> I don't think we want to use unit tests as a substitute for integration tests just because the needed endpoints/services aren't available to run the integration tests. Using something like distributed-ci (what gundalow just mentioned) seems more appropriate.
+17:23:07 <gundalow> caphrim007: You are on my list, don't worry :)
+17:23:16 <pdellaert> gundalow: sounds interesting, for now, my main goal in this meeting is to determine how to move forward with this PR/test cases
+17:23:34 <mattclay> Even if we can't run the integration tests in our CI system, I think I'd rather see integration tests written as such, instead of writing unit tests with a crazy amount of mocking.
+17:23:57 <caphrim007> mattclay: in my case i have integration tests for all my modules
+17:23:58 <gundalow> pdellaert: How many other modules do you have to get in for 2.4?
+17:24:06 <caphrim007> but not publicly exposed gear to point it at
+17:24:39 <pdellaert> gundalow: ansible modules? None, this is our target for 2.4
+17:24:41 <Pilou> there are some examples of ansible-with-mock in the openshift/openshift-ansible (https://github.com/openshift/openshift-ansible/tree/master/roles/lib_openshift/src/test/unit)
+17:25:37 <pdellaert> I'm already mocking the API replies in my tests, of course, because there is no real API behind
+17:25:41 <caphrim007> Pilou: thanks for that
+17:26:06 <mikedlr> gundalow: I'm around
+17:26:08 <gundalow> pdellaert: What would be involved to rewrite the tests for your PR as an integration test, with a mocked out API replies?
+17:26:29 <gundalow> mikedlr: Just talking about mocking and Unit tests which I thought you may find interesting
+17:27:47 <pdellaert> gundalow: depending if we need to do extensive integration tests, or if testing the basic API functionalities (CRUD) is enough
+17:27:50 <mikedlr> avoid, unless you have to , in which case it's a good thing it's possible ;-)
+17:28:21 <pdellaert> gundalow: in case of basic API functionalities, it wouldn't be as complicated as mocking the base VSPK library
+17:28:22 <mikedlr> response to mattclay ;  the mocking is often horrible because the code needs refactored and simplified
+17:28:47 <pdellaert> extensive integration testing is already taken care of with the VSPK library itself in our internal QA
+17:29:00 <gundalow> ^ That's the main thing
+17:29:35 <gundalow> So maybe just a basic CRUD integration test is fine
+17:30:36 <pdellaert> sure, i'll also investigate how much i can keep in unit tests without having VSPK installed, but i fear it will be down to basic input testing and negative case testing, so code coverage of unit testing will be abismal
+17:30:37 <gundalow> We just want something to protect us from accidently breaking all of Nuage when changing something in module_utils
+17:30:58 <gundalow> Sure, though as you say, you have local QA that works through that
+17:31:06 <pdellaert> gundalow: which is appreciated of course :)
+17:31:14 <gundalow> #action pdellaert to add pragmatic testing for Nuage
+17:31:20 <gundalow> Anything else on that one
+17:31:56 <gundalow> otherwise I'll move onto the next (related) topic
+17:32:15 <pdellaert> gundalow: if you want to have a private conversation on how we can do an actual integration test with an actual Nuage management node, i'm open to it and i can investigate how far i can push our internal teams to have some support
+17:32:45 <gundalow> Sure, I'll ping you my details
+17:33:05 <gundalow> #toic Reducing the dependencies in test/runner/requirements/integration.txt
+17:34:02 <gundalow> bah
+17:34:09 <gundalow> #topic Reducing the dependencies in test/runner/requirements/integration.txt
+17:35:08 <gundalow> So related to previous topic the list of "requirements" is growing
+17:35:36 <gundalow> # The list of "requirements" is ever growing. We plan on trimming that down to only what's needed to run ansible-test
+17:35:40 <gundalow> #info The list of "requirements" is ever growing. We plan on trimming that down to only what's needed to run ansible-test
+17:36:36 <Pilou> Should some integration tests be rewritten using unit tests ?
+17:36:55 <gundalow> #info For integration tests we are considering 1) requirements in test/integration/targets/*/requirements.txt
+17:37:04 <mattclay> Many integration tests already install dependencies they have during the test. Some rely on ansible-test to do this for them. We'll be migrating those requirements from test/runner/requirements/integration.txt into the tests themselves.
+17:37:44 <gundalow> #info 2) or Just install them in during the playbooks. If they dependencies are needed by multiple roles then use a presetup_foo and set that in meta/main.yml dependencies
+17:38:14 <shaps> it probably makes sense to have a 'setup' role that allows you to do that
+17:38:32 <Pilou> yep
+17:38:33 <mattclay> I originally liked the idea of #1, but the more I've thought about it, I think #2 is the better approach. Particularly because we already do it for some tests and it doesn't require adding more functionality to ansible-test. It's also more flexible.
+17:39:04 <mattclay> Some tests already have to set specific dependency versions, uninstall dependencies, re-install them, etc. So doing it in the playbook makes the most sense.
+17:39:16 <shaps> yep
+17:39:42 <gundalow> Yup and #1 only works for pip
+17:40:04 <mattclay> So it's just a matter of removing some entries from test/runner/requirements/integration.txt and adding them to the integration tests themselves. I have that on my list.
+17:40:16 <shaps> well, I guess it *could* work for other pkg managers, just adds a ton of code to ansible-test
+17:40:17 <mattclay> Unless someone else wants to volunteer. :)
+17:40:31 * gundalow looks at the tumbleweed
+17:40:37 <gundalow> so I guess we are agreed on #2
+17:40:53 <shaps> mattclay, if you can give me some guidance I can do that
+17:40:54 <branko> ('lo, just lurking)
+17:41:09 <gundalow> #chair branko
+17:41:09 <zodbot> Current chairs: Pilou branko caphrim007 gundalow mattclay nitzmahone pdellaert shaps
+17:41:14 <gundalow> branko: Welcome :)
+17:41:18 <gundalow> shaps: Excellent
+17:41:34 <gundalow> #chair dag
+17:41:34 <zodbot> Current chairs: Pilou branko caphrim007 dag gundalow mattclay nitzmahone pdellaert shaps
+17:41:45 <mattclay> shaps: Sure, we we can discuss after the meeting.
+17:42:06 <shaps> ok
+17:43:13 <gundalow> #action agreed we will remove the integration dependencies and add them into the playbooks instead (in pretest_foo if needed by multple roles)
+17:43:14 <shaps> I'll then bother gundalow as usual when I get stuck :D
+17:43:20 <gundalow> shaps: :)
+17:43:27 <dag> sorry
+17:43:46 <mattclay> gundalow: Actually, that should be: setup_foo
+17:43:59 <gundalow> dag: httptester for windows - The two matts will chat about that next week
+17:44:09 <gundalow> dag: lxml It's on the list
+17:44:48 * gundalow is going to skip pycodestle as I'd like to talk about Testing Working Group Structure
+17:44:53 <mattclay> The existing integration tests use various setup_ roles for common setup. Also, ansible-test knows to ignore those (I doesn't consider them tests).
+17:45:06 <mattclay> s/I doesn't/it doesn't/
+17:45:13 <gundalow> #action, correction setup_foo
+17:45:41 <gundalow> #action also lets remove the empty setup_tests (from memory) that doesn't do anything
+17:45:44 <gundalow> ok, next
+17:45:53 <gundalow> #topic Testing Working Group Structure
+17:46:24 <dag> \o/
+17:46:27 <gundalow> #info First of all, massive thank you to everyone that attended in person or online for the Contributors Summit as part of London Ansible Fest
+17:46:44 <gundalow> Was great to meet some of you in person
+17:47:12 <shaps> was very good indeed
+17:47:42 <gundalow> #info There was a lot of discussion about how to make it easier to Working Groups to document and self organise
+17:48:10 <gundalow> #info https://github.com/ansible/community/ has been restructured there are now directories per working griup
+17:48:23 <gundalow> #info group-windows is the best example
+17:48:33 <dag> Designed after the Openstack community repo
+17:48:44 <gundalow> #info Also we have wiki's now https://github.com/ansible/community/wiki again Windows is best example
+17:48:53 <dag> Although the README.md is semi-autogenerated from a yaml file
+17:48:54 <gundalow> #info based on how k8s do stuff
+17:49:39 <gundalow> #info we how have more IRC channels #ansible-aws #ansible-vmware #ansible-windows
+17:49:47 <gundalow> So the discussion part
+17:50:22 <gundalow> We've talked a bit in the past before about how to put a list of things people can get involved in and help
+17:50:59 <gundalow> Windows have created
+17:51:05 <gundalow> https://github.com/ansible/community/wiki/Windows%3A-progress-tracker
+17:51:06 <gundalow> and
+17:51:12 <gundalow> https://github.com/ansible/community/wiki/Windows%3A-community-plan
+17:51:30 <gundalow> and a higher level action list o fhttps://github.com/ansible/community/wiki/Windows%3A-action-list
+17:51:33 <gundalow> so
+17:51:37 <gundalow> Do we want something similar
+17:51:48 <gundalow> This could be where we list things like
+17:52:06 <gundalow> 1) Tests to update to stop using requirements.txt
+17:52:27 <gundalow> 2) Tests that use external dependencies rather than httptester, and therefore are occasionally unstable
+17:52:37 <gundalow> 3) List of important modules that don't have integration tests
+17:53:12 <shaps> I believe having a community plan will take us to have a fairly good action list
+17:53:14 <gundalow> 4) List of things that need unit tests (e.g libraries under module_utils)
+17:53:26 <shaps> ( sorry broken your list )
+17:53:38 <gundalow> lol, that's why I number
+17:53:51 * gundalow hopes people do add there thoughts
+17:53:59 <gundalow> (don't wait for me to stop talking)
+17:54:18 <dag> gundalow: the TWG has a lot more stuff anyone can help out with, or rather, distribute tasks to (all) maintainers...
+17:54:35 <gundalow> Yup
+17:54:41 <dag> gundalow: especially for TWG I think it's worthwhile to have a clear channel to maintainers, with monthly/quarterly updates
+17:54:51 <gundalow> and if you can write a Playbook then you can write an integration test
+17:55:27 <dag> definitely, but a lot of maintainers have lost the connection with the mothership, and that's something we have to work on
+17:56:04 <gundalow> Yup, that's something that I'd like to improve
+17:56:42 <gundalow> We've got ~11 weeks till the next Contirbutors Summit (again all welcome in person/virtually)
+17:57:30 <gundalow> I'd love for all the working groups to be in a great shape by then with good lists of how people can help, then we can mention it at AnsibleFest itself
+17:57:49 <dag> I think we need a CWG working on different shareholders in the community and how to address them, and the content can come from the other Working Groups
+17:57:56 <gundalow> Yup
+17:58:04 <gundalow> totally agree
+17:58:10 <gundalow> so bring it back to TWG
+17:58:19 <dag> but who's going to take that lead, everyone is busy with their own stuff
+17:58:30 <dag> ok
+17:58:43 * gundalow has time ringfenced for TWG
+17:58:56 <gundalow> so, does it make sense to start with the Action list?
+17:59:19 <shaps> +1
+17:59:22 <Pilou> +1
+17:59:41 <gundalow> ideas, what should be on there
+17:59:56 <shaps> it's not a huge list, but it's a start :)
+18:01:12 <shaps> gundalow, Can't think of other things to add
+18:01:32 <gundalow> 5) Reviewing testing_pull_request PRs
+18:02:42 <Pilou> is there a place where the "testing policy" (for example: tests are required new network modules) is written ?
+18:03:19 <gundalow> Pilou: http://docs.ansible.com/ansible/dev_guide/testing_integration.html#network-tests
+18:05:47 <dag> Windows syntax checking, code style and coverage
+18:05:56 <gundalow> Who doesn't have an edit option on https://github.com/ansible/community/wiki/Testing:-action-list if want rights please ping me your GitHub ID and I'll add you
+18:07:05 <dag> the individual action list is actually quite easy to manage, these things come up during meetings (or from tickets asking to help/review)
+18:08:04 <shaps> true. I see test-related things in the Windows group, would it make sense to have all the testing related items in the TWG?
+18:09:27 <gundalow> hum, I'd say initally on the Windows WG, though we should be aware of them
+18:10:01 <shaps> yeah, I said Windows, but I meant any other group, really
+18:10:40 <gundalow> nod
+18:10:45 <dag> gundalow: I think it would be great if TWG also maintains a list of known issues with CI
+18:10:52 <gundalow> dag: oh, that's a good idea
+18:10:57 <Pilou> is there some doc about httptester ?
+18:11:01 <dag> gundalow: the things people may see from time to time, or where one could report such issues centrally
+18:11:06 <gundalow> Yup
+18:11:11 <dag> Pilou: yes !
+18:11:31 <gundalow> Pilou: http://docs.ansible.com/ansible/dev_guide/testing_httptester.html
+18:11:34 <dag> CI seems to be much better now, but there were times where 50% of the time it would fail
+18:11:40 <branko> This topic is more about how to organise etc in working group, or...?
+18:11:58 <dag> branko: organize and communicate to others (transparency)
+18:12:07 <mattclay> Tracking known issues on a wiki page would be good. For reporting new issues, ping myself and gundalow.
+18:12:27 <dag> mattclay: I was thinking of one ticket where people could report, maybe ?
+18:12:39 <dag> that could be a ticket people could follow as well
+18:12:54 <gundalow> hum, that's a point not everyone can update the wiki
+18:12:56 <gundalow> oh
+18:13:00 <mattclay> dag: I suppose that works too. It may get a little messy as issues are resolved, but we can address that later.
+18:13:01 <dag> otherwise it's one-to-one communication
+18:13:12 <gundalow> do we want an #ansible-testing channel?
+18:13:32 <dag> gundalow: might not be that bad, as everyone relates to testing these days
+18:13:35 <mattclay> I don't think we have enough testing specific discussions yet that we need to separate from devel.
+18:13:48 <shaps> ^ +1
+18:13:54 <dag> indeed, if it relates to everyone, we don't need a dedicated channel
+18:14:13 * dag was flip-flopping there :p
+18:14:24 <branko> Plus it might increase visibility?
+18:14:29 <gundalow> Sure, I've flip-flopped a bit as well
+18:14:31 <branko> (using same channel)
+18:14:31 <gundalow> branko: good point
+18:16:01 <shaps> gundalow, I believe those 2 pages you linked earlier are not linked by anything in the docs
+18:16:11 * dag has created a few badges on shields.io that you could integrate in your wiki/README.md, to show open tickets/PRs based on a label
+18:16:21 <shaps> ( or I'm blind and can't see them :)
+18:16:34 <dag> they have not yet been integrated, but I hope they will, and we can add more if you have nice ideas
+18:16:40 <gundalow> #action We will continue to use #ansible-devel as 1) Most of what we talk about relates to everyone 2) increase visibility
+18:17:00 <gundalow> erm
+18:17:08 <gundalow> #agreed We will continue to use #ansible-devel as 1) Most of what we talk about relates to everyone 2) increase visibility
+18:17:08 <dag> gundalow: Would be nice to add that in the README.md (use of #ansible-devel, and the reason why)
+18:19:13 <gundalow> dag: good idea, done
+18:20:19 <gundalow> testing_integration.html is linked form testing.html
+18:20:37 <gundalow> You might be right and testing_httptester.html may not be linked from anything
+18:20:49 <dag> The link to coverage reports should be in the Wiki-main page (instead of progress, maybe ?)
+18:21:50 <gundalow> Where should the lower level detail of what need unit test need adding need adding
+18:22:16 <dag> What is missing from the README.md is how people are supposed to contact/collaborate (and that's missing for the WWG too)
+18:22:26 <gundalow> should they be individual headings under progress-tracker like https://github.com/ansible/community/wiki/Windows%3A-progress-tracker
+18:22:29 <dag> gundalow: ah, that's also progress, true
+18:22:49 <gundalow> #action gundalow to add people to contact/collaborate on README.md
+18:22:51 <dag> again, what I did was just what seemed useful (i.e. what we did in Etherpad)
+18:23:08 <dag> maybe there's a better way to do this, maybe even automated ?
+18:23:14 <gundalow> #action gundalow to look at old TWG etherpad and pull relevant info in
+18:23:22 <gundalow> #chair
+18:23:22 <zodbot> Current chairs: Pilou branko caphrim007 dag gundalow mattclay nitzmahone pdellaert shaps
+18:23:47 <gundalow> Pilou: shaps Do you want adding to the list of members, and have edit powers on the wiki?
+18:24:10 <shaps> gundalow, I do already
+18:24:20 <gundalow> shaps: oh, sweet
+18:24:31 <shaps> erm.. "I do have powers already"
+18:24:36 <Pilou> same
+18:24:53 <Pilou> I made some minor changes ;)
+18:25:46 <gundalow> cool
+18:25:56 <gundalow> feel free to hack over whatever I've done
+18:29:43 <gundalow> https://github.com/ansible/community/wiki/Testing:-progress-tracker created
+18:29:51 <gundalow> well the outline, detail needs adding
+18:31:14 <shaps> gundalow, I'll update the list of tests that use requirements
+18:31:31 <shaps> likely tomorrow
+18:31:32 <gundalow> shaps: Ace, thanks
+18:32:29 <dag> gundalow: PEP8 non-compliance with a link to the legacy whitelist :)
+18:32:32 <dag> that's an easy one
+18:32:40 <gundalow> dag: erm, no
+18:32:42 <dag> (although not really test-related)
+18:33:16 <gundalow> We will look at doing the pep8 stuff in bulk
+18:33:44 <dag> gundalow: hmm, I thought for modules that wasn't actually needed, but ok
+18:36:53 <shaps> I need to leave now. If there's anything else that I can help with, feel free to tag it to me on tracker/action plan
+18:37:01 <gundalow> shaps: Thanks
+18:37:16 <dag> let's start tagging to shaps right away
+18:37:16 <shaps> have a good evening all
+18:37:27 <shaps> well, evening/morning/restoftheday
+18:37:30 <dag> bye :-)
+18:37:55 <shaps> dag, yeah, doesn't mean I'll actually do it hehe
+18:38:39 <gundalow> We can continue this all in #ansible-devel tomorrow :)
+18:38:45 <gundalow> haha
+18:41:00 <dag> gundalow: is it ok if I add some of the individual actions from the Windows action list ?
+18:41:59 * dag is not sure how well the Wiki stuff works when people are editing at the same time ;-)
+18:42:25 <pdellaert> What better way then try! ;)
+18:42:36 <pdellaert> than
+18:42:55 <dag> :-)
+18:44:35 <gundalow> dag: badily it seems
+18:44:38 <gundalow> dag: sure
+18:45:07 <dag> it's the lxml, httptester and Windows syntax/style/coverage integratiuon
+18:45:24 <dag> and then also the Windows 2016 (Windows 10 please ?) too
+18:45:30 <gundalow> Sure, that makes sense to be on our list
+18:45:32 <dag> and the speed improvements to WIndows testing
+18:45:57 <dag> that's the nice part, we can add stuff to your list, but the reverse doesn't make that much sense
+18:46:12 <dag> unless you start managing our non-compliant stuff :p
+18:46:36 <dag> actually, you guys do have some leverage...
+18:46:38 <gundalow> :P
+18:46:51 <gundalow> Writing Windows Tests should stay on your list
+18:47:36 <dag> we are getting there, most that doesn't have tests doesn't have the infrastructure :-(
+18:47:59 <dag> but the real deal is having a look at coverage, so we know where we lack proper testing
+18:48:07 <dag> I think that's going to make a bigger difference
+18:49:44 <gundalow> :)
+18:51:23 <gundalow> shaps: Pilou You may wish to raise a PR to update https://github.com/ansible/community/tree/master/group-testing
+19:01:47 * dag still needs to work on the yaml2ical script
+19:02:04 <dag> then we can get rid of the Google Calendar privileges
+19:02:22 <gundalow> yup
+19:02:52 <gundalow> cool
+19:03:07 <gundalow> Well I'm happy with what's been discussed and agreed today
+19:03:10 <gundalow> Thanks everyoen
+19:03:15 <gundalow> We can continue in #ansible-devel
+19:03:18 <gundalow> #endmeeting

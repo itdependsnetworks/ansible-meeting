@@ -1,0 +1,117 @@
+18:01:09 <gundalow> #startmeeting New Modules Meeting
+18:01:09 <zodbot> Meeting started Wed Oct 19 18:01:09 2016 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+18:01:09 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+18:01:09 <zodbot> The meeting name has been set to 'new_modules_meeting'
+18:01:23 <gundalow> #chair abadger1999 ryansb
+18:01:23 <zodbot> Current chairs: abadger1999 gundalow ryansb
+18:01:53 <ryansb> hello, all
+18:01:54 <abadger1999> ola
+18:03:56 <gundalow> Anyone got anything?
+18:04:20 <ryansb> How about https://github.com/ansible/ansible-modules-extras/pull/2917
+18:04:43 <ryansb> Appears to have enough shipits, if there's no objections I'll merge after this meeting
+18:05:07 <ryansb> My only big gripe is that it's actually 7 modules under one PR
+18:05:34 <gundalow> Version_added will need updating on the, all
+18:05:37 * abadger1999 looks at one of the modules
+18:05:38 <gundalow> them all*
+18:06:38 <gundalow> Would be good if they used a docs_fragment for the common stuff and put the common options in module_utils
+18:07:44 <gundalow> and perform_checks into module_utils
+18:07:49 <gundalow> #topic https://github.com/ansible/ansible-modules-extras/pull/2917
+18:08:53 <gundalow> oh, though perform_checks is different in two modules
+18:09:04 <abadger1999> ryansb: Would like to see it import from ansible_module_utils without wildcards (and at the top with the other imports).
+18:09:34 <abadger1999> ryansb: would like to see get_exception used instead of sys.exec_info directly (so we can remove it easier when we drop 2.4 support)
+18:11:28 <ryansb> abadger1999: That's fair, can you post those on the review?
+18:11:34 <gundalow> 6/7 manage_config are identicle
+18:11:49 <gundalow> Do people think I should suggest module_utils for common code?
+18:12:03 <abadger1999> ryansb: I'm not familiar with proxysql so  Idon't know what separates it from the mysql modules.
+18:12:22 <abadger1999> ryansb: I can... wanted to know if you consider these blockers or just nice to have?
+18:12:31 <ryansb> Neither do I, but I also think since this is extras we shouldn't gate too hard
+18:12:41 <ryansb> so maybe post as suggestions for followups?
+18:13:06 <abadger1999> works for me.
+18:13:11 <gundalow> +1
+18:13:48 <ryansb> gundalow: same goes for your module_utils suggestion IMO, since that can be done after (and requires coordinating with ansible/ansible)
+18:14:11 <gundalow> cool, will add it as a suggestion
+18:15:19 <ryansb> Ok, next up we have this monster list: https://github.com/ansible/community/issues/92#issuecomment-248412097
+18:21:00 <ryansb> #topic Dimension Data Modules https://github.com/ansible/community/issues/92#issuecomment-248412097
+18:21:05 <ryansb> Is the author here?
+18:23:27 * gundalow doesn't recognise the name mpappas86
+18:23:50 <gundalow> Is tima on IRC?
+18:23:58 <gundalow> Would be interested to know why he added it
+18:24:45 <gundalow> also that's not a new module
+18:25:02 <gundalow> we looking at https://github.com/ansible/ansible-modules-core/pull/4054/files ?
+18:25:39 <ryansb> no, at https://github.com/ansible/ansible-modules-extras/pull/2977/files
+18:26:01 <ryansb> and the other 7 listed with it https://github.com/ansible/community/issues/92#issuecomment-248412097
+18:28:29 <gundalow> Thanks
+18:28:38 <thaumos> @ryansb et al, should we suggest, by way of docs, to do a PR per module?
+18:29:29 <abadger1999> regarding the proxysql modules... I also realized the user input isn't quoted.  So that's probably a blocker.  Comment on the pr has links to helper code and examples in existing modules
+18:29:32 <ryansb> I thought that was in the docs somewhere already...is it not?
+18:29:38 <thaumos> I don’t believe so...
+18:29:41 <thaumos> I can double check
+18:29:48 <thaumos> Also, re: tima I can ask him to join
+18:29:53 <ryansb> ok, well if not then yeah, we should document that somewhere
+18:30:13 * gundalow is making notes on improving developing_modules, I'll add it to that
+18:30:14 <thaumos> I’ll double check, and pr it if it doesn’t exist.
+18:30:33 <gundalow> https://public.etherpad-mozilla.org/p/ansible-testing-working-group#lineNumber=139 line 139
+18:30:45 <thaumos> There’s tima
+18:30:47 <tima> greetings.
+18:31:29 <abadger1999> I don't think the get_dd_region stuff is going to work.
+18:31:35 * abadger1999 looks for the module_utils PR to check
+18:31:55 <thaumos> @gundalow, what was it that you were curious of tima adding?
+18:32:25 <ryansb> the dimensiondata modules
+18:33:44 * dminca reads through the lines
+18:34:05 <gundalow> ergh, way too many tabs open
+18:34:20 <dminca> kill`em`all
+18:34:23 <dminca> :)
+18:34:38 <abadger1999> okay, the dd_region() stuff definitely will not work.
+18:34:44 <thaumos> lol kill -9 tabs
+18:34:51 <gundalow> tima: Was just wondering why you added some PRs to the agenda, if there was a reason to speed them up, such as https://github.com/ansible/ansible-modules-core/pull/4054
+18:35:12 <gundalow> I clear out my tabs when I accidently have two instances of Chrome running and I shut them down in the wrong order
+18:35:15 <gundalow> so once a week :P
+18:35:52 <thaumos> and the worse thing is when you try to restore tabs and it creates yet another instance… yeah I know that pain
+18:36:21 <gundalow> on a side note, what I've found helpful on https://github.com/ansible/community/issues/110 is to edit the comments and put ~~foo~~ MERGED
+18:36:34 <tima> hum. checking @gundalow.
+18:36:50 <dminca> gundalow use The Extender Chrome extension
+18:37:16 <ryansb> really GH issues is tough to keep uptodate with these
+18:37:25 <ryansb> might be a good use for the new github dashboard things
+18:37:32 <gundalow> ryansb: oh the project thing?
+18:37:45 <abadger1999> the reason is there's a circular dependency of what the code needs to run...   dd_region() needs libcoud to operate otherwise it throws an exception.  But we need to catch that exception and use module.fail_json() to return a nice error message.  But since the return from dd_region() is used in the argument_spec then we'll never be able to create the module.
+18:38:03 <tima> on man that PR was from months ago @gundalow. that contributor approached me at an event months ago and said it was just sitting there with no feedback coming in.
+18:38:11 <ryansb> Yeah, since basically our agenda is driven by "Is it waiting on maintainer? skip. Is it waiting for review? Review it."
+18:38:18 <gundalow> tima: cool
+18:38:26 <thaumos> @ryansb agreed, we should try it out.
+18:38:28 <dminca> sorry, The Great Suspender
+18:38:33 <thaumos> lol thanks dminca
+18:38:41 <thaumos> I was thinking, umm… am I crazy I can’t find that!
+18:38:42 <ryansb> thaumos: ohhh....it's one-repo :/
+18:38:46 <dminca> thaumos yw :)
+18:38:55 <ryansb> Well after the merge it'll be great!
+18:38:56 <thaumos> @ryansb, well…
+18:38:59 <thaumos> lol exactly
+18:39:13 <thaumos> test on extras?
+18:39:27 <thaumos> or it can only be enabled on one
+18:40:13 <ryansb> We could do one per repo as a test
+18:40:17 * ryansb will give it a shot
+18:40:46 <tima> @gundalow: never quite sure where to put PRs like that when someone approaches me like that. This agenda seemed like the best option. maybe not? you tell me and I'll course correct in the future.
+18:41:38 <thaumos> maybe create a label or something to that affect… @ryansb / @gundalow maybe something to look at for the board?
+18:41:40 <gundalow> tima: Agenda is the right place.
+18:42:15 <gundalow> tima: I was only wondering as the one I picked didn't have any review comments on, so wondered if it was a customer PR that needed fast trackikg
+18:42:32 <abadger1999> I think this meeting is probably the best place.
+18:42:45 <abadger1999> everything else can get pushed down in priority.
+18:43:39 <gundalow> I think after we merge an item in the agends we should edit and ~~strikethrough~~ it
+18:43:45 <gundalow> no need for anything more complex
+18:43:52 <thaumos> most of the time, for modules, it’s the partner not a customer :-)
+18:46:59 <gundalow> :)
+18:52:09 * gundalow has reviewed the back end of https://github.com/ansible/community/issues/92 and striked out a load of PRs that have been merged
+18:55:09 <ryansb> thanks gundalow
+18:55:17 <ryansb> Anybody have other PRs to bring up?
+18:55:34 <gundalow> ryansb: nps, should make it easier for everyone in the future
+18:55:48 <gundalow> PLEASE TEST ANSIBLE 2.2 RC2!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+18:56:06 <gundalow> ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+18:56:27 * gundalow isn't sure how to do blinking text in IRC
+18:56:41 <ryansb> I don't think that's in the spec, luckily for us all
+18:56:57 <gundalow> :sad_face:
+18:57:21 <gundalow> Remember for any new modules that get merged the version_added will need updating
+18:57:46 <ryansb> ^ also important
+18:58:32 <gundalow> Also in modules-core and modules-extra for devel (and shortly for the stable- branches) we are using ansible-validate-modules from ansible/ansible. Any issues let me know
+19:00:46 <dminca> thanks for the useful info :)
+19:05:59 <gundalow> all done I guess
+19:06:01 <gundalow> #endmeeting

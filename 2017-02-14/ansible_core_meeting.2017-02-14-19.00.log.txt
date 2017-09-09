@@ -1,0 +1,288 @@
+19:00:29 <gundalow> #startmeeting Ansible Core Meeting
+19:00:29 <zodbot> Meeting started Tue Feb 14 19:00:29 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:00:29 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:00:29 <zodbot> The meeting name has been set to 'ansible_core_meeting'
+19:00:50 <nitzmahone> Yo
+19:01:09 <gundalow> #chair allanice001 bcoca jimi|ansible jtanner mattclay nitzmahone Qalthos ryansb shertel
+19:01:09 <zodbot> Current chairs: Qalthos allanice001 bcoca gundalow jimi|ansible jtanner mattclay nitzmahone ryansb shertel
+19:01:36 <gundalow> shertel: If you register your IRC nick on Freenode we can give you Ops :)
+19:01:42 <ryansb> hi team
+19:01:48 <gundalow> Hello Ryan :)
+19:02:00 <ryansb> yeah, then shertel can be an op'd dev ;)
+19:02:21 * mattclay waves
+19:02:25 <shertel> hi
+19:02:26 <gundalow> #info Agenda, feel free to add things https://github.com/ansible/community/issues/150
+19:02:26 <thaumos> Don't be a hater @gundalow
+19:02:33 <thaumos> ;-)
+19:02:55 <gundalow> thaumos: You are no good to us if you drive into a wall, we've got waaaaaaay too much to give you
+19:03:09 <abadger2000> Óla
+19:03:19 <gundalow> #chair abadger2000
+19:03:19 <zodbot> Current chairs: Qalthos abadger2000 allanice001 bcoca gundalow jimi|ansible jtanner mattclay nitzmahone ryansb shertel
+19:03:28 <jtanner> yo yo yo
+19:04:23 <gundalow> #topic Proposal Process
+19:05:02 <gundalow> Who has the action to create a proposal proposal?
+19:05:25 <gundalow> 7 Feb Meeting: Discussed at the meeting. Many problems with the meta-proposal for creating proposals were discussed. Minimum timeframes were proposed but no agreement could be come to. Proposal documenting the new proposal process was asked for.
+19:05:50 <gundalow> #info Need to work out who has the action to document the proposed Proposal Workflow
+19:06:00 <gundalow> bcoca: you there?
+19:06:03 <gundalow> (here)
+19:06:11 <abadger2000> bcoca brought it up but we didn't assign a #action.
+19:06:14 <allanice001> no clean dion, gundalow
+19:06:29 <allanice001> Celean Dion ....
+19:06:49 <allanice001> i think it was between abadger2000 and bcoca
+19:06:58 <allanice001> For the proposals
+19:08:04 <abadger2000> yeah, I asked for a proposal to be made so that we could all be on the same page as to the new vision of what the proposal process and criteria should be.
+19:08:38 <abadger2000> If someone would like to take that on...
+19:08:39 <gundalow> Yup
+19:08:56 * jimi|ansible -> lurks
+19:09:02 <allanice001> I still vote for adding it to the agenda for this meeting
+19:09:23 <allanice001> But, wouldn't reviewing existing process if it exists
+19:09:35 * gundalow doesn't have any spare cycles for that (aka it's not higher priority than the network stuff)
+19:09:36 <allanice001> .. wouldn't mind ...
+19:10:05 <abadger2000> allanice001: If you want to... here's the current meta-proposal proposal: https://github.com/ansible/proposals/blob/master/proposals_process_proposal.md
+19:10:25 <abadger2000> allanice001: however, most of it doesn't actually work with how we're set up.
+19:10:32 <thaumos> I'm happy to take a stab at it.
+19:10:52 <abadger2000> so there will be a lot of revising to do.
+19:11:09 <abadger2000> Cool.
+19:11:10 <gundalow> #info the proposal update should be done in a PR which updates https://github.com/ansible/proposals/blob/master/proposals_process_proposal.md
+19:11:31 <gundalow> allanice001: if you have some spare cycles for an initial update that would be ace
+19:11:32 <abadger2000> gundalow: actually would it maqke sense to document it in documentation?
+19:11:48 <allanice001> @gundalow - accept
+19:11:51 <gundalow> abadger2000: You mean docs.ansible.com?
+19:12:10 <abadger2000> well, docs/SUBDIR/rst/
+19:12:13 <gundalow> It could maybe end up their, though let's make it easier to edit and update
+19:12:17 <gundalow> (for the moment
+19:12:40 <abadger2000> if we aren't splitting project docs out from other docs yet then it would end up on docs.ansible.com, yes.
+19:12:43 <allanice001> abadger2000, I started a "quick start guide" - https://infrascloudy.github.io/2017/02/writing-ansible-modules-001.html
+19:12:49 <gundalow> #action allanice001 has kindly offered to raise a PR to update proposals_process_proposal.md
+19:13:08 <allanice001> I can easily incorporate the process into the docs as part of the workflow
+19:13:37 <bcoca> late
+19:13:39 <bcoca> her
+19:13:41 <gundalow> #info In the future we can look at moving this under docs.ansible.com/ansible/NEWDIR/process_proposal.html (though that's not a priority at the moment, and required gundalow to think about better names)
+19:13:43 <bcoca> lunhc
+19:13:46 <abadger2000> Right now it seems that things are documented in a variety of places... I liked that you were moving the caanonical location for ansible_metadata into the ansible/ansible repo as that meant less places to keep track of changes.
+19:14:11 <allanice001> abadger2000, I agree fully
+19:14:16 <bcoca> isnt it part of module developer docs?
+19:14:18 <gundalow> #info gundalow to move the doc under rst once it's been agreed
+19:14:31 <abadger2000> cool.
+19:14:31 <allanice001> And was hoping to use the metadata implementation to drive the docs changes
+19:14:55 <gundalow> hum, do we have two topics going on now
+19:15:32 <allanice001> No, I made a comment on agreeing with abadger2000
+19:15:37 <gundalow> ANSIBLE_METADATA will be documented under dev_guide/developing_modules_documenting.rst see #21250
+19:15:38 <allanice001> Just a @mention
+19:16:11 <bcoca> ^ thought that was a given
+19:16:46 <gundalow> #info gundalow wants to create a new docs section for other things, but isn't sure what to call it yet, details about our release process, proposal process, etc will go there, rather than under dev_guide. Need to bikeshed a name
+19:17:03 <gundalow> allanice001: Thanks for taking the first draft on
+19:17:09 <gundalow> Anything else on this topic?
+19:17:20 <allanice001> call it Devstack ?
+19:17:33 <bcoca> updates: release and roadmaps
+19:17:55 <gundalow> bcoca: good idea
+19:17:58 * gundalow updates his notes
+19:17:59 <abadger2000> <nod>
+19:18:06 <bcoca> ^ been on my list for a while
+19:18:13 <bcoca> current locations make no sense
+19:18:37 <gundalow> bcoca: I can take that off your list if you want :)
+19:18:43 <gundalow> OK, next topic, if we are ready?
+19:18:54 <bcoca> you can take whole list!
+19:18:59 <resmo> hi
+19:19:03 <gundalow> bcoca: You don't want to see my code
+19:19:06 <gundalow> resmo: Hello :)
+19:19:11 <gundalow> ok. next
+19:19:13 <gundalow> ......................................
+19:19:14 <bcoca> i dont want to see MY code
+19:19:22 <gundalow> #topic ansible/ansible#18453 "pycrypto not listed in the Python package requirements list"
+19:19:34 <gundalow> #link https://github.com/ansible/ansible/issues/18453
+19:19:44 <gundalow> jtanner: You here?
+19:19:51 <jtanner> yep
+19:20:13 <gundalow> #info This issue highlighted: 1) Update the requirements in documentation 2) Prevent future desync between setup.py and docs
+19:20:23 * allanice001 points to https://github.com/ansible/ansible/blob/devel/setup.py#L24
+19:20:28 <jtanner> sivel has a suggestion
+19:21:04 <jtanner> move to requirements.txt and have docs build source that
+19:21:20 <gundalow> #info Sivel suggested: Maybe we could move the requirements to install into a requirements.txt file that is referenced by setup.py as well as the instructions specifying to utilize the requirements.txt instead of listing the packages separately in 2 locations? Just a thought, as I've seen this done elsewhere.
+19:21:26 <abadger2000> Hmm... I think paramiko might have pulled in pycrypto in the past.  Might be that is *how* the two got out of sync.
+19:21:49 <abadger2000> yeah, sivel's suggestion sounds sane.
+19:21:59 <gundalow> I've not seen this issue before though, their seem to be (at least) three items here
+19:22:04 <gundalow> A) The general case
+19:22:15 <gundalow> b) paramiko might have pulled in pycrypto in the past.
+19:22:27 <gundalow> C) pycrypto is waaay out of date, nearing 3 years since last release at this point
+19:22:28 <abadger2000> Not sure how that is dont elsewhere (maybe setup.py reads in requirements.txt and creates a list by splitting on newlines?)
+19:22:53 <gundalow> So for the moment, lets focus on (A)
+19:22:56 <jtanner> sivel: you around?
+19:23:20 * gundalow -> back in a min, can someone please #info #action as needed, thanks
+19:23:29 <bcoca> we have PR to have newer crypto lib and fallback to pycrpto, not sure how to tell setup.py 'one of these 2'
+19:23:43 <akasivel> Oops, knew I was forgetting something
+19:23:59 <akasivel> I'm hereish.  I'll be back at my computer in a few minutes
+19:24:17 <abadger2000> #chair akasivel bcoca thaumos
+19:24:17 <zodbot> Current chairs: Qalthos abadger2000 akasivel allanice001 bcoca gundalow jimi|ansible jtanner mattclay nitzmahone ryansb shertel thaumos
+19:24:31 <allanice001> Well, we need to add Py3 support in setup.py anycase
+19:24:35 <abadger2000> bcoca: you can't
+19:25:10 <allanice001> You could use a try statement
+19:25:12 <abadger2000> since it's code, you can detect when someone runs setup.py but that doesn't translate well to package managers etc.
+19:25:18 <allanice001> Worst case both will fail
+19:25:55 <jtanner> i don't really know the best solution to the problem, which is why i added it here
+19:25:57 <abadger2000> I'd let the people making the cryptography PR worry about that, though.
+19:26:48 <allanice001> But, in the mean time we need to either add pycrypto, or the newer crypto library
+19:27:27 <allanice001> I haven't looked at the new lib, but there may be massive crypto changes, affecting vault et al
+19:27:34 * gundalow returns
+19:27:35 <bcoca> abadger2000: pip does not have virtual packages?
+19:27:51 <sivel> ok, back at my laptop
+19:28:02 <sivel> bcoca: not really, unless it was just a package with a setup.py for deps
+19:28:32 <bcoca> sad, this is exactly what this situation calls for (adds note to ansible-installer to support virtual packages)
+19:28:48 <sivel> Per my recommendation, I still prefer moving the deps out of setup.py directly, and into a requirements.txt file.  And then have setup.py utilize the requirements.txt
+19:29:03 <sivel> then we can just document in the docs to use pip install -r requirements.txt
+19:29:08 <sivel> and it shoudln't fall out of sync
+19:29:29 <bcoca> +1 to that ... just need to see which crypto we really depend on
+19:29:29 <allanice001> That might break with differences between py2 and py3
+19:29:42 <sivel> allanice001: how is that?
+19:30:05 <allanice001> Lets say asyncio is in that file, it can't get installed by py2
+19:30:13 <sivel> why would we do that? ;)
+19:30:25 <bcoca> allanice001: requirements should nto have optional ones
+19:30:32 <sivel> realistically speaking, I don't see that happening
+19:30:42 <abadger2000> yeah +1 to adding pycrypto to the documentation.
+19:30:42 <abadger2000> One thing about requirements.txt.... requirements.txt allows us to serparate install requirements from runtime requirements.
+19:30:42 <abadger2000> (setup.py is both)
+19:30:47 <bcoca> if ansible requries asyncio ... well, its not py2 compatible
+19:30:50 <abadger2000> *sigh*  I seem to be falling off the network every 30 minutes or so... /me hopes his connection lasts the rest of hte meeting
+19:31:33 * allanice001 agrees with abadger2000
+19:31:39 <bcoca> stop stealing wifi from the cars speeding through the highway
+19:32:24 <sivel> maybe I'm not following there, abadger2000 are you -1 for moving things into requirements.txt?
+19:32:34 <sivel> I don't know that I understood your comment
+19:32:44 <abadger2000> I'm not certain of the ramifications..
+19:33:03 <sivel> I've seen it done before.  I was just trying to find the project, but my memory is failing me
+19:33:51 <abadger2000> Maybe we should make a runtime-requiremnts.txt file (or minimal-requirements.txt) file and have setup.py use that?
+19:34:11 <abadger2000> We can symlink it to requirements.txt until there's a divergence?
+19:34:42 <sivel> I'm not necessarily against that, just not sure what that gets us.  The things in setup.py are requirements, so unsure why we wouldn't just call it requirements.txt
+19:34:48 <abadger2000> Or just a comment in requirements.txt # Keep this minimal for bare runtime requirements.  No optional or alternate requirements in here.
+19:35:23 <sivel> I think that makes sense, mention that it is only core requirements
+19:35:48 <abadger2000> Cool.
+19:35:56 <abadger2000> that works for me.
+19:36:15 <allanice001> Sivel & abadger2000
+19:36:20 * allanice001 points to https://github.com/ansible/galaxy/blob/develop/setup.py
+19:36:26 * allanice001 points to https://github.com/ansible/galaxy/blob/develop/requirements.txt
+19:36:55 <allanice001> (Fwiw)
+19:37:57 <sivel> I think that is slightly different, and doesn't look like setup.py uses requirements.txt, it just ignores installing deps
+19:38:15 <abadger2000> yeah.
+19:38:30 <abadger2000> we cn figure out how to do this after the meeting.
+19:38:57 <abadger2000> gundalow, jtanner: Is there more that needs deciding/doing on this?
+19:39:05 <gundalow> abadger2000: could you please #info #action as needed
+19:39:26 <jtanner> i guess it needs implementation design for the docs aspect
+19:39:27 <abadger2000> #action abadger and sivel to figure out how to implement docs and stup.py using the same requirements.txt to install dependencies.
+19:39:45 <abadger2000> jtanner: Docs side we change it to: pip install -r requirements.txt
+19:39:46 <jtanner> ^ that covers it i think
+19:39:48 <bcoca> https://github.com/google/google-apputils
+19:40:01 <jtanner> next topic
+19:40:04 <gundalow> #info Docs side we change it to: pip install -r requirements.txt
+19:40:09 <gundalow> ..................................................
+19:40:09 <gundalow> ..................................................
+19:40:10 <gundalow> ..................................................
+19:40:18 <gundalow> #topic ansible/ansible#21299 Add "idempotence check" section to module docs
+19:40:27 <gundalow> #link
+19:40:30 <gundalow> bah
+19:40:36 <gundalow> #link https://github.com/ansible/ansible/issues/21299
+19:41:12 <bcoca> a) not all modules are idempotent
+19:41:21 <bcoca> b) that can get complicated
+19:41:38 <bcoca> c) notes; already exist as well as you can add to descriptions of 'state'
+19:41:48 <bcoca> -0
+19:42:50 <ryansb> d) all the more docs to become outdated with
+19:42:53 * thaumos claps
+19:42:53 <abadger2000> Yeah, notes is where these things usually end up.
+19:43:17 <gundalow> (d) is my concern
+19:43:29 <gundalow> #info a) not all modules are idempotent
+19:43:39 <gundalow> #info b) that can get complicated
+19:43:40 * jtanner filed a bug on ansibot for that issue
+19:43:49 <gundalow> #info c) notes; already exist as well as you can add to descriptions of 'state'
+19:43:58 <gundalow> #info d) all the more docs to become outdated with
+19:44:02 <abadger2000> I guess it's a matter of if we want longer information for the majority of modules then a separate field makes sense.  Otherwise, just document it in notes.
+19:44:36 <jtanner> wait ... why do we care how it's implemented?
+19:44:39 <bcoca> or description state: descrption: - .... c('changed') requires tags to be specified for proper chagne detection
+19:44:50 <bcoca> s/tags/unique id|name|etc/
+19:45:05 <bcoca> jtanner: new field requries code changes
+19:45:11 <thaumos> i'd think we care because the code implication of this effects doc code
+19:45:13 <bcoca> reusing existing, does not
+19:45:24 <jtanner> which field?
+19:45:35 <thaumos> adding a new one, as the proposer suggested
+19:45:50 <gundalow> will require changes to the module -> RST generator code
+19:46:15 <jtanner> i feel like "supports check mode" is sufficient
+19:46:38 <bcoca> jtanner: that is already there, the problem is that sometimes it is not a true/false proposition
+19:47:02 <gundalow> Current docs for `note:` say:  Details of any important information that doesn’t fit in one of the above sections; for example if check_mode isn’t supported, or a link to external documentation.
+19:47:02 <bcoca> supports check mode , but it is only reliable if name is unique (i.e vmware_guest)
+19:47:20 <gundalow> We could extend that wording
+19:47:27 <gundalow> I'm -1 to adding a new field
+19:47:46 <allanice001> -1 to adding additional fields
+19:48:08 <gundalow> Can people please vote on adding new field
+19:48:43 <jtanner> -1
+19:48:49 <thaumos> -1
+19:48:51 <ryansb> -1
+19:48:57 <sivel> just curious, what are the expectations for number of votes?
+19:49:16 <sivel> although, looks like quite enough -1s :)
+19:49:26 <gundalow> sivel: to get a feel if we should continue certain discussions
+19:49:26 <bcoca> -0
+19:49:30 <jtanner> sivel: your vote matters the most
+19:49:44 <thaumos> does that take away a -1 bcoca?
+19:49:45 <gundalow> In this case if it's a fairly solid swing one way, then we think if their are better ways of doing it
+19:49:46 <sivel> gundalow: yeah, I just meant a count or percentage of people participating
+19:49:47 <thaumos> ;-)
+19:49:55 <bcoca> sivel: votes are multiplied by vowels in your name and divded by consonants
+19:50:05 <sivel> so we need like 60% of people participating to vote
+19:50:10 <abadger2000> -1
+19:50:16 <mattclay> -1
+19:50:26 <bcoca> thaumos: never gave a -1
+19:50:35 <sivel> just thinking maybe it would be good to solidify how many people need to actually vote, or otherwise it gets shelved for another attempt
+19:50:46 <sivel> anyway, I'll -1 it too, since my vote counts the most :)
+19:50:52 <abadger2000> votes are typically among committers.
+19:50:52 <gundalow> sivel: I make that bit up based on gut feel
+19:50:53 <thaumos> ^ lol
+19:50:58 * gundalow attempts to count
+19:51:20 * allanice001 suggests a #vote for zodbot
+19:51:29 <bcoca> thaumos: i dont like, but dont think important enough to give +-1, hence -0
+19:51:49 <sivel> just as long as zodbot continues to recognize my multiplied vote status
+19:52:13 <sivel> I digress
+19:52:16 <abadger2000> and yeah... we should make sure we know the number of committers so we know if a close vote should wait a week to give others a chance to vote.
+19:52:22 <thaumos> if it committers then I rescind my vote
+19:52:23 <gundalow> #info -1: jtanner, thaumos, ryansb, gundalow, abadger2000, mattclay, sivel, allanice001 (8)
+19:52:30 <gundalow> #info +0: bcoca
+19:52:38 <jtanner> thaumos: i think you count.
+19:53:09 <gundalow> Well that's fairly clear 8/9 say no
+19:53:36 <gundalow> Do we need to improve the wording of http://docs.ansible.com/ansible/dev_guide/developing_modules_documenting.html#documentation-block (last line is about `notes`)
+19:53:43 <gundalow> If so, suggestions
+19:54:02 <gundalow> #agreed No to updating a new field
+19:55:25 <thaumos> @gundalow, I don't know what's not clear about the check_mode mention there.
+19:55:31 <abadger2000> "for example if check_mode isn’t supported with some parameters"
+19:55:52 <thaumos> I just think the proposers point is that since Notes are so far down and aren't highlighted in some way, it could be missed.
+19:55:52 <abadger2000> "for example if check_mode is only supported with some parameters"
+19:55:58 <allanice001> gundalow: maybe extend the example to have a clear usage of each of the keywords?
+19:56:26 <gundalow> thaumos: The original comment was: For many modules, the logic used to implement the idempotence check isn't obvious. For example, the ec2_vpc_route_table module isn't idempotent if you don't specify tags. This information is present in the docs, in the description of the "lookup" option, but I missed it at first because I didn't read the documentation of every single option
+19:56:39 <allanice001> But that could also be this - https://github.com/ansible/ansible/blob/devel/examples/DOCUMENTATION.yml
+19:57:18 <gundalow> allanice001: yup, I improved that a bit at the same time as updating developing_modules_documenting.html, though it stil needs work
+19:57:21 <thaumos> ah, that last bit it was I missed "every single option".
+19:57:23 <bcoca> we can write as many docs as we want, that does not get people to read them
+19:57:32 <thaumos> ^
+19:57:33 <gundalow> bcoca: very true
+19:57:42 <thaumos> as proven by me just now.  People skim for keywords
+19:57:43 <jtanner> like someone said earlier, there's also docs all over the place
+19:57:45 <jtanner> hard to keep up
+19:58:04 <gundalow> though since I updated developing_modules_documenting.html, I've linked to it in 20+ reviews I've done in the last few days
+19:58:06 <bcoca> thaumos: those are the 'good' ones, others dont even bother
+19:58:32 <gundalow> #action gundalow to add some words to developing_modules_documenting.html's notes: regarding "for example if check_mode is only supported with some parameters"
+19:58:39 <gundalow> ok, I think we are done on that
+19:58:39 <allanice001> sadly, I agree, Again, I hope we can drive to changing that with implementing metadata
+19:58:43 * jtanner has to join another meeting in 2 min, but will still lurk here
+19:58:51 <gundalow> jtanner: ACK
+19:59:06 <gundalow> #topic Open Floor
+19:59:13 <gundalow> oh, and with 50 seconds to spare \o/
+19:59:53 <allanice001> I recall abadger2000 mentioned implementing #chairing roster
+19:59:53 <gundalow> #topic Commits to devel
+20:00:05 <jtanner> note to all ... needs_revision is a constant work in progress with the bot. Please point out irregularities or inconsistencies to me
+20:00:11 <gundalow> ah, sorry
+20:00:14 <gundalow> #topic Open Floor
+20:00:32 <gundalow> #info note to all ... needs_revision is a constant work in progress with the bot. Please point out irregularities or inconsistencies to jtanner
+20:01:17 <gundalow> #info All code changes to devel must go via PRs. Shippable is their to help you, look before merging
+20:04:30 <gundalow> Anyone got anything else?
+20:04:47 <allanice001> nope
+20:04:47 <gundalow> allanice001: Good point, though I've not got energy for that at the moment
+20:05:03 <allanice001> Next time is good too
+20:05:11 <gundalow> I personally think #info, action, agreed are resulting in better meeting logs
+20:05:14 <gundalow> Cool
+20:05:28 <allanice001> #agree
+20:05:37 <gundalow> #info If you have anything for next meeting please add to https://github.com/ansible/community/issues/150
+20:05:40 <gundalow> allanice001: haha
+20:05:53 <gundalow> #endmeeting

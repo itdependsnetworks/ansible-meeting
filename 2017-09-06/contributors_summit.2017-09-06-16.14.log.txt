@@ -1,0 +1,433 @@
+16:14:25 <gundalow> #startmeeting Contributors Summit
+16:14:25 <zodbot> Meeting started Wed Sep  6 16:14:25 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:14:25 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:14:25 <zodbot> The meeting name has been set to 'contributors_summit'
+16:14:36 <rbergeron> ahh
+16:14:38 <rbergeron> #link https://public.etherpad-mozilla.org/p/ansible-summit-september-2017-core
+16:14:54 <rbergeron> Also, main agenda link: https://public.etherpad-mozilla.org/p/ansible-summit-september-2017-agenda
+16:15:37 <gundalow> #chair abadger1999 alikins  bcoca  gregdek jimi|ansible jimi|ansible nitzmahone privateip Qalthos rcarrillocruz ryansb sdoran shertel thaumos
+16:15:37 <zodbot> Current chairs: Qalthos abadger1999 alikins bcoca gregdek gundalow jimi|ansible nitzmahone privateip rcarrillocruz ryansb sdoran shertel thaumos
+16:15:44 <gundalow> #chair rbergeron
+16:15:44 <zodbot> Current chairs: Qalthos abadger1999 alikins bcoca gregdek gundalow jimi|ansible nitzmahone privateip rbergeron rcarrillocruz ryansb sdoran shertel thaumos
+16:16:03 <gundalow> #topic Intro
+16:17:43 * jlk is on IRC :D
+16:18:06 <jtanner> i'm alive
+16:18:16 <pabelanger> o/
+16:18:32 <gundalow> #chair jlk pabelanger chouseknecht caphrim007 kedarX stacywsmith
+16:18:32 <zodbot> Current chairs: Qalthos abadger1999 alikins bcoca caphrim007 chouseknecht gregdek gundalow jimi|ansible jlk kedarX nitzmahone pabelanger privateip rbergeron rcarrillocruz ryansb sdoran shertel stacywsmith thaumos
+16:18:33 <caphrim007> \o/
+16:18:35 <rcarrillocruz> o/
+16:18:37 <Pilou> o/
+16:19:18 <gundalow> #chair rcarrillocruz Pilou
+16:19:18 <zodbot> Current chairs: Pilou Qalthos abadger1999 alikins bcoca caphrim007 chouseknecht gregdek gundalow jimi|ansible jlk kedarX nitzmahone pabelanger privateip rbergeron rcarrillocruz ryansb sdoran shertel stacywsmith thaumos
+16:19:36 <gundalow> #topic Playbook bundle installer
+16:19:40 * mikedlr waves hi.
+16:20:47 <gundalow> #info Big ask for "Minimal installer", ability to distributes only certain modules
+16:21:03 <gundalow> #info We want this for Ansible 2.5
+16:22:03 <gundalow> #action thaumos to create proposal and add link to etherpad
+16:22:31 <maxamillion> can someone share a link to the etherpad?
+16:22:38 <jlk> https://public.etherpad-mozilla.org/p/ansible-summit-september-2017-core
+16:22:58 <maxamillion> jlk: thanks!
+16:23:12 <gundalow> #chair maxamillion
+16:23:12 <zodbot> Current chairs: Pilou Qalthos abadger1999 alikins bcoca caphrim007 chouseknecht gregdek gundalow jimi|ansible jlk kedarX maxamillion nitzmahone pabelanger privateip rbergeron rcarrillocruz ryansb sdoran shertel stacywsmith thaumos
+16:23:25 <jlk> https://public.etherpad-mozilla.org/p/ansible-summit-september-2017-agenda is the main one maxamillion
+16:23:35 <maxamillion> jlk: +1 thanks again
+16:23:42 <gundalow> Guest34818: Hi, Are you part of the Contributors Summit? If so could you please "/nick realname"
+16:24:20 <jlk> speak into the mic...
+16:24:41 <gundalow> jlk: better now
+16:24:43 <gundalow> ?
+16:24:50 <jlk> a tiny bit
+16:24:51 <mikedlr> not very clear ..
+16:25:15 <gundalow> now?
+16:25:32 <bcoca> did they hang up?
+16:25:34 <jlk> it was better until Greg dropped off.
+16:25:37 <mikedlr> absolutely nothing..
+16:25:41 <gundalow> #info Other notes are in https://public.etherpad-mozilla.org/p/ansible-summit-september-2017-core
+16:28:16 <mikedlr> so greg can now be heard fine but the people who are actually talking come across between mumble and just a bit of noise..
+16:28:44 <jimi|ansible> bcoca: change your background color in etherpad, the dark blue is hard to read against
+16:30:00 <jimi|ansible> dark red is not much better :)
+16:30:03 <bcoca> really cannot hear people in room
+16:30:19 <jtanner> i think greg's mic is the only one that works
+16:30:20 <jimi|ansible> i'll try and find the sound peeps to up the mic levels
+16:30:35 <bcoca> i know abadger1999 is talking, not what he is saying
+16:30:43 * resmo waves
+16:30:50 <thaumos> better?
+16:30:54 <thaumos> I think it is
+16:31:03 <jtanner> now i can at least tell it's toshio talking
+16:31:48 * jimi|ansible shakes fist at package names across distros
+16:31:59 <jlk> lol, age old anger.
+16:32:17 <gundalow> #chair mikedlr ShaneF resmo
+16:32:17 <zodbot> Current chairs: Pilou Qalthos ShaneF abadger1999 alikins bcoca caphrim007 chouseknecht gregdek gundalow jimi|ansible jlk kedarX maxamillion mikedlr nitzmahone pabelanger privateip rbergeron rcarrillocruz resmo ryansb sdoran shertel stacywsmith thaumos
+16:32:21 <jlk> see also, bindep from OpenStack land, and mordred
+16:32:59 <jimi|ansible> but deps are almost always required on remote systems...
+16:33:07 <jimi|ansible> ^ this is why i'm skeptical about this being useful
+16:33:14 <jimi|ansible> also, at what point are we just reimplementing roles?
+16:33:17 <jlk> except for things like aws, openstack, gce, networks, etc...
+16:33:27 <jimi|ansible> sure, cloud stuff, unless you're using a bastion system
+16:33:31 <jlk> all the "api" modules.
+16:33:32 <jimi|ansible> i guess then you'd run the bundler thing there
+16:33:38 <jlk> yeah
+16:34:26 <jimi|ansible> so why not write a module that is the dep installer?
+16:34:39 <jimi|ansible> - setup_module: name=aws <- installs boto on the target system
+16:35:04 <jlk> could work, but I think you're on a tangent from the original problem, and bcoca's bit is pile-on
+16:35:08 <jimi|ansible> module/action_plugin, to deal with distro "fun"
+16:35:45 <gundalow> #chair dag
+16:35:45 <zodbot> Current chairs: Pilou Qalthos ShaneF abadger1999 alikins bcoca caphrim007 chouseknecht dag gregdek gundalow jimi|ansible jlk kedarX maxamillion mikedlr nitzmahone pabelanger privateip rbergeron rcarrillocruz resmo ryansb sdoran shertel stacywsmith thaumos
+16:35:50 <jimi|ansible> technically that's not true: ansible -m include_role=myrole localhost
+16:36:33 <jimi|ansible> also, we're talking about bundling playbooks, so we're going to have playbooks wrapping something already
+16:36:35 <jimi|ansible> ?
+16:37:00 <jlk> "many people arguing"
+16:37:30 <jimi|ansible> ^ every day in our slack channel :)
+16:37:42 <jlk> yup!
+16:39:16 <gundalow> :)
+16:39:17 <jlk> holy echo batman
+16:39:22 <rbergeron> jlk: does this seem similar to bindep or?
+16:39:33 <rbergeron> oh. paul is asking the same thing
+16:39:38 <rbergeron> jlk: is the echo bad?
+16:39:41 <rbergeron> like super bad?
+16:39:56 <sdoran> Depends on who's talking.
+16:40:04 <jhawkesworth_> but largely, yes
+16:40:06 <sdoran> My guess is proximity to another mic in the room.
+16:40:21 <jlk> whoever was talking a couple people ago had bad echo, but right now it's okay
+16:40:21 <jlk> and yeah, this is close to bindep
+16:40:53 <alikins> echo is pretty bad, mostly intelligible but barely
+16:42:18 <pabelanger> https://github.com/ansible/ansible/pull/22159 bindep task for ansible, mordred wrote
+16:42:35 <alikins> do we have specific use cases for bundles?  Seems like we are trying to solve about 10 vaguely related problems
+16:42:47 <jlk> waiiiit
+16:42:52 <jlk> you're talking about pushing modules back out??
+16:42:52 <mordred> pabelanger: yes please
+16:43:24 * mordred lets jlk and pabelanger handle the meeting
+16:43:43 <jlk> alikins: that's kind of what it sounds like to me
+16:43:51 <rbergeron> mordred: i think you chatted with someone about this last week or week before while in the office
+16:43:57 <jlk> there was 1 problem, 1 solution, and a bunch of other problems went "heyyyy, that looks interesting"
+16:43:58 <rbergeron> vaguely
+16:44:23 <gundalow> Question: What do other people in the room think of this?
+16:44:47 <rbergeron> pabelanger: can you add that link to that PR to the etherpad with a little description? purdy plz
+16:45:00 <rbergeron> https://public.etherpad-mozilla.org/p/ansible-summit-september-2017-core around line 33ish
+16:45:16 <matrix30001> Is there anyone looking at the idea of a module manager?
+16:45:25 <jimi|ansible> gundalow: i'm skeptical of it being useful
+16:46:06 <mikedlr> a) galaxy alone isn't sufficient - some kind of artefact management / own system needs to be available - once you do that you only want once source of all remotely installable objects in use in any install
+16:46:39 <maxamillion> gundalow: I think the idea of bindep is pretty cool for those who want to use it, but I'm not sure this is something I really care about to be added to ansible core for my use cases ... this just isn't really a problem for my team (at least not that I'm aware of)
+16:46:51 <abadger1999> thaumos: mattclay is speaking
+16:46:53 <mikedlr> b) the modules are getting unmaintainable and compatibility with different python versions will get worse if more of them move outside the main ansible package.
+16:47:16 <matrix30001> agreed, the python v2.7 vs 3.x is going to make the problem larger
+16:47:18 <mikedlr> there was a reason why having two separate packages was problematic.
+16:47:43 <jimi|ansible> mikedlr: yeah i think ultimately something along the lines of pip would be where we end up, but there are namespace concerns, etc. The idea of "minimal" was to get you the basic set of modules that let you do file/package/service stuff out of the box and then you could install other modules as you wish
+16:48:05 <mordred> maxamillion, gundalow: I think bindep is a bit different from ansible bundles - bindep is an available tool for being able to list distro package depends for something - it could be a thing that bundles could know how to process as a shorthand, but by itself I don't think it solves the same problem
+16:48:06 <rbergeron> btw: if you're here (virtually, physically, mentally... 1 out of 3 works) -- if you get a moment, add your name / irc / github details to the main page: https://public.etherpad-mozilla.org/p/ansible-summit-september-2017-agenda -- around line 85 under "who is here"
+16:48:26 <gundalow> ^^^^
+16:48:42 <mikedlr> jimi: I agree that PIP is crucial;  ansible modules should be "thin" and call in libraries via PIP.  if we can then work with libraries outside that simpifies ansible lots.
+16:49:04 <jimi|ansible> that still doesn't solve the problem of deps for the module on remote systems
+16:49:13 <jimi|ansible> which is the main reason i'm skeptical of this being useful
+16:49:21 <maxamillion> mordred: then maybe I don't understand the problem this is trying to solve
+16:49:23 <mordred> it's obviously easy enough to have a "depends.yaml" playbook that has a bunch of package: lines in it - but also having a boiler-plate one that says "oh look, there's a bindep.txt, I'm going to bindep it, grab the list and run package: on the results" might be a way to express those concisely
+16:50:06 <jimi|ansible> crazy solution would be to extend ansiballz to use packages from the controller but that opens a BIG can of worms
+16:50:09 <abadger1999> remote deps that are included in the minimal package set includes: selinux, systemd, and urllib3
+16:50:27 * jimi|ansible ducks as abadger1999 throws something from behind
+16:50:33 <mordred> jimi|ansible: I think that's one of the reasons my understanding of the bundle idea was that it would have an "install" or a "depends" or osmething like that phase so that it's easy to say "I want to run this module on this remote system, could you please run its bundle's install playbook first so that I get the remote depends installed"
+16:50:36 * abadger1999 reads the channel
+16:51:00 <maxamillion> jimi|ansible: you're crazy man +1
+16:51:18 <jimi|ansible> 4 years of doing open source as a day job can have that effect
+16:51:42 <mordred> so if you say "ansible-bundle install my-awesome-bundle" to get thebundle locally, then you could mabye say "ansible-bundle '*' remote-deps my-awesome-bundle" *handwave*
+16:52:17 <pabelanger> ya, I'm happy to talk more about how bindep solves the issue for us in openstack-infra. Basically same use case I think
+16:52:33 <gundalow> #topic Core: 2.5 Roadmap
+16:52:35 <gundalow> NEW TOPIC
+16:52:45 <abadger1999> jimi|ansible: that could help with arch independent modules.
+16:52:49 <jlk> Can the speaker talk _AT_ greg's laptop?
+16:52:59 <abadger1999> well... pyhthon arch independent modules.
+16:53:11 <jimi|ansible> abadger1999: i just imagine the hell of different python versions between the controller/remote and the fun that could result
+16:53:25 <abadger1999> makes the ansiballz bigger ad doesn't handle things that aren't pure python.
+16:53:26 <maxamillion> what is Ansible Config?
+16:53:32 <abadger1999> jimi|ansible: <nod>
+16:53:37 <jlk> and what is facts namespacing?
+16:53:38 <bcoca> abadger1999: systemd is only required on systems that alreayd have systemd,  not sure where urllib3 is a problem, have not seen anyone complain aobut htat one
+16:53:42 <jimi|ansible> it would make the zip bigger yes, but probably not critically so
+16:53:44 <jlk> (we've ran into namespacing concerns in zuul land)
+16:53:47 <gundalow> #info 2.5 roadmap notes is been added to https://public.etherpad-mozilla.org/p/ansible-summit-september-2017-core see "Core 2.5 roadmap" section
+16:53:49 <abadger1999> maxamillion: it's a feature for 2.4 (will be continued on other systems)
+16:53:57 <jimi|ansible> could also configure it to not use local modules
+16:53:59 <maxamillion> abadger1999: is that pronounced "ansiballs" or "ansiball zee" (like DragonBall-Z) ?
+16:54:04 <abadger1999> *will be continued on other releases.
+16:54:05 <bcoca> jlk: ansible_facts.varname vs varname
+16:54:15 <jimi|ansible> maxamillion: i typically do -z
+16:54:17 * abadger1999 can't type and listen at the same time.
+16:54:21 <jlk> maxamillion: Ansiball Z is for s390x
+16:54:29 <gundalow> #chair ericsysmin
+16:54:30 <zodbot> Current chairs: Pilou Qalthos ShaneF abadger1999 alikins bcoca caphrim007 chouseknecht dag ericsysmin gregdek gundalow jimi|ansible jlk kedarX maxamillion mikedlr nitzmahone pabelanger privateip rbergeron rcarrillocruz resmo ryansb sdoran shertel stacywsmith thaumos
+16:54:32 <jlk> bcoca: oh.
+16:54:40 <jimi|ansible> ansiballz - it's over 9000 modules!
+16:54:40 <maxamillion> abadger1999: where might I find docs on it? all I found is the Ansible Configuration docs page and I suspect that's not what I want
+16:54:49 <abadger1999> maxamillion: AnsiBallZ like DragonBallZ
+16:54:54 <bcoca> jlk:  currenly facts can do 'ansbile_user' and clash with reserved/top level vars, this is a way to make them 'safe'
+16:54:58 <maxamillion> jlk: jimi|ansible: abadger1999: +1
+16:55:08 <bcoca> jlk: the last CVEs were all due to this and fact injection
+16:55:14 <abadger1999> bcoca: ^ (question about where docs for ansible-config live)
+16:56:49 <abadger1999> bcoca: systemd managed systems don't necessarily have the python bindings (and they aren't necessarily the python2 vs python3 bindings).
+16:56:54 <bcoca> sound really sucks
+16:57:01 <abadger1999> bcoca: so we do have to make sure it's installed.
+16:57:08 <bcoca> abadger1999: we dont use python on systemd module
+16:57:17 <bcoca> we use command direclty, there is no dep on the bindings
+16:57:22 <jlk> General request to have room speakers like this walk over to Greg's laptop to speak
+16:57:33 <jlk> gregdek: ^^ rbergeron ^^
+16:57:36 <abadger1999> try:
+16:57:37 <abadger1999> from systemd import journal
+16:57:39 <abadger1999> has_journal = True
+16:57:40 <abadger1999> except ImportError:
+16:57:42 <abadger1999> has_journal = False
+16:57:46 <gundalow> #info Network 2.5 roadmap https://github.com/ansible/community/wiki/Network%3ACore-roadmap-2.5 (feedback welcome in #ansible-network)
+16:57:55 <bcoca> ^ that is our logging, which 'transparently' falls back to syslog if systemd is not present
+16:57:57 <mikedlr> everybody please mute mikes if not speaking;  people on meeting hear typing.
+16:58:03 <bcoca> systemd is NOT requried
+16:58:08 <abadger1999> bcoca: https://github.com/ansible/ansible/blob/devel/lib/ansible/module_utils/basic.py#L99
+16:58:41 <bcoca> abadger1999: i know the code, please read what i said, has_journal=false is NOT an error
+16:58:44 <mikedlr> now it's clear for me..
+16:58:58 <abadger1999> bcoca: that's not the customer request
+16:59:06 <abadger1999> bcoca: the customer request is to instal deps.
+16:59:07 <bcoca> what request?
+16:59:12 <bcoca> its not a dep
+16:59:24 <gundalow> #chair itdependsnetwork zerocoolback
+16:59:24 <zodbot> Current chairs: Pilou Qalthos ShaneF abadger1999 alikins bcoca caphrim007 chouseknecht dag ericsysmin gregdek gundalow itdependsnetwork jimi|ansible jlk kedarX maxamillion mikedlr nitzmahone pabelanger privateip rbergeron rcarrillocruz resmo ryansb sdoran shertel stacywsmith thaumos zerocoolback
+16:59:34 <abadger1999> bcoca: if the remote side is supposed to log by systemd then it is a dep.
+16:59:36 <gundalow> #topic Core: Finishing Config
+16:59:50 <gundalow> #info https://public.etherpad-mozilla.org/p/ansible-summit-september-2017-core heading "finishing config (bcoca)"
+16:59:55 <gundalow> #chair grastogi
+16:59:55 <zodbot> Current chairs: Pilou Qalthos ShaneF abadger1999 alikins bcoca caphrim007 chouseknecht dag ericsysmin grastogi gregdek gundalow itdependsnetwork jimi|ansible jlk kedarX maxamillion mikedlr nitzmahone pabelanger privateip rbergeron rcarrillocruz resmo ryansb sdoran shertel stacywsmith thaumos zerocoolback
+16:59:58 <abadger1999> bcoca: thaumos (who jsut left) said that this feature is a customer request.
+17:00:13 <jtanner> config?
+17:00:24 <jlk> and the echo is back :(
+17:00:28 <jlk> and then went away
+17:00:30 <jlk> and back
+17:00:37 <maxamillion> jtanner: I also don't know what it is :/
+17:00:42 <abadger1999> jtanner: (I'm still talking about installer but bcoca is audio-speaking about config
+17:00:59 <bcoca> abadger1999: its not, it TRIES and fallsback
+17:01:00 * jhawkesworth_ back later
+17:01:57 <jlk> Greg needs to mute when bcoca is talking.
+17:02:47 <maxamillion> jlk: yeah, we should probably switch to push-to-talk
+17:02:59 <jlk> it's a bluejeans thing, not the room mic thing
+17:03:08 <maxamillion> oh
+17:04:20 <ericsysmin> where is this located?
+17:04:28 <ericsysmin> i want to take a look at the doc
+17:04:36 <jlk> Somebody on BJ talks, it's piped into the room, and then greg's laptop mic pics up the noise and feeds it back into BJ
+17:05:10 <gundalow> #topic Core: How to get community features on 2.5 roadmap
+17:05:43 <abadger1999> ericsysmin: doc for which?
+17:06:08 <gundalow> ericsysmin: https://github.com/ansible/proposals/issues/35
+17:06:19 <ericsysmin> gundalow: thanks
+17:06:19 <jimi|ansible> jpmens didn't submit that mqtt thing? i'm surprised :)
+17:06:37 <jlk> heh.
+17:06:44 <jlk> bcoca: that plugin isn't merged, and it's not clear if it would be merged at all
+17:07:40 <willthames> bcoca, wrt ansible-config, https://github.com/ansible/ansible/issues/25160 still seems like a concern
+17:08:21 <jlk> For community, it'd be good to use labels or something else that can indicate interest in getting something into the next release or not. The "roadmap" may be a red herring here, what's more important is feedback to contributors about intent.
+17:08:37 <jtanner> do we want to have shipit+automerge for !module plugins? Seems like we should figure out installer first.
+17:08:50 <jtanner> i don't want to make more giant piles that people think core owns
+17:08:57 <jlk> nod
+17:09:04 <bcoca> willthames: that was deprecated  and then removed in 2.2 iirc
+17:09:21 <willthames> but with zero deprecation warnings
+17:09:26 <bcoca> config added new 'deprection' warnings for items, but that does not aply retroactively
+17:09:42 <bcoca> willthames:  was in changelog, but we had no mechanism to give runtime warnings, now we have
+17:09:43 <willthames> I don't think we should deprecate stuff without prior warnings
+17:10:07 <bcoca> we 'warned' in the release notes and chnagelog ... just not in runtime
+17:10:18 <bcoca> willthames: it was not only time, but it probalby is one of the last
+17:10:28 <bcoca> as now we have method to deprecate
+17:11:13 <willthames> if you get a bunch of issues following 2.4 release regarding hostfile, I won't be hugely surprised - not everyone reads changelogs and release notes
+17:11:14 <bcoca> there are still 2 'grey items' , sudo/su keywords and accelerate
+17:11:31 <bcoca> willthames: iirc hostfile was removed in 2.2
+17:11:43 <bcoca> and we did get people complaining but very few
+17:11:51 <willthames> hostfile breaks only with devel
+17:12:19 <ericsysmin> bcoca: weren't those supposed to be removed
+17:12:22 <willthames> as I say in that issue, it works fine with 2.3 still
+17:12:30 <bcoca> ericsysmin: which?
+17:12:38 <ericsysmin> bcoca: sudo/su
+17:12:47 <bcoca> ericsysmin: tehy've been deprecated since 2.0
+17:13:25 <willthames> sudo/su have had runtime warnings for a long time though, it's a lot more obvious that you should use become
+17:13:41 <willthames> iirc
+17:13:51 <bcoca> no, had to remove them cause they were 'always set'
+17:13:55 <bcoca> did try to add at one point
+17:14:04 <bcoca> same with accelerate
+17:14:59 <willthames> ansible-lint warns about sudo at least :) (I didn't know about hostfile, but ansible-lint can't check ansible.cfg, ansible-review might be able too)
+17:15:17 <gundalow> #info BOTMETA https://github.com/ansible/ansible/blob/devel/.github/BOTMETA.yml
+17:20:46 <bcoca> willthames you are right on chronology .. in 2.3 we have
+17:21:11 <bcoca> DEPRECATED_HOST_LIST  = get_config(p, DEFAULTS, 'hostfile', 'ANSIBLE_HOSTS', '/etc/ansible/hosts', value_type='path')
+17:21:17 <bcoca> which i though had been removed already
+17:21:30 <bcoca> i remember responding to a couple of people complaingin about the same you did
+17:21:59 <bcoca> willthames: ah, it was removed .. but then someone added back ...grphgm
+17:22:13 <gundalow> gregdek: https://github.com/ansible/proposals/labels/Agreed
+17:22:17 <alikins> are we talking format proposals as in https://github.com/ansible/proposals ?
+17:22:18 <resmo> gregdek: handler listen proposal?
+17:22:31 <bcoca> that one is 'done'
+17:22:42 <resmo> gregdek: i made the proposal, jimi|ansible made it
+17:22:51 <jimi|ansible> yep i wrote the code
+17:23:27 <ericsysmin> that's a valid point
+17:23:38 <jimi|ansible> the module metadata implemenation itself was original a proposal (2 actually)
+17:23:52 <ericsysmin> "beginner" could be a way for that to happen
+17:24:06 <bcoca> another proposal being implemented 'versioned doc site'
+17:24:32 <jimi|ansible> that's not something an outside contributor could really work on though
+17:24:38 <jimi|ansible> that's a lot of infrastructure stuff
+17:26:35 <ericsysmin> yep, doc site is something on the server end for generation of docs and template from my understanding
+17:26:47 <ericsysmin> people are familiar with ReadTheDocs format
+17:27:02 <abadger1999> gregdek: The failed attempt to update the proposals process: https://github.com/ansible/proposals/pull/59
+17:27:44 <ericsysmin> i believe that's reliant on sphinx
+17:27:46 <jtanner> that last proposal on the "proposal process" still had lingering questions about it's intent. To me it was trying to build a framework to force the core team to accept a PR in a given timeframe.
+17:28:17 <jtanner> my belief is that proposal needs to be used to socialize an idea and have the community at large agree or disagree on the idea
+17:28:39 <jtanner> not be used as a tool to force the core team to do something
+17:28:52 <jimi|ansible> dag: funny you just reopened proposal 67, i would tend to agree with bcoca that it's more about better error messages
+17:29:24 <jimi|ansible> trying to guess the hint has its own problems, as i've experienced many times with the automatic hint suggestion in AnsibleError in relation to yaml parsing errors
+17:32:19 <bcoca> so i'm being moved to tailand?
+17:33:05 <jlk> That face when you forget you're on a video conference and you almost pick your nose.
+17:33:28 <bcoca> or you dont have pants on and get up for a tissue
+17:33:39 <jtanner> TMI.
+17:34:16 <jimi|ansible> o_O
+17:34:31 <maxamillion> jlk: been there
+17:34:54 <bcoca> tmi would be mentioning the underware status
+17:35:00 <jimi|ansible> ;_;
+17:35:19 <bcoca> i really cannot hear anything aside from greg and matt
+17:41:17 <gundalow> topic Core: New module utils API
+17:41:21 <gundalow> #topic Core: New module utils API
+17:42:25 <gundalow> #info module_utils/basic.py is huge and needed to be copied to every machine on run. We now have the technology (thanks to ansiball-Z) to split this into smaller files
+17:42:49 <jlk> smells like the "minimal Fedora install target" argument all over again :)
+17:43:00 <jlk> when does minimal actually equal minimal?
+17:43:00 <gundalow> #info Notes so far https://gist.github.com/abadger/3edc108f5a5b88c1a9a46c4869d778fd
+17:43:13 <gundalow> #action abadger1999 to write up proposal
+17:43:38 <jimi|ansible> wc -l basic.py -> 2844 as of last night
+17:43:48 <gundalow> #topic Core: Holistic view on facts
+17:44:46 <gundalow> #topic Core: How to handle encoding for file contents
+17:44:51 <gundalow> #action abadger1999 to write up proposal
+17:44:56 <gundalow> #undo
+17:44:56 <zodbot> Removing item from minutes: ACTION by gundalow at 17:44:51 : abadger1999 to write up proposal
+17:45:05 <gundalow> #action abadger1999 to write up proposal for How to handle encoding for file contents
+17:45:27 <ericsysmin> i like making it a parameter
+17:46:00 <jimi|ansible> if you set your locale to latin1, it's really your own fault
+17:46:01 <bcoca> characters are hard!
+17:46:15 <ericsysmin> A user.
+17:50:39 <stickster> jlk: you sexy beast
+17:50:47 <jlk> rawr
+17:50:55 <stickster> we've missed you so!
+17:51:12 <stickster> NOOOO WAAAAAAAAY
+17:51:15 <jlk> blast from the past!
+17:51:39 * bcoca goes for lunch
+17:51:40 <jlk> it sits on my shelf, on top of a pile of other Red Hat / Fedora memorabilia
+18:09:52 <gundalow> #topic Community Working Group
+18:10:05 <gundalow> #info https://public.etherpad-mozilla.org/p/ansible-summit-september-2017-cwg
+18:10:55 <gundalow> #topic Community: Documentation
+18:11:07 <gundalow> #info We are in the process of moving documentation around
+18:11:22 <jlk> are you all talking yet?
+18:11:25 <gundalow> #info Issue was that we had lots of documentation in different locations all slihgtly different
+18:11:25 <alikins> should there be sound?
+18:11:25 <jlk> because we aren't hearing
+18:11:28 <gundalow> jlk: yup
+18:11:40 <gundalow> Workin gnow?
+18:11:47 <jlk> yup
+18:11:48 <alikins> that sounded great. do it.
+18:12:05 <gregdek> https://public.etherpad-mozilla.org/p/ansible-summit-september-2017-cwg
+18:12:34 <abadger1999> jtanner: gregdek had said that a lot of these items will be interesting to you
+18:12:35 <gregdek> http://docs.ansible.com/ansible/latest/community/
+18:12:59 <jtanner> what items?
+18:13:35 <gundalow> jtanner: we are talking about community docs which includes PR work flow, which as bot owner is of interest to you
+18:13:45 <jtanner> ok
+18:18:17 <alikins> paste this url somewhere?
+18:18:40 <jimi|ansible> i'd really at the very least like to see that drop down in the top left instead of having to click a link and scroll
+18:18:54 <jimi|ansible> it's also a misnomer to call it "previous versions" when it's just current and devel
+18:19:39 <gundalow> http://docs.ansible.com/ansible/latest/ - stable-2.3
+18:19:48 <gundalow> http://docs.ansible.com/ansible/devel/ - devel
+18:23:15 <ericsysmin> old process shouldn't matter
+18:23:42 <jtanner> separate community doc from product doc
+18:23:45 <ericsysmin> yep
+18:23:52 <ericsysmin> jtanner: +1
+18:25:01 <stickster> ericsysmin: +1
+18:26:23 <jtanner> dag has some thoughts about WGs
+18:26:27 <jlk> We can't see the hands...
+18:26:49 <stickster> Many hands went up for "are you in a WG." About half of those went up for "feeling they are working"
+18:27:02 <jhawkesworth_> summer holiday has slowed windows wg down a bit
+18:27:12 <gundalow> #topic Community: Working Groups
+18:27:21 <jtanner> https://github.com/ansible/community/wiki/VMware%3A-community-plan#major-problems
+18:27:25 <jimi|ansible> i propose we create a time zone working group
+18:28:45 <bcoca> or WG per timezone?
+18:29:54 <gundalow> #info Community main page https://github.com/ansible/community/
+18:30:00 <abadger1999> jimi|ansible: I propose the WG uses the timezone for AQ ;-)
+18:30:09 <gundalow> #info Community Wiki https://github.com/ansible/community/wiki
+18:31:00 <gundalow> #action gundalow to get IRCBot ops set correctly on every Working Group IRC channel
+18:32:49 <bcoca> a working group workgin group?
+18:35:24 <jimi|ansible> Error: maximum recursion depth exceeded
+18:38:12 <jimi|ansible> we need to work on gregdek's metaphors
+18:42:47 <bcoca> *choke*
+18:42:54 <jtanner> all in one git repo
+18:43:01 <jtanner> it'll be amaaaaazing
+18:43:16 <jimi|ansible> saw a stat, i think it was like 6000 npm modules downloaded every second of every day on average?
+18:43:29 <jlk> hah I saw that one
+18:43:32 <jlk> but those are all different repos
+18:43:37 <bcoca> and that is only 1 guy trying to use strip()
+18:43:42 <jimi|ansible> LOL
+18:43:55 <jtanner> it's only a half-joke
+18:44:11 <gundalow> #topic Community: Ansibot
+18:44:47 <ericsysmin> I love Ansibot
+18:44:52 <ryansb> ansibot++
+18:44:59 <ryansb> rebuild_merge is dabes
+18:45:01 <jimi|ansible> ansibot <3
+18:45:06 <bcoca> im friends with ansibot ... love is a strong word ...
+18:45:38 <jlk> need more trust in the CI system
+18:45:46 <jimi|ansible> did we change that? i thought back in the day a maintainer was pretty much an auto-shipit?
+18:46:02 <gundalow> jlk: How do you mean?
+18:46:23 <jlk> Would be great to do 1 ship-it + a CI vote+merge
+18:46:23 <jlk> gundalow: there's a problem where CI results are stale.\
+18:46:32 <jlk> or it tests not quite the future reality
+18:46:48 <jlk> (things Zuul was written to fix for OpenStack, and we're working to bring zuul to Ansible)
+18:47:06 <jimi|ansible> well part of the problem is a lack of tests on a large swath of modules
+18:47:11 <jlk> yup
+18:47:15 <jimi|ansible> if we had those, i think we'd have more trust in the ci
+18:47:20 <jlk> would have to adjust the rules for new mdoules, add tests
+18:47:29 <jlk> and a working group to retro add tests to existing modules
+18:47:35 <ericsysmin> I thought we have tests as a requirement for new modules?
+18:47:54 <jimi|ansible> ^ that was originally supposed to be  a requirement for something to get into "core" vs. "extras"
+18:47:57 <Pilou> BOTMETA.yml overrides authors in DOCUMENTATION
+18:48:07 <gundalow> Adding tests that run via Shippable is a requirement for modules/network/*
+18:48:43 <jimi|ansible> i don't think it's a blanket requirement, and if we move to an external install method for modules it probably never will be except for the "minimal" modules
+18:49:13 <gundalow> Adding tests that run via Shippable is MUST for modules/network/* for Ansible 2.4 (and higher)
+18:49:19 <ericsysmin> jimi|ansible: yep, ok yea, and that's what our experience was as a vendor getting into core
+18:49:50 <jimi|ansible> ^ what gundalow said
+18:50:16 <ericsysmin> ok, good, just making sure cause we spent a good amount of time working on a test environment for that requirement
+18:50:49 <gundalow> :)
+18:51:20 <ericsysmin> we had to build a product deployment specifically for testing our modules lol
+18:51:43 <Pilou> Currently: "If you are a maintainer of a module in the same namespace, only one shipit is required."
+18:52:23 <resmo> I would not want to "block" good maintainers to wait for no one to pass by
+18:53:04 <Pilou> if there is only one module/namespace maintainer for a module, module could be moved in another namespace
+18:53:19 <jlk> you really really really don't want a self-ship capability
+18:53:26 <jlk> without peer review
+18:53:35 <jlk> not for anything that's distributed in the Ansible package
+18:53:51 <dmsimard> let's split modules again back into extras :(
+18:54:02 <dmsimard> (just kidding)
+18:54:10 <resmo> I know not a good example but cloud/cloudstack has basically one maintainer (me)
+18:54:23 <jlk> you've got modules in Ansible, and modules that can be distributed via Galaxy
+18:54:43 <resmo> but if the one maintainer makes good work and has integration tests?
+18:54:46 <jlk> resmo: even for those, you'd want another human to look at it and ensure that at least you didn't insert any backdoors
+18:54:58 <abadger1999> 1393 modules at the moment
+18:55:53 <alikins> there is a middle ground: a wild west universe (ala, pip/npm/etc) and a curated ansible distro
+18:56:06 <alikins> distro(s)
+18:56:13 <jimi|ansible> i thought that was the point of the minimal install
+18:56:58 <resmo> jlk: even then 2 make no difference, does it?
+18:57:17 <jlk> it does, if "shipit" has to come from humans with elevated rights
+18:57:19 <jimi|ansible> i think networking has blown up the # of modules a bit in the last couple of releases, but yeah i'd say we normally probably do 100 new per release
+18:58:45 <jlk> yes, lack of reaping is a problem
+18:59:49 <jimi|ansible> we tell them, it's in the metadata
+18:59:54 <jimi|ansible> and that shows up in docs now
+19:02:57 <gundalow> Back in 1 hour, at that point we will split into different working groups
+19:03:20 * jlk eats
+19:04:16 <bcoca> resmo: a good enough and trusted maintainer would get commit privs ... like you did
+19:04:57 <bcoca> the automerge/shipit is mostly for 'transitory' community, eitehr dont need to make many changes or are only involved for a period
+19:05:40 <bcoca> alikins: i actually think that the core/certified/community is a good split for modules (wish we did that in galaxy roles)
+19:06:17 <Pilou> jlk: "modules that can be distributed via Galaxy" is that possible ?
+19:06:23 <bcoca> though certified in my mind is mostly == we reviewed and conclude they are well done .. vs whatever it actually ends up being
+19:06:36 <jlk> Pilou: yeah, a role can have a module within it
+19:06:57 <bcoca> Pilou: you can now in role, but it is clunky, my point of an installer was to allow modules (and any other plugin) being distributable via git/tarball/github/galaxy
+19:30:22 <jtanner> why is zuul under the ansibot section?
+19:31:28 <jlk> mostly because at some point we should talk about how zuul and ansibot are going to interact with each other
+19:31:40 <jlk> as in Ansible using zuul for CI
+19:32:40 <jtanner> that would be more about replacing the shippable+github integration
+19:33:46 <jlk> yeah.
+19:33:56 <jtanner> the status of a PR in the github api is generally the same for all the various CIs that i've seen
+19:33:57 <jlk> weird, why am I italics?
+19:34:07 <jtanner> key difference is the url to the ci system for each job
+19:34:38 <jlk> sortof. It's a more lengthy discussion with zuul, but that can wait for a specific type of meet up
+19:34:40 <jtanner> the bot is using that status api for most of the work execpt ci_verified/rebuild_merge
+20:00:39 <mattclay> jtanner: Well, not replacing the Shippable + GitHub integration, but adding another, since we'll be using Shippable and Zuul in parallel for a while.
+20:01:09 <jtanner> i'll prepare a ci_splitbrain label =P
+20:03:09 <gregdek> Hey y'all.  For the afternoon sessions, we'll have separate IRC/bluejeans sessions, so we'll sort that out shortly.
+20:03:18 <gundalow> #endmeeting

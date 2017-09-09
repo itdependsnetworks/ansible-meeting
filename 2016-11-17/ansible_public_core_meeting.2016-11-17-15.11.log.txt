@@ -1,0 +1,360 @@
+15:11:05 <gundalow> #startmeeting Ansible Public Core Meeting
+15:11:05 <zodbot> Meeting started Thu Nov 17 15:11:05 2016 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:11:05 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:11:05 <zodbot> The meeting name has been set to 'ansible_public_core_meeting'
+15:11:13 <gundalow> HELLO EVERYBODY
+15:11:24 <gundalow> #chair alikins jtanner bcoca abadger1999
+15:11:24 <zodbot> Current chairs: abadger1999 alikins bcoca gundalow jtanner
+15:11:37 <jtanner> hEElow
+15:11:43 * Qalthos 🌊🌊
+15:11:59 <gundalow> Agenda as always https://github.com/ansible/community/issues/140
+15:12:07 <gundalow> shaps: You around?
+15:12:11 * jimi|ansible here now
+15:12:12 <abadger1999> Good morning
+15:12:34 <shaps> yep I am, do I need to talk about something? :)
+15:13:01 <gundalow> Discuss implementation of ansible/ansible#18501 - This is to be discussed in 2016-11-22 meeting.
+15:13:07 <gundalow> oh, that's not today
+15:13:13 <shaps> yup :D
+15:13:33 <shaps> I mean, if bcoca has info it can be discussed, otherwise wait next week
+15:13:45 <gundalow> that comment changed since when I looked at it this morning
+15:13:52 <gundalow> sounds like we need to wait for the other implementation
+15:14:09 <bcoca> changed 18h ago
+15:14:19 <shaps> yeah that was this morning here :P
+15:14:21 <gundalow> or last night
+15:14:24 <bcoca> still trying to remember who commited to it
+15:14:58 <gundalow> #topic Provides a document with lifecycle of the various releases https://github.com/ansible/community/issues/143
+15:15:01 <gundalow> #info https://github.com/ansible/community/issues/143
+15:16:07 <bcoca> we do community tickets here now also?
+15:16:12 <ryansb> Do we have that written down somewhere?
+15:16:24 <bcoca> ah, has to do with 'support'
+15:16:29 <ryansb> Seems relevant, even though it's in /community
+15:16:32 <bcoca> we have some vague stuff in releases
+15:16:57 <gundalow> aye, I spotted it in community, though it feels more like a Core thing
+15:17:12 <bcoca> i can see the overlap
+15:17:45 <gundalow> thoughts?
+15:18:44 <bcoca> reasonable request, we should clarify a bit more how many versions we support
+15:18:48 * gundalow find https://github.com/ansible/ansible/blob/devel/RELEASES.txt and notes it out of date
+15:19:15 <bcoca> http://docs.ansible.com/ansible/dev_guide/developing_releases.html
+15:19:21 <bcoca> ^ that is doc i was refereing to
+15:19:37 <gundalow> ah, cool thanks. That's why I was trying to find
+15:20:11 <ryansb> So adding an EOL list somewhere?
+15:20:37 <bcoca> instead of list, rule
+15:20:51 <abadger1999> and 1.9 as an exception to the rule
+15:21:00 <ryansb> So last 2 majors, but also 1.9?
+15:21:03 <bcoca> n - 2 for normal bugfixes, security fixes might be applied to older versions depending on consensus
+15:21:08 <jtanner> bleh, rm -rf 1.9
+15:21:24 <bcoca> abadger1999: im fine with 1.9 now not being an exception anymore
+15:21:46 <bcoca> actually, n + n-1, for normal bufixes, where n == devel
+15:22:09 <abadger1999> bcoca: Okay, note that from the tower side, they still support 1 release which does not support ansible2.x
+15:22:20 <ryansb> so right now that'd mean only 2.3/devel and 2.2?
+15:22:46 <jtanner> we're still pushing 2.1 updates, so -2 probably makes more sense
+15:22:54 <bcoca> does anyone normally cherrypick bugfixes to stable-2.1 or stable-2.0 or stable-.19??
+15:23:07 <bcoca> we are only doing 2.1 cause of security issue
+15:23:16 <jtanner> right ...
+15:23:20 <bcoca> after we release we don't normally update the older branches
+15:23:28 <abadger1999> jimi|ansible was thinking that we could do one more 1.9 release with the security fixes applied.... one of those needs to be reworked to be applied to 1.9, though
+15:24:17 <jtanner> i think n-1 moves too fast for most orgs
+15:24:40 * abadger1999 cherry-picked bugfixes to stable-2.1 until 2.2.0 was released.
+15:24:43 <jimi|ansible> bcoca: i sometimes do backport things to 2.1 still
+15:24:55 <abadger1999> only thing I still target for 2.1 are security fixes now.
+15:25:00 <jimi|ansible> for instance, the thing i merged yesterday will be merged back
+15:25:12 <bcoca> jimi|ansible: but that is more exception than rule
+15:25:22 <abadger1999> would consider also pushing security fixes to 1.9 if that's what we want to do as a group.
+15:25:24 <bcoca> ^ im fine with exceptions when the fix is fundamental
+15:25:34 <alikins> I wouldn't get bogged down in figuring out a formula for release cycle. Just document it for each release.
+15:25:38 <jtanner> we don't have any formal "rules" yet do we?
+15:25:48 <bcoca> abadger1999: im fine with that also considering it's widespread use, if fix is not overtly complicated
+15:26:09 <bcoca> i would document the general rule as i posted above, exceptions can be made on case by case
+15:26:53 <abadger1999> to me there's little sense in pushing "trivial security fixes" to 1.9 if we don't also push major security fixes...
+15:27:16 <ryansb> so N,N-1 support, backports/security case by case for older releases?
+15:27:19 <jtanner> i think i've heard mattclay might be doing some release manager type duties at some point, so i'd like to know his thoughts on N - x
+15:27:22 <abadger1999> so it's less about whether it's easy to backport the fix... but degree of the flaw.
+15:27:40 <ryansb> tw
+15:27:49 <bcoca> abadger1999: i think many things factor in
+15:28:19 <bcoca> abadger1999: if too hard to backport major security fix to 1.9, no subsequent minor one makes sense, that version is already 'insecure' and should be avoided
+15:28:23 <abadger1999> ryansb: that more or less works for me.
+15:28:54 <bcoca> ryansb: yes, that rule is easy to understand and lets people we know we are flexible if circumstances dictate
+15:28:54 <ryansb> so in the hypothetical case of bcoca's major fix that can't be backported, what happens?
+15:29:02 <jtanner> devel for all!
+15:29:16 <ryansb> ruh roh
+15:29:26 <bcoca> no, last stable shoudl always be scure N-4 ... doesnt have that requriement
+15:30:08 <alikins> And even better than just documenting it, keep a record of the timeline in the doc. (ie, when released what was it's expected lifetime. If we change that, document when and what we changed). And git history of the doc doesn't count.
+15:30:14 <abadger1999> bcoca: the problem is for users... users will have much better expectations if they know we're giving them security fixes until X date than if they wake up one morning to find they must update today because we won't fix this flaw in the version they're running.
+15:30:50 <bcoca> abadger1999: ok, lets do this, N-1 for normal fixes N-2 for security?
+15:31:07 <bcoca> with N-X where X>2 is left to our discression
+15:31:24 <bcoca> ^ not really willing to guarantee security fixes for N-5
+15:31:42 <abadger1999> that's fine with me....  1.9 being the exception that we have to work out specially here.
+15:32:02 <bcoca> have we had major security issue that we have not been able to fix for 1.9?
+15:32:06 <bcoca> ^ did i miss something?
+15:32:11 <abadger1999> bcoca: the latest one.
+15:32:11 <ryansb> so https://paste.fedoraproject.org/483831/79396728/
+15:32:21 <bcoca> ah, then i would argue ... 1.9 be flagged as insecure
+15:32:30 <ryansb> ^^ just a draft, does that cover what people want to say
+15:33:42 <alikins> ryansb: Not for me.
+15:33:52 <abadger1999> bcoca: but we haven't telegraphed to users that we have ended support for 1.9 already.
+15:33:53 <alikins> I'd avoid 'support'
+15:34:16 <alikins> doesn't define what N is
+15:34:39 <abadger1999> so it puts users in exactly the position I feel is bad for them: they wake up tomorrow and find out that they must upgrade from 1.9 to 2.2.
+15:34:42 <bcoca> ryansb: i would reword
+15:34:57 <bcoca> abadger1999: 1.9 to 2.1 OR 2.2
+15:34:58 <alikins> or the units of the -1, -2 etc
+15:35:47 <bcoca> abadger1999: we still havep lenty of 1.7 users ... we have always been clear on the expectation that we dont backport bufixes more than last stable, security has always been a judgement call
+15:35:57 <abadger1999> bcoca: Either way, the problem is that they wake up and find they have to upgrade.
+15:36:10 <ryansb> ok, so instead of support how does "N-1 release (latest official) will receive backports, security fixes, and other fixes from the core team"
+15:36:14 <ryansb> sound
+15:36:19 <bcoca> they ALL have to upgrade, granted that most just a minor version
+15:36:20 <abadger1999> bcoca: we have not always been clear.
+15:36:21 <ryansb> No "support"
+15:36:31 <abadger1999> bcoca: we have been clear on every release except for 1.9
+15:36:42 <abadger1999> bcoca: that's why 1.9 is the exception that we have to figure out.
+15:37:01 <bcoca> we were clear that at one point we would not be able to keep updating it
+15:37:13 <bcoca> 1.9.6 has been out since march
+15:37:15 <abadger1999> ryansb: Also.... we need to loop notting and jmckerr into this discussion...
+15:37:29 <abadger1999> bcoca: yes.  But we've never said when that date is.
+15:37:31 <bcoca> 6 other versions have been released since then
+15:37:33 <abadger1999> and that's the problem.
+15:37:40 <abadger1999> we need to tell people a date.
+15:37:48 <bcoca> abadger1999: we never give any dates more than 'release in aprox 4 months'
+15:37:54 <bcoca> ok, date is today
+15:37:58 <abadger1999> and it's... "unfriendly" if we tell them that date is $now
+15:38:17 <abadger1999> bcoca: we've said that 1.9 would be supported longer than normal.
+15:38:24 <bcoca> it has been already
+15:38:29 <bcoca> waaaay past normal
+15:38:33 <abadger1999> but we never put an end to it.  So people can't plan.
+15:38:46 <bcoca> we never put an end to anything
+15:38:56 <bcoca> if we are going to start now, lets formalize it
+15:39:05 <alikins> I think it just needs to be explicit and explain what is maintained now and for how long. Anything else is even more of a guess.
+15:39:09 <bcoca> but 1.9 users have known for a looong time they are on borwed time
+15:39:21 <abadger1999> the normal end is "once we've made the N+1 release".
+15:39:34 <bcoca> we are at N+3
+15:39:43 <bcoca> for 1.9
+15:39:53 <abadger1999> but we said 1.9 is an exception to that rule without putting a new expectation in for it.
+15:40:04 <bcoca> abadger1999: not sure what alternative we have, since backporting the fix is such an issue
+15:40:49 <bcoca> abadger1999: yes, we were vague, but we have always been pretty vague, not sure what we can do except set less vague expectations going forward, and then adhere to them
+15:41:12 <abadger1999> Anyhow, we don't have the pay grade to make this decision here...
+15:41:14 <bcoca> we left a lot to 'when we cross that bridge' ... well, now we are in the middle of the birdge
+15:41:22 <alikins> If we don't know what we actually consider maintained at the moment, that is ok if it's documented.  TBD is a valid EOL
+15:41:45 <abadger1999> And newtMckerr wasn't going to be able to make this meeting.
+15:42:01 <bcoca> alikins: and that has been what we've done, which is mostly a reflection of us not knowing nor having time to plan, i'm all for being more specific, but i cannot go back in time
+15:42:03 <abadger1999> So we probably need to make some proposals and then table the decision itself.
+15:42:24 <bcoca> if we already cannot update 1.9 ... its EOL, insecure and should not be used
+15:42:40 <abadger1999> bcoca: jimi|ansible was somewhat amenable to updating 1.9.
+15:43:08 <abadger1999> So my best guess is that the fix can be backported but he anticipates having to do some work to do so.
+15:43:14 <bcoca> which CVE was this one?
+15:43:22 <bcoca> i have 3 'last ones' in my head
+15:43:32 <abadger1999> the modules affecting the controller one.
+15:43:35 <bcoca> only one seems hard to implement, but 1.9 didnt need it anyways
+15:43:49 <bcoca> 1.9 does not have ansible_ssh_executable, only 2.2 has that and is affected by it
+15:44:00 <abadger1999> I believe the others were independent changes to a few modules.
+15:44:25 <abadger1999> but modules can overwrite any vars right?
+15:44:37 <abadger1999> and some of the other vars can lead to problems as well.
+15:44:46 <bcoca> yes, but that is the case for every version of ansible since facts got introduced
+15:45:00 <bcoca> the actual vulnerability was allowing for arbitrary execution on controller
+15:45:06 <bcoca> which only 2.2 is vulnerable to
+15:45:29 <bcoca> is it 'nice' to have the var protection, yes, is it needed ... not imo
+15:47:05 <abadger1999> so... we need to ask ksiefred/jimi about whether this affect 1.9 and talk to jmckerr/notting about when we can EOL 1.9.x.
+15:47:39 <ryansb> abadger1999: I'm not saying we have to make a decision now, but I would like to have something at least we agree on
+15:47:40 <abadger1999> and give them a proposal about both normal release EOL and 1.9.x EOL specifically.
+15:47:43 <ryansb> then evolve from there
+15:48:07 <abadger1999> I'm +1 to ryansb's proposal for normal releases
+15:48:13 <alikins> Documenting CVE's (when and where fixed) is another TODO
+15:48:20 <bcoca> the general var overwrite issue affects all versions, the actual vulnerability filed is only 2.2
+15:48:34 * sivel daylight savings time...  :(
+15:48:46 * sivel is now lurking
+15:48:51 <bcoca> alikins: last one was oversight, we dont add to commit or changelog to not disclose before release (but we should deff add on release)
+15:48:53 <abadger1999> bcoca: that's what I'm not sure about.  I thought there were other vars that people were figuring ways to exploit as well.
+15:49:12 <abadger1999> anyhow... we need t oloop kseifred and jimi into that.
+15:49:26 <bcoca> abadger1999: worst case is connection vars, which you can only redirect to other host, no real way to send payload
+15:49:43 <abadger1999> For 1.9, Propose We end support in 1 month and we make one more security release to address outstanding CVEs before then.
+15:49:55 <bcoca> any auth/secrets gotten through 3rd host are irrelevant since attacker already has original target host
+15:50:34 <ryansb> Updated https://paste.fedoraproject.org/483864/93978271/
+15:50:53 <alikins> s/support/maintain
+15:50:59 <bcoca> ryansb:  i would not add 'currently' or you need to update docs every release
+15:51:17 <ryansb> alikins: k, will do
+15:51:37 <alikins> we don't support anything to anyone
+15:51:39 <ryansb> bcoca: that's just to disambiguate during this meeting, I'll clean that up w/ a full explanation of what the N/N-1 stuff means
+15:51:40 <bcoca> +1 to maintain vs support, rest of text seems fine
+15:51:59 <bcoca> ryansb: N == devel?
+15:52:20 <bcoca> i would replace N-1 for 'current stable release' and N-2 'previous stable release'
+15:52:22 <abadger1999> ryansb, alikins: CVEs are documented in two places already..  Changelog in the tarball and   https://www.ansible.com/security
+15:52:31 <bcoca> abadger1999: we missed that last time
+15:52:53 <bcoca> but that was 'release snafu'
+15:52:58 <abadger1999> <nod> yep.
+15:53:19 <ryansb> Ok, fixed https://paste.fedoraproject.org/483868/79397992/
+15:53:24 <bcoca> i'm updateing RELEASES.txt with missing stuff
+15:53:32 <abadger1999> Understood... but those are the places we make the list... having a third place we keep the list won't make release snafus happen less frequently...
+15:54:26 <bcoca> agreed
+15:54:26 <abadger1999> ryansb: Cool.  +1  to taking that up the chain.
+15:54:32 <bcoca> just need to make sure we always update those
+15:58:09 <ryansb> #action ryansb bring https://paste.fedoraproject.org/483868/79397992/ up with PMs and such
+15:58:25 <abadger1999> gundalow: I think we're ready to move on
+15:58:50 <gundalow> "N-2 will get security fixes, but no feature or other backports" - It isn't clear if functional fixes will go into that
+15:58:53 <bcoca> https://github.com/ansible/ansible/commit/2b37bd8e67e5423c2ff9d1da4ffe687b0531ee11
+15:59:07 <gundalow> Just given the wording used for N-1
+15:59:07 <ryansb> what is a "functional fix"?
+15:59:16 <gundalow> erm, bug fix
+15:59:18 <bcoca> bugfix
+15:59:18 <gundalow> rather
+15:59:57 <ryansb> I guess I lumped that w/ "other backports"
+16:00:09 <ryansb> I'll reword to "N-2 will get security fixes only"
+16:00:17 <gundalow> +1
+16:00:18 <gundalow> Thanks
+16:00:21 <gundalow> cool
+16:00:28 <gundalow> hum, nothing else on the agenda
+16:00:36 <gundalow> Do we want to talk about any proposals?
+16:00:40 <alikins> I've never seen https://www.ansible.com/security before. google for 'ansible cve' doesn't have it on first page. It is not reverenced anywhere from ansible/ansible that I see.
+16:00:53 <gundalow> or are we happy with the hours we've spent
+16:01:09 <gundalow> #topic Open Floor
+16:02:34 <bcoca> i had from last meeting, extending deprecation period
+16:03:01 <bcoca> since we hvae now gotten back to mostly regular releases every quarter, deprecating n+2 seems a bit 'soon' for most
+16:03:24 <gundalow> #topic extending deprecation period
+16:04:56 <abadger1999> I'm okay with making deprecation period longer but I think the larger problem is that you have to port your playbooks 4 times a year if we release quarterly.
+16:04:59 <gundalow> That makes sense to me
+16:05:58 <bcoca> we'll we are still 'cleaning up' bad errors that 1.x allowed
+16:06:06 <bcoca> i expect deprecations to go down after 2.4
+16:06:32 <abadger1999> That would be helped by making the release cycle longer (or only having new deprecations in certain releases)... longer deprecation periods don't fix it.
+16:06:43 <abadger1999> bcoca: You sir, are an optimist ;-)
+16:06:43 <gundalow> I've been wondering if we can make it easier for people to update their playbooks. Some combination of ansible-lint, ansible-review or maybe even a tool that will rewrite your paybooks like Python's 2to3 or GoLangs https://golang.org/cmd/fix/
+16:07:25 <gundalow> As well as having a single page the details all the deprecations and how to deal with them, like the 2.0 porting page we did. They any deprecation warnings point to thet page
+16:08:03 <bcoca> we had upgrade guide for 2.0 ...we should have kept updating it (though 90% of issues are with stuff we already put in that guide)
+16:08:16 <bcoca> most people complaining are upgrading NOW from 1.9
+16:08:24 <gundalow> Yup
+16:08:28 <bcoca> or upgraded and just turned deprecation warnings OFF
+16:08:46 <bcoca> ^ see #ansible just 4 mins ago, they were ignoring the warnings from 2.0/2.1 and then hit error in 2.2
+16:08:50 <gundalow> So I was chatting to lots of people at O'Reilly Velocity and it was suprising the amount of people still on 1.9
+16:10:19 <bcoca> gundalow: what is shocking is the people on 1.5 and 1.7
+16:11:45 <alikins> any numbers?
+16:12:09 <gundalow> There was a survey a while ago
+16:12:29 <bcoca> none too reliable, i'm guessing those responding to survey are not same crowd that would run ancient versions
+16:12:47 <bcoca> but guessing by ammount of questions, <5%
+16:13:01 <bcoca> but since we have grown the ansible user base ... that is still a LOT of people
+16:16:20 <gundalow> yup
+16:17:12 * gundalow often gets comments about the pain in updating to the latest version of Ansible, so that's why I was wondering about what we can do to reduce that pain
+16:20:04 <alikins> gundalow: +1
+16:21:27 <gundalow> 1) Do people think having a rolling deprecations page with all the details will be good - perhaps repurposing the poting 2.0 page?
+16:21:42 <gundalow> votes?
+16:22:43 <abadger1999> +1
+16:23:19 <bcoca> +1,  but module deprecations are comming via diff way
+16:23:48 <bcoca> 2 things, deprecating a module (no way to have version associated currently), deprecating module options (resmo just built in the facility to do this)
+16:24:12 <gundalow> bcoca: Just to clarify, you mean the way we implement the code to track and report deprecations by "via diff way"
+16:24:25 <jimi|ansible> +1, though most of those deprecations occurred because of the major 2.0 changes where we got rid of a lot of cruft so hopefully a major set of deps like that won't happen again for a long time
+16:24:41 <bcoca> yep
+16:24:52 <bcoca> jimi|ansible: you are the other optimist!
+16:25:02 * bcoca still wants to deprecate with_ ...
+16:25:15 <jimi|ansible> i am a pessimistic optimist, I believe the glass is half full of crap
+16:25:20 <gundalow> lol
+16:25:25 <bcoca> but going back to original point ... lmao ....
+16:25:40 <bcoca> do we extend deprecation from N+2? if so, how long ?
+16:25:54 <jtanner> i believe the glass has a hole in it, so some of the crap has leaked out onto my shoe
+16:26:16 * bcoca must stop using glasses inappropriately
+16:26:44 <bcoca> (i cannot believe this is me saying this) kidding aside, back to the serious point
+16:26:50 <gundalow> :)
+16:27:00 <bcoca> a) do we want to extend deprecation period? b) if so, for how long?
+16:27:17 <bcoca> me=> a +1 , b= n+4
+16:27:32 <gundalow> c) Do we want a single deprecation period for core & modules, or different
+16:27:51 <gundalow> a) +1 b) n=1 (that gives a year) c) same
+16:27:57 <bcoca> c) same
+16:28:08 <jimi|ansible> i was actually thinking just make it a flat year for everything rather than 2 versions
+16:28:12 <bcoca> gundalow: n+4 = 4 releases, 1 each quarter == 1 year
+16:28:34 <gundalow> a) +1 b) n=4 (that gives a year) c) same
+16:28:36 <gundalow> *cough*
+16:28:49 <bcoca> well, but we cannot really deprecate 'by time' only by version
+16:28:58 <jimi|ansible> well, next version after a year
+16:29:09 <bcoca> which is n+4?
+16:29:11 <gundalow> -1 to by year
+16:29:31 <bcoca> just cause it is hard to codify by time and kind of less predictable for users
+16:29:40 <bcoca> we probably will take longer than 1 year, very rarely less
+16:29:46 <bcoca> for 4 releases
+16:29:48 <jimi|ansible> ok, just a thought
+16:30:19 <gundalow> Difficult to write in code $what_ever_release_is_in_a_year, unless we do Ubuntu style YY.MM releases
+16:30:23 <bcoca> if we change to every 3 months, i would say n+5 (i think a year is good period, but we deprecate and announce version)
+16:31:02 <bcoca> jimi|ansible: so i agree with the period, just not sure how to 'implement' that in the warnings
+16:31:25 <gundalow> If we are writing in code when the deprecation will happen as per https://github.com/ansible/proposals/issues/32 then we can't go back and change it (I don't think) if we decide we are doing 6 or 2 releases a year
+16:32:04 <gundalow> Just a thing to be aware of
+16:32:55 <abadger1999> I We're not quarterly yet and I don't think quarterly is achievable.
+16:33:00 <abadger1999> (release-wsie)
+16:33:15 <bcoca> we are almost quaterly
+16:33:33 <abadger1999> I think 3 months is a better number.
+16:33:36 <abadger1999> err
+16:33:36 <bcoca> 3.5 releases a year vs 4
+16:33:40 <abadger1999> 3-yearly.  4 months
+16:34:25 <bcoca> n+4 guarantees AT least a year, even if we meet with quarterly, we are in between right now
+16:34:47 <abadger1999> I could even see us going to 6 months... we still haven't solved how to address community feature PRs in a timely manner in the current release cycles.
+16:34:50 <bcoca> i did update 'releases' to be 4months
+16:35:04 <jtanner> when i look at the releases page, i get the impression we are never not actively releasing something
+16:35:47 <bcoca> jtanner: basically we are talking about major 2.x <= x is major (i know not same as most version standards), for this discussion 2.x.y is not being considered a 'release'
+16:36:04 <abadger1999> jtanner: If you include minor releases, in the process of releasing something is definitely the norm rather than the exception
+16:36:04 <bcoca> as those are 'bugfix' vs feature release
+16:36:40 <gundalow> ok, maybe we can look at this form a different point
+16:36:53 <jtanner> my point is that we seem to be very busy "releasing" things
+16:36:53 <bcoca> is everyone comfortable with 1yr?
+16:37:03 <bcoca> jtanner: i blame bugs!
+16:37:04 <gundalow> 1y +1
+16:37:08 <jtanner> perhaps a longer cycle wouldn't hurt
+16:37:42 <jtanner> well, are the bugs in any way correlated to the rate of releasing?
+16:37:43 <bcoca> probably, but hard to balance people wanting new features, also most of the issues come from us not really observing teh freezes that strictly
+16:37:59 <bcoca> 90% of headaches come from stuff introduced in 'last 2 weeks before release'
+16:38:28 <bcoca> new bugs are correlated to change, any change
+16:38:45 <bcoca> as sometimes  a 'fix' may cause other bugs cause of 'unintended/uknwon' consequences
+16:38:50 <bcoca> test coverage helps with that
+16:39:08 <bcoca> but also having greater samples of actual usage, many 'bugs' are users doing stuff we did not expect
+16:39:14 <jtanner> would doing postmortems get us closer to reducing the breaking changes?
+16:40:09 <abadger1999> 1 year +1 with the caveat that we should revist if we change our target release cycle.
+16:40:21 <bcoca> possibly, but we have 2 major sources, core fixes/revamps and module changes, some like docker/aws have to do with moving targets or features that are then incompatible with api/libs used across very diverse user base
+16:40:22 <abadger1999> postmortems would be nice in general.
+16:40:24 <alikins> 1yr of what exactly?
+16:41:09 <bcoca> alikins: since feature was marked for deprecation, which currently would be 'current version +4'
+16:41:16 <abadger1999> alikins: we're targetting 1 year between the introduction of a deprecation (with warning) and the feature being removed.
+16:41:21 <bcoca> ^ possibly +3 but not enough safety
+16:42:35 <abadger1999> I'd rather do 3 releases and be slightly under a year actually but not going to block for that.
+16:42:55 <alikins> given the user base, 1 year sounds ridiculous to me.
+16:43:11 <bcoca> i'm fine with revising release schedule, but that is diff topic
+16:43:14 <gundalow> alikins: how do?
+16:43:17 <bcoca> alikins: what period do you suggest?
+16:43:43 <abadger1999> bcoca: I mean -- deprecation cycle 3 releases rather than 4.
+16:43:49 <bcoca> abadger1999: we attempt every 3 motnhs (but document 4, we normally fall in between)
+16:43:57 <alikins> any time period really seems wrong. That is just going to result in folks getting stuck on older releases.
+16:44:06 * gundalow invokes chair power: We've had 40 minutes on this, are we still getting anyway, do we want to park it think some more and revisit at another point
+16:44:09 <abadger1999> agreed that changing the release schedule is a different topic
+16:44:12 <bcoca> alikins: never?
+16:44:47 <jimi|ansible> alikins: that's not the case now, i don't think it would be if we made it longer (in fact i think it would be much less)
+16:44:52 <bcoca> so you propose we dont deprecate nor remove sutff?
+16:45:54 <abadger1999> -1 to never remove....  I've been in projects that have a few deprecations every cycle and ones that eventually have a major, break everything release.... the former are the ones that are easier to adapt to.
+16:47:18 <gundalow> -1
+16:47:36 <bcoca> before you vote, let him confirm
+16:47:44 <gundalow> fair point
+16:47:59 <bcoca> ^ that is my inference, that is why i want him to clarify
+16:49:41 <bcoca> alikins: ?
+16:50:21 <alikins> never what?
+16:51:28 <bcoca> [11:43] <alikins> any time period really seems wrong. That is just going to result in folks getting stuck on older releases.
+16:51:43 <bcoca> ^ so i infered that youre time period is 'never' and that we should just not do deprecations
+16:51:48 <alikins> no time period. version based.
+16:52:10 <bcoca> well, we discussed that above, just adjusting the version to be at least a year from deprecation
+16:52:24 <bcoca> no good way to implement '1yr' that is why i was voting version+4
+16:52:34 <bcoca> which will roughly always be 'over one year'
+16:54:27 <abadger1999> k.  So I think we're all in agreement.
+16:57:40 <abadger1999> bcoca, gundalow:  Are we making this official or holding for more discussion next week?
+16:57:53 <bcoca> either is OK with me
+16:58:03 <abadger1999> I don't think anyone voted against the proposal but it's not "quorum".
+16:58:18 <gundalow> To make it offical where does it get documented - We could update that as a PR and get extra votes on that
+16:58:25 <bcoca> didnt we make these mandatory to ensure quorum?
+16:58:27 <gundalow> and reference the PR in next weeks meeting
+16:58:47 * bcoca goes back to bed
+16:58:58 <jtanner> you sick again?
+16:59:06 <bcoca> lazy
+17:00:05 <gundalow> If we are to make this officail where do we document it?
+17:00:29 <bcoca> releases doc i linked above seems good place
+17:00:32 <gundalow> Does it go on http://docs.ansible.com/ansible/dev_guide/developing_releases.html
+17:00:40 <bcoca> thatone
+17:00:55 <bcoca> though thinking it does not belong in devguide
+17:01:09 <bcoca> more like 'about' or just 'release policy' as users care about that too
+17:01:12 <gundalow> #action gundalow to raise a PR to update http://docs.ansible.com/ansible/dev_guide/developing_releases.html add in deprecation section and raise PR in next meeting
+17:01:22 <abadger1999> yeah, it's not dev_guide.
+17:02:17 <abadger1999> probably need a short and long version of developing_releases.  short version user-oriented.  Long version project-oriented.
+17:02:37 <bcoca> agreed
+17:03:39 <gundalow> bah, brain failing now
+17:03:58 <gundalow> 1) new page in docs root (to replace developing_releases.html )
+17:04:09 <gundalow> 2) Document deprecation process
+17:05:24 <gundalow> ?
+17:06:04 <gundalow> right, that's 2 hours
+17:06:12 <gundalow> #endmeeting

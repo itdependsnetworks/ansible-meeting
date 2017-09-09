@@ -1,0 +1,137 @@
+15:01:19 <gundalow> #startmeeting  Ansible Core
+15:01:19 <zodbot> Meeting started Thu Aug 25 15:01:19 2016 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:01:19 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:01:19 <zodbot> The meeting name has been set to 'ansible_core'
+15:01:33 <bcoca> we should really standarize on meeting name ....
+15:02:03 <gundalow> #action standerdize on a name and put commands to start the meeting in MEETINGS.md
+15:02:31 <gundalow> #chair abadger1999 bcoca jimi|ansible nitzmahone
+15:02:31 <zodbot> Current chairs: abadger1999 bcoca gundalow jimi|ansible nitzmahone
+15:02:48 * mattclay waves
+15:03:01 <nitzmahone> Yo
+15:03:08 <gundalow> dag: you around?
+15:03:12 <shertel> hi
+15:03:30 * bcoca dives back into role-includes
+15:03:43 <gundalow> bcoca: did you want to give an update on that?
+15:03:54 <gundalow> if you do. #topic :)
+15:04:57 <Qalthos> Hi
+15:05:11 <gundalow> Anyone got anything
+15:05:14 <bcoca> https://github.com/ansible/ansible/pull/17232
+15:05:31 <bcoca> ^ current state, i'll be 'working' directly against the PR every time i fix/add something
+15:05:33 <abadger1999> ohiyo gozaimasu
+15:05:36 <gundalow> #topic https://github.com/ansible/ansible/pull/17232 [WIP] Role include (HIGHLY UNSTABLE)
+15:10:16 <abadger1999> I sent out a status report on python3 support this morning: https://groups.google.com/forum/#!topic/ansible-devel/FlBN1BX3NJM
+15:10:53 <abadger1999> tldr; we're on track for a tech preview in 2.2 but it won't be ready for running all of anyone's infrastructure.  Help welcomed.
+15:14:50 <abadger1999> #link Python3 support status report: https://groups.google.com/forum/#!topic/ansible-devel/FlBN1BX3NJM
+15:15:21 <abadger1999> We should talk about https://github.com/ansible/ansible/pull/15938 even if dag is not here.
+15:15:53 <bcoca> isnt that pretty much redundant?
+15:16:01 <abadger1999> sivel and bcoca have both noted that this overlaps significantly with formatting that jinja2 already provides.
+15:19:19 <crab> is the long-term plan to drop python2 support?
+15:19:36 <bcoca> crab: LOOOOOOONG term
+15:20:04 <bcoca> think about installed base of distros that ship with 2.x by default, its only been last year that major distros have been removing it
+15:20:23 <crab> yeah, that's why i was scared. :-)
+15:20:23 <bcoca> 2.4 support though, might die soon
+15:20:31 <bcoca> its support ALSO py3
+15:20:42 <bcoca> migrating to py3 woudl have been simple, that is not what this is
+15:20:47 <bcoca> this is ADDING py3 compatibility
+15:20:55 * nitzmahone can't wait to dance on the ashes of 2.4
+15:21:02 <bcoca> nitzmahone: looong ine
+15:21:04 <bcoca> line
+15:21:05 <abadger1999> I sent out a message about dropping python2.4 and python2.5 support a few weeks ago.  Plan is to drop those two around March of next year.
+15:21:11 <bcoca> also, abadger1999 has dibs
+15:21:33 <nitzmahone> lol
+15:21:35 <abadger1999> There's plenty of ashes to dance in ;-)
+15:26:07 <abadger1999> On dag's pyformat PR.. It also seems like it doesn't take positional parameters which is probably the most common python format string
+15:26:58 <abadger1999> timestamp5: '{{ "{0} {1} {2}" | pyformat(8, 25, 2016) }}'
+15:26:58 <abadger1999> timestamp6: '{{ "%s %s %s" | pyformat(8, 25, 2016) }}'
+15:27:43 <abadger1999> So currently, I don't see that it adds enough over and above what jinja2's format() filter does.
+15:30:33 <sivel> I agree
+15:33:09 <abadger1999> Hmm this work too:
+15:33:10 <abadger1999> timestamp7: '{{ "%(month)s%(day)s%(year)s" %  ansible_date_time}}'
+15:34:46 <abadger1999> Okay, I'll close the PR with the message that the alternate methods of doing this seem to cover the same use cases.
+15:34:54 <abadger1999> #topic Open Floor
+15:34:58 <abadger1999> Anyone else have something?
+15:35:27 <abadger1999> If not we can close the meeting early and get back  to frantically coding for the September 5th deadline ;-)
+15:36:41 <linuxdynasty> https://github.com/ansible/ansible/pull/17207
+15:36:44 <linuxdynasty> please
+15:36:46 <linuxdynasty> include_vars
+15:36:56 <abadger1999> #topic Include_vars https://github.com/ansible/ansible/pull/17207
+15:37:02 <linuxdynasty> the merging of my last PR of include_vars_dir into include_vars
+15:37:43 <abadger1999> jimi|ansible, bcoca: I believe you were discussing this on IRC last?
+15:37:47 <jimi|ansible> yep looking
+15:38:27 <abadger1999> IIRC, it was a question of whether we could already do this and whether the steps to do this with current playbook syntax was too complex so it deserved a new keyword.
+15:39:16 <abadger1999> ahh... I see new PR, merges the functionality into the existing keyword.
+15:39:30 <linuxdynasty> yep
+15:40:04 <jimi|ansible> i would prefer to see the DictDataLoader used for the unit tests, to avoid having all those files sitting out there
+15:41:01 <jimi|ansible> have other yaml files crept into unit tests recently?
+15:42:29 <jimi|ansible> i dislike that this has copied a lot of code from basic.py :/
+15:42:35 <linuxdynasty> jimi|ansible: sorry about that, I am just starting to learn how to use the MagicMock and I could not figure out how to mock the file loading
+15:42:56 <linuxdynasty> ??
+15:43:04 <linuxdynasty> I did not look at basic.py jimi|ansible
+15:43:05 <jimi|ansible> linuxdynasty: it's a minor nitpick about unit tests
+15:43:18 <jimi|ansible> linuxdynasty: really? it looks like a lot of the arg parsing code is from basic.py
+15:43:52 <linuxdynasty> seriously, I did not look at basic.py. If you want I can look into it now and refactor
+15:43:58 <jimi|ansible> rather than a black list, i'd prefer this to be a white list: https://github.com/ansible/ansible/pull/17207/files#diff-b98d0eb5981eb00d04363dd4d3b5bb43R77
+15:44:14 <jimi|ansible> it should only look for '', '.yml', and '.yaml'
+15:44:28 <jimi|ansible> and maybe .json
+15:44:55 <abadger1999> There's only so many obvious algorithms  to solve the same basic problem :-)
+15:46:25 <abadger1999> If there's things that can be done in common, we can pull it out into a generic function when we get around to refactoring basic.
+15:46:45 <abadger1999> First glance, I don't see much that's the same as basic.py, though..
+15:46:53 <linuxdynasty> so the gist of it is change blacklist to whitelist and review basic.py
+15:46:55 <linuxdynasty> :)
+15:47:37 <linuxdynasty> also jimi|ansible if you can give me an example on how to use DictLoader with Mocking, please send it here or pm please
+15:47:40 <jimi|ansible> algorithms yes, but some of the names are right on: VALID_ARGUMENTS, _mutually_exclusive...
+15:48:15 <jimi|ansible> linuxdynasty: there are many examples of it in other unit tests, basically you create DictDataLoader(dict(...)) where the keys of the dict are the full file paths and the dict value is the file contents
+15:48:28 <linuxdynasty> kk
+15:48:56 <jimi|ansible> like i said, it's a minor nit, but it's nice to have everything contained within the unit test code so you don't have to hunt down files all over the unit test directories
+15:49:57 <abadger1999> jimi|ansible: Even english does not have an infinite number of choices that mean the same thing ;-)
+15:50:11 <jimi|ansible> ^ abadger1999 this is the other reason it'd be nice to have the argspec in the module metadata, action plugins should really be checking all those args too
+15:50:34 <abadger1999> Yes!!!
+15:50:36 <nitzmahone> Yep!
+15:50:42 <linuxdynasty> ohhh yeahhh
+15:51:55 <jimi|ansible> linuxdynasty: so cleanup the DataLoader stuff and we can merge that, it's got nice unit tests otherwise and we have tests in other places for include_vars so i have no qualms about it
+15:52:15 <linuxdynasty> kk
+15:52:24 <linuxdynasty> thank you guys for the review
+15:52:27 <jimi|ansible> ultimately i would want all of that arg parsing generalized in ActionBase, but that's down the road
+15:52:34 <linuxdynasty> Agreed
+15:54:27 * jimi|ansible goes back to debugging meta_meta_meta
+15:54:36 <jimi|ansible> linuxdynasty: just ping us in #ansible-devel when ready
+15:54:39 <linuxdynasty> kk
+15:55:24 <abadger1999> Cool.
+15:55:28 <abadger1999> #topic Open Floor
+15:55:36 <abadger1999> Anything else?
+15:56:02 <abadger1999> Speak in the next 60s or wait for the next meeting ;-)
+15:56:16 <alexander_s> Hmm, is this the right place to promote my little bugfix PR 17204 for merging? ;-)
+16:00:33 <jimi|ansible> it is
+16:01:24 <jimi|ansible> linuxdynasty: before i forget, the whitelist thing too
+16:01:30 <abadger1999> #topic https://github.com/ansible/ansible/pull/17204 Fix "Text file busy" exception in atomic_move
+16:01:40 <linuxdynasty> yep yep
+16:01:54 <abadger1999> So nitzmahone, bcoca, and I actually started looking at this yesterday.
+16:02:11 <abadger1999> There's some security considerations to the changes proposed here.
+16:02:47 <abadger1999> I think those are fixable but it then brings up the question of whether the existing code could be made better in that regard.
+16:04:28 <alexander_s> Hmm, can you give me some details about the security considerations? Maybe I can improve the PR somehow
+16:04:36 <abadger1999> The benefit of NamedTemporaryFile is really that the file is deleted once the filehandle closes.
+16:05:24 <abadger1999> Turning delete off removes that benefit... so it's really no better than tempfile.mkstemp() then.
+16:06:25 <abadger1999> I think you can be as good as NamedTemporaryFile by properly using an outer try: finally (outer try: finally because this code has to work on pyhon2.4) which removes the file
+16:07:17 <abadger1999> But then the question was raised as to why we're not using TemporaryFile() which makes the file inaccessible immediately (removes the filename so that only the filehandle can be used to acces the file contents)
+16:08:00 <jimi|ansible> because of the rename
+16:09:16 <abadger1999> I'm not sure^Wyep, jimi|ansible had the same question I did.
+16:09:34 <abadger1999> bcoca thinks there's a way but I don't know what that is.
+16:09:38 <alexander_s> Hmm another question: Why are we calling self.cleanup(tmp_dest.name) in the except block if NamedTemporaryFile is responsible for the unlink?
+16:10:18 <jimi|ansible> we probably switched to NamedTemp and never removed that?
+16:12:03 <jimi|ansible> i had the same opinion as abadger1999, we should probably be using a finally there
+16:12:03 <abadger1999> yeah and the shutil.move() is suspect as well (shutil.move is not atomic whereas os.rename is)
+16:12:24 <jimi|ansible> abadger1999: that's why it's kind of "pseudo" atomic, and move is the fallback
+16:16:02 <jimi|ansible> so, i think we'll hold this PR open if that's ok with you alexander_s, a small tweak to your code may be all thats required, but we need to test it thoroughly
+16:16:07 <alexander_s> Ok, if desired I can replace NamedTemporaryFile with mkstemp() and use a finally block to unlink the file
+16:16:29 <jimi|ansible> i would say we can probably nuke that cleanup call at the end, especially if you do the above
+16:17:42 <alexander_s> This bug bothers me quite a lot, so a little bit more effort is reasonable ;-)
+16:21:16 <abadger1999> don't need to cleanup in the other path because the other path the file is renamed.
+16:22:51 <abadger1999> but yeah a finally will handle any errors we aren't catching.
+16:22:58 <abadger1999> So it's definitely desirable
+16:23:55 <abadger1999> #action alexander_s to update 17204 to use mkstemp() and use finally to cleanup.
+16:24:04 <alexander_s> fine, thank you
+16:25:10 <abadger1999> alexander_s: be sure to ping us in #ansible-devel when you've got that in.  atomic_move is pretty essential to some core ansible modules so we'll need to decide whether it's going in prior to feature freeze on september 5th.
+16:25:37 <abadger1999> (and if it takes some debating, then that debate should happen prior to september 5th ;-)
+16:25:53 <abadger1999> okay, meeting is running overtime so I'll go ahead and close us out.
+16:25:55 <alexander_s> abadger1999: sure
+16:26:03 <abadger1999> #endmeeting

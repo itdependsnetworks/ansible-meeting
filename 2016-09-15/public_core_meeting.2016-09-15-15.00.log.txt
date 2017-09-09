@@ -1,0 +1,99 @@
+15:00:01 <gundalow> #startmeeting Public Core Meeting
+15:00:01 <zodbot> Meeting started Thu Sep 15 15:00:01 2016 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:00:01 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:00:01 <zodbot> The meeting name has been set to 'public_core_meeting'
+15:00:10 <gundalow> #topic Roll Call
+15:00:13 <gundalow> Who's around today?
+15:00:17 <jtanner> i am for a bit
+15:00:26 <Qalthos> hello
+15:00:29 <_shaps_> Hi
+15:00:30 <gundalow> #chair jtanner abadger1999 bcoca Qalthos
+15:00:30 <zodbot> Current chairs: Qalthos abadger1999 bcoca gundalow jtanner
+15:01:03 <shertel> hi!
+15:01:08 <gundalow> Agenda for today https://github.com/ansible/community/issues/123 if anyone has anything please add it there
+15:01:25 <sivel> I am hereish, this meeting happens at the same time as my team stand up
+15:01:28 <gundalow> #topic Pass the absolute path to dirname when assigning basedir https://github.com/ansible/ansible/pull/17457
+15:01:30 <abadger1999> bon jour
+15:01:31 <gundalow> _shaps_: over to you :)
+15:01:46 <_shaps_> heh, that was quick :D
+15:02:42 <gundalow> :D
+15:02:49 <_shaps_> Is there an agreement on where that retry file should go in case of symlink?
+15:03:45 <_shaps_> this will reflect which method to use
+15:03:46 <gundalow> bcoca: abadger1999 You seem to be the active people on https://github.com/ansible/ansible/pull/17457 What's your thoughts about where that retry file should go in case of symlink?
+15:04:15 <abadger1999> I think we all agree it should be placed next to the playbook's symlink?  Just have proposed different ways of putting it there?
+15:04:28 <bcoca> on 'path given to ansible-playbook'
+15:04:31 <abadger1999> bcoca: ^ Or do you think it should go next to the real file despite the symlink?
+15:04:35 <abadger1999> <nod>
+15:04:57 <_shaps_> right, so it won't follow the symlink
+15:04:57 <bcoca> no, it seems i was commenting more on 'general function' than realizing exactly where they wanted the file
+15:05:19 <bcoca> basedir shoudl not follow symlink since it is also way of 'using same play with diff resources'
+15:05:29 <bcoca> i.e templates/group_vars/files/etc
+15:06:06 <_shaps_> cool
+15:06:30 <_shaps_> bcoca: not sure what your last comment means, but I assume is not really related
+15:07:41 <_shaps_> I'll update the PR to use os.path.dirname(os.path.abspath(playbook_path)) ( as mentioned in https://github.com/ansible/ansible/pull/17457#discussion_r78130130 )
+15:07:55 <bcoca> plays/play.yml
+15:08:02 <bcoca> i can symlink to dev/play.yml
+15:08:16 <bcoca> and use dev/templates/nginx.j2 vs prod/templates/nginx.j2
+15:08:28 <bcoca> so everything for play should follow 'locallity' not origin
+15:08:50 <bcoca> ^ allows for using filesystem as way of sharing/managing your resources
+15:09:09 <bcoca> .retry shoudl follow same model
+15:09:28 <bcoca> im just being  very verbose in agreeing
+15:09:34 <_shaps_> thanks :D
+15:10:58 * resmo waves
+15:11:21 <_shaps_> cool, I'll update the PR later then
+15:12:06 <gundalow> _shaps_: Thanks :)
+15:12:40 <_shaps_> thanks bcoca / abadger1999 for clarifying that
+15:12:54 <abadger1999> de nada
+15:12:58 <gundalow> #topic Open Floor
+15:13:02 <gundalow> anymore for anymore?
+15:14:03 <gundalow> Meeting agenda for Tuesday meeting https://github.com/ansible/community/issues/124
+15:14:24 <abadger1999> #info Hard freeze on Friday.  Only bugfixes thereafter.
+15:14:28 <gundalow> usual reminders Testing Working Group meeting is later today, see https://github.com/ansible/community/issues/114
+15:14:40 <gundalow> ^^^^^^^^ WHAT MR BADGER SAID
+15:15:21 <resmo> abadger1999: ack
+15:16:15 <resmo> abadger1999: I assume adding more tests is ok, right?
+15:16:24 <resmo> after "freeze"
+15:16:56 <gundalow> resmo: Test changes are fine
+15:17:01 <gundalow> as a documentation improvements
+15:17:27 <abadger1999> resmo: yep.
+15:17:37 <gundalow> resmo: If you add any tests please add them to https://github.com/ansible/community/issues/124 so they can get fast tracked through the PR process (also so we can see what's going on)
+15:17:38 <_shaps_> Friday as in: tomorrow?
+15:17:43 <abadger1999> _shaps_: correct.
+15:17:48 <_shaps_> cool
+15:18:21 <_shaps_> ah, well bugfixes are still accepted, so no worries for me. I'll be likely working on another couple bugs
+15:19:48 <abadger1999> Excellent
+15:20:08 <resmo> I'll work on tests for handlers listen
+15:20:56 <abadger1999> Cool.
+15:21:03 <gundalow> woot, thanks
+15:21:24 <gundalow> Last few hours of discounted tickets for Brooklyn https://www.ansible.com/ansiblefest
+15:21:53 <gundalow> also https://www.ansible.com/blog/ansible-contributor-summit-brooklyn-2016 we are building up the agenda now
+15:24:45 <resmo> regarding bugfix PR in extras, is anyone looking at it as well?
+15:25:00 <gundalow> resmo: How do you mean?
+15:26:36 <_shaps_> I need to leave for another meeting, thanks again for before guys
+15:26:42 <resmo> I mean, I see some PRs containing bug fixes and they look good (maintainer did not respond). I mark them for shipit but it would be great if someone could also give their +1 from core
+15:26:52 <resmo> e.g https://github.com/ansible/ansible-modules-extras/pull/2643
+15:27:02 <gundalow> _shaps_: Thanks
+15:27:10 <bcoca> i normally go thorugh those on triage
+15:27:22 <bcoca> but had small hiatus due to roles revamp
+15:27:30 <bcoca> back on it though, will look through those tmrow
+15:27:34 <gundalow> bcoca: Do you have a way of spotting PRs with a single "shipit"?
+15:27:42 <bcoca> the label
+15:27:48 <resmo> there are a few windows related bug fix PRs, I usually do not merged them as I get lost in powershell code :)
+15:28:08 <bcoca> resmo: im alergic to powershell, normally ping nitzmahone for those
+15:28:10 <gundalow> oh I thought it only had one "shipit" comment, not a label. OK :)
+15:28:12 <bcoca> some i can read
+15:28:16 <nitzmahone> I'll be doing a pass on those once I'm in "full bugfix mode" next week
+15:28:24 <resmo> ack
+15:28:27 <bcoca> gundalow: depends, shipit by 'maintainer' is supposed to trigger label
+15:28:29 <resmo> makes sense
+15:28:39 <bcoca> otherwise needs 2 shipit by 'other contributors' afaik
+15:28:41 <gundalow> bcoca: TIL the above, cool
+15:29:11 <bcoca> unless bot rules have changed?
+15:29:22 <gundalow> I think you are right
+15:30:02 <bcoca> you KNOW i am, specially when i'm not
+15:30:52 <gundalow> :D
+15:31:48 <resmo> ansible member can also give a shipit
+15:32:46 <resmo> but if I give a shipit, it would makes sense if another member is merging
+15:32:48 <bcoca> i nomrally just merge at that point, at least set label manually
+15:41:06 <gundalow> I guess we are done
+15:41:09 <gundalow> #endmeeting

@@ -1,0 +1,218 @@
+19:00:12 <thaumos> #startmeeting Core Meeting
+19:00:12 <zodbot> Meeting started Tue Jun 27 19:00:12 2017 UTC.  The chair is thaumos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:00:12 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:00:12 <zodbot> The meeting name has been set to 'core_meeting'
+19:02:06 <dag> o/
+19:02:10 * bcoca killed the crickets so not even they make sounds
+19:02:35 <thaumos> #chair dag bcoca
+19:02:35 <zodbot> Current chairs: bcoca dag thaumos
+19:02:46 * shertel lurks
+19:03:02 <thaumos> #chair shertel
+19:03:02 <zodbot> Current chairs: bcoca dag shertel thaumos
+19:03:05 <thaumos> silent but deadly
+19:03:19 <shertel> :P
+19:03:24 <thaumos> lol
+19:03:59 <bcoca> thaumos: you just made me spill tea over my kybd using my nose
+19:04:07 <thaumos> lol
+19:04:26 <thaumos> it's true though
+19:04:42 <jtanner> yawn
+19:05:05 <shertel> I have been known to talk occasionally
+19:05:07 * samdoran drinks coffe
+19:05:12 <thaumos> #chair jtanner samdoran
+19:05:12 <zodbot> Current chairs: bcoca dag jtanner samdoran shertel thaumos
+19:05:17 <samdoran> And give good advice about Chess books
+19:05:33 <shertel> heh
+19:05:33 * gundalow waves
+19:05:33 <thaumos> so... yeah.  How'd everyone like last week?
+19:05:40 <gundalow> WOOOOOOOOOOOOT
+19:05:44 <gundalow> Lets do it again
+19:05:49 <gundalow> Maybe September?
+19:05:59 <thaumos> yeah, sounds good!
+19:05:59 <samdoran> Yeah, London is pretty fantastic.
+19:06:04 <samdoran> Going to stay more next time.
+19:06:08 <thaumos> best city in the world
+19:06:08 <gundalow> :)
+19:06:14 * samdoran starts saving money
+19:06:39 <thaumos> hey @dag, I didn't get to say hi in person... hopefully sometime soon
+19:07:11 <thaumos> anyways, @dag, I saw all of your issues you opened... I am going to digest those.
+19:07:16 <dag> hi thaumos, I don't even know all the people I met, next year nicknames on the name-tags
+19:07:27 <thaumos> heh, yeah
+19:07:37 <thaumos> I was up front... rambling about partner stuff.
+19:07:37 <gundalow> dag: yup, it's on the feedback list
+19:08:01 <thaumos> #topic Open Floor
+19:08:11 <thaumos> Anything anyone wanted to bring up today?
+19:08:23 <samdoran> resmo was the only one clever enough to do that himself
+19:08:23 * jtanner waits for new bot feature requests from ansiblefest to get filed
+19:08:36 <bcoca> https://github.com/ansible/ansible/pull/25948
+19:09:23 <thaumos> for a quick second @bcoca, I thought you changed your avatar on GH
+19:09:39 <thaumos> #topic ansible/ansible#25948
+19:09:45 <dag> bcoca: interesting functionality, although I don't like the fact you need to modify the dict for it to take action
+19:09:49 <bcoca> us duckies need to stick toghether
+19:09:52 <jtanner> it needs examples
+19:09:54 <thaumos> #link https://github.com/ansible/ansible/pull/25948
+19:10:16 <bcoca> needs examples/docs/changelog
+19:10:24 <jtanner> and integration test
+19:10:26 <bcoca> dag: not really, you just need to add !yamlisim to file
+19:11:34 <erasmix> Hello?
+19:11:34 <dag> bcoca: ah, so the user doesn't have to do this, it's done by Ansible ? (And the key is being removed)
+19:12:08 <bcoca> no, user declares each dict mergable vs overwritable
+19:12:29 <bcoca> dicta: {normal: value} ... then in other file dicta: !merge {append: this}
+19:12:30 <thaumos> #chair erasmix
+19:12:30 <zodbot> Current chairs: bcoca dag erasmix jtanner samdoran shertel thaumos
+19:12:33 <dag> that's what I mean, they don't have to add the key themselves
+19:12:47 <thaumos> hi @erasmix, we are on another topic atm.  We'll get to your's after this.
+19:13:03 <bcoca> dag: not sure what you mean
+19:13:09 <erasmix> Sorry got disc. Was just checking:)
+19:13:29 <dag> bcoca: the code expects a key __mergereplace__ in the dict
+19:13:38 <dag> and I did not like the fact you have to add that
+19:13:47 <dag> but then you said that you don't have to add that
+19:13:53 <dag> and then I said that I like that
+19:13:56 <dag> sigh
+19:14:33 <bcoca> i might have misread, thought it was creating an object with that property, not require a key in dict
+19:16:06 <bcoca> i see what you mean now, code does it ... but i would prefer it not be a key but a object property outside the normal keys
+19:16:15 <dag> well, not exactly dict, but AnsibleMapping, so it is part of the value
+19:16:34 <bcoca> but that is minor detail, it does not require dict to be created with that key
+19:16:39 <dag> right, I'd prefer that too, but if it's not exposed to the user, I wouldn't mind that much
+19:17:01 <bcoca> but it uses it as 'alternate constructor'
+19:17:17 <bcoca> i would just remove that and keep the rest
+19:17:34 <bcoca> user just needs to use !merge or !replace  to override default merge_hash setting
+19:18:17 <thaumos> alright, so what are next steps?
+19:18:31 <dag> docs, feedback
+19:18:38 <dag> the idea is ok
+19:18:58 <thaumos> okay
+19:19:07 <thaumos> #action dag and bcoca to provide feedback in pr
+19:19:28 <thaumos> #action pr authour to add in some docs, changelog updates, etc to PR.
+19:19:31 <bcoca> im even ok w/o docs, we can add them later
+19:19:43 <thaumos> would be nice to suggest it
+19:19:51 <thaumos> because then it's yet another lost doc.
+19:20:00 <thaumos> even if it isn't technically needed.
+19:20:07 <thaumos> k, next topic
+19:20:15 <thaumos> #topic Cyberark pull requests
+19:20:46 <thaumos> @erasmix, there's a meeting scheduled with you folks tomorrow to discuss these.  I'd say let's get some action items out of that meeting and then follow up
+19:21:27 <thaumos> one thing I'd like to bring up, I have mentioned a number of times to join #ansible-devel to discuss your PR's.  You only need to attend this one time to raise the PR.  Not every time you want to gather feedback.
+19:21:45 <thaumos> but once again, we'll talk with you more tomorrow. Sound good?
+19:21:53 <erasmix> Ok. But can we have the PR's reviewed today and see if there are any objections? We can address in the meeting tomorrow
+19:22:09 <erasmix> I'm not aware of tomorrow's meeting
+19:22:21 <bcoca> cyberark is network appliance?
+19:22:41 <thaumos> password vault
+19:22:50 <erasmix> An  appliance is one of our offerings
+19:23:08 <thaumos> the PR's in question are related to the Password vault offering though
+19:23:11 <erasmix> We are a credential vault for privileged accounts
+19:23:19 <erasmix> Yes
+19:23:23 <thaumos> #link https://github.com/ansible/ansible/pull/21857
+19:23:42 <erasmix> That is correct @Thaumos
+19:24:11 <bcoca> i dont remember this ticket at all ... yet i reviewed it ....
+19:24:17 <samdoran> Super popular secret store. Tons of folks asking for it.
+19:24:18 <thaumos> #link https://github.com/ansible/ansible/pull/21764
+19:24:33 <thaumos> you're all over the place bcoca
+19:25:52 <thaumos> any immediate feedback for the cyberark folks??  or should we continue the conversation in #ansible-devel?
+19:26:01 <nitzmahone> bcoca is Tyle Durden
+19:26:05 <nitzmahone> Tyler*
+19:26:22 <thaumos> lol
+19:26:26 <thaumos> #chair nitzmahone
+19:26:26 <zodbot> Current chairs: bcoca dag erasmix jtanner nitzmahone samdoran shertel thaumos
+19:26:30 <erasmix> Thaumos, I'm not aware of tomorrow's meeting. Can you forward details please?
+19:26:37 <thaumos> What about Robert Paulson
+19:26:44 <thaumos> @erasmix, I am figuring that out.
+19:27:05 * dag wonders if running an executable is a good method for a lookup plugin
+19:27:07 <jtanner> thaumos: in death, he has a name
+19:27:17 <dag> I would implement it using an API
+19:27:43 <bcoca> dag: pipe?
+19:27:50 <thaumos> for now, let's just stay course.
+19:28:05 <bcoca> dag: yes, but it would not be only lookup that does so
+19:28:14 <dag> bcoca: possibly
+19:30:25 <thaumos> okay, @erasmix, I am going to ask for you to join #ansible-devel to continue this discussion
+19:30:53 <thaumos> @bcoca, can you take an action to comb over these again.  Would you mind driving these PR's to a close in some way?
+19:31:18 <erasmix> Thanks @ Thaumos
+19:31:36 <thaumos> #action erasmix to join ansible-devel and discuss with team there.
+19:31:56 <thaumos> #action bcoca to do a second review of PR's.
+19:32:00 <erasmix> Tomorrow at what time?
+19:32:08 <thaumos> #action thaumos to figure out how to get erasmix into meeting
+19:32:12 <thaumos> Not sure, see action ^^
+19:33:01 <erasmix> Thx
+19:33:06 <thaumos> #topic ansible/ansible#25950
+19:33:15 <thaumos> #link https://github.com/ansible/ansible/pull/25950
+19:33:23 <thaumos> dag, you have the floor
+19:34:50 <thaumos> @dag, yt?
+19:35:33 <gundalow> daaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaag!
+19:35:48 <jborean93> sleep probably caught up with him
+19:36:29 <thaumos> heh
+19:36:34 <thaumos> #chair jborean93
+19:36:34 <zodbot> Current chairs: bcoca dag erasmix jborean93 jtanner nitzmahone samdoran shertel thaumos
+19:37:28 * jtanner imagines dag typing out a pep8 fix and falling off chair mid keystroke
+19:37:38 <thaumos> lol
+19:37:58 <thaumos> jborean93 you're one to talk... early bird catches the worm?
+19:38:04 * bcoca sneaked up and knocked him out
+19:38:25 <thaumos> alright, we'll talk next time for that PR.
+19:38:29 <thaumos> #topic Open Floor
+19:38:31 <dag> sorry
+19:38:33 <jborean93> thaumos: the windows meeting is at 6am for me, need to prepare myself
+19:38:34 <thaumos> LOL
+19:38:43 <thaumos> you're killing me smalls!
+19:38:51 <thaumos> #topic ansible/ansible#25950
+19:38:57 <thaumos> dag, you have the floor
+19:39:03 <dag> So we already determined that the rc value should not decide over whether a task failed
+19:39:17 <dag> and I was convinced we fixed it, but my CI was still failing
+19:41:15 <dag> ok bcoca merged it, next one is: https://github.com/ansible/ansible/pull/26028
+19:41:45 <dag> this PR is cross-platform, it merges the options/docs/implementation of ping and win_ping
+19:42:09 <dag> it's really stupid, but hey we are looking at feature-parity and this was one of the easy ones to fix:)
+19:42:56 <dag> also the integration tests are now more complete (I hope to get 100% coverage for ping !!) :p
+19:43:22 <thaumos> #topic https://github.com/ansible/ansible/pull/26028
+19:45:22 <thaumos> how about discussing this PR in the windows group?
+19:45:30 <thaumos> @nitzmahone, are you aware of this PR?
+19:45:34 <jborean93> I think the issue is the CI erros
+19:45:38 <dag> yeah, I don't think the Windows part is disputable either
+19:45:41 <jborean93> dag was unsure whether it would keep on failing
+19:45:49 <dag> but it's not just Windows
+19:45:59 <nitzmahone> The changes are mostly on the *nix module
+19:46:22 <dag> yeah, so the python ping module always had a data option, so I don't want to add version_added: 2.4, because it was just undocumented since ever
+19:46:51 <jtanner> i had no idea
+19:47:05 <thaumos> no big deal if it's documented for 2.4
+19:47:10 <mattclay> The module validator will only complain about it until it's merged, then the problem goes away.
+19:47:32 <jtanner> can't you do version_added: legacy or something like to get past the validator?
+19:47:40 <dag> mattclay: that's what I assumed, if nobody complains (and the integration tests look complete to me) I guess this can be merged
+19:47:47 <bcoca> historical .. but no, it checks current version
+19:48:07 <dag> jtanner: sure, but what does it bring us ? it's just a one-off error (I have another one with this exact problem)
+19:48:45 <mattclay> As long as that's the only error, merging it should be fine.
+19:48:59 <bcoca> its one of those cases we just ignore the error cause automating CI for past failures is not good idea
+19:49:49 <dag> For https://github.com/ansible/ansible/pull/25140 the option state was missing from the docs, makes no sense to add it for 2.4 (it doesn't work without it ;-))
+19:49:52 <jtanner> the results added by the bot are not always the only failures, so someone has to look at the job logs before merging
+19:50:15 <dag> yup, that's why I wanted to bring it up here
+19:50:24 <dag> nobody is going to look at it with a failing CI
+19:50:24 <jtanner> i see other failures
+19:50:30 <dag> jtanner: you do ?
+19:50:38 <jtanner> https://app.shippable.com/github/ansible/ansible/runs/26560/30/console
+19:50:48 <jtanner> TASK [ping : assert the ping failed with data=boom]
+19:51:33 <bcoca> boom causes exception, should not get registered data?
+19:51:43 <jtanner> "msg": "MODULE FAILURE",
+19:51:50 <jtanner> "assertion": "result.msg == 'boom'",
+19:52:11 <dag> hmm, ok, weird I thought I verified the Exception case
+19:52:29 <bcoca> didnt look like you changed the code much ...
+19:53:34 <bcoca> did that test ever run before?
+19:53:48 <bcoca> it should always exepect MODULE FAILURE .. even with old code
+19:55:44 <thaumos> alright, so any action items out of this, or shall we continue discussions in #ansible-devel?
+19:56:20 <jtanner> "boom" testcase needs alteration
+19:56:29 <jtanner> testcase/assertion
+19:56:49 <bcoca> that test cannot have passed before
+19:57:05 <bcoca> msg has been MODULE_FAILURE in case of exception since 2.1
+19:57:28 <dag> bcoca: no, I didn't push my latest changes, and the output was still failing on the option
+19:57:41 <dag> so I didn't check (and CI wasn't showing the other errors)
+19:58:02 <bcoca> that test has been wrong a looong time
+19:58:06 <jtanner> there's a small subset of test failures the bot is allowed to add as comments
+19:58:21 <dag> bcoca: that test was missing before, no ?
+19:59:04 <bcoca> ah, you added that test?
+19:59:07 <bcoca> well, bad adding
+19:59:17 <bcoca> that test would not pass before nor after your change
+19:59:56 <dag> there were some tests commented out, I was thinking of removing them
+20:00:09 <dag> anyway, the Windows meeting is starting, I'll follow up on this and ping you again
+20:00:17 <bcoca> fix the test
+20:00:22 <dag> I did
+20:00:44 <dag> it's pushed now
+20:01:22 <bcoca> exception key is not automatic
+20:01:30 <bcoca> yt
+20:01:32 <bcoca> yet
+20:01:42 <bcoca> test will still fail
+20:01:52 <bcoca> error_record?
+20:03:52 <thaumos> alright folks, I have to end this meeting.  we're running over into the windows group
+20:04:07 <thaumos> #action discussions to continue on PR in devel
+20:04:12 <thaumos> #endmeeting

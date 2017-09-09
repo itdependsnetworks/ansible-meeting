@@ -1,0 +1,410 @@
+17:00:17 <gundalow> #startmeeting Testing Working Group
+17:00:17 <zodbot> Meeting started Thu Mar 16 17:00:17 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+17:00:17 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+17:00:17 <zodbot> The meeting name has been set to 'testing_working_group'
+17:00:25 <gundalow> #chair gundalow mattclay
+17:00:25 <zodbot> Current chairs: gundalow mattclay
+17:00:47 * gundalow waves
+17:00:58 * mikedlr waves back
+17:01:19 <gundalow> shaps: you around?
+17:01:20 * mattclay waves
+17:01:29 <dag> o/
+17:01:30 <gundalow> #topic Core updates
+17:01:53 <gundalow> #info Ansible 2.3 RC1 has been released https://groups.google.com/forum/#!topic/ansible-devel/V2ESSQqLnS0 Pleeeeeeeeeeease test it and report bugs
+17:02:30 <gundalow> #info Ansible 2.3 contians lots of changes to the *network* modules, so if you use any of those pleeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeese test those a well
+17:03:26 <gundalow> #info Devel is now 2.4, which no longer support Python 2.4 (the requirement is py 2.6+ & 3.5+).
+17:04:27 <gundalow> #info Be mindfull of the above when you need to backport tests or functional changes to stable-2.3. As always PRs should be used when making changes to branches to allow CI to run
+17:04:34 <gundalow> mattclay: anything else on that side?
+17:04:59 <mattclay> Nope
+17:05:29 <gundalow> Anyone got questions?
+17:05:49 <gundalow> #topic Ubuntu 12.04 EOL
+17:06:28 <gundalow> #info Ubuntu 12.04 goes EOL (End Of Live) in April, when should we remove it from our CI pipeline
+17:06:40 <gundalow> Also, to make it more complex
+17:06:55 <gundalow> 1) Should it be enabled on stable-2.2 & stable-2.3 for longer?
+17:07:37 <gundalow> 2) I believe you can pay and get extended support for Ubuntu 12.04, though I've not managed to find out what date that shifts it to
+17:07:52 <gundalow> What do people think?
+17:08:18 <dag> It's a pity that after all the effort to support python 2.4 we are ditching it so quickly
+17:08:30 <bcoca> dag: 5yrs is quick?
+17:08:50 <dag> bcoca: so quickly at the first opportunity it presents itself
+17:08:52 <gundalow> Ansible 2.3 will be supported for, erm, no idea actually
+17:08:54 <bcoca> we are not jumping and making teh code 'incompatible' over night
+17:09:03 <dag> RHEL5 will be around for a lot longer, RHEL4 is only now really EOL
+17:09:05 <bcoca> we are just stopping from checking it is
+17:09:08 <dag> true
+17:09:17 <dag> but what's the policy for incompatibilities ?
+17:09:33 <dag> will they get attention or not
+17:10:12 <mattclay> I'm inclined to drop testing of Ubuntu 12.04 from devel now, since it will be EOL before we release 2.4.
+17:10:14 <gundalow> So to clarify, the only thing that's changes is the remote. ansible-playbook already requires to be run on a py2.6+ host
+17:10:33 <dag> gundalow: true
+17:10:42 <gundalow> mattclay: Yup, that will free up a lot of CI resources
+17:10:45 <bcoca> 2.4 andn 2.5 was only supported for 'targets'
+17:11:06 <gundalow> well, granted stable-2.3 will get a fair bit of traffic, but no where near as much as devel
+17:11:10 <bcoca> as of 2.4 we are looking to drop 2.4 and 2.5 support for targets
+17:11:36 <gundalow> hum, we've got multipe topics going again
+17:11:46 <mattclay> I wouldn't be opposed to dropping 12.04 from CI for stable branches once it reaches EOL.
+17:11:49 <gundalow> lets finish up on Ubuntu first
+17:11:51 <dag> but do we keep the compatibility library stuff, and do we allow fixes for python 2.4 compatibility ?
+17:11:58 <gundalow> ....................
+17:12:07 <gundalow> topic is ubutu 12.04
+17:12:10 * dag has a $CUSTOMER with a massive RHEL5 base and they will have that around for a few more years
+17:12:17 <dag> ok
+17:12:20 <gundalow> :)
+17:12:26 <gundalow> Stuffs going to get lost otherwise
+17:13:13 <gundalow> Votes please: Drop Ubuntu 12.04 from devel (2.4) testing today
+17:13:14 <gundalow> +1
+17:13:25 <mattclay> +1
+17:13:57 <dag> 0
+17:14:15 <dag> (depends on policy for accepting backward compatibility fixes :-))
+17:15:05 <bcoca> +1, but i would keep for 2.2/2.3
+17:15:10 <mattclay> Do we have any policy from management on how long we need to support EOL distros?
+17:15:43 <gundalow> I've just pinged Dylan to ask him
+17:15:58 <dag> IMO if people are willing to spend the effort we shouldn't prevent them (for targets)
+17:16:40 <mattclay> As long as we have 12.04 in CI for stable, we won't be breaking anything for those releases (assuming there's test coverage). I don't think we're going to stop people from making incompatible changes in devel though.
+17:17:49 * gundalow has zero data on how often we get mixed results for the Ubuntu distros
+17:18:07 <mattclay> However, at some point, we shouldn't be supporting 12.04, even in our stable branches. The question is when?
+17:18:11 * dag has no personal interest in Ubuntu though, also no clue what the user-base is
+17:18:22 <gundalow> Do they all fail/pass uniformly
+17:18:41 <mattclay> gundalow: Yes, until they don't. ;)
+17:19:02 <gundalow> #info Dylan personally says we are OK to no longer test Ubuntu 12.04 on devel, though he is going to check with "the business"
+17:19:05 <gundalow> lol
+17:19:36 <mattclay> I've seen Ubuntu version specific failures, but they don't happen too often (py2 vs py3 issues occur much more often).
+17:20:03 <gundalow> I wonder if we should park this till Dylans got back to us
+17:20:10 <mikedlr> I had different version of py2 problems with exceptions;  that's really 2.7 vs 2.4
+17:20:11 <mattclay> Yeah
+17:20:29 <dag> Ubuntu 12.04 is still python 2.7 so...
+17:20:33 <gundalow> #agreed will park decission making process till Dylan has reported back
+17:20:35 <mattclay> gundalow: Lets put it on the agenda again for next week. Hopefully we'll hear back by then.
+17:20:41 <gundalow> cool
+17:20:55 <gundalow> Do we want to loop back to Py?
+17:21:04 <mattclay> Sure
+17:21:40 <gundalow> #topic Python 2.4
+17:22:59 <dag> I think we should ask Dylan's position as well ;-)
+17:23:12 <mattclay> So to recap from earlier: We've dropped the requirement for python 2.4 support in modules from devel. We're no longer testing for python 2.4 syntax issues in devel.
+17:23:33 <mattclay> However, this doesn't affect stable branches. Anything being backported must still work with python 2.4.
+17:23:39 <dag> but I would keep the existing compatibility library and allow for python 2.4-specific fixes
+17:24:01 <dag> (rather than start rewriting everything the py2.7 way)
+17:24:36 <mattclay> We won't be going out of our way to rewrite anything for python 2.6+.
+17:24:48 <dag> so maybe only test basic modules on RHEL5 ping raw shell command script etc.
+17:25:05 <mattclay> As changes and new code come in though, they're free to use python 2.6+ features.
+17:25:24 <dag> mattclay: but if that happens in mod_utils it could be game-over very quickly
+17:25:31 <gundalow> abadger1999: You may wish to join in this if you are around
+17:25:40 <gundalow> abadger1999: discussion is testing py2.4
+17:25:45 <mattclay> dag: Only for devel, which is intentional.
+17:26:41 <dag> mattclay: that quickly boils down to dropping py2.4 support, if module_utils is easily broken
+17:26:41 <mattclay> gundalow, abadger1999: Not just testing python 2.4, but supporting python 2.4.
+17:27:00 <dag> that's why I would prefer very basic python2.4 support with basic modules only
+17:27:03 <mattclay> dag: Yes, the plan is to drop python 2.4 support in devel.
+17:27:13 <mattclay> If we support it, we're going to test it.
+17:27:41 * abadger1999 reads back
+17:27:49 <mattclay> We're dropping testing because we're no longer supporting it (starting with devel). Obviously we'll continue to support it for stable-2.3 and earlier.
+17:28:21 <dag> that would be a shame IMO, how long wil v2.3 be supported ?
+17:28:27 <abadger1999> dag: I would be against that sorta.
+17:28:35 <abadger1999> ie not purposefully rewriting but
+17:28:55 <abadger1999> I was about to merge a fix to url handling that only works on python-2.6+, for instance.
+17:29:05 <abadger1999> which I think should be fair game.
+17:29:06 <bcoca> dag: i dont see us changing the modules to be 2.4 incompatible, but i can see changes to module_utils creating an issue
+17:29:16 <mattclay> abadger1999: Did we announce and/or document dropping python 2.4 support somewhere?
+17:29:17 <bcoca> abadger1999: could this also be good reason to 'split the api'?
+17:29:21 <dag> abadger1999: I would have basic support for RHEL5, and leave full support up to maintainers PLUS have a policy to accept py2.4 compatibility fixes if acceptable
+17:29:28 <abadger1999> mattclay: yes.  We've been announcing it for a while.
+17:29:32 <bcoca> keep basic.py for backwards compat but use new api for new stuff?
+17:29:42 <dag> bcoca: modume_utils/basic.py and maybe a few others
+17:29:51 <bcoca> facts/url
+17:30:04 <mattclay> abadger1999: Where? It seems at least some people weren't aware of the impending change.
+17:30:08 <dag> I'd go for 2-phased approach, minimal support in v2.4, no support in v2.5
+17:30:13 <bcoca> both basic and facts are targetted for 'rewrite and split'
+17:30:16 <gundalow> #info Docs on Ansible 2.4 support http://docs.ansible.com/ansible/dev_guide/developing_modules_python3.html#minimum-version-of-python-3-x-and-python-2-x
+17:30:30 <abadger1999> Ansible 2.3 will be supported longer than RHEL5 (unless you're paying big bucks for special support).
+17:30:40 <gundalow> ffs
+17:30:41 <dag> abadger1999: is that true ?
+17:30:42 <mattclay> gundalow: Perfect. Thanks. :)
+17:30:46 <gundalow> #info Docs on Python 2.4 support http://docs.ansible.com/ansible/dev_guide/developing_modules_python3.html#minimum-version-of-python-3-x-and-python-2-x
+17:30:54 <abadger1999> dag: rhel5 goes EOL at the end of April IIRC.
+17:31:08 <gundalow> > The only long term supported distro that we know of with Python-2.4 support is RHEL5 (and its rebuilds like CentOS5), which is supported until April of 2017. For Ansible, that means Ansible-2.3 will be the last major release that supports Python-2.4 for modules. Ansible-2.4 will require Python-2.6 or greater for modules.
+17:31:14 <bcoca> abadger1999: vendor EOL != user EOL
+17:31:15 <dag> abadger1999: EUS will take another 3 years
+17:31:24 <dag> abadger1999: RHEL4 was only now dropped by Red Hat
+17:31:28 <abadger1999> dag: yes... but we've never supported that.
+17:31:31 <bcoca> but i dont hold us to people that are stil lusing windows 3.11 (yes, they exists)
+17:31:56 <dag> abadger1999: well, enterprise customers will be running RHEL5 for possible 2 more years
+17:32:13 <nitzmahone> And they're welcome to use Ansible 2.3. :)
+17:32:56 <nitzmahone> lol'ing at bcoca's apropos typo "windows 3.11 lusers"
+17:32:58 <dag> nitzmahone: it's still your infrastructure, you can't share stuff then
+17:33:10 <abadger1999> bcoca: I wouldn't want to support 2.4 intentionally in basic.py when we start implementing hte replacement API... implementation could change and be incompatible.
+17:33:23 <bcoca> nitzmahone: sometimes my bad typing works better than my intended wording
+17:33:29 <dag> I would ask Dylan anyhow :-)
+17:33:55 <dag> and explain the implications for customers (because they have a mix of RHEL5, RHEL6 and RHEL7 and maybe Satellite)
+17:33:56 <bcoca> abadger1999: by freezing basic.py and moving on, no real 'support'
+17:34:12 <abadger1999> *notes that he's already asked newtMcKerr, thaumos (dylan) and notting and they were all okay with it.
+17:34:24 <abadger1999> bcoca: then you end up having to maintain more code.
+17:35:16 <abadger1999> bcoca: i don't think that's workable actually...  Unless we migrate all modules that we support to not use basic.py.
+17:35:21 <abadger1999> bcoca: which wasn't my plan for that.
+17:35:55 <abadger1999> bcoca: I was thinking we write new API, rewrite basic.py to use the new API under the hood, and then gradually migrate the modules we care about to use the new API directly.
+17:36:14 <bcoca> well, we have not made that plan clear, my thought was recreating it in split apis AND moving modules there
+17:36:48 <abadger1999> bcoca: k.... migrating modules will be a huge task... even if we 're only talking about the 200 modules that are core + curated.
+17:36:53 <bcoca> ^ so we might need to look at that plan, but that is offtopic, i only brought up cause i thoght we could address this issue as a byproduct
+17:37:02 <abadger1999> <nod>
+17:37:12 <alikins> if we are going to drop 2.4, I think we should break devel/ on 2.4 ASAP and not look back. But... we should also be very close to allowing ansible-2.4 to use old (py2.4 compat) modules + 'custom' py2.4 compat module_utils
+17:37:41 <bcoca> ^ really hate that, people will be using parallel versions of ansible foreeeever
+17:37:56 <bcoca> probably why we have such 1.9 holdouts currently
+17:38:06 <bcoca> the reason py2 still exists  ....
+17:38:44 <dag> that's why I would prefer basic module support so people that care can provide the compatibility they need, but still on v2.4 and possible v2.5
+17:38:57 <abadger1999> alikins: I beleive that will be possible.  Since 2.3+ has custom module_utils a user should be able to use python-2.4 compatible module_utils with python-2.4 compatible modules as a drop in for our shipped modules/module_utils
+17:39:10 <mikedlr> is it so difficult to see py2.4 as similar to a router platform with a specific subdirectory of limited modules?
+17:39:45 * dag is just wondering what Red Hat's roadmap will be for Satellite+Foreman+Ansible, or Ansible Tower and RHEL5 support
+17:39:45 <abadger1999> mikedlr: yes.  because the common code (module_utils) won't continue to be py2.4 compatible.
+17:39:50 <mikedlr> custom module_utils would be needed but it would never need to be touched.
+17:40:12 <shaps> dag, afaik from the last version of tower they only support RH7
+17:40:24 <dag> shaps: only RH7 for targets ?
+17:40:32 <dag> that's insane
+17:40:34 <shaps> lol no
+17:40:38 <abadger1999> shaps: although.. that's "controller"... (yeah, what dag said about targets)
+17:40:44 <dag> we're talking targets
+17:41:35 <shaps> hm, I don't have many info about targets, luckily never had to ask the question abuot RHEL5
+17:42:33 <alikins> it is probably worthwhile making sure ans-2.4 can work with a set of py2.4compat modules+module_utils (say, the 2.3 set) and adding tests to CI
+17:42:40 <abadger1999> -1
+17:42:48 <abadger1999> well..
+17:43:01 <abadger1999> Okay, w/ custom module_utils, I could be +1 to that.
+17:43:12 <alikins> that buys us a whole lot of wiggle room for backwards compat constraints
+17:43:54 <shaps> As long as there's docs about using custom module_utils with py24 I believe that will be ok
+17:43:56 <abadger1999> I do share bcoca's note that that encourages frankenstein creations though.
+17:44:04 <alikins> 'old stuff works with setup X, so we are free to change setup Y'
+17:44:08 <abadger1999> which can lead to frustrating bug reports.
+17:44:24 <dag> shaps: and how will the selection be made to use the p2.4 template module and the py2.7+ template module ?
+17:44:28 <abadger1999> "I thought this problem was fixed for 2.4....."
+17:44:42 <mikedlr> all cloud / router/ etc. modules would be dropped from there;  only ones that locally configure linux.
+17:45:24 <shaps> dag, have template in library/, maybe
+17:45:38 <alikins> abadger1999: well, I think it would be totally valid to get to the point where that works... and then leave maintaining that compat setup to someone else
+17:46:05 <alikins> we just need to get to a point where someone else could maintain a backwards compat stack externally
+17:46:17 <dag> shaps: good luck if that's the compatibility requested from Satellite or Ansible Tower
+17:46:26 <bcoca> alikins: we barely have people to support what we have, i dont see how multiplying the surface of supported code will help
+17:46:30 <dag> shaps: I tink it's more complicated than that
+17:46:47 <abadger1999> alikins: it should work now.. the problem is that user reports that "Bug X still happens with 2.5" and we spend a long time debugging it without realizing that it's because they have an old versio of basic.py from 2.3 which doesn't have the fix.
+17:46:53 <mattclay> Do we need to take this discussion back to management? It's not really about testing python 2.4, but changing our plans for dropping support.
+17:46:56 <dag> bcoca: indeed :-/
+17:46:58 <alikins> bcoca: we wouldn't be supporting it, just allowing it to be possible
+17:47:15 <bcoca> alikins: and that means, we'll still get asked to support it
+17:47:41 <bcoca> it is possible 'now', if 3rd party wants hassle, go ahead, WE should not do it, post it and abandon
+17:47:48 <bcoca> too much of that already
+17:47:53 <thaumos> Best effort support for EOL OS
+17:47:55 <bcoca> *cough* docker *cough*
+17:48:15 <mikedlr> actually, a really simple decision would be if someone volunteers to be maintainer of a module then it goes in..
+17:48:16 <abadger1999> mattclay: You have hit the nail on the head.
+17:48:22 <mikedlr> this may have a brutal effect ;-)
+17:48:44 <bcoca> mikedlr: and when that volunteer stops responding? this is currenetly huge problem in ansible/ansible
+17:48:58 <bcoca> ^ we have many 'maintainers' but not as many 'maintain'
+17:49:00 <abadger1999> mattclay: of course the thing is... if no one who talks to management recommends keeping pyhton2.4 support then nothing is likely to change... and dag isn't in our chain of management.
+17:49:13 <bcoca> abadger1999: yet
+17:49:17 * bcoca ducks
+17:49:18 <abadger1999> hehe :-)
+17:49:22 <gundalow> OK
+17:49:23 <thaumos> We have lots of contributors not maintainers
+17:49:24 <dag> you don't have to do this for me BTW :)
+17:49:32 <dag> and not even for my $CUSTOMER
+17:49:34 * gundalow puts on his chair hat
+17:49:39 <gundalow> So
+17:49:40 <bcoca> dag: it would not be just for you, it is 'part of our user base'
+17:49:40 <dag> but I think it is (also) a business decision
+17:49:42 <abadger1999> headlines: dag gets hired by red hat solely to press for continued python-2.4 support on Ansible targets ;-)
+17:49:45 <bcoca> the question is 'how big is that part'?
+17:49:46 <gundalow> We can't make a decision on this
+17:49:55 <dag> abadger1999: :-P
+17:50:03 <thaumos> Best effort is the decision from the business
+17:50:09 <gundalow> Thoug we can capture the concerns and push that upto mgmt
+17:50:18 <bcoca> gundalow: we've made the decision, we cannot revise it ourselves, but we should escalate
+17:50:22 <mattclay> abadger1999: True, but we can relay what we've collected from this discussion, even if we don't support the idea. We may end up having a to schedule a dedicated meeting with the community to discuss this topic.
+17:50:26 <dag> so I end up doing py2.4 and Windows, so how much is Red Hat willing to pay :-D
+17:50:34 <thaumos> I escalated
+17:50:36 <abadger1999> mattclay: <nod>  But... there's nothing new here.
+17:50:43 <bcoca> thaumos: define 'best effort'
+17:51:11 <abadger1999> I've already told people all of these points along with our desire not to support it.
+17:51:24 <abadger1999> So nothing has changed.
+17:51:26 <bcoca> a) we should NOT knowingly add backwards incompatible code? b) should we accept 2.4 compat fixes?
+17:51:31 <thaumos> We don't have to spend cycles ensuring it works for EOL OS and py2.4 systems.
+17:51:35 <mattclay> OK, since thaumos has escalated, lets table this discussion for now.
+17:51:43 <abadger1999> (a) We should be allowed to add backwards incompatible code.
+17:51:55 <bcoca> abadger1999: not asking you, asking the 'business'
+17:51:56 <gundalow> thaumos: Do you require any extra infomation to allow you to escalte?
+17:51:59 <bcoca> abadger1999: our position is clear
+17:52:27 <thaumos> Extra info would always help. However in a quick chat with Justin he said best effort.
+17:52:38 <bcoca> abadger1999: im all for 'not thinking of 2.4' at all, just was trying to see if we had way of addressing dag's (user base) concerns
+17:53:09 <gundalow> thaumos: how long will Ansible 2.3 be supported for?
+17:53:14 <mattclay> thaumos: The only concern I have is that while we're waiting on a decision, we should probably re-instate the python 2.4 tests.
+17:53:21 <bcoca> until 2.6 is out
+17:53:30 <bcoca> once 2.5 is out, only major bugfixes/security
+17:53:38 <abadger1999> thaumos: please include hte fact that I would be very displeased if they're not going to let us get rid of python-2.4.... I asked, was given permission, and have been looking forward to this for a looong time.
+17:53:58 <bcoca> ^ he has 'printer party' ready
+17:54:11 <thaumos> I think it's clear on a decision. He said best effort.
+17:54:12 <bcoca> 2.4 is named 'dancing days' in his honor
+17:54:24 <dag> bcoca: :)
+17:54:26 <nitzmahone> It's true
+17:54:33 <abadger1999> mattclay: I've just responded to a stuck PR that we've dropped python2.4 compat in devel so they can update their code to an acceptable solution that doesn't have 2.4 support.
+17:54:34 <thaumos> We don't need to re-enabled py2.4
+17:54:35 <bcoca> thaumos: 'best effort' means we dont do incompatible changes ?
+17:55:03 <nitzmahone> I don't think that's realistic
+17:55:22 * dag was actually here for the next topic, sorry abadger1999
+17:55:27 <abadger1999> hehe :-)
+17:55:36 <thaumos> For older OS, the customer will have to make their environment compatible for py2.6 on their own time
+17:55:43 <abadger1999> maybe we should move on then... come back to this when we have more management-level info
+17:55:44 <nitzmahone> +1000
+17:55:51 <gundalow> OK, moving on
+17:55:54 <gundalow> .....................
+17:55:54 <gundalow> .....................
+17:55:55 <gundalow> .....................
+17:56:22 <dag> (BTW how about RHEL5 + python2.7 from RHSC ?)
+17:56:29 <dag> ok
+17:56:36 <gundalow> #topic CI Shell out using run_command #18181
+17:56:42 <gundalow> #info https://github.com/ansible/ansible/issues/18181
+17:56:46 <gundalow> shaps: you there?
+17:56:49 <shaps> yep
+17:57:00 <gundalow> COol
+17:57:03 <gundalow> So the question is
+17:57:18 <gundalow> Q: Should this be code-smell or in validate-modules?
+17:58:23 <shaps> yep, I am ok adding it in any of those, just wanted clarification on where it's best to put it
+17:58:24 <mattclay> I'd recommend putting it in validate-modules, since I'm planning on overhauling the code-smell tests soon.
+17:58:24 <gundalow> So i believe (and mattclay correct me if I get this wrong) the high level split is code-smell checks the whole repo, validate-modules is only for modules
+17:59:08 <shaps> mattclay, ok, happy to add it to validate-modules then
+17:59:54 <shaps> it would then be raised as an 'error' in validate-module
+17:59:55 <mattclay> Generally tests that don't fit elsewhere go into code-smell.
+17:59:56 <gundalow> #agreed check to go into validate-modules (code-smell is going to get an overhaul soon)
+18:00:13 <shaps> k
+18:00:26 <gundalow> shaps: Any ideas how many failing cases there are?
+18:00:50 <shaps> there's about 5/6 modules I've found using subprocess.Popen
+18:01:28 <gundalow> cool, so if they can be fixed you can make it a fatal error
+18:02:05 <shaps> yeah, I think they can be fixed, I'll have a closer look at why it's used
+18:03:09 <shaps> there may be a good reason why it's used, what should be done in that case?
+18:03:27 <shaps> "good reason"
+18:03:58 <mattclay> If you find something that's an issue, bring it up in #ansible-devel
+18:05:00 <shaps> k, I'll gather info on the modules and ask in #ansible-devel
+18:05:14 <mattclay> #topic Open Floor
+18:05:28 <shaps> ^ ( that will likely happen tomorrow )
+18:05:33 <mikedlr> cloud integration tests...
+18:05:46 <mattclay> #topic Cloud Integration Tests
+18:06:02 <mattclay> #info https://github.com/ansible/community/issues/114#issuecomment-286357055
+18:06:04 <mikedlr> I have fixed them so they run.  It would be really good if they ran more often.
+18:06:46 <allanice001_> Soup everybody
+18:06:47 <mikedlr> they picked up several bugs in modules as I did that.
+18:06:49 <mattclay> Running cloud integration tests in CI is now part of the proposed 2.4 roadmap.
+18:06:55 <allanice001_> Suup everybody
+18:06:58 <allanice001_> :P
+18:07:16 <mattclay> In priority order, I'll be looking at enabling: AWS, Azure, GCE
+18:08:02 <mikedlr> okay;  neat.  then it would be nice to merge my changes;  there is currently one PR which has several carefully separated commits.
+18:08:37 <mikedlr> I need comments back if more work is needed.
+18:09:04 <mattclay> mikedlr: Have you been working with shertel and/or ryansb on those?
+18:09:20 <mikedlr> shertel has been trying to run them.  I think he got quite a bit of the way.
+18:09:56 <shertel> mikedlr I'm still working on them :)
+18:10:21 <mikedlr> it's environment / AWS credential difficulties likely ; right?
+18:11:16 <mikedlr> if someone else like ryansb ran them also and got the same problems maybe it's clearer ..
+18:11:29 <shertel> I was thinking I'd just move the environment variables into defaults
+18:11:32 <mikedlr> currently the "work for me" ;
+18:11:45 <shertel> the issue I'm working on though is the ec2_asg load balancer bug
+18:13:32 <mikedlr> I won't be able to help with that but I might get back to how we set the credentials.  For me that has to be 100% safe
+18:13:55 <mikedlr> as in it will only ever use credentials explicitly given to it in credentials.yml and never take them from the environment.
+18:14:12 <shertel> yes, I agree
+18:14:17 <mikedlr> or the .aws directory.
+18:14:20 <shertel> and you've done a lot already, thank you :)
+18:14:36 <gundalow> back
+18:15:00 <shertel> https://forums.aws.amazon.com/thread.jspa?messageID=733153 appears to be related to why the test_ec2_asg test with the load balancer times out. But I haven't figured out the solution yet.
+18:15:01 * mikedlr happy to help here :-)
+18:15:45 <mikedlr> 2.4 target for running in CI is realistic and good I think.  I think it would have to only run on mainline or the AWS account it ran in would have to be carefully configured.
+18:16:07 <shertel> mikedlr sidenote- the environment/AWS credentials haven't been a problem for me anymore; I rebooted the terminal and it solved the weirdness
+18:16:43 <mattclay> mikedlr: I'm planning on setting up an isolated account for testing cloud module PRs as part of CI.
+18:17:38 <mikedlr> intermittent / hiesenbugs..  not happy.  I know that we have to check the environment variable precedence and then use the highest precence ones.
+18:18:22 <mikedlr> mattclay: good.  Still don't want infinite charges.   I have built up an IAM policy with close to minimum rights needed, unfortunately it
+18:18:46 <mikedlr> still seems to need to have unlimited create rights on some resources.
+18:19:20 <mikedlr> does AWS cooperate here?
+18:19:51 <mikedlr> their support / help with the account would be nice.
+18:21:04 <shertel> mikedlr not that I'm aware of
+18:21:11 <mattclay> I don't think we'll get, or need, any special support for AWS on this. Of course, I won't know for sure how well it's going to work until I get into it.
+18:22:03 <mikedlr> BTW;  PR is here for anyone who's interested and/or has an AWS account they can try on  https://github.com/ansible/ansible/pull/22499
+18:22:04 <shertel> will we want some kind of human screening process before running on prs?
+18:23:41 <mikedlr> unfortunately I think that's might be wise to begin with;  it should be possible to set up limits though, and then the question is what
+18:24:00 <mattclay> shertel: I hope to have CI fully automated, just like regular PRs. It will require some careful setup of IAM and account limits however.
+18:24:01 <mikedlr> damage can be done that's more than you could do with shippable..
+18:24:22 <mattclay> That's why we'll be using a dedicated account for this, used only for these CI tests.
+18:25:10 <shertel> Okay, cool.
+18:25:15 <mikedlr> as mattclay says; I think the limits will make it not a big problem.  Where should I put the IAM policy I developed?  It needs feedback
+18:25:39 <gundalow> OK
+18:25:48 <gundalow> Lets move onto the next topic
+18:25:50 <gundalow> ...................................................
+18:25:54 <shertel> mikedlr I'm not sure, but would love to review that
+18:26:07 <mattclay> mikedlr: A link to a gist would be nice.
+18:26:10 <gundalow> We can look back onto cloud at the end if peoplewant tocontinue
+18:26:11 <mikedlr> I'lll put it as a gist..
+18:26:44 <mikedlr> so that's all I had to discuss.
+18:26:55 <gundalow> mikedlr: Thanks :)
+18:26:58 <gundalow> #topic structured way to reuse tests for both normal mode and check-mode testing
+18:27:15 <gundalow> #info I'd [Dag] like to discuss a structured way to reuse tests for both normal mode and check-mode testing, and also discuss the use of YAML anchors and references for doing idempotency testing. Since I would like to redo all the Windows integration tests (some are simply missing) I would like to get approval on the preferred mechanism.
+18:27:23 <gundalow> #info See this example : https://github.com/ansible/ansible/pull/22611/files#diff-9bdd58936ad3aaccf0f2daa7c4a385e1R1
+18:27:29 <gundalow> dag: over to you
+18:28:13 <dag> I am looking for advice to how to do idempotency and check-mode tests better
+18:28:40 <dag> as I plan to add missing integration tests for Windows modules as much as possible
+18:29:02 <gundalow> So in the network tests I normally do
+18:29:09 <mattclay> +1 to more solid integration tests
+18:29:12 <gundalow> Setup: remove
+18:29:19 <dag> (hopefully improving the quality of Windows modules during the v2.3 RC process)
+18:29:25 <gundalow> Task1: Add (amd assert it's changed_
+18:29:45 <gundalow> Task2:  Add again (and assert nothing has changed)
+18:29:55 <gundalow> teardon: Revert to original state
+18:30:19 <gundalow> https://github.com/ansible/ansible/blob/devel/test/integration/README.md#network-tests
+18:30:25 <dag> gundalow: that's what I am doing now as well, and I am using an include of those tasks for doing both the normal run and the check-mode run
+18:30:38 <mattclay> I like the way dag has structured the tests in the example.
+18:30:46 <dag> I do the tear-down also twice, in order to ensure that's idempotent too
+18:31:02 <dag> my only concern here is that all tasks run, and the checks are all together at the end
+18:31:20 <dag> that's an advantage (because the test results are different between normal run and check-mode run)
+18:31:38 <dag> but also a disadvantage (because the test output is more disconnected from the check)
+18:32:19 <dag> the main advantage still is the fact we reuse the same tests for normal and check-mode run though, and I think that's more important
+18:33:01 <mattclay> The re-use also makes the tests shorter, which helps in readability, especially for otherwise lengthy tests.
+18:33:19 <dag> and the practice of registering to very identifiable variables definitely help to relate result with assert
+18:33:31 <gundalow> yup
+18:34:09 <dag> I guess this is acceptable, but can this be improved, am I missing something that we may want to do as well ?
+18:34:19 <dag> (I am not very experienced in writing tests)
+18:35:23 <mattclay> bcoca, abadger1999: Any wisdom for us on further improving on dag's example integration tests (https://github.com/ansible/ansible/pull/22611/files#diff-9bdd58936ad3aaccf0f2daa7c4a385e1R1) ?
+18:36:55 <dag> gundalow: I also started using YAML anchors for the repeated tasks, that's something we may want to document as well ?
+18:38:53 <gundalow> nod
+18:39:07 <gundalow> we need to put together some docs around how to best write tests
+18:39:24 <gundalow> though that hasn't made it to the top of my todo list yet
+18:39:47 <dag> gundalow: I would point from the docs to some reference examples (those being well-documented inline)
+18:40:11 <gundalow> That's a decent point,
+18:40:23 <mattclay> That should be easier to maintain than duplicating a solid example inline in the docs.
+18:40:48 <dag> gundalow: and by choosing a few good examples, we can cover the most important facets (like how to test for capabilities on Windows, or specific network module testing)
+18:40:57 <mattclay> Just include a comment in the example like "This test is also used as a example test in the docs here: xxxx"
+18:40:59 <dag> I am sure every subsystem has its own specifics
+18:41:20 <abadger1999> Not sure... I like that you can reuse the same test multiple times this way but I'm not sure if checking all asserts at one time is good... might make it harder to debug the precise place that things are going wrong.
+18:41:45 <dag> mattclay: indeed, and the docs could simply differentiate (or highlight) the various reference examples
+18:41:51 <dag> abadger1999: agreed, that was my concern as well
+18:42:00 <abadger1999> Not opposed to using it and seeing how it goes in any case :-)
+18:42:34 <mikedlr> shertel: https://gist.github.com/michael-dev2rights/77f9b007d06519d85792a872db4b687f  (for the minutes?)
+18:42:42 <dag> the example is only for one specific idempotency test, so if you'd be testing another aspect of the module, I would move it to another _taskbook_
+18:42:47 <mattclay> I suppose an alternative would be to put the asserts in the included file and set a value that indicates if you want the first or second assert.
+18:42:55 <abadger1999> <nod>
+18:43:26 <mattclay> Then it's all inline, in order, and you just have multiple groups of asserts for a task, with only one group run per include of the tests.
+18:44:11 <dag> mattclay: but the asserts are different in run-mode and check-mode, how would you make the difference
+18:44:17 <mattclay> assert with when?
+18:44:32 <dag> mattclay: the asserts could be different as well (i.e. check-mode would not have the same output as run-mode)
+18:44:35 <dag> ah
+18:44:35 <mattclay> The when checking for run-mode or check mode.
+18:44:50 <dag> that's not a bad idea
+18:45:09 <mattclay> abadger1999 gave me the idea
+18:45:47 <dag> my example is pretty simple, so it favors this way of working a bit, but they can get really complex too
+18:46:21 <mattclay> dag: Could you try an example with the assert + when combination instead, so we can see how that works and looks?
+18:46:40 <dag> mattclay: sure, but not now, desperately need to go home
+18:46:55 <dag> it's 8PM here and still an hour drive
+18:47:16 <mattclay> dag: Go home. Have a safe drive.
+18:48:14 <gundalow> dag: cya
+18:48:23 <dag> alright, thanks for the feedback !
+18:48:36 <mattclay> Thanks for working on improving integration tests!
+18:48:39 * mikedlr waves ;-)
+18:50:03 <mattclay> #topic Open Floor
+18:50:26 <mattclay> OK, anything else before we end the meeting?
+18:50:51 <gundalow> Please test RC1 :)
+18:51:10 <mikedlr> @gundalow latest on devel counts?
+18:51:42 <jtanner> count of what?
+18:51:55 <gundalow> devel and stable-2.3 are different beasts
+18:52:09 <gundalow> their have already been some new feature integrated into devel
+18:52:20 <mattclay> They're rapidly diverging.
+18:52:47 <gundalow> Yup
+18:52:51 <mikedlr> jtanner: counts as testing RC1.  gundalow okay;  I think stable-2.3 is still ahead of what we're using internally so I will rebase to that.
+18:53:21 <mikedlr> I'm developing on devel though.
+18:53:49 <gundalow> Yup, develop on devel, though I'd recomend using stable-2.3 for when you actually *run* ansible-playbook
+18:56:33 <gundalow> #endmeeting

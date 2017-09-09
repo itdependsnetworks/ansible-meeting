@@ -1,0 +1,255 @@
+15:00:07 <thaumos> #startmeeting Ansible Core Meeting
+15:00:07 <zodbot> Meeting started Thu May 18 15:00:07 2017 UTC.  The chair is thaumos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:00:07 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:00:07 <zodbot> The meeting name has been set to 'ansible_core_meeting'
+15:00:17 <thaumos> #chair thaumos bcoca gundalow
+15:00:17 <zodbot> Current chairs: bcoca gundalow thaumos
+15:00:24 <sivel> hello
+15:00:29 <thaumos> #chair sivel
+15:00:29 <zodbot> Current chairs: bcoca gundalow sivel thaumos
+15:00:31 <thaumos> herro
+15:00:34 <ryansb> hey team
+15:00:44 <thaumos> #chair ryansb
+15:00:44 <zodbot> Current chairs: bcoca gundalow ryansb sivel thaumos
+15:00:48 <thaumos> mornin!
+15:02:09 * mattclay waves
+15:02:14 <thaumos> #chair mattclay
+15:02:14 <zodbot> Current chairs: bcoca gundalow mattclay ryansb sivel thaumos
+15:02:39 <thaumos> @mattclay go to sleep!
+15:02:57 <gundalow> thaumos: It's not tomorrow yet :P
+15:03:07 <thaumos> heh,
+15:03:14 <mattclay> It's only 11 PM.
+15:03:33 <thaumos> I am out cold by 11pm
+15:03:46 <thaumos> I am savoring all the sleep I can before baby arrives in aug
+15:03:57 * mattclay understands that
+15:04:10 <thaumos> it's going to be all new for me 😞
+15:04:33 <thaumos> #topic Quick discussion around backlog scrub
+15:05:10 <thaumos> So, jimi|ansible brought up something yesterday that I wanted to throw by all of you.  He suggested that we could use some time to do some backlog scrub.
+15:05:11 <sivel> haha, I am out by like 9:30pm. I also do wake up at 6am though
+15:05:19 <thaumos> ^^ that's me!
+15:06:24 <thaumos> So, bcoca, jimi|ansible, funzo and myself did some initial backlog scrubbing yesterday and got through 10 or so PR's labeled bugfix_pull_request.
+15:07:10 <thaumos> So going off what jimi|ansible suggested, do you guys have any ideas on what would work best?  Should I pick out a couple ahead of time in the next meeting for us to scrub, or we just pick on a couple collectively, thoughts?
+15:08:15 <thaumos> @bcoca I thought it worked rather well yesterday, but I think it's fair to think we could tackle more in a meeting once a week in here too.  Do you have any ideas how we could do it here?
+15:08:39 <bcoca> as part of 'tirage' we have been doing 'individual backlog' scrubbing, i tink yesterday was good as many times the individual is not able to answer questions about the issue/pr
+15:09:01 <bcoca> i think both things are useful, we might want the 'individual triage backlog' to add to the list for the weekly meeting
+15:09:24 <sivel> Ideally shouldn't we start at the back? and work our way toward the newer PRs/issues. Just a random thought
+15:09:34 <thaumos> we did start at the back yesterday
+15:09:39 <thaumos> sorry for not clarifying that.
+15:09:41 <sivel> cool
+15:10:24 <bcoca> sivel: we cleared out 2015!
+15:10:28 <gundalow> FYI the network team have a weekly meeting where we are going through all label:network items
+15:10:36 <thaumos> So yeah, about group vs individual.  we'll have a group here too, right @bcoca.  so we can close some quick here as well.
+15:10:50 <akasurde> hi all,
+15:10:56 <gundalow> akasurde: Hi :)
+15:10:57 <thaumos> #chair akasurde
+15:10:57 <zodbot> Current chairs: akasurde bcoca gundalow mattclay ryansb sivel thaumos
+15:10:58 <sivel> I don't spend much time going through the github.  I tend to pick up the things I see going through my email. Not ideal, but for me, I don't necessarily have the full ability with my $dayjob
+15:10:58 * bcoca waves
+15:11:10 <sivel> the github queue*
+15:11:13 <thaumos> screw $dayjobs
+15:11:23 <bcoca> sivel: unacceptable, we want to mandate how you do your fee labour to us!
+15:11:25 <thaumos> oh wait
+15:11:34 <sivel> lol
+15:11:56 <bcoca> sivel: mostly discussing for those of us hired by RH how to interact better with community and reduce backlog
+15:12:05 <thaumos> ^^
+15:12:07 <thaumos> exactly
+15:12:34 <thaumos> so just suggesting if I bring 3 -5 tickets for us as a group to scrub together, or we as a group pick 3-5 to scrub
+15:12:51 <bcoca> so we ask YOU, what do you think about our approach and if anyone has better idea, we are open to it (no .. RH hiring 200 people for backlog is not feasable)
+15:13:00 <thaumos> because then it isn't the individual problem still.  it's a group
+15:13:03 <thaumos> yep
+15:14:21 <thaumos> How about this.
+15:14:30 <thaumos> Think it over, and let's revisit Tuesday?
+15:15:08 <gundalow> End of each meeting to fill up the hour, or at least 2 PRs, whatevers greater?
+15:15:13 <sivel> Yeah, I guess my suggestion, is bring the bottom 5, or so
+15:15:41 <bcoca> https://github.com/ansible/ansible/pulls?q=is%3Apr+is%3Aopen+sort%3Acreated-asc
+15:16:13 <thaumos> yeah, I was thinking start small at first.  so 3-5 I'd bring.  if we're successful here, then we can plow through more.
+15:16:25 <bcoca> https://github.com/ansible/ansible/pulls?q=is%3Apr+is%3Aopen+sort%3Acreated-asc+label%3Abugfix_pull_request <= bugfixes as priority
+15:16:40 <thaumos> thanks bcoca!
+15:16:43 <akasurde> bcoca++
+15:16:57 <thaumos> #link https://github.com/ansible/ansible/pulls?q=is%3Apr+is%3Aopen+sort%3Acreated-asc+label%3Abugfix_pull_request
+15:17:01 <bcoca> list can be long, we just need to focus on 5 at time
+15:17:09 <thaumos> 👍
+15:17:16 <bcoca> also, we discussed and are 'working on' the first 5 of that one already
+15:17:53 <thaumos> okay, cool!  So I will have five picked out for Tuesday's meeting
+15:17:55 <bcoca> 1 &2 have been refered to cloud team, 3 i have alternate fix, 4 and 5 james is looking into (well, not right now, he is flying)
+15:18:17 <thaumos> #action Thaumos to bring five PR's to Tuesday's meeting for scrubbing.
+15:18:24 <thaumos> #action thaumos to bring five PR's to Tuesday's meeting for scrubbing.
+15:18:47 <thaumos> #topic ansible/ansible#24751
+15:18:50 <jtanner> hi
+15:18:56 <thaumos> #chair jtanner
+15:18:56 <zodbot> Current chairs: akasurde bcoca gundalow jtanner mattclay ryansb sivel thaumos
+15:18:58 * jtanner forgot about meeting
+15:19:07 <thaumos> welcome to west coast times
+15:19:11 <shertel> me too
+15:19:16 <thaumos> #chair shertel
+15:19:16 <zodbot> Current chairs: akasurde bcoca gundalow jtanner mattclay ryansb shertel sivel thaumos
+15:19:25 <thaumos> @shertel I was going to give you grief if you didn't show!
+15:19:34 <jtanner> shame
+15:19:35 <shertel> XD
+15:19:41 <thaumos> #link https://github.com/ansible/ansible/pull/24751
+15:20:00 <thaumos> So re: topic.  You all cool with the merge?  I always am going to ask for permission 😛
+15:20:02 <bcoca> shertel: not sure if anyone touched base with you, but from discussion above we assigned 2 'old' tickets to you
+15:20:18 <thaumos> ^^ thanks for bringing that up @bcoca
+15:20:22 <bcoca> https://github.com/ansible/ansible/pull/11374 and https://github.com/ansible/ansible/pull/11658
+15:20:23 <shertel> Okay, cool.
+15:20:30 <shertel> thanks bcoca!
+15:20:43 * bcoca expected cursing instead
+15:20:44 <thaumos> we can give you more info offline if you need it @shertel 😄
+15:20:56 <sivel> thaumos: the only question I have, is how are these decisions being made?
+15:20:57 <shertel> haha
+15:21:00 <thaumos> @shertel isn't there with you yet @bcoca
+15:21:07 <bcoca> thaumos: we need action items in those meetings to follow up with people we give work to
+15:21:31 <sivel> not that I am concerned about any of the changes, just not sure who is making those decisions
+15:21:36 <bcoca> sivel: mostly the people in meeting discussing, several core memeber there, think that is why thaumos brougth up here for 'oipening it up'
+15:21:41 <thaumos> @bcoca, agreed.  I am happy to take charge on divvying those out.
+15:21:57 <thaumos> @sivel, what bcoca said.
+15:22:08 <bcoca> sivel: started out as internal effort to 'do more to reduce backlog'
+15:22:22 * mikedlr waves
+15:22:26 * bcoca waves back
+15:22:28 <thaumos> #chair mikedlr
+15:22:28 <zodbot> Current chairs: akasurde bcoca gundalow jtanner mattclay mikedlr ryansb shertel sivel thaumos
+15:22:28 <sivel> cool, all I needed
+15:22:47 <bcoca> sivel: no smoke filled room deciding, if that is what you were asking
+15:23:00 <thaumos> bleah
+15:24:29 <thaumos> so we good to merge?
+15:24:55 <thaumos> or is everyone cool with me merging without permission on these sorts of updates?
+15:25:02 <thaumos> as long as CI passes that is
+15:25:25 <sivel> I'm good with it
+15:25:26 <gundalow> thaumos: Ensure that "stale_ci" label isn't there
+15:26:45 <thaumos> 👍
+15:27:10 <thaumos> Anyone opposed?
+15:27:52 <thaumos> k, cool
+15:28:15 <thaumos> #action thaumos to merge pr, cherry-pick to stable-2.3 and merge.
+15:28:23 <thaumos> #topic Open Floor
+15:29:38 <sivel> https://github.com/ansible/ansible/pull/24732
+15:29:43 <akasurde> I have one suggestion related to issues. Can we have easy_fix or low_hanging_fruit like label ?
+15:30:00 <thaumos> #topic ansible/ansible#24732
+15:30:01 <sivel> Wanted to get another set of eyes on that PR, and see if everyone agrees that it should be backported to 2.3.1
+15:30:14 <thaumos> #link https://github.com/ansible/ansible/pull/24732
+15:32:15 <sivel> Bueller...
+15:32:19 <sivel> bcoca...
+15:32:23 <jtanner> heh
+15:32:33 <jtanner> i wonder why the unarchive maintainers didn't chime in
+15:32:37 <thaumos> I think bcoca has passed out.
+15:32:57 <jtanner> someone is wrong in the internet ... he out trying to fix that
+15:33:16 <sivel> no idea.  I am comfortable with the patch, and I do believe it should be cherry picked into stable-2.3
+15:33:22 <bcoca> sorry, can only handle 4 parallel discussions same time
+15:33:37 <bcoca> also that is dag question
+15:33:43 <bcoca> iirc unarchive is his?
+15:33:54 <jtanner> and pileoffrogs
+15:34:16 <jtanner> oh, this is 22 hours old
+15:34:24 <jtanner> prob why they haven't seen it
+15:34:26 <sivel> bcoca: well, partly I pinged you, because you introduced the bug iirc
+15:34:48 <sivel> in https://github.com/ansible/ansible/commit/7b197d823ee775b0138495bcd3954dff28851dd5
+15:35:04 <sivel> I just made a more robust fix
+15:36:09 <sivel> https://github.com/ansible/ansible/commit/7b197d823ee775b0138495bcd3954dff28851dd5#diff-5254fe5279129755e6073ef35bd91025
+15:36:15 <sivel> by stripping `remote_src` out
+15:36:40 <sivel> anyway, we can move on I suppose.  I just wanted to get eyes on it, because I wanted to see about getting it in and cherry picked before a 2.3.1rc2 was cut
+15:36:44 <bcoca> when i added encryption? that should not ahve affected remote_src
+15:37:03 <sivel> bcoca: yeah, you stripped out `remote_src`
+15:37:05 <sivel> for key in ('remote_src', 'decrypt'):
+15:37:18 <sivel> not sure why `remote_src` was added in there
+15:38:09 <bcoca> hhm, might have been me cpoy/pasting from copy
+15:38:28 <sivel> but because `copy` is deprecated, and `remote_src` is the recommended option, I effectively reversed the logic, and stripped out `copy` instead
+15:38:48 <sivel> and updated the module to reflect that change
+15:40:18 <bcoca> no, meant from copy action plugin
+15:40:24 <bcoca> not copy options
+15:40:54 <sivel> I understood what you meant
+15:40:59 <sivel> I was just talking about my implementation
+15:41:04 <bcoca> so you might just fix by removing remote_src from that tuple
+15:42:22 <sivel> Yes, that is possible as well.  Feel free to leave feedback on the issue.  As I mentioned, my change was just a bit more robust.
+15:42:36 <sivel> we can move on, or if nothing else for open floor
+15:43:31 <sivel> we actually just got another issue for that same bug
+15:43:49 <bcoca> sivel: thinkign we can backport thei simple change (minimal) and push yourse into devel (might make a 2.3.2
+15:44:22 <sivel> bcoca: I'll put together a 2nd pr for the 2.3 fix
+15:44:49 <bcoca> so random idea after talking to networking folk yesterday (duck)
+15:44:57 <thaumos> one sec
+15:45:17 <bcoca> they want a 'discovery' to figure out Os of net appliance, does it make sense to expand to windows/linux/other flavors?
+15:45:21 <thaumos> @sivel, so if I follow, you're going to create a new PR for 2.3?
+15:45:26 * gundalow sees network mentioned and looks up
+15:45:39 <sivel> thaumos: yes, I'll create a 2nd PR for a fix for stable-2.3
+15:45:44 <thaumos> kk
+15:45:48 <thaumos> and the current is for devel?
+15:46:00 <thaumos> or you'll abandon it?
+15:46:15 <bcoca> thaumos: both appy to devel, current is more robust but also requires more review
+15:46:28 <thaumos> cool, thx for clarifying!
+15:46:48 <thaumos> #action sivel to create new pr for fix to stable-2.3
+15:47:12 <thaumos> #action more review to occur on ansible/ansible#24732
+15:47:37 <thaumos> #topic quick Network Os discussion
+15:47:39 <nitzmahone> discovery of things with that don't use SSH would be ... tricky. And slow.
+15:47:47 <bcoca> sivel: ping me tomorrow about the curernt PR, should be able to use some cycles on it
+15:47:59 <sivel> bcoca: will do
+15:48:05 <bcoca> nitzmahone: good indicator of looking at winrm ports
+15:48:25 <bcoca> nitzmahone: closed port not that bad to look for, its 'bad ssh port' that is harder
+15:48:43 <bcoca> allowed, listened to, but not actually ssh (yes i run my webservers on port 22)
+15:48:55 <thaumos> you would
+15:49:04 <sivel> can you define what "Os of net appliance" means?
+15:49:17 <bcoca> ios vs junos vs cumulos vs etc
+15:49:23 <sivel> oh, lol
+15:49:38 <sivel> OS, I was thinking it was like plural of the letter O
+15:49:40 <sivel> and was confused
+15:49:44 <gundalow> lol
+15:49:50 <bcoca> just thinking, discovery plugin might be good for 'new setups' or peole with high turnover
+15:49:54 <akasurde> hehehe
+15:50:02 <gundalow> high turnover?
+15:50:11 <bcoca> gundalow: cloud/virtual
+15:50:13 <sivel> We have been talking about this pluggable "setup" phase for a while
+15:50:28 <bcoca> sivel: this would be 'before that'
+15:50:46 <nitzmahone> The hard part is deciding how to connect once you think it's WinRM (which authtype? ignore self-signed certs?). By the time you've covered all that, seems like you'd do better to just stuff the rest of it in there too. I understand that there are scenarios where that might make sense, but it seems like something that'd be better prototyped in dynamic
+15:50:46 <nitzmahone> inventory (as it's really an inventory problem) than something we want to set in stone in core right away.
+15:50:50 <sivel> well, something related at least.  A pluggable way to run some form of script that could do some determination early
+15:51:28 <nitzmahone> I've kicked it around before too, but I've always found other ways around it.
+15:51:34 <thaumos> kind of like the old fashioned way of pinging a host and looking at it's response.
+15:51:41 <sivel> I mean, it can be done currently with a playbook also, at least determining the port, and then some logic to determine what connection method
+15:51:55 <bcoca> nitzmahone: not saying it should be default, but an option
+15:52:01 <bcoca> thaumos: yep
+15:52:04 <sivel> `gather_facts: false` and then run some determination steps
+15:52:26 <thaumos> I think it's something to play around with.
+15:52:32 <thaumos> definitely an option
+15:52:37 <bcoca> gather_facts: false .. tasks : - fingerprint: connections=ssh,paramiko OS=bsd,linux.aix
+15:52:39 <nitzmahone> I'm just worried that it'll turn into a boondoggle like the "fallback authtype" stuff in WinRM that's a huge pain in my ace
+15:52:54 <thaumos> @bcoca, can you write up a proposal on it and we can discuss further?
+15:53:08 <sivel> ooh, I kinda like the idea of fingerprint
+15:53:20 * bcoca has 6 proposals still open, just wanted to test waters for this idea
+15:53:25 <thaumos> I like it
+15:53:25 <sivel> not so sold on OS determination from that
+15:53:35 <sivel> but at least port/connection type
+15:53:41 <thaumos> I want to hear more.
+15:53:54 <bcoca> sivel: its easy to do one, the other or both
+15:53:56 <bcoca> OS=None
+15:54:01 <thaumos> Lol, but Sivel, I always loved suprirsing airheads in the NOC when I could pretty much tell them if it were a windows or unix box.
+15:54:03 <bcoca> os: []
+15:54:11 <bcoca> ^ both take lists, try 'all by default'
+15:54:31 <sivel> yeah, I just think it will be not so easy to determine OS type, unless we nmap the box
+15:54:35 <bcoca> again, just brain storm here
+15:54:53 <bcoca> sivel: or once you have ssh/winrm port, try connection plpugin + uname
+15:54:54 <sivel> port and connection type, are likely easiest
+15:55:12 <thaumos> yeah, let's table for now.  write it up and let's go from there
+15:55:13 <bcoca> agreed
+15:55:33 <bcoca> thaumos: just wanted to gague intereset
+15:55:41 <thaumos> I know :smile
+15:55:48 <thaumos> 😄
+15:55:50 <thaumos> I am interested
+15:56:02 <thaumos> There's been customer requests of the same
+15:56:13 <thaumos> so I think there's general interest.
+15:56:29 <bcoca> probably more intereset in 'bigger shops'
+15:56:38 <thaumos> yep, because more of those noc airheads exists.
+15:56:47 <bcoca> guy that has 20 servers probably knows them by name and can recite the MAC addresse
+15:56:56 <thaumos> You'd hope
+15:57:00 <thaumos> okay, really quick
+15:57:07 <thaumos> some housekeeping from me!
+15:57:17 <thaumos> 1. Contributor summit!
+15:57:43 <thaumos> #link https://public.etherpad-mozilla.org/p/ansible-summit-june-2017
+15:57:46 <thaumos> Proposed topics
+15:58:04 <sivel> I'll see about proposing some things, but I won't be able to participate
+15:58:05 <thaumos> Time: Wednesday 21st June, from 9:30am to 4pm
+15:58:11 <thaumos> Come on sivel!
+15:58:14 <gundalow> #topic Contributor Summit
+15:58:25 <thaumos> thx gundalow
+15:58:28 <gundalow> #info Agenda, feel free to add items https://public.etherpad-mozilla.org/p/ansible-summit-june-2017
+15:58:32 <thaumos> was lazy in essence of time
+15:58:36 <gundalow> :)
+15:58:39 <sivel> That is the first day of my sabbatical, and prep for 6 weeks out of the country
+15:58:45 <thaumos> fun!
+15:59:52 <thaumos> I forgot #2, so not important I guess.
+16:00:08 <thaumos> #endmeeting

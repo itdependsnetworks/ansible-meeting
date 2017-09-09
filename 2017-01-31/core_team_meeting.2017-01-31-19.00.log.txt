@@ -1,0 +1,444 @@
+19:00:40 <gundalow> #startmeeting Core Team Meeting
+19:00:40 <zodbot> Meeting started Tue Jan 31 19:00:40 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:00:40 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:00:40 <zodbot> The meeting name has been set to 'core_team_meeting'
+19:01:06 <gundalow> #chair abadger1999 alikins bcoca jtanner mattclay ryansb
+19:01:06 <zodbot> Current chairs: abadger1999 alikins bcoca gundalow jtanner mattclay ryansb
+19:01:18 * mattclay waves
+19:01:40 <gundalow> Agenda https://github.com/ansible/community/issues/148
+19:01:51 <jtanner> Omw
+19:02:06 <ryansb> hi folks
+19:02:11 <abadger1999> Óla
+19:02:17 <gundalow> #topic custodianship of the AWS modules
+19:02:24 <gundalow> https://github.com/ansible/community/issues/148#issuecomment-276347992
+19:02:27 <gundalow> willthames: over to you
+19:02:41 <willthames> thanks
+19:02:57 <willthames> so the rate of acceptance of AWS module PRs in particular has been pretty bad recently
+19:02:57 <alikins> bloop
+19:03:10 <willthames> e.g. 1.5 months to change Falsentry to False
+19:03:41 <willthames> I've imported several PRs from the old repos that are months old with no review etc
+19:04:07 <willthames> something is going wrong, I'm not 100% sure on how best to fix it, but more people with shipit rights, more committers, etc would be a start
+19:04:27 <willthames> interested to hear ryansb's thoughts too
+19:04:34 <bcoca> just some context, i believe aws is group with most people with 'shipit' rights
+19:04:45 <bcoca> and other modules have been languashing for longer
+19:04:55 <willthames> do you have *any* evidence for that first assertion bcoca?
+19:04:59 <bcoca> ^ not saying it justifies, but this is endemic
+19:05:23 <bcoca> https://github.com/ansible/ansibullbot/blob/master/FILEMAP.json
+19:05:33 <willthames> https://github.com/ansible/ansibullbot/blob/master/MAINTAINERS.txt
+19:05:36 <bcoca> https://github.com/ansible/ansibullbot/blob/master/MAINTAINERS.txt
+19:05:43 * jtanner just sat down
+19:05:58 <jtanner> which aws module(s) ?
+19:06:07 <willthames> right, so lots of people with ship it rights on a *single* module
+19:06:10 <gundalow> jtanner: https://github.com/ansible/community/issues/148#issuecomment-276347992
+19:06:23 <bcoca> willthames: the fallback is 'grouping'
+19:06:29 <willthames> no one with shipit rights on cloud/amazon as a whole
+19:06:33 <willthames> I don't have shipit rights
+19:06:35 <willthames> so who dows
+19:06:37 <willthames> does
+19:06:57 <ryansb> willthames: yeah, we do have lots of AWS PRs waiting, and I've been reviewing & merging, but expanding the pool of people that can review & test would help
+19:07:24 <willthames> another problem is zero call to review on PRs
+19:07:36 <bcoca> willthames: they do have as a whole
+19:07:45 <willthames> who do?
+19:07:49 <bcoca> those in aws
+19:07:53 <willthames> who is in aws?
+19:08:16 * bcoca feels he is in laurel and hardy skit now
+19:08:51 <ryansb> zero call to review? I think everyone's aware that someone needs to review PRs
+19:09:00 <jtanner> ec2.py is 'supported_by': 'committer', ... so it can be labeled shipit, but it will never be automerge
+19:09:30 <jtanner> and in terms of "call to review", @name in github doesn't draw people in
+19:09:39 <jtanner> some people pay attention, most don't
+19:09:55 <jtanner> the bot is pinging anyone explicitly listed as a maintainer though
+19:09:59 <willthames> sorry, not what I meant ryansb, actually you're right, there is a call to review but jtanner's point is valid
+19:10:10 <willthames> a lot of reviewers may no longer be at all active
+19:10:11 <ryansb> Yeah, but we can't make community members review PRs if they don't want to
+19:10:18 <ryansb> also that
+19:10:34 <jtanner> and for modules with 1 maintainer, the bot is now allowing people who maintain a module in the same namespace to give a 2nd shipit ... they are also being pinged
+19:10:37 <willthames> no, but if community members aren't even aware there is stuff in need of review...
+19:10:51 <willthames> jtanner is that a new thing?
+19:10:54 <jtanner> show me a ticket that didn't ping people
+19:10:58 <ryansb> yes, pretty recent
+19:10:58 <bcoca> willthames: comminity_review label?
+19:11:06 <jtanner> the namespace change is a few days old
+19:11:18 <ryansb> namespace pinging was within the last week or so
+19:11:21 <allanice001> Hey, sorry I'm late
+19:11:24 <bcoca> ^ actually thought that is how it worked all alaong
+19:11:26 <willthames> bcoca, was thinking more active notifications, perhaps like ansible/aws was designed for
+19:11:36 <jtanner> define "active"
+19:11:39 <ryansb> what about that would be more active?
+19:11:44 <willthames> I get an email
+19:11:49 <bcoca> willthames: people already complain about spam
+19:11:55 <jtanner> i can't email people through github
+19:12:04 <willthames> you can do @willthames and I get an email
+19:12:09 <bcoca> ^ cc @person normally triggers email
+19:12:10 <jtanner> that is already done
+19:12:18 <bcoca> but not always, depends on user's settings (default is email)
+19:12:22 <willthames> sure
+19:12:28 <jtanner> if you aren't a maintainer, but want to be ping'ed, you can be added to the FILEMAP.json
+19:12:43 <bcoca> ^ we need to make that process clearer
+19:12:46 <willthames> I would like to be pinged on all AWS changes
+19:12:50 <willthames> PRs that is
+19:13:01 <willthames> I would like overall shipit rights on AWS changes
+19:13:09 <jtanner> ok, file a bug in ansible/ansibot and i will make it happen
+19:13:16 <jtanner> but notification != shipit rights
+19:13:27 <jtanner> you need to be added to MAINTAINERS.txt for that
+19:13:29 <willthames> Ideally I would like commit rights too
+19:13:39 <bcoca> jtanner: we need to move the data file to ansible/ansible and have docs point people at it for 'community maintenance process'
+19:13:41 <willthames> not really a new request...
+19:13:49 <gundalow> I've emailed GitHub to ask them so we can request GitHub PRs reviews from people outside of those with commit rights, got their standard "Thanks for the suggestion" email
+19:14:05 <bcoca> gundalow: great, we'll have in 4yrs
+19:14:11 <jtanner> github doesn't care about repos with >10 people
+19:14:24 <jtanner> not their target market
+19:14:25 <willthames> perhaps we need more AWS modules at community status
+19:14:28 <gundalow> bcoca: aye, well they added the ability to see what reviews are assigned to you
+19:14:30 <ryansb> community shipits still weigh in when I'm reviewing. Like, if I see a PR (as a committer) and the maintainer hasn't commented but there's community shipits that's a factor
+19:14:34 <willthames> clear down maintainers.txt to active reviewers
+19:15:03 <bcoca> willthames: we have process for that, if maintainer has not responded for a while to any tickets
+19:15:20 <jtanner> we do?
+19:15:31 <willthames> when was that last checked?
+19:15:33 <bcoca> jtanner: i must have had that conversation with myself
+19:15:48 <bcoca> jtanner: thought you had that done already ....nvmd then
+19:15:48 <jtanner> i'd like there to be one, but i didn't write anything to make it so
+19:16:01 <gundalow> jtanner: bcoca we have an agenda item for today regarding taking over modules, so we can talk about that after this
+19:16:52 <willthames> how is that even tracked?
+19:16:55 <bcoca> gundalow: i belivve that is subset to what issues willthames brought up, some i thought we had solved a while ago ...
+19:17:22 <gundalow> bcoca: you, I didn't want us to get sidetracked on taking over orphaned modules
+19:17:25 <jtanner> willthames: it's not currently ... not by anything under the redhat umbrella
+19:18:30 <jtanner> the problem with the cloud modules is the number of people who even have the ability to test them
+19:18:37 <jtanner> i don't have accounts
+19:18:41 <willthames> jtanner, sure
+19:18:44 <willthames> I have lots now
+19:18:56 <jtanner> which is why i don't feel the core team should be gating them
+19:19:00 <willthames> I have been inactive in AWS space for about two years, until the last month
+19:19:24 <willthames> and now I'm very active again, I see the lack of support on AWS modules
+19:19:38 <jtanner> you were the support ...
+19:19:41 <willthames> some of that will be legacy, some of that will be active maintainers leaving the project
+19:19:50 <ryansb> jtanner: I have the necessary accts, just not the necessary hours
+19:19:54 <willthames> jtanner and now I have 15 open AWS PRs and not much getting them through
+19:20:05 <resmo> hi
+19:20:08 <bcoca> so a) we need DOCUMENTED phasing in/out of maintainers
+19:20:08 <willthames> most of them aren't even mine, I'm just shepherding old PRs through
+19:20:13 <willthames> morning resmo
+19:20:38 <jtanner> the cloud modules aren't suffering any problems that all the other modules are not
+19:20:59 <willthames> bcoca, can we see how long tickets have been in waiting_for_maintainer or whatever
+19:21:18 <willthames> if several tickets have been waiting on same maintainer, they get dropped
+19:21:25 <willthames> not after a week, but after a month
+19:21:27 <willthames> say
+19:21:44 <jtanner> and who replaces them? @ansible ?
+19:21:47 <jtanner> that won't work
+19:22:13 <bcoca> i would not replace in a month, its rare, but some people do take 1 month vacation (less rare outside USA)
+19:22:21 <willthames> who can do it? ryansb can, I can
+19:22:31 <willthames> bcoca, I did say 'say'
+19:22:37 <bcoca> willthames: dont commit ryansb .. he has plenty on his plate
+19:22:50 <jtanner> you'll do it this month while it's your hot ticket item, but when you job responsibilities shift again, you'll be off to different things
+19:23:11 <willthames> well, what's your alternative jtanner? as it appears to be no-one can do it
+19:23:20 <willthames> whereas i'm willing to do it
+19:23:31 <bcoca> lets see if this is better: 1) allow new maintainer sto be added at any time , 2) after 2months of non response, maintainer gets listed for deprecation 3) after review/contact process ? he gets removed
+19:23:32 <willthames> and maybe in six months the project will have the same problem
+19:23:42 <willthames> he/she bcoca
+19:23:46 <bcoca> jtanner: there is no way around the 'shifhting'
+19:23:56 <bcoca> we just need to make maintainers 'phasing in' easier
+19:24:13 <jtanner> most of the modules under cloud/aws have only 1 maintainer, so you already have shipit capability because you maintain something in there
+19:24:23 <jtanner> cloud/amazon/ec2_snapshot.py: willthames
+19:24:27 <willthames> that's not true, unless that's changed in the last week
+19:24:40 <willthames> I added shipit to a PR and it got removed :(
+19:24:45 <jtanner> which?
+19:25:00 <willthames> two secs
+19:25:05 * mattclay will be away for a few minutes
+19:25:14 <bcoca> willthames: many reason sfor removal, anyone can add 'shipit' comment but it will only count if you are maintainer
+19:25:19 <jtanner> there's also bugs in the bot sometimes, and i try to fix those if pointed out
+19:25:34 <willthames> https://github.com/ansible/ansible/pull/18842
+19:25:54 <willthames> so you two are making completely different arguments
+19:26:35 <bcoca> added automerge
+19:26:43 <bcoca> ^ athat is why shipit was removed
+19:26:58 <jtanner> no, that should have stayed
+19:27:02 <jtanner> i'll figure it out
+19:27:04 <bcoca> jtanner: bug then?
+19:27:05 <willthames> sorry, 'added automerge' makes no sense as a sentence
+19:27:17 <bcoca> ￼ ansibot added automerge community_review
+19:27:21 <jtanner> automerge is under review right now until we are sure the algo is correct
+19:27:23 <bcoca> ^ labels
+19:27:31 <jtanner> so for now, it's just a label and not an action
+19:27:48 <bcoca> willthames: so it was working for you, bug made it go away when we were attempting to have bot set automerge
+19:27:51 <ryansb> So automerge (the tag) is going to mean the bot will merge PRs that have the shipit label after the sufficient community/maintainer/committer shipits
+19:27:59 <ryansb> which is not yet implemented
+19:28:07 <willthames> so community_review is supposed to be sufficient for shipit?
+19:28:44 <jtanner> no
+19:28:46 <bcoca> jtanner: we need to setup workflow diagrams
+19:28:56 <jtanner> community_review is a state, meaning it's waiting on people to give shipits
+19:29:02 <willthames> ok, if it was a bug, or a not yet implemented feature, that's fine, but that PR was embarrassing
+19:29:03 <bcoca> probably after we stop redefining workflows ....
+19:29:31 <willthames> if I had commit rights it would have long been sorted...
+19:29:44 <jtanner> no, you'd be squirreled off into some other niche area
+19:30:16 <willthames> I meant that specific PR jtanner
+19:30:36 <willthames> I'm not expecting to resolve all issues with AWS PRs, I'm not a naive idiot
+19:30:51 <bcoca> willthames: you are on the short list, but we have not set date to review current permissions, w/o bugs the 'shipit' shoudl havee been enough
+19:31:11 <willthames> ok
+19:31:32 <willthames> I'm relatively happy with your course of action bcoca
+19:31:33 <bcoca> ^ i think bot will help more than commit privs as it gives a good balance between commit permissions and scope of them, github is all or nothing
+19:31:57 <willthames> bcoca, still understood from a year ago, still occasionally frustrating from a year ago
+19:32:07 <bcoca> willthames: we are constantly trying to improve, lots of stuff going on, i though some of this was already done, sorry i was wrong
+19:32:08 <willthames> but that's why I turned up here, to find out what was going on
+19:32:10 <resmo> .oO(willthames has not commit rights??!)
+19:32:22 <willthames> resmo, no, still...
+19:32:24 <bcoca> willthames: i just closed PRs over 2yrs old ...
+19:32:32 <resmo> o_O
+19:33:10 <bcoca> i had to x2 check, thought we gave him last time we revised perms
+19:33:15 <gundalow> (30 minutes)
+19:33:43 <jtanner> "what was going on" ... summary: too many PRs and too many issues, no matter how big the core team gets. The way we're dealing with it is to give more capabilities through the bot, since github doesn't care.
+19:33:43 <bcoca> willthames: going forward, let us know when you see this stuff, issues/pr against ansibot help
+19:33:51 <willthames> yep, will do
+19:34:15 <allanice001> I think adding a mention in core's agenda also works
+19:34:30 <willthames> too many inactive maintainers as well jtanner
+19:34:31 <allanice001> That way, someone can keep it on the radar
+19:34:39 <bcoca> its also why we have these meetings ... we are always happy to merge low hanging fruit (i probably glossed over that once they resolved the merge conflict, i should have merged then)
+19:35:00 <willthames> means a PR languishes for months before people realise that no maintainer is looking at it
+19:35:03 <jtanner> inactive maintainers is not a manpower problem, imo. It's a problem with us allowing too many modules into the code.
+19:35:23 <willthames> jtanner, really?
+19:35:27 <bcoca> jtanner: i agree, but we are fighting windmills until ansible-installer
+19:35:45 <bcoca> willthames: we are close to 900+ moduels .. i would have less than 60
+19:35:58 <willthames> wow, ok, batteries included no longer a thing eh?
+19:36:03 <jtanner> if we keep at this pace, we are going to have a python abstraction for every concept in world of computing. We can't possibly maintain all of that.
+19:36:05 <bcoca> ansible-aws-plugins should be it's own project
+19:36:10 <bcoca> imo
+19:36:22 <allanice001> Make that ansible-cloud-plugins
+19:36:30 <willthames> plugins or modules?
+19:36:37 <allanice001> Because you have open stack (close to aws)
+19:36:40 <allanice001> azure
+19:36:40 <bcoca> allanice001: that is virtual package that includes ansible-azure-plugins, anisible-vmware....
+19:36:59 <allanice001> i see
+19:37:13 <bcoca> willthames: plugins, i want to be able to also have lookup('aws_meta') ...
+19:37:30 <willthames> we should probably move on - where should I raise a 'cull inactive maintainers' issue?
+19:37:32 <bcoca> willthames: and THAT package can depend on boto
+19:37:35 <bcoca> boto3
+19:37:40 <jtanner> i don't think "batteries" was ever meant to be "everything everyone ever wanted"
+19:37:49 <bcoca> willthames: that is next item on agenda, gundalow has on ticket
+19:37:54 <willthames> ok
+19:38:26 <bcoca> gundalow: i believe i outlined a process above, though for that user (that does not exist on github anymore) i think we are passed 3)
+19:38:47 <bcoca> the question is, who should own by default?
+19:38:59 <gundalow> #topic Orphaned mode process (uri)
+19:39:05 <bcoca> ^ my vote for 'community' modules is leave orphan and have those in same category assume mantle
+19:39:13 <gundalow> It says 'supported_by': 'core'
+19:39:15 <bcoca> jtanner: will that work with bot?
+19:39:19 <bcoca> gundalow: then its core
+19:39:26 <jtanner> huh?
+19:39:38 <gundalow> https://github.com/ansible/ansibullbot/pull/291
+19:39:40 <gundalow> jtanner: https://github.com/ansible/ansibullbot/pull/291
+19:39:47 <bcoca> module_utils/uri .. not module
+19:39:53 <bcoca> and yes, that was always 'core supported'
+19:39:59 <bcoca> feel free to remove name
+19:40:27 <gundalow> The agenda item is about network/basics/uri.py
+19:40:35 <jtanner> it should be @ansible
+19:40:35 <gundalow> which currently points to romeotheriault
+19:40:55 <bcoca> ah, that uri.py ..
+19:40:59 <gundalow> not sure why module_utils was mentioned
+19:41:19 <bcoca> modue_utils/uri.py .. which has most of the code uri.py and other modules that do http requests use
+19:41:23 <bcoca> sorry, i conflated
+19:41:26 <gundalow> nps
+19:41:43 <gundalow> So are people happy with https://github.com/ansible/ansibullbot/pull/291
+19:41:45 <bcoca> still, core module, its our 'generic http/restapi requests' module
+19:41:46 <gundalow> if so I'll merge
+19:41:59 <bcoca> happy ..NO... resigned
+19:42:06 <willthames> gundalow I am, but still need a way to find other inactive maintainers
+19:42:30 <willthames> this one is only obvious because they appear to have left github
+19:42:39 <bcoca> which is easy case
+19:42:40 <gundalow> willthames: If you see PRs that aren't getting pinged with everyone under cloud/amazon/ then let us know
+19:43:12 * allanice001 can assist with reviews / testing of was PR's willthames
+19:43:20 <gundalow> allanice001: Thank would be ace, thanks :)
+19:43:28 <allanice001> S/was/aws
+19:43:45 <willthames> gundalow obvious example: https://github.com/ansible/ansible/pull/20214
+19:43:57 <willthames> thanks allanice001
+19:44:21 <willthames> gundalow that's probably one out of many
+19:44:39 * mattclay is back
+19:44:41 <willthames> note that the original commits are over a year old now
+19:45:00 <gundalow> hum, so ec2_vpc_nat_gateway_facts isn't in MAINTAINERS.txt
+19:45:13 <allanice001> Close to 60 open containing AWS
+19:45:14 <gundalow> jtanner: I would have expected the bot to ping everyone
+19:45:28 <jtanner> why?
+19:45:34 <gundalow> to ask for a review
+19:45:47 <jtanner> on a PR without a maintainer?
+19:45:50 <willthames> gundalow it's a new module
+19:45:57 <gundalow> oh
+19:45:57 <willthames> how do new modules get reviewed?
+19:46:00 * gundalow reads the actual PR
+19:46:07 <gundalow> jtanner: sorry, ignore me
+19:46:10 <bcoca> +1 to adding willthames to cloud/aws maintainers
+19:46:13 <willthames> shouldn't the bot ping everyone?
+19:46:21 <jtanner> https://github.com/ansible/ansibullbot/blob/master/ISSUE_HELP.md#new-modules
+19:46:22 <bcoca> willthames: not everyone ...
+19:46:35 <willthames> bcoca, *anyone* ?
+19:46:41 <bcoca> someone
+19:46:46 <jtanner> "community" is defined as maintainers in the same namespace in that regard
+19:46:51 <bcoca> someone on the list in the path for maintainership
+19:47:02 <willthames> but if noone knows about it
+19:47:27 <willthames> It's not even clear to me from that PR that that's what I should do
+19:47:28 <bcoca> we need to document 'community_review' and probably have a 'needs maintainers'
+19:47:38 <bcoca> ^ then link those in docs as queries for peopel wanting to participate
+19:48:10 <jtanner> i -think- the bot should have pinged a bunch of people on 20214
+19:48:13 <jtanner> checking
+19:49:16 <willthames> jtanner could it be a side effect of repomove?
+19:49:34 <allanice001> Add @maintainer tags in doctstring perhaps?
+19:49:58 <willthames> it seems to have the right labels, but not the right comments from the bot
+19:50:08 <jtanner> hrm, the bot wants to ping a bunch of people on it now
+19:50:13 <willthames> allanice001 problem is that goes out of date
+19:50:14 <jtanner> because of the namespace change
+19:50:29 <allanice001> An example cou
+19:50:32 <willthames> jtanner, I have a whole list of similar PRs
+19:50:34 <allanice001> Could be """
+19:50:49 <allanice001> @maintainer: allanice001 2017
+19:51:03 <allanice001> @maintainer: willthames 2017
+19:51:05 <allanice001> etc
+19:51:12 <jtanner> willthames: there's a skip logic to avoid re-processing issues that haven't been updated since last run
+19:51:16 <jtanner> that's probably what happened here
+19:51:29 <jtanner> bot_status command or any comment could trigger it to check again
+19:51:54 <jtanner> the skip logic is one of the tactics i have to use to avoid rate limiting
+19:52:23 <willthames> jtanner, ok, I'll do that at a human pace over the next couple of days then :)
+19:53:06 <willthames> not for 20214 though as bcoca merged it - thanks!
+19:53:15 <bcoca> was easy to review
+19:53:27 <bcoca> sometimes you just need to ping right person at right time
+19:53:42 <jtanner> 18842's problem was that the submitter made a commit -after- the maintainer did shipit
+19:53:56 <jtanner> then during a bot code test, shipit was added and removed
+19:54:15 <bcoca> ^ which is how it should be
+19:54:30 <jtanner> it was going to be re-added after you and the maintainer had redone his shipit ... but someone merged it beforce then
+19:54:36 <bcoca> but probably bot should say that (new commit detected, shipit count reset)
+19:55:14 <jtanner> that will kill the ratelimit
+19:55:37 <bcoca> :-(
+19:55:39 <gundalow> right, I need to go and sort stuff out for Paris.
+19:55:48 <gundalow> Can someone take over chairing please?
+19:55:49 <jtanner> bot_status will give counts as needed
+19:56:11 <allanice001> enjoy gundalow
+19:56:25 <willthames> jtanner, that's not right
+19:56:36 <jtanner> what isn't?
+19:56:48 <willthames> my shipit got removed after a comment
+19:57:05 <jtanner> your shipit was the 1st one after the last commit
+19:57:16 <willthames> and the bot added shipit label
+19:57:21 <willthames> and then later removed it
+19:57:26 <jtanner> yes, during a code revision
+19:57:27 <willthames> after a comment, not a commit
+19:57:37 <jtanner> i fixed a logic bug, it re-calculated, and removed the shipit
+19:57:53 <jtanner> ... then the maintainer added another shipit
+19:57:59 <jtanner> bringing the count to 2
+19:58:47 <willthames> right, I guess the lag between commit and shipit label being removed didn't help
+19:59:06 <jtanner> the reset logic was being implemented that day
+19:59:22 <willthames> I would suggest shipit1 and shipit2, but guess that's yet another rate limiting limited feature ;)
+20:00:27 <jtanner> it is
+20:00:37 <jtanner> object creation is severely rate limited
+20:03:02 * jtanner does a full run on all PRs without the skip feature to get things re-synced
+20:03:37 <jtanner> will probably take >2 hours
+20:04:22 <abadger1999> Okay, are we done on this topic?
+20:06:23 <willthames> abadger1999 I think so - bcoca, I'll raise a PR for MAINTAINERS.txt
+20:06:44 <willthames> not sure that I understand FILEMAP.json sufficiently to make any changes or understand if one is needed
+20:07:24 <jtanner> if you are going add "cloud/aws: willthames" to MAINTAINERS, you don't need to change FILEMAP
+20:07:52 <willthames> ok
+20:08:24 <willthames> bcoca, do you need an issue to track inactive maintainers?
+20:08:48 <willthames> sorry abadger1999 I'm kind of done, just checking on actions
+20:09:06 <abadger1999> #topic PR 20737 bugfix for test-module
+20:09:28 <abadger1999> allanice001, willthames: Looks like you two are working on this right now.
+20:09:37 <allanice001> yup
+20:09:48 <willthames> yep, just need to check final result
+20:09:52 <allanice001> Final patch should be up, if willthames agrees
+20:10:09 <willthames> will test on my OS X laptop as brew makes for a great test case
+20:10:24 <allanice001> Which is how I found the bug ...
+20:10:31 <willthames> saying that a virtualenv works fine too
+20:10:43 <willthames> yeah, I hadn't tested the non ansiballz case
+20:10:48 <willthames> not even sure how I would tbh
+20:12:04 <allanice001> I'm working through gundalow's refactored module building docs
+20:12:18 <allanice001> And just happen to not be in a virtualenv
+20:12:23 <abadger1999> probably a ruby module from the ansible-for-rubyists repo would test nonansiballz
+20:12:34 <abadger1999> windows module might.
+20:13:01 <abadger1999> not entirely sure about that, though as I've not tested powershell stuff out
+20:13:15 <allanice001> BDS perhaps
+20:13:16 <abadger1999> Cool.
+20:13:17 <allanice001> ?
+20:13:35 * bcoca looks for old perl module
+20:14:02 <abadger1999> Okay, allanice001and willthames: Let me know when you're happy with it and I'll merge.
+20:14:09 <willthames> allanice001 is timetest.py just print json.dumps(datetime.now()) ?
+20:14:19 <willthames> I guess that would be non ansiballz
+20:14:25 <willthames> abadger1999 will do
+20:14:27 <allanice001> yeah
+20:14:38 <willthames> can you put that in the PR for replication purposes?
+20:14:43 <allanice001> Literally from the docs
+20:14:45 <allanice001> ack
+20:14:55 <allanice001> Would a comment suffice?
+20:14:58 <willthames> sure
+20:15:17 <willthames> we can take this off #ansible-meeting, sorry
+20:15:36 <allanice001> np
+20:16:12 <abadger1999> Cool.
+20:16:21 <allanice001> added
+20:17:04 <abadger1999> #topic https://github.com/ansible/ansible/pull/20058  systemd-nspawn connection
+20:18:14 <bcoca> +1 , but wanted more eyes on it
+20:18:50 <bcoca> disclaimer: this is in no way a waiver on my right to critisize systemd in general
+20:19:18 <agaffney> heh
+20:20:31 <abadger1999> No problem with it in general, there's some code that needs changing as general style, python2.6 compat and such.
+20:20:42 <bcoca> abadger1999: go2town
+20:20:55 <abadger1999> bcoca: if you're fine with the overall, I'll just review the specifics and we can merge when they fix them.
+20:21:00 <abadger1999> Cool.
+20:21:41 <abadger1999> #action systemd-nspawn connection plugin, abadger1999 will look at some specific code quality and then we can merge
+20:22:08 <abadger1999> #topic https://github.com/ansible/ansible/pull/18379 lookup plugin for system keyrings
+20:22:17 <abadger1999> bcoca: yours again
+20:22:24 <bcoca> same deal
+20:22:44 <bcoca> i'll add docs if merged
+20:24:00 <bcoca> also, not sure what we want for passing args to looups anymore
+20:25:54 <abadger1999> bcoca: Looks okay to me.
+20:26:24 <abadger1999> actually.. minor nitpick.. you can change it when you do docs:
+20:26:54 <abadger1999> modify the error message to specify it's the python keyring module.
+20:27:04 <abadger1999> we have too many uses of the term module otherwise.
+20:27:08 <bcoca> he
+20:27:15 <abadger1999> #topic Open floor
+20:27:16 <bcoca> python keyring LIBRARY
+20:27:18 <bcoca> https://github.com/ansible/ansible/pull/20567
+20:27:21 <abadger1999> bcoca: <nod>
+20:28:36 <willthames> abadger1999 https://github.com/ansible/ansible/pull/20737 is good now
+20:29:30 <jtanner> willthames: it missing a shippable status
+20:29:37 <jtanner> close and re-open it
+20:29:52 <jtanner> allanice001: ^
+20:30:01 <allanice001> enroute
+20:30:07 <willthames> jtanner pretty sure we don't have reopen rights
+20:30:19 <jtanner> the owner doesn't?
+20:30:26 <jtanner> he just did it
+20:30:27 <abadger1999> bcoca: Looks like a nice feature.... I'm wondering if there's a noticable performance cost to it, though.
+20:30:33 <willthames> oh, clearly he does
+20:30:38 <jtanner> allanice001: that did it, thanks
+20:30:51 <willthames> I'm sure I've made that mistake in the past and had to ask for a ticket to be reopened
+20:30:57 <willthames> legacy info at best I guess
+20:31:33 <allanice001> I think I can, cause I'm a contributor for that PR
+20:31:58 <jtanner> submitter
+20:32:16 <bcoca> abadger1999: not that i've found, should only happen 1 per invokation
+20:32:28 <allanice001> Submitter, yes
+20:32:59 <allanice001> But I'm not a maintainer on something like https://github.com/ansible/ansible/pull/20214, so I can't do same there (as an example)
+20:33:46 <abadger1999> <nod>  And it's not recursive either so won't hurt people who define inventory vars.
+20:34:38 <abadger1999> bcoca: Okay, looks fine to me.
+20:38:43 <abadger1999> Anyone else have something for today?
+20:38:55 <abadger1999> If not, I'll close in 60s
+20:39:26 <podlesh> can I suggest https://github.com/ansible/ansible/pull/19707 ?
+20:39:59 <podlesh> looks like I should have been online last two tuesdays... which I haven't (my mistake)
+20:41:00 <bcoca> -1
+20:41:19 <abadger1999> #topic https://github.com/ansible/ansible/pull/19707 Serial group_by
+20:42:51 <podlesh> the main question is: is there any way to make similar feature in apropriate way, at this moment
+20:43:10 <podlesh> or should I just close the PR and use patched version of ansible?
+20:46:14 <podlesh> ... or maybe some other time - I just don't want to contibute to already quite huge number of open pullrequests
+20:46:49 <abadger1999> bcoca: So I'm not sure if podlesh's example is solvable with current serial.
+20:47:23 <abadger1999> bcoca: example is here: https://github.com/ansible/ansible/pull/19707#issuecomment-271683995
+20:48:30 <jtanner> https://github.com/ansible/ansible/pull/19707#issuecomment-271683995 looks more like a "zip" than a "groupby" to me
+20:48:51 <jtanner> example #1
+20:49:41 <podlesh> good point, zip is more pythonic term...
+20:49:48 <allanice001> i'm concerned with dynamic inventory possibly breaking - that could become a bigger issue, especially as this is core module
+20:51:14 <jtanner> i don't see the correlation with 19707 and dynamic inv
+20:51:27 <allanice001> In his example
+20:52:00 <allanice001> <q>correct result ([A1,B1,C1],[A2,B2],[A3]) can be achieved by serial: [3,2,1]
+20:52:00 <allanice001> unfortunately, obtaining these values is not easy, especially for dynamic inventory (unless they are known beforehand - but in that case the whole feature is suprfluous)</q>
+20:55:04 <jtanner> i don't see how it affects dyn inv
+20:55:15 <jtanner> the feature is ignored if the keyword is absent
+20:56:46 <allanice001> But with keyword supplied, dyn inv would need to be parsed before it gets here
+20:58:19 <jtanner> podlesh: did you test dyn inv?
+20:58:25 <jtanner> or did you see a test in there
+20:58:58 <jtanner> dyn inventory is parsed on load, afaik
+20:59:49 <podlesh> I think I've tested it with dynamic inventory, but I can test it again for sure
+21:00:21 <podlesh> but I can argue that if dynamic inventory would not be parsed at this point,  even normal serial:  feature would not work either
+21:01:40 <jtanner> pretty sure you are correct
+21:01:45 <jtanner> worth testing though
+21:03:16 <abadger1999> okay, seems that bcoca is busy with something else and jimi-c is en route to paris today/this week.
+21:03:26 <abadger1999> podlesh: are you able to attend next week?
+21:03:54 <podlesh> yes
+21:04:56 <abadger1999> cool.  then I think, test dyn inv ( but I'm pretty sure it will work), we'll try and talk more about this next meeting when bcoca and jimi can both be here.
+21:05:08 <podlesh> ok, thanks
+21:05:19 <abadger1999> And with that, I think we should let the channel go so the next meeting can take over
+21:05:24 <abadger1999> #endmeeting

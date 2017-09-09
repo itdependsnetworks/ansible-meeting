@@ -1,0 +1,57 @@
+17:01:19 <gundalow> #startmeeting Testing Working Group
+17:01:19 <zodbot> Meeting started Thu Dec 22 17:01:19 2016 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+17:01:19 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+17:01:19 <zodbot> The meeting name has been set to 'testing_working_group'
+17:01:26 <gundalow> #chair gundalow mattcla
+17:01:26 <zodbot> Current chairs: gundalow mattcla
+17:01:29 <gundalow> #chair gundalow mattclay
+17:01:30 <zodbot> Current chairs: gundalow mattcla mattclay
+17:01:40 <gundalow> Agenda as always is https://github.com/ansible/community/issues/114 feel free to add items
+17:02:36 <gundalow> #Topic Core Update
+17:02:53 * mattclay waves
+17:03:31 <gundalow> #info Ansibot is now live on the merged repo (ansible/ansible) and seems to be doing the right thing, shout out in #ansible-devel if you see anything strange
+17:04:19 <gundalow> #info Progress is being made (slowly) on getting Network test appliances brought up for CI. Starting with VyOS
+17:05:27 <mattclay> #info ansible-test is now using the integration test aliases files in the repo, instead of having them re-generated from the legacy destructive/non_destructive playbooks when CI runs
+17:06:38 <gundalow> #info No meetings w/c 26th December
+17:06:53 <gundalow> #topic Open Floor
+17:06:58 <gundalow> allanice001: How you doing?
+17:07:03 <allanice001> all good
+17:07:09 <allanice001> your side?
+17:07:56 <gundalow> Will be happy once I get VyOS Network appliances up and running. First one is always "fun"
+17:08:05 <allanice001> true
+17:09:26 <allanice001> it’s also quite interesting to debug, as you’re unsure if its a aws setup issue, or a config issue
+17:09:49 <gundalow> Indeed. Not done anything with AWS before, so nice learning curve :)
+17:10:09 <allanice001> shout if you need a hand / second pair of eyes
+17:10:14 * allanice001 ex aws
+17:10:47 <gundalow> Is their anyway to get an interactice console to debug when you've broken networking?
+17:11:25 <allanice001> not really, unless you have a seperate bastion you’re running tests from
+17:11:27 <gundalow> Or do I need to create a 2nd VM and attach the disk from the first?
+17:11:42 <allanice001> yeah, most likely the latter
+17:12:08 <allanice001> make sure it’s in the same availability zone (1a / 1b) as your instance thats borked
+17:12:18 <gundalow> ah, good point thanks
+17:12:51 <allanice001> disks are not available cross AZ
+17:13:28 <allanice001> also, they suggest you leave the interfaces set to dhcp
+17:14:04 <allanice001> the SDN caters for ip addressing, and you can assign ip’s when creating the virtual interface
+17:14:18 <allanice001> from the console / api
+17:14:51 <gundalow> Is it usual for the MAC address to change?
+17:15:25 <allanice001> yes
+17:15:39 <allanice001> it happens when the underlying hw changes
+17:16:03 <gundalow> Currently seeing when I do a poweroff/off (rather than reboot) that I lose networking due to the MAC been saved (in VyOS case) to /config/config.boot, so on 2nd boot I don't get networking
+17:16:34 <allanice001> yeah, stop and start process migrates the underlying hw
+17:17:14 <gundalow> So I've been deleting the hw-mac line from /config/config.boot, which has generally seemed to be working, but not on this last test
+17:18:25 <allanice001> could be that its picked up the nics and assigned them different eth / em id’s
+17:19:03 <allanice001> from the web console - you can see the console output
+17:19:09 <allanice001> but it’s not interactive
+17:20:35 <gundalow> Nothing in use from that. I'll keep on digging/poking the VyOS guys
+17:20:42 <gundalow> Thanks for the pointers/sounding board :)
+17:22:01 <allanice001> np
+17:26:23 <allanice001> gundalow: try adding  ```set system console device ttyS0 speed 9600 ```
+17:26:30 <allanice001> before your next reboot
+17:26:44 <gundalow> Word from VyOS is I can just pretend it's Debian and fix udev rules
+17:27:06 <allanice001> yeah, most likely a udev issue
+17:27:21 <allanice001> http://wiki.vyos.net/wiki/User_Guide - for the console bit
+17:28:27 <allanice001> Configuration Overview section
+17:32:05 <gundalow> Thanks
+17:32:24 <gundalow> If there is nothing else I'm gona find some food and poke udev rules
+17:32:40 <gundalow> allanice001: I hope you have some time off and enjoy the break
+17:32:44 <gundalow> #endmeeting

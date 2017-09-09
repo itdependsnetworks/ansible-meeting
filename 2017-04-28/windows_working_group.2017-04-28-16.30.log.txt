@@ -1,0 +1,58 @@
+16:30:35 <nitzmahone> #startmeeting Windows Working Group
+16:30:35 <zodbot> Meeting started Fri Apr 28 16:30:35 2017 UTC.  The chair is nitzmahone. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:30:35 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:30:35 <zodbot> The meeting name has been set to 'windows_working_group'
+16:30:56 <jhawkesworth> hello.  Anyone around for windows working group?
+16:31:06 <nitzmahone> So far just us. :)
+16:31:40 <jhawkesworth> ok.  I'm on the train again so expecting flaky connection
+16:32:01 <nitzmahone> Noted. You on for coming to 'Fest in June?
+16:32:31 <jhawkesworth> yep, I've bought the ticket, still need to sort out train and accommodation tho
+16:32:37 <nitzmahone> Excellent
+16:32:56 <jhawkesworth> do you know if there's anything planned for the day before?
+16:33:21 <nitzmahone> Did they accept your talk, or did you use the not-accepted-speaker discount?
+16:33:31 <nitzmahone> Yeah, we're doing a contributor summit again the day before.
+16:33:52 <jhawkesworth> i haven't heard yet.  Maybe I'm on the reserve list :-)
+16:34:44 <nitzmahone> I have a contributor discount you can use if you paid full price- drop me an email and we'll get that sorted if that's the case.
+16:35:00 <nitzmahone> (wait to hear if your talk was accepted or not first, I guess)
+16:35:06 <jhawkesworth> your talk looks more widely interesting than anything I proposed so I won't be surprised if I don't get a slot
+16:35:53 <jhawkesworth> redhat.com email address?
+16:36:06 <nitzmahone> Yeah, just kind of a broad overview- I did a cut-down version of it in Singapore at Ansible Automates this week.
+16:36:22 <nitzmahone> Yeah, or ansible.com - they both work
+16:36:51 <nitzmahone> Well, looks like it might just be us today- anything you want to talk about?
+16:36:59 <jhawkesworth> cool, well I wait till I hear from Bill / Carrie and mail you when I've heard heard.
+16:37:05 <nitzmahone> Sounds good
+16:37:38 <jhawkesworth> nothing specific from me.  Will take another swing at the bugs next week.  Slow start this week (back from time off).
+16:38:03 <nitzmahone> Me too- yesterday was a "40 hour Thursday" coming back from Singapore, so I'm not feeling quite 100% today. :)
+16:38:13 <jhawkesworth> ouch
+16:38:28 <jhawkesworth> thanks for getting up for this then!
+16:38:55 <nitzmahone> Heh, no worries. I figure today will be a catchup day on email and bugs, then back to hacking Kerberos message encryption Monday
+16:39:26 <nitzmahone> Current slate of stuff for 2.3.1: https://github.com/ansible/ansible/issues?utf8=%E2%9C%93&q=is%3Aopen%20milestone%3A2.3.0%20label%3Awindows
+16:40:02 <jhawkesworth> oops.  much win_copy.  I'll take a look at those first
+16:40:17 <nitzmahone> I ended up getting nailed for 2 talks in Singapore (one of which I basically had to write from scratch while I was there), so I didn't get the time I'd hoped to work on fixing ANSIBLE_KEEP_REMOTE_FILES support
+16:40:34 <jhawkesworth> brb getting off train atm
+16:41:40 <nitzmahone> Still hoping to get that in for 2.3.1, but there's a couple of (non-Windows-related) CVEs that may need to go out sooner than I'm ready, so I'll get what I can on the 2.3.1 train.
+16:47:46 <jhawkesworth> ok back now.
+16:48:08 <jhawkesworth> sorry you got stung for second talk.
+16:48:23 <jhawkesworth> CVE stuff has to come first.
+16:48:44 <nitzmahone> S'ok- good to have another one under my belt that I can bust out as needed.
+16:49:19 <jhawkesworth> I keep meaning to have a poke around and see if there's a quick way to grab module params from debug output.
+16:49:28 <nitzmahone> Thus far I haven't been tagged to actually work on the CVE stuff, but they want to get the fixes released for at least one of them ASAP, so might be quickly followed by a 2.3.2 with non-critical bugfixes like these.
+16:50:01 <nitzmahone> Ugh, yeah, not really- that's the biggest problem with the current KEEP_REMOTE stuff being broken.
+16:50:15 <jhawkesworth> yeah I get that CVE fixes will need get out as soon as possible.
+16:50:33 <nitzmahone> Otherwise, unless you're trying to debug the exec wrapper itself, it's easier to just run the module code directly in ISE (not the exec wrappered version)
+16:51:15 <jhawkesworth> I guess its tricky to do something to expose the params when usually you wouldn't want them being grabbed easily
+16:51:19 <nitzmahone> I'm looking forward to spending some time sanding off the rough edges of the new exec wrapper stuff- it's there and works, but it's a royal pain to debug ATM
+16:51:48 <nitzmahone> Actually, there's no reason I couldn't have the current stuff persist at least the parameter file.
+16:52:09 <jhawkesworth> that might be enough of a win
+16:52:15 <nitzmahone> What I really want to do is get it set up so that it all runs from disk when you ask for persistence (ala the Linux modules with Ansiballz)
+16:52:39 <nitzmahone> (so that you can do interactive debugging with become/async and everything)
+16:52:51 <jhawkesworth> would be good to make it broadly the same as linux
+16:53:28 <nitzmahone> Yep- I could just persist what we're running, but you wouldn't be able to debug the module code in ISE as-is, because it's in at least 1 nested level of runsapce
+16:53:29 <jhawkesworth> but worth considering quick win, given there's not a huge community of people who will be debugging modules
+16:54:07 <nitzmahone> Yeah, I'll put that on my list- if it doesn't look like I'll get to the other, at least dumping the argfile will help those of us that do
+16:54:28 <jhawkesworth> great
+16:54:45 <nitzmahone> OK, anything else you want to talk about, or shall we call it a week?
+16:55:00 <jhawkesworth> let's call it.  good to catch up though
+16:55:06 <jhawkesworth> cheers
+16:55:08 <nitzmahone> Same- have a good weekend!
+16:55:14 <nitzmahone> #endmeeting

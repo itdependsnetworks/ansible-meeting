@@ -1,0 +1,126 @@
+19:34:24 <mattclay> #startmeeting Core Team Meeting 2016-12-13
+19:34:24 <zodbot> Meeting started Tue Dec 13 19:34:24 2016 UTC.  The chair is mattclay. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:34:24 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:34:24 <zodbot> The meeting name has been set to 'core_team_meeting_2016-12-13'
+19:34:44 <mattclay> #chair abadger1999 ryansb alikins jtanner
+19:34:44 <zodbot> Current chairs: abadger1999 alikins jtanner mattclay ryansb
+19:35:02 <ryansb> hey team
+19:35:15 * mattclay waves
+19:35:56 <Qalthos> hiya
+19:36:07 * mattclay is new to running IRC meetings
+19:36:51 <mattclay> Agenda is here: https://github.com/ansible/community/issues/147
+19:37:10 <gregdek> busy week :)
+19:37:18 <mattclay> #chair gregdek
+19:37:18 <zodbot> Current chairs: abadger1999 alikins gregdek jtanner mattclay ryansb
+19:37:33 <mattclay> #chair Qalthos
+19:37:33 <zodbot> Current chairs: Qalthos abadger1999 alikins gregdek jtanner mattclay ryansb
+19:37:42 <abadger1999> Hello
+19:38:07 <mattclay> #topic https://github.com/ansible/community/issues/147#issuecomment-265864630
+19:39:01 <mattclay> Is there anything new to discuss regarding messaging on dependencies?
+19:39:09 * nitzmahone lurks
+19:39:22 <mattclay> #chair nitzmahone
+19:39:22 <zodbot> Current chairs: Qalthos abadger1999 alikins gregdek jtanner mattclay nitzmahone ryansb
+19:40:22 <abadger1999> I think gundalow had the action items from that
+19:40:39 <mattclay> OK, since he's not here we'll move on to the next item then.
+19:41:20 <mattclay> #topic finding modules in subdirectories of "library": https://github.com/ansible/community/issues/147#issuecomment-265864678
+19:41:59 <mattclay> Looks like we need to decide if we're interested in accepting this PR: https://github.com/ansible/ansible/issues/15432
+19:42:39 <mattclay> OK, issue, not PR. What feedback do we have for that?
+19:43:04 <mattclay> jtanner: Looks like you originally added this to the agenda.
+19:43:16 <nitzmahone> I remember tripping over this with a customer right after 2.0 came out- it's a regression of undocumented behavior IIRC
+19:43:51 <nitzmahone> Seems to me we should follow the same rules as pluginloader normally does (2 levels down IIRC)
+19:44:11 <mattclay> Is that what the pre-2.0 behavior was?
+19:44:11 <abadger1999> I think bcoca was arguing that it wasn't something that we should change... but I don't know if he really felt that strongly or I was just reading too much into his comments.
+19:44:36 <nitzmahone> Yeah, IIRC 1.x would pull at least 2 levels
+19:44:50 <jtanner> sorry, on a call
+19:44:56 <mattclay> bcoca: Are you around?
+19:46:09 <mattclay> Perhaps we should save this for the next meeting, since bcoca's sick and probably not available right now.
+19:47:47 <mattclay> #topic Fix: mysql_user - permission string with column privileges (https://github.com/ansible/ansible/pull/19016)
+19:48:35 <abadger1999> anyone use mysql enough to look at that?
+19:48:37 <mattclay> This is a migrated PR which was re-migrated after the repo merge issues.
+19:48:43 <abadger1999> It's a very small change... but to a regex.
+19:48:48 <abadger1999> -                privs.append(re.sub(r'\(.*\)','',i))
+19:48:48 <abadger1999> +                privs.append(re.sub(r'\s*\(.*\)','',i))
+19:49:46 <abadger1999> megamisan explains why it's needed but I don't know enough about mysql to double check it: https://github.com/ansible/ansible/pull/19016#issue-194461895
+19:50:26 <mattclay> We have tests for that module, but I don't know if we have any that cover that code path.
+19:54:33 <mattclay> Nobody with other feedback?
+19:54:53 <mattclay> We'll move on then.
+19:55:18 <mattclay> #topic ec2_ami: Add support for registering Amazon Machine Images from EBS snapshots. (https://github.com/ansible/ansible/pull/19020)
+19:55:48 <mattclay> This is another migrated PR which was re-migrated.
+19:56:49 <ryansb> It's on my list, it looks ok but I've not had a chance to test it out
+19:58:09 <mattclay> #action ryansb to review https://github.com/ansible/ansible/pull/19020 later
+19:58:12 <jtanner> isn't jmainguy the mysql_user maintainer?
+19:58:38 <jtanner> database/mysql/mysql_user.py: Jmainguy
+19:58:51 <mattclay> Hmm... does the bot ack #actions ?
+19:58:51 <jtanner> would have been more obvious i guess if the bot was doing it's job
+19:59:05 <abadger1999> yep, but he's not around right now.
+19:59:07 <abadger1999> mattclay: it does not.
+19:59:11 <ryansb> It doesn't in the pub channel
+19:59:19 <mattclay> OK
+19:59:24 <ryansb> the fedora-notifs bot messaged me though
+19:59:27 <ryansb> it's recorded
+19:59:40 <mattclay> I checked the mysql_user tests. We don't have coverage of the changed line from the previous PR we were discussing.
+19:59:43 <allanice001> what, the bot’s in the pub, no wonder
+19:59:51 * allanice001 lurking
+20:00:21 <mattclay> #topic new AWS module for ec2 VPC vgw facts (https://github.com/ansible/ansible/pull/19021)
+20:00:51 <mattclay> Anything else to add to this one? It looks like it's already had feedback.
+20:01:18 <ryansb> looks like it's got 2 reviews already
+20:01:23 <ryansb> just waiting on contributor
+20:01:32 <mattclay> OK, moving on then.
+20:02:01 <mattclay> #topic boto3-powered s3 synchronization module (https://github.com/ansible/ansible/pull/19024)
+20:02:10 * abadger1999 marks it needs_revision
+20:02:25 <ryansb> I thought the bot autodid that now?
+20:02:48 <abadger1999> due to the reviewer flag in github?
+20:03:00 <ryansb> yeah, but I also may be crazy. Carry on
+20:03:04 <jtanner> the post-repomerge bot is not yet complete
+20:03:13 * abadger1999 hasn't used reviewer so not sure.
+20:03:14 <mattclay> This one is another re-migrated PR.
+20:04:06 <abadger1999> ryansb: For this one, it looks like tedder addressed all your points (one was with additional info rather than changing code, though)  Does it pass muster for you now?
+20:05:37 <ryansb> I still need to do more thorough testing of how it handles weird cases
+20:06:18 <mattclay> #action ryansb to perform more thorough testing of https://github.com/ansible/ansible/pull/19024
+20:06:46 <mattclay> #topic Add module "launchd" to manage Mac OS X services. (https://github.com/ansible/ansible/pull/19027)
+20:06:52 <mattclay> Another re-migrated PR.
+20:07:19 <mattclay> Looks like it's awaiting minor revisions requested by gundalow, as well as needing further review by bcoca.
+20:08:02 <mattclay> If nobody else has anything to add to this one, we'll keep moving.
+20:08:25 <allanice001> #agree
+20:09:03 <mattclay> #topic Pamd Module (https://github.com/ansible/ansible/pull/19029)
+20:09:26 <mattclay> Re-migrated PR.
+20:09:55 <mattclay> alikins: You were mentioned on this PR. Have you had a chance to review?
+20:12:11 <mattclay> Has anyone else looked at the PR, or would like to volunteer to review it?
+20:12:43 <alikins> looking
+20:15:46 <mattclay> alikins: Do you want time to review and merge later so we can keep moving?
+20:15:48 <alikins> looks like most of the stuff I mentioned on the previous pr has been fixed up
+20:16:09 <alikins> I haven't tested it, etc
+20:17:01 <mattclay> alikins: Do you want to take an action item to finish review and testing?
+20:17:29 <alikins> mattclay: Oh, yes, don't block on me reviewing code in realtime.
+20:17:56 <mattclay> #action alikins Finish review and testing of https://github.com/ansible/ansible/pull/19029
+20:18:13 <mattclay> I figure we can go for about another 15 minutes since we got a late start on the meeting.
+20:18:30 <ryansb> sounds good. I'd like to add https://github.com/ansible/ansible/pull/19313 on
+20:19:10 <ryansb> It's a (slightly updated) port of the old GUIDELINES.md file from before repomerge
+20:19:36 <abadger1999> ryansb: +1  and let gundalow know... i think he might ewant to integrate that into his docs changes.
+20:20:45 <ryansb> added him as a reviewer so he can take a look
+20:21:20 <mattclay> If there's anything else to discuss on that PR, go ahead and add it to the agenda so we can get to it for the next meeting. I don't think we're going to get through the entire agenda today.
+20:21:45 <ryansb> that's it :)
+20:21:49 <mattclay> #topic [PostgreSQL] Support forced SSL-verified connection with given CA certificate (https://github.com/ansible/ansible/pull/19042)
+20:22:09 <mattclay> Another re-migrated PR.
+20:23:00 <mattclay> It's had some review by gundalow and his feedback was addressed. Needs additional review.
+20:24:04 <abadger1999> I'll take it
+20:24:51 <mattclay> #topic abadger1999 to review https://github.com/ansible/ansible/pull/19042
+20:24:55 <mattclay> oops
+20:24:59 <abadger1999> #undo
+20:24:59 <zodbot> Removing item from minutes: <MeetBot.items.Topic object at 0x393be990>
+20:25:09 <mattclay> #action abadger1999 to review https://github.com/ansible/ansible/pull/19042
+20:26:07 <mattclay> The next three on the agenda are network modules. I'll skip those since gundalow isn't here.
+20:26:36 <mattclay> #topic vmware_guest: Add multiple nics management + Bug fixes (https://github.com/ansible/ansible/pull/19049)
+20:27:07 <mattclay> This one needs to be rebased, so I think we can skip it for now.
+20:27:58 <mattclay> #topic Fix UnboundLocalError remote_head in git (https://github.com/ansible/ansible/pull/19057)
+20:28:26 <mattclay> Another re-migrated PR.
+20:29:06 <mattclay> abadger1999: You've looked at this some already, yes?
+20:29:38 <abadger1999> ah yeah.. I have to look at robinro 's response
+20:31:05 <abadger1999> I'll take care of this as well.
+20:31:43 <mattclay> #action abadger1999 to review https://github.com/ansible/ansible/pull/19057
+20:31:43 <abadger1999> Looks like robinro and  sbussetti  are currently talking which is good.
+20:32:15 <mattclay> #topic Open Floor
+20:32:34 <mattclay> OK, I think that's all of the agenda we have time for today. Anything else before the meeting ends?
+20:34:23 <mattclay> If nobody has anything else, I'll end the meeting in another minute.
+20:35:27 <mattclay> Thanks everyone.
+20:35:30 <mattclay> #endmeeting

@@ -1,0 +1,125 @@
+19:01:28 <gundalow> #startmeeting Ansible Core Team Meeting
+19:01:28 <zodbot> Meeting started Tue May  2 19:01:28 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:01:28 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:01:28 <zodbot> The meeting name has been set to 'ansible_core_team_meeting'
+19:01:33 <nitzmahone> boop
+19:01:37 <gundalow> #chair abadger1999 alikins bcoca nitzmahone
+19:01:37 <zodbot> Current chairs: abadger1999 alikins bcoca gundalow nitzmahone
+19:02:05 <shertel> o/
+19:02:10 <gundalow> #topic Extending module option validation/types
+19:02:14 <gundalow> #chair shertel
+19:02:14 <zodbot> Current chairs: abadger1999 alikins bcoca gundalow nitzmahone shertel
+19:02:26 <gundalow> #link https://github.com/ansible/community/issues/159#issuecomment-298523500
+19:02:59 <gundalow> #info I've recently seen a few modules that: Ensure an int is within a specific range; or that an option is an IPv4/IPv6 address
+19:03:04 <nitzmahone> IPv6 in particular is problematic, but I don't object to such an extension
+19:04:00 <nitzmahone> If we had ipaddress for parsing, sure, but IIRC it's py3 only
+19:04:10 <nitzmahone> IPv4 is relatively easy
+19:04:27 <jtanner> hello
+19:04:36 <bcoca> ipv6 is more fun since [ and : are also 'reserved in yaml'
+19:04:47 <bcoca> and python
+19:05:17 <nitzmahone> Yeah, and all the shortcut forms and stuff, plus a couple of overlaps with IPv4, zone IDs, bleh. Nightmare, not the business we want to be in. :)
+19:05:37 <gundalow> since privateip isn't here I may make it his problem LO
+19:05:52 <gundalow> so people are generally happy
+19:06:02 <bcoca> +1 to making it privateip's problem
+19:06:04 <nitzmahone> You could do an "IPv6-ish" regex, but it wouldn't be comprehensive
+19:06:11 <gundalow> should it be three types ipv4, ipv6, ipv4_and_ipv6
+19:06:22 <bcoca> ^ we could have 3 'types' in basic, ipv4, ipv6 and ip (does both)
+19:06:24 <nitzmahone> (probably +hostname)
+19:06:37 <nitzmahone> If you want to get pedantic about it
+19:06:39 <abadger1999> I'm not sure we want to make this part of standard arg validatioin/conversion.
+19:06:50 <misc> why wouldn't we ?
+19:06:59 <bcoca> abadger1999: does not need to live in basic,py, can live in 'network.py'
+19:06:59 <nitzmahone> IPv4 seems like the most common one, but even there, you sometimes have CIDR suffix, etc
+19:07:06 <abadger1999> Unless we want to bundle voluptuous, formencode, or another one of the third party libraries to do it.
+19:07:14 <nitzmahone> We were having similar discussion on the Windows side
+19:07:31 <gundalow> My requirement would be that it has to work in py2.6 standard libs
+19:08:01 <abadger1999> misc: Just seems like this gets us away from simple and we'd have to maintain it.
+19:08:06 <bcoca> networking modules normally already have special requirements, i think it can live there w/o many issues, i would NOT add it to basic.py if code depends on more libs
+19:08:25 <nitzmahone> Do we have pluggable arg validation now though
+19:08:27 <nitzmahone> ?
+19:08:32 <bcoca> nitzmahone: no
+19:08:41 <misc> abadger1999: we could make it a type, but not enforce verification, only for documentation and/or future verification
+19:08:41 <nitzmahone> I remember we talked about that as a possibility
+19:08:43 <abadger1999> nitzmahone: we don't but we could pretty easily
+19:08:45 <gundalow> I was assuming it would go here https://github.com/ansible/ansible/blob/devel/lib/ansible/module_utils/basic.py#L744
+19:08:50 <misc> (like, when python2 is deprecated for good)
+19:09:03 <nitzmahone> +1 to "unenforced type" (or loosely enforced)
+19:09:10 <bcoca> misc:  in 5yrs?
+19:09:11 <abadger1999> nitzmahone: I think I outlined how to do it in a ticket somewhere.
+19:09:22 <nitzmahone> Yeah, I seem to recall bouncing that around at one point
+19:09:42 <bcoca> its been discussed, iirc we left it as 'problem for those doing networking'
+19:10:02 <bcoca> as we dont have many other types that would make sense to be pluggable
+19:10:41 <gundalow> Lots of modules (outside of networking) could make use of `type='ip'`
+19:10:45 <abadger1999> If we want "unenforced type" we probably don't want to put it into type.
+19:11:06 <abadger1999> Something more like type="str", type_alias="ipv4 address"
+19:11:27 <bcoca> type=email was the other one .. but that has it's own issues
+19:11:33 <nitzmahone> I think if we were going to do it (with the eye to light or future enforcement), you'd have to get much more specific
+19:11:36 <bcoca> ^ email providers violate the rfc
+19:11:56 <gundalow> What's the objections to putting this in basic.py along with the existing type checks?
+19:11:57 <misc> and IIRC, the regexp to valide email is 3 pages of perl or something
+19:12:09 <nitzmahone> ipv4, ipv4+cidr, ipv4 netmask, ipv6, ipv4_or_ipv6 (maybe w/ netmask possibilities)
+19:12:13 <bcoca> gundalow: most of those modulse are 'cloud + networking'
+19:12:16 <nitzmahone> It does seem to get away from us quickly
+19:12:24 <jtanner> ugh, i really hope to never have to support 3 page regex for email validation
+19:13:02 <bcoca> jtanner: 4 regexes to cover all major services/MTAs
+19:13:06 <misc> (ok so less than 3 pages: http://www.ex-parrot.com/~pdw/Mail-RFC822-Address.html )
+19:13:22 <bcoca> misc: except RFC is not followed
+19:13:28 * nitzmahone wipes blood from eyes
+19:13:30 * gundalow puts on his chairing hat. Lets ignore email regex
+19:13:37 <bcoca> ^ rfc is only 1 of 4 you need to validate email
+19:13:46 <jtanner> we will inevitably have people using MTA in their own corpnets with lax rules
+19:14:15 <bcoca> <= worked for spammer, after years we narrowed down all exceptions
+19:14:38 <gundalow> Any web/REST API module could make use of type=hostname_or_ip
+19:14:52 <nitzmahone> I have no problem with adding IP types, but if we're going to do it, the types should be specific, and we should do some "best effort" shape validation at least.
+19:15:12 <bcoca> we dont validate hostname, and that is an easy one
+19:15:49 <misc> ipv4 seems also quite easy to validate
+19:16:00 <nitzmahone> ... and if we keep the validation simple, I have no problem adding to basic, either, but I don't think any of us wants to see a meg or two of nasty to validate IP addresses in there
+19:16:12 <bcoca> misc: until you throw cidr/netmask into the mix
+19:16:22 <jtanner> i didn't realize we had already moved past python stdlib "types"
+19:16:40 <bcoca> jtanner: we have json
+19:16:53 <gundalow> So I'm not sure if we need to make it check everything, it could be a bit lose
+19:16:58 <misc> bcoca: it depend how much you want to validate, ie, would just "oops, I gave a hostname and it should have been a ip", or "oups, I got my cidr wrong"
+19:17:40 <gundalow> I know a few modules take hostname or IP address, though will fail if you pass in an IPv6 address, for example
+19:17:55 * nitzmahone guilty
+19:18:00 <gundalow> :)
+19:18:04 <gundalow> I think a lot of us are
+19:18:04 <bcoca> ^([a-z0-9](?:[a-z0-9-\.]*[a-z0-9]))
+19:18:27 <bcoca> ^ and that has a flaw
+19:18:32 <gundalow> so having "This roughly look like a hostname, IPv4, IPv6 address" is OK
+19:18:35 <nitzmahone> straw poll on quick-n-dirty IP types + validation in basic?
+19:18:40 <gundalow> +1
+19:18:42 <nitzmahone> +1
+19:18:43 <bcoca> -1 in basic
+19:18:48 <bcoca> +1 in 'network'
+19:19:06 <abadger1999> -1 basic
+19:19:07 <nitzmahone> (would require implementing "pluggable validators")
+19:19:15 <abadger1999> +1 elsewhere
+19:19:15 <bcoca> nitzmahone: not really
+19:19:19 <bcoca> but good excuse for it
+19:19:30 <shertel> +1
+19:19:44 <jtanner> i  feel like this is going to end up being a pain
+19:19:45 * abadger1999 was looking for the ticket with the spec but couldn't find it... can look harder after the meeting
+19:19:46 <nitzmahone> bcoca: yeah, "good excuse" is a better description. :)
+19:20:07 <bcoca> jtanner: yes, it will, that is why i dont want it in baci
+19:20:08 <bcoca> basic
+19:20:16 <bcoca> also it will grow fast and complex
+19:20:22 <abadger1999> ah ha https://github.com/ansible/ansible/pull/17731
+19:20:46 <bcoca> https://github.com/ansible/ansible/pull/17731#issuecomment-290769612
+19:20:56 <bcoca> ^ privateip already offered
+19:21:35 <nitzmahone> Buck passed, moving on ;)
+19:21:36 <abadger1999> https://github.com/ansible/ansible/pull/17731#issuecomment-256148500 + https://github.com/ansible/ansible/pull/17731#issuecomment-268034339 == how it should look.
+19:22:03 <jtanner> +1 !basic.py
+19:22:16 <gundalow> #info https://github.com/ansible/ansible/pull/17731#issuecomment-256148500 + https://github.com/ansible/ansible/pull/17731#issuecomment-268034339 == how it should look.
+19:22:19 <gundalow> Thanks
+19:22:37 * gundalow will put this on the Network Trello board
+19:22:41 <gundalow> #topic Open Floor
+19:22:52 <nitzmahone> Did we ever revisit the frequency/timing of this meeting?
+19:23:04 <bcoca> last meeting
+19:23:15 <bcoca> we are keeping current timing
+19:23:16 * nitzmahone was probably sleeping in Singapore
+19:23:27 <nitzmahone> k
+19:23:52 <gundalow> keeping as, and if we run out of items then we finish early
+19:24:00 <nitzmahone> aight
+19:24:56 <nitzmahone> Speaking of...
+19:26:04 <gundalow> I guess we are done
+19:27:11 <gundalow> #endmeeting

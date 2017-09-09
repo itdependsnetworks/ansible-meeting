@@ -1,0 +1,74 @@
+15:02:59 <bcoca> #startmeeting Ansible Core Meeting
+15:02:59 <zodbot> Meeting started Thu May  4 15:02:59 2017 UTC.  The chair is bcoca. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:02:59 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:02:59 <zodbot> The meeting name has been set to 'ansible_core_meeting'
+15:03:08 <jtanner> ohai
+15:04:05 <nitzmahone> rolp
+15:04:48 * bcoca waves
+15:04:55 <bcoca> #chair jtanner nitzmahone abadger1999
+15:04:55 <zodbot> Current chairs: abadger1999 bcoca jtanner nitzmahone
+15:05:07 <albertom> o/
+15:05:18 <bcoca> passing on 'shipit' workflow as it requires tagging of each plugin type, which has not been done/scheduled
+15:06:00 <bcoca> abadger1999: wildcards on lookup? author of PR made some comments, invited them to this meeting but i'm still unlcear if we have chosen a path forward
+15:06:53 <abadger1999> Hmm... Link to the issue?
+15:07:05 * mattclay waves
+15:07:14 <abadger1999> We had decided that we were going to error on wildcards in the path portion I think.
+15:07:29 <abadger1999> I haven'[t read his responses since then.
+15:07:33 <bcoca> abadger1999: a, ok, https://github.com/ansible/ansible/pull/19297
+15:08:03 <abadger1999> #topic https://github.com/ansible/ansible/pull/19297 wildcard in path portion of fileglob lookup
+15:09:00 <bcoca> abadger1999: so slight modification to my implementation?
+15:09:10 <abadger1999> #info alternative solution: https://github.com/ansible/ansible/pull/23265
+15:10:13 <bcoca> #action: bcoca to update alternate to give error instead of 'first found'
+15:10:30 <bcoca> #action bcoca to update alternate to give error instead of 'first found'
+15:10:30 <abadger1999> bcoca: Probably yeah... I believe we said... relative paths with globbing in the path are ambiguous so it should error.  globbing in absolute paths is fine.
+15:11:12 <bcoca> he, its written already in ticket ... did not read to end, totally forgot
+15:11:23 <bcoca> proposals, anything new?
+15:11:28 <bcoca> #topic proposals
+15:12:02 <abadger1999> I think thaumos took this on and since he's at summit no progress for htis week.
+15:12:52 <bcoca> moving on then
+15:12:59 <bcoca> #topic module option validateion expansion
+15:13:05 <bcoca> do we add ipv4/etc to basic
+15:13:13 <bcoca> ^ didnt we vote on this, was mostly split
+15:13:28 <bcoca> ah ... need to learn2scroll
+15:13:36 <bcoca> no oposition if outside basic
+15:13:54 <bcoca> anything new on this?
+15:14:10 <nitzmahone> I think that was where we left it
+15:14:24 <bcoca> so mostly i vote we dump it on privateip's lap
+15:14:33 <nitzmahone> I think that was also where we left it. ;)
+15:14:39 <abadger1999> :-)
+15:14:44 <bcoca> unanimous!
+15:14:51 <bcoca> ok, so that is all i see in ticket
+15:14:55 <bcoca> #topic open floor
+15:14:57 <abadger1999> yep, I think we can take it off the agenda.
+15:15:02 <abadger1999> mattclay: Did you see this? https://github.com/ansible/community/issues/159#issuecomment-291569609
+15:15:27 <albertom> Hi I did my homework and updated PR 20333
+15:17:00 * mattclay looks
+15:17:09 <bcoca> lgtm, any fedora/rhel leaning people want to review?
+15:17:21 <mattclay> Yep. That's on my personal TODO list now.
+15:19:33 <abadger1999> mattclay: cool  thanks.
+15:19:40 <abadger1999> albertom: I'll review that.
+15:20:23 <abadger1999> #action abadger1999 to review https://github.com/ansible/ansible/pull/20333
+15:21:21 <albertom> u thanks
+15:21:23 <albertom> ill update asap
+15:24:45 <abadger1999> Anyone else have any items to discuss?
+15:25:06 <Pilou> misc reviewed #23686 (postgresql_user module) and i updated the PR, new reviews are welcome
+15:26:18 <abadger1999> Pilou: erroring on python3.
+15:26:58 <Pilou> i am not able to reproduce this error and mattclay added ci_verified label
+15:27:47 <Pilou> should i 'touch/rebase' the PR in order to trigger another pass ?
+15:28:15 <bcoca> ci_verified means that the error stands
+15:28:18 <abadger1999> I believe ci_verified means that the ci test failure is a valid failure.
+15:28:20 <bcoca> not that it passes
+15:29:01 <Pilou> oh, i was not aware, my bad
+15:29:14 <mattclay> Pilou: Have you tried running the tests locally using python 3?
+15:29:21 <abadger1999> Pilou: Lines like this look like likely Py3 culprits: hashed_password = 'md5{0}'.format(md5(to_bytes(password) + to_bytes(user)).hexdigest())
+15:30:00 <bcoca> Pilou: not all py3 are the same
+15:30:11 <abadger1999> Hmm... but looks like it should work.
+15:30:17 * abadger1999 takes a close look at the traceback
+15:30:44 <Pilou> mattclay: yes, in a xenial lxc container without python2 at all
+15:32:12 <mattclay> Perhaps it's due to a different version of psycopg2? What version do you have installed?
+15:33:34 <sivel> The error seems to be coming from a function not modified in that PR, but unsure how it may impact that function.  Line 269 in user_add
+15:34:28 <Pilou> mattclay: 2.6.1 (according to http://packages.ubuntu.com). I will check the version used in the CI and then comment the PR
+15:35:29 <bcoca> #action mattclay and abadger1999 to follow up
+15:35:33 <bcoca> anything else?
+15:38:54 <bcoca> ok, ending meeting in 5 if nothing else comes up
+15:42:33 <bcoca> #endmeeting

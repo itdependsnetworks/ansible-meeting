@@ -1,0 +1,542 @@
+15:00:53 <jimi|ansible> #startmeeting Ansible Public Core Meeting
+15:00:53 <zodbot> Meeting started Thu Apr 21 15:00:53 2016 UTC.  The chair is jimi|ansible. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:00:53 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:00:53 <zodbot> The meeting name has been set to 'ansible_public_core_meeting'
+15:01:08 <jimi|ansible> #chair abadger1999 bcoca jtanner alikins
+15:01:08 <zodbot> Current chairs: abadger1999 alikins bcoca jimi|ansible jtanner
+15:01:12 <bcoca> i misread that for a sec, bbr, getting coffee
+15:01:47 <jtanner> hello
+15:01:53 <Jmainguy> hellp
+15:01:56 <Jmainguy> hello
+15:02:00 <bcoca> hola
+15:02:01 <bcoca> ciao
+15:02:17 <jimi|ansible> #info agenda https://github.com/ansible/community/issues/83
+15:02:18 <abadger1999> bom dia
+15:02:46 <nitzmahone> ohayo gozaimasu
+15:02:49 <alikins_> hello
+15:04:49 <Qalthos> hello
+15:05:31 <jimi|ansible> so first up, are we going to continue going through proposals?
+15:05:38 <abadger1999> #chair alikins_ Qalthos kei
+15:05:38 <zodbot> Current chairs: Qalthos abadger1999 alikins alikins_ bcoca jimi|ansible jtanner kei
+15:06:16 <abadger1999> jimi|ansible: I think we should start with people here who have PRs then moveon to proposals/question from new modules if we have time
+15:06:29 <abadger1999> jimi|ansible: otherwise we never give people time to talk to us about hteir PRs.
+15:06:30 * kei waves
+15:07:03 <jimi|ansible> abadger1999: works for me
+15:07:15 <ryansb> hi!
+15:07:22 <kei> sounds good!
+15:07:29 <jimi|ansible> go ahead kei
+15:07:29 <abadger1999> #chair ryansb
+15:07:29 <zodbot> Current chairs: Qalthos abadger1999 alikins alikins_ bcoca jimi|ansible jtanner kei ryansb
+15:07:39 <kei> i have two PRs
+15:07:49 <kei> one for the PR and the other for the heads up
+15:07:52 <kei> here is the first one
+15:07:53 <kei> https://github.com/ansible/ansible/pull/15489
+15:08:03 <kei> module_utils/openswitch.py
+15:08:04 <abadger1999> #topic openswitch.py: Use new ops.dc declarative Config(DC) module  https://github.com/ansible/ansible/pull/15489
+15:08:17 <kei> due to the change on OpenSwitch declarative config
+15:08:28 <kei> we need to modify ansible openswitch.py
+15:08:33 <kei> to configure the switch
+15:08:52 <kei> i had a quick chat yesterday with Qalthos
+15:09:12 <kei> and waiting for privateip 's go for this
+15:09:17 <kei> as far as I know.
+15:09:47 <kei> i might be able to sync up with him this afternoon but just want to give you the heads up here at core team
+15:09:52 <abadger1999> k
+15:10:04 <bcoca> kei: does this handle older versions of openvswitch?
+15:10:04 <Qalthos> kei: and I will get that right back to you as soon as I have a chance to talk it over with privateip
+15:10:25 <kei> bcoca: actually no
+15:10:27 <bcoca> ^ not everyone gets to run 'latest and greatest'
+15:10:45 <kei> true but openswitch itself is still early stage
+15:10:48 <bcoca> then i would reject this change and ask for a 'conditional' that allows to use either the old or new version depending on what user has
+15:11:10 <kei> and i don't believe we have a customer base out there.
+15:11:11 <bcoca> its been around for a few years now, but i do not know what penetration it has had
+15:11:25 <abadger1999> Code looks fine to me from a generic python and ansible conventions standpoint.
+15:11:27 <kei> bcoca: it's not OVS, OpenSwitch
+15:11:29 <bcoca> ok, that might be worth accepting then, if it really does not affect many
+15:11:31 <kei> just to make sure
+15:11:40 <bcoca> hmm, ok, i might be conflating them ....
+15:12:04 <bcoca> i'll defer to privateip as he is much more current/knowledgable on this than i am
+15:12:18 <kei> bcoca: thanks!
+15:12:36 <abadger1999> I'm okay with not supporting older versions as this is a new module for 2.1 -- will leave it to networking guys as to which path makes sense from a "most users are using X" standpoint
+15:13:49 <kei> abadger1999: thanks and that's true, as 2.1 is the first release for OpenSwitch customer, as far as I know.
+15:14:00 <abadger1999> #topic net_template.py: Fix j2 file search path https://github.com/ansible/ansible/pull/15134
+15:14:17 <kei> yep, we had this discussion last week
+15:14:34 <kei> we need the address the search path issue in template.py
+15:14:42 <bcoca> abadger1999: if you consider the 'rate of replacement' you really are ignoring a lot of the installed base if for example this was IOS
+15:14:51 <bcoca> ^ so i would make it conditional on that
+15:15:20 * bcoca still has to finish it
+15:15:31 <kei> bcoca: do you need the actual number of install base to remove that conditional?
+15:15:36 <abadger1999> bcoca: <nod>  yeah -- that's my second clause (leaving to networking guys[...])
+15:16:04 <kei> abadger1999: we'll have a talk with privateip and get back to you on that.
+15:16:15 <bcoca> kei: yes, up2 the last moachine! ... no really, ballpark impact
+15:16:33 <bcoca> many cisco 2650s out ther ... sadddly
+15:17:08 <kei> bcoca: true, and i'll also double check on OpenSwitch community, as well.
+15:17:26 <kei> we don't want any hiccups either. :)
+15:17:34 <kei> then getting back to *template.py
+15:17:57 <kei> this is a search path issue on template files
+15:18:05 <kei> as I use lots of "include" statement inside j2
+15:18:22 <kei> and ops_template.py can't find those *.j2 files
+15:18:33 <kei> i raised this issue last week or so
+15:18:47 <bcoca> and its still on my plate
+15:18:50 <kei> and i believe bcoca are now working on it to fix it in a generic way
+15:18:53 <kei> bcoca: cool!
+15:19:04 <bcoca> ^ mentioned above, i still need to finish
+15:19:14 <kei> i'm point this out here, as you asked before. :)
+15:19:31 <kei> do you have a particular issue on this, then I'll watch
+15:19:45 <kei> so that I don't have to repeat this on IRC chat... ;)
+15:19:45 <bcoca> not yet
+15:20:45 <kei> bcoca: let me know once you create it. In a meanwhile, i'm using my devel for my role development.
+15:21:22 <abadger1999> Is this related or unrelated? https://github.com/ansible/ansible/pull/15145
+15:21:28 <kei> i think that's all I have for today. thanks team!
+15:22:14 * kei is checking the patch
+15:22:55 <kei> is it in devel already, then I can check
+15:23:43 <abadger1999> nope, still just a PR.
+15:23:49 <abadger1999> bcoca: ^  (it's your PR)
+15:24:39 <bcoca> did i push already?
+15:24:53 <bcoca> whatever is there is not working though
+15:25:55 <abadger1999> bcoca: okay,  so related but still work in progress.
+15:26:04 <bcoca> yep
+15:26:20 <bcoca> i now remember i pushed a 1st draft to compare notes, forgot about it
+15:26:21 <abadger1999> #info https://github.com/ansible/ansible/pull/15145 Work in Progress to fix the search path in a generic fashion
+15:26:23 <kei> bcoca: got you! let me try and see if this address my specific case.
+15:26:37 <bcoca> kei: dont bother, its broken
+15:26:39 <abadger1999> #topic Open Floor
+15:26:44 <sivel> anyone want to discuss changing the behavior of lookups and loops using comma joined strings, instead of just using lists?
+15:26:49 <kei> bcoca: got you. :)
+15:27:01 <bcoca> sivel: proposal for 2.2, revamp loops
+15:27:05 <bcoca> deprecate with_
+15:27:12 <abadger1999> #topic lookups and loops with comma joined strings
+15:27:17 <bcoca> go with loop: which takes A LIST
+15:27:23 <sivel> is that a proposal already?
+15:27:31 <bcoca> sivel: inmyheaditis
+15:27:41 <sivel> I'm not really a fan of the proposals, so I haven't been looking at them
+15:28:05 <bcoca> #action bcoca to write proposal on loop revamp (to include loop_control feature idea ticket)
+15:28:17 <sivel> yeah, I'm not super concerned with deprecating with_, but I think we could still make that change to use lists instead of strings for now
+15:28:21 <bcoca> ^ ignored? did i do wrong?
+15:28:30 <sivel> you aren't chaired?
+15:28:50 <bcoca> im sitting on a bench .. if that is relevant
+15:29:02 <sivel> #chair
+15:29:08 <sivel> dunno :)
+15:29:24 <gregdek> Hey, open floor! Can someone take a look at maybe backporting this PR: https://github.com/ansible/ansible-modules-extras/pull/1663
+15:29:46 <gregdek> Keep seeing bugs pop around it.
+15:29:57 <bcoca> gregdek: depends, are we doing more 1.9 releases?
+15:29:58 <sivel> wedo need to figure a way to resolve the 2.0.2 issue though
+15:30:02 <abadger1999> #chair gregdek sivel
+15:30:02 <zodbot> Current chairs: Qalthos abadger1999 alikins alikins_ bcoca gregdek jimi|ansible jtanner kei ryansb sivel
+15:30:04 <gregdek> I dunno!
+15:30:09 <bcoca> ^ don't think that bug merits one, but should be included if we do
+15:30:17 <gregdek> Makes sense to me.
+15:30:19 <abadger1999> bcoca: your action should be fine... #action is silent.
+15:30:36 <bcoca> ^ there is really good joke there ...
+15:30:44 <gregdek> Don't know where/how you keep lists of such things, but this one popped this morning, so. ¯\_(ツ)_/¯
+15:30:56 <bcoca> normally the backport tag
+15:30:59 <bcoca> and milestone
+15:31:32 <bcoca> jimi|ansible: did we already release for lxc ? would this make it in?
+15:32:02 <jimi|ansible> bcoca: we are doing 1.9.7 (not released yet) but we hadn't really planned on adding anything other than the lxc fix
+15:32:54 <bcoca> modules: 9 core,  2 extras, marked as backport
+15:33:03 <bcoca> 3 ansible/ansible
+15:33:11 <bcoca> ^ might be worth it's own meeting to run through
+15:33:32 <abadger1999> if npm in 1.9 doesn't work at all right now, I'd be fine pushing this into 1.9.7 as well.
+15:33:33 <bcoca> since we probably will make this the 'last' 1.9
+15:33:48 <bcoca> ^ barring big issue
+15:34:12 <abadger1999> if it does work somewhat then it's problematic to push into 1.9.7 as we were going to release that with just targetted testing of the lxc_container fix (which has been done)
+15:34:29 <jimi|ansible> ^ this
+15:34:42 <bcoca> 4 in ansible/ansible
+15:34:47 <abadger1999> #topic  backporting npm extras module for 1.9.7
+15:34:54 <jimi|ansible> it sounds like it works but not so well with new versions of npm, which doesn't strike me as a critical fix (what we're limiting 1.9.x stuff to)
+15:35:22 <bcoca> do we want to consider 1.9.8 after review of all these?
+15:35:31 <bcoca> then put 1.9 to bed?
+15:35:48 <bcoca> we can even merge them if we don't consider 1.9.8 being merited by them
+15:35:57 <bcoca> just in case we do find something in future
+15:37:28 <abadger1999> bcoca: I'm definitely okay with the latter -- I'd merge the fix and just leave a comment that we don't know if we'll release 1.9.8 but if we do, it will be in it.
+15:37:57 <bcoca> should we just schedule a meeting for this? make it part of public core agenda?
+15:38:09 <jimi|ansible> or we can do 1.9.7 with a proper rc process
+15:38:11 <bcoca> not sure we want to go through it now, specially if 1.9.7 is 'ready'
+15:38:22 <bcoca> im fine either way
+15:38:55 <abadger1999> jimi|ansible: I think there was a deadline to get 1.9.7 out so I'd rather avoid that.
+15:39:49 <jimi|ansible> no deadline, was just willing to do it fast because of the broken lxc module
+15:40:02 <jimi|ansible> we can still do a short rc too
+15:40:28 <jimi|ansible> i see a lot of comments on that npm thing, but not sure if anyone really put it through its paces
+15:40:31 <abadger1999> I also am fine with 1.9.8/9/10/etc... we just have to decide when enough of our users have migrated to 2.x that we feel good teling the rest that now they must migrate.
+15:40:32 <jimi|ansible> ^ sivel
+15:40:59 <abadger1999> jimi|ansible: I think there was a conference coming up where someone was giving a talk....
+15:41:00 <sivel> something specific you are alerting me to?
+15:41:11 <jimi|ansible> the npm backport for 1.9
+15:41:17 <jimi|ansible> https://github.com/ansible/ansible-modules-extras/pull/1663
+15:41:31 <jimi|ansible> i see you left a comment there, wasn't sure if you had done any testing on it at all
+15:42:14 <sivel> jimi|ansible: I had not.  It was really just saying, TESTING is not used anywhere, it should be removed and real integration tests should be submitted
+15:42:25 <jimi|ansible> k
+15:42:40 <sivel> there are like 55 lines added to that file that likely aren't going to be seen and never run
+15:42:48 <bcoca> agreed, that is confusing
+15:43:19 <sivel> I never checked back on it, I had figured my advice would be taken, which it apparently had not been
+15:43:40 <bcoca> mark as needs_revision
+15:44:09 <sivel> should update with a comment too
+15:44:19 <jimi|ansible> ok, so yeah we'll do 1.9.7 with just lxc_container and then we can debate 1.9.8 in the future, though i'm leaning towards a no on that, as we're getting close to 2.1
+15:44:38 <sivel> jimi|ansible: I am +1 on moving forawrd and leaving 1.9 behind :)
+15:44:58 <bcoca> +1000000
+15:45:21 <sivel> I can't keep straight what 1.9 can even do, so it takes 3 times as long to figure out how to handle problems in 1.9 at this point
+15:45:44 <jimi|ansible> yep
+15:45:55 <jimi|ansible> ok, moving on
+15:46:04 <jimi|ansible> anyone with any other PRs to discuss?
+15:46:06 <bcoca> i think we 'smoothed over' the transition enough, might still have a few issues but i think we've solved/worked around most
+15:46:16 <bcoca> so i'm happy with letting 1.9 slip away
+15:46:27 <jimi|ansible> #topic PRs for consideration
+15:46:56 <bcoca> https://github.com/ansible/ansible/pull/12798
+15:47:22 <bcoca> ^ as per sivel's point this DOES limit playbook names that conflict with ansible-<util>
+15:47:28 <bcoca> but i think I can live with that
+15:48:50 <sivel> my problem is that I have a group called 'doc', so the adhoc command would get tricky to target that group
+15:49:04 <sivel> I'd have to rename the group, and confuse people
+15:49:23 <sivel> since we deploy sphinx docs to our doc server cluster
+15:49:42 <sivel> just my 2 cents :)
+15:50:39 <sivel> I had a group called vault, but it was decommed.  It was for our secrets servers which were effectively etcd nodes
+15:51:16 <jimi|ansible> bcoca: that can be addressed, where the first param is the command, and anything after that are the hosts
+15:51:19 * bcoca makes note to make '<util>' groups 'illegal' in yaml inventory
+15:51:20 <sivel> anyone else have feedback?  <crickets>
+15:51:53 <sivel> I have 2 PRs that I don't think anyone has looked at yet
+15:51:54 <bcoca> so limit to argv[1] and sivel needs to make sure to not use group/host as first argument?
+15:52:05 <sivel> cascade ssh_*args configurations in synchronize: https://github.com/ansible/ansible/pull/15306
+15:52:19 <sivel> Guard against a shell profile printing extraneous data: https://github.com/ansible/ansible/pull/15337
+15:52:52 <bcoca> extra args should not be cascade but appended if they exist
+15:52:53 <abadger1999> I think vault may be pretty wide-spread
+15:52:57 <jhawkesworth> bcoca: would 'illegal' == a warning if present?
+15:53:05 <bcoca> jhawkesworth: error!
+15:53:14 <jhawkesworth> hell btw.  ok
+15:53:24 <sivel> bcoca: cascaded may be the wrong "term", but it is effecively what the ssh connection plugin does
+15:53:33 <sivel> bcoca: there is just an order of appending
+15:53:39 <jhawkesworth> duh typo.  s/hell/hello/
+15:53:47 <sivel> HELL BTW!
+15:53:50 <bcoca> ah, not stacked, listed
+15:53:50 <sivel> ;)
+15:54:13 <bcoca> jhawkesworth: hell, hello ... sometimes they are interchangable, hi!
+15:54:54 <bcoca> sivel: not sure if order is significant
+15:54:58 <abadger1999> I think I'm -1 as is.
+15:56:33 <abadger1999> Might be convinced that there's some combination of warnings that would make it okay.... I probably would not warn if the names show up in inventory.  I would warn if the user is both using ansible <util>  and <util> is in inventory.
+15:57:03 <abadger1999> Not sure though... there's more than one way to do it doesn't have much appeal to me.
+15:57:09 <sivel> bcoca: yeah, as mentioned, just following the same order as used in the ssh connection plugin currently
+15:57:23 <abadger1999> And this will break at some people's sites.
+15:57:24 <bcoca> abadger1999: not inventory, just yaml inventory
+15:57:49 <abadger1999> so cost benefit seems to lean agaisnt doing this.
+15:57:51 <bcoca> also, joking
+15:58:09 <bcoca> abadger1999: against cli?
+15:59:21 <jimi|ansible> bcoca: upon further thought, it's probably not a good idea
+15:59:27 <jimi|ansible> too much conflict with the cli command
+15:59:28 <bcoca> i added the option as many people had asked for a more 'integrated' ansible util as they found using each ansible-<util> cumbersome (really typing space instead of - is just lazy in my book)
+15:59:38 <abadger1999> bcoca: yeah, leaning toward -1 to the PR.
+15:59:54 <bcoca> fine, close
+16:00:02 <bcoca> just wanted it out of my list one way or another
+16:00:31 * kei is gotta go to catch a train.  Thanks team!
+16:00:33 <jhawkesworth> can alias if typing 'ansible-playbook' too long
+16:00:33 <abadger1999> bcoca: heh, very lazy... now if it had been "_"..... Shift would have been another story ;-)
+16:00:39 <abadger1999> kei: thanks for coming !
+16:01:27 <sivel> about time for me to leave as well
+16:01:35 <kei> abadger1999: thank you for your time, all!
+16:02:18 <thaumos> One way to think is use the github method of docs as well.. That could alleviate the concern for <util>
+16:02:22 <abadger1999> #info decided that ansible <util> would conflict with current use of the CLI so going to not accept that PR for now.
+16:02:38 <alikins> I suspect # of people that would prefer 'ansible playbook' >> # of people with hosts named playbook/vault/doc. but can't break scripts... (could you default to sub command interactive on tty, and default to inv on script/notty? a bit weird...)
+16:03:33 <abadger1999> sivel: k... If you want we could put your two PRs on the agenda for next meeting.
+16:04:04 <abadger1999> sivel:(Probably will be next Thurs as the Tues meeting will probably be proposals)
+16:05:40 <sivel> abadger1999: no prob, looks like one is not mergable, will do that for then
+16:05:45 <jimi|ansible> sivel: we'll also open a new agenda item on the community repo, which we'll email out again
+16:05:54 <jimi|ansible> so you can add them there to be sure we cover them
+16:06:07 <sivel> alright
+16:06:22 <jimi|ansible> i like the way that worked out, so we'll continue it
+16:06:33 <bcoca> alikins: the change makes it an option, so ansible-playbook still works, but you could use ansible playbook also
+16:07:07 <abadger1999> Any more PRs from people here?  If not we can start on proposals.
+16:07:38 <bcoca> or end meeting?
+16:08:02 <abadger1999> We said we'd extend to 1.5 hours so we still have 20minutes.
+16:08:07 <abadger1999> and we do have proposals.
+16:08:12 <bcoca> ok
+16:09:22 <abadger1999> rbergeron: are you around?
+16:10:40 <abadger1999> #topic Meta questions around: https://github.com/ansible/ansible-modules-extras/pull/1593   What criteria are there for a Module in Extras?
+16:10:53 <abadger1999> So this is from yesterday's new module meeting.
+16:11:49 <bcoca> i would 'refine' that list, specially first 3 are not what was 'meant'
+16:12:19 <bcoca> actually .. i think most of that does not read well
+16:12:36 <thaumos> which is why I and abadger1999 tried to say it was a brain dump
+16:12:46 <thaumos> I assume abadger1999 you did a copy/pasta on that stuff, right?
+16:13:12 <abadger1999> yeah -- I went through the meeting log and tried to add all the points I could find there.
+16:13:34 <bcoca> yeah, but out of context they don't really mean the same
+16:13:45 <abadger1999> I don't think we have consensu yet as to which of those things we want to keep and which we don't want to keep.
+16:13:50 <thaumos> totally agree bcoca
+16:14:11 <abadger1999> Yeah, I needed a place to record the thoughts so they wouldn't get lost and there wasn't really anyplace else yet.
+16:14:17 <bcoca> i think 1st one for example is 'we want modules to have these things' not that ONLY be written if they do
+16:14:21 <rbergeron> abadger1999: yes, almost - driving home from taking kid to school (traumatic morning #4 in a row)
+16:14:59 <abadger1999> rbergeron: k.  We're discussing the module criteria from yesterday.  We'll probably still be at it next week.
+16:15:51 <bcoca> ok, starting from 'last' which i think is most manageable: - _facts module should get info about/related to the machine, not general data query
+16:15:58 <bcoca> - looups are allowed to do general data query
+16:16:13 <abadger1999> lookups are not modules.
+16:16:25 <bcoca> well, they are mentioned there
+16:17:41 <rbergeron> abadger1999: that's totally fine :) i appreciate you and thaumos taking the time to capture some thoughts.
+16:18:13 <rbergeron> mostly just wanted to make sure we (a) followed up (and continue to) and (b) that we're doing it in a place/time where people know the conversation is happening.
+16:18:23 <abadger1999> <nod>
+16:18:29 <bcoca> -place for modules that are rejected by any rules, i think we already  have that: galaxy and the rest of the internet?
+16:19:06 <abadger1999> So... we have a big ball of ideas here.
+16:19:27 <abadger1999> And I think that most of us like a few of them and dislike most of the rest.
+16:19:30 <chouse> that ineresting @bcoca. that sort of implies that maybe there should be a 'modules' section of galaxy.
+16:19:40 <jimi|ansible> rbergeron: whee kids!
+16:19:43 <abadger1999> and the problem being that our sets are different.
+16:19:55 <bcoca> i thnk its not that big, 1 main issue: is extras a 'free for all' or 'ansible curated but more liberally than core'?
+16:20:03 <abadger1999> Does anyone have ideas of how we can move this forward?
+16:21:02 <bcoca> my postion: as long as we ship extras and appear responsible for it, it should have some rules, agreed to more lax than core, but not absent
+16:21:02 <abadger1999> bcoca: If we all decided it was free-for-all I think we'd be done.  But if we all think it should be curated, I think we're stuck i nthe details of what rules we want to apply to the curation.
+16:21:17 <bcoca> if we push extras to be like galaxy: ansbile hosted, but community managed, i'm fine with no rules
+16:21:35 <abadger1999> I would like to do that.
+16:21:39 <bcoca> abadger1999: i dont think we all agree on that point, speically greg
+16:21:42 <abadger1999> i think that's a good goal to strive for.
+16:22:29 <bcoca> that im ok with, but probably not going to happen anytime soon, till then ...
+16:23:10 <bcoca> rbergeron: greg around? do you think i'm wrong on his position?
+16:23:17 <abadger1999> So maybe first three questions to ask:  (1) is our goal for  extras to be like galaxy: ansible hosted, but community managed,  (2) What are we willing to do until that goal is met?  (3) What is the roadmap for advancing towards that goal and who is working on it?
+16:23:42 <bcoca> +1 to those 3
+16:24:20 <bcoca> ^ but we seem to be missing key people to even discuss that
+16:24:31 <chouse> i think that is greg's goal.
+16:24:44 <bcoca> me too, but hate to talk for people that are not here
+16:24:44 <chouse> announce it for 2.2.
+16:25:01 <chouse> we can stick on the 2.2 roadmap now
+16:25:02 <bcoca> and i actually disagree with the goal
+16:25:14 <bcoca> i think extras should stay as 'middle ground'
+16:25:23 <bcoca> and push 'free for all' to galaxy
+16:25:25 <rbergeron> i am not sure if greg is about
+16:25:30 <rbergeron> i can ping him
+16:25:40 <chouse> @bcoca - that's exactly what's causing the headaches.
+16:25:50 <abadger1999> I'm also okay not answering the questions today.
+16:25:53 <chouse> it's stuck in the middle. and therefor, just stuck .
+16:26:11 <thaumos> bcoca, you’ve got a point there, if we had a modules only section for galaxy
+16:26:13 <bcoca> well, there is huge diff between 'middle ground' and 'stuck in the middle'
+16:26:16 <rbergeron> i think that's... largely his position.
+16:26:20 <abadger1999> But I think it helps to move us forward if we at least know that those are the questions we need to be asking and finding answers to
+16:26:43 <bcoca> thaumos: which i think i'm not the only one that has been asking, not just modules, but all plugins in galaxy
+16:27:03 <bcoca> ^ one of my aims when making roles a 'resource' not just an tasklist + resources
+16:27:08 <thaumos> I haven’t heard it myself… Nor thought of it.. But now I agree with that wholeheartedly.
+16:27:24 <thaumos> That could also solve for the process of “graduation” from extras to core
+16:27:28 <bcoca> thaumos: current workaround is using roles as 'plugin containers'
+16:27:39 <thaumos> yeah, and that’s messy as all hell.
+16:27:47 <thaumos> defeats a role imho
+16:27:48 <bcoca> which has been the case in galaxy for a long time, many vendors published their plugins that way
+16:27:56 <thaumos> yeah… messy
+16:28:03 <rbergeron> i want to be clear though that "having a defining point between extras / core" is important in its own ways -- i don't think we should just think of it as "a solution to this problem"
+16:28:23 <thaumos> no rbergeron, not necessarily the end all be all solution as am I making it out to seem
+16:28:34 <bcoca> rbergeron: agreed
+16:28:56 <thaumos> More of another part of a process, where we can have a dumping ground of stuff. And extras / core actually have more meaning to them.
+16:28:57 <abadger1999> So maybe question (0) what is the difference between Core and Extras today and what do we want it to be in the future?
+16:29:08 <bcoca> rbergeron: not my point, but it is part of a bigger discussion, we cannot agree on extras till we agree on a more global issue on how users share plugins (not just modules)
+16:29:39 <bcoca> abadger1999: we have had trouble resolving that and always ended in 'what Ansible inc says it is'
+16:29:50 <bcoca> which is vague as <insert fav swear word>
+16:29:57 <abadger1999> bcoca: <nod>  Yep, and thus, we continue to have these discussions ;-)
+16:30:19 <rbergeron> abadger1999: yeah, in some ways. I think there's also business-y stuff involved in that.
+16:30:20 <bcoca> i would also like to expand extras to hold more than task plugins
+16:30:43 <bcoca> rbergeron: i think biggest issue has always been lack of resources
+16:30:44 <rbergeron> and i think for that there's probably some sort of middle ground also -- i think both sides are looking to each other for a full answer when really ... we probably need to inform each other on things.
+16:31:24 <abadger1999> #info questions to resolve via these module criteria discussions: (0) What are the present means of distributing modules and what meaning is presently assigned to each?
+16:31:41 <bcoca> and we keep 'robbing' you of the dedicated galaxy resource (hi chouse) which would probably make it easier to resolve this
+16:32:00 <abadger1999> #info (1)  is our goal for  extras to be like galaxy: ansible hosted, but community managed?
+16:32:20 <abadger1999> #info (2)  (if 1) What are we willing to do until that goal is met?
+16:32:28 <chouse> do we have an example of a plugin in galaxy? or what do you mean by plugin?
+16:32:33 <thaumos> abadger1999 or make galaxy the first entry point, then graduate to extras which keeps it as is?
+16:32:49 <thaumos> bcoca do you agree with my above statement?
+16:32:49 <bcoca> chouse: filter plugin, task plugin/module, lookup plugin, etc
+16:32:50 <rbergeron> a module.
+16:32:53 <abadger1999> #info (3) (if 1):  What is the roadmap for advancing towards that goal and who is working on it?
+16:32:55 <rbergeron> or those other things!
+16:33:00 <chouse> if we say galaxy first, then graduate to extras, things will be lost in galaxy.
+16:33:06 <bcoca> thaumos: that has alwasy been my view
+16:33:16 <abadger1999> thaumos: yeah exactly, that would be an alternative to 1
+16:33:43 <thaumos> yeah, but with better process and curation we could be better about it.
+16:33:56 <rbergeron> thaumos: better process and curation for what?
+16:33:59 <thaumos> because right now having things in extras, they get “lost” and never graduate, and that is part of what we are looking for.
+16:34:12 * gregdek is here
+16:34:14 <abadger1999> We're now at an hour and a half... So here's an idea for homework....
+16:34:15 <bcoca> https://galaxy.ansible.com/Juniper/junos/ <= example of vendor using galaxy to publish modules
+16:34:22 <abadger1999> Let's work on a shared doc for (0)
+16:34:55 <abadger1999> Do we have public google docs now?
+16:35:08 <abadger1999> If so we can use that.  if not we can use an etherpda somewhere.
+16:35:22 <bcoca> we can make any ansible.com doc 'public'
+16:35:23 <gregdek> My very brief position: we must articulate a distinction between Extras and Core, or do away with the distinction and come up with a separate mechanism for "contrib" content.
+16:35:50 <abadger1999> We should think about (1) and alternatives to (1) [like using galaxy as the entrypoint instead of extras]
+16:36:06 <bcoca> gregdek: im fine with articulating, just need to agree on what to articulate first
+16:36:13 <gregdek> Yep.
+16:36:33 <abadger1999> Next meeting we can discuss (1) and alternatives and express the pros and cons of them.
+16:36:35 <bcoca> since we have never had good consensus, we keep stuck in the current 'arbitrary' distinction
+16:36:41 <gregdek> Trouble is, I'm not sure we all agree on the distinction. So to me, that's the hard work to do.
+16:36:47 <abadger1999> maybe come to some decision about them but I kinda doubt it.
+16:36:53 <bcoca> gregdek: that i think we all agree on
+16:37:11 <rbergeron> abadger1999: it looks like redhat docs cant. bcoca: we no longer have access to google docs in the ansible domain, iirc
+16:37:16 <gregdek> The problem that "the ansible name means we support it" isn't lost on me.
+16:37:39 <bcoca> gregdek: that is why a 'ansible hosted' vs an 'ansible shipped' is a big distinction in my  mind
+16:37:49 <bcoca> ^ and i bet users
+16:37:50 <gregdek> I was hoping that by carving off Extras into a separate package, that would help. But that hasn't happened, and in the absence of that, there's no functional distinction between core and extras at all.
+16:38:00 <rbergeron> we can use our personal google accounts (or someone can) to create something though and move forward -- i can do that if needed, @abadger1999
+16:38:07 <gregdek> Now, does that solve the problem? I don't know.
+16:38:19 <gregdek> But that was the proposed solution, and we never got far enough along to try it.
+16:38:32 <bcoca> even as separate package, as long as 'we ship it' we'll still be held accountable
+16:38:38 <gregdek> Maybe so.
+16:38:47 <thaumos> well… the carve off now is already done with galaxy…. so that is a thought?
+16:38:48 <bcoca> if it worked like galaxy, im fine with 'free for all'
+16:38:49 * abadger1999 suggested at the contrib summit namespacing in the tasks:  if it comes from extras, the task would look like - extras.docker_admin:    if it came from core it would look like - docker_admin:
+16:38:56 <gregdek> thaumos: may be.
+16:38:58 <thaumos> then extras doesn’t need to be carved off anymore
+16:39:02 <gregdek> Maybe that time has come.
+16:39:10 <rbergeron> yes, but those expectations for what we're accountable for can be defined differently. we just don't do any of that currently.
+16:39:29 <thaumos> just more thoughts… I am in more of the camp of an extra level of obfuscation here… I think it could work out for communnity and partners
+16:39:34 <bcoca> rbergeron: agreed, so i'm working with the 'implied', that you support what you ship
+16:39:43 <abadger1999> bcoca: Sorta.... but many other projects already ship "contrib" directories of code... people file bugs with the project about those but don't expect them necessarily to fix them in the same way as the real code.
+16:39:59 <gregdek> In my opinion, it's a lot of additional work to make Galaxy do what we could already to by fencing off Extras more clearly... but that's just, like, my opinion, man. :)
+16:40:09 <bcoca> abadger1999: but they still dont just ship 'anything' in contrib, which we currently dont in extras eitehr
+16:40:36 <bcoca> gregdek: possibly, i think galaxy is more elegant solution, but i'm fine if we just 'cut the cord' with extras also
+16:40:56 <bcoca> i thnk the current state is bad, confusing for us, contributors and community
+16:40:57 <abadger1999> bcoca: depends on the project ;-)  But yeah, there is some level of review... It's a lot less strict than our criteria for extras appears to be right now, though.
+16:40:59 <gregdek> I actually agree that Galaxy may well be the better solution. It's just a lot more work to get there.
+16:41:23 <gregdek> bcoca: yes, we're at a pain point. But I'm confident we'll solve it.
+16:41:27 <bcoca> gregdek: i do not ddisagree about the work, but if we set the goal, we'll get there eventually
+16:41:50 <bcoca> ^ one way or the other, im pressing on setting a clear goal, not getting it done
+16:41:50 <rbergeron> i really kind of dislike galaxy as *the* solution for this -- but :)
+16:41:59 <gregdek> There are some things on the Galaxy roadmap that make it attractive. Versioning, redefining how roles work, etc.
+16:42:31 <bcoca> ^ that is another part of it, we need to chagne roles to be more usefule to community, i think my current proposal is big step in that direction
+16:42:33 <gregdek> I mean, the Extras model is kind of Old World, and the Galaxy model is more like the new world of npm. Which can be incredibly painful, but it is also powerful.
+16:42:45 <chouse> ido we leave modules and plugins buried in roles? seems like we would want to break those out and make them more visible.
+16:42:58 <thaumos> we do leave them buried… and that’s messy
+16:43:11 <abadger1999> chouse: I tend to agree with that.
+16:43:11 <gregdek> If we bring in npm primitives like semver etc., have galaxy be able to deliver multiple kinds of content... it could work.
+16:43:14 <bcoca> chouse: agreed, that is why its 'lots of work' on galaxy side, but i'm even fine with leaving them inroles (or both)
+16:43:23 <gregdek> Again: lots of work. :)
+16:43:35 <bcoca> but i think its 'worth it'
+16:43:45 <abadger1999> emacs has a "sumo distribution" which might be good.
+16:43:51 <gregdek> wat
+16:43:58 <bcoca> i dont think extras scales much more
+16:44:08 <gregdek> I was having a nice time until someone mentioned emacs.
+16:44:09 <abadger1999> but maybe the community should be in charge of creating that -- we just host it.
+16:44:23 <rbergeron> Extra Modules for Ansible ConsumerS!
+16:44:29 <bcoca> ^ imho we should split, merge into core what we want to ship and push rest to 'hosted solution' be it galaxy or the 'new extras'
+16:44:34 <gregdek> I'm gonna kickban you so hard rbergeron
+16:44:37 <rbergeron> (sorry)
+16:44:45 <rbergeron> (it was soooo obvious)
+16:44:48 <bcoca> rbergeron++
+16:45:12 * chouse goes to find coffee
+16:45:18 <gregdek> Maybe it's "short term separate extras / long term galaxy hosted modules". That's a story we can tell, anyway.
+16:45:54 <bcoca> also, this should wait till 2.2/2.3 once ziploader is fully proven/debugged as it allows us to add 'module_utils' to roles/extras
+16:46:03 <gregdek> yes. absolutely.
+16:46:06 <bcoca> ^ but i would like to have 'vision' in place well before
+16:46:16 <gregdek> Yep.
+16:46:21 <bcoca> as any solution requires a lot of groundwork
+16:46:39 <bcoca> soo proposal?
+16:46:46 <gregdek> yep.
+16:46:50 <bcoca> ^ probably will get 2 or 3 competing ones
+16:47:08 <bcoca> also this might be better/worse depending on galaxy OSS?
+16:47:13 <bcoca> contingent?
+16:47:19 <gregdek> maybe.
+16:47:48 <bcoca> i know its not a simple thing to answer, i just want to 'unstuck' us as it feels like we've had little/no progress in long time
+16:47:48 <gregdek> imagine stackable module sets like docker hubs, LOL
+16:48:07 <gregdek> I think we all agree it's time to figure out the answer. What we have isn't scaling that well.
+16:48:09 * bcoca goes into closet to scream in the dark
+16:48:11 <gregdek> I mean, it's not awful.
+16:48:16 <gregdek> But it's not good either.
+16:48:45 <bcoca> also i think we have a 'base feature set' that is mostly complete, a lot of the modules are now 'frills'
+16:49:08 <gregdek> I like the tools that we have in place to help get more people involved in maintaining things, and would like to import a lot of those practices into ansible/ansible itself.
+16:49:23 <gregdek> But new things are new thigns.
+16:49:29 <bcoca> yep
+16:49:29 <jimi|ansible> just because a module is contributed to extras doesn't mean we have to accept it, even if it is looser/more open in general
+16:50:14 <bcoca> jimi|ansible: the base of the disagreement is that we have rules on it at all
+16:50:26 <bcoca> i think the conversation is broader
+16:50:26 <gregdek> ^^^
+16:50:38 <bcoca> how do we want 'community driven content to work?'
+16:50:45 <jimi|ansible> of course we have rules, otherwise the only rule would be "write something in python and submit it and it's in extras"
+16:50:51 <bcoca> ^ then is galaxy/extras the right place?'
+16:50:53 <gregdek> My opinion: if we can't instantiate the rules with automated checks, they're not rules that will allow us to scale.
+16:51:29 <abadger1999> https://public.etherpad-mozilla.org/p/Ansible_Module_Criteria
+16:51:42 <bcoca> gregdek: agreed on scale, but there is also the 'utility' rules which scaling is actually making problems bigger instead of smaller
+16:51:43 <gregdek> I mean, bcoca is right -- a lot of the core pieces are already there. And a lot of our current modules are just a little broken, and when in doubt, people work around it by just using a shell command instead.
+16:51:58 <thaumos> shoudld we use proposals for this forum?  sorry in another meeting at the same time if it was already discussed
+16:52:07 <gregdek> thaumos: yes, we will.
+16:52:24 <gregdek> just talking through the problem a bit.
+16:52:31 <thaumos> sorry, I’ll shut up then
+16:52:32 <bcoca> so i'm probably going to propse the galaxy -> extras -> core divide (all plugins, not just modules)
+16:52:37 <thaumos> ^^
+16:52:37 <xaeth> i've gotta say that from an external POV i think going the galaxy/module route makes more sense .. just my $.02
+16:52:55 <gregdek> In the long term, I think I agree.
+16:52:59 <gregdek> The question is how we get there.
+16:53:01 <bcoca> xaeth: i think most liek teh idea, its just the implementation cost
+16:53:21 <gregdek> Honestly, the right answer might be just to say "there is no extras, we allow modules in core but the bar is much higher."
+16:53:25 <bcoca> cost not just being $$, but time, mindshare, community acceptance, etc
+16:53:32 <xaeth> *nod* was just catching up on the convo and providing an external agreement
+16:53:32 <gregdek> And then we push hard to get the galaxy solution moving.
+16:54:04 <bcoca> ok, i'll put something toghether, probably after 2.1 RC
+16:54:05 <gregdek> Really, the root of the current problem is that there's no *real* distinction between core and extras. We can solve that by fiat.
+16:54:07 <abadger1999> Or perhaps that's cart before horse.
+16:54:24 <bcoca> gregdek: its a 'looser acceptance' but that is not well defined
+16:54:36 <bcoca> abadger1999: ?
+16:54:40 <gregdek> s/not well defined/undefined/ :)
+16:54:47 <gregdek> UNDEF
+16:55:03 <bcoca> well, we have accepted modules in extras we would not have in core
+16:55:14 <gregdek> We have accepted modules in core that we would not have in core. :)
+16:55:27 <gregdek> Point taken, though.
+16:55:28 <abadger1999> Get galaxy working for this use case first.  when that's ready then say "We're removing the extras in tarball -- modules will either be in core or galaxy.  Use $TOOL to install things you need from galaxy)
+16:55:29 <bcoca> its more like +-X ~= core rules where X varies depending on core team member consulted/day of week/last release date
+16:55:47 <bcoca> ^ again, yes the criteria has changed over time
+16:56:14 <bcoca> abadger1999: not even that far yet, 1st agree on what 'path' we take, then we can deal with order and rest
+16:56:33 <gregdek> Anyway. I think we all agree on the problem, and that the time has come to solve the problem, and while we may disagree on particulars, I think we agree on broad principles. Now it's time to move on to proposals and hash them out on their merits.
+16:56:41 <bcoca> abadger1999: and i agree, with sane steps
+16:56:44 <abadger1999> bcoca: yes -- that's why I made an etherpad: https://public.etherpad-mozilla.org/p/Ansible_Module_Criteria
+16:56:57 * gregdek goes to abadger1999's etherpad
+16:57:01 <chouse> i think you'll regret putting modules in galaxy. you'll end up with the '4000 nginx roles' problem.
+16:57:25 <bcoca> chouse: we have them already and i think we already have the nginx problem
+16:57:43 <bcoca> which is better than the 0 nginx roles
+16:57:55 <bcoca> and does require invensting more in 'testing/grading'
+16:58:09 <chouse> you don't have it in extras today because there is some level of curation.
+16:58:11 <bcoca> ^ its not simple, i know this, but i think its what we should strive for
+16:58:28 <bcoca> chouse: kind of breaking that curation started this conversation
+16:58:44 <xaeth> +1 on testing/grading and at least there is a basic set of ranking concepts already
+17:00:11 <gregdek> i have another call. thanks for the discussion. let's keep it going!
+17:00:52 <abadger1999> I agree with chouse but that's also a problem for the future... if we get galaxy to work well at hosting niche modules and it simply explodes with content, then we can work out things like an ansible-contrib-modules-1.0.tar.gz that someone puts together periodically.
+17:01:24 <thaumos> that or can use ansible-galaxy command to import
+17:01:28 <bcoca> abadger1999: i would even propose to split each 'cloud' into it's own package
+17:01:40 <bcoca> then installing ansible-aws-modules will install boto also!
+17:01:45 <thaumos> ^^ tima would be interested in that as well
+17:02:06 <abadger1999> Okay, we've hit 2 hours now.
+17:02:17 <abadger1999> I think this was productive so thanks everyone!
+17:02:44 <xaeth> can i ask a module PR review question?
+17:02:48 <jimi|ansible> we didn't get to my kubernetes module...
+17:02:48 <bcoca> ^ really think we should discuss this in bar and have to drink shot as you propose something
+17:02:51 <abadger1999> let's try to fill out the first two sections of the etherpad for next Tuesday's Proposals Meeting.
+17:03:05 <bcoca> jimi|ansible: totallyforgotthat
+17:03:22 <abadger1999> jimi|ansible: naughty naughty, didn't add it t othe agenda ticket ;-)
+17:03:32 <abadger1999> xaeth: go ahead.
+17:03:42 <abadger1999> #topic Open floor
+17:03:54 <xaeth> https://github.com/ansible/ansible-modules-core/pull/1301 <-- seems legit
+17:04:00 <jimi|ansible> if we're at 2 hours, we can just discuss it off to the side
+17:04:08 <xaeth> my only question is if i should push for the examples to include an ipv6 sample
+17:04:09 <jimi|ansible> need to ping erjohnson about it anyway
+17:04:28 <abadger1999> jimi|ansible: core team members are a captive audience... we can discuss it after xaeth's if you want.
+17:04:42 <bcoca> jimi|ansible: he already commented on ticket, he gave +1
+17:04:48 <xaeth> context is that the fix for exclude_hosts not working they also made sure that it definitely works for ipv6
+17:05:53 <bcoca> ah, remember that one ... looked good at the time, lots more comments than last time i looked
+17:06:08 <bcoca> still has merge commit
+17:06:18 <jimi|ansible> bcoca: ahh, haven't looked at my github notifications recently then
+17:06:21 * jimi|ansible goes to look
+17:06:25 <bcoca> tempted to cherry pick
+17:07:15 <bcoca> jimi|ansible: im probably fine with your additions, but my issues with 'functionality' stand, fine to merge if we commit to expand to more than 'upload config' module
+17:07:58 <jimi|ansible> bcoca: i agree, it should check the state before sending the POST/PATCH so it could support check mode
+17:08:11 <jimi|ansible> but yeah we can continue to improve on it in the future
+17:08:16 <bcoca> and more fine grained settings/control vs just upload existing settings
+17:08:44 <xaeth> bcoca: so i'm kewl with asking them to squash and maybe come back w/ cherry pick if we don't hear back withing X time period? its functional and has just been sitting there... we've been working around it internally
+17:09:04 <bcoca> i'll just probably cherry pick the commit myself
+17:09:09 <abadger1999> xaeth: bcoca: 1301 looks reasonable to me.   gregswift tested and gave approval.
+17:09:25 * xaeth == gregswift ftr
+17:09:35 <abadger1999> will github's squash feature remove the merge commit?
+17:09:42 <bcoca> yeah, seems enough people looked at it and i cannot see anything wrong, will cherr pick and test locally
+17:09:47 <xaeth> i forgot about that... not sure
+17:09:48 <bcoca> abadger1999: no, can do strange things
+17:09:50 <abadger1999> xaeth: ahh... but you could have had two votes before I knew that ;-)
+17:10:00 <xaeth> abadger1999: D:
+17:10:17 * bcoca now creates 20 github accounts to randomly downvote PRs
+17:11:02 <abadger1999> #action xaeth to ask for rebase to remove merge commit or will do so himself
+17:11:14 <abadger1999> #action bcoca will cherrypick and test
+17:11:15 <bcoca> just did cp, running tests
+17:12:05 <xaeth> request made
+17:12:30 <bcoca> looks good
+17:12:41 <bcoca> merging, will close ticket
+17:14:10 <xaeth> wooo :) thank yall
+17:14:16 <jimi|ansible> i'll go ahead and merge the k8s module as well since he's fine with my changes
+17:14:16 <bcoca> np
+17:14:26 <bcoca> sorry, shoudl have merged that one a while back .. but long list ...
+17:15:09 <bcoca> ok, im off to lunch, then will go kick kittens in front of kindergarden to harden the kids to the real world
+17:15:24 <xaeth> totally understood
+17:15:29 <abadger1999> Cool.
+17:15:42 <abadger1999> Okay, I'll close the meeting in 60s then.
+17:22:46 <abadger1999> #endmeeting

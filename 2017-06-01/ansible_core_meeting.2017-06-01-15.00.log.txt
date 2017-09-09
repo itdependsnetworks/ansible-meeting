@@ -1,0 +1,277 @@
+15:00:10 <gundalow> #startmeeting Ansible Core Meeting
+15:00:10 <zodbot> Meeting started Thu Jun  1 15:00:10 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:00:10 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:00:10 <zodbot> The meeting name has been set to 'ansible_core_meeting'
+15:00:14 * gundalow waves
+15:00:24 <gundalow> #info Agenda https://github.com/ansible/community/issues/159
+15:00:32 <alikins> blurp
+15:00:43 <gundalow> #info Fresh agenda for June will be created after the meeting
+15:00:47 <gundalow> #chair alikins
+15:00:47 <zodbot> Current chairs: alikins gundalow
+15:01:05 <sivel> hello
+15:01:07 * shertel waves
+15:01:16 <gundalow> #chair sivel shertel
+15:01:16 <zodbot> Current chairs: alikins gundalow shertel sivel
+15:01:44 <gundalow> #topic `when:` conditions are warning even for variables composed of other variables
+15:01:51 <gundalow> #info https://github.com/ansible/community/issues/159#issuecomment-304184556
+15:01:55 <gundalow> action: need to revisit once sivel can attend and discuss complete removal of warning
+15:01:58 <gundalow> ￼￼ 1￼
+15:02:08 <gundalow> sivel: Do you know anything about this?
+15:02:14 <sivel> I am here, I know what it is about
+15:02:38 <gundalow> Is their anything for this group to follow up with?
+15:02:51 <sivel> We added a warning in 2.3 for the case where a user places {{ }} in a when statement
+15:03:06 <sivel> there was a false positive, and a change was committed tuesday to fix it
+15:03:26 <sivel> bcoca referenced removing it completely however, but I'm not sure that is necessary at this point
+15:03:42 <sivel> I'm not necessarily the one to run this, I think people just wanted my feedback in the discussion
+15:03:48 <sivel> I am happy with the way it is now
+15:05:17 <gundalow> mkay
+15:05:19 <gundalow> Thanks :)
+15:05:58 <gundalow> #topic ansible/ansible#24580
+15:06:08 <gundalow> #link https://github.com/ansible/ansible/pull/24580
+15:06:13 <gundalow> Fix idempotency for Unix permissions in zip files
+15:07:04 <gundalow> Needs a review and to see if the tests cover enough
+15:08:36 <gundalow> So if someone could, that would be good
+15:08:56 <gundalow> #topic ansible/proposals#65 Allow documenting option deprecatio
+15:09:08 <gundalow> #link https://github.com/ansible/proposals/issues/65
+15:09:13 <sivel> gundalow: I just took a quick look and added comment on something that needs addressed
+15:09:20 <gundalow> sivel: Thanks
+15:09:45 <gundalow> new proposal, looks fairly simple and straight froward
+15:09:49 <gundalow> forward*
+15:09:51 <gundalow> +1
+15:09:56 <sivel> My only real concern between the proposal and the deprecation for modules, is that that proposal diverges from how we implement now
+15:10:11 <sivel> I'd like to see them standardized, between an option and a full module
+15:12:47 <sivel> I feel like we are pretty light today on the attendees for this meeting
+15:12:52 <gundalow> Yup
+15:13:00 <gundalow> A few Core people are in another meeting
+15:13:30 * jhawkesworth is lurking
+15:13:36 <gundalow> For module deprecations I believe we currently do deprecated: "Use M(somethingelse), this will be removed in X.Y"
+15:13:50 <gundalow> I wonder if module level deprecations should be updated to match ansible/proposals#65
+15:13:56 <gundalow> jhawkesworth: Hi :)
+15:15:26 <sivel> I would be in favor of having module level match the proposal
+15:15:43 <sivel> we just have to likely do a one time mass change at the same time
+15:15:55 <sivel> not sure how many deprecated modules we have right now
+15:16:03 <sivel> some probably are ready to be removed even
+15:16:46 <gundalow> #chair
+15:16:46 <zodbot> Current chairs: alikins gundalow shertel sivel
+15:16:47 <shertel> +1 to the proposal for option deprecation
+15:16:53 <gundalow> alikins: shertel thoughts
+15:16:55 <gundalow> shertel: :)
+15:17:03 <shertel> sivel is there  doc for module deprecation?
+15:17:18 <sivel> Only 18 current deprecated modules, so making modules match would likely be easy
+15:17:30 <sivel> > deprecated: "Use M(somethingelse), this will be removed in X.Y"
+15:17:53 <gundalow> http://docs.ansible.com/ansible/dev_guide/developing_modules_documenting.html
+15:17:56 <gundalow> 
+15:17:59 <gundalow> If this module is deprecated, detail when that happened, and what to use instead, e.g. Deprecated in 2.3. Use M(whatmoduletouseinstead) instead. Ensure CHANGELOG.md is updated to reflect this.
+15:18:27 <shertel> Is there a cycle for that?
+15:18:37 <sivel> I'd just like to see us standardize while we have the opportunity, rather than knowingly diverge
+15:18:40 <shertel> there is https://github.com/ansible/proposals/issues/14 for renaming, but not really the same. Just some overlap.
+15:18:52 <gundalow> It's 2 or 4 versions depending how you ask
+15:18:54 <sivel> I believe there is a timeframe, I believed it was 2 releases
+15:18:58 <jhawkesworth> does 'options' here mean module parameters?
+15:19:05 <gundalow> jhawkesworth: correct
+15:19:14 <sivel> jhawkesworth: yes, items under the `options` part of DOC
+15:19:19 <gundalow> FYI we are trying to standerdize on options
+15:19:22 <gundalow> what he said :)
+15:19:36 <jhawkesworth> one doc key to deprecate modules, module params and actions would be preferable I think
+15:19:47 <sivel> I also feel like if we are doing it, it needs extended, to actually providing a DEPRECATED notice if you use them
+15:20:01 <sivel> but not sure the immediate feasability there actually
+15:20:08 <bcoca> used to be 2 versions, it is 4 now
+15:20:14 <sivel> that might be extended scope too much
+15:20:16 <bcoca> ^ we changed it start of year
+15:20:26 <shertel> +1
+15:20:36 <gundalow> There is a feature in argspec to mark an option as deprecated, which will print out a warning when you use it
+15:20:51 <bcoca> yes, doc change does not mean code doesnt need deprecation notice on runtime
+15:20:54 * jhawkesworth wishes we had argspec for windows modules
+15:20:57 <sivel> gundalow: thanks, it's easy to lose track
+15:21:21 <alikins> gundalow, bcoca: are there examples of where https://github.com/ansible/proposals/issues/65 would be used?
+15:21:41 <bcoca> linked tickets
+15:21:41 <sivel> yes, so my "counter" proposal is that we standardize module deprecation with whatever we choose for option deprecation
+15:21:59 <bcoca> sivel: im fine with 'upgrading' the current loose description
+15:22:12 <gundalow> alikins: https://github.com/ansible/ansible/pull/25234/files#diff-954c42ec1d32c14a6e1e0351c7831692R116
+15:22:26 <gundalow> #info Example of where this would be needed https://github.com/ansible/ansible/pull/25234/files#diff-954c42ec1d32c14a6e1e0351c7831692R116
+15:23:01 <alikins> ah, modules not plugins (or in addition to...)
+15:23:27 <gundalow> So it seems like everyone here is agreed that
+15:23:30 <gundalow> 1) This is good
+15:23:51 <gundalow> 2) Module level deprecations should be updated to use these two keys
+15:24:00 <gundalow> (not enough people here to vote)
+15:24:10 <gundalow> Is that a fair summary?
+15:24:56 <Pilou> yep
+15:24:59 <jhawkesworth> seems a fair summary to me.  Its what I'd like to see, can't comment on how achievable it is
+15:25:44 <shertel> sounds good
+15:25:47 <gundalow> woot
+15:25:48 <gundalow> thanks
+15:25:51 <shertel> #chair Pilou
+15:25:51 <zodbot> Current chairs: Pilou alikins gundalow shertel sivel
+15:26:01 <gundalow> next topic then I guess
+15:26:15 <gundalow> #topic What constitutes authorship for a module
+15:26:28 <gundalow> #link https://github.com/ansible/community/issues/159#issuecomment-304979822
+15:26:35 <gundalow> 1) What constitutes authorship for a module
+15:26:41 <gundalow> 2) What criteria should there be to be added to the authors list?
+15:26:47 <gundalow> 3) What responsibilities (if any) does being added to the authors list bring?
+15:26:54 <bcoca> author vs maintainer i think would need clarifying first
+15:26:55 <gundalow> 4) Do we even need to define authors:
+15:28:27 <shertel> author is a subset of maintainer maybe
+15:28:33 <shertel> willthames are you around?
+15:28:44 <gundalow> he will probs be asleep
+15:28:50 <shertel> yah
+15:28:58 <misc> 1h30 in Australia, likely
+15:30:36 <gundalow> I was chatting to gregdek and rbergeron recently, we were not sure if Author is even needed
+15:30:41 <gundalow> you can git blame the file
+15:31:36 <shertel> aren't maintainers (manually) determined from the authors right now for the bot?
+15:33:42 <gundalow> maintainers are initially set to the person that added the module
+15:34:01 <gundalow> adding a module has an implicit expectation that you will maintain it
+15:35:00 <shertel> Makes sense. Maybe it's for old modules that it is still being manually added.
+15:35:12 <gundalow> Maintainers come and go
+15:35:41 <shertel> Yes. We don't have a procedure documented for that yet, do we?
+15:36:13 <gundalow> Expectations of a maintainer isn't documented, it's a topic on the Contributor Summit agenda
+15:36:15 <shertel> (when someone is inactive enough to be removed as maintainer)
+15:36:21 <shertel> oh, cool
+15:37:55 <gundalow> Do people think author is still needed?
+15:38:29 <shertel> to 4) I feel like not. But maybe this is a topic we should revisit on Tuesday when there are more participants.
+15:38:33 * akasurde waves
+15:38:43 <shertel> hi akasurde
+15:38:49 <akasurde> hi shertel
+15:39:05 <gundalow> shertel: Good point, I don't think tehre are enough people to sign off on anything today, just trying to get a hold of what people feel
+15:39:09 <jhawkesworth> as a module user, its nice to see who wrote, but only really useful if they are around and maintaining stuff
+15:39:13 <gundalow> #chair akasurde
+15:39:13 <zodbot> Current chairs: Pilou akasurde alikins gundalow shertel sivel
+15:39:27 <albertom> git blame can tell you that
+15:40:12 <jhawkesworth> true but I'm not allways on a dev box with git installed and a source checkout
+15:40:28 <albertom> github webui has git blame
+15:40:38 <Pilou> i don't think author is needed
+15:40:39 <gundalow> + commit history per file
+15:40:40 <shertel> The bot could generate maintainers by blame as well.
+15:41:02 <rvgate> not sure if i can say anything... but if it comes with an author you'd expect them to update stuff... it might hold other people from trying to fix stuff because they expect the author/maintainer to do so
+15:41:12 <Pilou> the bot use "git blame" in order to compute "committers"
+15:41:39 <shertel> Ah, thanks Pilou
+15:41:41 <jhawkesworth> i think the idea of maintainer has developed somewhat from authors.
+15:41:57 <jhawkesworth> so as above need terms clarifying
+15:42:01 <gundalow> +1
+15:42:30 <jhawkesworth> albertom thanks for github webui tip, will use that I'm sure
+15:42:57 <gundalow> #action gundalow gregdek and rbergeron to put some words together around expectation for maintainers and some thoughts about if we do/don't need "authors:", will be added to Contributors Smmit
+15:43:09 <shertel> I think maintainer explicitly expresses responsibility whereas author may be interpreted in various ways
+15:43:10 <gundalow> Anyone else got anything on this topic?
+15:43:18 <gundalow> shertel: +1000
+15:43:42 <akasurde> shertel, I agree with you
+15:48:27 <gundalow> #topic Open Floor
+15:48:33 <gundalow> Anyone got anything else
+15:48:35 <gundalow> #chairs
+15:48:37 <gundalow> #chair
+15:48:37 <zodbot> Current chairs: Pilou akasurde alikins gundalow shertel sivel
+15:48:49 <bcoca> history: authors was initially also maintainers list, currently 'maitnainers' is in asnibullbot repo in json files
+15:49:29 <bcoca> ansible-doc displays authors .. has no access to maintainers as that list is not part of anisble install
+15:50:01 <shertel> would it make sense to rename `authors`?
+15:50:28 <shertel> or has that ship sailed
+15:50:45 <shertel> bcoca ^
+15:50:55 <bcoca> ansible-doc also had 'maintainers' but that was never used and recently removed
+15:51:17 <shertel> ah
+15:51:35 <bcoca> we can remove that info ... idc either way, authors and maintainers can still add themselves to copyright notice which no docs sees but developers can chekc by editing file
+15:52:29 <bcoca> i would add maintainers back to modules, so it would be easy for 'volunteeers' to just create PR against module, also easy for users to check (unless they know how ansibullbot works inernaly and go to that repo to check file)
+15:52:49 <bcoca> only issue would be 'section maintainers'
+15:52:55 <bcoca> cloud/aws/
+15:53:06 <shertel> oh, yes
+15:53:20 <sivel> yeah, we tried handling maintainers in modules but moved away from that
+15:53:35 <sivel> trying to manage all the PRs and commits to the modules to support maintainers was too much
+15:53:45 <shertel> hrm
+15:53:45 <gundalow> bcoca: The discussion for moving maintainers into the modules themselves was help back behind https://github.com/ansible/proposals/issues/46
+15:53:46 <sivel> gregdek has more details there too
+15:54:10 <sivel> It ended up being easier to go the way of ansibullbot
+15:54:33 <bcoca> easier for us, not really for maintainers/users
+15:54:45 <sivel> That is roughly the approach that docker uses too, they have a file that indicates maintainers for certain parts
+15:54:58 <bcoca> ^ even in core team people are not clear on how that works, how you get to be/loose maintainer hsip
+15:54:59 * abadger1999 tries to catch up
+15:55:16 <bcoca> sivel: in separate repo?
+15:55:27 <sivel> trying to find it
+15:55:41 <bcoca> even if we just migrated that file to ansible/ansible .. would allow for PRs in a clear way
+15:55:52 <bcoca> won't help ansible-doc ... but less worried about that
+15:56:20 <jhawkesworth> i think its in 'ansibulbot'
+15:56:52 <sivel> bcoca: no, it's in each docker repo, specific to each repo: https://github.com/moby/moby/blob/master/MAINTAINERS
+15:56:58 <shertel> I like the idea of removing authors and dynamically generating the most relevant people to ping by filtering the blame results (amount/frequency committed, and recentness) because there might be a better response rate but that kind of eliminates volunteer maintainers and just voluntells people who might care
+15:57:13 <sivel> bcoca: I'd have no problems with a MAINTAINERS file, but handling it as part of PRs to a module I am against
+15:59:03 <bcoca> sivel: handling maintership as PR to same repo, is my main point, having to find diff repo for a bot... not something most do/think about
+15:59:15 <sivel> Not sure it would even be a big deal to just move our maintainers file from ansibullbot to ansible would be hard
+15:59:40 <sivel> ansibullbot could just read that file from another repo
+15:59:48 <bcoca> shertel: having bot do a recency/decay analysis on commits would be cool ....
+16:00:03 * dag thinks ansibot could be used for managing maintainers, nudging maintainers and even mark modules as unmaintained
+16:00:20 <bcoca> dag: 2/3 it does right now
+16:00:29 <bcoca> we are stil 'defining unmaintained'
+16:00:33 <dag> it could be the interface to the issue reporter (stating the module is currently maintained, and we are looking for maintainers)
+16:00:38 <bcoca> once we do, bot should be able to
+16:00:47 <dag> ok
+16:01:18 <bcoca> dag: looking at thresholds, if mainter happens to be on 2-3week vacation .. not really unmaintained, but user might see it diff
+16:01:49 <dag> true, I was thinking 6 weeks to 3 months
+16:01:56 <dag> there has to be a grace period
+16:02:05 <sivel> I'll be on an 8 week vacation shortly
+16:02:06 <sivel> :)
+16:02:08 <jhawkesworth> a union of maintainers (people who care, but haven't necessarily touched recently) and recent commiters, perhaps
+16:02:12 <gundalow> sivel: slacker
+16:02:14 <gundalow> :P
+16:02:16 <sivel> 3 months sounds reasable though :)
+16:02:20 <dag> and I would make a difference between active maintainer, and unactive maintainer (so not remove people from the maintainer-list)
+16:02:46 <dag> unless they want to
+16:02:59 <akasurde> dag, yes
+16:03:08 <dag> so it doesn't really matter how many inactive maintainers we have, but the active ones get a vote
+16:03:35 <dag> inactive means no PR activity, no commits, no answering issues
+16:03:40 * abadger1999 coming around to the idea that maintainership based on commit/comment metrics might be the future but probably want to look at scenarios first
+16:04:30 <bcoca> dag: if inactive .. they might have right to vote, just won't exercise it .. not sure it makes sense to remove it
+16:04:36 <abadger1999> a maintainer that says no to many PRs probably should be marked active even though they'll have few recent commits, for instance.
+16:04:39 <jtanner> "Not sure it would even be a big deal to just move our maintainers file from ansibullbot to ansible would be hard ansibullbot could just read that file from another repo" ... that is the plan, but I'm waiting on metadata for non-modules to get decided on before i go refactor too much
+16:04:46 <bcoca> but i would count activity towards 'orphan status'
+16:04:53 <dag> bcoca: debatable, I don't mind really
+16:05:00 <gundalow> jtanner: ^
+16:05:12 <gundalow> He may be stuck in traffic
+16:05:20 <jtanner> me?
+16:05:22 <sivel> jtanner: you seem to have solved the problem then :)
+16:05:28 <dag> however we have to ensure that inactivity is seen in the right perspective, if a module has no open issues and no PRs, the maintainer is not inactive
+16:05:45 <gundalow> jtanner: talking about maintainers and bot stuf
+16:05:49 <bcoca> that is a good module!
+16:05:57 <jtanner> i have code to report "inactive" maintainers
+16:06:02 <dag> bcoca: exactly, he should become core :P
+16:06:48 <bcoca> dag: nope
+16:07:06 <bcoca> trying to move stuff out of core, not more in
+16:07:19 <dag> bcoca: I meant, he should become a core developer
+16:07:34 <dag> as a joke
+16:07:58 <jtanner> who?
+16:08:05 * gundalow has to leave now
+16:08:36 * shertel waves at gundalow
+16:08:46 <jhawkesworth> jtanner: hypothetical developer of module with no open issues and no PRs.
+16:08:49 <gundalow> Could someone please #endmeeting
+16:08:53 <gundalow> Thanks
+16:08:56 <bcoca> dag: xattr has almost no bugs/changes ... but mostly cause people dont use it ...
+16:09:06 <bcoca> they still made me core dev ...
+16:09:10 <jhawkesworth> ditto win_say module :-)
+16:09:21 <abadger1999> gundalow: will do.
+16:10:08 <abadger1999> So do we have actions to take here?
+16:10:21 <shertel> chair
+16:10:24 <shertel> #chair
+16:10:24 <zodbot> Current chairs: Pilou akasurde alikins gundalow shertel sivel
+16:10:34 <shertel> #chair abadger1999 dag jtanner dag bcoca
+16:10:34 <zodbot> Current chairs: Pilou abadger1999 akasurde alikins bcoca dag gundalow jtanner shertel sivel
+16:10:52 <abadger1999> Thanks shertel :-)  Would have been hard for me to endmeeting I suppose
+16:10:54 <sivel> jtanner seems to have planned moving MAINTAINERS.txt into the ansible repo, I think that is one that we were in agreement needed done
+16:11:02 <shertel> :)
+16:11:15 <bcoca> did we differntiate author/maintainer?
+16:11:37 <jtanner> sivel: i planned on it, because everyone demanded
+16:11:55 <sivel> :)
+16:12:06 <dag> what's the rationale for moving it ?
+16:12:07 <abadger1999> #action jtanner to move MAINTAINERS file into ansible/ansible repo once it makes sense.
+16:12:10 <jtanner> it makes sense though, as i try to genericize the ansibot code
+16:12:20 <dag> to merge it in one PR ?
+16:12:36 <sivel> dag: not necessarily, but not having to know about another repo
+16:13:04 <abadger1999> dag: additionally, we could install the file and then ansible-doc could use it.
+16:13:21 <bcoca> abadger1999: as 'data'?
+16:13:26 <bcoca> would not be hard
+16:13:27 <abadger1999> bcoca: correct.  as data
+16:13:45 <bcoca> we already do that for galaxy templates, was going to do that for 'config definition files' for ansible-cofnig
+16:14:20 <dag> abadger1999: That's good, attribution is important
+16:14:33 <dag> make that 'active maintainers' only:p
+16:14:57 <dag> copyright holders too ? :)
+16:15:13 <bcoca> copyright shold be kept in module (in license comment)
+16:15:23 <bcoca> ^ i would not remove anyone unless full rewrite
+16:15:31 <bcoca> but maintainers should be able to add themselves
+16:15:49 <dag> yeah, copyright is harder, not every PR is copyright related
+16:16:58 <abadger1999> Okay, anything else or should I wrap up?
+16:18:47 <jtanner> i have to biobreak anyway
+16:19:04 <abadger1999> Will endmeeting in 60s
+16:19:20 <bcoca> dag: we dont have rule aside from removal, in theory 'every contributoer' has copyright, but only those that do a lot on module feel like they can add themselves, have not had issues with that until now
+16:20:13 <abadger1999> #endmeeting

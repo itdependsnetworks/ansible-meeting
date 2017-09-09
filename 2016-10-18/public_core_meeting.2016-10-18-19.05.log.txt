@@ -1,0 +1,205 @@
+19:05:12 <gundalow> #startmeeting Public Core Meeting
+19:05:12 <zodbot> Meeting started Tue Oct 18 19:05:12 2016 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:05:12 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:05:12 <zodbot> The meeting name has been set to 'public_core_meeting'
+19:05:30 <gundalow> #chair alikins alikins bcoca jimi|ansible jtanner
+19:05:30 <zodbot> Current chairs: alikins bcoca gundalow jimi|ansible jtanner
+19:05:35 <jtanner|t420> hello
+19:05:50 <jtanner|t420> this is the community working group, right?
+19:06:02 <gundalow> jtanner|t420: Public Core meeting
+19:06:30 <jtanner|t420> yes, but i think the cwg is the specific type of meeting
+19:06:54 <gundalow> CWG is a meeting on Thursday
+19:07:03 <jtanner|t420> nvm, i'm stupid
+19:07:07 <jtanner|t420> thought it was wednesday
+19:07:21 <gundalow> I thought it was wednesday earlier today
+19:07:32 <gundalow> anyway, now I've set up the meeting, I'm going offline
+19:07:58 <gundalow> Can someone please run and remember to #endmeeting at the end, and create an agenda for Thursday with the meeting_agenda lable
+19:08:02 * gundalow -> offline
+19:10:03 * jtanner|t420 looks for agenda
+19:10:27 <jtanner|t420> no agenda
+19:10:36 <jtanner|t420> #topic open floor
+19:10:49 <jtanner|t420> crap, need to use my other nick
+19:11:03 <jtanner> #topic open floor
+19:11:11 <jtanner> anyone have anything they want to discuss
+19:11:12 <jtanner> ?
+19:12:16 <abadger1999> ola
+19:12:32 <jtanner> #chair abadger1999
+19:12:32 <zodbot> Current chairs: abadger1999 alikins bcoca gundalow jimi|ansible jtanner
+19:12:52 <abadger1999> I think we did have an agenda...
+19:13:22 <abadger1999> https://github.com/ansible/community/issues/129
+19:13:48 <abadger1999> ansiblefest messed up the dates.
+19:14:08 <jtanner> oh, i guess i didn't realize we skipped that
+19:14:12 <jtanner> the date threw me off
+19:14:33 <jtanner> #topic https://github.com/ansible/ansible-modules-core/pull/4617
+19:14:50 <jtanner> mscherer isn't around though? maybe i don't know his irc handle
+19:15:31 <jtanner> dag_: you around?
+19:16:00 <abadger1999> misc: ^
+19:16:42 <abadger1999> FWIW, I think that looks nice in that it's a much less intrusive fix than trying to separate results from looping vs results as part of the json returned by the module.
+19:16:52 <jtanner> this looks like a patch i wrote too
+19:17:32 <jtanner> https://github.com/ansible/ansible-modules-core/pull/4141/files
+19:20:05 <abadger1999> <nod>  Yeah -- looks like yours could be merged with just the one mentioned change.
+19:20:31 <jtanner> i didn't merge because string parsing makes me hesitate
+19:20:55 <abadger1999> yeah, that's true..  it's fragile.
+19:21:16 <abadger1999> bcoca: how does https://github.com/ansible/ansible-modules-core/pull/4617 look to you?
+19:21:40 <abadger1999> bcoca: even if we change results inside of ansible/ansible later, this seems like an easy fix for 2.2.0.
+19:23:24 <jtanner> i'm guessing we should do a quick test and then merge if passed
+19:23:54 <jtanner> we really aren't paying attention to core modules because of time and have to start putting more trust in the contributors
+19:24:49 <bcoca> abadger1999: we shoudl really bite bullet and just disallow 'results' in taht form
+19:24:57 <bcoca> but wont oppose this merge right now
+19:25:01 <abadger1999> <nod>
+19:25:16 <abadger1999> Cool.  I'll merge, test and cherry-pick
+19:25:48 <abadger1999> #acion abadger1999 to merge and cherrypick  https://github.com/ansible/ansible-modules-core/pull/4617 for 2.2
+19:25:53 <abadger1999> #action abadger1999 to merge and cherrypick  https://github.com/ansible/ansible-modules-core/pull/4617 for 2.2
+19:26:17 <jtanner> move on to https://github.com/ansible/ansible/issues/17947 ?
+19:26:20 <abadger1999> yep
+19:26:33 <jtanner> #topic https://github.com/ansible/ansible/issues/17947
+19:26:38 <jtanner> i don't even know what ansible_managed is
+19:27:02 <jtanner> ah, some sort of marker for templates
+19:27:44 <robinro1> it's used quite a lot, since many examples have it
+19:28:54 <bcoca> ^ iwantonukeit
+19:29:02 <bcoca> it does not work as it should
+19:29:27 <abadger1999> bcoca: I'm not very good at jinja templating but can a user actually replicate the 9non-idempotent) values that ansible_managed currently gives?
+19:30:09 <bcoca> most of them, also in a 'saner' manner, using actual source/dest instead of tempfile ....
+19:31:50 <abadger1999> date of the template source seems like they'd have a separate task to stat the template on the controller.
+19:32:36 <jtanner> i skipped a topic, but we'll go back to it
+19:33:22 <dminca> interesting
+19:33:25 <abadger1999> host maybe you have to run a task to get hostname on the controller (if that's really what they want)
+19:33:27 <bcoca> abadger1999: we already do the stat, just need to pass data to templar
+19:33:28 <jtanner> abadger1999: changing it or removing it seems like a drastic change i would like to defer to post 2.3
+19:33:28 * dminca reads throw the lines
+19:33:42 <robinro1> What would be your way to deprecate it? Show a warning every time it's used? Fail on use immediately?
+19:33:59 <bcoca> im fine with changing the default (thought it was already that way) then deprecate it
+19:34:00 <abadger1999> jtanner: that's true... little late to remove.
+19:34:12 <bcoca> ^ then create the vars users need to actually do this right
+19:34:17 <abadger1999> so for 2.2 change to a pure static default.
+19:34:21 <bcoca> +1
+19:34:38 <abadger1999> Cool.  I'll make that so.
+19:35:02 <jtanner> #action abadger1999 to make ansible_managed a static default for 2.2
+19:35:28 <abadger1999> I guess we can defer what we're going to do in 2.3 for when somehas the time to implement the deprecation.
+19:35:57 <jtanner> #action defer decision on deprecation of ansible_manage to post 2.3
+19:36:16 <jtanner> #action defer decision on deprecation of ansible_manage to post 2.2
+19:36:22 <abadger1999> robinro1: I don't know for sure... I guess we'd want to show a warning when the user didn't explicitly define ansible_managed.
+19:37:01 <robinro1> sounds good
+19:37:43 <abadger1999> jtanner: Cool.  I think we can move on from this topic now
+19:37:49 <jtanner> #topic https://github.com/ansible/ansible/issues/17982
+19:37:56 <jtanner> another one from abadger1999
+19:38:10 <jtanner> "remove paramiko from the setup.py"
+19:39:07 <abadger1999> bcoca's suggestion was that we make paramiko dependent on the platform we're running on.
+19:39:11 <dminca> due to dependency hell ?
+19:39:29 <jtanner> so like require for osx but not for others?
+19:39:31 <bcoca> on one part
+19:39:35 <abadger1999> MacOSX would require paramiko.  Other platforms would not because they have ssh that is controlpersist capable.
+19:39:43 <bcoca> centos5 also
+19:39:58 <abadger1999> bcoca: we wouldn't be running hte controller on centos5, though.
+19:40:10 <abadger1999> oh... I guess if the user install their own python....
+19:40:12 <bcoca> WE wouldn't ....
+19:40:53 <abadger1999> alright, yep, I can check /etc/redhat-release in setup.py as well.
+19:41:25 <robinro1> the original poster was fine with installing paramiko as a workaround and it's available everywhere and really small... Are you sure it's worth the extra effort to remove it?
+19:41:55 <thaumos> wouldn’t this potentially be counterproductive to privateip’s wip?
+19:42:02 <jtanner> what is driving this?
+19:42:06 <jtanner> abadger1999: ^
+19:42:08 <bcoca> we try to minimize deps, make it easy for people to install things as many times they have to 'manually' copy packages and sneakernet
+19:42:32 <nitzmahone> paramiko can be onerous to build IIRC if you're targeting a platform that doesn't have a bdist_wheel
+19:42:46 <bcoca> thaumos: not if we generalize it, instead of just paramiko all plugins can be persistent
+19:42:53 <abadger1999> thaumos: Hmm... yeah... that's true, it would no longer be just the paramiko connection plugin that requires paramiko but also the network-related conneciton plugins.
+19:43:16 <nitzmahone> not really any different than, say, pywinrm - I haven't angled to have that added as a default dep
+19:43:25 <abadger1999> <nod>
+19:43:48 <nitzmahone> (at least it's pure python)
+19:43:50 <abadger1999> We can add different targets for setup.py as well...
+19:43:58 <jtanner> #chair thaumos
+19:43:58 <zodbot> Current chairs: abadger1999 alikins bcoca gundalow jimi|ansible jtanner thaumos
+19:44:09 <jtanner> #chair nitzmahone
+19:44:09 <zodbot> Current chairs: abadger1999 alikins bcoca gundalow jimi|ansible jtanner nitzmahone thaumos
+19:44:09 <nitzmahone> Yeah- that's what I did with pywinrm itself to make kerberos optional
+19:44:15 <jtanner> #chair robinro1
+19:44:15 <zodbot> Current chairs: abadger1999 alikins bcoca gundalow jimi|ansible jtanner nitzmahone robinro1 thaumos
+19:44:31 <jtanner> #chair dminca
+19:44:31 <zodbot> Current chairs: abadger1999 alikins bcoca dminca gundalow jimi|ansible jtanner nitzmahone robinro1 thaumos
+19:44:32 <nitzmahone> (since that part has a heavy C build requirement)
+19:44:39 <abadger1999> so I can isntall or require ansible["paramiko"] or ansible["winrm"] (in addition to ansible)
+19:44:53 <abadger1999> <nod>
+19:44:56 * dminca cries for ansible_managed deprecation
+19:45:16 <jtanner> dminca: deferred, so don't fret
+19:45:28 * dminca is happy again
+19:45:49 <dminca> I'm still using that
+19:46:37 <abadger1999> For the question, is this worthwhile?  I'm not sure... it's nice not to demand people install optional deps but setuptools makes errors happen like this happen when the deps aren't resolved.
+19:46:41 <dminca> just to break the Puppet they run on the servers lol
+19:46:59 <nitzmahone> damned if you do, damned if you don't
+19:47:19 <bcoca> damned ...
+19:47:24 <sivel> I am -1 for removing it, I think it becomes too much work.
+19:47:31 <dminca> damned
+19:47:31 <nitzmahone> IIRC recent OSX builds include a decent ssh w/ CP support (and they fixed the kernel panic on sshpass thing)
+19:47:32 <jtanner> i'd rather just leave it and let package maintainers do what they want since people who can't manage paramiko install are likely using brew/yum/apt anyway and don't know the difference
+19:47:40 <sivel> networking modules use it, some people just prefer it
+19:48:05 <jtanner> #chair sivel
+19:48:05 <zodbot> Current chairs: abadger1999 alikins bcoca dminca gundalow jimi|ansible jtanner nitzmahone robinro1 sivel thaumos
+19:48:16 <samdoran> I'm also fairly certain CP works on recent macOS. With transport = smart seems to use ssh.
+19:48:21 <dminca> how is paramiko different from normal SSH, isn't this a Python implementation of SSH ?
+19:48:32 <jtanner> python native
+19:48:43 <jtanner> it's not forking a shell command to ssh
+19:48:46 <bcoca> samdoran: unless you are using passwords, then the problem is sshpass so we still use paramiko
+19:48:48 <sivel> and a bit more easy to programatically work with
+19:48:59 <dminca> I see.
+19:49:30 <dminca> you could keep it like `apt` keeps `backports`
+19:49:55 <jtanner> in this case we are constrained to the constructs available via setup.py
+19:50:23 <sivel> I say just keep it, the real problem was how we were reporting errors when importing paramiko
+19:50:36 <sivel> not really with it being a dep
+19:50:46 <jtanner> what errors?
+19:50:56 <abadger1999> So if we keep it, is there anything else we need to do?  Is there some pip invocation that will install the deps of an already installed package?
+19:50:58 <jtanner> hiding import error or something?
+19:51:18 <sivel> jtanner: we said there was an error importing, but we didn't say what the error was
+19:51:25 <sivel> and you had to run ANSIBLE_DEBUG to see the error
+19:51:27 <sivel> and that is fixed now
+19:51:32 <abadger1999> so people run hacking/env-setup and then pip install ansible or something?
+19:51:42 <jtanner> sivel: ah
+19:51:53 <abadger1999> sivel: well... it's an error when importing an unrelated library.
+19:52:04 <abadger1999> sivel: because setuptools is a dirty kludge.
+19:52:15 <sivel> we run into the ocassional complaint that paramiko changed it's deps to require cryptography, but that is on the decline
+19:52:23 <sivel> since cryptography needs libffi
+19:52:24 <abadger1999> and if the dep is broken, then it causes breakage in other places.
+19:53:02 <abadger1999> in this case, the cryptography install was all fine.
+19:53:04 <nitzmahone> There are several issues with deps/pip- worst ones are where pip will silently ignore unfulfilled dep versions that are OS-owned
+19:53:19 <sivel> I think we made something into a bigger problem than it was, I vote for just moving on and doing nothign further
+19:53:28 <jtanner> +1
+19:53:29 <sivel> and also typing better ;)
+19:53:30 <nitzmahone> 2nd worse is older versions of pip that silently succeed when native dep builds fail and mark package as properly installed when it's not
+19:53:33 <abadger1999> But because ansible was installed but paramiko was not, setuptools (via pkg_resources) won't allow the cryptography import to succeed.
+19:54:05 <nitzmahone> yep
+19:54:34 <abadger1999> Anyhow... I'll go along with sivel's proposal.
+19:54:53 <abadger1999> especially since networking seems to be making paramiko used in more places.
+19:55:09 <jtanner> #action paramiko will be left alone for now
+19:55:28 <jtanner> 5 minutes left
+19:55:31 <jtanner> #topic https://github.com/ansible/ansible/pull/17768
+19:55:55 <nitzmahone> oy, not a 5m discussion
+19:56:08 <sivel> :)
+19:56:33 <jtanner> so defer again?
+19:56:50 <thaumos> I can take a quick look, and ask for guidance in the meantime?
+19:56:59 <abadger1999> thaumos: Thanks.
+19:57:07 <thaumos> it’s a give and take with docs right now, right?
+19:57:30 <abadger1999> thaumos: not sure what you mean?
+19:57:58 <thaumos> we need people to write more stuff, so we should take some time to do some follow up for them too
+19:58:06 <abadger1999> <nod>  Yeah.
+19:58:11 <jtanner> i don't know that we need -more- stuff
+19:58:21 <abadger1999> this one, though, is also a change to the release process.
+19:58:29 <nitzmahone> that was the controversial part
+19:58:29 <jtanner> i think we need to split the docs into separate things
+19:58:32 <abadger1999> So at the least, jimi|ansible needs to think it's correct.
+19:58:46 <jtanner> a narrative set of guides, a reference manual and and FAQ
+19:59:01 <dminca> why not add it in GitHub wiki
+19:59:06 <jtanner> *shrug*
+19:59:16 <dminca> :d
+19:59:26 <abadger1999> jtanner: there definitely needs to be organization... I like the idea of guides/tutorials and reference manual but that depends on us being able to write both.
+19:59:55 <jtanner> i think it's just been "one doc to rule them all" up till now and with our new tech writer we have someone who understands the issue finally
+20:00:21 <jtanner> abadger1999: ref manual could be more generative then hand written
+20:00:52 <jtanner> faq would get the most traffic because people are usually trying to find quick answers instead of long prose
+20:01:10 <jtanner> and our meeting time is up ...
+20:01:22 * dminca shakes hands with everyone
+20:01:31 <dminca> pleasure to have you all
+20:01:31 <jtanner> so what's the action for https://github.com/ansible/ansible/pull/17768 ?
+20:01:50 <abadger1999> jtanner: Maybe.... we need to have the content somewhere to be generated from, though.
+20:02:01 <abadger1999> I think action is... punt to next meeting.
+20:02:07 <abadger1999> jsut ran out of time.
+20:02:14 <jtanner> #action https://github.com/ansible/ansible/pull/17768 punted to next meeting
+20:02:42 <bcoca> need to decide workflow before we document it, it does not reflect  teh current workflow
+20:02:43 <jtanner> i'll go make the new agenda issue and add it
+20:02:48 <jtanner> #endmeeting

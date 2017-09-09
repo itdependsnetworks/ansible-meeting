@@ -1,0 +1,223 @@
+17:00:02 <gundalow> #startmeeting Testing Working Group
+17:00:02 <zodbot> Meeting started Thu Jan 26 17:00:02 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+17:00:02 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+17:00:02 <zodbot> The meeting name has been set to 'testing_working_group'
+17:00:06 <gundalow> #chair mattclay gundalow
+17:00:06 <zodbot> Current chairs: gundalow mattclay
+17:00:09 * gundalow waves
+17:01:16 * mattclay waves
+17:03:44 <gundalow> #topic Core Team Update
+17:03:45 <sivel> oh, hay
+17:04:03 <sivel> maybe what I was going to talk to gundalow about might be best for this meeting
+17:04:28 <sivel> but I'll defer until we have discussed anythign on the agenda
+17:04:50 <gundalow> So from my side, I'm looking at putting in testing for the new "Persistent Connection Manager" bits that are going into Ansible 2.3 to speed up talking to network devices
+17:05:24 <gundalow> Will most likely do something similar to the existing targets/connection_paramiko_ssh tests
+17:05:40 <gundalow> Slow progress due to fighting bugs, though that's what I'm here for
+17:06:28 <gundalow> IOS tests are live (thanks again to mattclay for all his help with that), waiting for development to catchup before enabling tests for Junos, VyOS
+17:07:06 <gundalow> mattclay: Anything you'd like to add?
+17:07:45 <gundalow> I know we've had some issues with AWS in Shippable over the last day or so, we are waiting for Amazon to tweak something (I forget the term)
+17:07:49 <mattclay> I'm continuing to enable more tests for OS X and FreeBSD. Unfortunately this does cause tests to take longer on those platforms.
+17:08:31 <mattclay> I'm also working on test reliability issues around our EC2 usage. I had moved our Windows tests over from us-east-1 to us-east-2, but forgot we didn't have increased instance limits there, so I've moved things back until our limit increase request goes through.
+17:09:13 <mattclay> That's it from me.
+17:09:51 <gundalow> First steps on improving developing_modules.html are underway
+17:10:05 <gundalow> https://github.com/ansible/ansible/pull/20673
+17:10:23 <sivel> my topic is related to that a bit
+17:10:27 <gundalow> No content changed, just moved things around into separate files to make it easier to follow
+17:10:38 <gundalow> over to you sivel :)
+17:10:42 <sivel> pep8 :)
+17:10:55 <sivel> I know you mentioned you and mattclay were talking about linting and whatnot
+17:10:56 <gundalow> #topic Coding Guidelines
+17:11:05 <gundalow> #topic Coding Guidelines & linting
+17:11:27 <sivel> I wanted to take a look to see what pep8 errors and warnings, were actually part of our style, and those that aren't
+17:11:48 <sivel> So I've spent several hours so, looking through pep8 output across the code base
+17:12:04 <sivel> and effectively have what I would currently consider the ignores that defined our current style
+17:12:34 <gundalow> oh, ace
+17:12:42 <sivel> This is what I have thus far: https://gist.github.com/sivel/492697cd61f1b6960df1f76f249c3043
+17:13:03 <sivel> Those 30 ignores, are effectively thigns we do often in the code (that aren't dumb) :)
+17:13:27 <sivel> excluding modules, that totals around 500 places where we violate the guidelines
+17:13:27 <ryansb> IMO E201/202 shouldn't be ignored
+17:13:50 <sivel> ryansb: we can talk about that, and of course work our way there
+17:13:56 <gundalow> +1
+17:13:57 <sivel> including modules, things blow up a bit
+17:14:07 <ryansb> sure, not saying that we should take it out *now*
+17:14:14 <ryansb> just that one day I'd like it enforced
+17:14:15 <abadger1999> sivel: If we have to start there and work our way to fixing more things, I'd be for it.
+17:14:19 <ryansb> sorry for derailing
+17:14:21 <sivel> 3362 violations with modules
+17:14:33 <sivel> but some of that is due to several modules that use 2 space indenation throughout
+17:14:40 <gundalow> I'm (personally) happy to enforce stricter standards for new modules
+17:14:47 <sivel> and a number of things that exceed 160 characters
+17:14:56 <sivel> but I figure we may start with this 30 ignores, and then get better
+17:15:09 <sivel> I suppose I could also turn this into a proposal
+17:15:49 <abadger1999> sivel: In fixing current code, the big thing you're going to run into is people who want to keep git blame attribution
+17:15:58 <ryansb> ughhhh modules styling
+17:16:04 <mattclay> I experimented with having one set of PEP8 guidelines for existing code, and another for new code, but it's difficult to automate that.
+17:16:17 <bcoca> i find those constraints ridiculous, but i wont oppose adding them to enforcement for new modules, still against restyling all existing code
+17:16:21 <abadger1999> In standardizing for new code/modules, we could probably take a few of those things off the ignore list without difficulty.
+17:16:28 <sivel> abadger1999: I don't doubt that, and I am generally in favor of keeping attribution, but at some point we have to get better
+17:16:38 <gundalow> mattclay: Is that easier now that ansible-test knows what files are new?
+17:16:58 <gundalow> via the gitdiff functions you've written
+17:17:06 <sivel> there is going to be push back on all corners of this "proposal"
+17:17:07 <mattclay> gundalow: Only if we determine new/old for an entire file only.
+17:17:08 <abadger1999> sivel: I'm +1 to your POV.... I've just never been successful in arguing that to others.
+17:17:26 <jtanner> busy modules will get their attribution back
+17:18:10 <mattclay> If we want to enforce PEP8, it would be easier to set the bar low enough that we could fix a small number of existing errors to have everything pass. Then incrementally enforce more rules (and fix the necessary violations to have tests pass).
+17:18:29 <mattclay> We may also want/need a different set of rules for modules and non-modules.
+17:18:30 <sivel> if we continue ignoring the "problem", it's going to get even worse, and worse quickly, especially with what bcoca calls "wild west modules"
+17:18:39 <gundalow> +10000000000000000000000000000000000000000000000000000000000
+17:18:46 <gundalow> (to sivel's last comment)
+17:18:49 <jtanner> ^ the number of modules we'll have one day
+17:18:57 <gundalow> :P
+17:19:04 <sivel> mattclay: I've been experimenting with that, and thus far it hasn't made sense with my ignores
+17:19:19 <sivel> modules are just hugely inconsistent at the moment
+17:19:33 <mattclay> sivel: Are you referring to having a different set of rules for modules/non-modules?
+17:19:37 <sivel> mattclay: yes
+17:19:37 <gundalow> mattclay: I should clarify, i was only talking about enforcing a higher bar for whole new modules (files)
+17:20:20 <sivel> I've played around with inverting the --ignore and turning into --select, and looking at the counts and such
+17:20:37 <sivel> I feel that this really is achievable, and we may just have to do some crazy --excludes on some modules
+17:20:40 <gundalow> Ruleset1: Existing Modules
+17:20:40 <gundalow> Ruleset2: New Modules
+17:20:41 <sivel> for the time being
+17:20:41 <gundalow> Ruleset3: Everything apart from modules
+17:21:03 <gundalow> Is that what we are thinking, or would #3 actually be in two parts (existing and new)
+17:21:09 <gundalow> by new I mean whole new files
+17:21:31 <sivel> I am more for saying 2 rules
+17:21:35 <mattclay> If I'm understanding sivel correctly, it seems we might only have 1) old code and 2) new code
+17:21:37 <sivel> existing and net new files
+17:21:38 <abadger1999> we could change new modules to new plugins
+17:22:00 <sivel> mattclay: that is largely what I am proposing
+17:22:52 <gundalow> black/whitelist the non-complient files (like we've done with Python, tests, etc) till they improve over time - and maybe have a script which we run ever so often that tells us if a file is now compliant with the stricter set of rules?
+17:23:18 <sivel> again, 3300 changes to meet the rulesets is big, but we could limit that a little, like excluding the 4 space indentation on the modules that currently do 2
+17:23:18 <mattclay> That seems like a simple enough approach. We can generate a list of "old" files to use for the relaxed ruleset. Anything not on that list gets the more strict ruleset. As old files are cleaned up, we can take them off the "old" list.
+17:24:06 <mattclay> gundalow: +1 to having a script to automatically check for candidates for removal from the "old" list
+17:24:08 <sivel> I don't have a proposal for new, but I imagine it would be much closer to strict pep8, with 160 column and ignoring E402
+17:24:25 <gundalow> I suggest that was as it closes the flood gates, and lates us take our time with cleaning up existing code
+17:24:51 <gundalow> s/lates/lets/
+17:24:59 <abadger1999> sivel: I'd reindent asap  then we can get rid of that problem.
+17:25:11 * abadger1999 looks for an existing script to do that.
+17:25:12 <sivel> abadger1999: I agree with that, just trying to provide stats and options
+17:25:19 <mattclay> Probably the most difficult part to agree on is what the more strict ruleset should be. The relaxed ruleset will be largely determined by our existing style (minus whatever we're willing to fix on day one).
+17:25:20 <sivel> abadger1999: there is an autopep8 script
+17:25:44 <sivel> mattclay: we can find the easy wins on doing that
+17:26:01 <sivel> I played with changing --ignore to --select, and counting the number of times an error ocurrs
+17:26:20 <sivel> a large number are relatively small
+17:26:38 <sivel> so I think initially, ticking off the easy wins would be simple
+17:26:44 <sivel> eventually we get to a more complex smaller set
+17:27:34 <abadger1999> Thew only two things I'd change for strict are (line-length=160 and "E402 module level import not at top of file" (becausev pep8 doesn't understand our DOC vars and since those are only used externally to the file, it doesn't make sense to put the imports above them)
+17:28:05 <abadger1999> err... change from the default pep8
+17:28:12 <sivel> abadger1999: ++ that agrees with my earlier comment about what I see
+17:28:31 <abadger1999> (as the idal)... how we get there is what I think sivel is addressing above.
+17:28:42 <sivel> What are everyones thoughts here?  Do you think we need a proposal?  Are those here comfortable with making a decision now?
+17:29:19 <jtanner> i think we've spent enough time talking about pep8 over the years that i'd like to just get it over with, do it, enforce it, etc
+17:29:26 <gundalow> yup
+17:29:45 <abadger1999> bcoca said he'd be okay with new code/files so I'm okay making a decision on that now.  Others, we probably need a vote among committers.
+17:29:49 <sivel> I mean, I can submit an "approved" proposal, so that we have it documented
+17:30:00 <gundalow> abadger1999: aka if coca's happy we are all good :)
+17:30:09 <jtanner> bdfl
+17:30:09 <bcoca> im probably only one against full enforcement
+17:30:13 <sivel> and have a place we use to document the process
+17:30:26 <sivel> bcoca: we still aren't going full, and may never, or at least not soon
+17:30:27 <gundalow> sivel: that will probs be in the new docs
+17:30:43 <sivel> gundalow: yeah, we will need to document in the new docs
+17:31:05 <abadger1999> over the years, bcoca has been the anti-pep8 faction, so for new files, if he's fine, I don't think there's a problem going ahead with it :-)
+17:31:23 * gundalow is planning on starting with new module-checklist as that's got a good cost vs benefit
+17:31:41 <sivel> ok, anyone against? Speak now or forever hold your peace
+17:32:00 * sivel is making decisions ;)
+17:32:01 <gundalow> #agreed to enforce (though not fully) pep8 for new files
+17:32:01 <abadger1999> By others I mean, incrementally tighetening down on pep8 for existing code.
+17:32:11 <abadger1999> Yay!
+17:32:34 <bcoca> i expect dag to complain ... but i expect taht anyways
+17:32:38 <gundalow> #info bcoca abadger1999 gundalow mattclay sivel jtanner all agreed to enforce (though not fully) pep8 for new files
+17:32:44 <sivel> cool, how would you like to see this start?  We don't necessarily have a place for "directives"
+17:32:46 <jtanner> shipit
+17:33:05 <sivel> like I said I could write an approved proposal, to take the palce of this new directive
+17:33:17 <bcoca> write it up developer docs
+17:33:20 <gundalow> yup, proposal, lets do this write
+17:33:21 <sivel> or we could add it to the roadmap
+17:33:44 <gundalow> #action gundalow to add document this in new developing_modules
+17:33:49 <sivel> cool, over the next few days, I'll work on a proposal
+17:34:03 <sivel> I may be able to get it done by tonight, but no promises
+17:34:05 <gundalow> So, code free is going to be 15th Feb (and modules 2 weeks after)
+17:34:13 <gundalow> (from memory)
+17:34:14 <abadger1999> *freeze
+17:34:21 <gundalow> lol, yes
+17:34:30 <sivel> CODE FREE!
+17:34:42 <jtanner> free as in puppies
+17:34:45 <mattclay> I can add pep8 checks (along with the old/new list) to ansible-test. We'd just have to add the pep8 exclusions then for old and new code.
+17:34:46 <sivel> that is for the 2.3 release?
+17:35:10 <gundalow> So I think it wouldbe good to enforce the bar for all modules that go into 2.4
+17:35:11 <sivel> so I'll document that this should start for the 2.4
+17:35:17 <gundalow> +1
+17:35:46 <gundalow> When do we create stable-2.3, on 15th Feb, or +2/+4 weeks?
+17:36:04 <sivel> At the time of the alpha/beta/rc usually
+17:37:37 <sivel> also, I'm going to include in the proposal a change to validate-modules to check for imports above docs, since we seem to have had some headbutting about that recently, and we don't have it documented
+17:37:55 <gundalow> sivel: +1 that would be great
+17:38:02 <sivel> bingo
+17:38:03 <sivel> love you all
+17:38:13 <sivel> haha
+17:38:17 <gundalow> I'm planning on reviewing docs against validate-modules
+17:38:32 <sivel> ok, next I suppose?
+17:39:05 <gundalow> #action sivel to update validate-modules to check for imports above docs
+17:39:21 <gundalow> #action gundalow to review module-checklist against validate-modules to ensure it's all documented
+17:39:59 <gundalow> #action gundalow to add coding style guidelines & updated example module into docs
+17:40:47 <gundalow> #info All new modules in 2.4 must pass the higher bar
+17:40:59 <gundalow> did we agree what the higher bar for new modules is?
+17:41:13 <gundalow> E402 module level import not at top of file
+17:41:14 <sivel> abadger1999: and I said --ignore=E402 and 160 columns
+17:41:23 <gundalow> Thanks
+17:41:52 <gundalow> and just to clarify, one ruleset to cover all new files (modules or utils?)
+17:41:53 <mattclay> New modules, or new files?
+17:41:59 <sivel> new files
+17:41:59 * gundalow hifives mattclay
+17:42:44 <abadger1999> Cool.
+17:42:45 <gundalow> what about: [missing-docstring] Missing class docstring
+17:43:01 <sivel> I don't think pep8 checks for that by default
+17:43:09 <gundalow> oh, maybe that's not from pep8. I'm using vim + syntastuic
+17:43:14 <gundalow> cool
+17:43:23 <sivel> there is a pep8 plugin that does it iirc
+17:43:39 <sivel> I mean, over time we should still work to get better, and may include some of those additions
+17:43:40 <abadger1999> pylint finds missing doicstrings, I don't think pep8 does
+17:43:56 <sivel> I am a -1 on pylint fwiw
+17:44:07 <sivel> pyflakes (flake8) perhaps in the future
+17:44:07 <gundalow> #agreed All (modules or utils) files to pass --ignore=E402 --max-line-length=160
+17:44:24 <gundalow> I've got pep8, pyflakes and other things all being run in vim
+17:44:32 <gundalow> Excellent, thanks everyeon
+17:44:37 <sivel> thank you!
+17:44:39 <gundalow> jesus, I really can't type today
+17:44:41 <mattclay> Are we limiting it to modules and utils? Or including core files too?
+17:44:49 <gundalow> ansible/*
+17:44:52 <gundalow> is what I thought
+17:45:04 <sivel> --exclude=test/*,examples/*,hacking/*,docs/*
+17:45:12 <sivel> so effectively ansible/*
+17:45:22 <gundalow> #agreed All (--exclude=test/*,examples/*,hacking/*,docs/* ) files to pass --ignore=E402 --max-line-length=160
+17:45:50 <abadger1999> pylint is great but it's hard to automate....
+17:45:53 <sivel> Again, I'll get this all together in the "proposal" as well
+17:45:55 <mattclay> We want tests to be readable too. Any reason to exclude those?
+17:46:04 <gundalow> sivel: Ace, thanks
+17:46:12 <gundalow> #action sivel to write this up in a proposal
+17:46:17 <sivel> mattclay: I would be +1, but it's a lot of additional
+17:46:27 <gundalow> One step at a time :(
+17:46:27 <sivel> mattclay: if you are +1, we can do it, or postpone it for later
+17:46:57 <mattclay> I'd prefer *.py unless there's a good reason to exclude something.
+17:47:15 <gundalow> #chair mattclay sivel abadger1999
+17:47:15 <zodbot> Current chairs: abadger1999 gundalow mattclay sivel
+17:47:16 <sivel> mattclay: I'll mention it, I feel comfortable with small shifts as we go
+17:47:34 <gundalow> right, I need to eat
+17:47:40 <sivel> and I think attribution of tests is less important
+17:47:52 <sivel> so blasting through it would be okay with me
+17:48:06 <gundalow> If between you you can please #action #agree and #endmeeting that would be great
+17:48:11 <gundalow> I'll read the scrollback later
+17:48:13 <sivel> yep
+17:48:15 <gundalow> Thanks again :)
+17:48:18 <sivel> I think we can do that now
+17:48:30 <sivel> mattclay: are you +1 on including test/* now?
+17:48:35 <mattclay> sivel: Yes
+17:49:36 <sivel> mattclay: do you want to use our guidelines for new files as the guidelines for test/*? Or stick with the 30 ignores for now?
+17:51:37 <mattclay> sivel: I don't think tests need special treatment. New and old test files can be treated just like any other new/old files.
+17:51:50 <sivel> mattclay: ok, sounds good
+17:52:13 <sivel> #agree we will extend our pep8 guidelines to test/*
+17:52:15 <mattclay> That keeps the implementation simple and easy to explain. Old files use relaxed rules, new files used more strict rules.
+17:52:27 <sivel> Ok, anything else?
+17:52:49 <mattclay> That's it from me.
+17:52:51 <sivel> if not we can end the meeting
+17:53:54 <sivel> #endmeeting

@@ -1,0 +1,108 @@
+16:00:38 <gundalow> #startmeeting Network Meeting
+16:00:38 <zodbot> Meeting started Wed Aug 31 16:00:38 2016 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:00:38 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:00:38 <zodbot> The meeting name has been set to 'network_meeting'
+16:00:45 <gundalow> #chair Qalthos
+16:00:45 <zodbot> Current chairs: Qalthos gundalow
+16:00:52 <gundalow> #topic roll call
+16:00:54 * gundalow waves
+16:01:02 * misc wave back
+16:01:23 <gundalow> misc: hey :)
+16:01:52 <Qalthos> hiya
+16:02:07 <gundalow> #topic 2.2 update
+16:02:14 <gundalow> Work on Ansible 2.2 continues
+16:02:32 <skg_net> Hey All
+16:02:40 <gundalow> We are getting very close to the code freeze, see https://groups.google.com/forum/#!topic/ansible-devel/Ce5uNA5TnJ0
+16:03:10 * mhite waves
+16:03:24 <gundalow> From the Network side I believe we only have one OpenSwitch, and a few Junos updates left
+16:03:37 <gundalow> Then lots of testing
+16:04:03 <skg_net> :( I have ten more modules to submit before then...
+16:04:29 <gundalow> As some of you may be aware there have been lots of changes to how network modules are implemented, so we will be looking to the community to help testing
+16:04:43 <skg_net> let me hurry up..Peter was mentioning Sep 16th
+16:05:01 <gundalow> skg_net: The purpose of the code freeze is to ensure we don't break other things
+16:05:53 <skg_net> @gundalow: ok
+16:05:54 <gundalow> New modules don't affect anything else, so we may be able to take their changes much closer to the final release
+16:06:21 <gundalow> skg_net: TL;DR, keep doing what you are doing and you should be fine :)
+16:06:33 <skg_net> Thx, anyway I will try push as early as possible
+16:06:36 <gundalow> #topic Dell Modules
+16:07:07 <skg_net> I have couple of questions
+16:07:08 <gundalow> So, introducing skg_net from Dell :)
+16:07:11 <gundalow> Sure, go for it
+16:07:44 <skg_net> Where do we documents the caveats
+16:08:11 <gundalow> such as?
+16:08:24 <skg_net> like from which release version we support Ansible module
+16:08:56 <skg_net> for OS9, we need to increase the connection rate limit in order for Ansible to work
+16:09:48 <gundalow> You can add things in the `notes:` DOCUMENTAION for caveats like that
+16:10:11 <skg_net> Thx
+16:10:54 <skg_net> for network facts, we dont have some info for facts to fill...like filesystems
+16:11:14 <skg_net> and we want add some more facts..
+16:11:38 <skg_net> how to go about that..
+16:12:01 <skg_net> is it a fixed standard, we need to follow on facts...
+16:12:11 <mhite> might be able to dig up our previous discussion on that
+16:12:16 <mhite> should be in our meeting notes somewhere
+16:12:20 <mhite> but it's a topic from a while ago
+16:12:48 <gundalow> all the minutes are under https://meetbot.fedoraproject.org/sresults/?group_id=ansible-meeting&type=channel
+16:12:49 <mhite> i think in the end it was determined that if you can, go for it, but don't feel obligated to model to a specific fact layout
+16:13:14 <skg_net> mhite:Thanks will take a look at it
+16:13:29 <gundalow> mhite: Thanks
+16:13:37 <mhite> no problem
+16:14:10 <gundalow> skg_net: Have a look at ios_facts, I believe that's might be a decent example
+16:14:13 <gundalow> caphrim007: hi :)
+16:14:29 <caphrim007> heyo. bus was late *grumble* *grumble*
+16:14:44 <skg_net> Thx
+16:14:48 <mhite> It's in the 5/18/2016 meeting notes, btw.
+16:15:09 <skg_net> on the PR..I have addressed all the comments..
+16:15:27 <skg_net> is there something I need to do to restart the review
+16:15:36 <mhite> https://meetbot.fedoraproject.org/ansible-meeting/2016-05-18/networking_working_group.2016-05-18-16.03.log.html
+16:16:01 <gundalow> Do they Dell Team are planning on pushing in around 16 new modules, the first two are in https://github.com/ansible/ansible-modules-core/pull/4599 We'd welcome other eyes on that so they can apply the feedback to their other modules
+16:16:27 <gundalow> skg_net: "When you are done, please comment with text 'ready_for_review' and we will put this PR back into review."
+16:16:39 <gundalow> that will kick Ansibull-bot to update the status
+16:16:48 <skg_net> Sorry its 12
+16:17:05 <gundalow> skg_net: Fewer means less things for us to review :)
+16:17:12 <skg_net> ok I will mark them accordingly
+16:17:14 <gundalow> so no need to be sorry
+16:17:50 <gundalow> :)
+16:17:53 <skg_net> we will incorporate the comments given in this module, in others as well
+16:17:57 <gundalow> cool
+16:18:15 <gundalow> skg_net: Once these PRs are done please do the other modules as one module per PR
+16:18:25 <gundalow> Do you have any other questions?
+16:19:34 <skg_net> sure will do
+16:19:40 <skg_net> nope thats it for now..
+16:21:22 <gundalow> cool
+16:21:36 <gundalow> topic Open Floor
+16:21:39 <gundalow> #topic Open Floor
+16:21:46 <gundalow> What else do people have?
+16:22:27 <skg_net> do we need compatible for python3 as well
+16:22:31 <skg_net> I guess yes
+16:22:49 <gundalow> yes :)
+16:23:09 <gundalow> all new modules MUST work with py3
+16:23:21 <misc> we test it ?
+16:23:34 <skg_net> ok
+16:23:41 <misc> (because afaik, we just test compilation on python3, which may not be enough)
+16:24:11 <gundalow> misc: We are running a lot of the functional tests against py2 *and* py3
+16:24:31 <misc> good good
+16:24:50 <gundalow> You make a good point though
+16:25:03 <gundalow> misc: Feel free to joing the Test Working Group Meeting tomorrow :)
+16:25:15 <misc> gundalow: I likely have others meetings :/
+16:25:18 <skg_net> is there a restriction/guidelines for importing modules in Ansible?
+16:25:38 <gundalow> misc: :(
+16:25:45 <gundalow> (connection is being lagguy)
+16:26:28 <gundalow> skg_net: It's fine if your module depends on other modules as long as you handle missing dependencies gracefully and add to DOCUMENTATION requirements:
+16:26:44 <skg_net> anything already available in Ansible for XML
+16:26:49 <skg_net> ok..
+16:28:14 <gundalow> I'm not aware of anything
+16:28:48 <skg_net> ok, will check it out..
+16:29:00 <gundalow> Feel free to stop via #ansible-devel to ask any of these questions, there should normally be people there from UK, eastcoast, westcoast
+16:29:03 <gundalow> :)
+16:29:13 <gundalow> Anyone got anything else
+16:29:22 <gundalow> caphrim007: Do you have any more modules planned?
+16:29:26 <gundalow> or anyone else?
+16:31:25 <caphrim007> gundalow: one more
+16:31:30 <caphrim007> but i havent made a pr for it yet
+16:31:40 <caphrim007> its for ssl cert mgmt
+16:31:47 <gundalow> caphrim007: cool, @gundalow it for attention :)
+16:31:51 <gundalow> Sounds good
+16:31:59 <gundalow> so guessing we are done
+16:32:27 <gundalow> As always please add stuff to https://github.com/ansible/community/issues/110
+16:32:33 <gundalow> Thansk everyone!
+16:32:35 <gundalow> #endmeeting

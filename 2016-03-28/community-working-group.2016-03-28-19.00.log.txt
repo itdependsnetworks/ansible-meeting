@@ -1,0 +1,62 @@
+19:00:00 <gregdek> #startmeeting community-working-group
+19:00:00 <zodbot> Meeting started Mon Mar 28 19:00:00 2016 UTC.  The chair is gregdek. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:00:00 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:00:00 <zodbot> The meeting name has been set to 'community-working-group'
+19:00:08 <gregdek> #chair rbergeron
+19:00:08 <zodbot> Current chairs: gregdek rbergeron
+19:00:13 <gregdek> #topic Open Floor
+19:00:27 <gregdek> While we busily go about doing other stuff, we'll be watching if anyone has any topics to bring up. :)
+19:05:43 <gundalow> evening
+19:05:58 <gundalow> oh, clocks havent changed in the states
+19:06:40 <rbergeron> they changed two weeks ago :)
+19:06:45 <rbergeron> but it's still definitely not evening here. :)
+19:08:07 <bcoca> guam?
+19:08:29 <bcoca> nvmd, early morning now
+19:09:50 <gundalow> ah, it's 19UTC.
+19:09:54 <gundalow> anyways
+19:13:37 <gundalow> How are we all, good weekend?
+19:14:59 <rbergeron> I think so :)
+19:20:31 <gundalow> :)
+19:20:31 <gundalow> o
+19:24:03 <gundalow> So,  with some simple modification to Travis, test wrapper and the Makefile I've split the tests into 3*4 minute blocks, rather than a 11 minute set. So that gives you quicker feedback per operating system. Though as Travis only let's you run 4 jobs at once the total elapsed time is slower.
+19:24:55 <gregdek> Excellent!
+19:25:30 <gundalow> What I believe would make sense (maybe this is longer term) is to look at what percentage of changes it even makes sense to run the integration tests on.
+19:26:42 <gregdek> Ultimately, this probably comes under the auspices of a dedicated testing working group.
+19:27:30 <gundalow> and if we are submitting lots of changes that are only in docs directory to only run the "sanity" (static analyser) test
+19:27:40 <gregdek> yeah
+19:27:58 <gregdek> We don't necessarily have resources to run detailed tests with every checkin.
+19:28:17 <gregdek> The nice thing about the sanity test is that it doesn't have to differentiate re: available resources.
+19:28:41 <gregdek> But some of the other module tests will need the ability to say "i depend on aws resources!" and the like, thus further complicating matters.
+19:28:43 <gundalow> I'm in the process of documenting all of the issues and a number of proposals
+19:41:40 <resmo> hi
+19:44:17 <gundalow> hey resmo
+19:44:43 <mgruener> hi
+19:46:56 <gregdek> Hi y'all :)
+19:47:10 <gregdek> resmo: I'll be looking at your emails later today. Digging out right now.
+19:48:28 <gregdek> And our "meeting" is not much of a meeting today :)
+19:48:34 <resmo> gregdek: sure, no problem. I have one more PR in the queue for the "we have a commit after the comment shipit" scenario
+19:48:42 <gregdek> Oh great. That's a good one.
+19:49:15 <resmo> but it depends on the other build status PR, so I am waiting for this to be in before I make a PR
+19:51:06 <resmo> gregdek: are there any topics beside "tests"?
+19:51:22 <gregdek> Nah, we're in open floor.
+19:51:30 <gregdek> So we can actually do some work on the issues, LOL
+19:51:58 <resmo> ;)
+19:53:16 <gundalow> go fot it, I've given my status update
+19:54:02 <resmo> So, maybe one thing about new module PRs, while mgruener is around
+19:54:32 <resmo> mgruener submitted the cloudflare
+19:55:05 <resmo> the cloudflare_dns module and I make an advise that he should make some tests for this closed API and show us the output
+19:55:17 <resmo> and he did, and the great thing about it
+19:55:45 <resmo> he found some issues (even some other guys tested it and said LGTM)
+19:56:07 <resmo> so maybe this could be a plan for the open PRs for new modules that we can define:
+19:56:50 <resmo> provide a test playbook, that shows it works as detailed as possible and also handles idempotency correctly
+19:57:47 <resmo> even if it's not a "closed" api. I would make reviewing PR much easier
+19:58:30 <resmo> that's it from me :)
+19:59:12 <resmo> (thanks mgruener btw, was nice to met you at the zurich meetup)
+19:59:28 <rbergeron> resmo: :)
+20:00:31 <mgruener> It would help if the way integration tests should work was a little better documented or at least clearly referenced in the documentation on how to contribute :) If resmo would not have pointed me at it, I would not have known that ansible has these types of tests
+20:00:45 <gregdek> We need to sort this out.
+20:01:04 <gregdek> But it's beyond the scope of the cwg. I believe we need a testing working group.
+20:01:09 <gundalow> which issue is this?
+20:01:27 <gundalow> if someone can ping me the details I can have a look
+20:04:45 <gregdek> ok, that's our hour today. :)
+20:04:47 <gregdek> #endmeeting

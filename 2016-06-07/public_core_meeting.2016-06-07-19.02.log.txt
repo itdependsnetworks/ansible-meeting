@@ -1,0 +1,76 @@
+19:02:02 <nitzmahone> #startmeeting Public Core Meeting
+19:02:02 <zodbot> Meeting started Tue Jun  7 19:02:02 2016 UTC.  The chair is nitzmahone. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:02:02 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:02:02 <zodbot> The meeting name has been set to 'public_core_meeting'
+19:03:04 <jtanner> hi
+19:03:07 <alikins> howdy
+19:03:14 <MichaelBaydoun> ola
+19:03:50 <nitzmahone> Today's agenda @ https://github.com/ansible/community/issues/108
+19:05:09 <bcoca> ouch, botrage
+19:05:10 <nitzmahone> #topic https://github.com/ansible/community/issues/108#issuecomment-223298118
+19:05:14 <bcoca> ^ it was not me!!!
+19:05:29 <MichaelBaydoun> yeah, and I think it was a valuable contribution
+19:06:05 <bcoca> code looks good 1st scaen, did you test?
+19:06:43 <MichaelBaydoun> bcoca: I did not test, just found the code after discovering I needed the functionality
+19:07:31 <MichaelBaydoun> Hoping we can discuss to see if all agree it's desired fuctionality
+19:07:37 <bcoca> i'm happy to merge if a couple of those with access test
+19:08:11 <nitzmahone> +1 for desired functionality, but I don't have enough privs to test on our account
+19:08:11 <MichaelBaydoun> It's not currently in a mergeable state
+19:08:22 <nitzmahone> That should be easy to fix
+19:08:50 <MichaelBaydoun> I could test, have aws privs, just need mergeable code to test with
+19:09:16 <nitzmahone> I'll clean that up and post to a separate branch for you if you're willing to test
+19:09:22 <bcoca> easy to cherry pick his commit and fix in subsequent PR, would keep attribution
+19:09:26 <MichaelBaydoun> nitzmahone: deal
+19:09:44 <nitzmahone> bcoca: yep, that's what I was planning (but not via GH UI)
+19:09:46 <bcoca> #action nitzmahone will take care of merging the code
+19:10:04 <bcoca> nitzmahone: if gui supported that ... i might use it more
+19:10:47 <nitzmahone> OK, I'll do that right after the meeting. Next...
+19:10:57 <nitzmahone> #topic https://github.com/ansible/community/issues/108#issuecomment-223439880
+19:11:45 <bcoca> abadger1999: ?
+19:11:51 <nitzmahone> I think Leibniz137 came and talked to us during Pycon sprints- I heard he was going to come to the meeting...
+19:12:02 <nitzmahone> Toshio's on PTO today IIRC
+19:12:13 <bcoca> ah, yes, back tmrow
+19:12:35 <nitzmahone> If requester's not here, we can move on and punt to next week
+19:12:40 <nitzmahone> Going once...
+19:12:52 * bcoca punts
+19:13:04 <abadger1999> he was coming thursday
+19:13:15 <nitzmahone> Ah, OK- we'll move to Thursday's agenda then
+19:13:37 * nitzmahone whacks abadger1999 to get back to PTO
+19:14:04 * abadger1999 just waiting for friend to show up ;-)
+19:14:15 <jtanner> sure ...
+19:14:39 <nitzmahone> Open floor- anyone got anything else pressing?
+19:14:58 <jtanner> cygwin =P
+19:15:06 <nitzmahone> GTH
+19:15:09 <jtanner> hhaha
+19:15:15 <nitzmahone> ;)
+19:16:41 <bcoca> jtanner: as long as you fix the windows api to deal with fork ... that is just one problem
+19:16:55 <bcoca> you also need to fix teh filesystem to be posix, also the socket api
+19:17:06 <bcoca> ^ just from top of my head
+19:17:16 <jtanner> hrm, i thought i had implemented all of that in the fedora livecd
+19:17:41 <nitzmahone> Honestly, if we were going to deal with that, it'd probably be more like "abstract the worker creation process" and do something that's Windows-friendly, not fork() at all... But that's a pretty big deal.
+19:18:08 <jtanner> we should get to cheat like docker does
+19:18:09 <mattclay> Put it on the roadmap for 2.3. :)
+19:18:10 <jtanner> boot2ansible
+19:18:14 <nitzmahone> For cygwin, the rest kinda "just works"
+19:18:44 <nitzmahone> select() is wonky under cygwin too, though IIRC
+19:18:47 <bcoca> nitzmahone: thread data sharing model is not compatible with current asnible architecture, would need to redo
+19:18:56 <bcoca> also ... python threads ... rewrite in go/haskel?
+19:19:08 <bcoca> select falls under 'posix sockets'
+19:19:41 <nitzmahone> Yeah, given the threading assumptions, it'd still probably be worker subprocesses- we'd just have to marshal the necessary stuff over on Windows to avoid the fork(). It'd be pretty ugly IMHO
+19:19:59 <nitzmahone> It's there, it's just sub-optimal
+19:20:03 <bcoca> windows file management is non atomic ... which is fun! (also main reason for file corruption)
+19:21:10 <nitzmahone> OK but seriously, topic is *not* "how are we going to run Ansible on Windows" - anyone else got anything *real* to discuss, or should we go back to our day? ;)
+19:21:47 * bcoca was just bolivating in case someone showed up with an issue
+19:22:04 <nitzmahone> +1 for bloviating. ;)
+19:22:06 <jtanner> stop making me google words
+19:22:07 <bcoca> bloviating
+19:22:17 <bcoca> izpells
+19:22:22 <nitzmahone> bolivating sounds like something you could get thrown in jail for
+19:22:47 <bcoca> bolivating: smuggling cocaine from a specific south american country
+19:22:55 <jtanner> or a thing you do if you really really like bowling
+19:23:05 <nitzmahone> @MichaelBaydoun - I'll ping you when the patched core branch is up for testing
+19:23:17 * nitzmahone groans
+19:23:23 <MichaelBaydoun> nitzmahone: great, thanks!
+19:23:35 * bcoca goes back to actual work
+19:24:24 <nitzmahone> OK, calling it in 5
+19:24:35 <nitzmahone> #endmeeting

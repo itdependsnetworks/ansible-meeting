@@ -1,0 +1,408 @@
+15:00:22 <thaumos> #startmeeting core_meeting
+15:00:23 <zodbot> Meeting started Thu Jul  6 15:00:22 2017 UTC.  The chair is thaumos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:00:23 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:00:23 <zodbot> The meeting name has been set to 'core_meeting'
+15:00:42 <alikins> blorp
+15:01:17 <jtanner> yawn
+15:01:34 <thaumos> #chair alikins jtanner
+15:01:34 <zodbot> Current chairs: alikins jtanner thaumos
+15:01:51 <thaumos> I agree with your yawn jtanner
+15:02:06 <jtanner> +1 on yawning
+15:02:22 <newswangerd> proof that yawns are contagious
+15:03:02 <Erasmix> hello everybody :)
+15:03:57 <bcoca> dammit ,, just yawned IRL ...
+15:04:40 <thaumos> LOL
+15:04:45 <ryansb> sup
+15:04:51 <thaumos> #chair newswangerd Erasmix bcoca ryansb
+15:04:51 <zodbot> Current chairs: Erasmix alikins bcoca jtanner newswangerd ryansb thaumos
+15:06:01 * samdoran sits in the back of the room
+15:06:13 <thaumos> nope! you don't get to do that @samdoran
+15:06:16 <thaumos> #chair samdoran
+15:06:16 <zodbot> Current chairs: Erasmix alikins bcoca jtanner newswangerd ryansb samdoran thaumos
+15:08:41 <jtanner> agenda today?
+15:08:45 * nitzmahone blinks
+15:08:49 <thaumos> #chair nitzmahone
+15:08:49 <zodbot> Current chairs: Erasmix alikins bcoca jtanner newswangerd nitzmahone ryansb samdoran thaumos
+15:11:48 <thaumos> #topic Discuss changing current behavior of failed filter
+15:11:55 <thaumos> sorry was trying to get my bearing
+15:12:12 <samdoran> North is that way ⬆
+15:12:35 <jtanner> lies, that is west
+15:14:09 <thaumos> heh
+15:14:21 <thaumos> funny enough, that is west for me as I am sitting
+15:14:33 <bcoca> north and south i get, but east and west are just a conspiracy from the "round earthers"
+15:14:41 <thaumos> @nitzmahone, you have the floor to kick off the discussion on this one
+15:14:59 <thaumos> bcoca: I will have fun with you on that one in  a bit
+15:15:04 <jtanner> is this about powershell/win32 returning non-zero for sucess?
+15:15:28 <samdoran> I believe so.
+15:15:31 <nitzmahone> Not really- bigger Purdue
+15:15:34 <nitzmahone> Picture
+15:15:34 <bcoca> its about all modules, but it started there
+15:15:44 <samdoran> Ripple effect.
+15:15:59 <bcoca> a) 'rc' field used to overried failed status
+15:16:21 <bcoca> b) failed or rc were/are both valid ways of communicating failure to ansilbe
+15:16:28 <nitzmahone> Core engine was changed to ignore nonzero RC for modules that explicitly specify failure, but failed filter still takes rc into account.
+15:16:36 <bcoca> c) dag changed to ignore rc in all cases, this broke some modules that relied on old behaviour
+15:16:53 <nitzmahone> For consistency now, failed filter should only take failed key into account
+15:16:56 <bcoca> d) i changed it so rc does not override failed, but still allows for 'status' transmition to core
+15:17:04 <bcoca> e) dag wants to reverse this
+15:17:30 <bcoca> nitzmahone: no, failed filter now works just as task_executor does
+15:18:15 <bcoca> nitzmahone: you reviewed my ticket ... did you not realize that deleting all mentions of 'rc' from `failed` test was part of it?
+15:18:24 <dag> bcoca: only 2 modules broke in our repository
+15:18:40 <dag> bcoca: and win_command and win_shell, because I did not modify those (oversight)
+15:18:45 <nitzmahone> Oh, I missed that part (saw the removal of the filter for the tests, but missed the rc removal)
+15:19:11 <bcoca> tests (filters are gone, but tests act as filters still) will now ONLY look at 'failed'
+15:19:16 <dag> but apart from the usual suspects, there were 2 modules that had issues (one of those was doing something wrong nevertheless)
+15:19:26 <bcoca> task_executor is only thing that still considers 'rc' and it does so to set 'failed' if failed is not set
+15:19:40 <dag> I think that is the wrong approach here
+15:19:49 <bcoca> dag: more worried about 3rd party as this is change to module api and it should be backwards compatible
+15:19:52 <dag> we always assumed that a missing 'failed' meant success
+15:19:58 <bcoca> i think its a good middle ground
+15:20:18 <dag> bcoca: I know it could break 3rd party modules, but I doubt the impact it big
+15:20:22 <bcoca> IF module returns 'failed' and 'rc', only 'failed' is considered, if module only returns one of them, that one will be used
+15:20:23 <nitzmahone> I think bcoca's current solution is the best balance of preserving back compat for modules that don't opt in to setting failed explicitly (either way)
+15:20:26 <dag> so we definitely need to document this
+15:20:41 <bcoca> agreed on documenting
+15:20:59 <nitzmahone> If we were building this from scratch with hindsight, I'd opt for dag's original solution.
+15:21:01 <bcoca> dag: i got pinged by at least 3 people on this, which is what started the discussion in core team and resulted in 'current compromise'
+15:21:02 <dag> but I think we should change the default behaviour
+15:21:13 <dag> because the impact is very low
+15:21:17 <bcoca> i disagree, i'm happy with current compromise
+15:21:45 <dag> note that various people already bumped into this, and simply renamed 'rc' into 'exit_code' or something else
+15:21:49 <dag> just to avoid this effect
+15:22:04 <bcoca> no, they did not, they ran into
+15:22:08 <bcoca> 'rc' overrides failed
+15:22:13 <dag> I think we should stick to the default behaviour that not having 'failed' means success
+15:22:14 <nitzmahone> We now have an explicit way for modules to deal with that, though...
+15:22:17 <bcoca> which was state previous to your change
+15:22:24 <dag> bcoca: yes, and that's very arbitrary
+15:22:31 <dag> assuming that 0 means success is wrong
+15:22:39 <dag> and Ansible should not care about the return code
+15:22:42 <bcoca> which is what the latest state fixes, but leaves it for modules that don't issue failed
+15:22:49 <dag> even when 'failed' was not set
+15:23:00 <bcoca> dag: i would not do that immediately w/o deprecation
+15:23:10 <bcoca> and i think current compromise is fine
+15:23:13 <dag> the other reason for me to not do the compromise is that people have been using Exit-Json (or exit_json) to mean successful
+15:23:50 <bcoca> easy to add failed=false there
+15:24:10 <dag> it's up to the module to decide if RC 3010 means success, and RC 1 means failure
+15:24:26 <bcoca> then module should state that with a 'failed' key
+15:24:28 <dag> every other logic diffuses the situation, and makes Ansible less clear
+15:24:42 <dag> if this breaks 2 modules, they should fix this for v2.4
+15:25:07 <dag> bcoca: that was never the case
+15:25:14 <nitzmahone> ... again, if we were building from scratch with hindsight, I'd agree we should do it that way, but there are a LOT of custom modules out there that may break silently with the original change.
+15:25:27 <bcoca> what was never the case?
+15:25:38 <dag> nitzmahone: for all modules in Ansible there were 2, of which one was broken anyway
+15:25:40 <nitzmahone> (we went weeks without figuring it out for win_shell/command)
+15:25:41 <bcoca> s/may/we know/ as ti has been reported
+15:25:56 <bcoca> dag: not an issue about OUR codebase, but the public API
+15:26:08 <dag> bcoca: it simply shows that the impact is very small
+15:26:33 <bcoca> dag: also the rc=0 was a well establish posix convention on which ansible built upon .. windows was an afterthought, hence the disparity
+15:26:47 <nitzmahone> dag: if you had been affected by this change made by someone else, wouldn't you be pretty upset about it?
+15:26:51 <bcoca> dag: not really when people start contacting us that their custom modules break
+15:26:58 <dag> bcoca: this is not a POSIX convention
+15:27:11 <dag> various tools have more success RC's that are non-zero
+15:27:28 <ryansb> various tools break the convention
+15:27:35 <ryansb> but that doesn't mean it isn't a convention
+15:27:41 <dag> grep does not follow this convention
+15:27:53 <dag> it's not a POSIX convention
+15:28:03 <nitzmahone> ... and we now have a simple way to deal with it without breaking backcompat for people who were relying on the old way
+15:28:04 <dag> it's a bad generalisation
+15:28:10 <dag> that you now are exposing to WIndows too
+15:28:12 <bcoca> its a convention derived  from C AND waitpid posix standard
+15:29:12 <dag> in C 0 means true
+15:29:16 <dag> that is a fact :-)
+15:29:20 <bcoca> exactly
+15:29:26 <bcoca> 0 == success in rc
+15:29:37 <dag> but it's not true for return codes
+15:29:50 <dag> 1 could mean success too
+15:29:57 <dag> even 3010 means success for chocolatey
+15:30:36 <bcoca> not disputing that
+15:30:52 <bcoca> but you want to change existing convention/interface in backwards incompatible way
+15:30:53 <dag> grep has 0 and 1 as different meanings
+15:30:53 <nitzmahone> We're going in circles here- we all understand the rationale, we just disagree on the depth of the change. I'm +1 for current solution.
+15:30:56 <dag> even cmp has it
+15:31:05 <bcoca> i changed it in a way you can still use it and indicate status from  module
+15:31:17 <bcoca> +1 also
+15:31:18 <dag> in cmp 0 means no difference, 1 means difference, 2 means error
+15:31:43 <dag> -1 because we are diffusing a problem, that's not a real problem
+15:32:05 <dag> and we have the chance to make it perfect, with little to no impact
+15:32:51 <bcoca> i disagree that the change you propose is 'perfect' and i also disagree on your impact assesment
+15:33:01 <nitzmahone> Perfection is rarely achievable, and your definition of "perfect" screws an unknown percentage of our community. I'm voting for a conservative fix.
+15:33:02 <dag> bcoca: then prove it
+15:33:09 <bcoca> ^ i have done above
+15:33:28 <dag> 1 module was broken
+15:33:49 <bcoca> no
+15:34:16 <bcoca> 2 modules that YOU know of, again, i got 3 diff people contacting me directly about this, so did others in our team, so this affects many more than you suppose
+15:34:19 <nitzmahone> Every customer I've worked with had 1-N custom modules that aren't shipped in the box. Some of them wrap command line tools and rely on the old behavior. Those will be screwed.
+15:35:00 <dag> Every customer I've worked with didn't
+15:35:37 <dag> that's not risk assessment
+15:35:41 <bcoca> well, your experience is not the only one that counts
+15:35:47 <nitzmahone> So nevermind mine?
+15:35:55 <nitzmahone> Or anyone else's?
+15:35:59 <dag> but hey I can't win this one, you outnumber me, and you both were already agreeing before this meeting
+15:36:15 <bcoca> cause we debated all this last night
+15:36:34 <bcoca> but its not just us 2, there were another 2 in agreement to the compromise we ended up with
+15:36:36 <nitzmahone> That's why we wanted to discuss in larger forum
+15:36:37 <dag> the changes that were made were discussed as well
+15:36:40 <dag> and were merged before
+15:36:54 <bcoca> dag: we dont wait for meetings for each and every change
+15:36:55 <dag> and many more people were present in that meeting
+15:37:05 <bcoca> but im willing to reverse it if i was in the minority here
+15:37:11 <dag> haha
+15:37:12 <nitzmahone> We also didn't realize the scope of potential failure at that point
+15:37:18 <bcoca> dag: its not the first time i have
+15:37:25 <dag> nitzmahone: we did, 1 broken module out of 1000
+15:37:35 <nitzmahone> *that we ship*
+15:37:41 <dag> right
+15:37:48 <samdoran> ramifications of the change weren't fully realized until after the merge
+15:38:13 <samdoran> hard to tell exactly how many this will affect
+15:38:23 <dag> samdoran: no, ramifications of the change were only realized because I forgot to fix win_shell and win_command
+15:38:36 <dag> that's why someone complained, not because it affected them in real life
+15:38:45 <dag> so we are now weighing the unknown
+15:38:48 <bcoca> no, actual complaints i got had nothing to do with windows modules
+15:38:56 <bcoca> they were all python/unix
+15:39:05 <dag> I doubt there is more than a handful, nitzmahone seems to indicate an infinite number of community modules :-)
+15:39:13 <dag> bcoca: which ones ?
+15:39:25 <bcoca> not in ansible/ansible
+15:39:29 <dag> which ones ?
+15:39:33 <thaumos> ok
+15:39:40 <thaumos> let's stop here.
+15:39:48 <thaumos> we're definitely going in circles now
+15:39:51 <jtanner> hammertime
+15:39:56 <dag> :-)
+15:40:17 * nitzmahone digs out 80s muscle pants
+15:40:44 <dag> bcoca: which modules ?
+15:40:49 * bcoca is now scared for life with that picture
+15:40:49 <thaumos> dag
+15:41:20 <dag> I can tell that the old behaviour caused issues for 3 windows modules in our tree, and we only noticed when doing integration tests
+15:41:26 <bcoca> dag:  i'll see if ican get a released or public version of them, but it was mostly from people that had custom modules in their environment
+15:41:34 <bcoca> and tested 2.4 over this weekend
+15:42:10 <nitzmahone> Majority of enterprise folks aren't testing on devel either, so they might not find until they upgrade in the future.
+15:42:33 <thaumos> We have to be very careful about changing behaviours between releases.
+15:42:54 <bcoca> this was small sample of people that go above and beyond, its not even a question if it is the 'correct' inteface, but changing a public interface in breaking manner w/o deprecation period
+15:42:55 <thaumos> we get lots of feedback on this exact thing. we CANNOT make assumptions based on what we ship.
+15:42:59 <dag> nitzmahone: but the existing behaviour was not documented as such, you might as well consider it a problem in the implementation
+15:43:13 <dag> and we have the opportunity to make Ansible do the right thing onward
+15:43:17 <nitzmahone> (especially if the behavior could result in an erroneous silent failure)
+15:44:11 <nitzmahone> Existing behavior wasn't a bug though- it was a decision made a long time ago that in hindsight maybe should've been different.
+15:44:29 <dag> This all wouldn't be so sad if I didn't have the same conversation 5 years ago
+15:44:31 <thaumos> There are lots of times where we have made changes because of the same thing, dag.  A lot of times, they have come back to bite us.  A lot of times too, it's when a bug is intro'd between releases.
+15:44:36 <dag> when this was introduced
+15:44:43 <thaumos> Okay.
+15:44:50 <nitzmahone> An unknown number of people rely on that behavior, and we know it's > 0
+15:44:50 <thaumos> Let's vote.
+15:45:04 <dag> maybe we should provide a warning
+15:45:10 <dag> and deprecate it in 4 releases ?
+15:45:30 <dag> at least there's a clear path to the right (expected) behaviour over time
+15:45:37 <bcoca> we can, but i think the current behaviour is good
+15:45:40 <dag> I can live with that
+15:45:47 <dag> I don't
+15:45:56 <dag> it's not up to Ansible to consider RC 0 is success
+15:46:09 <dag> even if you only consider Unix, (but I am also considering Windows)
+15:46:21 <bcoca> and i think it is a good fallback  when there is no 'failed' key
+15:46:34 <dag> that's why we modified shell, command, raw, and win_shell and win_command
+15:46:43 <bcoca> a diff thing i tried to do last night was add 'failed'=false on exit_json
+15:46:53 <dag> bcoca: it shouldn't be in Ansible
+15:46:57 <bcoca> but i was told it was redundant, i'm of a mind of requiring this from modules
+15:47:18 <bcoca> dag: we disagree on that, i think rc is an acceptable way of signifying failure, you do not
+15:47:20 <dag> bcoca: exactly, we consider failed=false redundant, that's always the case
+15:47:45 <thaumos> Alright folks, let's vote.
+15:47:45 <dag> and now you are compromising that, in order to keep the current broken behaviour IMO
+15:47:49 <thaumos> guys
+15:47:58 <dag> thaumos: can we at least add a warning ?
+15:48:26 <dag> I believe the impact is quite small, and at least we can implement the correct behaviour in 4 releases
+15:48:36 <thaumos> I am doubtful on that.
+15:48:43 <dag> thaumos: doubtful on what ?
+15:48:45 <samdoran> I think a warning is a bit much. Updating developer docs should be sufficient.
+15:48:54 <bcoca> woudl be noisy, considering teh people that have already come out on that ... i think you are misjudging the impact
+15:49:01 <thaumos> We, as devs in the community, need to do a better job at surveying users.
+15:49:21 <dag> bcoca: and a flag to disable the DeprecationWarning
+15:49:29 <thaumos> I am doubtful that the impact is small
+15:49:45 <thaumos> I am sure it is much larger than we all collectively realise.
+15:49:46 <dag> so it is hard to reason against the unknown
+15:50:03 <thaumos> Exactly my point.  Which is why I error on the side of surveying
+15:50:04 <dag> we can still get rid of the warning before v2.4 is released
+15:50:18 <nitzmahone> Which is why the ones who have to answer the call from the unknown want to choose conservatively. ;)
+15:50:19 <thaumos> not many test on devel
+15:50:34 <bcoca> i can assure you the same 3 pepole that contacted me and the others that contacted other team members will complain aobut the warning
+15:50:50 <dag> thaumos: I grepped all modules for rc keywords
+15:51:25 <thaumos> dag, I know you aren't missing the point.
+15:51:32 <dag> well, the fix was in the tree for 2 weeks
+15:51:38 <thaumos> We're not just arguing for the ones included with Ansible.
+15:51:47 <dag> it only triggered an issue when |failed appeared to be broken
+15:52:06 <bcoca> well, |failed does not deal with 'rc' at all anymore
+15:52:11 <thaumos> We're arguing for users that have Ansible < devel in their environment that have custom modules built on this.
+15:52:12 <bcoca> ^ that i DID fix last night
+15:52:41 <dag> bcoca: right
+15:52:56 <bcoca> dag:  and this is not very apparent in the irc domain, but we have many users using C/C++ modules that seem to LOVE this convention
+15:53:58 <dag> bcoca: what C does means nothing here
+15:54:07 <dag> there are languages where 0 means false
+15:54:13 <thaumos> okay
+15:54:17 <thaumos> seriously
+15:54:20 <bcoca> i dont disagree, but that is the convention
+15:54:26 <bcoca> and they have used it
+15:54:30 <thaumos> we've created a crater with the circles we're dancing here.
+15:54:31 <dag> not on Windows
+15:54:37 <dag> not for many Unix tools
+15:54:39 <thaumos> dag, bcoca. stop
+15:54:58 <thaumos> let's vote.
+15:55:07 <thaumos> nitzmahone, can you frame the vote pelase
+15:55:14 <dag> you don't have to vote
+15:55:20 <dag> it's pretty clear
+15:55:44 <Erasmix> sorry to interrupt but we are close to the hour. I was wondering if we could cover the CyberArk PR's today
+15:55:55 <thaumos> Erasmix, I got your PM.
+15:56:01 <Erasmix> thx :)
+15:56:10 <thaumos> let us finish the current topic.
+15:57:07 <nitzmahone> Ok:
+15:58:23 <nitzmahone> Should we leave the current compromise behavior that treats legacy "rc != 0" as a failure unless the module specifies "failed: false"?
+15:58:48 <nitzmahone> +1
+15:58:54 <dag> -10
+15:59:44 <samdoran> +1
+16:00:05 <nitzmahone> I'm guessing we lost most of the rest of the crowd. :(
+16:00:16 <thaumos> +1 from me.
+16:00:16 * abadger1999 trying to catch up
+16:00:25 <thaumos> #chair abadger1999
+16:00:25 <zodbot> Current chairs: Erasmix abadger1999 alikins bcoca jtanner newswangerd nitzmahone ryansb samdoran thaumos
+16:01:26 <abadger1999> -1
+16:01:56 <jimi|ansible> +1
+16:02:18 <abadger1999> I suppose -0.5
+16:02:19 <jimi|ansible> an rc code without the presence of any other flag is a legacy failure, and too much stuff might (does) depend on that
+16:02:30 <abadger1999> well, no -1
+16:02:44 <jimi|ansible> if we want to deprecate that behavior at some point in the future, that's something to talk about, but we can't just change it without warning
+16:02:46 <alikins> 0
+16:02:53 <abadger1999> Do we specify that rc is a special return code?
+16:02:53 <thaumos> what jimi|ansible just said.
+16:02:58 <abadger1999> bcoca: ^  If we do that, i'll move to -0.5
+16:03:08 <thaumos> We can talk about it as something to do over time.  We can't just black and white change it like this in a release.
+16:03:11 <thaumos> that's too risky
+16:03:13 <nitzmahone> yep, I'm not opposed to a future deprecation cycle either
+16:03:25 <abadger1999> <nod>
+16:03:31 <abadger1999> dag suggested that earlier didn't he?
+16:03:36 <abadger1999> <dag> maybe we should provide a warning
+16:03:36 <abadger1999> <dag> and deprecate it in 4 releases ?
+16:03:37 <thaumos> are you cool with that, @dag?
+16:03:39 <jimi|ansible> we have changed_when/failed_when to deal with rc's sans other flags
+16:03:49 <thaumos> I think we need to do more than a warning
+16:04:08 <abadger1999> jimi|ansible: wouldn't that be the opposite?
+16:04:16 <thaumos> we need to do more investigating on this.
+16:04:18 <nitzmahone> jimi|ansible: and now we have a way for modules to deal with it internally while still returning an rc key
+16:04:29 <jimi|ansible> abadger1999: i guess it depends on what people are trying to do
+16:04:33 <abadger1999> heh
+16:04:34 <ryansb> +1
+16:04:42 <jimi|ansible> frankly, do we have a lot of modules that return rc's besides shell/command/script?
+16:04:51 <jimi|ansible> those modules really probably shouldn't
+16:04:59 <jimi|ansible> that can be cleaned up separate from this
+16:05:00 <nitzmahone> Yes, a lot of modules that wrap cmdline tools
+16:05:19 <dag> nitzmahone: they usually don't return the rc
+16:05:20 <jimi|ansible> those should all be setting failed/changed themselves properly
+16:05:33 <nitzmahone> Though it's purely forensic in most cases, which could make it moot
+16:05:35 <samdoran> especially custom ones in the community
+16:05:38 <dag> nitzmahone: because they usually run the command more than once, or because they run fail_json()
+16:05:42 <alikins> but +1 to  making rc meaningless in the future
+16:05:51 <jimi|ansible> really the only thing we ship that does rc's is shell/command and script (and raw)
+16:06:00 <dag> jimi|ansible: yes, except one module
+16:06:11 <jimi|ansible> dag: which one?
+16:06:47 <abadger1999> I think run_command might automatically return rc... let me check
+16:06:58 <dag> I think it was this one: https://github.com/ansible/ansible/pull/26018
+16:07:39 <abadger1999> if rc != 0 and check_rc:
+16:07:39 <abadger1999> msg = heuristic_log_sanitize(stderr.rstrip(), self.no_log_values)
+16:07:39 <abadger1999> self.fail_json(cmd=clean_args, rc=rc, stdout=stdout, stderr=stderr, msg=msg)
+16:07:43 <dag> and that one doesn't even expose rc directly
+16:07:45 <abadger1999> that's in run_command
+16:09:02 <dag> so everything using run_command is not a problem
+16:09:19 <dag> but they also do not expose the rc value
+16:09:23 <jimi|ansible> so this really seems like a non-issue in most regards?
+16:09:29 <dag> so that's probably why there was so little impact
+16:09:39 * dag thanks abadger1999 and jimi|ansible
+16:09:40 <abadger1999> Hmm... run_command sets rc in osme other suspect ways....
+16:09:58 <dag> ah, it does expose rc
+16:10:02 <abadger1999> All with fail_json, though so fail_json will properly set failure=True no matter what the rc is
+16:10:10 <dag> indeed
+16:10:12 <dag> so it's moot
+16:10:28 <dag> and that's how I think it should be
+16:10:31 <abadger1999> <nod>
+16:10:35 <dag> fail_json is a failure, anything else is not
+16:10:42 <dag> (or not necessarily)
+16:10:46 <abadger1999> yeah, I think that sshould be the future.
+16:10:53 <dag> although I would prefer not to use failed=true, and exit_json
+16:11:03 <nitzmahone> (well, for things using basic.py anyway)
+16:11:05 <dag> I prefer and explicit fail_json() on failures
+16:11:32 <nitzmahone> A lot of the ones we're worried about don't (c++/other lang modules)
+16:11:47 <dag> the risk got down drastically, but know comes the unknown factor inflating it back to its original size
+16:12:11 <dag> you can't win from doubt, much like terror :)
+16:12:22 <dag> so I'd go for the warning
+16:12:29 <nitzmahone> If you're volunteering your cell#, we'll do it your way and they can call you. ;)
+16:12:39 <dag> at least there's a perspective to kill it eventually
+16:12:44 <dag> deal
+16:12:49 <thaumos> there always has been
+16:13:08 <nitzmahone> Exactly- it's not like we wouldn't all like to do it that way, we just don't want to rip the band aid off as fast as you did.
+16:13:09 <dag> nitzmahone: 5$ per minute :-)
+16:13:35 <dag> (not 5 years ago, where's michael ?)
+16:13:55 <dag> anyway, do as you please
+16:14:01 <thaumos> well, we're much larger as a community now.
+16:14:22 <dag> it'll be another PEP8 for me, I'll be the biggest supporter as soon as the vote is over
+16:14:26 <nitzmahone> Speaking of, there are others patiently waiting to discuss things
+16:14:45 <nitzmahone> (or maybe not any more) ;)
+16:14:51 <bcoca> well, its a public api, so the change should be as backwards compatible as possible, that said, i think rc is perfectly valid way to do it in unix land, windows doesnt even use 'return code' as convention, they use 'exit code'
+16:14:52 <dag> so a re-vote in light of the new discovery ?
+16:15:34 <dag> bcoca: we are using the Ansible convention of using 'rc', as we try to do with many things (type 'str', 'int', 'bool')
+16:16:04 <dag> bcoca: it makes things more convenient, unless you want WIndows to stop doing stdout and stderr too :)
+16:16:08 <nitzmahone> Keep current compromise, explore sane deprecation path to get us to "rc is fully ignored by core engine"
+16:16:17 <jimi|ansible> we're not changing the functionality now, it will break things that depend on it. Deprecate in future
+16:16:23 <jimi|ansible> ^ what nitz said
+16:16:24 <bcoca> dag: those are more pythonism
+16:16:35 <bcoca> jimi|ansible: we have already changed teh functionality
+16:16:38 <dag> bcoca: true, but as relevant
+16:16:44 <thaumos> +1 no change now, deprecate or other in future.
+16:16:45 <jimi|ansible> bcoca: in devel only i thought
+16:16:47 <bcoca> my patch last night restored it to a saner default for backwawrds compatiblity
+16:16:51 <dag> if we are discussing conformity
+16:16:55 <abadger1999> nitzmahone: add: document that rc is a special return field.
+16:16:56 <bcoca> jimi|ansible: so you want 'all the chagnes' reverted?
+16:17:48 <jimi|ansible> did your patch make all tests pass and other modules work as expected?
+16:17:50 <bcoca> abadger1999: i believe we already did
+16:17:53 <bcoca> its in common return codes
+16:18:05 <abadger1999> +1 to nitzmahone's proposal.  -1 to reverting all changes... seems like at least the controller method and failed filter weren't in agreement before and that should be fixed.
+16:18:08 <bcoca> jimi|ansible: had to chaagne the tests
+16:18:21 <nitzmahone> Yeah, bcoca's final fix is fully backward compatible
+16:18:28 <bcoca> abadger1999: the filter is gone, the test now relies exclusively on 'failed'
+16:18:34 <jimi|ansible> ok leave it as-is then, deprecate in the future
+16:18:41 <bcoca> nitzmahone: not really, the 'rc' overrides 'failed' has been removed
+16:18:47 <abadger1999> bcoca: And we set failed before the filter can be run?
+16:18:51 <bcoca> ^ that is a changed in behaviour
+16:18:52 <jimi|ansible> yeah rc overriding failed never should have been the case
+16:19:04 <dag> right
+16:19:06 <bcoca> jimi|ansible: i think we all agree on that
+16:19:12 <abadger1999> bcoca: needds documentation: http://docs.ansible.com/ansible/common_return_values.html#rc   <=== doesn't mention that rc influences failed state.
+16:19:12 <jimi|ansible> failed should have been checked first, then if failed was not present check the rc
+16:19:14 <bcoca> which is what i made 'current state'
+16:19:26 <jimi|ansible> 99% of the time there's no rc, so it's just not changed
+16:19:28 <dag> abadger1999: and I prefer we don't add that TBH
+16:19:28 <bcoca> jimi|ansible: that is 'current devel'
+16:19:31 <jimi|ansible> +1
+16:19:41 <dag> abadger1999: if we plan to deprecate it anyway
+16:19:49 <abadger1999> dag: I'd like it added, but with a "This is deprecated behaviour" warning.
+16:19:54 <thaumos> nice thing about docs, it can be removed.
+16:19:59 <dag> abadger1999: ah, ok
+16:20:00 <jimi|ansible> thaumos++
+16:20:07 <abadger1999> So that there's no surprises for current or future code.
+16:20:24 <dag> abadger1999: that was my point anyway, this "convention" was never a contract, so the behaviour could be considered a bug
+16:20:28 <jimi|ansible> or amended: "Prior to 2.x, an rc value in the task result could cause the task to be marked as failed if it was non-zero"
+16:20:32 <bcoca> well, the current state might still break some playbook logic, but i think that is merrited
+16:20:32 <abadger1999> <nod>
+16:20:34 <thaumos> yeah, in this case, it's much better for all of us to error on the side of caution than rip a rug out.  that's all we're trying to do here.
+16:21:32 <dag> thaumos: still questioning the size of that rug :)
+16:22:12 <dag> and my cellphone is public too ;-)
+16:22:13 <thaumos> lol, no matter what big or small someone will fall over.
+16:22:15 <bcoca> * Changed task state resulting from both 'rc' and 'failed' fields returned, 'rc' no longer overrides 'failed'.
+16:22:21 <bcoca> ^ changelog entry
+16:22:34 <dag> bcoca: thanks
+16:22:38 <jimi|ansible> ok so i think we're done with this topic, i think we have a plan and can move on, no need to keep rehashing it
+16:22:46 * bcoca goes to lunch
+16:22:46 <nitzmahone> Agreed
+16:22:58 <nitzmahone> Cyberark folks still here?
+16:24:28 <abadger1999> bcoca was working on the review of the PRs as well.
+16:24:51 <thaumos> nitzmahone, I asked them to chime in in #ansible-dvel
+16:24:59 <thaumos> s/dvel/devel
+16:27:02 <thaumos> ok
+16:27:15 <thaumos> thanks all for the meeting today
+16:27:22 <thaumos> #endmeeting

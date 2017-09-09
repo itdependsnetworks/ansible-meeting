@@ -1,0 +1,248 @@
+17:00:25 <gundalow> #startmeeting Testing Working Group
+17:00:25 <zodbot> Meeting started Thu Sep 22 17:00:25 2016 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+17:00:25 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+17:00:25 <zodbot> The meeting name has been set to 'testing_working_group'
+17:00:31 <gundalow> #chair gundalow mattclay
+17:00:31 <zodbot> Current chairs: gundalow mattclay
+17:00:37 <gundalow> #topic Roll call
+17:00:45 <gundalow> Who is here?
+17:00:46 <gundalow> Who is new this week?
+17:00:47 * caphrim007 is here
+17:00:50 * mattclay waves
+17:00:51 * misc is
+17:01:08 * mmaglana is here
+17:01:21 <mmaglana> i'm new
+17:01:22 <gundalow> lots of people, excellent :)
+17:01:52 <gundalow> mmaglana: Welcome :)
+17:01:59 <mmaglana> thanks!
+17:03:01 <gundalow> #topic Writing Fully-Tested Ansible Modules for Fun and Profit
+17:03:27 <gundalow> mmaglana: Could you please introduce yourself, then we can go into your review?
+17:04:01 <mmaglana> thanks gundalow. i'm Mark Maglana, QA/Release Engineer from Dimension Data.
+17:04:51 <mmaglana> The current channel topic is my talk for AnsibleFest Brooklyn and i'm submitting it for everyone's scrutiny.
+17:05:18 <gundalow> \o/
+17:06:20 <gundalow> Which can be found here: https://www.relaxdiego.com/2016/06/writing-ansible-modules-with-tests.html
+17:06:31 <mmaglana> beat me to the punch :)
+17:06:37 <gundalow> hehe
+17:07:42 <gundalow> So if people could cast their expert eyes over it I know Mark would find that useful
+17:08:13 * MichaelBaydoun is now present
+17:08:22 <gundalow> I think it's good that you've included the git basics in, and that it's a full end-to-end walk though
+17:09:01 <mmaglana> yesterday, i added something near the end about getting additional insights from a code coverage report.
+17:09:37 <gundalow> mattclay and I were talking about it earlier and he made the good point that once the three git repos are merged it will need some tweaking, though that will be post AnsibleFest NYC
+17:10:08 <mmaglana> gundalow: true. the prepping and PR part will be a lot simpler then.
+17:12:39 <gundalow> yup :)
+17:13:51 <gundalow> Have other people taken a look, what do they think?
+17:14:19 <misc> it is long :)
+17:14:24 <mmaglana> heh.
+17:14:30 <gundalow> mmaglana: too long
+17:14:46 <gundalow> mmaglana: Have you timed the talk?
+17:14:48 <misc> but that's quite good, it cover everything to know
+17:15:15 <mmaglana> i'm going to skim through certain parts to keep it under 30
+17:15:21 <mmaglana> 30 mins. to be specific ;)
+17:15:50 <mmaglana> for example, the workspace prep will have to be slideware and i will just refer the audience to the blog post as their reference.
+17:15:56 <gundalow> cool, well you can direct people to the article online for extra info
+17:16:05 <mmaglana> exactly
+17:16:33 <caphrim007> would giving a plug for the module checklist be relevant? or is that most specific to the developing part and not the testing part?
+17:16:44 <caphrim007> more*
+17:16:44 <gundalow> caphrim007: Good point
+17:16:56 <gundalow> The checklist is for *both* the creator and the tester
+17:17:01 <mmaglana> oh, good point caphrim007
+17:17:09 <mmaglana> i can put that in
+17:17:17 <mmaglana> or at least reference it
+17:17:26 <caphrim007> yeah you dont need to go into detail on it
+17:17:28 <abadger1999> _shaps_: I'm not sure hte unittest for argument_spec is a good thing to promote.
+17:17:30 <caphrim007> but at least make mention of it
+17:17:34 <abadger1999> err sorry _shaps_.
+17:17:40 <abadger1999> that was just a general comment.
+17:19:11 <gundalow> mmaglana: I'd say just reference it
+17:19:20 <mmaglana> yup. noted. :)
+17:19:53 <gundalow> It's on our list to completly redo developing_modules.html
+17:21:14 <gundalow> Cool, thanks everyone
+17:21:29 <abadger1999> Might want to hav e a little side-bar about different types of testing.
+17:21:33 <gundalow> If anyone has any other thoughts there is a link at the end of the post to submit feedback
+17:21:51 <gundalow> abadger1999: such as?
+17:21:53 <gundalow> also hi :)
+17:22:00 <abadger1999> even though we use the unittest framework, the example test is more an acceptance test than a unittest.
+17:22:16 <abadger1999> (not wrong -- I'm not enamoured with unittests for everything ;-)
+17:23:31 <mmaglana> abadger1999: i might have to avoid test taxonomy though as that's a whole topic in itself. i'll leave it to the audience what kind of test they want to do and just show them the tools instead.
+17:23:54 <mmaglana> abadger1999: i mean, knowing the difference is important, certainly. but 30 mins won't be enough to cover that too. :-)
+17:24:41 <abadger1999> mmaglana: well... right now we don't really ahve any acceptance tests.
+17:25:07 <gundalow> abadger1999: Anything else we should add py3 wise?
+17:25:08 <abadger1999> It's pretty much just unittests or full integration tests.
+17:25:10 <mmaglana> but i'll be happy to share links about the different kinds of testing if there's one you can recommend.
+17:25:33 <abadger1999> Another option would be not to give that example?
+17:26:17 <mmaglana> abadger1999: problem with not sharing the example though is that it won't give the audience much in terms of how to really get started.
+17:26:32 <abadger1999> For most modules, testing the main() function is likely less valuable than testing individual functions (and splitting poorly written main functions into multiple helper functions)
+17:26:42 <abadger1999> mmaglana: right -- but give a different example.
+17:27:09 <abadger1999> mmaglana: write two test cases for test_fetch-data and test_write_data
+17:27:11 <mmaglana> abadger1999: oh actually, the main() tests are just the beginning. you'll see further down actual unit tests of individual functions
+17:27:14 <abadger1999> skip main
+17:27:20 <mmaglana> abadger1999: i have those two tests
+17:27:26 <abadger1999> mmaglana: <nod>  Yeah -- I'm just saying testing main confuses the issue.
+17:27:39 <mmaglana> abadger1999: ah. ok. i see your point now. :)
+17:27:57 <abadger1999> Cool.
+17:27:58 <gundalow> in a well written module main should be limited to just option parsing and validation
+17:28:35 <abadger1999> yeah, lighter weight main() is good... it's really the dispatcher.
+17:28:39 <mmaglana> got it. alright, i can do that :)
+17:29:11 <misc> abadger1999: I wonder if we can get some complexity testing on the main function
+17:29:18 <abadger1999> in the modules that take state, it should usually  just be if state == 'Foo': Foo(with_proper_arguments)
+17:29:32 <linuxdynasty> minimal main FTW
+17:29:44 <gundalow> linuxdynasty: Hello you :)
+17:30:06 <linuxdynasty> hello (in and out on my phone as I am in a company wide meeting)
+17:30:06 <gundalow> mmaglana: might be worth making that point in the presentation
+17:30:14 <gundalow> linuxdynasty: cool :)
+17:30:16 <abadger1999> mmaglana: Cool.  One other thing to change.  Separate test methods for testing fetch-data and write_data.
+17:30:39 <mmaglana> gundalow: certainly. i'm going to modify that part to make sure main() is minimal and also point out why it should be minimal
+17:31:02 <mmaglana> abadger1999: you mean separate them into their own test*.py files?
+17:31:50 <abadger1999> mmaglana: Oh wait, sorry -- I see you broke them out later in the document.
+17:32:03 <linuxdynasty> also maybe a bullet point that functions/methods should be small so that each function can be tested easily
+17:32:14 <mmaglana> linuxdynasty: +1
+17:32:16 <abadger1999> mmaglana: Just to separate methods.
+17:32:31 <mmaglana> abadger1999: got it. :)
+17:32:43 <abadger1999> In your document, you did do that under: "Let’s Implement fetch_data()"  so you're good there.
+17:33:14 <mmaglana> and "Let’s Implement write_data()" too
+17:34:11 <abadger1999> Gary bernhardt has some good talks on testing that are good for distilling how to write testable functions... The Boundaries one is a good one for ansible module writers to learn: https://www.destroyallsoftware.com/talks/boundaries
+17:34:33 <mmaglana> abadger1999: nice!
+17:34:34 <abadger1999> That might the ruby version... Let me find the pycon version
+17:34:42 <mmaglana> i don't mind ruby ;)
+17:34:56 <abadger1999> I'll link you to it in #ansible-devel later
+17:35:08 <mmaglana> thanks!
+17:35:26 <mmaglana> so with regards to main(), just to make sure i got it...
+17:35:54 <mmaglana> it should just initialize AnsibleModule and then dispatch another function to do the module user's bidding?
+17:36:07 <gundalow> +1
+17:36:10 <linuxdynasty> +20
+17:36:11 <mmaglana> cool
+17:36:12 <linuxdynasty> :P
+17:36:52 <mmaglana> alright. in that case, there really is no point unit testing main() as the unit test will just _mostly_ look like main itself.
+17:37:02 <gundalow> correct
+17:37:10 <linuxdynasty> also this is my personal opinion, but I do not like using module.fail_json() inside of functions/methods and I rather return it to main and raise it their. (I am unsure how the core team feels about that though)
+17:38:49 <caphrim007> linuxdynasty: i tend to go that route too
+17:39:01 <gundalow> Core team likes good code
+17:39:13 <abadger1999> I have a love-hate relation with fail_json() inside of functions/methods.
+17:39:25 <gundalow> Sounds like a sensible guideline, but I guess it really depends on the case
+17:39:27 <abadger1999> fail_json() is really equivalent to pyhton raise Exception().
+17:39:45 <abadger1999> But a vastly inferior version of raising an Exception.
+17:40:03 <bcoca> no, its equivalent to sys.exit(json.dumps(msg))
+17:40:15 <mmaglana> so would the accepted practice be for the functions to raise an exception and for main to catch and fail_json it?
+17:40:29 <abadger1999> bcoca: You're coming at it from a functional point of view... I'm coming at it from a use point of view.
+17:40:36 <abadger1999> So to clarify:
+17:40:42 <bcoca> abadger1999: programmers point, user doesn't see anything
+17:41:19 <bcoca> mmaglana: my issue with catchalls, you tend to give generic unhelpful messages, i'm fine as long as you get a specific message that can help the user determine what is wrong as clearly as possible
+17:41:36 <gundalow> Yes, that's a very good point
+17:41:39 <caphrim007> i can second bcoca's point
+17:41:40 <abadger1999> It is often used (and thus shows we have a need for) raising an exception.  What we have is a method that unconditionally exists the program an error message.
+17:41:49 <bcoca> - action you were attempting, - cause of error, if possible, - possible solutions
+17:41:50 <abadger1999> *with an
+17:42:18 <bcoca> abadger1999: not the same, exceptions can be captured, exit_json is meant for 'termination'
+17:42:29 <abadger1999> So at some point we need to design something that fits the needs better without the problems that we have now.
+17:42:46 <bcoca> i'm still not clear on what the problem is other than 'distaste'
+17:43:00 <abadger1999> bcoca: exit_json() performs termination.  People are using it in place of raising an exception.
+17:43:16 <linuxdynasty> what I try to do when I am writing modules, is to catch the exception and check if exception occurred and return it back to main and raise that exception.
+17:43:27 <abadger1999> What it is meant for is gray as "de facto" is fighting with "what it can actually do"
+17:43:32 <bcoca> abadger1999: i dont know what the issue is there, a) they are using it wrong? b) why not use exceptions?
+17:43:39 <abadger1999> linuxdynasty: That sounds pretty decent.
+17:43:53 <abadger1999> linuxdynasty: The only problem is losing information.
+17:44:03 <abadger1999> Which happens quite a lot as well.
+17:44:30 <abadger1999> toplevel does:
+17:44:31 <abadger1999> try:
+17:44:35 <abadger1999> do_everything()
+17:44:40 <abadger1999> except Exception as e:
+17:44:43 <bcoca> i still dont see that as an issue with fail_json, if we NEED more info we should make it available, fail_json should ONLY be used to indicate 'failure i cannot recover from'
+17:44:49 <abadger1999> return module.fail_json(msg=str(e))
+17:45:06 <bcoca> ^ abadger1999, my problem with that is what i stated above, user error messages will be crap
+17:45:21 <abadger1999> That loses the fine grained information about what is really going wrong and how it should be reported to the user.
+17:45:25 <abadger1999> bcoca: yep.
+17:45:39 <bcoca> I prefer to err on the side of being helpful to the user than to the programmer trying to fix the code (he can add exceptions/loggings/debugging)
+17:45:50 <linuxdynasty> well the try do everything is just bad design, try for a, if fail return
+17:45:56 <caphrim007> +1 it bugs me when i see that method of handling exceptions
+17:46:12 <abadger1999> So we need to figure out the right way to address the problems raised both both bad designs and get people using that instead.
+17:46:12 <bcoca> for me it is a red flag of a really bad error handling
+17:46:29 <abadger1999> I think we should have a catchall.
+17:46:31 <linuxdynasty> smaller methods will promote better code design which in turn will promote better error handling :D
+17:46:35 <bcoca> abadger1999: i reject modules with that pattern, not sure that is a problem
+17:46:50 <bcoca> ^ its in developer guidelines NO catchall exceptions
+17:46:56 <abadger1999> but the catchall should be builtin to basic.py
+17:47:05 <bcoca> abadger1999: i dont understand why
+17:47:17 <abadger1999> And the developer should make an effort to do the right thing.
+17:47:30 <bcoca> i dont think we need a catchall (we actually do have one, the part that reads module output)
+17:47:41 <abadger1999> bcoca: to get rid of some of the crap handling of stdout and stderr that we have to do controller side.
+17:47:54 <bcoca> we need that crap anyways
+17:48:02 <abadger1999> bcoca: and we could probably make the fail_json stuff better as well.
+17:48:04 <bcoca> ^ not all modules use basic.py, so there is no avoiding it
+17:48:19 <abadger1999> bcoca: there is no avoiding keeping it... but we can make less people run into it.
+17:48:21 <bcoca> not opposed to making it better, opposed to make it a parallel exception mech
+17:48:39 <bcoca> abadger1999: you are just moving it, not avoiding it
+17:48:56 <abadger1999> right now you get different exceptions in output depending on how the module was written.
+17:49:05 <bcoca> and i dont see the problem with IT as is, what does it do that you don't like? should we just not fix that?
+17:49:27 <bcoca> that will always be true?
+17:49:27 <abadger1999> bcoca: but you can make it better when you have structured data (the exception in the module) as opposed to screenscraping (from stdout and stderr)
+17:49:50 <abadger1999> We can make it so that all the modules that we ship are better.
+17:50:04 <abadger1999> because we mandate that all the modules we ship will use the module_utils boilerplate.
+17:50:09 <bcoca> er .. yes and no, you would have to wrapp the whole module in try/except
+17:50:23 <bcoca> we can already do that w/o a catchall
+17:50:26 <abadger1999> Definition of catchall.
+17:50:33 <abadger1999> No we can't.
+17:50:37 <bcoca> depends on which level you put it
+17:50:50 <abadger1999> def main is in the module, not in the AnsibleModule.
+17:50:51 <bcoca> if __main__ is one thing, what you are implying is around that also
+17:51:26 <bcoca> can you show me concrete example of what the problem is? i'm still not sure about the issue aside from vague 'output disparity'
+17:51:36 <abadger1999> anyhow... we have this argument a lot... we don't need to take up the new module meeting having it.
+17:51:39 <bcoca> and those are ALWAYS possible
+17:51:52 <bcoca> i thought we cancled the meetings until freeze is over
+17:52:01 <bcoca> ^ jimi posted message on last one
+17:52:30 <abadger1999> bcoca: Err sorry the testing meeting.
+17:52:32 <gundalow> This is Testing Working Group. New Modules meetings are on hold till after the freezde
+17:52:37 <abadger1999> bcoca: which is where we are now :-)
+17:52:39 <bcoca> abadger1999: i think we need proposal, i just dont 'see' what the issue is nor what the proposed solution will give us aside from more boilerplate and duplicate code
+17:52:49 <abadger1999> bcoca: +1 to proposal.
+17:52:51 <bcoca> gundalow: sorry
+17:52:59 <bcoca> did not mean to hijack
+17:53:07 <gundalow> bcoca: It's cool. There is usefull discussion going on
+17:53:22 <abadger1999> I don't have anything that is close to addressing all the problems yet so no proposal yet.
+17:53:32 <gundalow> mmaglana: Not sure if we confused the matter a lot there :P
+17:53:48 <mmaglana> not at all. it was an interesting discussion to me :)
+17:53:59 <bcoca> i think the 'actions' return key might be better suited to give us more context info (nitzmahone was writing that proposal)
+17:54:13 <bcoca> ^ which would also help with testing
+17:54:19 <bcoca> its kind of 'module debugging'
+17:54:23 <gundalow> mmaglana: Hopefully you got some good suggestions. If you want to go round this again feel free to add the 2nd version onto the meeting agenda and we will all have another look
+17:54:39 <bcoca> thoguh we already have a module debugging but some don't like that it goes to syslog
+17:54:57 <mmaglana> gundalow: i did. thanks and i will certainly submit the second version!
+17:55:08 <gundalow> :)
+17:55:14 <gundalow> Right, we have 5 minutes left
+17:55:27 <gundalow> Did anyone have anything else?
+17:55:40 <caphrim007> yeah, gundalow asked about my tests for f5 modules
+17:55:52 <caphrim007> the tests i have right now are in playbooks
+17:56:00 <gundalow> ah, yes
+17:56:05 <caphrim007> but the coverage here is per module
+17:56:06 <caphrim007> https://coveralls.io/builds/7958671/source?filename=library%2Fbigip_selfip.py
+17:56:21 <caphrim007> which is partially why i was asking abadger1999 about the ansiballz thing the other day
+17:56:41 <caphrim007> so my tests could be construed as "functional" tests specifically of the module
+17:57:07 <caphrim007> so thanks abadger1999 for not cramming all that module code together! (whether that was on purpose or not)
+17:57:15 <abadger1999> :-)
+17:58:03 <abadger1999> Making things more modular, structured, and organized is one of my personality quirks ;-)
+17:58:46 <caphrim007> i fought with coverage.py for a day and then i had my moment of enlightenment
+17:59:03 <caphrim007> and it resulted in a bug found, so hooray!
+17:59:14 <gundalow> caphrim007: What was the bit of magic you were missing?
+18:00:05 <caphrim007> i originally thought the entire ansiballz thing was executed as one part, but instead the module specifically is its own file
+18:00:16 <caphrim007> so i massaged the way coverage reports on that
+18:00:31 <caphrim007> i think i cc'd the commit in my message to the testing group's github issue
+18:02:52 <caphrim007> long story short, i create a .pth file at runtime that turns on coverage for everything, then during reporting i change the name of the file that is reported on
+18:03:02 <caphrim007> ansiballz calles it ansible_module_bigip_selfip
+18:03:12 <caphrim007> i just change that to bigip_selfip so that coverage can find my code
+18:03:31 <caphrim007> because ansible_module_bigip_selfip is transient
+18:03:52 <abadger1999> Cool.
+18:06:34 <abadger1999> caphrim007: One thing to test your code one is a module that mirrors a name from the stdlib. That's the reason I had to start prefixing with ansible_module_ in the first place.
+18:07:19 <abadger1999> caphrim007: It probably will be okay because it sounds like you are just changing the name in the report, not in actually running the code but thought I'd mention it as a possible caveat.
+18:07:19 <caphrim007> yeah, in my  .coveragerc i turn off the pylib coverage, but that is a valid point
+18:07:51 <caphrim007> yeah i change it in the report
+18:07:57 <caphrim007> under the "include =" section
+18:08:13 <abadger1999> <nod>
+18:11:24 <caphrim007> gundalow: thats it from me
+18:11:54 <gundalow> cool
+18:12:53 <gundalow> I added a "Tasks/Status" section to the top of https://public.etherpad-mozilla.org/p/ansible-testing-working-group
+18:13:23 <gundalow> Feedback on that would be welcome
+18:13:57 <gundalow> I need to step away from the computer now
+18:14:32 <gundalow> Thanks as always for all your time
+18:14:42 <gundalow> One last question
+18:14:52 <gundalow> Is anyone going to Velocity in Amsterdam?
+18:15:05 <gundalow> I should be there
+18:15:18 <gundalow> #endmeeting

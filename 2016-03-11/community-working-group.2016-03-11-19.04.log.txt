@@ -1,0 +1,101 @@
+19:04:35 <gregdek> #startmeeting community-working-group
+19:04:35 <zodbot> Meeting started Fri Mar 11 19:04:35 2016 UTC.  The chair is gregdek. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:04:35 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:04:35 <zodbot> The meeting name has been set to 'community-working-group'
+19:04:40 <gregdek> #chair rbergeron
+19:04:40 <zodbot> Current chairs: gregdek rbergeron
+19:04:59 <gregdek> #info agenda, as always: https://waffle.io/ansible/community
+19:06:27 <gregdek> #topic Proposals
+19:06:38 <gregdek> https://github.com/ansible/community/issues/23
+19:07:14 <gregdek> #info New repo is created: https://github.com/ansible/proposals
+19:07:41 <gregdek> #info Proposals in process of being moved over
+19:08:13 <rbergeron> and https://github.com/ansible/ansible/pull/14929 is ready to merge.
+19:10:19 <gregdek> #topic New module committee
+19:10:29 <gregdek> https://github.com/ansible/community/issues/39
+19:10:46 <gregdek> Still waiting on newtmckerr for the core resource for this, should have it today
+19:16:23 <gregdek> #topic Reviewer Recruiting
+19:16:34 <gregdek> https://github.com/ansible/community/issues/44
+19:16:49 <gregdek> From the ticket:
+19:17:12 <gregdek> "Put a module reviewer solicitation directly in boilerplate for modules that are in core review. "
+19:17:25 <gregdek> e.g. "Hi submitter! Thanks for this PR. This module is currently maintained by the Ansible Core team, which means it might take a while. But if you'd be willing to take over maintainership, we might be able to move your PR through more quickly! Just respond to this with "new_maintainer" and we'll follow up with next steps to make you a maintainer of this
+19:17:25 <gregdek> module."
+19:18:02 <gregdek> abadger1999 bcoca jimi|ansible nitzmahone what would you think of doing ^^^ this for modules in Extras?
+19:18:29 <gregdek> (we could consider for modules in Core too, but def would start in Extras)
+19:20:03 <rbergeron> well - so have we been doing okay at picking up new maintainers for not-owned-by-core-modules
+19:20:19 <gregdek> True -- only 10 of the 285 files are owned by ansible
+19:21:07 <gregdek> Core is 55/199, but that's because we've been more conservative in handing over maintainership
+19:21:15 <gregdek> (at least in part)
+19:21:42 <nitzmahone> Hmm... I think we might want to have a little higher bar for maintainer "nomination" - just because someone files a random PR doesn't necessarily mean they're qualified as a maintainer (and I've definitely seen a number of cases where that's REALLY true).
+19:22:31 <misc> what would be the risk ? not answering to bug, or committing wrong code ?
+19:23:04 <gregdek> That is sometimes true. But the most important criteria is willingness to commit time and effort, and the most likely pool of those folks are kinda by definition people who submit PRs.
+19:23:26 <nitzmahone> OTOH, I've come across cases where I've merged fantastic PRs and would love to offer that to someone
+19:23:58 <gregdek> And module maintainers who give consistently bad "shipits" -- all of which are ultimately reviewed in at least a cursory fashion by the core team -- will probably get discouraged soon enough.
+19:24:03 <rbergeron> well, i think there are enough eyeballs around to determine if someone has made good changes and maybe has made good progress / comments / etc. elsewhere int eh project.
+19:24:33 <gregdek> I'd just like a better answer than "whoops, maintainer went away! Let's wait on the core team to magically have free time." :)
+19:24:35 <rbergeron> But I think worse is letting things languish, letting perfectly good possible maintainers feel dejected because their stuff wasn't accepted, because in some cases they'll never come back.
+19:24:39 <nitzmahone> Ah, so we're still talking extras only (for now) and not giving commit access, just "shipit" privs? I'm more comfortable with that
+19:24:45 <gregdek> Right.
+19:25:02 <rbergeron> nitzmahone: yeah, just "module maintainer" level things
+19:25:05 <gregdek> I continue to think that, for modules, we still need core committers to merge shipits.
+19:25:12 <nitzmahone> So long as we're still agreed that "shipit" isn't an automatic merge, that someone's at least looking at it (and ideally running it)
+19:25:20 <rbergeron> where possible.
+19:25:35 <gregdek> I presume that the core team has a schedule for reviewing shipits. :) Our goal is just to make sure they're working from a good starting place.
+19:25:36 <rbergeron> some things (crazy networking harddware or whatever) sometimes makes that hard(er).
+19:27:26 <nitzmahone> of course- if it's something we can't readily test, we'll have to take the maintainer's word. :)
+19:27:33 <gregdek> Which we do anyway!
+19:27:36 <rbergeron> well: we could do that for... maybe pick like 10 modules that really need some love, and see if it works in getting someone, and see if it actually works as a new process. :)
+19:27:43 <rbergeron> gregdek: exactly
+19:28:33 <gregdek> ok. I'll let the other core folks catch up and have their say when they notice we've asked them for input.
+19:28:37 <nitzmahone> gregdek: I don't think we have a "standard" workflow for it yet. Waffle's been really nice for some things, but I'm still trying to figure out all the different github-search-fu to make sure things don't fall through the cracks
+19:29:08 <gregdek> Well, one simple thing: look at anything marked "shipit" in core and extras every so often.
+19:29:15 <gregdek> Usually aren't more than 5-10 around.
+19:29:39 <gregdek> Which I think y'all do! But I'm not certain. All I know is they don't tend to stick around for too long.
+19:29:43 <nitzmahone> Right- I'm building up a list of actions to take on triage day (that's one I need to add)
+19:31:16 <gregdek> ok!
+19:31:25 <gregdek> Where is that list, and can other people help?
+19:36:00 <nitzmahone> Mostly in my head, but it's getting large enough that I have to write it down
+19:36:30 <bcoca> i'll post the list for 'triage day' i was writing it up for the new recruits
+19:37:24 <gregdek> Awesome!
+19:37:47 <gregdek> I would love for that to live as a document in the community repo, could we have that?
+19:38:30 <bcoca> could, but things like maling list access makes it hard for this to be a 'community thing'
+19:39:54 <abadger1999> For extras, I am definitely in favor of empowering the community.  We can't (micro)manage everything
+19:40:09 <sivel> as things are becoming more public, might be worth making sure that the means of communication and such during a traige should be moved public
+19:40:23 <gregdek> +1 to sivel
+19:40:40 <rbergeron> +2 even :)
+19:40:50 <abadger1999> note that shipit in extras is close to a rubber stamp for me... a lot of the things getting shipits there I don't run so can't test.. I just look for simple, obvious flaws (maybe 5 minutes of review) and then merge.
+19:41:28 <gregdek> worth perhaps discussing what we mean by triage. :)
+19:41:29 <sivel> especially with some of the language in the contributors docs, that contributors are integral to the roadmap process, probably makes sense to make sure that there is minimal private comms
+19:41:45 <gregdek> One kind of triage is merging shipits for modules.
+19:41:50 <sivel> or at least comms being exposed to those external contributors
+19:41:58 <rbergeron> transparency. it works! :)
+19:42:01 <gregdek> That, in particular, I'd like to see all core committers being able to help with.
+19:42:37 <gregdek> There may be other kinds of triage that's more challenging to break out in that way, I dunno.
+19:42:46 <sivel> I can't necessarily commit myself to a day of triage, but I do try to help when I can :)
+19:43:19 <gregdek> If it's a whole day, that's terrifying, LOL
+19:43:32 <rbergeron> well, ideas come out when at least one thing starts happening.
+19:43:49 <sivel> what does that mean?!
+19:43:53 <sivel> ;)
+19:44:00 <gregdek> But getting a broad set of people up to speed who can spend an hour here or there merging shipits seems worthwhile to me, in both core and extras
+19:45:30 <rbergeron> yeah. well, triage "day" may not be a day thing, unless it's just "hey everyone, let's traige all the issues in exras and core and make sure the right people are pinged, just work when you can"
+19:45:59 <rbergeron> ... all day stuff is nicer for things like a testing day, and just making sure omeone's available in a channel for any weird questions or etc.
+19:46:02 <rbergeron> different things.
+19:46:04 <rbergeron> anyway.
+19:46:15 <rbergeron> what's the takeaway here, peeps?
+19:46:19 <rbergeron> actions?
+19:46:28 <rbergeron> Pick out a few modules and test this out?
+19:46:45 <gregdek> There are only 10 owned by core in the extras repo anyway.
+19:46:53 <gregdek> Why not just turn it on in extras and see how it goes?
+19:48:03 <gregdek> The process I'm envisioning is that when modules get "orphaned" (i.e. move from a maintainer to ansible maintainer) we post new boilerplate, and any new PR filed against a module that's currently "orphaned" gets similar boilerplate.
+19:48:22 <gregdek> And then the bot can pick out some kind of "volunteer" text for action.
+19:50:42 <gregdek> #action gregdek will move the extras recruitment boilerplate forward
+19:50:53 <rbergeron> that sounds delightful.
+19:51:26 <rbergeron> resmo might be interested to see this as well. :)
+19:51:46 <rbergeron> might link to these notes somewhere (like if you change the boilerplate in ansibullbot)
+19:51:53 <rbergeron> (in that pr)
+19:51:58 <gregdek> Yep.
+19:52:06 <gregdek> #topic open floor
+19:52:12 <gregdek> Anyone have anything to discuss?
+19:54:06 <rbergeron> I haz nothing.
+19:54:26 <rbergeron> other than thanks to folks who joined us today :)
+19:54:34 <gregdek> Thanks y'all!
+19:54:36 <gregdek> #endmeeting

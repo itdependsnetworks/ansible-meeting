@@ -1,0 +1,113 @@
+15:00:59 <thaumos> #startmeeting ansible core meeting
+15:00:59 <zodbot> Meeting started Thu Jun 15 15:00:59 2017 UTC.  The chair is thaumos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:00:59 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:00:59 <zodbot> The meeting name has been set to 'ansible_core_meeting'
+15:01:08 <thaumos> #chair thaumos ryansb
+15:01:08 <zodbot> Current chairs: ryansb thaumos
+15:01:16 <thaumos> missed by a min...
+15:01:18 <thaumos> sorry folks
+15:01:58 * shertel is silent but deadly
+15:02:26 <thaumos> #chair shertel
+15:02:26 <zodbot> Current chairs: ryansb shertel thaumos
+15:03:07 <alikins> blorf
+15:03:31 <ryansb> alikins: gesundheit
+15:05:12 * gundalow waves
+15:05:13 <thaumos> #chair alikins
+15:05:13 <zodbot> Current chairs: alikins ryansb shertel thaumos
+15:05:19 <thaumos> #chair gundalow
+15:05:19 <zodbot> Current chairs: alikins gundalow ryansb shertel thaumos
+15:05:27 <thaumos> #topic Open Floor
+15:06:55 <jtanner> Kinda here but not really
+15:06:57 <thaumos> Looking forward to seeing some people at the contributor summit next week!
+15:07:02 <thaumos> #chair jtanner
+15:07:02 <zodbot> Current chairs: alikins gundalow jtanner ryansb shertel thaumos
+15:07:08 <thaumos> it's all good.
+15:09:46 <thaumos> welp
+15:10:00 <ryansb> looks like the whole meeting is silent but deadly
+15:10:03 <thaumos> lol
+15:10:14 <itdependsnetwork> hold on
+15:10:21 <gundalow> itdependsnetwork: hey dude
+15:10:24 <thaumos> #chair @itdependsnetwork
+15:10:24 <zodbot> Current chairs: @itdependsnetwork alikins gundalow jtanner ryansb shertel thaumos
+15:10:32 <gundalow> #chair itdependsnetwork
+15:10:32 <zodbot> Current chairs: @itdependsnetwork alikins gundalow itdependsnetwork jtanner ryansb shertel thaumos
+15:10:34 <thaumos> @itdependsnetwork, I mentioned you on the issue
+15:10:37 <gundalow> #unchair @itdependsnetwork
+15:10:37 <zodbot> Current chairs: alikins gundalow itdependsnetwork jtanner ryansb shertel thaumos
+15:10:45 <thaumos> thanks gundalow
+15:10:50 <itdependsnetwork> can we look at: https://github.com/ansible/ansible/pull/20717
+15:10:59 <thaumos> I am going to review that PR.
+15:11:00 <samdoran> Here here
+15:11:07 <thaumos> #chair samdoran
+15:11:08 <zodbot> Current chairs: alikins gundalow itdependsnetwork jtanner ryansb samdoran shertel thaumos
+15:11:16 <ryansb> Anyway, I'd say the big item would be to add stuff to https://public.etherpad-mozilla.org/p/ansible-summit-june-2017
+15:11:21 <gundalow> YES :)
+15:11:23 <ryansb> if that's not on the agenda already
+15:11:24 <gundalow> thanks ryansb
+15:11:51 <itdependsnetwork> sorry if I jumped in line. thought you were saying silent so let's close the meeting :)
+15:11:52 <ryansb> itdependsnetwork: what would you like to cover RE: https://github.com/ansible/ansible/pull/20717
+15:11:59 <ryansb> no worries :)
+15:12:07 <gundalow> correction: Updates go onto the sub pages of https://public.etherpad-mozilla.org/p/ansible-summit-june-2017-agenda
+15:12:11 <thaumos> Oh no not at all, itdependsnetwork
+15:12:22 <ryansb> I was just rummaging around for the agenda link
+15:12:37 <thaumos> I assume you just want to have the PR merged, amiright?
+15:12:39 <itdependsnetwork> @bcoca indicated that there was not consensus and didn't seem like it would be added any time soon
+15:12:44 <itdependsnetwork> lol, yes
+15:12:54 <thaumos> I'm going to review it from a product perspective.
+15:13:17 <thaumos> we'll have an answer by next week.
+15:13:36 <thaumos> #topic ansible/ansible#20717
+15:13:41 <cben> hi
+15:13:55 <ryansb> #action thaumos get consensus on https://github.com/ansible/ansible/pull/20717
+15:14:05 <thaumos> #link https://github.com/ansible/ansible/pull/20717
+15:14:09 <thaumos> thanks ryansb
+15:14:11 <itdependsnetwork> thanks!
+15:14:22 <thaumos> #topic Open floor
+15:14:26 <thaumos> #chair cben
+15:14:26 <zodbot> Current chairs: alikins cben gundalow itdependsnetwork jtanner ryansb samdoran shertel thaumos
+15:14:39 <ryansb> #link corrected Summit Etherpad https://public.etherpad-mozilla.org/p/ansible-summit-june-2017-agenda
+15:15:15 <cben> I'm here about https://github.com/ansible/ansible/pull/25106
+15:15:52 <cben> we have ~5 modules for ManageIQ we want to contribute, this is the first simplest one.
+15:16:31 <thaumos> #topic ansible/ansible#25106
+15:16:41 <thaumos> #link https://github.com/ansible/ansible/pull/25106
+15:17:16 <bcoca> gpl
+15:17:27 <bcoca> handle import error
+15:17:32 <bcoca> see ec2/boto
+15:17:46 <bcoca> missign docs
+15:17:58 <thaumos> isn't it gpl?
+15:18:14 <bcoca> ah, nvmd .. was looking at module_utils ...
+15:18:18 <thaumos> heh
+15:18:47 <bcoca> well, import error is still and issue
+15:18:58 <cben> which docs are missing?  RETURN?
+15:19:08 <bcoca> cben: nvmd, no coffee today
+15:19:21 <bcoca> just import error is an issue from what i said above
+15:20:07 <cben> cool
+15:21:04 <shertel> the return docs are empty though?
+15:21:13 <bcoca> cben: on 'e' you might want to use to_native to avoid encoding issues, also yo have an 'exception' key to put tracebacks in (optionally)
+15:21:24 <bcoca> shertel: that is fine if return is only common fields
+15:21:37 <shertel> Ah, okay
+15:21:58 <bcoca> those are already documented .. and people tend to document them differently ....
+15:22:06 <bcoca> i've seen 7 diff descriptions of msg
+15:22:34 <shertel> ha
+15:22:49 <samdoran> Only seven? ;)
+15:23:10 <gundalow> in one file
+15:23:11 <bcoca> i stopped reading at one point
+15:23:36 <cben> tracebacks (that we catch) normally represent server errors (it's a module that talks to a REST API)
+15:23:55 <bcoca> understsood, that is why i said 'optionally'
+15:24:20 <cben> so I wonder if they're useful.  If we have an unexpected crash we don't catch, user will see tb, right?
+15:24:26 <bcoca> was letting you know of the facitliy, it does not display to user by defautl, it only shows with -vvv (though it is always logged)
+15:24:43 <cben> thanks, I'll think of it.
+15:24:46 <bcoca> if logged is enabled
+15:25:42 <thaumos> feel free to poke at us more in #ansible-devel @cben
+15:25:54 <thaumos> #action cben/team to handle import error
+15:26:12 <thaumos> #topic Open Floor
+15:27:36 <gundalow> thaumos: Do we want to cancel all IRC meetings next week?
+15:27:47 <thaumos> Yep
+15:27:49 <gundalow> I think I'll kill Network & Testing Working Group
+15:28:01 <thaumos> I already added in a comment before today's meeting
+15:28:07 <gundalow> #info NO IRC MEETINGS w/c 19th June
+15:28:08 <gundalow> cool
+15:28:48 <thaumos> anything else to talk about folks?
+15:29:20 <bcoca> im 4 mounts away from having all class mounts
+15:30:06 <thaumos> 🙌
+15:30:29 <thaumos> Alrighty!  Looking forward to seeing some of you in person next week!  If not, be sure to attend remotely!
+15:30:33 <thaumos> #endmeeting

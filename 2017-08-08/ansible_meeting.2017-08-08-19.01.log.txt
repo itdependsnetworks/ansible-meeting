@@ -1,0 +1,232 @@
+19:01:05 <abadger1999> #startmeeting ansible meeting
+19:01:05 <zodbot> Meeting started Tue Aug  8 19:01:05 2017 UTC.  The chair is abadger1999. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:01:05 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:01:05 <zodbot> The meeting name has been set to 'ansible_meeting'
+19:01:09 * nitzmahone lurks
+19:01:19 * shertel waves
+19:01:32 * mkrizek lurks
+19:01:33 * mikedlr waves
+19:01:53 <abadger1999> Agenda: https://github.com/ansible/community/issues/220
+19:03:02 <jtanner> oh hai
+19:03:05 <abadger1999> #chair nitzmahone shertel mkrizek mikedlr Erasmix samdoran bcoca jtanner dag- alikins ganeshrn gundalow mattclay newswangerd Qalthos ryansb
+19:03:05 <zodbot> Current chairs: Erasmix Qalthos abadger1999 alikins bcoca dag- ganeshrn gundalow jtanner mattclay mikedlr mkrizek newswangerd nitzmahone ryansb samdoran shertel
+19:03:38 <abadger1999> #topic https://github.com/ansible/community/issues/220#issuecomment-319466723  facts namespace
+19:04:18 <abadger1999> #info after last weeks irc meeting core team discussed workload and timing and decided to revert the facts namespace for now and re-add it in 2.5 with the keys inside the namespace being shortened.
+19:04:38 <abadger1999> #topic https://github.com/ansible/ansible/pull/27636
+19:05:14 <abadger1999> #topic Notification module for Office 365 Connector Cards - https://github.com/ansible/ansible/pull/27636
+19:05:40 <abadger1999> Is marc-sensenich around?
+19:07:12 <abadger1999> Okay.
+19:07:32 <abadger1999> This is a pretty simple new module I think.  Talks to a web api to set a notification.  Anyone want to take it?
+19:08:46 * shertel will
+19:08:57 <abadger1999> Cool.  thanks shertel.
+19:09:27 <abadger1999> #action shertel to do a review of https://github.com/ansible/ansible/pull/27636
+19:10:00 <abadger1999> #topic stdout/stderr parameter for the command module: https://github.com/ansible/ansible/issues/14380
+19:10:17 <abadger1999> This one is requiring some discussion.
+19:10:29 <abadger1999> But jimi|ansible is out this week and bcoca might be busy too.
+19:10:39 <abadger1999> So I'm not sure if we have enough of the right people to discuss it.
+19:10:51 <abadger1999> Unless someone objects, I'll skip it
+19:11:18 <samdoran> We should postpone than one.
+19:11:22 <abadger1999> #topic New xml module: https://github.com/ansible/ansible/pull/25323
+19:11:35 <abadger1999> dag: Are you here?
+19:12:05 <abadger1999> dag has been working on a module submitted earlier, getting it relicensed, fixing up the code, etc.
+19:12:52 <abadger1999> resmo has given it a shipit.
+19:13:00 <jtanner> shipit imo
+19:13:23 <samdoran> Really thorough testing.
+19:13:41 <abadger1999> Cool.  I'll merge it after the meeting.
+19:14:40 <abadger1999> #info abadger1999 to give xml module a quick once over and merge after the meeting
+19:15:15 <abadger1999> #topic encoding, bytes and modules that deal with file contents - https://github.com/ansible/ansible/issues/27779
+19:15:31 <abadger1999> Okay, I put this one on the agenda.  It's kinda a tough one.
+19:15:35 <abadger1999> Policy decision.
+19:15:55 * jtanner didn't even know "replace" was a module
+19:16:35 <abadger1999> Our basic strategy for dealing with content from files for the last several years in replace, lineinfile, template, copy w/ content, and other file-content modules has been to read and write utf-8.
+19:17:46 <abadger1999> There's other encodings of unicode out there.  and files can be of any of those encodings.
+19:17:48 <jtanner> replace: mode=binary|utf8
+19:18:36 <abadger1999> They can also have mixed encoding (which makes for some poor UI... no tool can display the file on the screen correctly even if it can edit it correctly)
+19:18:46 <jtanner> evank is the author of the module
+19:19:09 <abadger1999> And they could even embed arbitrary sequences of bytes.
+19:19:19 <jtanner> so are we debating reversing https://github.com/ansible/ansible/pull/24861 and doing it differently?
+19:19:45 <abadger1999> The submitter of the linked issue wants to make it so that we address all of these use cases.
+19:19:51 <abadger1999> I think that at least some are out of scope.
+19:19:54 <jtanner> it's a community module
+19:20:01 <jtanner> i don't want to dictate to the author how to handle it
+19:20:15 <abadger1999> jtanner: yeah.
+19:20:50 <abadger1999> jtanner: well... I think that whatever we do for replace also applies to lineinfile, copy content, and those other modules I mentioned which are core modules.
+19:21:14 <abadger1999> jtanner: the yeah was: we 'd revert 24861 and do it differently.
+19:21:31 <jtanner> sounds like "differently" would be a much larger scope of work
+19:21:33 <mattclay> I think we do need a consistent policy across modules, whatever that is. Otherwise we don't know what to test and users won't know which modules support their use case without trying them.
+19:21:49 <jtanner> ^ larger scope
+19:22:12 <jtanner> 2.5+ roadmap item
+19:22:39 <abadger1999> The only way I can see to handle arbitrary file content is to leave the file content as bytes at all times and then have module parameters that re-encode the strings passed into the module as parameters (as opposed to what 24861 did, which is decode the strings read from the file)
+19:23:04 <abadger1999> jtanner: note that hte replace changes have only hit devel so far.
+19:23:36 <abadger1999> jtanner: so any module param changes are currently okay but won't be once 2.4 is out.
+19:23:39 <jtanner> but you are saying to remove that change and have it broken until we take the time to fix all modules
+19:24:05 <abadger1999> jtanner: I'm saying I want a policy/strategy so that we can implement it the same for all modules.
+19:24:16 <abadger1999> they don't all have to get the changes at the same time.
+19:24:27 <abadger1999> But we should be implementing the same strategy for all of them.
+19:24:36 <jtanner> policy is fine. complication will be design, imo
+19:24:44 <abadger1999> rather than one module doing one thing and a different module doing something different.
+19:25:23 <samdoran> Seems like it was the intent of the author to bring this module inline with the others by using utf-8 encoding.
+19:25:39 <abadger1999> I think my proposal would be that these modules are only for handling single encodings.  Just as replace is now, the user can specify an encoding to to read and write the file.
+19:25:49 <abadger1999> encoding should default to utf-8
+19:25:59 <samdoran> +1
+19:26:24 <abadger1999> We should be encouraging of a new module, or set of modules that deal with binary data.
+19:26:37 <jtanner> so add params['encoding'] to the common argspec for file modules?
+19:26:38 <abadger1999> and those can handle the mixed encoding case.
+19:26:53 <abadger1999> jtanner: yeah -- although the file module itself doesn't need it (since it doesn't handle file contents)
+19:27:21 <mattclay> abadger1999: If handling mixed encoding, what would you do with module arguments?
+19:27:38 <abadger1999> (Note that encouraging of modules that handle binary content is something we've not been open to in the past so that's also a change)
+19:28:02 <abadger1999> mattclay: you mean if we wanted to implement the user's use case instead of my proposal?
+19:28:15 * jtanner wonders if someone will want to debate setting encoding on "touched" files
+19:28:35 <abadger1999> If we did that, we'd need to have at least one module parameter that told how to encode the string parameters that we're giving to the modules.
+19:28:55 <abadger1999> In the case of something like lineinfile, you could theoretically want a separate encoding parameter for each string
+19:28:57 <mattclay> abadger1999: I guess I was confused by your later statement "and those can handle the mixed encoding case".
+19:29:11 <abadger1999> (line could have one encoding while regex could  have a different one)
+19:29:52 <abadger1999> jtanner: I would rather have an iconv module than to overload touch like that.
+19:29:53 <jtanner> would have been a good topic for the contributor summit
+19:30:08 <abadger1999> jtanner: we're having another one in September ;-)
+19:30:21 <jtanner> at a more reasonable time of day too
+19:30:37 <abadger1999> mattclay: ah... my proposal would be to handle mixed encoding cases via modules meant for binary data.
+19:31:07 <mattclay> abadger1999: Ah, as in new modules specifically for binary data, not existing modules updated to handle binary data?
+19:31:20 <abadger1999> mattclay: correct... that's my proposal/strawman.
+19:31:31 <abadger1999> people can feel free to tell me they don't like it ;-)
+19:31:32 <mattclay> OK, makes sense now. Thanks.
+19:31:58 <jtanner> i can see that getting annoying
+19:32:15 <jtanner> like all the [win]_something module duplicates
+19:32:31 <abadger1999> From the questions I'm getting, this seems like it might be too big to decide now.  What would you like me to do to move this forward?
+19:32:41 <jtanner> add to contributor summit
+19:32:46 <abadger1999> k
+19:32:55 <jtanner> i see it as a shift
+19:33:04 <jtanner> and requires design
+19:33:10 <abadger1999> #acton abadger1999 to write up a proposal and putting this on the contributor summit agenda
+19:33:39 <alikins> I read 27779 as a request for modules to be aware of locale specified encoding and possibly default to the locale specified encoding. Related but different than using non-utf8 encodings for string content passed to module.
+19:33:44 <mikedlr> I really don't like the idea of multiplying the number of modules by some number of encodings .. even if it only applies to some select ones.
+19:35:15 <abadger1999> alikins: https://github.com/ansible/ansible/issues/27779#issuecomment-320424672  <=== the submitter is asking to operate "encoding-less" on byte strings.
+19:36:09 <abadger1999> mikedlr: We'd handle single encodings in the current modules.  Files where the system has multiple encodings in the same file would be handled by one or more binary-oriented modules.
+19:37:50 <abadger1999> So it's not an infinite matrix of modules x encodings but it could theoretically double the file-content oriented modules (my preference would be to have modules for binary data that were different than the ones for text.  more like a single binary sed module rather than replace + lineinfile + copy content)
+19:38:06 <mikedlr> right, but then you end up with line_in_file_binary and line_in_file (UTF), copy_file_binary and copy_file ..  etc.  there are quite a number of files which can't be safely handled by UTF reading..
+19:39:05 <mattclay> abadger1999: Would it be feasible to have modules able to work with any single arbitrary file content encoding, where one of the options was bytes?
+19:39:16 <abadger1999> mikedlr: sorta.  you only need copy if you support copy content that way.  you can't have template because jinja won't do multi-encodings.
+19:39:32 <mikedlr> okay;  binary "sed" sort of makes sense.
+19:40:17 <abadger1999> mikedlr: in my proposal you could do lininfile encoding=latin-1;  you jsut couldn't say lineinfile: line_encoding=latin1, regex_encoding=utf-8
+19:40:19 <mikedlr> abadger1999: you can have jinja + encoding conversion -  it's just the output that goes binary.  Think this should be an open proposal which people put up designs for and then select the best.
+19:40:37 <abadger1999> mikedlr: right.  But that's supportable in my proposal.
+19:40:47 <abadger1999> It's not what the issue reporter wnats, though.
+19:41:07 <abadger1999> they want /etc/passwd with one entry using latin-1 and a different entry using utf-8
+19:42:06 <abadger1999> Okay.  I think we should move on, if you have more comments, hit me up after the meeting so I can include your thoughts i nthe proposal
+19:42:21 <mikedlr> okay..
+19:42:33 <abadger1999> #topic cyberarkpassword lookup plugin - https://github.com/ansible/ansible/pull/21857
+19:42:56 <Erasmix> I'm here
+19:43:41 <jtanner> #chair Erasmix
+19:43:41 <zodbot> Current chairs: Erasmix Qalthos abadger1999 alikins bcoca dag- ganeshrn gundalow jtanner mattclay mikedlr mkrizek newswangerd nitzmahone ryansb samdoran shertel
+19:43:48 <abadger1999> Erasmix: I see that Pilou raised an issue with this one.
+19:44:21 <Erasmix> I'd like 21857 and 27519 to be reviewd
+19:44:22 <alikins> if there was a 'content' or 'payload' or 'blob' arg type, it could include the text encoding and say, a base64 of the bytes.
+19:44:30 <Erasmix> what's the issue
+19:44:44 <abadger1999> Erasmix: https://github.com/ansible/ansible/pull/21857/files#r126185846
+19:45:04 <Erasmix> ok. We'll review
+19:45:13 <Erasmix> can we also please look at 27519?
+19:45:13 <abadger1999> oh, I see you put in a note in docs...
+19:45:17 <abadger1999> that doesn't seem right.
+19:45:38 <abadger1999> Erasmix: oh, also... docs live outside of the lookup plugin right now.
+19:45:54 <Erasmix> CyberArk User Management #27519
+19:46:11 <Erasmix> @abadger I'll take that in
+19:46:31 <abadger1999> Erasmix: docs/docsite/rst/playbooks_lookups.rst <== that's where lookup plugin docs go
+19:46:41 <Erasmix> thank you
+19:47:00 <Erasmix> anything else?
+19:47:20 <jtanner> i thought bcoca had worked on enabling docs inside plugins
+19:47:52 <abadger1999> jtanner: he has but it's not ready yet... We're close enough to 2.4 freeze, I'm not sure if it will make it for 2.4 or 2.5.
+19:48:25 <abadger1999> Erasmix: for Pilou's note, you should see if you can make it work as an implementation for loops.
+19:48:43 <Erasmix> I will. Thank You
+19:48:43 <abadger1999> Erasmix: if not, there, should be some explanation of why that isn't possible.
+19:49:00 <Erasmix> understood
+19:50:02 <Erasmix> Anything else?
+19:50:36 <abadger1999> Erasmix: I think (but don't hold me to it, I'm trying to read code fast and migtht be mistaken) that hashivault is an example that does it by parsing each term for extra arguments.
+19:50:43 <abadger1999> So that may be something to copy.
+19:51:09 <abadger1999> Erasmix: Do you have someone reviewig these now?  I see that bcoca was commenting earlier.
+19:51:11 <Erasmix> We'll look into this
+19:51:19 <Erasmix> Yes, PR 27519
+19:52:09 <abadger1999> k
+19:53:03 <abadger1999> He's not at this meeting today but hopefully he'll continue the review once you've made the changes and if not we can ping him from this meeting then or see if we can get someone else to review.
+19:53:25 <Erasmix> Who?
+19:53:44 <abadger1999> bcoca?
+19:53:48 <Erasmix> ah
+19:53:59 <abadger1999> You said "yes"  was that saying he was reviewing?
+19:54:14 <abadger1999> or for something different?
+19:54:20 <Erasmix> I meant Yes, I have something else I want reviewed
+19:54:26 <abadger1999> ah okay.
+19:54:31 <Erasmix> PR 27519
+19:54:35 <abadger1999> #topic CyberArk User Management module - https://github.com/ansible/ansible/pull/27519
+19:56:27 <abadger1999> Looks like I was reviewing this one.  I'll go ahead and do another pass of it after the meeting?
+19:56:43 <abadger1999> #action abadger199 to do another review pass on https://github.com/ansible/ansible/pull/27519
+19:57:11 <Erasmix> Thank You @abadger
+19:57:30 <abadger1999> Okay, limited time left..
+19:57:35 <abadger1999> #topic Open floor
+19:57:49 <abadger1999> Anyone have any announcements?
+19:58:08 <abadger1999> I do see that mikedlr is here and he had some PRs he wanted to push.
+19:58:41 <mikedlr> yes;  might also announce that I'll be talking about using ansible for configuring microservices at the London meetup next week.
+19:58:54 <abadger1999> Nice :-)
+19:59:25 <mikedlr> this is kind of related.  - I'd like to get the minimum sensible set of modules to run AWS lambda based microservices merged ASAP
+19:59:32 <abadger1999> mikedlr: Which of those PRs is blocking the other ones?
+19:59:35 <mikedlr> so that it's mostly stable for the next release
+19:59:59 <shertel> mikedlr: let's let shippable finish on https://github.com/ansible/ansible/pull/24722 and then I'll merge that
+20:00:03 <mikedlr> there's a dependency the RDS module utils to get the split up RDS modules in .
+20:00:41 <mikedlr> I think we can merge it in one state then improve it in a separate PR.
+20:00:55 <abadger1999> k
+20:01:03 <mikedlr> I think it's important to get to the state where we can deprecate the old RDS module soon.
+20:01:06 <abadger1999> mikedlr, shertel: Is the ansible aws sig having meetings?
+20:01:19 <shertel> https://github.com/ansible/ansible/pull/26059 has a merge commit.
+20:01:23 <abadger1999> 9and are they useful for recruiting reviewers?)
+20:01:38 <shertel> We haven't been having meetings.
+20:01:40 <mikedlr> abadger1999: there's not really enough of us yet for meetings to matter that much.
+20:01:44 <abadger1999> <nod>
+20:02:03 <abadger1999> Okay.
+20:02:31 <mikedlr> maybe though it would be helpful publicity?
+20:03:19 <mikedlr> I don't think ryan/me/shertel (and willthames depeding on TZ) would be enough to keep so much conversation going.
+20:03:41 <abadger1999> Are there enough of you to agree as a group how important it is to get there minimum set of modules in for 2.4?  And make a recommendation for getting them in if you collectively agree (like we think we should have an exception to freeze, or we can fix any other bugs after freeze, etc)?
+20:04:23 <abadger1999> mikedlr: yeah, I agree.  If you are still able to talk things over ad hoc without a meeting it's probably better for now.
+20:05:59 <abadger1999> I don't think the rest of us have the expertise to tell you whether the modules shold go inpre-2.4 or not but we'd certainly listen to a proposal from the group if you all think it's important to get them in.
+20:06:45 <shertel> I think we're on track for the roadmap. I'd like to see lambda things merged soon.
+20:06:57 <mikedlr> we can likely agree on priorities...  lambda_policy / s3 with boto3 /
+20:07:01 <shertel> mikedlr: nothing is happening to rds.py, yet, right?
+20:07:23 <shertel> so there wouldn't be anything holding back the rds split, since there will be time to work out kinks before deprecation
+20:07:41 <mikedlr> I want to have rds_* in so that we can say "rds.py will be deprecated soon;  please start trying the others modules"
+20:07:56 <shertel> +1
+20:08:13 <mikedlr> that's going to be a bit ugly so I think the wider community has to know we are planning it.
+20:08:22 <abadger1999> <nod>
+20:08:45 <mikedlr> but rds.py is unlikely ever to be fixed properly (e.g. it doesn't support SSD disks and probably never will which is terrrible for relational databases)
+20:09:19 <shertel> Yeah. I think everyone is onboard with the split.
+20:10:33 <mikedlr> yes; that ageed;  deprecation hasn't been widely discussed, though, I think.
+20:10:33 <abadger1999> Cool.  I think we'll mostly be willing to leave the decisions up to you all  just keep us informed ahead of freeze dates of what your needs are so we can anticipate them and tell you earlier if there's anything we can't budge on.
+20:10:48 <mikedlr> abadger1999: where are the list of freeze dates?
+20:10:52 <abadger1999> Alright.  Anything else?
+20:10:55 * abadger1999 digs those out
+20:10:59 <jtanner> mikedlr: in the roadmap doc
+20:11:16 <jtanner> https://github.com/ansible/ansible/blob/devel/docs/docsite/rst/roadmap/ROADMAP_2_4.rst
+20:11:32 <abadger1999> Core Engine Freeze and Module Freeze: 15 August 2017
+20:11:36 <abadger1999> Core and Curated Module Freeze: 15 August 2017
+20:11:40 <abadger1999> Community Module Freeze: 29 August 2017
+20:11:50 <abadger1999> Target Release: Mid-September 2017
+20:11:51 <mikedlr> module utils?  Part of modules?
+20:12:09 <abadger1999> mikedlr: by and large yes.
+20:12:54 <mikedlr> probably just doable.
+20:12:55 <abadger1999> mikedlr: I think much of the amazon stuff is curated, though, so those might be the 15th.
+20:13:06 <abadger1999> (if it's new, then it would be Aug 29th)
+20:13:24 <abadger1999> mikedlr: also.. I think there's some events that will take some working days away from ansible employees.
+20:13:45 <abadger1999> we have a meeting in durham the week of the 20th
+20:13:54 <shertel> ryansb and I will be out the 14th-16th
+20:14:01 <abadger1999> so there will be travel, week of meetings, travel back
+20:15:04 <mikedlr> split is new, and rds has { 'supported_by': 'community' } so I think key things have till August 29th.  still everything is tight.
+20:15:13 <abadger1999> <nod>
+20:15:53 <abadger1999> How about either next meeting or next week, giving an idea of whether you htink you'll need an exception or a slip to get things in and we can discuss it then?
+20:16:11 <mikedlr> more support on testing and playing with the modules doing different things would be appreciated.  gundalow will be there in london.
+20:16:13 <shertel> I think #27910 should be using placebo probably. Your other module utils pr for rds 26594 looks good to me. I'd like to have another review on it before merging.
+20:16:14 * abadger1999 should close this particular meeting soon.
+20:16:16 <mikedlr> abadger1999: yes.
+20:16:21 <abadger1999> Cool.
+20:16:55 <abadger1999> #action mikedlr and shertel to work on reviewing/merging listed prs
+20:17:30 <mikedlr> I think what we lack is more feedback with stories of success using the modules.  .. show them to your friends ;-)
+20:17:41 <abadger1999> #action aws sig to evaluate timing and report on whether they may need more time to finish at one of hte next few meetings.
+20:18:40 <abadger1999> #info Ansible, company meting will delay work from Aug 20th => 27th
+20:19:13 <abadger1999> #info AWS users, test the modules in the PRs so we have more assurance they're doing the right things!
+20:19:23 <abadger1999> Okay, closing meeting n 30s
+20:20:00 <abadger1999> #endmeeting

@@ -1,0 +1,325 @@
+16:03:34 <privateip> #startmeeting Networking Working Group
+16:03:34 <zodbot> Meeting started Wed May 18 16:03:34 2016 UTC.  The chair is privateip. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:03:34 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:03:34 <zodbot> The meeting name has been set to 'networking_working_group'
+16:03:57 <privateip> ok lets get started
+16:04:05 <privateip> i have the following topics for today's meeting
+16:04:12 <privateip> 2.2 Roadmap
+16:04:24 <privateip> Network facts
+16:04:40 <privateip> SDN modules
+16:04:51 <privateip> any other topics for today?
+16:05:03 * kei is good, as all the PRs are merged! :)
+16:05:15 <gundalow> https://meetbot.fedoraproject.org/ansible-meeting/2016-05-04/networking_working_group.2016-05-04-16.03.html has the actions from the previous meeting
+16:05:24 <gundalow> https://meetbot.fedoraproject.org/ansible-meeting/2016-05-04/networking_working_group.2016-05-04-16.03.log.html is the full chat log
+16:05:25 <jedelman8> there are other modules me and my team plan on contributing - most are for nxos devices - not sure if you want to track them ?
+16:05:54 <privateip> jedelman8: hi ... and yes hit that in 2.2 roadmap
+16:06:02 <christx2> hi
+16:06:08 <gundalow> https://github.com/ansible/community/issues/99 mentionsansible/ansible#15911
+16:06:08 <jedelman8> probably a question that has an answer somewhere, but when does 2.1 get released as GA ?
+16:06:16 <mhite> Not sure if this got addressed, but it looked like an F5 GTM module got merged into the wrong directory. Let me double check to see if someone backed that out.
+16:06:40 <privateip> #topic 2.1 release
+16:06:52 <privateip> we are releasing 2.1 RC3 today !!
+16:07:02 <kei> yay!
+16:07:19 <jedelman8> sweet...how many candidates are there again? :)
+16:07:19 <privateip> plan is to have a short RC cycle and get final out the door next week
+16:07:28 <jedelman8> cool
+16:07:30 <privateip> this will (hopefully) be the last RC
+16:07:46 <privateip> obviously everything is null and void if major bugs show up
+16:07:58 * kei :)
+16:08:08 <privateip> if all goes well we expect a mid next week release
+16:08:23 <privateip> so (as i always ask) please hammer RC3 as much as your time allows
+16:08:49 <privateip> #topic 2.2 Roadmap
+16:08:57 <privateip> switching gears to 2.2
+16:09:15 <privateip> we want to start to lock in the 2.2 roadmap WRT to networking
+16:09:34 <privateip> the following items are what I know about so far
+16:09:41 <privateip> F5 move from extras to core
+16:09:46 <gundalow> Existing roadmap https://github.com/ansible/ansible/blob/devel/ROADMAP.md
+16:09:50 <jedelman8> how long is each minor releases roadmap?
+16:09:58 * kei yay F5 to the core!
+16:10:10 <privateip> four months
+16:10:14 <bcoca> 3-4 months
+16:10:15 <gundalow> privateip: can you add me to the chairs please and then I can add stuffinto the minutes
+16:10:19 <privateip> so the working goal is mid sept
+16:10:56 <privateip> support for quagga
+16:11:23 * kei yay quagga in 2.2!
+16:11:40 <privateip> this will be just the basics (zebra, conf files, etc)
+16:12:02 <privateip> move ovs from extras to core and add additional functionality
+16:12:19 <kei> nice!
+16:12:37 <kei> do we have someone from ovs here to take care of that?
+16:12:50 <privateip> gobgp support (stretch goal)
+16:12:57 <kei> or we do it. :)
+16:13:09 <privateip> adding support for config diff and replace to EOS, IOS, IOSXR and JUNOS
+16:13:17 <privateip> kei: as of now we do it
+16:13:23 <privateip> but im looking for a maintainer
+16:13:30 <kei> privateip: sounds good! :)
+16:13:32 <gundalow> #chair gundalow
+16:13:37 <gundalow> #chairs
+16:13:39 <gundalow> #chair
+16:13:43 <gundalow> :(
+16:13:56 <jedelman8> very cool regarding config diff & replace
+16:14:23 <privateip> we are also refactoring some of the common functions to harden them
+16:14:31 <privateip> taking advantage of ziploader
+16:14:59 <privateip> adding common network facts (will address in more detail in next topic)
+16:15:12 <privateip> jedleman8: anything you want to add (commit) to for 2.2?
+16:15:41 <privateip> for those of you who don't know...jedelman8 is the maintainer for the nxos modules currently in core
+16:15:52 <jedelman8> not just me..me and my team :)
+16:15:59 <privateip> i stand corrected
+16:16:00 <jedelman8> we are actively working a few more for nxos
+16:16:02 <privateip> you and your team :)
+16:16:15 <jedelman8> managing virtual port channels, ospf, bgp, vxlan, and evpn
+16:16:22 <jedelman8> our GOAL is by Sept
+16:16:53 <privateip> cool ... will get those added to the roadmap
+16:16:57 <jedelman8> there may be a few more smaller ones thrown in there too such as managing snmp and ntp
+16:17:29 <jedelman8> do we want to talk about getter modules, i.e. nxos_get_interface_counters,  or it could be *_get_this or *_get_that :)
+16:17:49 <privateip> yes lets do that in the next topic around facts
+16:17:53 <jedelman8> k
+16:18:05 <privateip> kei: ops needs for 2.2?
+16:18:23 <kei> privateip: i think we'll spend more on the roles
+16:18:38 <kei> not the cores ansible
+16:18:44 <kei> as far as i feel
+16:19:09 <privateip> ok sounds good ... as an aside check out the new docker modules, i think you will like them :)
+16:19:26 <privateip> mite: caphrim007: f5 roadmap items for 2.2?
+16:19:30 <privateip> besides migration to core
+16:19:31 <kei> privateip: I will! :)
+16:19:55 <mhite> I think we'd like to get support for F5's REST API into the existing modules
+16:20:12 <caphrim007> yeah, our f5-sdk is quickly adding functionality
+16:20:13 <mhite> While not breaking it for those who are on older version of BIGIP software which don't do REST yet
+16:20:35 * privateip likes that idea a lot
+16:20:56 <privateip> good to add REST API support for F5 to the roadmap then?
+16:21:26 <mhite> Yeah, I think the most challenging module to retrofit is actually the facts module. So I'd say the efforts may go beyond 2.2
+16:21:38 <mhite> But let's see what comes out of this facts discussion on the agenda
+16:21:48 <privateip> fair enough
+16:21:58 <privateip> ok any 2.2 stuff i missed?
+16:22:13 <privateip> i believe the plan is to publish the first draft next week of the 2.2 roadmap
+16:22:31 <gundalow> privateip: cool, than answers my question :)
+16:22:36 <gundalow> (when/where)
+16:22:47 <privateip> lol .. i knew at least one person had that question
+16:22:57 * kei :)
+16:23:08 <privateip> it will be published at ansible/ansible on github
+16:23:16 <privateip> #topic Network facts
+16:23:27 <privateip> ok so this seems to be a hot one right now
+16:23:48 * kei is a big fan of facts now! :)
+16:23:58 <privateip> i played around with some ideas last week while on vacation (amazing how clear my head gets when at the beach :)
+16:24:12 <jedelman8> +1
+16:24:13 <kei> privateip: good for u! :)
+16:24:32 <privateip> i propose we develop a base set of facts for network devices to be implemented for each OS that mimics ansible_facts
+16:24:51 <kei> nice!
+16:25:02 <privateip> i came up with three subsets: hardware, config, interfaces
+16:25:09 <privateip> well four: default
+16:25:22 <privateip> all prepended with ansible_net_<fact name>
+16:25:38 <privateip> all includes model, version, hostname, image, serialnum
+16:25:49 <kei> as ansible_net_hardware?
+16:25:54 <privateip> hardware includes filesystems, memfree_mb, memtotal_mb
+16:26:01 <privateip> config: config
+16:26:12 <jedelman8> are these modules or something more integrated into ansible?
+16:26:20 <privateip> interfaces: all_ipv4_addresses, all_ipv4_addresses, interfaces, neighbors
+16:26:27 <privateip> just modules
+16:26:47 <privateip> kei: so facts would return ansible_net_hostname for instance
+16:26:48 <kei> more higher layers, say bgp, will come into the picture?
+16:27:01 <privateip> yeah these are the base device facts
+16:27:15 <privateip> then i propose we develop more specific fact modules around network "applications"
+16:27:19 <privateip> ansible_net_bgp
+16:27:23 <privateip> ansible_net_ospf
+16:27:25 <privateip> etc
+16:27:33 <jedelman8> even for those
+16:27:37 <jedelman8> there is bgp configuration state
+16:27:42 <jedelman8> and operational state
+16:27:45 <privateip> yep
+16:27:47 <jedelman8> what is your thought there?
+16:28:09 <privateip> to do what makes sense :)
+16:28:14 * kei :)
+16:28:18 <bcoca> i think we need asnible_fact_plugin hostvar
+16:28:26 <privateip> i think we should break them up into subsets similar to base device facts
+16:28:40 <bcoca> so gather_facts/setup invokes 'that' when gathering facts for certain hosts
+16:28:59 <privateip> yeah that would be ideal
+16:29:42 * bcoca makes note
+16:29:49 <mhite> right now the bigip_facts can potentially collect an metric ton of data... the user specifies which portions of the taxonomy to retrieve. otherwise things could potentially take a long time.
+16:30:03 <mhite> it also already populates into ansible_facts
+16:30:37 <mhite> if a module set ansible_facts, is it compatible with the fact cache?
+16:30:40 <privateip> i just added my notes to the issue here: https://github.com/ansible/community/issues/99
+16:30:54 <privateip> i think it will help to visualize the fact tree better
+16:31:35 <privateip> my biggest worry is that facts doesn't become a statistics gathering mechanism ... there are far better tools around to do that
+16:31:35 <bcoca> mhite: yes
+16:31:51 <mhite> bcoca: cool
+16:32:19 <jedelman8> does this mean, you'd prefer to work on config state first ?
+16:32:19 <bcoca> facts should really be restricted to 'stuff i can make actions against or condition why i take action'
+16:32:21 <privateip> jedelman8: i know you have some thoughts here :)
+16:32:28 <jedelman8> I'd like to use ansible for pre and post change validation
+16:32:29 <mhite> privateip: regarding statistics -- definitely want to clearly articulate that for sure. because statistics are facts, just more ephemeral
+16:32:34 <jedelman8> which means we need stats
+16:32:36 <jtanner|t420> if facts are run with subsets, what would be wrong with using them for stats?
+16:32:43 <jedelman8> but they are NOT facts really
+16:33:05 <jedelman8> ephermeral facts seems off/odd whatever word you like better :)
+16:33:11 <privateip> granularity becomes a serious PITA
+16:33:22 <bcoca> if you want stats, its easy enough to register them and save localy , i would not bunch them up with facts
+16:33:37 <privateip> right what he said ^^
+16:33:55 <jedelman8> I'd agree with that @bcoca
+16:34:19 <jtanner|t420> fair enough. i still see this as argument of opinions though
+16:34:41 <jedelman8> that is a fact
+16:34:48 <mhite> is something like free space a fact, or a statistic?
+16:34:48 <jedelman8> :)
+16:34:57 <privateip> fact imho
+16:34:58 <mhite> or memory utilization?
+16:35:03 <mhite> they are ephemeral though
+16:35:18 <mhite> anyways, i won't rathole. just need to provide very clear guidance and examples of what is a fact and what is not
+16:35:19 <privateip> so what i hope to avoid are things like counters
+16:35:23 <jtanner|t420> in the world of big data, the thought is that anything can be a statistic
+16:35:45 <jtanner|t420> keep it all, analyze it later
+16:36:00 <privateip> ok lets start with the proposed network facts in the issue i ref above
+16:36:06 <privateip> and then we can go from there
+16:36:12 <mhite> from a statistics standpoint, cpu utilization, memory, and interface statistics are all changing yet one might be considered a fact while another not.
+16:36:15 <jedelman8> in an ideal world, I'd like to just run modules like  *_get_bgp_neighbors  and have it be returned as a key in ansible_facts
+16:36:33 <jedelman8> if register must be used, I will be able to move on and use it
+16:36:42 <privateip> or bgp_facts and gather_subset=neighbors
+16:36:43 <mhite> jedelman8: not a fan of that approach. module bloat
+16:36:50 <jtanner|t420> so is that just a request to create more subsets?
+16:37:04 <mhite> i'd more a fan of pruning instructions sent to the module itself
+16:37:13 <mhite> or inclusion
+16:37:14 <mhite> or whatever
+16:37:27 <jedelman8> wasn't that the intent anyway to have modules for each config/ object being collected?
+16:38:30 <privateip> #action privateip to capture all these notes and start discussion on ansible ML
+16:38:48 <privateip> lets start to document this so we all have a common reference point to draw from
+16:38:54 <mhite> not sure; from the standpoint of manipulating specific types of configuration are you asking?
+16:38:55 <privateip> i will take that action to get that started
+16:39:19 <kei> privateip: sounds good!
+16:39:27 <privateip> #topic SDN modules
+16:39:32 <bcoca> there is a balance between the 'one module that gathers all facts' and the module that gathers facts for odd numbered appliances 3rd network port on wednsdays
+16:39:33 <christx2> hello
+16:39:33 <mhite> like if there is a *_bgp module, there should also be a *_get_bgp? is that what you mean?
+16:39:44 <christx2> SDN modules - yes - ready to go
+16:39:56 <privateip> hi christx2
+16:40:14 <privateip> care to share your thoughts here?
+16:40:20 <christx2> okay
+16:40:39 <christx2> so as the github issue describes we have developed jointly with a customer a set of Ansible modules
+16:41:33 <kei> https://github.com/ansible/community/issues/99#issuecomment-220039575
+16:41:38 <christx2> they are structured around coding to an SDN overlay using a Vendor SDK (python in this case). We would therefore ask that a.) a repo for SDN be created under the networking section and b.) additional SDN vendors have the space to participate
+16:41:39 <kei> christx2: just in case
+16:41:45 <christx2> thanks kei
+16:42:27 <kei> christx2: do you have a code already to share somewhere?
+16:42:29 <christx2> this would be a subdirectory in networking, having monitored the working group and the networking efforts this would not clash with any vendor work on the underlays that ansible work is being done, so this would be a new thing
+16:42:42 <christx2> kei: the code is undergoing a licensing review
+16:42:46 <christx2> here is how it works however
+16:43:11 <christx2> 1. a set of core python modules (ansible 2.x compatible and tested) using the vendor sdk (apache 2.0)
+16:43:26 <christx2> 1. is complete , the modules need the MIT license
+16:43:45 <christx2> the sdk is imported in regular fashion into python and not modified, no licensing issues
+16:44:06 <jedelman8> which modules are being discussed?  for which SDN platform?
+16:44:10 <christx2> tasks and roles are mapped accordingly, as the description in my issue says - we create an entire network overlay topology
+16:44:20 <jedelman8> and do we really need to use the term SDN?  :)
+16:44:30 <christx2> the Vendor here is Nuage Networks and the SDK calls Restful API to the Nuage Controller
+16:44:35 * kei :)
+16:44:38 <jedelman8> roger that.  awesome.
+16:44:53 <christx2> SDN is pretty awesome and its actually "real"
+16:45:14 <christx2> we have several customers in production now, so we would like to propose under networking the repo of "SDN"
+16:45:17 <christx2> or "sdn"
+16:45:18 <jedelman8> <me giggles>  but note I really do like the nuage solution
+16:45:24 <bcoca> privateip: so mdavis will write up proposal with ansible_facts_plugin vs
+16:45:28 <bcoca> bar
+16:45:30 <bcoca> var
+16:45:34 <bcoca> ... needs food
+16:45:39 <privateip> bcocoa: thx
+16:45:52 <privateip> bcoca: damn my fingers get ahead of my brain
+16:46:05 <privateip> or i just really like to type o's
+16:46:15 <privateip> cristx2: is the code viewable somewhere?
+16:46:16 <christx2> thanks for the compliments
+16:46:19 <bcoca> ^ not worse mispelling of my name
+16:46:36 <christx2> well, if we can have the repo, and the MIT license is clear, we wil post it
+16:46:49 <privateip> has to be GPLv3
+16:46:50 <christx2> i can also check in a README.md describing all of it for a starter
+16:46:59 <christx2> okay, got it, GPLv3
+16:47:04 <christx2> noted.
+16:47:32 <christx2> the modules are written quite elegantly, there is a superclass and subsuperclasses
+16:47:32 <privateip> are all the modules focused on one overlay platform?
+16:47:45 <christx2> yep
+16:47:50 <christx2> however...
+16:48:00 <christx2> there is a map that can be ported to anyone else
+16:48:12 <privateip> can that be extracted into a separate library?
+16:48:17 <christx2> yep
+16:48:31 <privateip> to create a clean separation between agnostic and specific code
+16:48:41 <christx2> so the idea is to widen the SDN eco system, from my perspective we would like to see others use the same methods
+16:48:46 <privateip> my gut says to start with extras
+16:49:00 <gundalow> Back in a bit
+16:49:05 <privateip> until we get an uptake from the community
+16:49:09 <bcoca> ^ yes, start with extras, we can always 'promote'
+16:49:32 <christx2> well, SDN is emerging, and we would like to be the first one, so if we have the SDN repo under 'networking'
+16:49:33 <privateip> so i would recommend starting with sending PRs to extras and we can go through the process from there
+16:49:34 <christx2> then we can promote it
+16:49:41 <privateip> sure
+16:50:11 <privateip> lets get the PRs submitted and that will get the ball rolling
+16:50:16 <christx2> there is currently no SDN vendor or modules from what i can tell, so we would be the first ones to innovate in this area - if you guys are comfortable with this - let me know
+16:50:25 <christx2> we have to start 'somewhere'
+16:50:41 <privateip> yep
+16:50:44 <christx2> additionally our SDK is currently open sourced, so that would enable people to swap us out fairl comfortably
+16:51:09 <privateip> 'somewhere' is the PR process
+16:51:11 <kei> christx2: nice!
+16:51:14 <christx2> the SDK for viewing pleasure is here : https://github.com/nuagenetworks/
+16:51:18 <christx2> its VSPK
+16:51:27 <privateip> im excited about this
+16:51:49 <privateip> please be sure to review this: http://docs.ansible.com/ansible/developing_modules.html#getting-your-module-into-ansible
+16:52:03 <christx2> so structure is overlay_module.py —> vspk —> bambou (rest transport) —>  Rest
+16:52:03 <privateip> good rule of thumb checklist prior to submitting the PRs
+16:52:34 * kei browsing the code on github! :)
+16:52:48 <christx2> we would need your networking communities support to begin the inclusion of SDN into core, its a journey - agreed
+16:52:54 <christx2> someone has to do it though
+16:52:56 <jedelman8> I've done ACI modules that I'll eventually migrate...needs to be tested with newer version of ACI though.  That said, I'd prefer to see a directory called "aci" in the networking modules vs. an "sdn" directory that has "aci" or "vsp"
+16:53:31 <jedelman8> again, just an opinion :)
+16:53:41 <christx2> my only caveat here is that sdn is separate from fabric management
+16:53:53 <christx2> we don't do that in our modules, i do know that cisco aci does that as well ;)
+16:54:06 <kei> christx2: overlay_module.py under which repo?
+16:54:08 <christx2> its tied to the nexus 9000 gear, we are fully decoupled from hardware
+16:54:16 <kei> i'm still here... https://github.com/nuagenetworks/vspk-examples
+16:54:19 <jedelman8> my answer would be the same if it were nsx or plumgrid
+16:54:36 <christx2> kei: proposal is for sdn under networking on your repo
+16:54:49 <christx2> kei: the examples show the workflows that are ported now into ansible
+16:55:04 <privateip> i think sdn is to generic ... we need to tie the modules to their functionality
+16:55:16 <christx2> kei: the generic create network python code has a good example
+16:55:17 <privateip> we can still promote a common set of "sdn" functions
+16:55:22 <christx2> privateip: okay, how about overlays
+16:55:44 <christx2> privateip: anything decoupled from hardware and pure software overlay is what we are proposing, naming convention is up to you guys
+16:56:09 <privateip> are your modules opened publicly yet?
+16:56:11 <jedelman8> is there a "hypervisor" directory in ansible today?
+16:56:20 <privateip> no
+16:56:30 <bcoca> well .. we call it 'cloud'
+16:56:34 <privateip> its tied to platform
+16:56:36 <christx2> privateip: no i've not published the modules yet, hence i'm here to get that going :)
+16:56:56 <privateip> well cloud/vmware cloud/openstack, etc
+16:57:03 <christx2> privateip: all the underlying overlay / vspk bits are fully published and available, just not what we all worked on
+16:57:10 <bcoca> docker/lxc
+16:57:26 <privateip> right ... what im trying to avoid is network/sdn
+16:57:38 <christx2> privateip: are you guys comfortable with the idea of including pure software overlays (sdn) ?
+16:57:40 <jedelman8> if the community was fine w/ that, think we'll be fine with whatever we come up with here...
+16:57:44 <bcoca> might make sense to distinguish between 'virtualization as a service' and "local" virtualization
+16:57:47 <privateip> christx2: yes
+16:57:48 <christx2> privateip: i'm open to proposals
+16:57:49 <jedelman8> netvirt or overlays
+16:58:00 <jedelman8> network_virtualization
+16:58:15 <christx2> privateip: we would welcome community suggestions - team players here ! :)
+16:58:28 <bcoca> separate into cloud/ and virtual/
+16:58:29 <bcoca> ?
+16:58:41 <jedelman8> sorry if I missed this, but does the modules in question communicate to physical hardware, i.e. VTEPs GWs ?
+16:58:54 <christx2> privateip: my only thing is that it's pure software based, i.e. no hardware dependence, that is not something we believe is qualified as SDN
+16:59:17 <privateip> sure im with you there
+16:59:28 <privateip> im just advocating we dont call it sdn
+16:59:34 <privateip> that term is overused enough as it is
+16:59:43 <christx2> privateip: thanks , otherwise we blur the lines with existing hardware device modules , and it would be confusing
+16:59:52 <privateip> yep
+16:59:56 <privateip> i like netvirt
+17:00:11 <christx2> privateip: okay, cool.. i'm easy guys, whatever stands out and has lasting meaning
+17:00:22 <christx2> but lets be real, SDN is the sexy thing at the moment
+17:00:24 <privateip> i like network_virtualization but im to lazy to type that all the time :)
+17:00:28 <christx2> ;)
+17:00:35 <christx2> netvirt
+17:00:49 <privateip> ok send us the PRs under that name to start
+17:00:53 <privateip> and we go from there
+17:00:58 <christx2> if you make netvirt, i will make repo and being the Readme markdown in it
+17:01:08 <privateip> just make the folder in your PR
+17:01:19 * kei +1 for netvirt, as i'm also lazy too. :)
+17:01:22 <privateip> benefits of going first :)
+17:01:26 <christx2> okay, can you private email me the info, will ping you on irc directly
+17:01:33 <privateip> sounds good
+17:01:45 <christx2> this would be under the core modules - correct?
+17:01:46 <privateip> top of the hour ... any final comments?
+17:01:51 <privateip> extras for now
+17:02:10 <christx2> okay, fine, we would welcome the move to core - will talk separate about this
+17:02:24 <christx2> no comments from me, thanks for letting me participate
+17:02:28 <privateip> as always thanks all for joining .... see you next week
+17:02:32 <privateip> #endmeeting

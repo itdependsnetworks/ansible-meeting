@@ -1,0 +1,151 @@
+17:02:18 <mattclay> #startmeeting Testing Working Group
+17:02:18 <zodbot> Meeting started Thu Jul 27 17:02:18 2017 UTC.  The chair is mattclay. Information about MeetBot at http://wiki.debian.org/MeetBot.
+17:02:18 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+17:02:18 <zodbot> The meeting name has been set to 'testing_working_group'
+17:02:24 <mattclay> #chair gundalow
+17:02:24 <zodbot> Current chairs: gundalow mattclay
+17:02:26 * gundalow wavs
+17:02:33 * Pilou mp3s
+17:02:39 <gundalow> hey Pilou :)
+17:03:10 <Pilou> :)
+17:03:14 <mattclay> #chair Pilou
+17:03:14 <zodbot> Current chairs: Pilou gundalow mattclay
+17:03:58 <mattclay> What, no flac?
+17:04:00 <mattclay> :)
+17:04:43 <mattclay> gundalow: Do you have any updates or announcements before we get started?
+17:05:00 <gundalow> nop
+17:07:04 <mattclay> abadger1999 has been doing quite a bit of recent code cleanup around pylint failures. He's been making good progress on fixing existing issues so we can enable more tests. Is there anything you'd like to add, abadger1999?
+17:09:06 <mattclay> He might be busy with other things right now. We'll move on to the agenda.
+17:09:13 <Pilou> are "sanity pylint 'import-error'" test and "sanity import" equivalent ?
+17:10:09 <mattclay> Pilou: You're asking if the import-error test from pylint is the same as the ansible-test import sanity test?
+17:10:45 <Pilou> if they detect the same issues or different ones
+17:11:08 <mattclay> The sanity import test is specific to ansible. It will detect things that pylint won't.
+17:12:43 <Pilou> I guess we will be able to remove "import-error" from test/sanity/pylint/disable.txt when all "broken_import" tests will be fixed
+17:12:45 <mattclay> #topic Using ansible-test with a proxy (https://github.com/ansible/community/issues/114#issuecomment-317442397)
+17:12:50 <mattclay> pdellaert: Are you around?
+17:14:55 <mattclay> We can come back to this, or save it for next week, if pdellaert is available then.
+17:15:00 <Pilou> could we comment if this is a wanted feature or not ?
+17:16:03 <gundalow> If docker is the only issue they could do:
+17:16:05 <gundalow> docker pull -a ansible/ansible
+17:16:29 <gundalow> (with env set)
+17:16:29 <gundalow> then
+17:16:31 <gundalow> ansible-test integration --docker-no-pull
+17:16:43 <gundalow> oh, it's about the tests, not just docker
+17:16:46 <mattclay> I can understand why someone might need it to run tests. However, getting all the tests to work with a proxy might be difficult.
+17:17:17 * gundalow is leaning toward "Just use Shippable"
+17:17:56 <mattclay> Either that, or an environment which doesn't require a proxy.
+17:18:57 <mattclay> It's not even specific to using --docker
+17:19:14 <mattclay> Running the tests with --tox or no delegation option at all will also fail if a proxy is required.
+17:19:33 <gundalow> yup
+17:20:02 <mattclay> Even if we get it working, it would likely break later since we wouldn't be testing it.
+17:20:16 <gundalow> +1
+17:20:20 <gundalow> lets move on
+17:20:23 <Pilou> mattclay: i commented the meeting agenda issue with your point
+17:21:05 <mattclay> #topic pylint
+17:21:16 <mattclay> Pilou: Did you want to continue the pylint discussion?
+17:21:51 <Pilou> about import-error/sanity import ? nope, it's all good
+17:22:15 <mattclay> #topic Open Floor
+17:22:53 <mattclay> Does anyone have anything else they'd like to discuss?
+17:22:55 <Pilou> yep
+17:23:24 <Pilou> If I understand well, in the CI, the controller host and the managed host are the same: am i wrong ?
+17:23:50 <mattclay> It depends on the tests.
+17:23:57 <mattclay> For most integration tests, yes.
+17:24:10 <mattclay> For network-integration tests, the modules usually run on the controller but the managed host is still remote.
+17:24:23 <mattclay> For windows-integration, the modules run on the remote (powershell, not python).
+17:24:55 <mattclay> For some of the integration tests that do test a "remote" host, it's still the local host, just a different inventory entry pointing at localhost.
+17:25:07 <mattclay> There are some connection tests, for example, which connect back to localhost using ssh.
+17:25:21 <Pilou> for some module this is a problem
+17:26:03 <Pilou> for exemple the copy integration are mixing things (src/dest local/remote),
+17:26:24 <Pilou> and they don't pass when controller and managed hosts aren't the same
+17:26:37 <mattclay> So that's a case where the tests need to be fixed.
+17:27:00 <mattclay> Having a clear "local" or "remote" in the filenames/paths for those tests can help make it more clear what's going on.
+17:27:18 <mattclay> I did something similar for the connection tests, specifically to keep straight what was local and what was "remote".
+17:27:57 <Pilou> otherwise different unix account could be used
+17:28:52 <Pilou> a nonprivileged user running ansible-playbook and root on the managed side
+17:29:36 <Pilou> would a setup like that be possible with the CI ?
+17:29:56 <mattclay> It's not just CI though, the test needs to work locally as well.
+17:30:42 <mattclay> Using a separate user would definitely make it more difficult to get the test wrong, but I think we can accomplish the same thing with just better use of filenames.
+17:31:08 <Pilou> i guess locally is a 'special' case which doesn't represent how ansible is used in general
+17:31:41 <mattclay> By locally I mean people running the tests on their on machines instead of on Shippable.
+17:33:07 <Pilou> ok. I will try to use different users and report result here.
+17:33:40 <mattclay> If we want the copy test to use another user, the test will need to create the user at the start of the test, then remove it when it's done. Using a block for that will be good, so we don't leave a user behind if the test fails.
+17:34:23 <mattclay> I'd probably mark the test destructive at that point too, since we're adding/removing a user. Although we should only be removing the user we created, so I could see not marking it destructive too.
+17:35:43 <Pilou> currently these tests are creating/deleting files, should not they be flagged as destructive ?
+17:35:45 <mattclay> That would end up being a test with the controller running root and the other user being non-privileged.
+17:36:31 <mattclay> You'd need to use ssh to connect to localhost though to make it useful, which means you'll also need to add `needs/ssh` for an alias.
+17:36:43 <Pilou> mattclay: this way to do seems fine indeed, thanks !
+17:36:45 <mattclay> However, I'm still not convinced all this is needed for the copy test.
+17:36:51 <mattclay> gundalow: Thoughts?
+17:37:45 <gundalow> Does httptester give us anything useful?
+17:37:52 <Pilou> mixing remote/local paths is really easy when controller and managed hosts are the same host :-/
+17:38:42 <mattclay> Pilou: Having a good naming convention for the paths would take care of that.
+17:40:00 <Pilou> indeed
+17:40:12 <mattclay> That's much easier than making the test use a remote user.
+17:40:34 <mattclay> You could update the copy test to have a clear naming convention for local vs remote files and document it at the top of the test.
+17:40:46 <Pilou> ok
+17:40:55 <mattclay> Something like "all local files must have "-local-" in their name and all remote files must have "-remote-" in their name (or use a directory instead). Just some ideas.
+17:41:51 <gundalow> +1
+17:41:51 <pdellaert> sorry, was delayed
+17:42:07 <mattclay> That should catch any issues that would occur when running tests remote, without having to actually run them remote.
+17:42:11 <pdellaert> just saw the comment on the Testing Workgroup meeting ticket, and have responded
+17:42:32 <mattclay> pdellaert: OK, we can switch back to your topic in just a minute. I think we're about done with this one.
+17:42:38 <Pilou> yep
+17:42:47 <mattclay> Pilou: You're happy with that approach?
+17:42:49 <pdellaert> sure
+17:42:51 <abadger1999> note with copy and symlinks I know that there were some I created recently that I couldn't figure out a good way to do them in a remote-friendly manner
+17:42:57 <abadger1999> Pilou: but if you can that's great :-)
+17:43:21 <Pilou> mattclay: yep
+17:44:04 <abadger1999> (IIRC, the symlinks needed to know about things that they pointed to, not necessarily in the same tree, which is what made them hard)
+17:44:23 <mattclay> #topic Testing and Proxies (https://github.com/ansible/community/issues/114#issuecomment-317442397)
+17:44:33 <mattclay> pdellaert: Can you explain your use case briefly?
+17:44:41 <pdellaert> sure
+17:45:02 <pdellaert> In corporate environments, often, there's a non-transparent proxy
+17:45:33 <pdellaert> so when running integration tests that have to install certain pip packages or connect to certain external api's, you run into issues
+17:45:58 <pdellaert> aka, test development in such an environment is a bit of a pain, at least if you want to run ansbile-test
+17:47:23 <pdellaert> so the goal is to have a way to configure a proxy, which is pushed into tox or the docker containers being setup by ansible-test
+17:47:40 <pdellaert> that is typically http_proxy, https_proxy and yum/apt proxy settings
+17:47:42 <mattclay> As you pointed out in your comment on GH, there are two different things to address if we want proxy support: 1) test infrastructure, 2) the tests themselves
+17:48:22 <pdellaert> yes, and my initial focus is test infrastructure, because that will cover a lot already
+17:49:52 <gundalow> pdellaert: Are these for tests you are developing?
+17:50:17 <pdellaert> for the test infrastructure, the complexity is not that high... I'm no tox expert, but i assume it is a configuration value; for the CentOS/Ubuntu docker containers, it is a couple of '-e' flags to add during container spin-up
+17:51:01 <pdellaert> gundalow: i'm not actively developing tests at the moment, but i did ran into this issue while developing the integration tests for the nuage_vspk network module
+17:51:16 <mattclay> Passing proxy env vars to into the test environment (for --local, --tox and --docker) should be pretty easy. However, getting all the tests to work with that is going to be much more work.
+17:51:37 <pdellaert> the integration tests required the installation of a couple of pip packages
+17:52:03 <pdellaert> mattclay: does it need to happen at the same time?
+17:52:20 <mattclay> pdellaert: No, it doesn't.
+17:52:24 <pdellaert> or can we first develop proxy support in the environment, as i suggest in my GH comment
+17:52:43 <pdellaert> so at least pip/apt/yum work
+17:53:21 <pdellaert> and as a next step, investigate if it is worthwile to expand it into the tests themselves (for those that might require connections to outside stuff)
+17:53:51 <mattclay> One thing to keep in mind is that even if we add proxy support for test infra and tests, it will still regress over time unless we're testing that in CI. If you're only focused on running certain tests though, that's probably not going to occur often.
+17:55:51 <pdellaert> not entirely sure i follow the 'it will still regress over time', i think making sure the --local, --tox and --docker environments being aware of a proxy, would be a great improvement
+17:56:27 <mattclay> pdellaert: I mean if you're running all the tests, you might find that new/updated tests don't work with a proxy, even though the test infra supports it.
+17:56:29 <pdellaert> however if i'm the only one interested in it, no worries, i'll just work from home whenever i want to work on testing, or do tests ;)
+17:56:35 <pdellaert> oh, sure
+17:56:44 <Pilou> people running the tests on their on machines behind a proxy will be able to test that
+17:57:09 <Pilou> s/on their on/on their/
+17:57:12 <mattclay> pdellaert: Do you have a list of the env vars you'd like passed through?
+17:58:01 <pdellaert> mattclay: i can provide such a list, yes
+17:58:23 <mattclay> pdellaert: Could you create an issue on GH with those details and CC me?
+17:58:25 <pdellaert> will have to look into tox on the correct way of exposing a proxy in that environment
+17:58:45 <pdellaert> sure, i'll look at it over the weekend
+17:58:49 <mattclay> I'm already familiar with that, so if you can get me the details on the env vars you need, I can take care of it.
+17:59:38 <mattclay> We'll want the proxy env vars passed through for --local, --tox and --docker, but for other delegation options like --remote
+17:59:50 <pdellaert> mattclay: for --local (haven't used it): does this just install/run everything in the local active shell?
+18:00:05 <pdellaert> if so, i would assume the proxy env vars are already properly configured
+18:00:13 <mattclay> --local is actually the same as not specifying delegation (--tox, --docker, --remote)
+18:00:35 <pdellaert> I have always used --tox or --docker
+18:00:35 <mattclay> pdellaert: We only pass a few select env vars though, even for local.
+18:00:40 <pdellaert> ok
+18:01:17 <mattclay> When it comes time to adding support for tests, we might have issues with the cloud simulators, but we can deal with that later.
+18:01:54 <pdellaert> it all depends how much interest there is for this, make sure it is worth the effort
+18:02:02 <mattclay> I'm thinking I'll add an `--enable-proxy` option to pass through known proxy related env vars where appropriate.
+18:02:28 <mattclay> pdellaert: Once I have the list it should be pretty easy, especially if you can test my PR once it's ready.
+18:02:58 <pdellaert> sure
+18:03:53 <mattclay> #topic Open Floor
+18:03:58 <abadger1999> (sorry for not being around earlier)  I was able to enable the undefined-variable test after cleanup done this weekend.  I'm working on cleaning up wildcard imports next with help from the script here: https://github.com/abadger/dewildcard  When I get that done, we'll have to expand the Warning blacklist in the pylint skips so that we can turn that on without getting warnings for everything else.
+18:04:25 <mattclay> abadger1999: Very nice work there.
+18:05:10 <mattclay> Do we have any other volunteers for cleaning up existing pylint issues so we can enable more rules?
+18:05:13 <mattclay> :)
+18:05:45 <abadger1999> if so, reach out to me anytime :-)
+18:06:29 <mattclay> OK, we've used up our scheduled time slot. Does anyone else have anything before we end the meeting?
+18:07:39 <mattclay> #endmeeting

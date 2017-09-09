@@ -1,0 +1,63 @@
+16:00:01 <gundalow> #startmeeting Ansible Networking
+16:00:01 <zodbot> Meeting started Wed Feb 22 16:00:01 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:00:01 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:00:01 <zodbot> The meeting name has been set to 'ansible_networking'
+16:01:18 <gundalow> #topic Open Floor
+16:01:42 <gundalow> #chair rcarrillocruz Qalthos
+16:01:42 <zodbot> Current chairs: Qalthos gundalow rcarrillocruz
+16:02:26 <gundalow> Agenda https://github.com/ansible/community/issues/110
+16:02:36 <gundalow> Which doesn't appear to have anything new on it
+16:02:43 <gundalow> So open floor...
+16:04:23 <allanice001> I wonder if commits are lower due to core code freeze
+16:04:32 <bcoca> probably not
+16:05:12 <gundalow> Time to review may have dropped as people are finishing off code
+16:05:22 <ismc> I tested the ASA modules in 2.3 with the same results.  That is, it never makes the actual change even though it thinks it does.  Do anyone know what platform these modules were tested on?
+16:05:57 <gundalow> ismc: If you've not already done so could you please raise a bug
+16:06:01 <allanice001> ismc: Got a pr / link  ?
+16:07:10 <ismc> I put in an issue.  I have not gotten a change to look into the code to see where things are going wrong.  I was hoping that someone could give me a pointer, or at least the platform that it was tested on so that I can see it actually working.
+16:07:14 <ismc> Let me find the issue...
+16:07:56 <ismc> https://github.com/ansible/ansible/issues/19183
+16:08:38 <gundalow> Thanks, I've added the 2.3 milestone on it, so we will check and get back to you
+16:08:40 <allanice001> On some of the fgt stuff id been testing, it seemed the ssh connection closes before the data / command stream is complete
+16:09:48 <ismc> Thanks @gundalow.  Let me know if there is anything that I can do to help.  I am willing to, I just need guidance because I am not very bright.
+16:10:15 <gundalow> Lot of moving parts at the moment, so thanks for taking the time to test and report back :)
+16:10:16 <ismc> Thanks @allanice.  Is there somewhere that I can see an indication of that happening?
+16:11:06 <gundalow> ismc: Do the other asa_* modules work correctly?
+16:11:16 <allanice001> Dont know the asa modules very well myself, but try adding a pause / sleep step in
+16:11:46 <allanice001> I started with 5 seconds, as a test
+16:12:10 <ismc> Well, the asa_command module works in that it give the information from the command.  asa_config is the only other modules that I tested.
+16:12:26 <ismc> I don't _think_ that I tested asa_acl, but I can try.
+16:12:48 <ismc> Wilco @allanice001
+16:13:27 <allanice001> Also, could it be a dependency chaining thing? IE add port to vlan100 before vlan 100 exists ?
+16:13:55 <allanice001> (Again, my ASA knowledge is rusty at best, and haven't really worked since v9 got released
+16:14:31 <ismc> No, I can run the same things manually with not problem.  One of the example I did was creating a context, which has no dependancies.
+16:17:00 <gundalow> Cool
+16:17:05 <gundalow> Anyone else got anything?
+16:18:45 <dkasberg> gundalow: I have several PRs for cnos_xxx modules inflight
+16:19:10 <bjolivot_> gundalow: i have pr waiting for second shipit
+16:19:10 <dkasberg> I think they are waiting on review to be merged.
+16:19:29 <bjolivot_> and future PR based on the 1st PR waiting to be pushed
+16:19:50 <bjolivot_> https://github.com/ansible/ansible/pull/21409
+16:20:18 <gundalow> dkasberg: Oh, you've been busy. Poke me at the end of the week if you've not heard anything
+16:20:32 <dkasberg> ok, thx!
+16:20:33 <gundalow> #action gundalow to review https://github.com/ansible/ansible/pulls/dkasberg
+16:22:12 <gundalow> #action gundalow to review https://github.com/ansible/ansible/pull/21409
+16:23:10 <bjolivot_> thank you
+16:27:29 <gundalow> bjolivot_: From a quick look it seems OK
+16:30:11 <bjolivot_> I have a question, i'll release at least 5 more modules for fortigate, is it better to have 1 big PR or 1 PR by module ?
+16:31:41 <gundalow> bjolivot_: One PR = One Module
+16:31:49 <bjolivot_> ok
+16:31:50 <gundalow> bjolivot_: Have a look at http://docs.ansible.com/ansible/dev_guide/developing_modules_in_groups.html
+16:32:08 <allanice001> bjolivot_, I've been following your fortunate PR's and had some timeout issues in using them
+16:32:10 <gundalow> That's a fairly new doc, so any feedback is welcome
+16:32:20 <allanice001> Not sure if it was link latency at the time
+16:34:08 <bjolivot_> gundalow: exactly what I needed ;)
+16:35:03 <gundalow> :)
+16:36:03 <bjolivot_> your documentation runs faster than me ^^
+16:36:52 <gundalow> ?
+16:39:37 <bjolivot_> forget about it, bad french literal translation, probably don't mean anything in english :(
+16:41:52 <gundalow> ah :)
+16:45:26 <gundalow> Cool
+16:45:30 <gundalow> Thanks for your time everyone
+16:46:02 <gundalow> #info Agenda, feel free to add items at any point https://github.com/ansible/community/issues/110
+16:46:06 <gundalow> #endmeeting

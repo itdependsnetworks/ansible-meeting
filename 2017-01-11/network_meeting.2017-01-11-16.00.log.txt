@@ -1,0 +1,237 @@
+16:00:01 <gundalow> #startmeeting Network Meeting
+16:00:01 <zodbot> Meeting started Wed Jan 11 16:00:01 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:00:01 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:00:01 <zodbot> The meeting name has been set to 'network_meeting'
+16:00:11 <gundalow> #chair Qalthos privateip andriusb
+16:00:11 <zodbot> Current chairs: Qalthos andriusb gundalow privateip
+16:00:27 <gundalow> Hello everyone!
+16:00:37 <allanice001> bleep
+16:00:41 * allanice001 waves
+16:00:51 <sqweez123> hello
+16:01:12 * privateip creeps in and sits in corner
+16:01:46 <gundalow> #info Agenda https://github.com/ansible/community/issues/110
+16:02:21 <andriusb> oh no, I'm a char
+16:02:21 <gundalow> #topic Adding Unit test dependencies ansible/pull/20034
+16:02:31 <gundalow> #link https://github.com/ansible/ansible/pull/20034
+16:02:36 <ganeshnalawade> Hello
+16:02:36 <gundalow> ganeshnalawade: You around?
+16:02:49 <ganeshnalawade> gundalow, yes just came in
+16:02:49 <gundalow> Magic, responding before I ask :)
+16:02:55 <ganeshnalawade> :)
+16:03:10 <gundalow> So first of all, thank you for the test improvements
+16:03:31 <ganeshnalawade> welcome
+16:03:35 <gundalow> privateip: I believe you has some thoughts about adding dependencies in?
+16:03:46 <gundalow> https://github.com/ansible/ansible/pull/20034/files#diff-0f71000b056cf3c2090a3c823c7ca88a
+16:04:40 <privateip> yeah i think my concern is a bit broad about if we are going to go down the path of including all external libraries in for testing if we aren't shipping them with Ansible
+16:05:21 <gundalow> Sure, valid concern
+16:05:21 <privateip> if for instance junos-eznc is breaking test cases our unit tests are broke for all ansible yet it should have no material impact on if we ship code or not
+16:05:55 <privateip> i guess i would rather see mocked interfaces for unit tests
+16:06:42 <gundalow> #chair rcarrillocruz
+16:06:42 <zodbot> Current chairs: Qalthos andriusb gundalow privateip rcarrillocruz
+16:06:43 <privateip> but i feel like we should do it one way or the other and not mix and match
+16:07:03 <privateip> this might be a more applicable discuss for the core team meeting now that i think about it
+16:08:05 <ganeshnalawade> privateip, junos.py check if  junos-eznc is installed  or not at the start hence I have to add it else testcase was failing
+16:08:12 <gundalow> Matt Clay and I said we'd wait for your views before we discussed it anymore
+16:08:38 <ganeshnalawade> as such testcase has no dependency on junos-eznc
+16:09:52 <privateip> so in theory we should be able to mock the import call no?
+16:10:23 <privateip> and then we dont need to include the libraries in the test requirements
+16:10:45 <privateip> if we need to refactor the module code a bit to make that happen im okay with that
+16:10:48 <ganeshnalawade> yes that can be done...i did not thought about this
+16:11:16 <privateip> so for the PR lets take that approach
+16:11:41 <ganeshnalawade> ok will make the changes in PR
+16:11:41 <gundalow> Since I'm working on getting the Junos tests running in AWS so we can test with Shippable am happy with mocked out junos-eznc as we do testing with that there
+16:12:01 <privateip> #action ganeshnalawade to refactor PR 20034 to use mock external libraries
+16:12:04 <gundalow> Is Junos the only networking platform where we use an external library
+16:12:08 <privateip> yes
+16:12:18 <allanice001> Currently yes
+16:12:39 <ganeshnalawade> privateip, gundalow thank you for the suggestion
+16:12:40 <allanice001> For fortigate, you need to add pyfg
+16:12:42 <gundalow> cool, thought so
+16:13:05 <privateip> #action mattclay and gundalow to bring up more generic test requirements in core meeting
+16:13:18 <gundalow> +1
+16:13:51 <gundalow> allanice001: Thanks for the info about fortigate
+16:13:58 <gundalow> cool, next item then
+16:14:04 <sqweez123> allanice001: probably better to forget about pyfg, too much bug in rollback
+16:14:42 <allanice001> Just mentioned it as an external lib that could be a future dependancy
+16:14:43 <gundalow> #topic fortigate box management
+16:14:54 <gundalow> sqweez123: over to you :)
+16:15:05 <sqweez123> hello all !
+16:15:13 <privateip> pyfg is just an implementation on top of paramiko right?
+16:15:27 <sqweez123> I'm currently trying to add fortios box support in ansible
+16:15:33 <privateip> YAY
+16:15:54 <allanice001> Another YAY
+16:16:02 <sqweez123> privateip: yes something like this
+16:16:41 <sqweez123> i need some help/doc to make this append
+16:17:16 <privateip> sure how can i help?
+16:17:18 <sqweez123> as i did not found correct library, i'll make one, but don't know where to begin
+16:17:53 <sqweez123> i understant that i need to create some provider in module-utils
+16:18:24 <privateip> so fortios is cli based right?
+16:18:26 <sqweez123> then i could benefit from networkmodule boilerplate
+16:18:53 <sqweez123> privateip: yes, there is some REST API, but not well supported
+16:19:22 <privateip> ok so in Ans2.3 we have added support for working with CLI driven devices
+16:19:29 <privateip> new connection plugin network_cli
+16:19:47 <privateip> that will handle the lower layer connective to the devie
+16:19:51 <privateip> *device
+16:20:24 <privateip> to handle setting up the environment and priviledge escalation (if needed) we have added a new terminal plugin
+16:20:24 <sqweez123> is there some simple sample of implementation ?
+16:20:31 <privateip> yes
+16:20:33 <privateip> look at ios
+16:20:36 <privateip> its done
+16:21:00 <privateip> you will need to write  terminal plugin for fortios and put it into here https://github.com/ansible/ansible/tree/devel/lib/ansible/plugins/terminal
+16:21:01 <sqweez123> ios is based on new plugin ?
+16:21:05 <privateip> yes
+16:21:10 <privateip> in the devel branch it is
+16:21:17 <privateip> only in the devel branch
+16:21:42 <privateip> you can use https://github.com/ansible/ansible/blob/devel/lib/ansible/modules/network/basics/net_command.py once you have the plugin done
+16:21:45 <privateip> to send commands
+16:21:48 <privateip> to confirm working
+16:22:04 <privateip> then you can develop declarative modules for fortios
+16:22:22 <privateip> see https://github.com/ansible/ansible/blob/devel/lib/ansible/modules/network/ios/ios_system.py
+16:22:25 <privateip> and
+16:22:36 <privateip> here https://github.com/ansible/ansible/blob/devel/lib/ansible/module_utils/ios.py
+16:22:39 <privateip> for examples
+16:22:58 <privateip> does that help to get you started?
+16:23:15 <privateip> you can ping me in ansible-devel as questions come up
+16:24:12 <sqweez123> seem's ok to me
+16:24:24 <gundalow> Or me, though I not know the answers, however I may have seen a PR that does something similar by privateip that does similar
+16:25:31 <sqweez123> privateip: it could be cool to have some doc about that, i spend lot of time searching for these elements
+16:25:49 <privateip> good point
+16:26:00 <privateip> #action privateip to document new network_cli plugin
+16:26:14 <sqweez123> and for new module too, http://docs.ansible.com/ansible/dev_guide/developing_modules.html seems to be the only doc...
+16:26:25 <gundalow> privateip: If you want to just throw stuff into gDocs I can take it from there
+16:26:37 <privateip> thanks gundalow
+16:26:41 <gundalow> sqweez123: I've got a background task to completely write all of that
+16:27:04 <sqweez123> gundalow: great
+16:27:45 <sqweez123> as i'm not python expert nor ansible-devel expert, I can help you to find what's missing :)
+16:28:24 <privateip> allanice001 would you be able to help as well with this?
+16:28:30 <privateip> perhaps testing
+16:28:38 <allanice001> sure
+16:28:42 <privateip> cool
+16:29:04 <privateip> sqweez123: allanice001 is a good reason in the community to bounce things off as well
+16:29:10 <privateip> resource**
+16:29:12 <sqweez123> xenol offer help testing too, and lot friends of mine
+16:29:13 <privateip> sheesh
+16:29:22 <gundalow> Yup, and that's great. If you subscribe to https://github.com/ansible/community/issues/114 you will find out when I've done the new docs
+16:29:25 <gundalow> ace :)
+16:29:32 <privateip> the more the better
+16:29:38 <rcarrillocruz> ++
+16:29:42 <allanice001> our company is heavily invested in fortigate
+16:29:55 <privateip> hi rcarrillocruz ... welcome
+16:30:05 <allanice001> So I got lots of gear and fgt heads to ask if stuck
+16:30:10 <rcarrillocruz> o/ folks
+16:30:14 <gundalow> We happy to move onto the next topic?
+16:30:26 <gundalow> #topic rcarrillocruz
+16:30:31 <gundalow> Over to you :)
+16:30:35 <rcarrillocruz> heya folks
+16:30:49 <rcarrillocruz> i'm ricardo carrillo cruz, tho everybody calls me ricky
+16:30:53 <rcarrillocruz> i just joined ansible this week
+16:30:57 <rcarrillocruz> the networking team in particular
+16:31:15 <rcarrillocruz> hoping to get up to speed pretty soon and start contributing and fixing stuff :-)
+16:31:26 <rcarrillocruz> i'm based in Spain (CET)
+16:31:44 <rcarrillocruz> so folks in EMEA particularly you can find me on ansible-devel around those working hours
+16:32:40 <allanice001> Cool, welcome !! +1 for EMEA
+16:32:43 <gundalow> :)
+16:32:59 <rcarrillocruz> thanks! :-)
+16:33:47 <sqweez123> +1 for EMEA, i'm in Paris
+16:34:03 <gundalow> sqweez123: Are you going to Ansible Automates Paris?
+16:34:14 * misc is in emea too
+16:34:20 <sqweez123> there's Ansible Automates Paris?
+16:34:33 <gundalow> https://www.ansible.com/events
+16:34:35 <gundalow> 2nd Feb
+16:35:05 <misc> damn
+16:35:06 * gundalow will be there. Would be great to see you there
+16:35:13 * misc will be in AMS
+16:35:44 <misc> too bad, I could have spoke in french :)
+16:36:05 <gundalow> We should be annoucing the main AnsibleFest soon
+16:36:09 <allanice001> any future plans to have ansible events more south (Like South Africa?)
+16:36:09 <sqweez123> register seems closed
+16:36:25 <gundalow> oh, maybe we hit the limit already
+16:36:41 <sqweez123> then, i'll not :(
+16:37:17 <gundalow> #topic Open Floor
+16:37:48 <ganeshnalawade> privateip, i have one question
+16:38:07 <gundalow> ganeshnalawade: Sure
+16:38:14 <ganeshnalawade> for ios modules NetworkModule class is replaced with LocalAnsibleModule class.
+16:38:24 <ganeshnalawade> What's the reason for this change, also will same change apply to junos modules and other network modules?
+16:38:51 <privateip> yes LocalAnsibleModule replaces NetworkModule
+16:39:09 <privateip> the architecture moves from using SSH as an API to SSH as a connection plugin
+16:39:18 <privateip> subtle yet significant difference
+16:40:18 <ganeshnalawade> ok so this change is applicable for all network modules?
+16:40:30 <privateip> this will allow two key things: 1) persistence across playbook run for ssh connections 2) integration with ansible connection plugin system instead of having to re-encod credentials at the task level
+16:40:40 <privateip> all that have a CLI connection
+16:40:54 <privateip> im hoping to get netconf connection plugin done too
+16:40:57 <privateip> working on it now
+16:41:11 <privateip> not sure its going to make 2.3 though
+16:41:21 <privateip> lots more to think about and work through
+16:41:48 <ganeshnalawade> sounds cool
+16:43:01 <sqweez123> sounds cool to me too
+16:43:14 <gundalow> Oh, and when you are finished I have one question
+16:43:41 <ganeshnalawade> that answers my question ..thank you
+16:43:56 <gundalow> COol
+16:44:01 <gundalow> ganeshnalawade: https://github.com/ansible/ansible/pull/19038
+16:44:11 <gundalow> Causes https://github.com/ansible/ansible/blob/devel/test/integration/targets/junos_config/tests/netconf/src_basic.yaml#L4
+16:44:21 <gundalow> to fail with: {"msg": "update is merge but the following are missing: src",
+16:45:08 <gundalow> So previously it was valid to have lines: without src:
+16:45:48 <ganeshnalawade> gundalow, i have added required_if statement for update
+16:46:01 <gundalow> aye, and that's what I'm hitting
+16:46:49 <ganeshnalawade> this is expected behaviour right?
+16:47:52 <ganeshnalawade> configuration statement should be present while running junos_config module
+16:48:02 <ganeshnalawade> thats why i added this check
+16:48:04 <gundalow> privateip: What do you think?
+16:48:39 <gundalow> you've made src always be required
+16:49:04 <gundalow> as update has three states, and you've listed those three states on line s349-351
+16:49:25 <ganeshnalawade> ohh yes...
+16:49:37 <ganeshnalawade> configs statement can be in lines as well
+16:50:00 <ganeshnalawade> will raise a PR to fix this
+16:50:34 <privateip> +1
+16:50:46 <gundalow> Thanks, if you could ping me the link once you've done so I'll retest and get it merged
+16:50:55 <ganeshnalawade> sure
+16:50:58 <gundalow> Anything else in the final 10 minutes?
+16:51:32 <sqweez123> if noone else, i have question
+16:51:33 <gundalow> I think community outnumbered Ansible Staff today, which is great to see :)
+16:51:37 <gundalow> sqweez123: sure
+16:51:59 <sqweez123> i'm looking for the best way to validate module.params values
+16:52:41 <sqweez123> check if something is valid ip address, or country code...
+16:53:22 <gundalow> oh, interesting question
+16:53:44 <privateip> today that is up to the dev to implement ... means you need to write a function to validate the param value after you instantiate AnsibleModule (or LocalAnsibleModule)
+16:54:10 <privateip> AnsibleModule will type check the value but nothing further
+16:54:29 <sqweez123> privateip: today as in "it's in todo list" ?
+16:54:45 <privateip> no today is in the foreseeable future
+16:54:56 <sqweez123> xD
+16:55:36 <sqweez123> would be great to have some regexp, or function to set
+16:55:56 <privateip> we have tended to stay out of module developers way
+16:56:10 <privateip> one of the reasons why ansible is so broadly applicable
+16:56:16 <sqweez123> something like value         = dict(type='str',required=True, validate_re='/a|b/'),
+16:56:36 <bcoca> closests thing we have is choices= which is basically an 'enum type'
+16:57:10 <sqweez123> ok, i have my answer :)
+16:57:58 <gundalow> I'm not sure if their are official regex for parsing, some a lot more complex than you think
+16:58:44 <gundalow> andriusb: You there?
+16:59:10 <andriusb> @gundalow yep
+16:59:44 <gundalow> andriusb: Care to (re)introduce yourself as their are some new people in here
+16:59:57 <allanice001> sqweez123, maybe look at https://validators.readthedocs.io/en/latest/
+17:00:44 <sqweez123> thank's allanice001, I'll have a look ;)
+17:00:45 <andriusb> sure thing! Howdy all, my name is Andrius Benokraitis and I joined Ansible last month. I'm primarily responsible for product management activities pertaining to networking with Ansible
+17:02:41 <bcoca> sqweez123: not against having a validation added to it, but it wont cover all caes
+17:02:53 <allanice001> Welcome andriusb
+17:03:18 <andriusb> thanks all! :-)
+17:03:34 <andriusb> back to you @gundalow
+17:03:47 <sqweez123> welcome andriusb :)
+17:03:54 <sivel> btw, there was a PR to add validation/more types for module params, https://github.com/ansible/ansible/pull/17731
+17:04:05 <allanice001> while this has turned into an AA meeting ::
+17:04:11 <allanice001> My name's Allan
+17:04:12 <sivel> it requires changes, but we had discussed `type` being a callable
+17:04:18 <allanice001> Based in South Africa
+17:04:18 <andriusb> HI ALLAN
+17:04:48 <gundalow> :)
+17:04:49 <allanice001> And I'm a dev-ops developer
+17:04:50 <sqweez123> ok,then I'm Benjamin from Paris
+17:05:34 <andriusb> HI BENJAMIN! ;-)
+17:05:42 * sqweez123 waves
+17:06:05 <andriusb> gotta run, see you next time all!
+17:06:07 <sqweez123> ok guys, need to go, read you later ;)
+17:06:16 <allanice001> cheers
+17:06:21 <sqweez123> cheers
+17:07:37 <gundalow> :)
+17:07:43 <gundalow> Cool, thanks everyone
+17:08:37 <gundalow> Agenda for the other meetings https://github.com/ansible/community/issues?utf8=%E2%9C%93&q=is%3Aissue%20is%3Aopen%20label%3Ameeting_agenda%20
+17:08:47 <gundalow> Enjoy the rest of your day!
+17:08:50 <gundalow> #endmeeting

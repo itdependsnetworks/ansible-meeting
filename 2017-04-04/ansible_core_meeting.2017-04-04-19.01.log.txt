@@ -1,0 +1,298 @@
+19:01:21 <gundalow> #startmeeting Ansible Core Meeting
+19:01:21 <zodbot> Meeting started Tue Apr  4 19:01:21 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:01:21 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:01:21 <zodbot> The meeting name has been set to 'ansible_core_meeting'
+19:01:38 <nitzmahone> Zerp
+19:01:49 <gundalow> #chair abadger1999 alikins bcoca ganeshrn jimi|ansible jtanner mattclay nitzmahone Qalthos ryansb shertel
+19:01:49 <zodbot> Current chairs: Qalthos abadger1999 alikins bcoca ganeshrn gundalow jimi|ansible jtanner mattclay nitzmahone ryansb shertel
+19:02:01 * gundalow really needs to write an IRSSI alias for each of the meetings
+19:02:02 <shertel> hi
+19:02:13 <allanice001> suuuup
+19:02:17 * jtanner needs to write a bot that will just do the meeting
+19:02:20 <gundalow> It's a new month sooooooo
+19:02:33 <gundalow> #info April's Agenda https://github.com/ansible/community/issues/159
+19:02:39 <nitzmahone> Declare agenda bankruptcy and start over?
+19:02:43 <ryansb> haha
+19:03:01 <gundalow> oh, which reminds me, we did say we'd look at Proposals...
+19:03:14 <gundalow> or did we say a dedicated meeting for that
+19:03:16 <allanice001> Yeah, I'm here
+19:03:29 <gundalow> to clarify, I meant the backlog of proposals
+19:03:31 <allanice001> Not sure if jtanner is here too
+19:03:35 <allanice001> Ahh :P
+19:03:44 <jtanner> i am a robot
+19:04:02 <nitzmahone> bot_broken
+19:04:12 <jtanner> support my patreon
+19:04:16 <allanice001> I proposed this (the first full week of meetings) for that
+19:04:30 <gundalow> allanice001: that's today then
+19:04:40 <allanice001> agreed
+19:05:00 <gundalow> though I want to be a pain and say not the Tuesday meeting as I don't have enought brain left by 2004
+19:05:31 <gundalow> oh, lets rattle though the stuff on the agenda then see what we can do from proposals
+19:05:52 <nitzmahone> I don't have enough brain left by 1204
+19:05:59 <gundalow> #topic Discuss extending the module "shipit" workflow to non-modules, such as:
+19:06:09 <gundalow> #info https://github.com/ansible/community/issues/159#issuecomment-291567077
+19:06:45 <gundalow> #info https://github.com/ansible/ansibullbot/issues/437
+19:07:04 <gundalow> jtanner: What can we do to help this?
+19:07:15 <jtanner> is the the metadata finalized?
+19:07:39 <gundalow> abadger1999: ?
+19:07:52 <nitzmahone> Lol, back to metadata, first cat out of the bag
+19:08:26 <jtanner> this is why i shy away from meetings
+19:08:29 * gundalow looks for the abort butter
+19:08:32 <gundalow> eeeeeerm
+19:08:36 * gundalow looks for the abort button
+19:08:42 <gundalow> ok, moving on
+19:08:52 <jtanner> abort butter seems like a pretty disruptive product
+19:08:55 <nitzmahone> "He chose ... Poorly"
+19:09:22 <allanice001> gundalow is just speed thinly ....
+19:09:29 <gundalow> haha
+19:09:38 <allanice001> Spread even..
+19:09:47 <gundalow> #topic Fix for wildcards inside of a path for fileglob lookup
+19:10:17 <gundalow> #info New alternative fix from bcoca https://github.com/ansible/ansible/pull/23265
+19:10:29 <gundalow> If people could review that would be great, think we want that in 2.3
+19:10:39 <bcoca> 2.2 also
+19:10:48 <gundalow> ah, OK
+19:10:54 <jtanner> i'm a suggested reviewer on that
+19:10:58 <bcoca> its a lot less intrusive than the other, no messing withdwim
+19:10:58 <jtanner> i must be special
+19:11:12 <bcoca> jtanner: i've seen gh make some really weird choices sometimes
+19:11:17 <bcoca> not sure what they base it on
+19:11:38 <gundalow> you are a *suggested* reviewed because you've touched one of more of the files in a PR
+19:11:40 <jtanner> trade secret
+19:11:48 <gundalow> You haven't been *selected* as a reviewer yet
+19:11:55 <gundalow> ok, so that seems to be moving
+19:11:56 <gundalow> thanks bcoca
+19:11:58 <gundalow> NEXT
+19:12:14 <gundalow> #topic Proposal Proposal
+19:12:20 <gundalow> allanice001: Anything to add?
+19:12:35 <allanice001> i''ve put in the pr, and got some feedback
+19:12:38 <bcoca> gundalow: it just took me less to write this approach than to point out all of the bad with the other
+19:12:39 <allanice001> one sec...
+19:12:55 <gundalow> seems like lasttime we couldn't agree though it felt their may be a bit too much process around it all
+19:12:55 <abadger1999> metadata is finalized.
+19:12:58 <gundalow> bcoca: ace :)
+19:13:09 <abadger1999> (format)  but we haven't added it to non-module files yet.
+19:14:02 * mattclay waves
+19:14:36 <allanice001> gundalow, https://github.com/ansible/proposals/pull/59
+19:14:59 <gundalow> #info https://github.com/ansible/proposals/pull/59
+19:15:03 <gundalow> #chair allanice001
+19:15:03 <zodbot> Current chairs: Qalthos abadger1999 alikins allanice001 bcoca ganeshrn gundalow jimi|ansible jtanner mattclay nitzmahone ryansb shertel
+19:15:08 <bcoca> ^ i just created the mechanism that allows it, now the hard works of actually writing
+19:15:22 <allanice001> so, again this is a goal, not an immediate requirement
+19:15:30 <bcoca> ^ still need tests/filters ... i have idea, but not done yet
+19:15:36 <gundalow> OK
+19:15:48 <gundalow> allanice001: Just make sure it's not overengineered :)
+19:15:54 <gundalow> allanice001: shall we move on?
+19:16:04 <allanice001> ack
+19:16:10 <allanice001> we can move on
+19:16:15 <abadger1999> allanice001: Can you update the PR with the things that we noted in comments?
+19:16:24 <allanice001> will do
+19:16:39 <gundalow> #action allanice001 to update the PR based on review comments
+19:16:41 <gundalow> thanks!
+19:16:48 <gundalow> #topic How should Paths work
+19:16:52 <gundalow> bcoca:
+19:16:58 <gundalow> #link https://github.com/ansible/ansible/pull/22546
+19:17:24 <bcoca> did we have anything change since last time?
+19:17:26 <gundalow> bah, I didn't update the agenda with what was said last time out that
+19:17:46 <gundalow> You've got conflicts
+19:17:48 <bcoca> ^ do it while meeting, it helps keep current
+19:17:52 <jtanner> "What problem is this proposed process really trying to solve?"
+19:17:53 * gundalow ducks
+19:18:00 <bcoca> gundalow: i know, not worth fixing unless we go ahead
+19:18:09 <gundalow> bcoca: aye, I usually do, or based on the #info #actions after
+19:18:22 <allanice001> jtanner, can we chat post meeting, or pm me ?
+19:18:35 <jtanner> why in private?
+19:18:47 <allanice001> just thought off meeting
+19:18:51 <nitzmahone> My first thought is: "would we do better to just leave current behavior and add a "basedir override" cli arg?
+19:18:53 <gundalow> because we've moved to next topic
+19:19:08 <gundalow> or use ansible-devel
+19:19:11 <jtanner> oh, very well
+19:19:13 <jtanner> i can't keep up
+19:19:21 * gundalow points jtanner to the topic
+19:19:31 <gundalow> somewhere up there ^^^
+19:19:34 <gundalow> :)
+19:20:21 <jtanner> why do we need to discuss a bugfix
+19:20:22 <jtanner> ?
+19:20:35 <nitzmahone> It's not just a bugfix
+19:20:49 <bcoca> its setting expectations on how pathing works
+19:20:57 <bcoca> ^ right now its all over the place
+19:21:36 <jtanner> to the casual observer (me), it is categorized as a bugfix and claims to fix an open bug ...
+19:24:29 <bcoca> that was my initial approach, then i realized that this 'changed' how things worked in some cases and that we did not have clear policy on how it should work
+19:24:36 <nitzmahone> The description sounds a lot scarier than the changes
+19:25:04 <bcoca> nitzmahone: it does what it says
+19:25:45 <nitzmahone> +1 from me
+19:26:04 * nitzmahone heads home from lunch, back in a few
+19:26:11 <gundalow> ack
+19:27:21 <sivel> forgot to mention, I doubt I'll be here today, I'm triple booked
+19:27:33 <gundalow> sivel: Thanks for letting us know
+19:27:55 <gundalow> bcoca: anyting else we need to discuss here?
+19:28:20 <gundalow> YOu may need to poke some more people for reviews outside of the meeting
+19:28:35 <abadger1999> I don't think it should work this way
+19:29:56 <abadger1999> I can't think of any precedent for paths being relative to the config file, really... and it means that paths change if a different config file is picked up than you were expecting.
+19:30:18 <bcoca> ^ i would expect that if using diff config file
+19:30:30 <bcoca> paths won't be the same at all
+19:30:37 <abadger1999> (Maybe postgres and apache are a precedent?  But lord knows linux distros hate that because it violates FHS)
+19:31:05 <bcoca> not sure i understand
+19:31:32 <abadger1999> bcoca: I thought last meeting we talked about making it an error if people were using a relative path i nthe config file and we didn't have a good place to root it at?
+19:31:44 <abadger1999> that seemed like a decent compromise.
+19:32:24 <abadger1999> If playbook and cwd are unsuitable, then error because there isn't a good guess.
+19:32:27 <bcoca> i thought we didnt reach a compromise, which is why i hvae not updated it
+19:32:27 <alikins> suppose we think of ansible.cfg as analog to Vagrantfile or the like, config relative could make sense
+19:32:41 <alikins> suppose if we think, that is
+19:32:47 <jtanner> a playbook is a better analogy for a vagrantfile
+19:33:08 <bcoca> ^ i was thinking of implementing alikins's idea of CWD/CONFIG/etc special vars to avoid 'bare' relative paths
+19:33:23 <abadger1999> yeah I agree with jtanner... and I think we all agree that where we can do it, using playbook is the right thing... it's just that some places we can't.
+19:33:55 <abadger1999> bcoca: that would be fine too... it removes the amiguous case.
+19:34:01 <bcoca> sometimes we have multiple playbooks ....
+19:35:13 <abadger1999> and sometimes we have none.
+19:35:48 <jtanner> same for ansible.cfg
+19:38:18 <abadger1999> bcoca: I'm happy with alikins' idea (CWD/CONFIG) if you want to implement it that way.
+19:38:23 <allanice001> jtanner, i dont agree
+19:38:37 <jtanner> with?
+19:38:39 <allanice001> at the very least you'd always have /etc/ansible/ansible.cfg
+19:38:49 <jtanner> i don't have that on any of my systems
+19:38:53 <bcoca> jtanner: ansible.cfg we can have 0 or 1
+19:39:11 <bcoca> allanice001: no, that is default, but ansible can run w/o ansible.cfg
+19:39:19 <allanice001> agreed
+19:39:49 <allanice001> just thought /etc/ansible/ansible.cfg will always exist
+19:39:55 * gundalow needs to step away for a bit,
+19:40:21 <allanice001> even though a more customized version can exist in CWD or ~/.ansible.cfg
+19:40:29 <bcoca> allanice001: no, not needed
+19:40:44 <bcoca> its there normally cause package managers install the examples/ansible.cfg there
+19:40:51 <bcoca> ^ but it is designed to NOT need it
+19:41:30 <allanice001> i see
+19:41:41 <allanice001> my bad
+19:41:48 <allanice001> continue ...
+19:42:35 <jtanner> if this is so complicated and causes disagreement as much as it does, we should just make it $(pwd)
+19:43:10 <jtanner> then nobody is suprised
+19:43:57 <bcoca> cd /var/tmp
+19:44:03 <bcoca> ^ that is why pwd is always bad
+19:44:12 <bcoca> still pissed that ansible.cfg is in pwd
+19:51:09 <abadger1999> So... to progress on this.... bcoca.. do you want to work on CWD/CONFIG or do you think we should go another way?
+19:54:03 <bcoca> dik
+19:58:25 * gundalow return
+19:58:27 * gundalow returns
+20:00:21 <abadger1999> bcoca: so we're waiting here on a plan to move forward...
+20:00:28 <bcoca> so am i
+20:00:48 <bcoca> this is where we left it last time
+20:00:52 <abadger1999> earlier you said "<bcoca> ^ i was thinking of implementing alikins's idea of CWD/CONFIG/etc special vars to avoid 'bare' relative paths"
+20:01:01 <bcoca> thinking .. not crystalized yet
+20:01:06 <abadger1999> And I've agreed that that sounds like it would be satisfactory.
+20:01:20 <bcoca> ^ first thing i asked was 'has anything changed' on this topic, it seems nothing has
+20:01:25 <abadger1999> So... if you want to do it that eway (or just explore doing it that way), that would be the path forward.
+20:01:28 <bcoca> we just rehashed same conversations
+20:01:38 <gundalow> ok, maybe we should move on
+20:01:40 <abadger1999> At least until next meeting when you can say "didn't work out because of reason X"
+20:01:50 <gundalow> mattclay: you back?
+20:02:15 * mattclay nods
+20:02:23 <gundalow> ok, moving on
+20:02:49 <gundalow> #info not sure...
+20:02:58 <gundalow> #topic Adding nested dictionary lookups
+20:03:06 <gundalow> #info https://github.com/ansible/ansible/pull/9563
+20:03:12 <gundalow> #info https://github.com/ansible/community/issues/159#issuecomment-291569762
+20:04:21 <mattclay> I added this PR to the agenda to see if we could decide whether we want to accept or reject it.
+20:04:38 <gundalow> cool
+20:04:41 * gundalow reads
+20:04:54 <mattclay> bcoca: Are you still unsure of whether or not to accept it (per your comment on the PR)?
+20:05:25 <bcoca> -1 seems something we can either already do by chaning nested
+20:05:32 <sivel> I am also a -1
+20:06:17 <gundalow> 0 I don't understand the case well enought
+20:06:41 <gundalow> bjolivot_: Hi, once we've finished this topic we can come to you
+20:06:52 <gundalow> mattclay: what doyou think?
+20:07:00 <bjolivot_> ok
+20:07:46 <mattclay> 0 - I don't see have a strong opinion on it either way.
+20:07:54 <abadger1999> bcoca, sivel: Could one of you paste an example of using the existing filters to achieve what the proposed lookup does?
+20:08:51 <abadger1999> Then it's easy to see that there's an existing way to do it and don't need special code just to do that.
+20:09:41 <sivel> Partially, I look at how many times I've seen something requested, and whether I think it would be used.  Using the 80/20 rule (or whatnot), I feel like this is an edge case need
+20:10:16 <bcoca> complex expression with map(orig, 'dict')|dict
+20:10:34 <bcoca> isdict?
+20:10:50 <bcoca> ^ need to lookup,will take me a while to construct, but its been done before in irc
+20:12:19 <mattclay> I agree with abadger1999 that it would be good to document an example solution when declining a feature by saying "there's another way to do this."
+20:13:03 <sivel> I'm sure I could figure out another way, I don't immedately know of one.  I have a few ideas
+20:13:05 <bcoca> writing the example is non trivial
+20:13:35 <bcoca> i've done similar before, dont want to spend 1-2h to reject corner case
+20:13:44 <sivel> That does rather prove a point though, regardless of my feelings.  If doing it is non-trivial, then having an easier approach would be nice
+20:13:53 <mattclay> If the example requires that much effort, perhaps the feature is a valuable addition then?
+20:13:56 <sivel> I just don't know that the depand warrants it
+20:14:03 <sivel> demand*
+20:14:23 <bcoca> it is much easeir to get same result by not having such bad example
+20:14:32 <gundalow> What's the danger of taking the PR?
+20:14:36 <gundalow> its' self contained
+20:14:41 <bcoca> insstead of using ini_file to construct this is trivial in template for loops
+20:15:00 <sivel> gundalow: more code to maintain?
+20:15:20 <bcoca> for very little return, for a corner case that is MUCH easier to do in template
+20:15:32 <bcoca> but still possible in mainline code
+20:15:41 <gundalow> much easier, but we don't know how and probs will take many hours
+20:15:51 <sivel> as mentioned, I prefer not catering to the edge case.  Ignore the 20%, support the 80%
+20:15:54 <bcoca> no, in template it takes 5 mins
+20:15:55 <abadger1999> mattclay: yeah, I'm kinda thinking hte same thing.
+20:15:59 <gundalow> (hum, that came out bad, but just restating what I've heard)
+20:16:04 <bcoca> ^ cause i wrote this exact thing for my php config
+20:16:10 <sivel> otherwise we fill the code base with things that few people ever use
+20:16:17 <mattclay> So can we propose they change their approach to using a template to see if that solves their use case?
+20:16:41 <gundalow> If we can't give them a solution, can we give them some hints in teh right direction?
+20:16:42 <sivel> The problem is systemic of having modules like lineinfile/replace/ini_file
+20:16:52 <mattclay> If it does, then there's no need for a more complex solution (with this feature or existing capabilities).
+20:17:01 <bcoca> which are supposed to do small modification to files, not constrcut them
+20:17:02 <abadger1999> So maybe that's the starting point: Why can't this be done using template?  (vs do this with alternate chains of filters)
+20:17:03 <sivel> there is no reason that they can't just keep their lookup and use it
+20:17:04 <bcoca> that is what template is for
+20:17:18 <mattclay> abadger1999: +1
+20:17:22 <sivel> we don't have to accept it, for them to keep using it
+20:17:30 <bcoca> ^ whathesaid
+20:18:01 <gundalow> ok, can someon put that on the PR and we can move on
+20:19:02 <abadger1999> anyhow.. If we can't give them any solution to their problem it seems very wrong to reject it.  If it's a 5 minute template fix, telling them that's the ansible way to achieve it is the minimum we should do.
+20:19:35 <gundalow> +10000000
+20:20:22 <bcoca> its not a problem, its them wanting to contribute a very skewed way of doing things
+20:20:49 <bcoca> we dont accept a module that does 20 tasks, just cause it takes 2h to write the 20 tasks
+20:21:49 <mattclay> #action mattclay to update the PR with a template example and inquire if that works for the described use case
+20:22:02 <gundalow> Thanks
+20:22:13 <gundalow> #topic 23242/
+20:22:22 <gundalow> ffs
+20:22:31 <gundalow> #topic https://github.com/ansible/ansible/pull/23242
+20:22:59 <gundalow> https://github.com/ansible/ansible/pull/23242/files looks good, just need another set of eyes then it can be merged & cherrypicked
+20:23:02 <bjolivot_> It's a simple bugfix for new 2.3 module
+20:24:23 <gundalow> and also
+20:24:29 <gundalow> #topic https://github.com/ansible/ansible/pull/23242
+20:24:33 <bcoca> you are changing defaults/required but not the docs
+20:24:48 <gundalow> erm, not that
+20:24:52 <gundalow> so much fail
+20:24:58 <gundalow> #info ignorethis
+20:25:07 <bcoca> also need to make note of version in which this behaviour changed
+20:25:36 <gundalow> new moduls in 2.3, so that's OK
+20:25:42 <bjolivot_> bcoca : there no behaviour change as module is new in 2.3
+20:25:58 <bjolivot_> but yes I need to update doc
+20:25:58 <bcoca> this would require an RC ..
+20:26:18 <gundalow> ?
+20:26:32 <gundalow> We are doing RC4 this week
+20:26:37 <bcoca> we are in the middle of releasing 2.3 this should make it into that branch for RC or not at all
+20:26:53 <bcoca> we normally only allow bugfixes in rc, not changes in behaviour
+20:27:03 <bcoca> you need to include jimi|ansible on this one
+20:27:18 <gundalow> well if you do state=absent then you get a backtrace and it's not removed
+20:27:59 <bjolivot_> it's not change of behaviour, it's bugfixing state=absent as it only need id param
+20:28:44 <bcoca> docs still and issue, coordinate with jimi|ansible to make release
+20:29:26 <abadger1999> +1 to including it but never hurts to ask jimi|ansible
+20:29:45 <bcoca> +1 if docs get fixed
+20:30:03 <gundalow> Cool
+20:30:10 <gundalow> #topic Open Floor
+20:30:16 <gundalow> right it's late, I'm heading offline
+20:30:29 <gundalow> so if someone else can #endmeeting at the end that would be grand
+20:30:30 <gundalow> Thanks
+20:31:26 * abadger1999 will #endmeeting
+20:31:41 <abadger1999> Anyone have anything else to talk about?
+20:32:06 <abadger1999> If not, I'll close the meeting in 60s
+20:32:11 <robinro> Would you consider to make me maintainer of the git module? I got pinged for issues quite a few times now
+20:32:24 <abadger1999> robinro: I definitely would.
+20:32:56 <mattclay> I would as well.
+20:33:15 <abadger1999> robinro: Just submit a PR against hte MAINTAINERs.txt file here: https://github.com/ansible/ansibullbot/blob/master/MAINTAINERS.txt
+20:33:23 <robinro> will do
+20:33:33 <abadger1999> Cool :-)
+20:33:40 <robinro> just thought to ask here, since the git module is quite "core" to ansible
+20:34:17 <abadger1999> <nod>
+20:34:25 <abadger1999> Anyone else?
+20:34:28 <bcoca> SOLD!
+20:34:41 <bcoca> as a present we also give you syncronize
+20:34:45 <robinro> :D
+20:35:10 <robinro> if I plan to go through the git backlog you won't see me for a few years
+20:35:15 <mattclay> bcoca: You're feeling generous today. Are you sure you don't want to keep it? ;)
+20:35:32 <bcoca> mattclay: its yours then?
+20:35:44 * mattclay hides
+20:35:49 <abadger1999> #endmeeting

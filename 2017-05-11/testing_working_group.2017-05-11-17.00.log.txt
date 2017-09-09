@@ -1,0 +1,77 @@
+17:00:31 <gundalow> #startmeeting Testing Working Group
+17:00:31 <zodbot> Meeting started Thu May 11 17:00:31 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+17:00:31 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+17:00:31 <zodbot> The meeting name has been set to 'testing_working_group'
+17:00:34 * mattclay waves
+17:00:38 <gundalow> #chair mattclay
+17:00:38 <zodbot> Current chairs: gundalow mattclay
+17:01:33 <gundalow> mattclay: `I've got ansible-test network-integration -vvvv --platform vyos/1.1.0 vyos_command` passing locally now
+17:01:57 <mattclay> gundalow: Excellent. Did it require any changes to make it work?
+17:03:46 <gundalow> mattclay: https://github.com/ansible/ansible/pull/24514/files
+17:05:05 <gundalow> The group_vars were taking precedence over the ssh key
+17:05:25 <mattclay> Seems simple enough. I think there's a minor formatting issue pep8 will complain about -- no space before the % on the last line of the diff.
+17:05:50 <gundalow> ah, yes
+17:05:57 <mattclay> Actually, neither of those need the '%s' you can just put the var in there.
+17:06:02 <mattclay> Since no formatting is happening.
+17:06:20 <gundalow> hum, I may have to remove the `aliases` from the other targets/
+17:06:23 <mattclay> Actually, the first one should be '%s_command' % var
+17:06:58 <sivel> yo
+17:07:07 <gundalow> #chair sivel
+17:07:07 <zodbot> Current chairs: gundalow mattclay sivel
+17:07:07 <mattclay> If the others aren't passing, just remove the ci aliases.
+17:08:18 <gundalow> Nice to see Environment Description in the ansible-test output now :)
+17:08:33 <mattclay> Ah, running with -vvv ?
+17:08:46 <gundalow> always
+17:10:31 <gundalow> I'll continue poking this. Got another or so left of today, so hopefully I can get a green run for you
+17:10:59 <gundalow> https://github.com/ansible/ansible/pull/24514/files#diff-5ed3c6596f1e495f6d0c6733e41ac3b5R2
+17:11:04 <gundalow> For that I'd ideally like
+17:11:10 <mattclay> Excellent. I'll try to finish up my coverage changes tomorrow. If you have any network tests passing I can make sure they keep working. :)
+17:11:44 <gundalow> use ssh key if specified, otherwise set those vars
+17:11:50 <gundalow> though not sure if that's possible
+17:12:15 <gundalow> That can be a problem for next week
+17:12:22 <mattclay> I don't see why not. We generate an SSH key for some of the other tests.
+17:12:32 <mattclay> But yeah, can do that next week.
+17:12:34 <gundalow> :)
+17:12:38 <gundalow> That's it from me
+17:14:28 <mattclay> The cloud module integration tests have been deployed to Shippable.
+17:14:51 <mattclay> We now run CloudStack and AWS integration tests on PRs.
+17:15:04 <mattclay> We have pretty good coverage for CloudStack. AWS is small but growing.
+17:15:42 <mattclay> jtanner is actually starting to look at using the cloud plugins to be able to test vsphere using a simulator like we do for CloudStack.
+17:16:01 <jtanner> maybe not exactly like that, but close
+17:16:14 <jtanner> working on flask controller now
+17:16:22 <mattclay> I've been overhauling the ansible-test code coverage injector to fix some issues so I can automate code coverage reporting.
+17:16:37 <mattclay> I hope to have that pushed tomorrow.
+17:17:12 <mattclay> If anyone wants to work on AWS module tests, let me know. As we get more tests I'll need to update our IAM policy and sweeper to support the additional permissions required by the tests.
+17:17:47 <mattclay> We've been having some issues with timeouts on Windows tests due to lack of T2 launch credits on AWS. I've put in a request to get the limit increased and I'm waiting to hear back on that.
+17:18:04 <mattclay> That's it from me.
+17:19:45 <gundalow> sivel: Did you have anything
+17:19:50 <sivel> I have nothing
+17:19:59 <gundalow> Any comments about line numbers in validate-modules?
+17:20:23 * gundalow missed last weeks meeting, so that might have been discussed already
+17:21:23 <sivel> It was merged
+17:21:34 <sivel> there is now native support for line numbers and column
+17:21:49 <sivel> there are several TODOs listed in the codebase that need line/column added
+17:22:08 <gundalow> oh, ace
+17:23:06 <gundalow> hum, wonder if I can run validate-modules with --warnings enabled and hook it upto Vim's Syntastic framework
+17:23:23 <sivel> The standard output is not similar to pep8 also
+17:23:26 <sivel> is now*
+17:23:54 <sivel> so the old style for printing is gone, and now prints in a manner that I guess syntastic can understand
+17:24:05 <gundalow> aye, looks like it
+17:24:20 <mattclay> sivel: We also have the --lint option to ansible-test for use with things like syntastic
+17:24:41 <gundalow> alikins: were you looking at syntastic?
+17:24:53 <sivel> mattclay: yeah, I just figured it was about time to get it in alignment
+17:25:01 <sivel> instead of some random output format
+17:25:04 * mattclay nods
+17:25:07 <gundalow> +1
+17:25:19 <alikins> gundalow: not recently
+17:25:36 <gundalow> alikins: ah, maybe I miss remembered
+17:26:04 <alikins> i've switch to 'ALE' in liue of syntastic, but same idea I suppose
+17:26:06 <gundalow> If I get a free weekend I may see if I can get something running
+17:26:46 <gundalow> ooooooooh, so I don't have to wait 5+ seconds for vim to load, nice
+17:26:49 <alikins> though ALE is async, so it might be useable with ansible-test where syntastic isnt really
+17:27:16 <gundalow> oh, ALE has ansible-lint support built in
+17:28:21 <gundalow> alikins: thanks for the pointer
+17:31:49 <mattclay> Does anyone have anything else to discuss?
+17:32:07 <gundalow> Nothing else from me
+17:35:30 <gundalow> Thanks everyone
+17:35:33 <gundalow> #endmeeting

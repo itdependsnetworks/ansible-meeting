@@ -1,0 +1,153 @@
+20:40:53 <abadger1999> #startmeeting 1.9.5 release meeting
+20:40:53 <zodbot> Meeting started Mon Mar  7 20:40:53 2016 UTC.  The chair is abadger1999. Information about MeetBot at http://wiki.debian.org/MeetBot.
+20:40:53 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+20:40:53 <zodbot> The meeting name has been set to '1.9.5_release_meeting'
+20:41:06 <nitzmahone> https://media.giphy.com/media/aMh59aKR8vjdC/giphy.gif
+20:41:14 <abadger1999> #chairs nitzmahone jimi|ansible bcoca
+20:41:24 <abadger1999> #topic https://github.com/ansible/ansible/issues/12469  environment variable evaluated as template --> fatal error
+20:41:29 <abadger1999> This is our only P1
+20:41:44 <abadger1999> Last week we were discussing how it would be pretty hard to fix in 1.9.x
+20:41:45 <bcoca> did we ever test if previous commit fixed?
+20:42:10 <bcoca> no, possibly fixed already by previous commit that looked for both start and end template indicators
+20:42:25 <abadger1999> don't we tested
+20:42:29 * abadger1999 tests now
+20:43:46 <abadger1999> fatal: [localhost] => Failed to template %(t.Ding!.%D{%L:%M})%# : template error while templating string: Encountered unknown tag 'L'.
+20:44:17 <abadger1999> bcoca: my tree is currently a bit behind stable-1.9 HEAD, though (testing a PR)  -- what commit was it?
+20:44:31 <jimi|ansible> abadger1999: does this also happen if you do `FOO={{|}} ansible-playbook ...`?
+20:44:41 <jimi|ansible> abadger1999: it was something we merged in on friday
+20:44:54 <abadger1999> k
+20:45:07 <abadger1999> with HEAD of stable-1.9, error goes away
+20:45:34 <jimi|ansible> oh good, so bcoca was right, it did go away, which is funny because that patch was more about unbalanced jinja2 stuff
+20:45:45 <jimi|ansible> well, i guess that string is unbalanced
+20:45:47 <bcoca> side effect!
+20:45:52 <nitzmahone> noice
+20:45:55 <jimi|ansible> abadger1999: ^ try with my command above, bet it still happens
+20:45:57 <bcoca> yes, it would template if it had both
+20:46:10 <bcoca> but fixes 'that ticket'
+20:46:47 <abadger1999> no error
+20:46:48 <bcoca> and the fix of 'not templating envvars should already be there, it should return  {# #}
+20:46:52 <jimi|ansible> o rly?
+20:46:59 <abadger1999> yeah...
+20:47:19 <bcoca> well, ticket shows how to 'hardcode it in' in which case it will be undefined (which we swallow!)
+20:47:21 <jimi|ansible> hrm, so i guess it wasn't removing the jinja2 stuff because it was unbalanced, but it was still trying to template it
+20:49:18 <abadger1999> FOO='{{|}}' doesn't trigger an error with the older checkout either
+20:49:23 <abadger1999> <nod>
+20:49:55 <abadger1999> anyhow -- I'll close 12469 as will be fixed in 1.9.5 then.
+20:50:42 <abadger1999> #topic https://github.com/ansible/ansible/issues/14175 Running 'assemble' as handler in check mode will result in changed destination file
+20:50:50 <abadger1999> First of 4 P2s
+20:51:10 <bcoca> assemble did not support check mode
+20:51:18 <bcoca> i think it still doesn't
+20:51:30 <nitzmahone> not using AnsibleModule?
+20:51:46 <jimi|ansible> assemble has an action plugin, could be a bug there
+20:51:53 <bcoca> yes
+20:51:58 <bcoca> fixed in 2.0, i'll backport
+20:53:16 <abadger1999> k
+20:53:26 <abadger1999> #action bcoca will backport 2.0 fix to stable-1.9
+20:53:41 <abadger1999> #topic https://github.com/ansible/ansible/issues/13537 user module set admin to standard on osx
+20:54:37 <nitzmahone> Easy backport- I'll take that one
+20:54:48 <jimi|ansible> nitzmahone: was there a follow-up on that?
+20:54:56 <jimi|ansible> i thought no one was ever able to reproduce that
+20:55:11 <nitzmahone> Oh no, I repro'd and fixed. It was a HORRIBLE fail.
+20:55:19 <jimi|ansible> ah ok, cool
+20:55:21 <bcoca> https://gist.github.com/anonymous/f557a72aef0cb403e378
+20:55:25 <bcoca> ^ fix for assemble
+20:55:46 <abadger1999> #action nitzmahone will backport fix from 2.0 to stable-1.9 for #13537
+20:55:48 <jimi|ansible> bcoca: +1
+20:56:33 <bcoca> pushed
+20:57:00 <bcoca> soo much nicer now that we just return a dict
+20:57:49 <abadger1999> #topic https://github.com/ansible/ansible/issues/12694  add_host followed by local_action adds 127.0.0.1 to inventory in following plays
+21:00:02 <nitzmahone> Blerg, that looks awfully risky
+21:00:24 <nitzmahone> (to backport, I mean)
+21:01:26 <jimi|ansible> i said so in my comment, so if we just want to close this we can
+21:03:06 <bcoca> close!
+21:04:52 <nitzmahone> +1 close
+21:11:59 <abadger1999> k.  I'll close and say that this is one that's fixed in 2.0
+21:12:20 <abadger1999> #topic https://github.com/ansible/ansible/issues/12545  template is ignoring variables from defaults/main.yml
+21:12:33 <abadger1999> Last of the P2 issues for stable-1.9
+21:14:54 <bcoca> hmm, i thnk we would have gotten a LOT more people complaining about that one, probably user issue specially since he 'fixed with quoting'
+21:16:23 <nitzmahone> Do we want to just bring the current 2.0 user module to 1. for #13537? There have been a bunch of other fixes to check-mode since it forked.
+21:18:10 <nitzmahone> bcoca already half-backported my original fix, but there's another for non-primary groups
+21:18:44 <abadger1999> nitzmahone: maybe post the diff between the 1.9.4 and 2.x version for us to look at?
+21:18:49 <bcoca> did 1 support check mode?
+21:19:25 <nitzmahone> It purported to, but lots of places where it makes changes when it shouldn't
+21:21:16 <bcoca> i remember fixing that, but was 2.0 only and on top of a LOT of things ... might be easier to just copy it
+21:25:44 <nitzmahone> That's what I was thinking
+21:25:44 <jimi|ansible> depends on the diff
+21:26:19 <jimi|ansible> abadger1999 or anyone else, has that example been tested and confirmed for #12545?
+21:26:52 <abadger1999> jimi|ansible: I'm creating files to test that right now
+21:27:44 <jimi|ansible> woot
+21:28:23 <abadger1999> works for me with stable-1.9 HEAD
+21:28:32 * abadger1999 checks out 1.9.2
+21:28:36 <nitzmahone> https://www.irccloud.com/pastebin/d1w5VsPA/
+21:28:58 <nitzmahone> ^-- stable-1.9->stable-2.0 user module diff
+21:29:40 <bcoca> taht syslog stuff should be removed, we already do it by default when in debug
+21:30:19 <abadger1999> jimi|ansible: Cannot reproduce with a checkout of 1.9.2 either
+21:30:23 <bcoca> ah, i did remove, the patch is reversed
+21:30:33 <jimi|ansible> abadger1999: cool, i saw you said in that comment that it was fixed
+21:31:22 <jimi|ansible> i have to go run an errand, so i'm going to step away for a bit, message me here or on slack or email and we can get 1.9.5rc1 out if we're ready to go
+21:37:29 <bcoca> 37 left
+21:38:09 <abadger1999> nitzmahone: so we added the skel feature and it looks like we got rid of syslog.
+21:38:16 <bcoca> nitzmahone: so it adds a couple of features with password and skeleton
+21:38:51 <abadger1999> nitzmahone: I'm a bit worried about the latter.  it might be something that people were relying on so I'm not sure we should remove it in 1.9
+21:38:56 <bcoca> abadger1999: he, yes, syslog was removed in favor of the debug + run_command, it was not switchable in any case, that was present in several modules to be toggled by editing the module itself
+21:39:19 <bcoca> ^ that was an MPD thing when he was developing these 'core modules'
+21:39:26 <nitzmahone> ouch
+21:39:39 <bcoca> users were never able to turn it on w/o changing the code
+21:40:09 <bcoca> +        self.syslogging = False
+21:40:43 <nitzmahone> Well, should I just backport the other half of the groups fix and leave the rest of the broken stuff broken? Manually backporting all the other stuff makes me a little nervous, since this one is clearly so well tested. ;)
+21:40:45 <bcoca> it was a 'feature' before run_command centralized the shelling out in modules, which is where i added the sysloging
+21:41:11 <bcoca> im fine with the copy, just test to make sure its not relying on things not present in module_utils/basic.py
+21:41:33 <abadger1999> k.  so the changes around syslog seem okay.
+21:41:51 <nitzmahone> just leaves the skeleton stuff
+21:41:54 <bcoca> yep, feel free to ignore
+21:42:03 <bcoca> im fine with skeleton being backported
+21:42:17 <abadger1999> <nod>  me too.
+21:42:35 <bcoca> iirc it WAS a feature long ago but rmeoved, not sure why
+21:42:37 <nitzmahone> ok- I'll look over the commits for any new module_utils usage
+21:43:33 <abadger1999> #topic other 1.9.x blockers
+21:43:45 <abadger1999> So that's all of the 1.9.x P1, P2, and PRs.
+21:43:59 <abadger1999> are there other things we want for 1.9.5?
+21:44:08 <bcoca> https://github.com/ansible/ansible/pull/12118 <= 1 pr left
+21:46:53 <abadger1999> bcoca: that's the one we decided on friday we were going to reject.
+21:47:22 <bcoca> agree with your comment, yes, reject, will close
+21:47:26 <abadger1999> I think we marked it pending_action to allow the guy to tell us if there was a reason that no_log wouldn't work there.
+21:47:43 <bcoca> ok, allowing 2 more days
+21:47:49 <abadger1999> <nod>
+21:48:03 <abadger1999> I doubt he'll reply -- it was submitted in august of last year.
+21:48:14 <abadger1999> hopefully he discovered no_log on his own.
+21:49:52 <abadger1999> okay, anything else we want in?
+21:52:08 <bcoca> 35 issues to look at
+21:52:13 <abadger1999> k
+21:52:19 <abadger1999> Unprioritised issues:
+21:52:44 <abadger1999> #topic https://github.com/ansible/ansible/issues/14641 ansible_local var no longer available
+21:53:01 <bcoca> fixed in 2.0!
+21:53:57 <bcoca> also we might want to start from oldest to newest
+21:54:07 <bcoca> https://github.com/ansible/ansible/issues?q=is%3Aopen+milestone%3Astable-1.9+sort%3Acreated-asc
+21:54:44 <abadger1999> we could... I was thinking that oldest had probably already been picked over for P1/P2s
+21:58:15 <nitzmahone> Who's going to bump stable-1.9 version to 1.9.5?
+21:58:54 <abadger1999> I think jimi|ansible does that as part of the release process
+21:59:08 <bcoca> ^ it is part of release
+21:59:09 <nitzmahone> Oh, I thought we did it beforehand...
+21:59:26 <nitzmahone> (so someone running from source sees v.next)
+21:59:40 <bcoca> we do that on devel
+21:59:56 <bcoca> but we should also do for stable-?
+22:00:10 <bcoca> devel is basically guaranteed next, stable is not
+22:00:13 <nitzmahone> consistency is good- seems like you should bump immediately *after* release
+22:00:51 <nitzmahone> It's not? If we shipped 1.9.4, any code changes wouldn't be 1.9.4 again, would they?
+22:01:05 <nitzmahone> I guess technically "first commit after release" should bump
+22:01:11 <bcoca> 2nd
+22:01:27 <bcoca> but sometims we just push stuff to stable-, jic
+22:05:45 <bcoca> ok, gone through whole list, fine with pushing with what we already dicussesd
+22:05:56 <bcoca> i would go thorugh each item and verify it works in 2.0 and then close
+22:06:41 <abadger1999> bcoca: I don't think we're in agreement yet on whether 1.9.5 is the last 1.9.x release (barring security fixes)  though.
+22:07:01 <abadger1999> if we do more of these we probably want the tickets open.
+22:07:12 <abadger1999> If we aren't going to then yeah, closing tickets is fine.
+22:07:16 <bcoca> most of them are fixed in 2.0, we've closed many that way
+22:07:39 <bcoca> but ok, pending on consensus 1.9.5 is last not counting severe security issues
+22:09:37 <abadger1999> if there's things we know are too intrusive to fix in a 1.9.6 I'm for closing now as well.
+22:11:21 <bcoca> ok, will go over list this week and close those (friday, which also gives pending guy time to response)
+22:11:53 <abadger1999> <nod>
+22:11:54 <abadger1999> cool.
+22:21:57 <abadger1999> Okay, I'm going to end this meeting.
+22:22:11 <abadger1999> and grab some lunch
+22:22:14 <abadger1999> #endmeeting

@@ -1,0 +1,311 @@
+15:02:19 <gundalow> #startmeeting Public Core Meeting
+15:02:19 <zodbot> Meeting started Thu Nov  3 15:02:19 2016 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:02:19 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:02:19 <zodbot> The meeting name has been set to 'public_core_meeting'
+15:02:33 <jtanner> hi
+15:02:39 <gundalow> #info Agenda https://github.com/ansible/community/issues/132
+15:02:56 <gundalow> #chair abadger1999 alikins jimi|ansible jtanner nitzmahone
+15:02:56 <zodbot> Current chairs: abadger1999 alikins gundalow jimi|ansible jtanner nitzmahone
+15:03:05 <alikins> howdy
+15:03:19 <gundalow> #topic Meeting times
+15:03:42 <gundalow> #info You can add this full list of meetings to your personal calendar by downloading and importing this .ics file into your calendar
+15:03:49 <gundalow> https://github.com/ansible/community/blob/master/ansible_community_meetings.ics
+15:04:06 <abadger1999> buenos dias
+15:04:48 <gundalow> If you use Google Calendar you can do http://www.howtogeek.com/wp-content/uploads/2010/10/image35.png
+15:05:02 <jtanner> what is stevekuznetsov's irc nick?
+15:05:37 <Qalthos> question: time zone is New_York, are we moving with US DST now?
+15:06:09 <gundalow> skuznets: Are you GitHub's stevekuznetsov?
+15:06:14 <Qalthos> Or is my ics parsing rusty?
+15:06:27 <skuznets> gundalow: Yes!
+15:06:35 <gundalow> I thought we defined all the meetings to be UTC
+15:06:59 <Qalthos> gundalow: was my impression as well, just don't know if this calendar agrees
+15:07:22 <Qalthos> I think it does, actually
+15:07:30 <jtanner> works4me
+15:07:31 * Qalthos withdraws question
+15:07:47 * gundalow has tried and failed to generate .ics tima has a PR in flight to add Testing Working Group, I just need to check it and merge
+15:08:01 <gundalow> So, Core Ansible People, please import https://github.com/ansible/community/blob/master/ansible_community_meetings.ics
+15:08:04 <gundalow> And anyone else
+15:08:19 <jtanner> skuznets: so you want the stdout callback to control all display() calls?
+15:08:23 <gundalow> #topic API https://github.com/ansible/community/issues/132#issuecomment-257011653
+15:08:33 <gundalow> #info https://github.com/ansible/community/issues/132#issuecomment-257011653
+15:08:35 <skuznets> jtanner: Well, I'm not quite sure.
+15:08:52 <gundalow> hey samdoran You will be next :)
+15:08:54 <skuznets> For background: the current UX for ansible tasks flying by on the CLI is not the best.
+15:09:03 <samdoran> Roger.
+15:09:08 <skuznets> I have built a stdout plugin that has a timer in it. shows only the current running play and playbook, etc
+15:09:20 <skuznets> The running tasks show as they happen and collapse once  they are done
+15:09:32 <skuznets> The issue with such an approach is it uses terminal escapes to clear lines, etc
+15:09:45 <skuznets> If I cannot assume as an owner of a stdout plugin that I control stdout, this is not possible
+15:09:55 <jtanner> understood
+15:10:13 <skuznets> Since I am consuming Ansible through the API and not the CLI I have redirected Display.display() to a file, but most will not be able to do that
+15:10:28 <abadger1999> jimi|ansible:  You understand the needs of Display() better than the rest of us I think.
+15:10:32 <skuznets> So I just wanted to know if we had a statement re: stdout callbacks, since they do seem to be unique
+15:10:44 <sivel> I agree with this.  It is a problem with the `json` callback too
+15:10:58 <jtanner> alikins has been pontificating the qualities of display lately too, iirc
+15:11:11 <skuznets> If we are assuming only one stdout plugin can exist, why let Ansible internals spew stuff to stdout? But if we don't allow that, we would need to funnel that stuff through a callabck, as well?
+15:11:35 <jimi|ansible> skuznets: the problem is there isn't always a callback plugin available at times we want to display things
+15:11:51 <skuznets> Yes, this I know. One of my other talking points was to address some of those parts
+15:12:04 <jimi|ansible> most of those have been resolved, but there are a few odd places where it still happens - namely includes (and now include_role)
+15:12:16 <skuznets> It seems reasonable to say that before and after a playbook is finished running that the callback can't control stdout
+15:12:34 <jimi|ansible> all of those things should be using Display.something though, and not prints
+15:12:39 <skuznets> Right
+15:12:46 <skuznets> Not always the case, but close :)
+15:13:02 <jimi|ansible> where in the code is it still doing prints?
+15:13:09 <skuznets> May not have any in the GA
+15:13:10 <jimi|ansible> those should definitely be resolved asap
+15:13:24 <skuznets> I remember seeing one in a hacked-up devel I was running
+15:13:59 <gundalow> Can we add a code-smell to detect use of prints? Any any uses valid?
+15:14:03 <skuznets> But yes, aside from Ansible internals falling over or something, it seems reasonable that between v2_playbook_on_start and v2_playbook_on_stats all things going to stdout should be going through a callback
+15:14:43 <jimi|ansible> no, everything should have Display available
+15:14:47 <jtanner> speaking of which, i should write that check for type() =
+15:15:11 <abadger1999> (I see some via grep... we can clean those up after the meeting)
+15:15:48 <gundalow> #action abadger1999 to clean up prints
+15:15:53 <gundalow> Thanks :)
+15:17:01 <alikins> skuznets: I have a wip branch that adds logging along side most of the Display.* stuff
+15:17:09 <abadger1999> logging --
+15:17:31 <skuznets> The ability to define a logging callback plugin is fine, I think
+15:17:42 <skuznets> I don't know that Ansible needs to do anything itself
+15:17:49 <abadger1999> Really, I'll vote against anything that has stdlib logging unless we get a different API on top of it.
+15:18:34 <skuznets> jimi|ansible: what are the reasons that e.g. here: https://github.com/ansible/ansible/blob/devel/lib/ansible/playbook/helpers.py#L196-L200
+15:18:40 <skuznets> jimi|ansible: we cannot have a callback handle?
+15:18:59 <skuznets> I guess that _is_ before the playbook_on_start
+15:19:49 <jimi|ansible> yep, that's mostly at playbook parsing time, before TQM (which loads the callbacks) is around
+15:20:18 <jimi|ansible> however that does also get used for dynamic includes so during that time we would have callbacks
+15:20:32 <skuznets> Yeah, I had seen both happen
+15:20:57 <skuznets> So can we make a stronger statement re: the stdout callback control of the terminal output?
+15:21:09 <skuznets> Looks like no
+15:21:10 <jimi|ansible> i wonder if we should create a CallbackManager class that sits in the global space like Display (optionally) does and use it from there instead of having TQM create it
+15:21:15 <jimi|ansible> that would get rid of all those problems
+15:21:31 <abadger1999> skuznets: Can you enumerate the problems that are currently occurring?
+15:21:53 <abadger1999> I think that would help evaluate the potential solutions.
+15:22:01 <skuznets> Right, sorry. As an author of a stdout callback plugin that is intended first and foremost for user experience
+15:22:08 <jimi|ansible> abadger1999: same as the JSON callback - Display is printing stuff outside of the callback so trying to do a stdout callback which captures all output isn't working
+15:22:31 <skuznets> I would like to be able to know that between v2_playbook_on_start and v2_playbook_on_stats I have control over stdout so that I may use terminal escapes, etc
+15:22:35 <abadger1999> So it's just interleaved output between callback plugin and other parts of ansible on stdout?
+15:22:44 <jimi|ansible> yep
+15:22:44 <skuznets> Interleaved at best
+15:22:50 <skuznets> Corrupted at worst
+15:23:02 <abadger1999> Why dosn't Display use stderr instead of stdout?
+15:23:06 <skuznets> If I clear the last three lines thinking I was the one that wrote them and instead remove some other message...
+15:23:17 <skuznets> abadger1999: No, but you can ask it to
+15:23:39 <abadger1999> I mean... why does Display use stdout currently?  Can we change it to use stderr instead?
+15:23:40 <jimi|ansible> abadger1999: that's a thought, have all v* output use stderr instead
+15:24:15 <abadger1999> yeah.  I also like jimi|ansible's idea of a global CallbackManager.  I just don't know whether that's a hard a problem or not.
+15:24:30 <abadger1999> whereas using stderr seems relatively straightforward.
+15:24:56 <skuznets> Changing to use stderr by default would be a +1/-1 diff, yeah
+15:25:06 <jimi|ansible> it probably wouldn't be too hard, basically just switch TQM's method which sends callbacks to use the global instead of the local and move all callback initialization to the manager
+15:25:14 <jimi|ansible> so not hard, but somewhat invasive
+15:26:13 <alikins> https://github.com/ansible/ansible/blob/devel/lib/ansible/playbook/helpers.py#L196-L200  looks like an obvious place where apps would normally log that info (and optionally display it to console with a console handler)
+15:26:15 <skuznets> The loading caches are already global, so for instance if I run multiple playbooks with the API in the same thread even though multiple TQMs get created the plugin load only happens (for real) that first time anyway
+15:28:31 <skuznets> I think using stderr by default on Display.display() would sufficiently solve the specific issues with stdout plugins, though.
+15:29:31 <jimi|ansible> sure, but overall the Manager idea is better i think, because it lets us do callbacks at playbook parsing time too
+15:29:40 <abadger1999> <nod>
+15:29:42 <skuznets> Agreed
+15:29:54 <jimi|ansible> so i'll take that as a todo and do it for 2.3
+15:30:03 <jimi|ansible> it shouldn't be too involved
+15:30:08 <jimi|ansible> (famous last words)
+15:30:22 <abadger1999> jimi|ansible: and then we switch Display() to go through the Callback?
+15:30:39 <abadger1999> (Or port code to use new methods in the callback directly).
+15:31:09 <jimi|ansible> no, display would still go to stdout (and/or we make .v* things go to stderr), but yeah we'd replace things using Display to use callbacks
+15:31:16 <jimi|ansible> specifically includes
+15:31:27 <skuznets> Sounds like a good approach
+15:31:31 <abadger1999> Cool.
+15:33:39 <samdoran> My turn?
+15:34:18 <skuznets> I had some other topics but I don't care what order we tackle things
+15:34:21 <abadger1999> #action jimi-c to work on a global CallbackManager for 2.3 and making ansible use that instead of display functions when appropriate.
+15:34:52 <abadger1999> #topic changing the examples format in existing modules to use multi-line YAML i
+15:35:09 <skuznets> +10000 to this idea
+15:35:15 <samdoran> Currently we have a rather inconsistent mix of syntax in our examples.
+15:35:31 <samdoran> I get and love the shorthand syntax. but it confuses people so much.
+15:35:51 <abadger1999> +1 with jsut the note to look out for places where k=v is appropraite.
+15:36:04 <gundalow> +10000000 to multiline
+15:36:15 <samdoran> And they don't quite get the difference between the two. And the multi-line syntax is what we teach in training and best practices talks.
+15:36:15 <abadger1999> ie: places that users are likely using /usr/bin/ansible instead of /usr/bin/ansible-playbook
+15:36:29 <gundalow> which would be ping, what else?
+15:36:36 <samdoran> abadger1999: Where is the k=v appropriate? Not trying to be adversarial, just wondering.
+15:36:56 <samdoran> Understood, so ad-hoc commands.
+15:37:22 <samdoran> Any module can be run as an ad-hoc command.
+15:37:24 <abadger1999> yeah, ad-hoc commands... I'm not sure if there's anything more general I can use to pin that down...
+15:37:36 <samdoran> with -a 'k=v k=v k=v'
+15:37:47 <abadger1999> package managers are probably frequently used in both ways.
+15:38:25 <samdoran> But to alleviate confusion and be consistent, I think our module examples should all use multi-line YAML.
+15:38:28 <abadger1999> other modules are likely only used from playbooks.
+15:38:45 <abadger1999> I can't think of many that are used almost exclusively as ad hoc.
+15:38:46 <samdoran> And we could have a section in the docs that explains the k=v syntax in the context of ad-hoc commands.
+15:39:01 <gundalow> we could add a note (link to docs) for those modules in `note:`
+15:39:05 <gundalow> erm, or some words like that
+15:39:12 <abadger1999> <nod>
+15:39:40 <samdoran> That's 99% of the time. You'd be surprised how many people are surprise when I show them you can run ad-hoc commands.
+15:39:57 <gundalow> jimi|ansible: You happy for alll module docs examples to go to multi-line YAML?
+15:40:00 <jtanner> what's the issue?
+15:40:38 <abadger1999> heh.  I only used ad-hoc for months after starting with ansible... new audiences coming into ansible from a different background.
+15:40:44 <samdoran> Changing examples in the module docs to all be multi-line YAML rather that k=v to reduce confusion.
+15:40:54 <samdoran> *than
+15:41:20 <jtanner> that's a lot of work around >700 modules
+15:41:37 <skuznets> samdoran: has a branch that seems to have a lot of that work done
+15:41:56 <samdoran> I've done all the core modules. I'll tackle the extras separately.
+15:41:57 <abadger1999> anyhow, I like yaml better than k=v so I'm not opposed we can add k=v in specific module examples later if we figure out that it's a place that makes sense.
+15:42:01 <jtanner> shouldn't we solve the confusion,  before looking at the module docs?
+15:42:18 <jtanner> before they get to the module docs
+15:42:19 <samdoran> But I'm more interested in reaching consensus. I'll get the work done.
+15:42:36 <skuznets> I feel like the k=v style is more prone to YAML parsing errors from quotes as well
+15:42:55 <alikins> do the existing doc checker tools actually parse and verify the examples?  if so, and if... there is a k=v serializer, the docs build could read the yaml and optionally generate an example k=v example
+15:42:56 <skuznets> I'm not sure I've personally run into any cases where the k=v style is more readable than the YAML, but that's my opinion
+15:43:14 <alikins> though I assume serializing something to k=v would be troubleprone
+15:43:20 <jtanner> well, pushing yaml also confuses because new users don't understand tabs and spaces
+15:43:25 <samdoran> I think there's value in adding a section to the docs on how to use k=v with ad-hoc commands if it doesn't exist already.
+15:43:36 <abadger1999> quoting and escaping is hard.  with yaml we only have yaml + jinja2 to mix together.  k=v we have yaml + our k=v parser + jinja2.
+15:43:38 <samdoran> jtanner +1
+15:43:50 <gundalow> Currently we only use humans to look at the module examples
+15:44:01 <jtanner> so both styles have their own way of confusing people
+15:44:13 <gundalow> In the future we may try testing them examples with willthamas' ansible-lint
+15:44:14 <samdoran> But they also get confused when they see two different syntax styles in examples for two different modules when writing playbooks. That's also confusing.
+15:44:28 <jtanner> that is something i think they need to learn
+15:44:56 <skuznets> jtanner: not allowing tabs in YAML and not using them is not Ansible's problem
+15:45:06 <skuznets> jtanner: any reasonable editor or IDE won't use tabs in a .yml file
+15:45:27 <jtanner> even with consistent use of tabs, new users have a hard time understanding how things are supposed to line up
+15:45:49 <skuznets> jtanner: If every example were in YAML would that remain the case?
+15:46:00 <skuznets> jtanner: most users unfamiliar with a module or with YAML will be copy-pasting
+15:46:03 <samdoran> Which is why providing examples in YAML that shows how things are lined up would help. :)
+15:46:16 <jtanner> only if it included a hosts declaration and the other keywords, but that wouldn't be accurate for use in roles
+15:46:17 <abadger1999> understanding "don't use tabs" is a simple bright line rule.  quoting and escaping in k=v is an ongoing headache.
+15:46:53 <samdoran> True. We had someone the other day having issues with a playbook because they copied the example from the docs, not realizing it was a tasks list, not a complete playbook.
+15:47:07 <jtanner> some of the module doc examples read better with k=v style
+15:47:11 <samdoran> I'm not trying to solve that, just get consistent with the examples.
+15:47:37 <skuznets> Only for very simple modules, in my experience, does it read better as one line
+15:47:38 <samdoran> I agree they read better, but consistency in order to reduce confusion is the goal.
+15:47:56 <skuznets> It ends up reading worse when they're inlined in a playbook mostly using YAML, though
+15:47:58 <jimi|ansible> it's been a standing best practice to do all things in full YAML syntax
+15:48:09 <jimi|ansible> rather than the k=v syntax
+15:48:17 <samdoran> Yeah, that's the heart of it.
+15:48:20 <alikins> tabs in yaml would be less annoying if ansible-playbook errors would tell you thats whats busted
+15:48:54 <samdoran> We're teaching Ansible far and wide now, and our messaging, i.e., examples, needs to be consistent.
+15:49:13 <gundalow> +10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+15:50:01 <samdoran> I consider k=v an advanced feature, which should absolutely be in the docs for those willing and able to find it. Like many great things in our docs. "You'll know when you need this..."
+15:50:22 <samdoran> But it shouldn't be front and center in the examples.
+15:51:27 <skuznets> I've got to leave now, I will attempt to address the other points I noted in the GitHub agenda on Tuesday.
+15:51:40 <jtanner> it's open source though, not a hivemind ... the examples reflect the different personalities of our contributors.
+15:51:50 <jtanner> if it's going to have to be yaml, we need to make a code smell script to enforce it
+15:52:05 <abadger1999> I think all modules should have yaml examples.  Some modules might deserve to have a k=v example alongside of the yaml examples but we can add those as we find them.
+15:52:25 <gundalow> skuznets: Thanks
+15:52:32 <gundalow> +!
+15:52:35 <gundalow> +1
+15:52:47 <samdoran> Which is why I figured we'd start with the core modules. We could be the example, and extras is a bit less stringent.
+15:53:08 <abadger1999> samdoran: are you up for creating a code-smell check (or ansible-validate-modules check) for this as well?
+15:53:29 <jtanner> i still believe forcing all the examples to be one way makes as much sense as saying something like "all user management examples in bash should be with adduser instead of useradd" ... arbitrary
+15:53:48 <abadger1999> would have to parse the module EXAMPLES string and decide whether there were k=v examples in there.
+15:54:08 <samdoran> Sure.
+15:54:12 <abadger1999> Cool.
+15:54:25 <samdoran> Do we have an existing place to start?
+15:55:01 <abadger1999> samdoran: code-smell checks are simple shell scripts: https://github.com/ansible/ansible/tree/devel/test/sanity/code-smell
+15:55:14 <jtanner> codesmell directory under tests
+15:55:35 <abadger1999> should output any failing filenames and some information of what needs changing
+15:55:52 <samdoran> jtanner: Agree, it's arbitrary. But I just want us to pick one and be consistent because the inconsistency is confusing and makes it harder for folks to get started with Ansible.
+15:55:52 <abadger1999> gundalow: What'st he ansible-validate-modules repo now?
+15:56:39 <gundalow> abadger1999: It's in ansible/ansible so we can add extra checks for newer branches
+15:56:42 <gundalow> https://github.com/ansible/ansible/tree/devel/test/sanity/validate-modules
+15:56:51 <samdoran> I think the extras module examples will retain a lot more "personality", but core could/should have a much more unified feel.
+15:57:12 <abadger1999> cool.
+15:57:22 * gundalow is more than happy to develop in some logic to run extra tests on core modules
+15:57:41 <jtanner> they'll all be in the same repo soon
+15:57:57 <samdoran> But metadata! ;)
+15:58:02 <gundalow> aye, though we will have access to the metadata
+15:58:20 <jtanner> we'll have that -before- merge occurs?
+15:58:30 <jtanner> how far out is the merge?
+15:59:06 <gundalow> jtanner: I mean if we want to enforce high standards for (whatever we are calling) core-maintained modules we can do that
+15:59:16 <abadger1999> Should have metadata soon -- I've been fixing bugs instead of working on it but it's not much more work for me to get it added.
+15:59:30 <gundalow> similarly we can add in checks that only run for new modules, so we can raise the bar for new modules
+15:59:30 <abadger1999> Will require more work after that to integrate it into the docs building, etc.
+16:00:45 <gundalow> oh, we have reached the hour
+16:00:48 <gundalow> So have we agreed
+16:00:58 <gundalow> 1) "k: v" is good
+16:01:27 <gundalow> 2) Examples in new modules MUST be "k: v"
+16:01:56 <gundalow> 3) samdoran can is a star, and can push that live
+16:02:09 <gundalow> 4) gundalow will update the new module checklist
+16:02:58 <gundalow> 5) Will look at adding in sanity tests for this - We (Matt & I) will be looking at linter tooling once all the repo merge is done
+16:03:19 <samdoran> I can write a code smell check for examples.
+16:03:49 <gundalow> Is the above a fair summary of what we've agreed?
+16:04:25 <samdoran> Do we want one PR per module with example changes?
+16:04:28 <gundalow> samdoran: Ace, I think it will be best added into https://github.com/ansible/ansible/tree/devel/test/sanity/validate-modules As that script already knows about module versions, etc
+16:04:32 <abadger1999> +1 from me
+16:05:00 <gundalow> I think one PR in total is fine
+16:05:10 <abadger1999> eventually we may need to whitelist and allow some k=v through but I'm okay crossing that bridge later
+16:05:12 <gundalow> abadger1999: One PR or one PR per module
+16:05:17 <gundalow> ACK
+16:05:21 <samdoran> Agreed.
+16:05:43 <alikins> (re tabs and yaml, quick patch to show errors cause by tabs in yaml   https://github.com/ansible/ansible/compare/devel...alikins:show_tab_errors_in_yaml?expand=1  https://gist.github.com/alikins/6fee7a8994d0489b7ae9dde2eeb77143 example)
+16:05:46 <samdoran> (on allowing some k=v exceptions)
+16:06:01 <abadger1999> Would like to not have thousands of lines to review in one shot but i don't think we need one PR-per either.
+16:06:36 <samdoran> So batches?
+16:06:38 <abadger1999> A manageable amount each time wuld be nice... "I modified 10 today, so I'll submit a PR with those 10" would probably work out fine.
+16:06:45 <samdoran> +1
+16:06:48 <abadger1999> Cool.
+16:07:31 <samdoran> Thanks everyone for the discussion.
+16:07:49 <gundalow> samdoran: Thank you for doing the actual work, will make it a lot better
+16:09:45 <gundalow> hum, no Scott, so do we want to skip versioning docs.ansible.com
+16:09:53 <gundalow> #topic Versioning docs.ansible.com
+16:10:43 <abadger1999> alikins: This looks like it might have just been for testing? -            if extended_error and not suppress_extended_error:  othersie looks good/
+16:11:02 <abadger1999> gundalow: I don't think we can discuss this without dharmabumstead
+16:11:07 <gundalow> ACK
+16:11:19 <gundalow> #info dharmabumstead isn't here, so skipping this
+16:11:36 <abadger1999> short answer it's on his todo list but we haven't gotten an idea of where he is in implementing it.
+16:11:41 <gundalow> #topic hardcoded $HOME/.ansible/cp; unexpected ControlPath behavior https://github.com/ansible/ansible/issues/18325
+16:12:04 <shaps> yep, I'm here
+16:12:08 <gundalow> \o/
+16:12:38 <shaps> as said in the comment, I do think it makes sense to have the directory configurable
+16:12:50 <shaps> that hardcoded value really bothers me
+16:13:43 <shaps> but I just wanted to confirm with others that change is ok to do
+16:14:55 <shaps> I've already worked on ssh.py and adding options, so I'm happy to do that
+16:15:06 * gundalow -> offline for a bit, other people are chairs
+16:15:53 * jimi|ansible trying to fix stuff he broke this morning so checking in from time to time
+16:16:14 <abadger1999> Hmm... I looked into something similar a few week ago.. .can't find the bug now, though.
+16:16:45 <abadger1999> https://github.com/ansible/ansible/issues/17876
+16:16:55 <shaps> ah if that's fixed already I'm also happy not to do it :D
+16:16:58 <abadger1999> Okay... I think not relecant.
+16:17:02 <abadger1999> relevant.
+16:17:20 <abadger1999> I saw what you see... but since it didn't affect the bug I didn't do anything about it.
+16:17:22 <shaps> yeah, no that's something else :)
+16:17:56 <shaps> cool, I'll raise PR for that then ;)
+16:18:14 <abadger1999> unfrakpath might not be good.  Check the implementation.
+16:18:33 <shaps> why not good?
+16:18:34 <abadger1999> It may use playbook base dirs and such to resolve relative paths.
+16:18:42 <abadger1999> I don't think we want that.
+16:19:10 <abadger1999> But using os.path.expanduser(os.path.expandvars(path))  would be good.
+16:19:12 <shaps> last time I worked on relative paths I kind of -had- to use unfrackpath
+16:19:30 <shaps> bcoca will be upset about that
+16:20:12 <shaps> i had the impression unfrackpath was the right way to expand everything
+16:20:26 <abadger1999> Okay, just checked.. I think it will be okay.
+16:20:47 <abadger1999> It does not involve palybook base dirs.
+16:20:57 <abadger1999> It does expand symlinks... but i think that's fine.
+16:21:07 <abadger1999> (It's not fine for some other code recently)
+16:21:21 <shaps> ah, didn't know that
+16:21:24 <abadger1999> which is the problem I was remembering with using it everywhere.
+16:22:12 <shaps> shall I go with expanduser/expandvars then?
+16:22:14 <shaps> just in case?
+16:23:37 <abadger1999> hughmFLEXin: nah,  unfrakpath is fine for this use.
+16:23:52 <shaps> ok cool
+16:24:01 <hughmFLEXin> abadger1999: i think you tagged the wrong person :-P
+16:24:06 <abadger1999> yes, yes I did.
+16:24:29 <abadger1999> I should disable tab completion to force myself to read before hitting return.
+16:24:50 <shaps> or disable return all together
+16:25:19 <shaps> anyhow, that's all for me
+16:26:13 <abadger1999> shaps: cool.
+16:26:24 <abadger1999> #action shaps to work on an implementation and then we can review.
+16:26:57 <abadger1999> #topic Potential Security issue in mysql_user module https://github.com/ansible/ansible-modules-core/pull/5388
+16:27:13 <abadger1999> PR author isn't here but pinged us earlier.
+16:27:23 <abadger1999> Jmainguy: You around and have a few moments?
+16:27:32 <Jmainguy> im getting grounded arent I
+16:28:01 <Jmainguy> looking now
+16:29:36 <abadger1999> If it looks good to you I can get it merged in time for 2.1.3 and 2.2.1
+16:31:05 <Jmainguy> Ill commit to testing it tonight and getting you an answer tonight
+16:31:31 <abadger1999> Jmainguy: Cool.  Thanks!
+16:31:36 <Jmainguy> looks like a small change, but I just need to test it
+16:31:50 <Jmainguy> Ill add that comment to the ticket as well
+16:31:53 <abadger1999> #action jmainguy to test tonight and we'll merge aap if it seems good.
+16:32:43 <abadger1999> #topic Open floor
+16:32:50 <abadger1999> Anyone else have anything?
+16:32:59 <jimi|ansible> yeah get it in for 2.1.3 asap and let me know when it's done
+16:33:08 <Jmainguy> ack
+16:33:10 <jimi|ansible> (was just reviewing the PR and original issue)
+16:33:53 <Jmainguy> Ill bug you about in in #ansible-devel
+16:34:59 <abadger1999> #endmeeting

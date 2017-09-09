@@ -1,0 +1,259 @@
+15:09:46 <mattclay> #startmeeting Ansible Core Meeting
+15:09:46 <zodbot> Meeting started Thu Mar  2 15:09:46 2017 UTC.  The chair is mattclay. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:09:46 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:09:46 <zodbot> The meeting name has been set to 'ansible_core_meeting'
+15:09:54 <mattclay> #chair abadger1999 alikins bcoca funzo jimi|ansible jtanner gundalow nitzmahone Qalthos ryansb shertel thaumos
+15:09:54 <zodbot> Current chairs: Qalthos abadger1999 alikins bcoca funzo gundalow jimi|ansible jtanner mattclay nitzmahone ryansb shertel thaumos
+15:10:08 <shertel> hello
+15:10:13 * bcoca waves
+15:10:13 <dag1> \o/
+15:10:18 <funzo> o/
+15:10:24 * nitzmahone sleeps
+15:10:30 <dag1> :-)
+15:10:37 * gundalow not here unless someone pings me
+15:11:15 * bcoca pings gundalow
+15:11:22 * nitzmahone not here unless someone has a giant poking device made of chopsticks taped together
+15:11:23 <jimi|ansible> bcoca beat me to it...
+15:11:36 <bcoca> nitzmahone: building it
+15:11:40 <jimi|ansible> nitzmahone: i really hope the rest of that analogy is not accurate
+15:12:09 <mattclay> #info Agenda https://github.com/ansible/community/issues/156
+15:13:58 <mattclay> #topic "shipit" workflow for non-modules: https://github.com/ansible/community/issues/156#issuecomment-283631658
+15:15:03 <mattclay> This was discussed in previous meetings. Is there anything else to discuss today?
+15:16:01 * dag1 hasn't prepared the facts-proposal yet, v2.3 module freeze happened
+15:16:25 <bcoca> mattclay: nope, it depends on metadadta which is being reworked, so makes no sense to discuss now
+15:16:37 <sivel> dag1: https://github.com/ansible/proposals/issues/56
+15:17:04 <dag1> sival: ouch
+15:17:56 <mattclay> #topic Fix for wildcards inside of a path for fileglob lookup (https://github.com/ansible/community/issues/156#issuecomment-283631866)
+15:18:11 <mattclay> bcoca: Any update on this one?
+15:20:55 <bcoca> nope
+15:21:22 <bcoca> dag1: wrong ticket for gather_facts revamp, posted  response to you
+15:22:02 <mattclay> bcoca: Still on your list to review?
+15:22:18 <bcoca> yes
+15:22:28 <bcoca> its down to 120is tickets
+15:22:53 <mattclay> #info no updates from bcoca, still on his list to review
+15:23:16 <mattclay> #topic Decide which are valid directives on include (https://github.com/ansible/community/issues/156#issuecomment-283632012)
+15:23:50 <bcoca> jimi|ansible: ^
+15:24:01 <bcoca> https://github.com/ansible/ansible/pull/22176 <= appropos
+15:24:15 <mattclay> There's a note on the agenda that documentation is needed, but I don't see who had that as an action item.
+15:24:22 <bcoca> also we can decide on pattern, like  https://github.com/ansible/ansible/pull/21585 vs https://github.com/ansible/ansible/pull/21586
+15:24:40 <bcoca> mattclay: first we need to decide, then to document
+15:24:42 <jimi|ansible> i don't recall that we had to debate what was valid?
+15:24:56 <bcoca> jimi|ansible: debate/define
+15:25:11 <jimi|ansible> which directives are questionable?
+15:25:13 <bcoca> we dont have it specified anywhere and it is confusing as people just 'test what works'
+15:25:33 <bcoca> ^ ignore_errors and any_erorrs_fatal are 2 (as those tickets show)
+15:25:42 <jimi|ansible> notify, imo should be triggered on static when it's expanded in helpers.py
+15:25:44 <bcoca> i would argue that almost all 'task directives' with very few exceptions
+15:25:52 <jimi|ansible> those two should be inherited
+15:26:30 <bcoca> ok, so i'll close 21586 and merge /21585
+15:26:41 <bcoca> tempted to rewrite user's patch to also work like 21586
+15:26:43 <sivel> I think at least some don't understand how/where they are applied
+15:27:03 <bcoca> jimi|ansible: as for notify inheritance .. include does not return changed, specially not when static
+15:27:04 <jimi|ansible> frankly all should be inherited, including an argument for doing notifies that way too, however since the notify SHOULD be triggered when the dynamic include happens, that's why i lean towards making it happen when it's expanded in helpers.py
+15:27:05 <sivel> instead of applying directly to the include, they may apply to the items within
+15:27:22 <bcoca> jimi|ansible: dynamic include + change_when: true
+15:27:42 <bcoca> ok, so we all agree on how it should work, just wanted to get 'firm' decision
+15:28:19 <jimi|ansible> bcoca: hrm, ok the problem would still be solved if the task inherited the notifiy list and could then trigger them if any tasks within the include returned changed
+15:28:52 <jimi|ansible> sivel: that's a good point, should ignore_errors apply to the include or the tasks within the include
+15:28:52 <bcoca> jimi|ansible: that would require include task to 'outlive' itself as a 'dyanmic block' of sorts
+15:28:53 <jimi|ansible> or both
+15:29:14 <jimi|ansible> directives like that could go one or both ways
+15:29:18 <bcoca> ^ i would use the static/dynamic rule, on 'static' it is inherited, on dynamic it applies to include
+15:29:40 <sivel> My personal opinion, is that it should apply to the tasks within.  Don't specify invalid/incorrect paths
+15:29:45 <resmo> sivel: +1 for tasks within
+15:30:14 <sivel> if paths are missing to includes, I would consider that a problem, and likely not an ignorable one
+15:30:34 <jimi|ansible> that's my inclination as well, and i believe includes fail today regardless of whether ignore_errors is set, when the include path is not found
+15:30:39 <jimi|ansible> that's kind of a fatal error regardless
+15:30:54 <bcoca> https://github.com/ansible/ansible/pull/22176 <= this changes that for 'one case'
+15:31:13 <jimi|ansible> we could _maybe_ add an include-specific directive to allow skipping if the path is not found
+15:31:33 <jimi|ansible> that way ignore_errors would clearly only apply to tasks contained within
+15:32:17 <sivel> yeah, such a new arg for the include "module" that is something such as "allow_missing" or something
+15:32:18 <bcoca> fatal: [localhost]: FAILED! => {"failed": true, "reason": "the file_name '/home/bcoca/work/ansible/garbage.yml' does not exist, or is not readable"} <=  current error on static
+15:32:34 <bcoca> and dynamic
+15:33:13 * mattclay needs to step away for a few minutes, can someone else run the meeting?
+15:33:51 <bcoca> i dont think that is consistent with block/rescue allowing to bypass the error on dynamic include
+15:34:20 <alikins> some of these feel analogous to 'context managers' on blocks
+15:35:01 <sivel> My "concern" is that my general "expectation" is that task args like that, are pushed down on to the tasks within.  That is the most consistent operatio of how that works
+15:35:09 <bcoca> https://gist.github.com/bcoca/ecdd0485b6f3feb8e6e0153488a5e1b0 < = examples
+15:35:32 <sivel> applying `ignore_errors` to the include, is inconsistent with how it works mostly everywhere else
+15:35:55 <sivel> I suppose, I would be fine with it applying to both the include AND all the tasks inside
+15:36:03 <bcoca> includes are inconsisten for most things, but if we can make the static/dynamic pattern itself consistent ....
+15:36:33 <bcoca> then why not always inherit all directives from include?
+15:36:43 <bcoca> right now we pick and choose
+15:36:57 <sivel> Yeah, I am saying we shoudl inherit them, and push them all down
+15:37:12 <sivel> then they effectively work like roles do
+15:37:20 <sivel> and mostly blocks
+15:37:44 <bcoca> i think that it should depend on include mode, if static, yes, behave like that, but if dynamic, behave more like normal tasks
+15:38:07 <bcoca> cause when: change/failed_when NOW apply to the include itself, when dyanmic
+15:38:13 <bcoca> so does with_
+15:38:20 <bcoca> ^ when static, they are inherited
+15:38:51 <bcoca> if everything is always inherited with_ loops on include wil change
+15:39:02 <bcoca> and we go back to not being able to conditionally skip the include itself
+15:39:21 <bcoca> include: when: <- would go back to 'static behaviour'
+15:41:12 <jimi|ansible> i think changing the behavior based on the mode is confusing
+15:41:25 <jimi|ansible> which is generally you're argument against static/dynamic ;)
+15:41:31 <bcoca> but we already do it
+15:41:33 <jimi|ansible> s/you're/your/
+15:41:46 <bcoca> yes, which is why i want 'diff names' include_task <<=always dynamic
+15:41:56 <bcoca> but as we are stuck with current, lets make it at least consistent
+15:42:19 <jimi|ansible> i wouldn't be opposed to different names
+15:42:24 <alikins> +1 to different names in future at least
+15:42:25 <bcoca> if include_x (-vars) has dual modes (static: no|yes) we should at least be consistent in those modes
+15:42:50 <bcoca> jimi|ansible: ok, so include_roles being dynamic by default?
+15:43:02 <bcoca> ^ that was our previous discussion, did not want it to have 'static'
+15:43:14 <jimi|ansible> well it gets tricky there, because we only have one include_role statement
+15:44:02 <jimi|ansible> we may want to do include_{task|role}_{static|dynamic} and deprecate the others
+15:44:22 <jimi|ansible> wordy, but i can't think of a better way
+15:44:49 <bcoca> roles:
+15:44:52 <alikins> i might even go say, 'import' and 'include' or 'include' and 'eval' or 'source' etc.  (but nameshedding...)
+15:45:06 <bcoca> alikins: 3.0
+15:45:16 <bcoca> yes, a distinct name would be better
+15:45:20 <bcoca> right now it is very confusing
+15:45:22 <jimi|ansible> import vs. include may work
+15:45:27 <jimi|ansible> import = static
+15:45:31 <bcoca> include = dynamic
+15:45:41 <bcoca> ^ worksforme, but it will take us a while to get there
+15:45:47 <jimi|ansible> then we have {import|include}_{tasks|role}
+15:45:54 <bcoca> import_play
+15:46:04 <jimi|ansible> not really, we can alias things pretty easily
+15:46:22 <bcoca> jimi|ansible: yes, but deprecation and old playbooks live long
+15:46:22 <jimi|ansible> import_task => include + static: yes
+15:46:34 <bcoca> +1 to this
+15:46:43 <bcoca> it will remove MANY headaches
+15:47:07 <bcoca> #action i'll add it to 2.4 roadmap
+15:47:11 <jimi|ansible> import = directives apply to contained things, include = directives apply to task as it's run
+15:47:24 <jimi|ansible> +1 for 2.4
+15:47:38 <bcoca> yeah, until then ... do we follow same rule for 'include static: yes|no' ?
+15:48:12 <jimi|ansible> it's too late in the 2.3 cycle to fix that, i think we need to leave behaviors as they are until 2.4
+15:48:26 <bcoca> 2.4 will have both coexisting
+15:48:32 <bcoca> till 2.7 at least
+15:48:39 <bcoca> ^ just want the 'general rule'
+15:50:47 <jimi|ansible> i'm torn on this, but i'm not sure we can fix it in time for 2.3
+15:50:56 <bcoca> not planning to
+15:51:03 <bcoca> but we can fix a few of those issues for 2.3.1
+15:51:11 <bcoca> as long as we establish a clear rule
+15:51:31 <bcoca> ^ added to roadmap draft
+15:52:02 <jimi|ansible> ok, so the general rule needs to be what i said above, even if it starts breaking some expectations today
+15:52:12 <bcoca> ok, that makes it clear
+15:52:30 <jimi|ansible> include+static:yes => directives apply to contained things, include+static:no => directives apply to the dynamic include
+15:52:50 <jimi|ansible> if we don't do that, it'll just be a mess down the road
+15:52:55 <jimi|ansible> better to start adjusting expectations now
+15:53:01 <bcoca> agreed
+15:53:07 <bcoca> whole reason i brought it up
+15:53:26 <jimi|ansible> yep
+15:53:35 <jimi|ansible> ok, i think we're good here, next topic (if any)
+15:54:07 <sivel> https://github.com/ansible/community/issues/156#issuecomment-283632237
+15:54:19 <mattclay> #topic versioned docs (https://github.com/ansible/community/issues/156#issuecomment-283632237)
+15:54:42 <bcoca> ping gundalow, dharmabumstead
+15:54:48 <gundalow> yo
+15:54:52 <bcoca> ^ topic
+15:54:53 <sivel> versioned docs
+15:54:58 <gundalow> ah, cool
+15:55:54 <gundalow> #info https://public.etherpad-mozilla.org/p/ansible-versioned_docs has proposal for versioned odcs in
+15:57:26 <gundalow> +1/-1 on that would be good, then it's on dharmabumstead's plate
+15:57:32 <bcoca> "no build dependencies should exist outside of the git repo" <= er .. that seems far fetched
+15:57:33 <gundalow> next?
+15:58:50 <gundalow> hum, I wonder if that's got confused
+15:58:52 <bcoca> some of the 'proposal' seems in contradiction /latest vs /stable + /devel vs /<versiono specific>
+15:59:07 <alikins> (other variation of include static/dynamic might be to add 'with:' and 'as:' directives, that would be a set of directives. something like https://gist.github.com/alikins/b390b3d0c6904505b111e5ebc10861a0)
+15:59:50 <bcoca> alikins: curious about 'as' but lets discuss later/elsewhere, diff topic now
+15:59:55 <alikins> yup
+16:02:09 <gundalow> #info [15:58] <@bcoca> some of the 'proposal' seems in contradiction /latest vs /stable + /devel vs /<versiono specific>
+16:02:17 <gundalow> OK, will get that looked at
+16:02:20 <gundalow> next topic?
+16:02:27 * gundalow -> afk
+16:02:54 <mattclay> #topic Define and document proposals process (https://github.com/ansible/community/issues/156#issuecomment-283632237)
+16:04:03 <mattclay> In a previous meeting, allanice001 had an action item to create a PR to update the proposal process.
+16:04:30 <mattclay> I don't see allanice001 in the channel now, and there's no PR open yet.
+16:04:53 <mattclay> Is there anything else to discuss on this topic now, or should we move on?
+16:06:01 <mattclay> #info waiting on allanice001 to open PR to update the proposal process
+16:06:30 <mattclay> #topic Module Rename Lifecycle (https://github.com/ansible/proposals/issues/14)
+16:07:31 <mattclay> ryansb: Where are we at with the proposal?
+16:09:37 <mattclay> OK, moving on.
+16:09:40 <mattclay> #info no updates
+16:09:45 <mattclay> #topic https://github.com/ansible/community/issues/156#issuecomment-283644505
+16:09:57 <mattclay> dag1: You around?
+16:10:30 <dag1> I am now
+16:10:50 <bcoca> ^ not what he wants to discuss, he wants to propose system that will make that discussion obsolete
+16:11:07 <dag1> bcoca: I wanted to discuss both
+16:11:30 <dag1> indeed
+16:11:46 <dag1> but someone already started a proposal for one of the aspects
+16:11:49 <dag1> so fine by me
+16:13:02 <thaumos> let me know what I missed for the proposal.  I am happy to update it.
+16:13:12 <thaumos> I tried to capture the high level points from the last meeting
+16:13:14 <bcoca> https://github.com/ansible/proposals/issues/56
+16:13:27 <bcoca> thaumos: you have commetns there already
+16:13:35 <mattclay> #info proposal here: https://github.com/ansible/proposals/issues/56
+16:13:42 <thaumos> yeah... I just wanted to kick of the discussion by leaving a comment
+16:13:49 <thaumos> I am happy to delete it, edit it or whatever
+16:15:32 <bcoca> just go to future and come back with what was decided
+16:16:02 <thaumos> ha
+16:16:20 <thaumos> but in all seriousness @dag1 if I missed something let's hash it out together.
+16:17:08 <thaumos> or even better, edit my original post :-)
+16:18:12 <bcoca> if im infering this correctly, dag wants to be able to set 'gather_facts' special play task as an user defined list of modules run
+16:18:30 <bcoca> ^ i have similar plan but resticted by name to  *_facts plugins
+16:18:47 <bcoca> also spliting current setup into many 'sub modules'
+16:22:34 <mattclay> OK, moving on. Additional discussion can take place in the proposal comments.
+16:22:55 <mattclay> #topic https://github.com/ansible/community/issues/156#issuecomment-283644743
+16:23:33 <mattclay> From the agenda item: can we get rid of these expanduser/expandvars calls here ? And if so, what's the process to get it done.
+16:24:59 <mattclay> dag1: This was originally from you. Anything to add?
+16:25:23 <mattclay> Well, the context for the above question was anyways.
+16:27:54 <dag1> hmm
+16:28:25 <dag1> so a lot of the module_utils functions that modify files perform expanduser/expandvars on the path-name
+16:28:48 <dag1> which is a problem (in case a path-name was deliberately created with eg $USER in it)
+16:29:07 <alikins> I like the idea of the low level file context setting methods not expanding paths (or to_bytes(path)) and leaving that to module to do first. But that also would intentionally change the AnsibleModule API so may need to leave those as is
+16:29:09 <dag1> that seems strange and non-sensical, but if that's a filename coming from an archive, we do NOT want to substitute it
+16:29:39 <dag1> alikins: agreed, but the CI tests did not catch any issues (might as well that we are not testing this specifically)
+16:30:06 <dag1> but since we are already stating type="path" which does exactly this already, a lot of this has already been taken care of
+16:30:24 <dag1> 3x already in a sentence
+16:30:45 <alikins> would like to see the guts of the set_*_if_different methods moved to their own class[es], and making the AnsibleModule.set_*_if_different use them (and expanding paths etc as they do now)
+16:31:25 <dag1> so the patch doesn't touch the old behaviour, but the tests I performed that _did_ modify the default behaviour (disable expandvars/expanduser) worked fine
+16:31:45 <bcoca> dag1: not all moduels use type=path, not all of them use these functions on 'options' passed in by user
+16:31:47 <dag1> anyhow, unarchive needs to disable the behaviour
+16:31:56 <bcoca> +1 for allowing a 'non expand' option to current functions
+16:32:02 <dag1> bcoca: probably true
+16:32:11 <bcoca> ^ but this would  be 'on by default' to keep backwards compat
+16:32:12 <dag1> bcoca: but something to change IMO
+16:32:37 <bcoca> agreed, im fine with adding the option, just not in 'non backwards compatible' way
+16:33:12 <dag1> so that's what the patch does now, but I think we need to change the order in the long run as well
+16:33:26 <bcoca> basic.py/url.py are  'the only' clearly public api we have in ansible, we should not change in ways that break behaviour
+16:33:30 <dag1> there might be other modules that do it incorrectly that haven't been triggered yet
+16:33:46 <mattclay> If we wanted to, we could create _v2 versions of the relevant functions with the new behavior and deprecate the old ones.
+16:33:50 <bcoca> we'll need api versioning/etc
+16:34:20 <alikins> dag: tis true, patch as is seems to retain current behavior. My concern is those methods already do too many things and would like the implementations to be simpler methods with less args and less assumptions in the future.
+16:34:20 <bcoca> actually, we plan on 'breaking up' basic.py , the new methods can have diff defaults
+16:34:46 <dag1> alikins: I would prefer not to have this option too...
+16:34:47 <mattclay> That would definitely be a good time to fix things like this.
+16:35:02 <bcoca> yep, but probably wont happen till 2.5
+16:35:15 <bcoca> and current basic.py will 'surivive' for a few versions, but deprecated
+16:35:18 <alikins> but yeah, adding an arg seems a reasonable way to do it and be compatible
+16:35:34 * abadger1999 shows up late
+16:35:42 <bcoca> abadger1999: i would say, right on time
+16:36:11 <mattclay> OK, is there anything else to decide on this one, or should we move on to our last agenda item?
+16:38:17 <alikins> I just get twitchy when method start acquiring 'do_something_completely_different=False' args. (The  case seems totally reasonable to me though)
+16:38:20 <alikins> er
+16:38:30 <alikins> the 'expand' case seems totally reasonable to me
+16:38:36 <mattclay> #info Current PR adds an optional argument to override the default expand behavior.
+16:38:53 <abadger1999> +1 to bcoc'a idea of adding a new keyword arg for now.
+16:39:04 <mattclay> #info The default can be changed in the new version when basic.py is split up.
+16:39:39 <abadger1999> I like alikins proposal to break the functions into their own python module eventually... probably one of the many things that can be done as part of the larger "break basic.py into pieces"
+16:40:33 <abadger1999> err, credit to dag for the keyword arg, I see his PR does that :-)
+16:40:53 <bcoca> arguments.py, files.py, conversions.py, etc
+16:41:46 <mattclay> It seems we're in agreement on the approach in the PR. Are we good to move on?
+16:43:07 <alikins> seems like it.
+16:43:07 <mattclay> OK, moving on to our last agenda item.
+16:43:15 <mattclay> #topic Update to metadata format (https://github.com/ansible/community/issues/156#issuecomment-283644932)
+16:43:27 <dag1> so who is going to merge that PR ? :-D
+16:43:51 <abadger1999> dag1: I'm finding some things that need to be changed.
+16:43:59 <sivel> I think we approved the metadata changes last meeting
+16:44:05 <abadger1999> You can keep bugging me as we move along, though.
+16:44:09 <abadger1999> Yep, it was.
+16:44:09 <dag1> Do we need a reminder in the code so that it triggers the right people when refactored ?
+16:44:18 <dag1> abadger1999: perfect !
+16:44:38 <sivel> mattclay: the current topic is complete
+16:45:02 <mattclay> #info metadata changes settled in previous meeeting
+16:45:06 <mattclay> #topic Open Floor
+16:47:21 <mattclay> We're well over our scheduled 1 hour, so if there are no additional comments in the next minute I'll end the meeting
+16:48:17 <bcoca> mattclay: reminder to update ticket with meeting notes
+16:48:25 <mattclay> bcoca: Thanks
+16:48:49 <mattclay> #endmeeting

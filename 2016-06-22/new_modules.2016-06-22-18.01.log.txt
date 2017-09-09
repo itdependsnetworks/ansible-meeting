@@ -1,0 +1,146 @@
+18:01:02 <gregdek> #startmeeting new modules
+18:01:02 <zodbot> Meeting started Wed Jun 22 18:01:02 2016 UTC.  The chair is gregdek. Information about MeetBot at http://wiki.debian.org/MeetBot.
+18:01:02 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+18:01:02 <zodbot> The meeting name has been set to 'new_modules'
+18:01:06 <gundalow> woot
+18:01:09 * gundalow waves
+18:01:15 <nitzmahone> yo
+18:01:22 <gundalow> hey nitzmahone :)
+18:01:24 <gregdek> #topic roll call
+18:01:30 * gregdek will wait a couple for people to show
+18:01:48 * mattclay waves
+18:01:55 <ryansb> hi!
+18:02:39 <Qalthos> hiya
+18:02:51 <gregdek> ok, agenda, working from bottom up:
+18:03:03 <gregdek> #topic Agenda: https://github.com/ansible/community/issues/92
+18:03:58 <gregdek> https://github.com/ansible/ansible-modules-extras/pull/1862
+18:04:10 <gregdek> #topic jboss cli module https://github.com/ansible/ansible-modules-extras/pull/1862
+18:04:33 * MichaelBaydoun is here
+18:04:43 <gregdek> Failing travis looks like?
+18:05:16 <gregdek> Gah.
+18:05:17 <gundalow> failed to git rebase
+18:05:23 <gregdek> Merge failure in yum.
+18:05:29 <gundalow> I've seen that patch fail on a few PRs
+18:06:04 <gregdek> Gonna kick travis to see if it's transient.
+18:06:09 <gundalow> cool
+18:06:18 <gundalow> Thanks
+18:07:08 <gregdek> If not, I guess it'll need a rebase, though it should have failed earlier, I would think
+18:08:41 <gregdek> While we're waiting  on that:
+18:10:32 <gregdek> LAG GAH
+18:11:32 <gregdek> OK, travis failed again.
+18:11:41 <gregdek> Looks like we need to ask for a rebase.
+18:11:53 <gundalow> OK, I'll update
+18:12:15 <gregdek> thx!
+18:12:47 <gregdek> #topic "potential" docker modules https://github.com/ansible/ansible/issues/16318
+18:13:14 <gregdek> So this is an issue in the ansible repo. I think it's out of scope for this meeting, but is jgrowl here?
+18:14:11 <gregdek> jgrowl, are you here? :)
+18:15:35 * gregdek waits another minute...
+18:17:03 <gregdek> ok, no jgrowl. I'll update accordingly.
+18:18:21 <gregdek> Next:
+18:19:00 <gregdek> #topic https://github.com/ansible/ansible/issues/16318
+18:19:07 <gregdek> Grr, yum breakage again.
+18:19:31 <gundalow> erm, same URL
+18:19:39 <gregdek> Ah, doh.
+18:19:51 <gregdek> #topic https://github.com/ansible/ansible-modules-extras/pull/2209
+18:20:13 <gregdek> But travis is breaking on yum.
+18:20:23 <gregdek> It's in shipit though.
+18:20:37 * rbergeron peeks in
+18:21:17 <gregdek> abadger1999 bcoca did we merge yum breakage? This is two yum issues in the past 24 hours from branches committed at very different times...
+18:21:18 <jgrowl> I am here! Sorry was making coffee
+18:21:28 <gregdek> Ah, ok :)
+18:21:58 <abadger1999> gregdek: link me?
+18:22:13 <gregdek> abadger1999: https://github.com/ansible/ansible-modules-extras/pull/2209
+18:22:45 <gregdek> jgrowl: so what feedback are you looking for? This is really a forum for reviewing module submissions that are already close to mergeable...
+18:23:23 <abadger1999> mattclay: https://travis-ci.org/ansible/ansible-modules-extras/builds/134550628
+18:23:33 <abadger1999> mattclay: That's happening on several module PRs for the extras repo
+18:23:40 <abadger1999> mattclay: (yum is in the core repo)
+18:23:45 <abadger1999> (ansible-modules-core)
+18:23:53 * mattclay takes a look
+18:24:16 <gregdek> Oh, super weird.
+18:24:20 <gregdek> Hadn't even realized.
+18:25:22 <abadger1999> gregdek: if you can find a PR that doesn't have this issue, probably should move on to that... I don't know what is wrong... will have to wait for mattclay to point me in a direction.
+18:25:49 <gregdek> thx abadger :)
+18:25:54 <gregdek> (sigh) ok!
+18:26:06 <MichaelBaydoun> the next two PR's don't have that issue
+18:26:48 <gregdek> #topic extras/1775: Retrieve attributes from server certificate
+18:26:55 <gregdek> https://github.com/ansible/ansible-modules-extras/pull/1775
+18:27:10 <gregdek> Actually in needs_revision.
+18:27:13 <rbergeron> gregdek: I think the guidance currently is "new modules go into extras" unless $extenuatingcircumstance, so... maybe this is the place where jgrowl should be asking about that particular thing? :)
+18:27:15 * ryansb tags with `aws`
+18:27:18 <gregdek> But gundalow misspelled it, so I fixed that :)
+18:27:29 <rbergeron> (not to detract from the current pr in discussion, just commenting)
+18:27:32 <jimi|ansible> doh... saw the meeting thing pop up and cleared it... then forgot
+18:27:41 <gregdek> rbergeron: that's why I'm asking, yes.
+18:27:46 <gundalow> gregdek: oh, did i typo needs_revision *headdesk*
+18:28:15 <gregdek> gundalow: no worries :)
+18:28:26 <gundalow> gregdek: will your bot detect the edit?
+18:28:29 <gregdek> I wish we had a typo-proof mechanism, but alas.
+18:28:33 <gregdek> Yes, it should.
+18:28:37 <gundalow> \o/
+18:28:54 <gundalow> Once my comments are addressed in that PR I think it should be good to merge
+18:29:12 <gregdek> thx gundalow!
+18:29:37 <jgrowl> gregdek ahh, well maybe I can wait until I get a PR ready since it is pretty close. Mainly I guess 1) If it would be better to have a single docker_machine module with a driver parameter or keep it split up with a separate module for each driver. 2.) If it is alright depending on an external python lib that I created or if it would be better to handle everything inside of the ansible module
+18:29:41 <gregdek> ryansb: we could/should have the bot doing aws tagging...
+18:30:03 <rbergeron> yes, plz re: tagging
+18:30:05 <ryansb> It's on my list
+18:30:12 <rbergeron> otherwise crazypants things happpen
+18:30:35 <rbergeron> :)
+18:31:00 <gregdek> ryansb: should be a trivial add, see https://github.com/ansible/ansibullbot/commit/a8ac6e8985c6a9dee08d0e1dab36e66a2ed780dc
+18:31:08 <nitzmahone> jgrowl: self-contained is usually preferred, or add to docker_common in ansible/ansible if it's small and reusable
+18:31:24 <nitzmahone> (module_utils)
+18:31:38 <gregdek> +1 to nitzmahone
+18:31:55 <gregdek> We prefer to avoid external python libs if at all possible/reasonable
+18:32:08 <gregdek> (sometimes it's not)
+18:32:44 <gregdek> jgrowl: is that sufficient guidance?
+18:33:36 <jgrowl> Yeah I think so. I'll just finish up a few things and then get a PR in
+18:33:53 <jgrowl> thanks
+18:35:26 <gregdek> thanks jgrowl!
+18:35:31 <gregdek> ok, moving on:
+18:36:41 <gregdek> #topic extras/1709: ec2 virtual private gateway module
+18:36:49 <gregdek> https://github.com/ansible/ansible-modules-extras/pull/1709
+18:37:50 <gregdek> Well, that one is easy. shipit! shipping it!
+18:38:05 <jimi|ansible> yep shipit
+18:38:05 <gregdek> next:
+18:38:37 <jimi|ansible> are we keeping track of merged ones for changelog updates?
+18:38:46 <gregdek> #topic extras/2326: network: Add new module openssl_privatekey
+18:39:04 <gregdek> jimi|ansible: I presume whoever is doing the actual merge is doing that.
+18:39:21 <gregdek> Since until it's actually merged, it may not make it :)
+18:39:32 <jimi|ansible> ahh, i thought when you said "shipit" you were merging it
+18:39:42 <gregdek> Oh no. nononono. I'm just tagging it. :)
+18:41:11 <gregdek> extras/2326 is still waiting on revisions, so I've flagged it appropriately.
+18:41:16 <jimi|ansible> ec2_vpc_vgw merged and CHANGELOG updated
+18:42:04 <gregdek> Thanks jimi|ansible!
+18:42:09 <gregdek> Next:
+18:42:39 <gregdek> Oh, next is a core module, actually.
+18:43:01 <gregdek> And it's waiting for feedback anyway.
+18:43:51 * gregdek does a quick review of rollovers...
+18:44:58 <gregdek> OK, all others in the queue were either merged or are still awaiting revisions.
+18:45:03 <gregdek> #topic Open Floor
+18:45:39 <gregdek> Any particular modules/topics? Other than hoping today's yum merge issue sorts itself out... :)
+18:45:58 <jimi|ansible> and any issues in particular with 2.1.1 RC1
+18:46:05 <jimi|ansible> module issues that is
+18:46:38 <MichaelBaydoun> what about https://github.com/ansible/ansible-modules-extras/pull/245
+18:47:04 <MichaelBaydoun> doesn't appear to be shipable, based on questions, but not marked needs_revision either
+18:47:29 <MichaelBaydoun> has been quiet since last december
+18:47:35 <jimi|ansible> yeah been there quite a while
+18:48:31 <jimi|ansible> needs_rebase too... there's a merge commit
+18:49:28 * gregdek looks
+18:50:04 <gregdek> jimi|ansible: so we should put it in needs_revision for that?
+18:50:57 <gregdek> I will put it in needs_revision.
+18:51:45 <gregdek> Anything else? Anyone?
+18:51:47 <MichaelBaydoun> If we are done with 245, this one https://github.com/ansible/ansible-modules-extras/pull/1643 looks like we need to re-ping the maintainers
+18:52:46 <gregdek> Kicked that one so the bot picks it up again.
+18:53:25 <MichaelBaydoun> general question, will the bot work on a closed and reopened pull request?
+18:54:30 <gregdek> Should.
+18:54:46 <gregdek> It looks at all open PRs.
+18:55:00 <jimi|ansible> gregdek: yes
+18:55:04 <jimi|ansible> (sorry phone call)
+18:55:15 <gregdek> No worries, already done :)
+18:55:37 <MichaelBaydoun> should https://github.com/ansible/ansible-modules-extras/pull/1710 be closed?  No response from author
+18:56:35 <gregdek> Yep. Need to do a pending action sweep, been a while
+18:56:44 <gregdek> Closed that one, thanks MichaelBaydoun
+18:57:58 <MichaelBaydoun> There are two pending PR's to manage NAT gateways, 1882 and 1687.
+18:58:34 <gregdek> I'll add them to the agenda for next time. Out of time today.
+18:58:40 <MichaelBaydoun> ok
+18:58:47 <gregdek> thanks everyone!
+18:58:48 <gregdek> #endmeeting

@@ -1,0 +1,112 @@
+16:00:12 <gundalow> #startmeeting Ansible Networking
+16:00:12 <zodbot> Meeting started Wed Mar  1 16:00:12 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:00:12 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:00:12 <zodbot> The meeting name has been set to 'ansible_networking'
+16:00:49 <caphrim0_> gundalow is privateip around today?
+16:00:54 <gundalow> #chair rcarrillocruz Qalthos
+16:00:54 <zodbot> Current chairs: Qalthos gundalow rcarrillocruz
+16:00:56 <gundalow> caphrim0_: nop
+16:01:07 <caphrim0_> is anyone that works on the terminal plugins?
+16:01:07 <gundalow> Anything I can help with?
+16:01:15 <gundalow> rcarrillocruz: Qalthos you there?
+16:01:48 <funzo> o/
+16:02:16 <gundalow> caphrim0_: State the question, Qalthos will hopefully join soon
+16:03:08 <caphrim0_> k, i was told that the terminal plugins would be deprecating the Cli things, but the other day i started getting this error
+16:03:08 <caphrim0_> AttributeError: 'Cli' object has no attribute 'default_output'
+16:03:24 <caphrim0_> and i wasnt sure if it was just me, of if that was a backwards compat break
+16:04:23 <caphrim0_> but that error made me begin looking at the terminal plugins out of panic
+16:04:25 <gundalow> hum, that's outside my knowledge
+16:04:37 <caphrim0_> and then i got lost down that rabbit hole
+16:04:45 <gundalow> hehe, aye
+16:05:10 <caphrim0_> a terminal plugin is only for a module that needs cli access to a remote device that doesn't have a "regular" ssh cli?
+16:05:11 <gundalow> That might be one of (many) areas that's changed from 2.2 to 2.3
+16:06:41 * gundalow looks at the code
+16:06:58 <caphrim0_> in the task executor there are specific callouts for the networking modules
+16:07:03 <caphrim0_> eos, ios, nxos, yada yada
+16:07:28 <gundalow> Do you get a backtrace along with AttributeError: 'Cli' object has no attribute 'default_output'
+16:07:30 <caphrim0_> and it looks like it checks the module name, and hands it to a different action plugin if it detects that
+16:07:33 <sivel> default_output was removed from many of the module utils
+16:07:35 <gundalow> ansible-playbook -vvvv
+16:07:42 <sivel> caphrim0_: what module_utils specifically?
+16:07:54 <sivel> ios/
+16:08:21 <Qalthos> caphrim0_: that sounds correct so far
+16:08:32 <caphrim0_> sivel: it was raising it in the context of my out-of-band bigip_command module which uses this https://github.com/ansible/ansible/blob/devel/lib/ansible/module_utils/f5_cli.py
+16:08:52 <caphrim0_> Qalthos: ok and then in that action plugin it sets this pc.network_os
+16:08:59 <Qalthos> caphrim0_: Ah, well, those are something of a different story
+16:08:59 <caphrim0_> and pc.connection
+16:09:08 <Qalthos> I think
+16:09:39 <caphrim0_> and the (i'm guessing here) the network_cli connection takes over
+16:09:45 <caphrim0_> and loads the terminal plugin for that os
+16:09:50 <caphrim0_> self._terminal = terminal_loader.get(network_os, self)
+16:09:51 <sivel> I know f5_cli is new to 2.3 and it's been changing a lot
+16:10:11 <caphrim0_> sivel: yeah i was told to just remove it because of the terminal connector thing
+16:10:53 <caphrim0_> there's only a single module that uses the cli of a f5; the bigip_command (which is not in core yet)
+16:11:12 <caphrim0_> every other one is run locally, but doesn't talk to the f5 cli, it talks via rest
+16:11:23 <sivel> got it
+16:11:28 <sivel> I'm just looking through some history
+16:11:39 <caphrim0_> so i was (assuming?) i should model the f5 terminal/action plugin off of the nxos one
+16:11:51 <caphrim0_> because it appears to do something (sorta?) similar
+16:12:22 <caphrim0_> the way task executor looks now though is that if the module name begins with any of the network-type modules
+16:12:35 <caphrim0_> it delivers them to the action/terminal plugin for that network module
+16:12:39 <caphrim0_> without exception
+16:12:51 <caphrim0_> and then in that action plugin, it then decides there if it should use the terminal plugin
+16:13:27 <caphrim0_> for example
+16:13:33 <caphrim0_> use terminal: https://github.com/ansible/ansible/blob/devel/lib/ansible/plugins/action/nxos.py#L55
+16:13:42 <caphrim0_> dont use terminal: https://github.com/ansible/ansible/blob/devel/lib/ansible/plugins/action/nxos.py#L88
+16:14:17 <Qalthos> So 'transport' is a param of the module
+16:14:34 <Qalthos> (in this case)
+16:14:46 <caphrim0_> right
+16:15:11 <caphrim0_> the f5 ones dont have a transport because, well, nothing should ever never ever happen via the cli
+16:15:16 <caphrim0_> except bigip_command
+16:15:25 <caphrim0_> which, frankly, doesnt need to happen over the cli either
+16:16:10 <caphrim0_> but i figured bigip_command's look should sorta mirror the existing network modules *_command modules
+16:16:15 <caphrim0_> so that's why it does
+16:16:48 <caphrim0_> https://github.com/ansible/ansible/blob/devel/lib/ansible/executor/task_executor.py#L777 is the catch all "use action plugin" for the network modules btw
+16:18:12 <caphrim0_> so im wondering if f5 has its action plugin there, then will all the f5 modules follow that code path above?
+16:18:29 <caphrim0_> and then i will have to decide in the action plugin which one should use the terminal plugin and which ones should not?
+16:19:26 <gundalow> caphrim0_: So for new modules that we (Ansible) have written for 2.3 (such as eos_banner) we don't use provider: (or any of it's child options)
+16:21:11 <caphrim0_> gundalow: how does it not fail here then? https://github.com/ansible/ansible/blob/devel/lib/ansible/plugins/action/eos.py#L51
+16:21:20 <caphrim0_> if you dont use provider, wouldn't that be a key error?
+16:21:50 <Qalthos> provider is still available to old modules as a backwards compat feature
+16:22:19 <Qalthos> deprecated, but allowing old playbooks with pre-2.3 modules to run
+16:22:19 <gundalow> caphrim0_: will fall back to "cli"
+16:22:42 <caphrim0_> ok so it lands here https://github.com/ansible/ansible/blob/devel/lib/ansible/plugins/action/eos.py#L55
+16:22:47 <caphrim0_> and then it uses a terminal plugin?
+16:22:53 <gundalow> caphrim0_: oh, I see. So we still use thr "transport" variable, which gets defaulted to "cli"
+16:23:07 <caphrim0_> by munging the pc.network_os and pc.connection?
+16:23:56 <caphrim0_> and this path here https://github.com/ansible/ansible/blob/devel/lib/ansible/plugins/action/eos.py#L88 that doesn't use a transport plugin? err, doesn't use an eos transport plugin
+16:25:13 <Qalthos> caphrim0_: terminal plugin gets loaded in network_cli https://github.com/ansible/ansible/blob/devel/lib/ansible/plugins/connection/network_cli.py#L83
+16:25:25 <Qalthos> (I believe)
+16:25:31 <caphrim0_> Qalthos yeah i mentioned that
+16:25:42 <caphrim0_> but its because the action plugin needs to munge the above 2 vars
+16:25:48 <caphrim0_> otherwise it doesnt know what network_os is
+16:26:13 <caphrim0_> lest you set it via ansible_network_os or whatever that config variable is
+16:29:14 <caphrim0_> Qalthos provider is still available even longer term though or else how does a module know whenever to use cli or eapi?
+16:29:48 <caphrim0_> whether*
+16:30:09 <Qalthos> caphrim0_: module knows which to use from transport, whether specified directly or via provider
+16:30:14 <Qalthos> transport defaults to cli
+16:31:00 <Qalthos> my understanding is that eapi is going away as of 2.5(?)
+16:31:18 <caphrim0_> transport is a subkey of provider though? https://github.com/ansible/ansible/blob/devel/lib/ansible/modules/network/nxos/nxos_command.py#L100
+16:31:48 <Qalthos> it is and it also is it's own key
+16:32:02 <caphrim0_> ahh ok, that makes sense now
+16:32:15 <Qalthos> We have to check both
+16:32:20 <caphrim0_> right
+16:36:18 <Qalthos> caphrim0_: does that mostly answer your questions?
+16:36:39 <caphrim0_> Qalthos: should i be using terminal plugins?
+16:38:37 <Qalthos> That seems to be the place where cli-specific bric-a-brac go, so if you still have cli connections, that would be the place
+16:39:14 <Qalthos> but if there's going to be only one module using it? I'm not really sure
+16:39:46 <caphrim0_> yeah only 1 module communicates with the remote device's cli
+16:40:00 <Qalthos> I don't think it's a bad idea though, in case someone wants it for something else
+16:40:00 <caphrim0_> the other are local actions that go via the devices web api
+16:40:22 <caphrim0_> wants what for something else?
+16:40:34 <Qalthos> to use the cli connection
+16:40:50 <caphrim0_> to use the cli connection for a different f5 module?
+16:41:21 <Qalthos> I don't really know the specifics of what you're doing, but sure
+16:41:41 <caphrim0_> the bigip_command module is the only one that would ever use it. the others cannot
+16:41:43 <caphrim0_> ever
+16:52:12 <gundalow> Anything else?
+16:52:22 <Qalthos> caphrim0_: Well then do whatever makes sense for your modules. privateip might be able to give you more concrete advice, but ultimately it's your module
+16:52:57 <Qalthos> caphrim0_: I hope that helps?
+16:53:19 <gundalow> caphrim0_: unfortunatly privateip is travelling for the next few days, then he will be at Ansible Automates DC
+16:53:34 <caphrim0_> Qalthos: i dont yet know
+17:03:05 <gundalow> #endmeeting

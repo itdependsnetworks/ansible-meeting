@@ -1,0 +1,197 @@
+19:07:26 <gundalow> #startmeeting public core meeting
+19:07:26 <zodbot> Meeting started Tue Aug  2 19:07:26 2016 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:07:26 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:07:26 <zodbot> The meeting name has been set to 'public_core_meeting'
+19:07:44 <gundalow> #chair abadger1999 bcoca jtanner
+19:07:44 <zodbot> Current chairs: abadger1999 bcoca gundalow jtanner
+19:08:00 <jtanner> #chair ryansb
+19:08:00 <zodbot> Current chairs: abadger1999 bcoca gundalow jtanner ryansb
+19:08:05 * mattclay waves
+19:08:16 <gundalow> #chair abadger1999 bcoca jtanner jimi|ansible mattclay nitzmahone
+19:08:16 <zodbot> Current chairs: abadger1999 bcoca gundalow jimi|ansible jtanner mattclay nitzmahone ryansb
+19:08:59 * Qalthos 🌊🌊
+19:09:14 <gundalow> Guys, was there anything that didn't get discussed in the internal core meeting that we want to discuss here
+19:09:18 <gundalow> #chair abadger1999 bcoca jtanner jimi|ansible mattclay nitzmahone Qalthos
+19:09:18 <zodbot> Current chairs: Qalthos abadger1999 bcoca gundalow jimi|ansible jtanner mattclay nitzmahone ryansb
+19:09:45 <gundalow> MichaelBaydoun: Did you have anything?
+19:09:56 <MichaelBaydoun> gundalow: I don't
+19:10:03 <abadger1999> None from me -- still recovering from all those meetings :-)
+19:10:43 <gundalow> #topic Testing Working Group
+19:11:24 <gundalow> #info gundalow will be running the Testing Working Group, which will start in a few weeks. If you are interested please subscribe to updates on https://github.com/ansible/community/issues/114
+19:11:43 <gundalow> Also if you have anything you've like to bring to the table, feel free to add it to
+19:11:48 <gundalow> the above ticket
+19:11:58 <gundalow> #topic Open Floor
+19:11:59 <gundalow> ...
+19:13:33 <ssiefkas> I have several PRs related to AWS modules pending review/merge.  Was directed here by @gregdek on one of them at https://github.com/ansible/ansible-modules-core/pull/2184.
+19:14:25 <gundalow> #topic https://github.com/ansible/ansible-modules-core/pull/2184
+19:14:36 * gundalow looks at his fellow chairs
+19:14:43 <gregdek> :)
+19:14:56 <gundalow> hello gregdek :)
+19:15:21 <nitzmahone> I can test/review 2184 unless rynasb or others feel strongly
+19:15:37 <nitzmahone> s/rynasb/ryansb/
+19:15:44 <gundalow> #action nitzmahone to test/review https://github.com/ansible/ansible-modules-core/pull/2184
+19:15:48 <gundalow> Thank you :)
+19:15:58 <gundalow> Anything else that's stuck in review?
+19:16:01 <ssiefkas> https://github.com/ansible/ansible-modules-core/pull/2527
+19:16:08 <ssiefkas> https://github.com/ansible/ansible-modules-core/pull/2179
+19:16:28 <ssiefkas> Both bugfixes as well.
+19:16:28 <nitzmahone> ditto
+19:16:44 <gundalow> #action nitzmahone to test/review https://github.com/ansible/ansible-modules-core/pull/2527 and https://github.com/ansible/ansible-modules-core/pull/2179
+19:16:47 <gundalow> nitzmahone: Thanks :)
+19:16:50 <abadger1999> 2184, Code looks sane but I'm not setup to test aws.
+19:18:00 <abadger1999> 2527, exception handling needs to be python3 compatible.  Not sure if we need py2.4 compat or if boto requirement is for python2.6+.
+19:18:19 <abadger1999> I don't know if the logic change is good or not.
+19:18:41 <bcoca> boto is 2.6
+19:18:46 <bcoca> so no 2.4
+19:19:02 <abadger1999> <nod>
+19:19:10 <bcoca> almost every cloud requires 2.6+ (do might soon be the only exception)
+19:19:34 <abadger1999> 2179 looks like someone who can test aws should look at it.. if nitzmahone is going to I'll leave it be.
+19:19:41 <bcoca> s/do/Digital Ocean/ ... they might rewrite it using module_utils/url.py exclusively
+19:19:42 <nitzmahone> Yep, I'm taking all 3
+19:19:45 <abadger1999> Cool.
+19:20:19 <ryansb> nitzmahone: no strong feelings
+19:20:31 <nitzmahone> aight
+19:21:19 <ssiefkas> I have two more that are feature PRs but don't want to monopolize everyone's time.  I can wait until a later meeting if desired.
+19:21:39 <nitzmahone> ssiefkas: also AWS stuff?
+19:21:41 <ssiefkas> Yes
+19:21:55 <nitzmahone> Bring em on- no guarantees, but I'll at least take a peek
+19:21:57 <abadger1999> As long as there isn't anyone else with PRs/issues to bring up, I say go for it.
+19:22:37 <ssiefkas> https://github.com/ansible/ansible-modules-core/pull/2273 is just mapping SNS notifications into the asg module
+19:23:14 <ssiefkas> https://github.com/ansible/ansible-modules-core/pull/3581 is less straight forward and not a pure AWS service mapping
+19:23:31 * bcoca says goodby to nitzmahone for rest of week
+19:24:11 <nitzmahone> OK- I'll hit the bugfixes first and if I've got time the others.
+19:24:27 <ssiefkas> Thanks @nitzmahone
+19:24:29 * nitzmahone is a master procrastinator
+19:24:34 <ryansb> I can take the other two
+19:24:41 <ryansb> (2273 and 3581)
+19:24:41 <nitzmahone> ryansb: that'd be cool
+19:25:19 <gundalow> #action ryansb to test/review https://github.com/ansible/ansible-modules-core/pull/2273 and https://github.com/ansible/ansible-modules-core/pull/3581
+19:25:22 <gundalow> Thanks ryansb :)
+19:26:45 <ryansb> oh, if there's other AWS folks around, I'm looking for feedback on
+19:26:58 <ryansb> https://github.com/ansible/ansible-modules-extras/pull/2558
+19:27:16 <gundalow> #topic https://github.com/ansible/ansible-modules-extras/pull/2558
+19:27:40 * gundalow -> awk for 5
+19:27:57 * gundalow -> afk for 5
+19:29:01 <abadger1999> ssiefkas: ^ I think that means you ;-)
+19:29:30 <ssiefkas> I'm reading :-)
+19:29:50 <ssiefkas> I think I can provide feedback on this @abadger1999
+19:30:00 <abadger1999> Excellent :-)
+19:30:04 <abadger1999> Thanks
+19:34:23 <nitzmahone> @mattclay --^ (#2558)
+19:34:33 <ssiefkas> @ryansb I have a test case I can construct for this in the real world.  Will provide feedback on PR later this week.
+19:35:16 <ryansb> neato, thanks!
+19:36:52 <mattclay> I can test #2558 as well.
+19:37:14 <tima> I've spent the couple of days trying to take down as many synchronize module/plugin related issues. Have one I could use a core team consult on ATM: https://github.com/ansible/ansible-modules-core/issues/3895
+19:37:29 <tima> When y'all have a chance here. ;)
+19:38:01 * abadger1999 takes a look
+19:39:37 <tima> @abadger1999 my last comment covers the ways to fix the issue.
+19:39:39 <abadger1999> tima: if it's indeed just that the default needs to be explicitly passed, then I agree, that seems like the correct fix.
+19:41:37 <tima> @abadger1999 yeah parsing the ssh_config to discover what Port ssh is running on seems like a bear where explicitly defining the port regardless of it as the default solves addresses that.
+19:41:59 <abadger1999> <nod>
+19:42:13 <abadger1999> tima: Do you want to submit a pull request or should I just change that?
+19:42:58 <abadger1999> tima: I see the code that appears to be doing that in the ansible-modules-core/files/synchronize.py file.  Should be easy to modify if you just want me to do it.
+19:43:06 <tima> I have a few PRs related to my synchronize issues/PR sweep queued up if you want to take that one.
+19:43:16 <tima> that would be swell @abadger1999
+19:43:31 <abadger1999> tima: Cool.  I'll do that.
+19:43:47 <abadger1999> tima: any of your PRs ready to review?  We can go through them in this meeting if you want
+19:43:56 <gundalow> #topic Open Floor
+19:45:17 <tima> @abadger1999 not at this point though there is one PR I looked at that seems sane -- I just haven't gotten around to test it.
+19:45:57 <tima> https://github.com/ansible/ansible/pull/16349
+19:46:00 <tima> That's it.
+19:46:48 <tima> There are two or three issues open that stem from this that I've found so far.
+19:51:19 <tima> that format() method is how you process a string for any inline variables?
+19:51:32 <tima> recall it was something different pre-2.0
+19:52:56 <abadger1999> I think that one is wrong.
+19:54:30 <jtanner> i'm used to "asdfasfasdf".format()
+19:54:49 <abadger1999> tima: the first part might be right... I'm not sure.... Should ask jimi|ansible or bcoca.  That's probably a quick yes or no.
+19:54:58 <abadger1999> tima: The second part just looks entirely wrong.
+19:55:12 <abadger1999> tima: I suppose need to ask the submitter what that's there for.
+19:55:52 <bcoca> expandpath/expandvars .. unfrakpath should take care of all
+19:56:21 <abadger1999> I don't think we call unfrakpath() anywhere in synchronize().
+19:56:37 <abadger1999> yeah, not called.
+19:56:44 <bcoca> though ssh uses os.path.expanduser(key))
+19:56:58 <bcoca> guessing we don't allow for vars in private_key?
+19:57:01 <bcoca> fine with it then
+19:57:20 <bcoca> we do, but not directly, through dwim
+19:57:28 <tima> @jtanner i think that format is a different method than what you are thinking of. Given the issue this PR is said to resolve I took it to be a method (of unclear origin) that substitutes the variables with their values.
+19:57:31 <jtanner> what does the format() actually do?
+19:57:52 <bcoca> basically  ' %s' % stuff
+19:57:58 <bcoca> a bit more powerfull
+19:58:19 <tima> does it do variable substitution though bcoca?
+19:58:54 <bcoca> kindof $USER or ~user
+19:59:04 <bcoca> but not $HOME
+19:59:08 <abadger1999> Really?
+19:59:16 * abadger1999 tests
+19:59:18 <bcoca> or maybe $HOME also but not $ANY ... reading
+19:59:24 <tima> so what do they need to use for any variable in context?
+19:59:29 <tima> ok
+19:59:36 <abadger1999> No, I don't think so.
+19:59:39 <bcoca> https://docs.python.org/2/library/os.path.html#os.path.expanduser
+19:59:42 <bcoca> so  ... depends
+19:59:43 <abadger1999> >>> format('$HOME')
+19:59:43 <abadger1999> '$HOME'
+19:59:57 <abadger1999> yeah, expanduser() and expandvars() do good things.
+20:00:12 <abadger1999> I think format() is a bad change, though.
+20:00:28 <jtanner> seems like a noop to me
+20:00:34 <bcoca> ssh connection is now all 'format()'
+20:00:47 <tima> mind posting that to the PR abadger1999 and I'll follow up with the submitter?
+20:01:01 <abadger1999> tima: Cool.  That will work out well.
+20:01:34 <abadger1999> bcoca: Did the first portion of the PR look right to you?
+20:01:45 <abadger1999> bcoca: https://github.com/ansible/ansible/pull/16349/files#diff-b6aae93451e66b991ccbd1b9e1ababb0L275
+20:02:12 <bcoca> it's syncronize, nothing looks right
+20:02:15 <tima> I was working on triaging as many issues as quickly as I could and was going to circle around to figure out (nee test) the harder ones once I got setup.
+20:02:24 <abadger1999> :-)
+20:02:30 <bcoca> delegation issues should be solved by play context, not the plugin
+20:02:32 <tima> @bcoca sigh
+20:02:39 <abadger1999> Getting rid of the if seems okay -- there may be a bug there but it would be a pre-existing bug if so.
+20:02:49 <tima> @bcoca know how many times a day I hear that from someone?
+20:02:54 <bcoca> tima: you know its not cause of your code, it is the issue itself you try to solve
+20:03:08 <jtanner> he didn't try to solve all of them
+20:03:10 <abadger1999> But I'm not sure if task-vars.get() is needed before we try the play_context or not.
+20:03:10 <bcoca> tima: as many as we get Issues for syncronize?
+20:03:11 <jtanner> we did
+20:03:31 <tima> @bcoca: and then some.
+20:04:50 <bcoca> so fix does look correct
+20:05:17 <jtanner> so what does the format() do?
+20:05:24 <bcoca> syncronize being special it needs the data for the dest= host if it exists, but src/delegate should work fine
+20:05:25 <jtanner> eli5
+20:05:56 <bcoca> jtanner: probably magic stringification?
+20:06:33 <bcoca> https://docs.python.org/2/library/functions.html#format
+20:07:08 <bcoca> hmm, that is weird
+20:07:30 <jtanner> without a format spec, it seems like a noop to me
+20:07:48 <bcoca> probably guarantees its a string for later use in concat
+20:07:50 <abadger1999> I think the format() is wrong.  But if the first part is correct, then that's probably what's fixing things.
+20:08:10 <bcoca> ^its probably a hackish way to do our to_str()
+20:08:38 <jtanner> utf8 safe version of str() ?
+20:08:56 <jtanner> or unicode
+20:09:15 <bcoca> not sure, he seems to expect it to do some sideffect
+20:09:48 <bcoca> we can always merge and correct that to to_str/to_unicode as needed
+20:10:03 <tima> yeah the delegate_to conditional in the first part was a bit odd. seemed like it was some cleanup tossed into this PR but it doesn't resolve the issue they are reporting.
+20:10:21 <jtanner> so nofix?
+20:10:30 <abadger1999> tima: I think it probably is the actual fix.
+20:10:51 <abadger1999> tima: afaics the format() is at least a noop and possibly detrimental in some cornercase I haven't thought of yet.
+20:11:25 <tima> oh wait. yeah. i've been looking at some many of these issues i'm losing it.
+20:11:31 <bcoca> so +1 for merge, with followup on abadger1999 on the forrmat issue
+20:11:34 <abadger1999> tima: What I'm guessing is happening is that task-vars.get() is returning some string that has untemplated variables.  play_context is returning a string with those variables already templated.
+20:11:40 <tima> right the task.get() is what's getting in the way.
+20:11:40 <tima> right.
+20:11:42 <jtanner> tima: back away from the the synchronize ... slowlo
+20:11:46 <jtanner> slowly*
+20:11:47 <abadger1999> Cool.
+20:12:07 <bcoca> jtanner: no, the appropriate reaction is to sprint
+20:12:29 <tima> HALO jump
+20:12:39 <tima> i may need to drop off here and run to something else -- any comments you can drop would be appreciated.
+20:12:42 <tima> Thanks all.
+20:12:45 <tima> TTYL
+20:12:47 <jtanner> later
+20:15:20 <abadger1999> gundalow: okay, is that it for our meeting time now?  Or do we have another 15minutes?
+20:19:49 <gundalow> abadger1999: You can take as long as you want, there isn't another meetin in here
+20:20:13 <abadger1999> Anyone else have topics/issues/PRs they want us to look at?
+20:20:21 <ryansb> not I
+20:21:03 <gundalow> Nothing else from me
+20:21:33 <gundalow> 10
+20:21:34 <gundalow> 9
+20:21:35 <gundalow> 8
+20:21:36 <gundalow> 7
+20:21:38 <gundalow> 1
+20:21:40 <gundalow> #endmeeting

@@ -1,0 +1,106 @@
+16:00:51 <gundalow> #startmeeting Network Working Group
+16:00:51 <zodbot> Meeting started Wed Aug 30 16:00:51 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:00:51 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:00:51 <zodbot> The meeting name has been set to 'network_working_group'
+16:01:08 <funzo> o/
+16:01:14 <gundalow> #chair funzo ganeshrn Qalthos trishnag
+16:01:14 <zodbot> Current chairs: Qalthos funzo ganeshrn gundalow trishnag
+16:01:32 * gundalow waits a few minutes for people to join
+16:02:37 <dag1> o/
+16:03:02 <gundalow> #chair dag1
+16:03:02 <zodbot> Current chairs: Qalthos dag1 funzo ganeshrn gundalow trishnag
+16:05:56 <gundalow> dag1: did you have anything left to discuss regarding ACI modules?
+16:06:28 <gundalow> I think we might have addressed everythong on https://github.com/ansible/community/issues/110
+16:06:45 <dag1> gundalow: no, lots more to come
+16:06:57 <dag1> but didn't make the deadline :)
+16:07:03 <gundalow> ah
+16:07:12 <gundalow> Well lots of time to get stuff into 2.5 :)
+16:07:42 <dag1> yup, AnsibleFest will be important, a talk about ACI and user feedback
+16:08:10 <dag1> it's been a wild ride to get everything we wanted in v2.4 though
+16:08:12 <gundalow> sweet
+16:08:16 <gundalow> aye
+16:08:23 <gundalow> #topic Open Floor
+16:08:30 <gundalow> Anyone got anything?
+16:08:47 <gundalow> #info No IRC meetings next week as most staff will be at AnsibleFest SF
+16:08:48 <dag1> when do we expect stable-2.4 to be branched ?
+16:09:03 <funzo> sometime next week
+16:09:04 <dag1> (I expected it was already done)
+16:09:07 <bcoca> on first RC1 .. roughly 2 weeks after freeze
+16:09:09 <dag1> ah
+16:09:16 <dag1> good
+16:09:33 <gundalow> dag1: you looking for a home for your new modules?
+16:09:47 <dag1> because I still need to add idempotency to aci_rest (apparently it is possible)
+16:09:59 <dag1> ACI has its own notion of idempotency we can use
+16:10:04 <dag1> gundalow: in what sense ?
+16:10:06 <gundalow> Is that for 2.4?
+16:10:09 <dag1> yes
+16:10:15 <dag1> it's going to be a small fix
+16:10:26 <gundalow> cool, sounds like a bug fix rather than feature, so should be fine to add to 2.4
+16:10:29 <gundalow> 2.4.0
+16:10:30 <dag1> all other ACI modules are idempotent, I didn't realize aci_rest could be idempotent
+16:10:47 <dag1> yeah, plan to do that tonight or tomorrow
+16:11:45 <gundalow> #chair privateip
+16:11:46 <zodbot> Current chairs: Qalthos dag1 funzo ganeshrn gundalow privateip trishnag
+16:11:46 * privateip waves
+16:12:10 <dag1> hey privateip !
+16:12:24 <privateip> hey dag
+16:12:25 <gundalow> privateip: nothing on the agenda today
+16:12:33 <privateip> my kind of meeting
+16:12:37 <gundalow> :)
+16:13:02 <privateip> i have one quick comment
+16:13:06 <gundalow> sure
+16:13:13 <privateip> looking for lots of eyes and testing on the new parsing feature
+16:13:15 <privateip> https://github.com/ansible/ansible/blob/devel/docs/docsite/rst/playbooks_filters.rst#network-cli-filters
+16:13:20 <privateip> just added to 2.4
+16:14:06 * gundalow will add to agenda (so people get notified)
+16:14:11 <privateip> +1
+16:14:12 <gundalow> should I ping it on NTC as well?
+16:14:30 <privateip> sure if you think of it next time you are out there
+16:15:20 <dag1> privateip: I think the name is pretty generic for something specific to network
+16:15:34 <dag1> or are there use-cases outside of network ?
+16:16:29 <dag1> it would be nice to include an example CLI yaml file so it's more clear how this works (without the need to investigate furtherà
+16:19:27 <gundalow> dag1: could be used by non-networking
+16:22:06 <agaffney> even so, it's still a little too generically named, especially since it could be used by non-networking stuff to parse something that didn't come from a CLI
+16:22:35 <privateip> im not married to the name ... if you have something better im all ears
+16:25:00 <agaffney> I can recognize a "bad" name, but coming up with a "good" one is often beyond my abilities
+16:25:16 <privateip> lol same here ... hence why the name is parse_cli
+16:25:21 * dag1 didn't realize the spec is already in the docs
+16:25:28 <dag1> agaffney: :-)
+16:27:41 <dag1> is there a similar interface that can be used by modules ?
+16:28:25 <dag1> I can imagine that once there is a library of these files, modules may want to reuse this too
+16:28:54 <privateip> yeah i suspect that could happen
+16:29:17 <privateip> i already moved some of it to module_utils/
+16:29:24 <privateip> for that very reason
+16:29:41 <dag1> can people contribute such files ? where do they go ?
+16:29:56 <privateip> im working on a place to do that right now
+16:30:01 <itdependsnetwork> "I can recognize a "bad" name, but coming up with a "good" one is often beyond my abilities" - heard that yesterday too :)
+16:30:21 <privateip> it will be a good thing to discuss in SFO
+16:31:28 <gundalow> #info There will be a networking session as part of Contributors Summit
+16:31:33 <dag1> the question is: does the current implementation(s) covers all use-cases
+16:31:55 <dag1> because if important functionality has to be added, it's not always easy to do that in a backward-compatible manner
+16:31:55 <itdependsnetwork> where do you sign up for that btw?
+16:32:29 <itdependsnetwork> @privateip, is new filter using textfsm?
+16:32:45 <privateip> itdependsnetwork: no
+16:32:53 <privateip> but there is an equiv parse_cli_testfsm that does
+16:32:54 <itdependsnetwork> what happened to that filter?
+16:32:57 <itdependsnetwork> ok
+16:33:03 <itdependsnetwork> do that did make it in?
+16:33:07 <privateip> yes
+16:33:26 <itdependsnetwork> nice!
+16:33:43 <privateip> dag1: no, it never does
+16:33:49 <privateip> :)
+16:34:38 <privateip> there is no reason to believe that parse_cli isn't generic enough to work with any structured text output ... its definitely not constrained to network device cli
+16:35:29 <privateip> i just pushed an example network playbook here --> https://github.com/privateip/network-parsers
+16:36:34 <rcarrillocruz> lelol
+16:36:41 <rcarrillocruz> oops, wrong channel
+16:37:24 <rcarrillocruz> anyone using test/integration/group_vars
+16:37:29 <rcarrillocruz> reason being, we just deleted it
+16:37:37 <rcarrillocruz> you may want to keep your own inventory and group/host vars
+16:37:45 <rcarrillocruz> as that's environment specific
+16:42:34 <itdependsnetwork> Is there documentation for the parse_cli_textfsm
+16:44:38 <privateip> i didnt add anything specific to the FSM parsing lang if thats what you are asking
+16:44:49 <privateip> there is the examples of how to call the parser
+17:09:12 <gundalow> Anything else otherwise I'll #endmeeting
+17:25:40 <gundalow> Thanks y'all
+17:26:02 <gundalow> #info Reminder no IRC meetings next week, see some of you at AnsibleFest San Francisco
+17:26:05 <gundalow> #endmeeting

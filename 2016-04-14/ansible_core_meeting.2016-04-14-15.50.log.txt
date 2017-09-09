@@ -1,0 +1,160 @@
+15:50:39 <abadger1999> #startmeeting Ansible Core Meeting
+15:50:39 <zodbot> Meeting started Thu Apr 14 15:50:39 2016 UTC.  The chair is abadger1999. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:50:39 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:50:39 <zodbot> The meeting name has been set to 'ansible_core_meeting'
+15:50:45 <kei> and without my patch
+15:51:10 <kei> main.j2 can't find other *.j2 file...
+15:51:20 <abadger1999> #topic https://github.com/ansible/ansible/pull/15134  net_template.py: Fix j2 file search path
+15:51:54 <bcoca> kei: sorry i dropped this, i'll fix in main, your PR makes no sense till that fix is in
+15:52:14 <kei> bcoca: nice!
+15:52:55 <abadger1999> #action bcoca to fix the underlying issue in Core Ansible.
+15:53:00 <kei> I'm now pointing my travis to my repo
+15:53:01 <kei> https://github.com/keinohguchi/ops-switch-role/blob/master/tests/Dockerfile.ubuntu-14.04
+15:53:10 <kei> otherwise it just fails... ;)
+15:53:25 <kei> and as we're planing to freeze 2.1 next Monday
+15:53:30 <kei> as I heard
+15:53:38 <kei> we need those fixes in soon...
+15:53:41 <kei> hopefully
+15:54:10 <bcoca> freeze is for features, not bugfixes
+15:54:19 <abadger1999> <nod>  -- Note bugfixes can go in later, it's just feature freeze.
+15:54:27 <kei> bcoca: great to hear!
+15:54:28 <bcoca> though we do become more picky on the bugfixes
+15:54:41 <abadger1999> But do keep it on our radar otherwise it might be forgotten in the rush of bugfixing.
+15:54:41 <kei> abadger1999: that makes my life super easy
+15:54:55 <abadger1999> Cool.
+15:54:59 <kei> i know i'll be all of those ansible meeting
+15:55:01 <kei> to make it happen
+15:55:06 <abadger1999> Okay, next issue?
+15:55:13 <kei> because i believe we're shooting to release 2.1 the end of this month
+15:55:17 <kei> the next one is this
+15:55:31 <abadger1999> #info Initial discussion before we started the meeting bot: https://gist.github.com/abadger/72eb213298e6d0877e5d472bcb0f5c8a
+15:55:44 <abadger1999> kei: yep.
+15:56:02 <abadger1999> robinro: You had something I think?
+15:56:11 <robinro> https://github.com/ansible/ansible/pull/15221 refactor distribution detection in facts.py
+15:56:11 <robinro> I try to make it more readable by keeping the old logic, but I marked a few places where one might want to change the logic; there are also new tests, so future refactoring gets safer
+15:56:56 <abadger1999> #topic https://github.com/ansible/ansible/pull/15221 refactor distribution detection in facts.py
+15:57:04 <robinro> there are 2 parts I want an opinion on: the refactor in general and the way the tests are written
+15:57:47 <robinro> for the tests I mock a lot and they broke recently with the module_arg changes, so maybe there is a better way to do it?
+15:59:43 * kei has couple of others to discuss
+16:00:04 * kei just wants to know if we can keep continue or we have hard stop in 1 min...
+16:00:24 <bcoca> start time is optional but end time is hard set?
+16:00:57 <abadger1999> I'll stay at least half an hour since we started late
+16:02:47 <kei> abadger1999: nice!  I'll go once robinro finishes his topic
+16:04:48 <abadger1999> robinro: I like the refactor -- I'm nervous that it will change something but we have to do something like this sometime.
+16:04:56 <abadger1999> the existing code is just too unmanagable
+16:05:16 <bcoca> i would push to 2.2 at this point
+16:06:11 <robinro> abadger1999: If the testcases get rather complete, it should be safe
+16:06:15 <abadger1999> robinro: Do the tests pass with current code?
+16:07:17 <abadger1999> robinro: if so I think we should definitely merge tests now
+16:07:29 <robinro> no, coreos fails; for the rest I didn't generated the testcases with 2.0.1, but didn't check whether the unittests themself work
+16:07:58 <robinro> so maybe I split it up in tests and refactor and you can merge the tests and think about the refactor?
+16:08:38 <abadger1999> robinro: Yeah And I'm for the rfactor ... Just the best time to merge it would be immediately after stable-2.1 branches from devel.
+16:09:02 <robinro> what about the mock/patch set in the test (last lines of the diff), is this ok?
+16:09:03 <abadger1999> that way we have a full cycle for people usng devel to report breakage.
+16:09:13 <abadger1999> hehe -- I closed my eyes when I got there.
+16:09:16 <abadger1999> ;-)
+16:12:26 <abadger1999> robinro: I'm not a huge user of mock but I don't see a better way to do the mock.patch stuff... jimi|ansible might.
+16:13:45 <robinro> if we don't need python2.6 support for the tests we could at least put all of them at one indent level; but 2.6 doesn't support unittest.skipif, so...
+16:14:00 <abadger1999> robinro: I'd probably try to use: http://nose.readthedocs.org/en/latest/writing_tests.html#test-generators  for that but I don't htink it would simplify the test code any... just a different organization (and you'd be able to get individual failures instead of one failure and not knowing if the rest succeeded or would fial too)
+16:14:29 <abadger1999> robinro: we do depend on unittest2.
+16:15:15 <abadger1999> robinro: use from ansible.compat.tests impotr unittest
+16:16:09 <abadger1999> robinro: that will use unittest on py2.7+, unittest2 on python2.6 and print an error if neither of those work.
+16:16:33 <robinro> test generators sounds good, so i'll clean it up and open a new PR for only the tests
+16:17:03 <abadger1999> robinro: Excellent.  And once we branch bug incessantly until we merge the refactor ;-)
+16:17:47 <abadger1999> bcoca: ^ Sound good to you  I figure if it's at the very start of the dev cycle we can merge and then iterate fixes as we go.
+16:18:03 <abadger1999> ...there was supposed to be a question mark in there..
+16:18:08 <robinro> do you have a test setup for the different distributions to fill the testcases? I don't have access to the enterpricy ones
+16:18:43 <abadger1999> We don't -- we have jenkins running with a few paid distributions but not all of them.
+16:19:19 <robinro> ok, so I wait for bugs and them fill the testcases?
+16:19:19 <robinro> is it ok to leave the testcase generator in the repo?
+16:19:24 <abadger1999> jimi|ansible: With things like this it could be a good idea for us to ship unittests so that the distro packagers run the unittests and report problems to us.
+16:19:47 <bcoca> i would add tests with current 'docker' images and maybe for jenkins also, mock tests only test what you mock
+16:19:57 <bcoca> i like to test 'real stuff'
+16:21:08 <robinro> bcoca: you can have both, but with mocking I can test 15 distros in a second while refactoring and with "real" tests I get 5 distros from travis after 10 mins
+16:21:20 <abadger1999> robinro: Yeah, I think that's a good idea... maybe put it in hacking/   and also need some documentation...
+16:21:43 * kei is also actually got to go in 5 min
+16:21:48 <robinro> abadger1999: sure
+16:21:50 <abadger1999> robinro: Comments in the facts.py file are probably most likely to be seen.  although a little something in docsite/rst/writing_fact would also work.
+16:22:13 * kei hope he can share the PR before times up...
+16:22:13 <abadger1999> Okay, let's quickly switch to rei and see if we can fit one more of his Prs in
+16:22:19 <abadger1999> kei:  i mean
+16:22:26 <abadger1999> kei: go ahead.
+16:22:27 <kei> got you.
+16:22:38 <kei> here is the one
+16:22:38 <kei> https://github.com/ansible/ansible/pull/15397
+16:22:51 <kei> Using new ops.dc module by openswitch.py
+16:23:03 <abadger1999> #topic https://github.com/ansible/ansible/pull/15397 using ops.dc module instead of runconfig
+16:23:22 <kei> i will ask mir to fix failure issue today
+16:23:35 <kei> but just to check if we're on the track for 2.1
+16:23:59 <kei> it's a bit far from bug fix but want to have this in 2.1
+16:24:17 <kei> so that our life, both ansible and openswitch, will be easier in the future
+16:24:27 <abadger1999> Qalthos: ^
+16:25:00 <kei> Qalthos: can you also watch this PR as well so that we can get this in before Monday?
+16:25:30 * bcoca goes grab grub as he is starting to see double
+16:25:42 * jimi|ansible looking at that PR
+16:26:15 <jimi|ansible> robinro / abadger1999: yeah generally for that stuff I'd mock it
+16:27:27 <abadger1999> kei: Okay, I'm marking it for 2.1.0 and assigning Qalthos... it sounds like it could be considered a bugfix (sorta.. but since networking is all new code anyway it might be okay)
+16:27:29 <jimi|ansible> with that many patches, i typically put the decorators on the unittest function to make it a little less insanely nested
+16:27:31 <jimi|ansible> ^ robinro
+16:27:51 <kei> abadger1999: nice!  Really appreciated!
+16:28:12 <abadger1999> kei: I'm not the guy to know if we'll accept that or not but I figure Qalthos or privateip can kick it to 2.2.0 after they look at it.
+16:28:27 <robinro> jimi|ansible: ok, I'll try it out
+16:28:29 <kei> I'll ask mir to update the code, to take care of the test
+16:28:35 <kei> abadger1999: sounds good! :)
+16:28:41 <abadger1999> Cool.
+16:28:54 <kei> thanks a lot guys!
+16:29:03 <abadger1999> Welcome!  Sorry we started late today.
+16:29:03 * kei says chat soon!
+16:29:13 <kei> abadger1999: no issue! :)
+16:29:14 <abadger1999> Okay, anyone else?
+16:29:31 <jimi|ansible> robinro: beyond that, the unit testing stuff looks fine to me
+16:29:51 <jimi|ansible> i'm excited that ziploader will (hopefully) make it easier to unit test module utils stuff
+16:30:26 <bcoca> locally,yes, remotely ... need to work out some kinks
+16:30:58 <nitzmahone> dag!
+16:31:16 <robinro> abadger1999: from last meeting there's this PR to be merged, it has tests now: https://github.com/ansible/ansible-modules-core/pull/3254
+16:31:57 <abadger1999> #topic https://github.com/ansible/ansible-modules-core/pull/3254 make git updates respect depth
+16:32:17 <abadger1999> #info integration tests now at: https://github.com/ansible/ansible/pull/15391
+16:36:03 <abadger1999> @robinro are you interested in doing more work on the git module or is this kinda a one off for you?
+16:38:28 <robinro> abadger1999: depends; I could do more, but don't have plans yet
+16:38:28 <abadger1999> Looks good -- I'll merge these.
+16:38:33 <abadger1999> k.
+16:39:01 <abadger1999> Keep an eye out for anything that might be a bug related to this/tags.
+16:39:06 <robinro> k
+16:40:10 <abadger1999> robinro: <nod>  Okay.  the git module is somewhat complex and right now the core team gets busy with other stuff and doesn't always have time to remain familiar with the code and make sure patches don't have side effects so that's why I ask ;-)
+16:41:37 <abadger1999> #topic Open floor
+16:41:47 <abadger1999> Okay -- anything else?
+16:42:17 <abadger1999> gregdek: I know you wanted to spend some time on proposals... This meeting seems to have started late and filled itself to capacity, though....
+16:42:28 <gregdek> :)
+16:42:30 <gregdek> That will happen.
+16:42:32 <abadger1999> gregdek: Do we want to do a special session jsut for proposals?
+16:42:37 <gregdek> We could.
+16:42:41 <abadger1999> Since we have a backlog?
+16:43:17 <gregdek> It would be nice to advertise an agenda. So maybe we set the next one for proposals and send an email to ansible-devel and ansible-project?
+16:43:26 <gregdek> It'd be good with that.
+16:43:30 <gregdek> Er, I'd.
+16:43:33 <gregdek> be good with that.
+16:44:46 <abadger1999> That'll be the first one post-feature freeze/rc1... Could be a good time.
+16:45:23 <abadger1999> unless we want to let people slip features into rc2 because we just started these meetings this weke.
+16:45:34 <abadger1999> jimi|ansible: thoughts?
+16:47:02 <nitzmahone> Did we decide if we're bumping rc a week or not yet?
+16:47:11 <abadger1999> Ooh... we didn't
+16:47:27 <nitzmahone> I know I'd be a lot more comfortable with the extra week. :)
+16:47:44 <abadger1999> #info Core team is discussing whether to bump rc a week.... Will discuss and hopefully decide that on Friday.
+16:48:05 <nitzmahone> (otherwise gonna be a hella busy weekend of scramblage)
+16:48:28 <abadger1999> Hopefully more time makes people happier rather than more stressed ;-)
+16:48:46 <abadger1999> but do note.... we probably don't want more major features showing up next week ;-)
+16:49:11 <nitzmahone> So long as we can stick to newMcKerr's mandate of "don't view this as the opportunity to throw in the kitchen sink"
+16:49:22 <abadger1999> yeah.
+16:49:33 <abadger1999> gregdek: okay, lack of input from others I'm going to take as consent.
+16:49:55 <abadger1999> gregdek: i guess talk to jimi since he's been sending out hte meeting announcements.
+16:50:00 <gregdek> :)
+16:50:09 <abadger1999> gregdek: If he doesn't like it... let's do a special session next week.
+16:50:25 <gregdek> Tue or Thu?
+16:50:46 <abadger1999> Doesn't matter to me.
+16:50:57 <gregdek> jimi|ansible: special core irc mtg to cover open ansible/proposals. tue or thu?
+16:51:07 <gregdek> (next tue or thu)
+16:51:47 <abadger1999> #info gregdek and jimi|ansible to either make one of next week's meetings an ansible proposals meeting or have a special meeting.  Will announce to mailing list when decided.
+16:51:57 <abadger1999> Alrgiht ... anything else?
+16:52:41 <abadger1999> I'll cloes in 60s
+16:53:30 <abadger1999> 15s
+16:54:57 <abadger1999> #endmeeting

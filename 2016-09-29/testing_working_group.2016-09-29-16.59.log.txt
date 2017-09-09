@@ -1,0 +1,194 @@
+16:59:55 <gundalow> #startmeeting Testing Working Group
+16:59:55 <zodbot> Meeting started Thu Sep 29 16:59:55 2016 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:59:55 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:59:55 <zodbot> The meeting name has been set to 'testing_working_group'
+17:00:02 <gundalow> #chair gundalow mattclay
+17:00:02 <zodbot> Current chairs: gundalow mattclay
+17:00:09 <gundalow> #topic Roll call
+17:00:09 * shertel hi!
+17:00:20 <mmaglana> hi!
+17:00:24 <cinerama> hi!
+17:00:27 * mmaglana hi!
+17:00:33 * mattclay waves
+17:00:37 <gundalow> Agenda as always is https://github.com/ansible/community/issues/114 feel free to add items
+17:01:01 <gundalow> Hello everyone :)
+17:01:29 <mmaglana> hello gundalow!
+17:01:39 <mmaglana> and everyone!
+17:01:43 <gundalow> cinerama: Is this your first Testing Working Group? Could you please give a quick introduction including what your interest in testing is please?
+17:02:30 <cinerama> it is. robinro mentioned the meeting on a pr i submitted re os family testing, so i thought i'd turn up and listen in on what's going on currently
+17:03:15 * MichaelBaydoun is lurking
+17:03:49 <gundalow> Cool
+17:04:02 <gundalow> Welcome :)
+17:04:18 <cinerama> thanks!
+17:04:18 <mmaglana> welcome cinerama!
+17:04:38 <gundalow> #topic Updates to CI (docs and run_tests.sh)
+17:04:48 <alikins> howdy
+17:05:04 <gundalow> There have been some changes to the CI test recently by mattclay
+17:05:16 <gundalow> mattclay: Could you give a quick overview?
+17:05:20 <gundalow> please :)
+17:06:07 <mattclay> We finally have some updated documentation on running integration tests. You can see the latest version of the docs here: https://github.com/ansible/ansible/blob/devel/test/integration/README.md
+17:06:31 <mattclay> The documentation update mostly covers using our docker containers to run integration tests.
+17:07:13 <mattclay> For those of you already running integration tests locally, you may have noticed we've removed the old run_tests.sh in favor of just using "make integration".
+17:07:28 <mmaglana> nice!
+17:07:57 <mattclay> Hopefully this should make it much easier to run the same integration tests that we use on Shippable (the Linux ones anyways).
+17:08:33 <mattclay> See the updated documentation for environment vars you can use with "make integration", as the defaults don't cover everything.
+17:09:39 <mattclay> If anyone has questions on how to run the tests, feel free to direct questions my way.
+17:10:40 <gundalow> The ability to run the same tests outside of CI (Travis/Shippable) was one of the items with a lot of votes, so we hope you will all find it useful.
+17:11:19 <mattclay> It's been possible for a while, but the process is much easier now, and better documented.
+17:11:37 <gundalow> Feedback on documenentation is always welcome. As users and developers of these tools we have a lot of background knowledge, so sometimes there may be bits missing, let us know :)
+17:11:46 <gundalow> mattclay: good point, lot easier now
+17:12:33 <gundalow> Any questions on that, if not I'll move onto the next item
+17:12:36 <bcoca> i'm still getting botocore import error on 'make tests'
+17:13:12 <mattclay> bcoca: Is that a new problem for you?
+17:13:18 <cinerama> i had to pip install a couple of boto-related dependencies myself
+17:13:35 <bcoca> has been for a while
+17:13:53 <bcoca> should not need boto on 'make tests', should only execute if i have credentials
+17:13:58 <gundalow> I think we need an ansible-playbook that installs everything you need to develop & run all the tests
+17:14:10 <bcoca> https://gist.github.com/bcoca/afd9a644b894cce3296f4a45e597f4e3
+17:14:17 <bcoca> you should NOT need botocore
+17:14:25 <bcoca> unless you are specifically dealing with aws
+17:14:36 <bcoca> make tests, was not 'clould' dependant
+17:14:45 <mattclay> bcoca: It's not connecting to AWS, it's just running the unit tests.
+17:15:07 <bcoca> will we need every 'cloud' lib then?
+17:15:29 <bcoca> gce/shade/etc
+17:15:38 <alikins> pip install -r test/utils/tox/requirements.txt
+17:15:46 <gundalow> If we have *unit* tests, maybe
+17:16:14 <bcoca> i would like to avoid that, specially since 99% of my testing is not cloud related
+17:16:25 <bcoca> alikins: im aware of it's addition, im protesting it
+17:16:38 <mattclay> We need to make it easier to run a subset of unit tests, specifically to deal with this kind of situation.
+17:16:42 <bcoca> it should be optional to cloud use
+17:17:17 <bcoca> systemd and others are also 'optional' as not everyone has a system that supports that
+17:17:27 <bcoca> s/are/should be/
+17:17:54 <alikins> easy enough to just raise SkipTest on import fail
+17:18:37 <bcoca> all i'm asking, when adding specific tech that not everyone has/needs, we should make them optional
+17:18:57 <gundalow> which is a reasonable request
+17:19:04 <bcoca> i've stopped using `make tests` in my bisects cause of this
+17:19:21 <gundalow> mattclay: Where should we track this?
+17:19:27 <mmaglana> for unit tests, dependencies like boto/libcloud may still be needed for mocking (e.g. create_autospec, autospec=True)
+17:19:30 <abadger1999> I have good and bad thoughts on using Skipest there...
+17:19:56 <bcoca> we should divide the tests 'core' no extra deps 'cloud/aws' ... etc
+17:19:57 <mattclay> gundalow: I already have this on my personal task list for fixing up tests.
+17:20:09 <abadger1999> I've done that in the past and it seems easy to use to keep develpoing and moving forward.  but on the other hand, it's harder to make sure you're testing what you think you're testing.
+17:20:10 <bcoca> make alltests
+17:20:14 <bcoca> ^ can run all of them
+17:20:57 <gundalow> mattclay: cool :)
+17:21:04 <abadger1999> +1 to splitting although I'm okay with make tests being the target for running all the tests.
+17:21:15 <bcoca> i think our CI should run them all, but anyone making changes to core or something specific shoudl be able to run 'make tests'  and only deal with the 'common/core' stuff
+17:21:35 <bcoca> ^ also fine with target, as long as i have a 'core' one
+17:21:40 <abadger1999> We probably can't run them all even in CI (in a single CI run)
+17:21:45 <bcoca> make minimaltests ?
+17:21:59 <abadger1999> there'll be tests for apt vs yum vs pkg vs dnf for instance.
+17:22:02 <bcoca> its hard to run conflicting technologies
+17:22:17 <abadger1999> so we'll have to figure out a way to make that obvious in the all target.
+17:22:19 <bcoca> which is why we kept them optional ninitially
+17:22:23 <abadger1999> <nod>
+17:22:54 <bcoca> well, all can have 'packaging' which runs 'OS dependant', for example
+17:23:06 <abadger1999> <nod>
+17:23:26 <bcoca> requirements becomes tricky then, as botocore shoudl nto be there, but still available when you want to run those
+17:24:06 <bcoca> ^ just my thoguhts as i have not been able to run local tests for a while now and it really becomes onerous when shippable slows down
+17:26:03 <mattclay> I'll fix the unit tests so the basic set of tests can run without having to install all dependencies for aws, etc.
+17:26:20 <gundalow> Once 2.2 is done myself and mattclay will have the time to discuss where we want to get to with testing as part of the 2.3 work
+17:26:30 <alikins> https://github.com/ansible/ansible/pull/17814
+17:26:37 <gundalow> mattclay: That sounds like a decent solution for the moment
+17:27:12 <alikins> pr above is to skip test_aws if no boto
+17:29:39 <gundalow> ok, I'm going to move us along now
+17:30:14 <gundalow> #topic test_pull_requests label
+17:30:59 <gundalow> abadger1999 suggested recently that we might wish to have a label applied to all PRs that modify tests
+17:31:13 <gundalow> that would give people something to filter by to see what changes are going on
+17:31:18 <gundalow> 1) Would people find that useful
+17:31:43 <gundalow> 2) Would people review changes if they had a label to filter by
+17:31:46 <gundalow> general thoughs
+17:32:21 <mmaglana> +1
+17:32:22 <shertel> that sounds useful
+17:32:33 <shertel> +1
+17:33:57 <gundalow> cool
+17:33:59 <alikins> I occasionally browse https://ansible.sivel.net/pr/byfile.html looking through prs that include tests, so I like the concept
+17:34:33 <gundalow> right, so that's +4 (me and alikins)
+17:34:42 <gundalow> motion carried, I'll get that done
+17:35:01 <mmaglana> alikins: nice. i didn't know about that page.
+17:36:14 <gundalow> #topic extend httptester docker image with apt,ppa,yum repos
+17:36:30 <gundalow> #link https://github.com/ansible/ansible/issues/16864
+17:37:37 <gundalow> So, for those that aren't aware as part of the CI tests we have a small machine that boots before the main system under test (Ubuntu, Fedora, etc)
+17:37:47 <mattclay> This one is also on my list to do.
+17:38:29 <mattclay> Of course if anyone wants to get to it before I do, feel free. :)
+17:38:46 <gundalow> the httptester docker machine was originally created to host a few websites so we can test various SSL connections, it's grown a bit so we can store various dependencies on there for 1) speed, 2) stability (external resources sometimes go away)
+17:39:42 <alikins> I'm mostly just wanted some feedback before I tried it since I've gotten push back about similar changes before
+17:40:48 <gundalow> I believe generaly going forward we aim to reduce the number of external dependencies the tests have, so pushing things into httptester (at a high level) sounds reasonable
+17:42:30 <mattclay> I know some concern has been expressed over making sure that httptester remains optional.
+17:42:38 <gundalow> alikins: Sure, generally best to check before making large changes like that. How about just port one package manager over then we can discuss and review; then once we are happy repeat for the others?
+17:43:09 <gundalow> mattclay: interesting. What currently depends on it? Some SSL tests and git?
+17:44:05 <mattclay> Various http/https tests use it currently, but are supposed to fall back to external sites if needed. However, since we don't test any of that in CI, that may no longer work.
+17:44:27 <alikins> well, if anything should be optional, it should be optional to depend on external network resources
+17:44:37 <gundalow> Would the existing tests work outside of docker?
+17:45:13 <mattclay> They used to, although I never run them outside docker any more.
+17:45:23 <gundalow> ditto
+17:45:25 <alikins> most of them
+17:45:36 <gundalow> I'm wondering if we already have a dependencythere
+17:45:40 <alikins> even the 'non_destructive' ones that f with your ssh config
+17:45:46 * abadger1999 hardly ever runs inside of docker but hasn't run the url tests in over a release.
+17:45:47 <alikins> ahem
+17:45:52 <mattclay> I don't mind making httptester required, but if anyone runs network dependent tests w/o docker, I'm sure they'll disagree.
+17:46:08 <bcoca> ^ agreed
+17:47:07 * alikins just merges the non_destructive change
+17:48:31 <alikins> I would also eventually like to be able to 'taint' anything that gets network content and ensure they run non-root or otherwise with restricted privs
+17:49:17 <gundalow> alikins: If you have time to work on this could you please pick just one package manager to start with then we can review?
+17:50:31 <gundalow> and in such a way that the test will fall back to the internet if httptester isn't available
+17:51:06 <gundalow> Just a state check at the beginning of the test to see if httptester is availble, then decide what repo and package to use for testing
+17:51:54 <mattclay> gundalow: Should be able to use the same package for both, just need to use a different repo.
+17:52:20 <mattclay> There should be as few differences as possible between the httptester and non-httptester runs of the same test.
+17:52:29 <bcoca> what about package managers that dont use http for repo sync?
+17:52:31 <gundalow> I guess, just wasn't sure if we were going to build a tiny package with no dependencies
+17:52:37 <bcoca> cvs/svn/rsync are used in many
+17:53:05 <mattclay> The httptester container is poorly named. I see no reason why it can't host other services.
+17:53:13 <gundalow> +1
+17:53:24 <bcoca> mockserver?
+17:53:26 <mattclay> We've expanded its use beyond the original purpose.
+17:53:54 <bcoca> ok, understood, just noting that the more 'esoteric' package managers will requrie these other services
+17:54:24 <gundalow> bcoca: aye, it's a good point to raise
+17:55:21 <abadger1999> it would be great to get the git tests into a repo (or several) on httptester as well (wishlist ;-)
+17:55:52 <gundalow> abadger1999: That's the (medium term) plan
+17:56:02 <mattclay> Eventually everything that depends on the network should be in there, if possible.
+17:56:40 <gundalow> Cool. I've updated the ticket with what we've discussed
+17:57:06 <gundalow> #topic Writing Ansible Modules Complete With Tests
+17:57:20 <gundalow> #link https://www.relaxdiego.com/2016/06/writing-ansible-modules-with-tests.html
+17:57:38 <mattclay> mmaglana: Are you going to include anything about integration tests in your presentation?
+17:57:43 <gundalow> mmaglana: You around
+17:57:50 * mmaglana is here!
+17:57:56 <gundalow> woot
+17:58:07 <mmaglana> mattclay: i will mention it in the talk and also in the article.
+17:58:10 <gundalow> So after the feedback given mmaglana has updated v2
+17:58:18 <gundalow> of https://www.relaxdiego.com/2016/06/writing-ansible-modules-with-tests.html
+17:58:22 <mmaglana> the updates are basically:
+17:58:25 <gundalow> Submitting version 2.0.0 of the article for review in the next meeting. Changes are:
+17:58:28 <gundalow> Simplify main() and move business logic to separate function
+17:58:31 <gundalow> Take advantage of lessons from Boundaries talk by Gary Bernhardt
+17:58:32 <gundalow> Other minor fixes
+17:58:35 <gundalow> Reference module checklist
+17:58:36 <gundalow> mmaglana: lol
+17:58:39 <gundalow> Give credit where credit is due :-)
+17:58:44 <mmaglana> beat me to the punch again!
+17:58:58 <mmaglana> GMTA, i guess gundalow? :-)
+17:59:43 <gundalow> indeed
+18:00:18 <mmaglana> mattclay: going back to the integration test, i did an initial test talk (to myself) and it looks like i'm going to be taking up about 35~40 mins without going into detail about integration tests
+18:01:12 <mattclay> mmaglana: No problem. I figured you'd at least want to give it a brief mention and maybe a link to the updated integration test docs.
+18:01:37 <mmaglana> mattclay: absolutely!
+18:04:21 <mattclay> We'll leave the meeting running for a bit in case there is more to discuss, but the core team is in another meeting now.
+18:04:55 <alikins> gundalow: re httptest/mocktest, added to bottom of TODO list ;->
+18:05:15 <gundalow> alikins: cool, thanks :)
+18:09:25 <gundalow> #topic Open Floor
+18:09:32 <gundalow> Anyone got anything else?
+18:10:10 <gundalow> Reminder about https://www.ansible.com/blog/ansible-contributor-summit-brooklyn-2016 (in person or online)
+18:10:11 <bcoca> many issues, but those are for my psychiatrist
+18:10:26 <gundalow> any other relevant issues :)
+18:12:20 <gundalow> cinerama: Not sure if you've seen this page before https://www.ansible.com/blog/ansible-contributor-summit-brooklyn-2016
+18:12:45 <cinerama> i did! not sure i would be able to make it
+18:13:07 <gundalow> There will be bits online - In this very channel infact
+18:13:12 <cinerama> cool
+18:13:58 <gundalow> also this is the our plan for Testing Working Group https://public.etherpad-mozilla.org/p/ansible-testing-working-group
+18:14:45 <gundalow> We'd really welome your views on that, feel free to +1/-1 items and if there are sections you think could do with more detail please do just add it in
+18:14:59 <gundalow> Please set a color + name on the right hand side
+18:15:20 <cinerama> thanks, that's awesome. i'm just starting out with this which is both good and bad in terms of giving feedback
+18:17:16 <gundalow> it's always good to get the view of people starting out
+18:21:29 <gundalow> Cool, as always thanks for your time
+18:21:58 <gundalow> Please do keep adding your thoughts to https://public.etherpad-mozilla.org/p/ansible-testing-working-group and https://github.com/ansible/community/issues/114
+18:22:05 <gundalow> #endmeeting

@@ -1,0 +1,48 @@
+19:12:55 <jimi|ansible> #startmeeting Ansible Core Public Meeting
+19:12:55 <zodbot> Meeting started Tue Sep 20 19:12:55 2016 UTC.  The chair is jimi|ansible. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:12:55 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:12:55 <zodbot> The meeting name has been set to 'ansible_core_public_meeting'
+19:13:08 <jimi|ansible> #chairs bcoca
+19:13:17 <jimi|ansible> #chair bcoca
+19:13:18 <zodbot> Current chairs: bcoca jimi|ansible
+19:14:33 <jimi|ansible> #topic https://github.com/ansible/ansible/pull/17604
+19:14:50 <mikeoutland> yes, that is me
+19:14:56 <bcoca> mikeoutland: so 'new' features are in a freeze right now, it is not likely that we'll merge these now, in any case i've already found an issue
+19:15:09 <jimi|ansible> ^ was just typing that out too
+19:15:13 <mikeoutland> ok
+19:15:29 <jimi|ansible> mikeoutland: rc1 for 2.2 should be out in a few weeks, at which time we'll fork off the stable-2.2 branch
+19:15:34 <jimi|ansible> these can be merged after that happens
+19:15:43 <mikeoutland> I just found out about the freeze today.  I was hoping there was a possibility to get it in 2.2
+19:15:56 <jimi|ansible> no sorry, it'll have to wait until 2.3
+19:15:59 <mikeoutland> I see, when is the next release expected?
+19:16:36 <jimi|ansible> it would be in devel pretty much immediately after that, and a lot of people do run from devel, however we're on a 4-ish month cadence for major releases currently
+19:16:50 <mikeoutland> Ok
+19:16:58 <mikeoutland> bcoca: what issue did you find?
+19:17:22 <bcoca> making notes on ticket
+19:17:27 <mikeoutland> awesome, thank you
+19:18:25 <mikeoutland> I suppose that is all I had then.  bcoca thank you for the feedback, we'll work on the issue within the PR.
+19:19:51 <bcoca> fyi, we dont have 80 col limit, also the " " \n " " concat is problematic for us in some cases and we avoid it
+19:21:07 <mikeoutland> thanks bcoca, I think we saw an 80 col limit in modules extra during the linter run.  What is the col limit we should enforce?
+19:22:47 <bcoca> imho none, but i think we agreed on 180
+19:23:20 <mikeoutland> ok, good to know
+19:27:01 <bcoca> @resmo, rest of agenda are your tickets
+19:31:38 <abadger1999> 160
+19:31:41 <abadger1999> 80 *2
+19:32:33 <abadger1999> (and even that is too big for my terminal)
+19:36:22 <abadger1999> Also, there should not be any problems with "String" \n "string2"
+19:37:09 <abadger1999> I ahven't found anything that breaks with it in some quick testing.
+19:37:31 <mikeoutland> abadger1999: so we can leave the current col limit we had in place along with the \n?
+19:37:36 <abadger1999> yes.
+19:37:40 <mikeoutland> thank you
+19:39:32 <abadger1999> The rule is generally, don't fix someone else's style as long as it falls within the parameters (or you may end up having to explain the actual code if someone goes looking at git blame later ;-)
+19:39:46 <mikeoutland> :)
+19:40:35 <abadger1999> bcoca: resmo doesn't appear to be active, are any of his tickets discussable without him?
+19:42:04 <bcoca> not his, mostly 3 tickets on autho_keys not creating missing /home/user
+19:47:12 * bcoca sits correctd
+19:49:20 <abadger1999> I lean towards not creating the parent directory.  We should catch the exception and fail_json with a message about the parent not existing, though.
+19:49:50 <abadger1999> parents of the parent to use terminology I'm seeing in the module.
+19:50:52 <abadger1999> If I'm reading the comments right, both you and resmo think the same thing.
+19:57:47 <bcoca> yep, so close all 3?
+20:08:22 <abadger1999> bcoca: yep.
+20:24:56 <abadger1999> jimi|ansible, bcoca: If there's nothing else, one of you should #endmeeting
+20:27:31 <bcoca> #endmeeting

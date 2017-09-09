@@ -1,0 +1,124 @@
+17:03:56 <mattclay> #startmeeting Testing Working Group
+17:03:56 <zodbot> Meeting started Thu Aug  3 17:03:56 2017 UTC.  The chair is mattclay. Information about MeetBot at http://wiki.debian.org/MeetBot.
+17:03:56 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+17:03:56 <zodbot> The meeting name has been set to 'testing_working_group'
+17:04:01 <mattclay> #chair gundalow
+17:04:01 <zodbot> Current chairs: gundalow mattclay
+17:04:14 * mikedlr waves hi.
+17:04:20 <mattclay> #chair mikedlr
+17:04:20 <zodbot> Current chairs: gundalow mattclay mikedlr
+17:04:37 <gundalow> h/me wave
+17:04:47 * gundalow fails to type
+17:04:49 * gundalow waves
+17:04:51 <Pilou> hi
+17:04:56 <mattclay> #chair Pilou
+17:04:56 <zodbot> Current chairs: Pilou gundalow mattclay mikedlr
+17:04:56 <gundalow> #chair Pilou
+17:04:56 <zodbot> Current chairs: Pilou gundalow mattclay mikedlr
+17:04:59 <gundalow> LD
+17:05:02 <mattclay> :)
+17:05:03 <gundalow> :D
+17:06:40 <gundalow> Pilou: Thanks for the great summary of the previous meeting
+17:06:40 <mattclay> gundalow: Any updates before we get started?
+17:06:46 <gundalow> nop
+17:07:21 <newswangerd> 0/
+17:07:48 <gundalow> #chair newswangerd
+17:07:48 <zodbot> Current chairs: Pilou gundalow mattclay mikedlr newswangerd
+17:07:55 <mattclay> Some new code-smell tests have been added this past week, with more on the way. abadger1999 is there anything you'd like to add?
+17:08:27 <abadger1999> The two new ones I have in progress are here: https://github.com/ansible/ansible/pull/21262
+17:08:43 <mikedlr> mattclay: do you have PR link?
+17:08:59 <abadger1999> One to check for wildcard imports and one for use of get_exception
+17:09:35 <abadger1999> Once we have all wildcard impotrs taken care of, we can remove that check and enable it in pylint instead.
+17:09:43 <nb> hi, i was wondering what time this meeting finishes? I need to restart zodbot again sometime
+17:09:49 <nb> but no hurry
+17:09:50 <gundalow> https://github.com/ansible/community/wiki/Testing%3A-progress-tracker#fixing-broken-imports
+17:09:57 <Pilou> I guess broken import, wildcard and get_exception should be handled at once
+17:10:14 <abadger1999> Pilou: it is efficient to handle all three at once, yes :-)
+17:10:14 <gundalow> nb: I'd expect ~hour
+17:10:28 <nb> gundalow, ok, thanks, i'll check back in an hour or so.
+17:10:35 <abadger1999> tracking of progress towards taking care of those is in the link gundalow mentioned
+17:10:41 <gundalow> nb: Thanks for maintaining the bot :)
+17:11:27 <abadger1999> I've also removed the no-list-cmp check as pylint's undefined-variable check handles that (as long as pylint is run on python3)
+17:11:49 <Pilou> #info new 'code-smell' tests have been added this past week
+17:12:39 <abadger1999> Several others have picked up work on removing existing instances where the code violates these checks which is great because I'm going to be busy with other things for at least two weeks.
+17:12:55 <abadger1999> That's all from me.
+17:13:23 <gundalow> abadger1999: great work, thanks
+17:13:26 <mattclay> #topic packet integration tests (https://github.com/ansible/ansible/pull/23127)
+17:13:36 <mattclay> Pilou: You put this one on the agenda.
+17:13:41 <Pilou> yep,
+17:14:04 <Pilou> the submitter is willing to add new tests
+17:14:46 <Pilou> the question is: which tests do we want ?
+17:15:37 <Pilou> units test (mocking the Packet API), integration tests (using the real API or a sandbox API)
+17:16:02 <mattclay> Integration tests are preferred, but we'll need a simulator of some kind for the API.
+17:16:04 <Pilou> Packet.net is willing to sponsor either a valid account for integration tests
+17:16:21 <mattclay> We can't protect account credentials, so I don't think anything requiring an account will work.
+17:16:40 <gundalow> mattclay: can we pass them in via Shippable secrets?
+17:16:55 <mattclay> gundalow: No, those don't work on PRs for public repos since they can be easily extracted.
+17:16:59 <gundalow> then trust no_log on auth_token:
+17:17:26 <mikedlr> in my experience integration tests are too slow and tricky to test things like the wait_for_devices_active code
+17:17:28 <Pilou> the CI isn't able to use any secret credentials ?
+17:17:41 <mattclay> If Packet provided a service similar to ansible-core-ci for provisioning temporary credentials, that would work. However, I'm guessing that's more than they'll want to implement.
+17:17:42 <gundalow> mikedlr: that's a valid point
+17:17:44 <mikedlr> I'd like to see a test case which pushes through each expected state you are supposed to wait for.
+17:18:05 <mikedlr> I've done something similar in waiting for RDSs to become life.
+17:18:34 <mattclay> I'm not familiar with packet. Are the tests something that will complete in a short amount of time? If not, having credentials is only half of the issue.
+17:19:24 <Pilou> so the answer is: 1. integration tests aren't possible because CI isn't able to store credentials 2.  integration tests should not take too long ?
+17:19:48 <mattclay> Well, unless there's a simulator for the API, which avoids both problems.
+17:20:12 <mattclay> For example, vcenter integration tests use a simulator.
+17:20:29 <gundalow> This feels like the type of thing that DCI or Zuul woud help with (in the future)
+17:20:30 <Pilou> Packet is willing to provide a sandbox API, I am not sure if the endpoint is secret or if credentials are still required
+17:21:10 <gundalow> How long do the tests in that PR take to run currently?
+17:21:13 <mattclay> As long as the sandbox API credentials can be in the public repo that should work.
+17:21:38 <Pilou> gundalow: there isn't any yet
+17:21:58 <mattclay> Pilou: It sounds like we need more details on what the sandbox API provides and how it works.
+17:22:07 <Pilou> yep
+17:22:13 <gundalow> +1
+17:22:13 <Pilou> otherwise an alternative to integration tests could be: 1. unit tests 2. propose Packet to use DCI 3. in the future, use Zuul :)
+17:23:15 <gundalow> DCI will be post 2.4.1, we've got other priorities at the moment
+17:23:26 <mattclay> Pilou: Are you volunteering to follow up and get more details on the sandbox API?
+17:23:33 <Pilou> yep
+17:24:00 <mattclay> #action Pilou to get more details on the Packet sandbox API for possible use with integration tests.
+17:24:16 <mikedlr> looking at the integration test, my understanding is that it doesn't actually use the packet device;  since we don't have functional tests I think that the tests should actually get something working.
+17:24:50 <mattclay> mikedlr: This would be to support tests which haven't been written yet.
+17:25:01 <Pilou> the goal is to use Packet API
+17:25:14 <Pilou> submitter removed tests using the API,
+17:25:38 <Pilou> because he wasn't able to execute them
+17:26:05 <Pilou> he didn't want to commit any credentials
+17:26:50 <mattclay> Shall we move on to the next topic?
+17:27:22 <Pilou> that's all on this subject for me :)
+17:27:33 <mattclay> #topic ansible-test proxy support (https://github.com/ansible/ansible/issues/27697)
+17:27:51 <mattclay> pdellaert: Are you around?
+17:30:06 <mattclay> pdellaert has provided details on what environment variables are needed for proxy support. I'll use this information to add experimental proxy support to ansible-test. pdellaert has volunteered to test once I have a PR ready.
+17:30:37 <mattclay> This will enable the test infrastructure to work with proxies, but not the tests.
+17:30:51 <mattclay> Updating the tests will need to come later.
+17:31:25 <mattclay> Since we won't be testing with a proxy on Shippable, there will be the possibility of regressing when it comes to proxy support. Either because a test is added or an existing test is updated and loses proxy support.
+17:32:05 <mattclay> Any questions or comments?
+17:33:27 <mattclay> #topic Open Floor
+17:34:05 <Pilou> about broken import PR,
+17:34:15 <Pilou> some PR need reviews :)
+17:34:57 <mikedlr> mattclay: the same effect happens with slow modules like RDS which it seems we can't practically test now.  maybe we need "nightly" slow testing?
+17:36:09 <Pilou> open and merged PR are listed there: https://public.etherpad-mozilla.org/p/ansible-fixing-broken-import
+17:37:16 <mattclay> mikedlr: We don't have any way to run tests beyond 1 hour right now. We're probably going to need some new test infrastructure to run very slow tests like RDS. Possibly some kind of async testing so we don't tie up CI resources while waiting between tasks.
+17:39:07 <mikedlr> is there any current proposal for that?  Agree 100% it's needed;  AWS tests were terribly decayed after not being run for long.
+17:39:45 <mattclay> mikedlr: Nothing I'm aware of.
+17:42:06 <mikedlr> so then I propose a proposal;  ( 🙄 )if I can't find it next time the issue becomes a problem for me I'll probably even write one.  I guess it means an entire separate test executor e.g. separate shippable account?
+17:42:38 <mattclay> mikedlr: I doubt it will be Shippable.
+17:43:26 <abadger1999> Pilou: six may be a false positive or come from before I removed the "use-system-lib-if-available" shim
+17:43:49 <Pilou> which PR ?
+17:44:13 <abadger1999> Pilou: from the list:  https://public.etherpad-mozilla.org/p/ansible-fixing-broken-import
+17:44:22 <abadger1999> Pilou: I see that six/__init__.py is on there
+17:45:07 <Pilou> ok, i need to synchronize the etherpad
+17:45:18 <abadger1999> oh... I have an idea of why it could be a false positive... it tries to import from py2 and py3 stdlib locations.
+17:45:48 <abadger1999> so one of those will always fail and the other one succeed.
+17:46:19 <Pilou> (yep six/__init__.py is in ./test/sanity/import/skip.txt too)
+17:47:01 <Pilou> another subject: i noticed some empty playbooks in integration tests (for example: test/integration/targets/ec2_vol/tasks/main.yml): what is the purpose of these ? Should not they be deleted ?
+17:47:32 <pdellaert> Hi, mattclay i'm here
+17:47:43 <pdellaert> sorry, conf calls all over the place :s
+17:49:00 <mattclay> Pilou: Some of the ec2 tests have no tasks in the role, but instead rely on common tests from setup_ec2. Tests specific to the module should be added there.
+17:49:50 <mattclay> pdellaert:  I summarized the state of proxy support in your absence. Do you have the scrollback available to see if there's anything you want to add?
+17:50:19 <pdellaert> looks good, thanks!
+17:50:34 <pdellaert> just want to add that i can test
+17:52:17 <mattclay> Does anyone have anything else before we end the meeting?
+17:52:43 <gundalow> Nothing else from me. I'm away next week, so delay on reviews etc
+17:53:19 <mikedlr> nothing from me;  thanks useful meeting.
+17:54:33 <mattclay> #endmeeting

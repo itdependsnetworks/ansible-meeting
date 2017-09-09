@@ -1,0 +1,462 @@
+15:00:29 <gundalow> #startmeeting Ansible Core Meeting
+15:00:29 <zodbot> Meeting started Thu Feb  9 15:00:29 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:00:29 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:00:29 <zodbot> The meeting name has been set to 'ansible_core_meeting'
+15:00:56 <gundalow> #chair allanice001 bcoca jimi|ansible jtanner mattclay nitzmahone rcarrillocruz ryansb shertel thaumos
+15:00:56 <zodbot> Current chairs: allanice001 bcoca gundalow jimi|ansible jtanner mattclay nitzmahone rcarrillocruz ryansb shertel thaumos
+15:01:11 <gundalow> #info Agenda https://github.com/ansible/community/issues/150
+15:01:11 <jtanner> hi
+15:01:15 * mattclay waves
+15:01:22 <nitzmahone> Yo
+15:01:26 <shertel> Hi
+15:01:41 <gundalow> #topic Discuss extending the module "shipit" workflow to non-modules
+15:01:43 <gundalow> bcoca: you there?
+15:02:01 <gundalow> #link https://github.com/ansible/community/issues/150#issuecomment-277025899
+15:02:13 <bcoca> no, im here
+15:02:48 <gundalow> bcoca: I believe you had an action to create a spreadsheet, and give an update
+15:02:52 <bcoca> https://docs.google.com/spreadsheets/d/1z-BfOkAaY60nYir6qx6L9yHMqcwT31UtrgaAFKnjH9w
+15:02:57 <gundalow> Could you please #info the key points
+15:02:59 <bcoca> ^ spreadsheet was created before that
+15:03:12 <albertom> hi!
+15:03:15 <bcoca> #info spreadsheet exists
+15:03:19 <bcoca> #info votes being cast
+15:03:51 <bcoca> its currently inventory plugins , module-utils is next, then will start by each plugin dir
+15:04:03 <gundalow> Cool
+15:04:24 <gundalow> I assume if there is anything we need to voteon you will poke us on Slack?
+15:05:00 <bcoca> you have link, a few people have already voiced opinion
+15:05:12 * gundalow is a solid +0 on it all
+15:05:35 <bcoca> we just need to have meeting go over votes, ignore whatever ryan wants .. then add metadata to scripts
+15:05:42 <bcoca> ^ possibly to config files also
+15:05:42 <gundalow> Cool, should I m
+15:05:45 <jtanner> lulz
+15:05:45 <gundalow> :)
+15:06:30 <gundalow> #action bcoca to organise vote for inventory plugins
+15:06:33 <bcoca> abadger2000: how do we deal with adding 'python metadata to config files'?
+15:07:56 * jtyr is here
+15:08:20 <gundalow> hum, I guess Mr Badger isn't around, so I'll move onto the next topic
+15:08:55 <gundalow> #action bcoca to speak with abadger2000 to find out howe we add python metadata to config files
+15:08:58 <gundalow> Thanks
+15:09:11 <gundalow> #topic ansible/ansible#19283 hosts module (for /etc/hosts)
+15:09:17 <gundalow> jtyr: Right on time
+15:09:21 <jtyr> ;o)
+15:09:41 <gundalow> #link https://github.com/ansible/community/issues/150#issuecomment-277028142
+15:09:50 <jtyr> I fixed all "incompatibilities" since last time ... so it should be good to go ...
+15:09:54 <gundalow> #link https://github.com/ansible/ansible/pull/19283
+15:10:16 <jtyr> only bcoca and abadger2000 wanted to discuss if we even need such module ...
+15:10:40 <gundalow> #info Imports have been moved to match "house style"
+15:10:55 <jtyr> their argument is that it can be done by a role ... my argument is that everything can be done as a role ...
+15:11:12 <bcoca> jtyr: not everything, you need base set of plugins, after that, most things can
+15:11:27 <jtyr> bcoca: yes, you only need shell module ... ;o)
+15:11:37 <bcoca> raw!
+15:11:42 <jtyr> everything else can be done as role ... ;o)
+15:11:56 <gundalow> For the purposes of keeping the meeting moving I'm going to call out in 5 minutes to see if we want to continue discussion
+15:12:27 <allanice001> gundalow,  - last comment on that -
+15:12:28 <allanice001> https://github.com/ansible/ansible/pull/19283#issuecomment-277007481
+15:12:32 <gundalow> #info New module policy requires two(+) shipits
+15:12:43 <allanice001> abadger mentioned it being rejected
+15:12:54 <gundalow> oh, it got closed then reopened
+15:13:23 <gundalow> Please vote +1/0/-1
+15:13:34 <bcoca> -1
+15:13:37 <jtyr> he just had to demonstrate his power to break my pride of PEP8 compliant code ...;o)
+15:13:45 <jtyr> bcoca: ;o(
+15:13:52 <allanice001> -1
+15:13:56 <thaumos> imo, a module like this is redundant.   There's template or lineinfile (which I dread).
+15:13:57 <thaumos> -1
+15:14:00 <bcoca> jtyr: im against that standard, but i was overruled, once adopted ... we need to follow them
+15:14:19 <gundalow> Please vote: jtanner mattclay nitzmahone shertel thaumos on if we should accept https://github.com/ansible/ansible/pull/19283
+15:14:27 <rcarrillocruz> -1, imho modules should be base building blocks, tthere are enough foundations to do this with a role and/or current modules
+15:14:39 <bcoca> jtyr: but im also against pep8 'purity' as you well know
+15:14:54 <jtyr> template or lineinfile doesn't validate IP addresses ...
+15:15:04 <jtanner> -1 because i don't want to deal with all the tickets complaining about $ODDBALL_HOSTS _SCHEMA
+15:15:06 <gundalow> For the purpose of this topic we are not discussing PEP8</chairing>
+15:15:18 <bcoca> in defense of this module, we do have many that are similar and violate the simplicity overlap, the question is if we want to stop or continue that trend (i want to stop)
+15:15:40 <gundalow> 5x-1
+15:15:48 <mattclay> +0
+15:16:07 <shertel> 0
+15:16:12 <mattclay> I see a little benefit of the validation, but it's not much more than just template/lineinfile
+15:16:27 <bcoca> we have ip filters that validate/convert
+15:16:31 <nitzmahone> +0 (what mattclay said)
+15:16:32 <jtyr> it's much simpler than inline ...
+15:16:33 <jtanner> lineinfile suffices for 80% of /etc/hosts needs
+15:16:35 <gundalow> +0 For teh points that jtanner said, though I think it has some use
+15:16:37 <rcarrillocruz> +1 to the filter
+15:16:40 <bcoca> we can add is_IP test if we really want
+15:18:32 <jtyr> shell module can cover 100% of all other modules in Ansible .... it's stupid refusing module only because some more generic and less convenient module can do the same thing ...
+15:19:04 <jtanner> don't we have some some sort of filter for IP now?
+15:19:52 <jtyr> jtanner: there is no filter nor module_utils to validate IP ...
+15:20:00 <albertom> +1 while line in file does the job, i etc_hosts saves me from the regex
+15:20:15 <bcoca> jtanner: yes, we have ip filters, we might need an ip test
+15:20:16 <jtyr> albertom: exactly!
+15:20:34 <albertom> also +1 for the filters :)
+15:20:43 <jtyr> I'm against using lineinfile actually ... it just creates mess! ... never use it!
+15:21:07 <bcoca> i agree, replace is much better
+15:21:12 <bcoca> but template!
+15:21:27 <gundalow> Core has voted: 4x-1 3x+0
+15:21:32 <jtyr> no templates for hosts file!
+15:21:44 <gundalow> Community has voted: 2x+1
+15:21:50 <jtyr> +1 from me as well
+15:21:53 <akasivel> I template hosts and much prefer that
+15:22:01 <gundalow> jtyr: I counted you :)
+15:22:03 <albertom> lol are you allowed to vote for yourself?
+15:22:09 <bcoca> albertom: yes
+15:22:17 <bcoca> its actually implied
+15:22:20 <jtyr> akasivel: with this module you don;'t have to create the template file ...
+15:22:27 <gundalow> though if jtyr voted -1, we move onto the next topic :)
+15:22:40 <thaumos> of course!  I'm sure there were multiple votes by a single president recently.
+15:22:49 <rcarrillocruz> lol
+15:22:57 <akasivel> I don't believe it necessary and I personally wouldn't use it. -1 from me
+15:23:27 <gundalow> OK, we we are not accepting it
+15:23:44 <gundalow> So the question now is: Would a filter be useful?
+15:23:58 <jtyr> using etc_hosts module is less work than using template module + template file ... what's so difficult to understand on that?
+15:24:46 <albertom> if you use ansible to manage lots of machines, you want all of the to have the same config so template would do, etc_hosts only has value when you want to add/remove entries to an already customized /etc/hosts
+15:24:57 <akasivel> My opinion is it recommends poor practice, of not managing the file as a whole.  The same problems I generally have with lineinfile and replace for that matter
+15:25:26 <gundalow> So their is nothing to stop you using the module yourself
+15:25:49 <shertel> not too familiar with our filters but does https://github.com/ansible/ansible/blob/4a57cba86d7de89aaae03e78ee5d4d87be79518e/lib/ansible/plugins/filter/ipaddr.py basically do what we need?
+15:25:53 <gundalow> or putting it in Galaxy
+15:25:55 <bcoca> akasivel: i dont disagree, this is where jtyr has a point (not the shell reductionist thing) in that we already have modules with lower bar, i just want to raise that bar
+15:26:06 <akasivel> I also don't recommend complicated or heavily populated hosts files.  Use DNS
+15:26:16 <jtanner> ^ i wish
+15:26:44 <akasivel> new Ansible dev motto "raise the bar!"
+15:26:53 <gundalow> For the purpose of keeping the meeting moving I'm moving onto the next topic at :30 as I don't believe we are getting anywhere
+15:26:58 <jtanner> "lower the foo" ?
+15:27:12 <gundalow> Though I'm happy if people think we *should* continue, just say
+15:27:29 <albertom> I have a PR on my own :)
+15:27:38 <jtyr> etc_hosts module is great for development if you just want to add few hosts and then forget about it ... then it's simpler to use one module only than the template module and have to create template file ...
+15:27:41 <bcoca> jtyr: i do think your module is useful and plenty of people will want it, i just want to reduce the crazyness in ansible/ansible
+15:27:44 <akasivel> gundalow lets move
+15:27:50 <gundalow> akasivel: Thanks
+15:28:05 <allanice001> +1 to moving along
+15:28:31 <jtyr> bcoca: let the community to support that module and you have no additional work ...
+15:28:45 <bcoca> jtyr: you can distribute it through galaxy in role for now, i'm working on making it easier to install/share custom plugins w/o having to put in ansible/ansible
+15:28:58 <gundalow> #info Although we have modules that are aren't as good we are continually learning from what we've done in the past and trying to raise the bar
+15:28:59 <abadger2000> buenos dias
+15:29:01 <albertom> bcoca: thats nice
+15:29:10 <bcoca> jtyr: in a perfect world, sadly people expect us to support everything in asnible/ansible .. that is not scalable
+15:29:12 <jtyr> shame on all of you who voted -1 or 0! ... ;o)
+15:29:15 <gundalow> #info [15:28] <@bcoca> jtyr: you can distribute it through galaxy in role for now, i'm working on making it easier to install/share custom plugins w/o having to put in ansible/ansible
+15:29:41 <bcoca> jtyr: im ashamed of many things (writing php, vb, etc) but not of this
+15:29:45 <albertom> abadger2000: que tal bien hombre?
+15:29:55 <rcarrillocruz> vb!
+15:29:57 <gundalow> ok, I'm moving on
+15:30:00 <gundalow> ............................................
+15:30:00 <gundalow> ............................................
+15:30:01 <gundalow> ............................................
+15:30:15 <gundalow> #topic ansible/ansible#19297 Fix for wildcards inside of a path for fileglob lookup (ie: with_fileglob: "/tmp/*/some.conf")
+15:30:27 <gundalow> #link https://github.com/ansible/community/issues/150#issuecomment-277029768
+15:30:36 <bcoca> i have not had time to look at that code
+15:30:38 <gundalow> #link https://github.com/ansible/ansible/pull/19297
+15:30:40 <gundalow> OK
+15:30:52 <gundalow> bcoca: should I park till next meeting?
+15:30:57 <bcoca> that needs to be supervised like a sex offender in a kindergarden
+15:31:13 * gundalow doesn't minute that
+15:31:23 <gundalow> #action bcoca to review https://github.com/ansible/ansible/pull/19297
+15:31:49 <abadger2000> albertom: I'm doing well, hope you are too :-)
+15:31:56 <gundalow> #topic ansible/ansible#20440 valid directives on include (for execution or inheritance)
+15:32:03 <bcoca> jimi|ansible: ?
+15:32:07 <gundalow> #link https://github.com/ansible/community/issues/150#issuecomment-277030715
+15:32:07 <abadger2000> (For the record, I'm +1 on jtyr's moduile)
+15:32:14 <gundalow> #link https://github.com/ansible/ansible/issues/20440
+15:32:24 <gundalow> abadger2000: noted
+15:32:28 <jtyr> abadger2000: thanks! ;o)
+15:32:29 <jimi|ansible> looking
+15:32:54 <bcoca> jimi|ansible: issue is not as much the problem as the implication of what is inhertited and what isnt
+15:32:58 <bcoca> ^ ticket
+15:33:06 <jimi|ansible> actually bcoca, you don't know if the include is dynamic in the preprocess either
+15:33:09 <bcoca> we dont have clear rules or docs
+15:33:15 <jimi|ansible> has to be caught in helpers.py
+15:33:37 <bcoca> ^ i was including helpers as 'preprocess'
+15:33:51 <bcoca> as in, they happen on 'compile time' vs 'runtime'
+15:33:51 <jimi|ansible> i haven't read jtyr's proposal, but to me the notify statements should be inherited
+15:34:03 <gundalow> #info issue is not as much the problem as the implication of what is inhertited and what isnt
+15:34:17 <gundalow> #info we dont have clear rules or docs
+15:34:19 <bcoca> jimi|ansible: the  underlying issue is we dont have clear list of what does get inherited or not (i agree on notify)
+15:34:37 <jimi|ansible> either that, or helpers.py should send the notification if it's brought in statically
+15:34:41 <bcoca> imo everything not 'consumed' should be inhertited
+15:34:54 <jimi|ansible> i believe it triggers the notification when dynamic?
+15:35:04 <gundalow> So is it a document then add tests to ensure (and defend) that is the case?
+15:35:11 <bcoca> jimi|ansible: it would if changed_when
+15:35:20 <bcoca> includes, by nature, dont return changed
+15:35:28 <jimi|ansible> ok, so two bugs then
+15:35:42 <bcoca> yes, for that ticket, but what i wanted to discuss was the deeper issue
+15:36:19 <bcoca> that ticket just shows one of many examples in which inheritance is not clearly defined
+15:36:43 <jimi|ansible> that's because really there's only two things that are inherited from roles and includes - tags and conditionals
+15:36:57 <jimi|ansible> and variables
+15:37:11 <jimi|ansible> so three things :)
+15:37:27 <bcoca> when
+15:37:43 <bcoca> but does it also inherit change_when/failed_when?
+15:37:50 <bcoca> loops are 'inherited' when static
+15:38:14 <bcoca> become?
+15:38:17 <bcoca> remote_user?
+15:38:30 <bcoca> ^ tons of properties we need to a) decide, b)test/fix
+15:38:56 <bcoca> it also affects blocks
+15:39:17 <bcoca> role/include/blocks when run 'statically' (in case of blocks this is always)
+15:39:29 <jimi|ansible> everything inherits, unless explicitly set not to
+15:39:57 <bcoca> ok, aside from 'name' what do we explicitly set not to?
+15:39:59 <jimi|ansible> really those 3 things above are special cases of inheritence
+15:40:04 <jimi|ansible> vars
+15:40:15 <bcoca> well, there is 'overwrite' and there is 'merge', those 3 are merge
+15:40:31 <jimi|ansible> right, but i think they're explicitly set not to inherit, as we merge them specially
+15:40:52 <bcoca> so 3 categoreies: inherited/inherited merge/not inherited
+15:41:15 <bcoca> ^ we should have table documenting this and then make sure its true (as it seemed not to be with notify)
+15:41:26 <bcoca> ^ also, notify should be 'merged' imo
+15:41:49 <jimi|ansible> well, this goes towards us actually documenting playbook language
+15:41:51 <bcoca> http://docs.ansible.com/ansible/playbooks_directives.html <= fullest list i have
+15:41:53 <jimi|ansible> which we hadn't really done
+15:42:08 <jimi|ansible> yeah there's that list, but it doesn't really show what any of them do or how the inheritence works
+15:42:27 <bcoca> which is why i added this topic to meeting
+15:42:30 <bcoca> that is starting point
+15:44:35 <abadger2000> I'm +1 to documenting things like this.... can't help, though, I haven't the foggiest what it's supposed to be.
+15:45:00 <bcoca> well, that is first question, and i think we mostly agreed 'as much as possible/sane is inheritable'
+15:45:29 <bcoca> then we need to deal with 'mergable' which includes the 3 above, i would add notify to that
+15:45:41 <bcoca> basically anything that is a list ?
+15:45:50 <bcoca> ^ tags/conditionals/notify
+15:46:15 <bcoca> hmm, until?
+15:46:26 <bcoca> delegate_to?
+15:46:50 <bcoca> environment
+15:49:09 <alikins> I would like to see a way to print/dump the info (it's attributes and structure) of a loaded playbook. More or less playbook repr's. To help debug/troubleshoot inheritance
+15:49:09 <gundalow> Are we OK to move on then we can continue at the end. It seems to mainly be a topic for the Core Team and we have other things to cover
+15:49:12 <jimi|ansible> there's a flag on the param as to whether it should be merged or not
+15:49:33 <jimi|ansible> but yeah, i think we can move on, that issue should probably be re-opened and we need another issue for documenting
+15:50:29 <gundalow> jimi|ansible: Thanks
+15:51:05 <bcoca> alikins: hacking/ has script that generates that doc page, mostly by dumping the object structure
+15:51:21 <gundalow> #topic ansible/ansible#20058 Add systemd-nspawn connection driver
+15:51:25 <gundalow> ............................................
+15:51:25 <gundalow> ............................................
+15:51:29 <gundalow> #topic ansible/ansible#20058 Add systemd-nspawn connection driver
+15:51:36 <bcoca> jimi|ansible:   inherit=False,, but that does nto seem to also accoutn for 'merged'
+15:51:50 <bcoca> +1 connectino plugin looks OK
+15:51:51 <gundalow> #link
+15:51:58 <gundalow> #link https://github.com/ansible/ansible/pull/20058
+15:52:13 <gundalow> abadger2000: Looks like this is ready for you https://github.com/ansible/ansible/pull/20058
+15:53:03 <abadger2000> <nod> THanks.  I think I have a window open where I'm looking at the final diff between thhat and chroot.
+15:53:04 <alikins> bcoca: and I have a WIP branch that adds stuff to playbook/*.py to make them easier to serialize and some playbook yaml style dumping
+15:53:19 <gundalow> #action abadger2000 to review https://github.com/ansible/ansible/pull/20058
+15:53:22 <gundalow> Thanks
+15:53:58 <bcoca> alikins: i think i removed the 'serialze' methods from play since we were not using them anymore, but we can continue this convo later
+15:54:02 <gundalow> #topic ansible/ansible#19264. "Added in bullet of Python 2.4+ support discontinuation"
+15:54:07 <gundalow> thaumos: you thee/
+15:54:07 <jimi|ansible> bcoca: it gets a little tricky, the merging is done in get_parent_attribute
+15:54:23 <jimi|ansible> when extend=True
+15:54:24 <gundalow> #link https://github.com/ansible/ansible/pull/19264
+15:54:39 <bcoca> jimi|ansible: discoverable pattern .. so i can make the docs reflect this
+15:54:56 <bcoca> abadger2000: will you merge?
+15:55:47 <gundalow> bcoca: you happy with https://github.com/ansible/ansible/pull/19264/files ?
+15:55:49 <abadger2000> Looks good to me too.
+15:56:24 <bcoca> i'm happy, abadger2000 is ecstatic
+15:57:06 <gundalow> #info Merged
+15:57:07 <gundalow> Thanks
+15:57:22 <gundalow> #topic ansible/ansible#20834 Add swupd plugin
+15:57:24 <gundalow> albertom: Hi
+15:57:28 <albertom> hi
+15:57:38 <gundalow> #link https://github.com/ansible/ansible/pull/20834
+15:57:49 <gundalow> albertom: How can we help
+15:57:54 <albertom> So swupd is the "update manager" for the ClearLinux OS
+15:58:09 <albertom> i would like to have ansible support ClearLinux better
+15:58:40 <albertom> A patch to detect the OS and select "swupd" as a package manager is already in place
+15:58:44 <albertom> i mean merged
+15:58:58 <albertom> only the swupd plugin is missing from ansible/ansible
+15:59:03 <bcoca> -1 to new package managers +1 to suporting distros +1 to suppress my hatred of  yet anothe package manager
+15:59:44 <albertom> yea it doesnt manage packages but bundles =/
+15:59:52 <jtyr> albertom: bcoca will give you -1 because he can see my fingerprints all over your code ... ;o)))
+16:00:01 <bcoca> -1 for semantic game!
+16:00:10 <jtyr> as I said! ... ;o)
+16:00:24 <jtyr> no new packages allower in Ansible ... all must be as a role since now on ... ;o)
+16:00:35 <bcoca> jtyr: i dont have anything against your code, its actually pretty clean, its the overlap in utility
+16:00:48 <jtyr> bcoca alias The Module Killer ... ;o)
+16:00:49 <bcoca> jtyr: its not in ansible, its no new package managers in world
+16:01:01 * bcoca is still goign to have to write ansible-installer  ... ironically
+16:01:16 <bcoca> +1 to merge in concept, have not reviewed PR
+16:01:29 <gundalow> bcoca: Do you have time to review?
+16:01:34 <albertom> is there a chance this can be merged for 2.3 ?
+16:01:40 <bcoca> mebbe
+16:01:45 <gundalow> Getting fairly close to the 2.3 deadline, which is 15th Feb
+16:02:37 <albertom> https://github.com/ansible/ansible/blob/devel/lib/ansible/module_utils/facts.py#L159
+16:02:53 <bcoca> content_url?
+16:03:04 <gundalow> #action bcoca (if he has time) to review the code. albertom knows we are close to the 2.3 cut off, so we can't guarantee it will make it in for 2.3
+16:03:11 <bcoca> manifest?
+16:03:26 <bcoca> ^ i know nothing of swpd itself
+16:03:57 <albertom> it would be a shame to have facter say use swupd module but no swupd module could be found :)
+16:04:22 <bcoca> albertom: sadly we already do that as we can detect more pkgmgrs than we actually support
+16:04:28 <bcoca> same with init systems
+16:04:54 <bcoca> and im not against mergin new package manager module (im against new package managers existing at all)
+16:05:05 <albertom> bcoca: i know swupd is "different"
+16:05:12 <albertom> beggining in the way that it does not manage packages
+16:05:19 <albertom> but collections of packages (bundles)
+16:05:30 <albertom> you can try "docker run -ti clearlinux"
+16:05:33 <albertom> im also in #clearlinux
+16:05:56 <bcoca> just need to figure out the concepts and see how they align with UI
+16:06:40 <albertom> I think the aliases are self explanatory
+16:07:00 <albertom> manifest = version
+16:07:11 <bcoca> see, that was totally not what i infered
+16:07:12 <albertom> bundle = ~package
+16:07:21 <bcoca> so im going to disagree with 'self explanatory'
+16:07:41 <bcoca> it 'might be' to someone familiar with swupd already
+16:07:48 <albertom> im a clearlinux dev so im clearly biased (no pun intended)
+16:08:03 <abadger2000> bcoca: take heart, it's the opposite of yum/dnf.... seems that here, groups are first class citizens and packages are just a piece of implementation ;-)
+16:08:31 <bcoca> i got that with bundle, manfiest seems confusing , no clue what content_url is/does
+16:09:43 <albertom> normally you dont specify the urls so swupd gets the updates from clearlinux.org
+16:09:55 <bcoca> albertom: im not saying its not OK, just need to figure what each thing is, manifest=version helps as i was totally expecting something else
+16:09:58 <albertom> but if you have your custom swupd server (or mixer (i know))
+16:10:07 <albertom> you can tell swupd to get the updates from another place
+16:10:12 <bcoca> ^ it would help having that in descriptions
+16:10:21 <ryansb> more docs more better
+16:10:23 <albertom> manifest is the list of files that certain bundle contains at certain version
+16:10:30 <albertom> so manifest ~= version
+16:11:02 <albertom> leave comments for unclear descriptions and i;ll update with better descriptions today
+16:11:16 <alikins> not having looked at any of the details, that vaguely reminds me of conary
+16:11:27 <bcoca> manifest and content_url, update those with what you explained here and i think we are g2go
+16:11:41 <bcoca> alikins: it is similar at first view
+16:12:09 <abadger2000> contenturl sounds like other package manager's repository.
+16:13:01 <allanice001> contenturl Could be a custom bundle location, or a mirror location, from what I can see
+16:13:08 <albertom> yea, there is no repos... you get all form one source or nothing
+16:13:32 <abadger2000> so what's the difference between name and content_url?
+16:13:40 <albertom> name = bundle
+16:13:49 <albertom> bundle is for example
+16:13:51 <albertom> c-basic
+16:14:01 <albertom> which contains all neccesary packages required to develop c programs
+16:14:09 <bcoca> abadger2000: content_url ~= ppa location
+16:14:10 <albertom> you cannot install just gcc
+16:14:27 <albertom> content_url ~= mirror
+16:14:39 <allanice001> I get it
+16:14:39 <albertom> as i said, you get everything from one source or nothing
+16:14:56 <alikins> (or looking closer, vaguely like ostree/atomic)
+16:15:00 <abadger2000> a ppa location is a repository
+16:15:01 <bcoca> repo url, but more limiting
+16:15:01 <allanice001> For c-basic, you need example gcc, make, and a few more
+16:15:50 <allanice001> name = c-basic; content-url=https://some.location.com/c-basic.bundle if you want to use custom location
+16:15:53 <abadger2000> albertom: it's still counding like a reository to me... but with the caveat that inside of one transaction, there can only be a single repository.
+16:15:57 <abadger2000> Is that accurate?
+16:16:02 <bcoca> albertom: pr looks fine, i advise updating description to clarify concepts for those not familiar with clearos, but im not going to requrie for merge, abadger2000, alikins if you guys want to review code also?
+16:16:51 <albertom> Ill update descriptions and ping you at #ansible-devel
+16:17:12 <alikins> I'll take a look, albeit with 0 clearlinux experience
+16:17:14 <albertom> in a few hours, i need to drive to the office after this meeting
+16:17:26 <abadger2000> k
+16:18:05 <allanice001> technically, the meeting is overrunning, but all in a day's work
+16:18:15 <allanice001> No rest for the mighty gundalow
+16:18:22 <gundalow> #action albertom to review feedback from meeting, continue discussion in #ansible-devel
+16:18:33 <gundalow> allanice001: no rest for the wicked :)
+16:18:42 <bcoca> alikins: as long as code and iface look good, i think we can trust albertom to have tested on clearos
+16:18:43 <allanice001> :D
+16:18:57 <gundalow> #topic ansible/ansible#20703 Fixing broken bind mount on CentOS
+16:18:59 <bcoca> commands seem to match man page
+16:19:04 <gundalow> jtyr: You still their?
+16:19:07 <gundalow> there
+16:19:08 <gundalow> here
+16:19:11 <bcoca> somehwer?
+16:19:32 * gundalow stops before breaking out into Celine Dion
+16:19:32 <abadger2000> I think we sorted the need for meeting in #ansible-devel
+16:19:41 <abadger2000> We can keep it on the agenda to make sure it gets merged.
+16:19:45 <gundalow> should really see a doctor about that
+16:19:53 <gundalow> abadger2000: oh, OK
+16:20:10 <gundalow> #info believe most issues have been resolved. Revisit next week to ensure it's merged
+16:20:45 <gundalow> #topic Open Floor
+16:20:55 <gundalow> So reviewing the agenda, the other things are
+16:21:54 <gundalow> #topic ansible/ansible#13206 Allow specifying Vault password from the environment
+16:22:02 <gundalow> Appologies, I missed one
+16:22:04 <gundalow> mattclay:
+16:22:26 <gundalow> What's needed to progress this?
+16:22:42 <gundalow> agreeding a way forward?
+16:22:59 <mattclay> I think we just need votes from people who weren't participating in the discussion on Slack.
+16:23:42 <mattclay> Well, I guess votes from everyone, since I didn't make a note of the votes we did have.
+16:23:55 <gundalow> What are the options we are voting on?
+16:24:40 <mattclay> Accept or reject the PR to allow setting the vault password from an env var. If accept, I believe we were all in agreement that a runtime warning was needed.
+16:25:11 <ryansb> I'm ok with it, since env vars are a common way for CI/CD systems to expose secrets
+16:25:37 <allanice001> +1 with runtime warning
+16:25:47 <bcoca> -1 cause then we also have to add connection and becoem passwords as envronment variables to keep 'parity'
+16:26:08 <bcoca> aside from generally bad usage of secrets in env vars
+16:26:24 <mattclay> Also, the runtime warning was suggested to not be able to be disabled.
+16:26:35 <gundalow> Is their anything we need to do to avoid passwords being leaked? Do we ever print env?
+16:26:44 <bcoca> ansible_env
+16:27:10 <abadger2000> what's the hierarchy of security?
+16:27:22 <gundalow> abadger2000: in what sense?
+16:27:35 <gundalow> #info Main question is do we allow or not
+16:27:59 <abadger2000> files are best to store secrets that have to be persisted, followed by env vars (not all systems make env vars secrure), and then never use the CLI?
+16:28:11 <abadger2000> because CLI is almost never secure
+16:28:12 <bcoca> abadger2000: basically
+16:28:15 <gundalow> #info Discussion that a runtime warning is needed if this feature is used (most seem to agreed, needs vote)
+16:28:25 <bcoca> -1 to feature at all
+16:28:46 <bcoca> specially since we dont do this for the other secrets, once we introduce 1 we'll have to add the others
+16:28:48 <allanice001> Perhaps also add a step :: os.environ["ANSIBLE_VAULT_PASSWORD"] = ""
+16:28:56 <abadger2000> so it's a question of whether we go from something that we know can be secured everywhere to allowing something that can be secured some places...
+16:29:03 <gundalow> #info If implemented maybe make it impossible for the warning to be disabled
+16:29:36 <ryansb> +1 on feature and warning (ambivalent on making runtime warning un-disable-able)
+16:29:44 <gundalow> allanice001: That's a cool idea
+16:29:46 <bcoca> ^ someone wil ask for removal and that decision might be revoked, i dont consider that a 'softening'
+16:30:05 <abadger2000> Since it's entirely our stuff (not working with an external library/toolset like modules do) I err on the side of security here.
+16:30:08 <abadger2000> -1
+16:30:29 <gundalow> #info < allanice001> Perhaps also add a step :: os.environ["ANSIBLE_VAULT_PASSWORD"] = "". This would may help avoid teh password being leaked
+16:31:14 <mattclay> +1 -- I'm actually at +0.5 I think, but I'll stick to round numbers. :)
+16:31:33 <abadger2000> gundalow: race condition.
+16:31:35 <ryansb> mattclay: votes are ints, sorry
+16:31:54 <abadger2000> gundalow: also.... how are they sticking it into the environment?
+16:32:02 <allanice001> Change my vote to +1 with un-disableable warning and cleanup step if implemented
+16:32:28 <bcoca> there is no way to make the warning 'permanently undisableable'
+16:32:28 <abadger2000> If they're only sticking it into the environment for running ansible, that's fine... if it's in a login script or something then we can't clear the password from every other program.
+16:32:42 <gundalow> #info [16:32] < abadger2000> If they're only sticking it into the environment for running ansible, that's fine... if it's in a login script or something then we can't clear the password from every other program.
+16:32:44 <allanice001> But I also see how this would open the gates for other avenues of passwords being env's being set
+16:32:51 <mattclay> abadger2000: This is for use with CI systems, where CI has already placed it in the env.
+16:33:11 <gundalow> #!/bin/sh
+16:33:12 <gundalow> echo $ANSIBLE_VAULT_PASSWORD
+16:33:17 <bcoca> mattclay: and there is already clear workaround, external to ansible, i dont think we need to add it inline
+16:33:19 <gundalow> ansible-playbook --vault-password-file /path/to/vault_from_env.sh ...
+16:33:19 <gundalow> ￼￼ 1￼
+16:33:24 <abadger2000> mattclay: but we're not going to do a test and say, oh, you're running on travis-ci.org, we'll look for this environment variable...
+16:33:31 <gundalow> mattclay: Would the above be fine with CI?
+16:33:31 <abadger2000> It's a genewral feature and as such can be abused.
+16:33:35 <ryansb> abadger2000: but if they put it in a login script, I don't see how that's Ansible's issue
+16:33:49 <nitzmahone> abadger2000: yeah, that's the point (and contention, I think)- the feature *could* be misused in a way that would expose their vault password, though so could the current impl.
+16:33:50 <abadger2000> ryansb: we create a feature that allows it.
+16:33:54 <bcoca> ryansb: they can use now w/o ansible having to support/secure it
+16:33:59 <gundalow> oh and chmod +x /path/to/vault_from_env.sh
+16:34:01 <ryansb> Everything *can* be used wrong/insecurely though. We let file delete things
+16:34:01 <abadger2000> ryansb: when it' unnecessary to create the feature at all.
+16:34:01 <mattclay> abadger2000: Correct. I was just pointing out what the use case was.
+16:34:15 <abadger2000> "Make easy things easy and hard things possible"..... securtity is a hard thing.
+16:34:20 <nitzmahone> But there's no *clean* way to do it for stuff like Travis where you can't easily/securely place a file.
+16:34:41 <bcoca> nitzmahone: that does not mean we should also 'dirty' ansible handling of secrets
+16:34:42 <allanice001> There are alternatives nitzmahone
+16:34:46 <abadger2000> so if the user has to create a shell script to make this possible... it's possible which I think is fine.
+16:35:09 <abadger2000> It's even relatively simple for a security matter.
+16:35:21 <nitzmahone> I do agree w/ bcoca in that if we do it for vault, others are sure to follow
+16:35:21 <bcoca> this feature is NOT a requirement for CI to work, as there is clear alternative in ticket
+16:35:25 <ryansb> Yeah, fair. It's a 1 line shell script
+16:35:29 <abadger2000> not like having to create a new ssl CA cert and install it on your system, for instance.
+16:35:31 <mattclay> gundalow: Having an executable script to echo the env var works, it's just extra steps. Both were already mentioned on the PR.
+16:35:51 <gundalow> mattclay: yup, I was wondering what the PR gives us over that
+16:36:06 <bcoca> gundalow: 1 less file
+16:36:15 <allanice001> https://docs.travis-ci.com/user/private-dependencies/
+16:36:18 <gundalow> If you are already doing stuff with ENV then you are already having to do some changes
+16:36:44 <bcoca> i see many drawbacks for little reward
+16:36:53 <alikins> I have an old branch that starts generalizing the mechanism for vault 'secrets' a bit at https://github.com/ansible/ansible/compare/devel...alikins:vaults_secrets_more
+16:37:04 <gundalow> This doesn't seem to be a case of zero to five steps (e.g it doesn't work out the box)
+16:37:07 <gundalow> -1
+16:37:15 <bcoca> alikins: that is not only problem, once we accept 1 secret as envvar it wont make sense we dont accept all
+16:37:35 <allanice001> Agree with bcoca here
+16:38:05 <bcoca> for me its clear, there is trivial workaround, this opens several cans of worms we dont really need to deal with
+16:38:15 <gundalow> bcoca: +1
+16:38:41 <ryansb> alright, sounds like a decision, I count -4 +2
+16:38:58 <ryansb> or +1.5 if we allow `float` votes
+16:39:06 <gundalow> #agreed Rejected, use work around
+16:39:24 <gundalow> #topic Open Floor
+16:39:31 <gundalow> Anyone got anything else?
+16:39:43 <bcoca> https://github.com/ansible/community/issues/152
+16:39:55 <bcoca> ^ but we can punt till next week, late already
+16:40:06 <bcoca> nitzmahone:  ^ you might want to red taht
+16:40:15 <nitzmahone> Yeah, I did
+16:40:35 <gundalow> nitzmahone: You want to talk about that now or next week?
+16:40:38 <gundalow> (or never)
+16:40:45 <nitzmahone> Nah, next week or offline is fine
+16:40:49 * gundalow hides fro Mr Wieers
+16:40:57 <gundalow> Cool
+16:41:04 <gundalow> Closing shortly
+16:41:12 <allanice001> Nothing should prevent community from having these in ansible-devel
+16:41:43 <allanice001> just my 5 cents
+16:41:56 <gundalow> +1
+16:42:35 <ryansb> back in my day it was only 2 cents
+16:42:51 <gundalow> jimi|ansible: Testing Working Group starts in 15 mins, so I'm not sure if you want to continue your chat in #ansible-devel or Slack (it seemed to be mainly core people talking)
+16:42:59 <allanice001> yeah, but with the exchange rate ......
+16:43:24 <gundalow> penny for your thoughts, I'll give you my five cents
+16:43:31 <gundalow> aaaaaaaaaaaaaaand we are done
+16:43:37 <gundalow> Thank you everyone
+16:43:53 <gundalow> As always add stuff onto https://github.com/ansible/community/issues/150
+16:43:59 <gundalow> #endmeeting

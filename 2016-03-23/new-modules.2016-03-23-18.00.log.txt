@@ -1,0 +1,462 @@
+18:00:08 <gregdek> #startmeeting new-modules
+18:00:08 <zodbot> Meeting started Wed Mar 23 18:00:08 2016 UTC.  The chair is gregdek. Information about MeetBot at http://wiki.debian.org/MeetBot.
+18:00:08 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+18:00:08 <zodbot> The meeting name has been set to 'new-modules'
+18:00:16 <gregdek> #chair rbergeron
+18:00:16 <zodbot> Current chairs: gregdek rbergeron
+18:00:23 <gregdek> #chair jimi|ansible
+18:00:23 <zodbot> Current chairs: gregdek jimi|ansible rbergeron
+18:00:30 <gregdek> #topic Roll Call
+18:00:37 <gregdek> So, who's around? :)
+18:00:40 <Shrews> exciting
+18:00:46 <gregdek> I'll give folks a couple of minutes to say hi.
+18:00:46 <chouse> here
+18:00:57 <newtMcKerr> here
+18:01:04 <misc> hi
+18:01:15 <misc> (but likely going home soon)
+18:01:33 <nitzmahone> yo
+18:01:49 <Jmainguy> im arrrrround
+18:01:57 <Jmainguy> your all fired
+18:02:02 <Jmainguy> make ansible great again
+18:02:32 <gregdek> w00t :)
+18:02:45 <jimi|ansible> (;_;)
+18:02:51 <gregdek> ok.
+18:03:03 <gregdek> #topic discussion of goals and process
+18:03:08 <gregdek> All right, so.
+18:03:17 <gregdek> Here's what I'd like to propose.
+18:03:54 <gregdek> We use this time to look at modules that are "close to ready" for some definition of close to ready.
+18:04:09 <gregdek> We look for:
+18:04:18 <gregdek> * Duplications of functionality (does some other module do this?)
+18:04:24 <rbergeron> hey ho
+18:04:36 <bcoca> how do we define 'close to ready'
+18:04:37 <jimi|ansible> it's off to modules we go?
+18:04:40 <gregdek> * Really bad stuff (does this module clearly do Very Wrong Things?)
+18:04:45 <gregdek> bcoca: not there yet :)
+18:05:03 <gregdek> Well, actually, let's go there now.
+18:05:19 <bcoca> the 'look for' points, we do that for ALL contribs
+18:05:25 <gregdek> Yep.
+18:05:53 <rbergeron> (sorry i'm late, I thought this was at 19:00 for some reason)
+18:06:00 <bcoca> until now i was using 'shipit' == close to ready
+18:06:15 <bcoca> rbergeron: timezones are hard!
+18:06:18 <gregdek> Basically, I'd like better bot mechanisms to get new modules to "shipit", and this is where we commit to looking at those. I suspect that the "shipit" really *is* "close to ready", and the problem is that we don't get enough new modules to "shipit".
+18:06:19 <misc> rbergeron: it is at 19:00, you are just at the wrong location
+18:06:20 <Jmainguy> rbergeron: you didnt miss much yet
+18:06:26 <gregdek> So bcoca, I think you're mostly right.
+18:06:50 <rbergeron> misc: ;)
+18:06:58 <bcoca> gregdek: so how do we get more modules to 'shipit'?
+18:07:00 * abadger1999 arrives late
+18:07:07 <Jmainguy> abadger1999: unacceptable
+18:07:09 <gregdek> But I'd also like to look at modules that are heavily commented that *don't* make it to "shipit" on a regular basis.
+18:07:12 <bcoca> /kicban
+18:07:51 <bcoca> gregdek: noisy metric, can be a lot of +1 (nice to have but never tried/tested) or lots of back n forth with module having issues
+18:07:52 <sivel> I'm personally not really convinced that a shipit actually means anything
+18:07:56 <gregdek> Well, so an idea for getting more modules to shipit: fix the bot. :)  Two "shipits" == put it in shipit, where we argue out any remaining issues.
+18:08:17 <bcoca> sivel: currently i dont even look at modules in extras unless they have 'shipit'
+18:08:23 <gregdek> You shouldn't!
+18:08:36 <sivel> well might me you should look, but other than that...
+18:08:38 <Jmainguy> well
+18:08:53 <Jmainguy> He doesnt have to, saying he shouldnt is extreme
+18:09:02 <gregdek> My hope is that core never looks at a module in community_review until it gets to "shipit."  (core_review backlog is a separate discussion.)
+18:09:12 <sivel> I actually spend my time looking at PRs with red X's for CI
+18:09:21 <sivel> anyway, slightly off topic
+18:09:24 <Jmainguy> =)
+18:09:29 <gregdek> But good topics for other times :)
+18:09:34 <gregdek> Anyway.
+18:09:50 <Jmainguy> ok, so for extras
+18:09:56 <Jmainguy> who decides whether its core or extras
+18:09:59 <Jmainguy> is all new modules extras?
+18:10:04 <misc> yes
+18:10:15 <Jmainguy> ok, well, that clears that up
+18:10:18 <gregdek> If we made a simple policy -- any new module with two shipits/+1s/etc. (resmo's better new bot checks for all of those) going straight to "shipit" -- would that be ok for people?
+18:10:31 <rbergeron> jmainguy: with a few exceptions, yes.
+18:10:35 <gregdek> (And yes, this is Extras only. New modules straight into core are exceptions.)
+18:10:36 <Jmainguy> gregdek: I would be ok with that
+18:10:43 <abadger1999> at some point we have to start shuffling (for instance, dnf coming into core) but we've got other things to solve first.
+18:11:05 <misc> I think the problem is mostly getting the +1/shipit in the first place, no ?
+18:11:05 <rbergeron> gregdek: is that shipit on the two criteria points as currently written (follows guidelines, worksforme)?
+18:11:18 <Jmainguy> misc: yes
+18:11:19 <gregdek> misc: that's true.
+18:11:38 <bcoca> does script account for 'revise after shipit'?
+18:11:40 <gregdek> Which is why I would also say that we need a second criteria to review modules on a regular basis.
+18:11:50 <bcoca> ^ many times i have to 'send back' things that were in 'shipit'
+18:12:12 <Jmainguy> unless the dev / community member is advocating hard to get a module shipits, then it gets ignored
+18:12:17 <rbergeron> bcoca: any pattern around why?
+18:12:18 <gregdek> bcoca: we could work that out. For new PRs, it'll be tricky, but we may just remove "shipit" comments when revisions are required.
+18:12:37 <misc> that kinda sound like the fedora review issue (that we didn't really solved so far)
+18:13:01 <Shrews> you put a lot of trust into assuming "shipit" comes from a reliable source if you're going to use that for a bot to tag a module. i could see people gaming that, but i have no better solution in mind
+18:13:30 <jimi|ansible> could the bot record the SHAs present in commits on the PR and take action when those have changed?
+18:13:33 <bcoca> rbergeron: mostly cause it was missing things or needed rebase or was incorrect (small percentages  of 'shipit' should have never gotten label)
+18:13:34 <Jmainguy> there was some drama with unarchive for example, where the author created 3 more modules to break functionality out, got dissapointed in what he believed was people not caring / ignoring, and closed this PR's
+18:13:40 <gregdek> So this meeting would become: (1) go over shipits, (2) go over some other modules that aren't in shipit but meet some other criteria (oldest, most commented. or whatever we decide)
+18:13:49 <misc> Shrews: but worst case of gaming is that we ship modules that are suboptimal
+18:13:51 <jimi|ansible> ie. when it's in shipit and the SHA's change the shipit should be removed and community_review re-added
+18:14:05 <misc> so maybe accepting them in some staging state or something, like this is done for the kernel ?
+18:14:14 <Jmainguy> Shrews: it still gets reviewed before actually getting merged
+18:14:22 <Jmainguy> Shrews: shipit just means its ready for that final review
+18:14:32 <Shrews> Jmainguy: fair point
+18:14:35 <Jmainguy> gregdek: ^^ right?
+18:14:38 <jimi|ansible> Jmainguy: yes
+18:14:39 <misc> I am not sure the problem is having bugs more than setting expectation of users that there will be bug and no warranty regarding stability
+18:14:42 <gregdek> Yep.
+18:14:47 <bcoca> Shrews: as i mention above, i send a few 'back'
+18:15:05 <gregdek> misc: at some point, Extras will break out from Core for that reason. That separation will help to level-set users.
+18:15:07 <jimi|ansible> shipit means we as the core team (or others we've given commit access to) do a review of the code quality, not functionality
+18:15:22 <gregdek> But we still seek to keep quality reasonably high. We just accept a bit more risk.
+18:15:38 <bcoca> jimi|ansible: i disagree on that, i have sent PRs back cause the functionality was wrong, one way or another
+18:15:42 <misc> gregdek: I fear that this will end like Fedora did, with extras getting more community people, and so potentially higher quality/number of package because the barrier to entry is lower
+18:15:46 <bcoca> ^ mostly overlaps with other modules
+18:15:48 <resmo> hi
+18:15:54 <jimi|ansible> bcoca: then that's a failing of the module owner that gave it a +1
+18:16:05 <Jmainguy> misc: oh, most definitly
+18:16:13 <gregdek> misc: that's a good problem to have. :)
+18:16:17 <bcoca> jimi|ansible: true, but plenty of those
+18:16:23 <misc> gregdek: true :)
+18:16:34 <bcoca> misc: WE WISH!
+18:17:09 <gregdek> OK, so do we kind of agree on method?
+18:17:15 <Jmainguy> yes
+18:17:20 <Jmainguy> I do anyways
+18:17:29 <jimi|ansible> misc: if that happens, then we just remerge all modules into one repo and level the barrier to entry
+18:17:39 <jimi|ansible> or at least that's what i'd do :)
+18:17:50 <gregdek> ok, so I'll make a few agrees, and if anyone disagrees, I'll undo them. :)
+18:17:59 <newtMcKerr> yeah, want to avoid the thing that misc brought up, but it’s something that can get backed down on later
+18:18:27 <jimi|ansible> gregdek: +1
+18:18:31 <gregdek> #agreed this meeting will be (1) reviewing new modules in shipit, and (2) reviewing new modules that are old/stuck/some criteria tbd.
+18:18:58 <gregdek> #agreed prbot will be improved to put all PRs with two shipits/+1s/etc. into "shipit" state
+18:19:05 <misc> I wonder if we could be inspired from gentoo/AUR, regarding testing and giving feedback, like having some kind of module marketplace and people giving enough feedback on what work and what do not (and also, what is used)
+18:19:24 <gregdek> misc: some interesting ideas here.
+18:19:31 <gregdek> "what is used" we might be able to derive from galaxy.
+18:19:33 <misc> ie, I suspect people for now do not test new modules because that manual to find the right PR, get the file, stick it in the right place and use it
+18:19:56 <misc> (and we are not at the time where it start to eat your brain)
+18:20:14 <gregdek> we probably need a better "how to test a PR" docs, but github actually does a pretty good job with this.
+18:20:25 <jhawk> misc: yes, testing new modules is slow going.
+18:20:30 <gregdek> At some point, though, we just have to assume that people who give "shipits" are doing so in good faith.
+18:20:38 <bcoca> ^ galaxy
+18:20:51 <rbergeron> gregdek: I guess the assumption we make though is that people even know that there is a new module available to test.
+18:20:53 <jhawk> I keep meaning to script the branch - fetch pr steps for testing.
+18:21:06 <gregdek> jhawk: share when you do :)
+18:21:11 <rbergeron> easy to test a PR ... if you know it's there.
+18:21:19 <jhawk> will do unless anyone else has automated
+18:21:31 <misc> jhawk: I think using hub or some github helper could help
+18:21:38 <gregdek> rbergeron well, we can carpet bomb the world with emails, or...? how do we solve that issue?
+18:22:04 <jimi|ansible> a weekly email to ansible-devel?
+18:22:08 <jimi|ansible> gregdek: ^
+18:22:10 <misc> regular blog post of the module to test of the week
+18:22:27 <misc> and some goodies to people who tested 1 module every week for 8 weeks
+18:22:32 <gregdek> jimi|ansible: yep. could be easily automated. But do we just send a list of 150+ modules? :)
+18:22:36 <jimi|ansible> "These modules are ready for merging, test them out and give them a +1"
+18:22:45 <jimi|ansible> we don't have 150 in shipit
+18:22:48 <jimi|ansible> (i hope)
+18:22:53 <bcoca> 9 or 12
+18:22:56 <gregdek> Oh, I was talking about getting them to shipit.
+18:23:11 <gregdek> I would presume that testing is what actually gets something to shipit. :)
+18:23:16 <jhawk> new_module label more interesting for discovery than shipit
+18:23:18 <resmo> gregdek: ack
+18:23:29 <jimi|ansible> yeah, new_module in that case
+18:23:41 <jimi|ansible> anything with new_module < 7 days old
+18:23:48 <bcoca> ^ sadly i've seen many a +1 or shipit in which poster had not tested
+18:23:53 <gregdek> And a link to "all the old other ones?"
+18:23:59 <Jmainguy> bcoca: <----
+18:24:00 <jimi|ansible> sure
+18:24:06 <resmo> gregdek: I would say if new modules would provide some "output" I can see they tested it (...) that would make me more like "shipit"
+18:24:09 <gregdek> bcoca: not much we can do about that ultimately, though, except embarrass people when it happens.
+18:24:10 <Jmainguy> bcoca: But I did state I didnt test it
+18:24:33 <bcoca> Jmainguy: not complaining about those that actually state it
+18:24:38 <Jmainguy> ah, gotcha
+18:24:42 <gregdek> We should revoke shipits from people who don't test, LOL
+18:24:48 <bcoca> but still, not very helpful for a merge
+18:24:55 <Jmainguy> gregdek: thats an interesting idea
+18:24:56 <gregdek> "I didn't test, but shipit!" "Yeah, no, that's not how it works."
+18:25:09 <misc> so instead of +1, saying "tested" and "reviewed" ?
+18:25:11 <Jmainguy> gregdek: right now, you look for 2 shipits from module authors, but I imagine you arent actually checking if they are module maintainers
+18:25:17 <gregdek> We aren't.
+18:25:28 <misc> (but then, if we ask to people to give more feedback or a more complex feedback might be causing more trouble)
+18:25:31 <gregdek> Actually, we're not looking for 2 shipits from module authors at all.
+18:25:39 <gregdek> We're looking for 2 shipits from anybody.
+18:25:51 <Jmainguy> ah cool, must have made up the module author thing
+18:26:04 <gregdek> We could reintroduce the "only shipits from module maintainers matter," but I don't think that's actually that useful.
+18:26:19 <rbergeron> gregdek: also, +1 on "that's what this meeting is for"
+18:26:23 <gregdek> Yep!
+18:26:30 <bcoca> i've been taking x2 'works for me' as shipit
+18:26:44 <rbergeron> gregdek: maybe carpetbomb with emails. maybe weekly blog post about what we're reviewing this week.
+18:26:46 <gregdek> bcoca: the bot should be able to do that for you (and I think does now)
+18:26:46 <resmo> gregdek: so maybe that's the point, 2 shipits from anybody or good tests output from author?
+18:26:48 <bcoca> ^ merged a few of those even if bot had not marked
+18:26:56 <newtMcKerr> yeah, I don’t like narrowing the shipits so much.  I’d rather the “can lose shipit” model from above, however that might work
+18:27:10 <newtMcKerr> to only maintainers I mean?
+18:27:19 <gregdek> So I think weekly notification is "these are new modules this week, for older modules see this link".
+18:27:23 <gregdek> Make sense?
+18:27:27 <rbergeron> gregdek: yes
+18:27:47 <Jmainguy> what about praising reviewers at the same time
+18:27:55 <Jmainguy> ie, jimbo reviewed 30 modules last week
+18:27:58 <Jmainguy> etc etc
+18:28:03 <misc> yeah, good idea
+18:28:07 <Jmainguy> top ten reviewers for last week
+18:28:12 <gregdek> So long as we can get that data relatively easily.
+18:28:43 <bcoca> github has no karma
+18:28:51 <bcoca> ^ seems to be what we need for this
+18:28:52 <jimi|ansible> and karma didn't help much with galaxy
+18:28:53 <misc> bcoca: it does now for comment, no ?
+18:29:11 <misc> but that's not per bug
+18:29:17 <misc> s/bug/issue/
+18:29:28 <gregdek> Which I guess we could query "top commenters on all new_modules"
+18:29:48 <resmo> gregdek: the bots :)
+18:29:54 <gregdek> resmo: yes :)
+18:29:56 <misc> https://github.com/blog/2119-add-reactions-to-pull-requests-issues-and-comments
+18:29:59 <gregdek> Yet Another Bot!
+18:30:29 * resmo is off, kids...
+18:30:29 <gregdek> resmo is our new Bot King. All hail the Bot King!
+18:30:32 <misc> soon, this will end like kubernetes, where you post a comment and 15 bots discuss together :p
+18:30:36 <gregdek> thx resmo :)
+18:30:47 <abadger1999> thanks resmo !
+18:30:55 <jimi|ansible> lol
+18:31:03 <gregdek> OK, so:
+18:31:07 <rbergeron> We can have ansibullbot and AuntSibylBot have nice chitchats.
+18:31:11 <jimi|ansible> PRs are becoming the next Turing test
+18:31:40 <bcoca> lets focus, need something productive out of this meeting
+18:31:51 <gregdek> #action gregdek will arrange to send weekly new module report to ansible-devel
+18:32:40 <gregdek> https://github.com/ansible/community/issues/51
+18:32:47 <gregdek> So.
+18:33:01 <gregdek> Shall we actually try to review some new modules in shipit? :)
+18:33:12 <gregdek> Because now we get into the criteria.
+18:33:31 <jimi|ansible> do it
+18:33:42 <jimi|ansible> oldest to newest please
+18:33:46 <bcoca> i go over them during 'triage day' do we want to shift that to 1/week instead?
+18:33:48 * gregdek goes to find the right link
+18:34:12 <gregdek> Actually, let's discuss that.
+18:34:13 <bcoca> https://github.com/ansible/ansible-modules-extras/issues?q=is%3Aopen+sort%3Acreated-asc+label%3Ashipit
+18:34:26 <bcoca> ^ sort is by 'oldest issue' not by 'oldest shipit label'
+18:34:29 <gregdek> When is "triage day" and what does it entail, and who participates?
+18:34:47 <bcoca> gregdek: each day for core team member, i do mondays
+18:34:49 <jimi|ansible> bcoca: correct, i'm fine with that (and github can't do anything smarter)
+18:35:02 <bcoca> gregdek: don't always get the whole list
+18:35:23 <gregdek> So maybe new module review is a separate kind of review, and done in a way that we can improve the criteria so they're clearer and more people can do it?
+18:35:57 <gregdek> And maybe you could walk us through some PRs and say "rejecting because x or y" and we can write those down?
+18:36:36 <gregdek> Because if so, the first one would be:
+18:36:37 <gregdek> https://github.com/ansible/community/issues/51
+18:36:48 <gregdek> #topic Actual Reviewing!
+18:37:29 <gregdek> So looks like bcoca is actually reviewing as we speak. :)
+18:37:42 <misc> because bcoca is a review machine
+18:37:44 <bcoca> https://github.com/ansible/ansible-modules-extras/pull/132 <= good example of 'not really shipit'
+18:38:05 <jimi|ansible> uh... https://github.com/ansible/ansible-modules-extras/pull/1617 <- needs to have shipit removed
+18:38:34 * jimi|ansible goofed and clicked on the last one ignoring the sorting order
+18:38:42 <Jmainguy> bcoca: why is that not really shipit
+18:38:55 <bcoca> also, need to mention, additonal lables like bugfix/feature/docs will help us triage faster
+18:39:04 <gregdek> Can we talk about these one at a time?
+18:39:17 <bcoca> Jmainguy: useless code, change of default options w/o reason and w/o adding required fields for the change
+18:39:19 <gregdek> It would be nice to pick one PR and say "this is / is not shipit because x."
+18:39:28 * abadger1999 agrees -- that will help other people understand what to look for when they review
+18:39:31 <bcoca> ^ added comments to PR
+18:39:35 * gregdek looks.
+18:39:58 <rbergeron> Especially since it would be nice to eventually have something people can look at to know common reasons why things don't get merged.
+18:40:00 <bcoca> he, down to 5
+18:40:21 <gregdek> bcoca: slow down chief. Stay with us. :)
+18:40:25 <Jmainguy> lol
+18:40:31 <bcoca> rbergeron: ^ from ticket above, if requried=false, you need default, that is already in instructions
+18:40:46 <gregdek> Yep. So that is objective.
+18:40:58 <gregdek> But useless code is subjective, yes?
+18:41:08 <gregdek> Or at least not easily quantified.
+18:41:13 * jimi|ansible commented on 1617 and changed tags
+18:41:51 <abadger1999> gregdek: it's not in the guidelines but it is objective:
+18:41:51 <gregdek> So when we change tags, are we notifying submitters about what they should do next?
+18:41:55 <bcoca> gregdek: code is doing a test and assignment that already happened in spec
+18:41:56 <abadger1999> The arg spec has this:  +            default_zone=dict(required=False, default=None),
+18:42:10 <jimi|ansible> gregdek: we should be leaving comments in general yes
+18:42:16 <jimi|ansible> especially with the needs_ tags
+18:42:20 <bcoca> i always leave comments
+18:42:23 <abadger1999> So the argument parsing will do exactly the same thing that the section bcoca highlighted as redundant does
+18:42:29 <gregdek> So this is where the bot helps.
+18:42:33 <bcoca> unless very clear (like 132 commits from other sources and needs_rebase)
+18:42:51 <gregdek> Because the bot gives clear instructions: "please fix this and when you're done comment "ready_for_review"".
+18:42:53 <bcoca> ^ or merge conflict
+18:42:56 <jimi|ansible> bcoca: yeah, my comment was more towards being helpful in cleaning that up
+18:43:15 <Jmainguy> bcoca: do you see a need for a hard rule on # of commits
+18:43:15 <gregdek> So would it be reasonable to ask reviewers to use bot comments instead of changing states directly?
+18:43:34 <Jmainguy> I personally love the 1 commit per PR, but I feel bad asking newbies to squash their commits
+18:43:37 <jimi|ansible> i held off on closing that issue, but it will need to be resubmitted as a new PR, unless someone knows a method of resubmitting a PR when the source branch changed
+18:43:38 <bcoca> Jmainguy: not really, squashing helps cherry picking and keeping things clean
+18:43:47 <bcoca> but i dont 'require' it
+18:44:03 <gregdek> jimi|ansible: then go ahead and close it and ask for that, I would say.
+18:44:03 <bcoca> jimi|ansible: force push
+18:44:04 <rbergeron> gregdek: I think wehave to get reviewers to do bot comments intead of changing states if we want consistency.
+18:44:16 <bcoca> force push will 'resubmit it'
+18:44:22 <jimi|ansible> bcoca: the source branch changed, he'd have to force push from feature_branch -> devel
+18:44:26 <jimi|ansible> that won't work
+18:44:38 <bcoca> jimi|ansible: cherry pick locally and force push from there
+18:45:08 <jimi|ansible> Jmainguy: from my perspective, i'd love PRs to almost exclusively be one commit, it really makes it a PITA when cherry-picking for stable releases when i miss one because i didn't know it was related to some other body of work
+18:45:10 <rbergeron> gregdek: otherwise things either fall through cracks, or people just don't pick up the habits by example
+18:45:40 <jimi|ansible> bcoca: yeah, that could work but any futher rebases against devel and they'd have the same problem
+18:45:54 <bcoca> rbergeron: i would put the 'bot responses' in the templates dir (also remove the ones we dont want to use)
+18:46:15 <bcoca> jimi|ansible: no, they just need to rebase their local branch
+18:46:16 <gregdek> bcoca: they are, one sec
+18:46:23 <jimi|ansible> they could stash the commit somewhere and fix devel, and then cherry-pick the commit back to devel and force-push
+18:46:28 <bcoca> gregdek: last i checked they were hardcoded in script
+18:46:29 <abadger1999> jimi|ansible: We aren't very likely to cherry-pick a new module over though as we consider those to be new features.
+18:46:30 <rbergeron> bcoca: yeah, along with "what the labels mean" is on the list.
+18:46:37 <gregdek> https://github.com/ansible/ansibullbot/tree/master/templates
+18:46:43 <gregdek> Fixed thanks to resmo :)
+18:46:51 <gregdek> bcoca: ^^
+18:47:04 <bcoca> ah, good, he read my mind in the past!
+18:47:08 <bcoca> resmo++
+18:47:18 <gregdek> It helps to have an actual developer writing this stuff, lol
+18:47:37 <gregdek> Anyway.
+18:47:47 <gregdek> So we just took some things out of shipit.
+18:48:15 <nitzmahone> ^-- should we just delete the shipit comment to do that?
+18:48:18 <gregdek> That means we need to redact the "shipit" comments so the bot doesn't throw up.
+18:48:31 <bcoca> delete? overwrite?
+18:48:32 <gregdek> Remove or redact, one. :)
+18:48:34 <Jmainguy> could you cross it out or something
+18:48:44 <Jmainguy> seems a shame to lose convo history
+18:48:46 <jimi|ansible> abadger1999: true, i was just talking in general
+18:48:54 <nitzmahone> mmm, markup- guessing the bot will still see "shipit"
+18:49:00 <Jmainguy> true
+18:49:05 <gregdek> So this is a bot problem.
+18:49:09 <jimi|ansible> and a lot of these shipits aren't new modules, they're feature/bug fixes
+18:49:14 <gregdek> Which makes it a process problem.
+18:49:26 <jimi|ansible> actually, are any of these shipit's new modules?
+18:49:30 <gregdek> I'm trying to keep this to "new modules only".
+18:49:45 <jimi|ansible> so we have no new modules in shipit then
+18:49:52 <rbergeron> we aren't storing states or counts in a table anywhere, so it's basically "since the last time somethign happened"
+18:49:55 <rbergeron> ?
+18:49:59 <gregdek> Oh, lol, they're not!
+18:50:04 <Jmainguy> =)
+18:50:04 <jimi|ansible> rbergeron: that was my question earlier
+18:50:04 <gregdek> That's right.
+18:50:15 <gregdek> I assumed and didn't look closely enough at the link.
+18:50:16 <rbergeron> jimi|ansible: i guess i missed that
+18:50:17 <jimi|ansible> the bots should be recording some meta data to compare against, like commit SHAs, etc.
+18:50:41 <jimi|ansible> ie. if something is marked shipit and the SHAs change, it should remove the shipit label and reapply community_review
+18:50:42 <bcoca> most of the shipit are bugfixes/features on existing modules, new modules are rarely there
+18:51:00 <gregdek> OK, so let's move to the next question:
+18:51:03 <bcoca> jimi|ansible: that requires 'central datastore'
+18:51:07 <rbergeron> jimi|ansible: if we get to that point, it will be magical. the bot could be doing lots of things. I am just incredibly thankful to have a bot that works-mostly, and is improving because resmo is our hero.
+18:51:11 <gregdek> What's the next criteria to check for shipits?
+18:51:15 <gregdek> Errr...
+18:51:19 <Jmainguy> bcoca: lots of webscale unsecured mongodb on the interwebs we could utilize =)
+18:51:22 <gundalow> evenin'
+18:51:26 <gregdek> what's the next criteria to check new modules for besides shipit?
+18:51:31 <jimi|ansible> gregdek: i thought it was 2 or more "works for me/+1" type comments
+18:51:35 <rbergeron> jimi|ansible: right now it's just "since the last time soemthing happened", and maybe someday more of webhooks to automagically know that something did happen and trigger some more stuff now.
+18:51:43 <gregdek> jimi|ansible: that's how new modules get into shipit.
+18:51:52 <gregdek> But we also want to knock down the backlog.
+18:51:55 <Jmainguy> gregdek: people that come to this meeting and beg you to look at it, and then after thats done, oldest to newest?
+18:52:05 <Jmainguy> thats my prefered method
+18:52:06 <gregdek> Jmainguy: that could work.
+18:52:07 <bcoca> ^ i actually want bot to erase '+1' comments
+18:52:15 <jimi|ansible> gregdek: ahh ok, so besides shipit
+18:52:19 <gregdek> bcoca: bot treats +1 as shipit.
+18:52:26 <bcoca> also lock issues closed over a week
+18:52:36 <gregdek> Scope creep, LOL
+18:52:40 <rbergeron> jmainguy: I think that's nice, except sucks for anyone who is not conveniently in the timezone
+18:52:50 <bcoca> gregdek: if it has message 'i tested and +1' its ok, i want to remove comments that are only '+1
+18:52:52 <jimi|ansible> is there any other criteria? for extras we said we wouldn't take into consideration things like usefulness or popularity
+18:53:06 <gregdek> bcoca: bots can't parse everything. :)
+18:53:20 * rbergeron thinks that enhancements to the bot above and beyond "get it functioning and make sure we have actual process that works and can be enforced"
+18:53:43 <rbergeron> are kind of ... not a huge priority right this second? :)
+18:53:46 <gregdek> I really think that, when in doubt, we should be looking at "new modules that have been open for a very long time."
+18:53:49 <bcoca> by removing teh 'just +1' we can encourage the users to actually post WHY they +1
+18:53:53 <bcoca> i tested and +1
+18:53:59 <bcoca> i think its good idea +1
+18:54:04 <bcoca> ^ not same
+18:54:10 <gregdek> Well, we can tell the bot to do anything we want, so long as it explains why.
+18:54:16 <Jmainguy> jimi|ansible: at that point, if you know usefulness and popularity, you prolly reviewed it right
+18:54:49 <gregdek> We could, for instance, say "sorry, @wellintentioneduser, but naked +1s are not acceptable, please say 'shipit' instead if you've tested etc."
+18:54:51 <bcoca> Jmainguy: sometimes its obvious from module itself
+18:55:04 <bcoca> pdp10_service_manager
+18:55:32 <jimi|ansible> yeah, like my hue light modules aren't going to be used by thousands of users, they're niche
+18:55:37 <bcoca> ^ lets not make shipit same as +1 either, i would like shipit ALSO to come with a reason
+18:55:41 <gregdek> Sure! Did two people test it? Does it work? Does it follow guidelines? pdp10_service_manager is approved!
+18:55:50 <gregdek> Why?
+18:56:09 <gregdek> "shipit" should implicitly mean "i tested it and it passes guidelines".
+18:56:15 <bcoca> gregdek: cause i believe people are adding 'shipit' w/o testing the module or even reviewing the code
+18:56:26 <gregdek> There's literally nothing we can do about that.
+18:56:35 <bcoca> ^ i have seen several cases of this, ticket i posted above does NOT pass guidlines, for example
+18:56:44 <jimi|ansible> idea: add a new label that means "We're going to merge this in the next module meeting unless someone objects
+18:56:48 <jimi|ansible> "
+18:56:54 <gregdek> But at least you've got a filter to narrow down your workflow. Which is all this stuff can be in the end.
+18:56:55 <bcoca> jimi|ansible: shipit!
+18:57:00 <jimi|ansible> ^ would encourage people to test
+18:57:04 <bcoca> gregdek: true
+18:57:26 <gregdek> And let's be really clear about that: that's why shipit isn't the same as merge.
+18:57:26 <bcoca> jimi|ansible: tthe other way around, we are going to reject this module in next meeting unless someone tests it
+18:57:43 <gregdek> Ultimately, the best we can ever do is to provide you guys with the best possible filter so you're not wasting your time.
+18:57:49 <misc> bcoca: then people are not gonna test, unless that's dead easy
+18:57:53 <gregdek> I prefer bcoca's. :)
+18:57:59 <jimi|ansible> right, if that's what it meant we'd just hit the merge button instedad of labeling it
+18:58:06 <misc> (again, this sound like the problem fedora have with making people test stuff)
+18:58:20 <gregdek> I mean, hey, if a new module gets to a year old and no one has tested it, we can say "someone test this soon or we're killing it."
+18:58:26 <bcoca> or the PR just waits till 'core has time'
+18:58:32 <jimi|ansible> misc: well that's our fault for adopting fedora's model of doing things :)
+18:58:39 <gregdek> Which is core_review :)
+18:58:45 <jimi|ansible> i guess it's inevitable that we'd run into the same gotchas
+18:58:49 <gregdek> Yep.
+18:58:49 <bcoca> gregdek: not in extras
+18:59:01 <gregdek> In extras, it just means "never", lol
+18:59:08 <gregdek> (working on a fix for that)
+18:59:14 <Jmainguy> if yall kill a module because nobody else reviewed it, that would be extremely lame
+18:59:20 <bcoca> gregdek: not never, we do 'sometimes' get around to looking at PRs there
+18:59:23 <Jmainguy> ie, discourage people from contributing
+18:59:25 <gregdek> Even if it sat around for a year?
+18:59:27 <Jmainguy> yes
+18:59:27 <misc> yeah :/
+18:59:32 <bcoca> Jmainguy: i agree, but they 'bitrot' also
+18:59:40 <gregdek> bitrot is my concern too.
+18:59:47 <bcoca> i prefer keeping it open
+19:00:06 <bcoca> closing it cause of 'lack of effort' might not always be right
+19:00:17 <gregdek> So the real key is to make sure that modules that are getting interest are being handled properly.
+19:00:17 <Jmainguy> the lack of effort being, they didnt bug the right people to look at it
+19:00:28 <gregdek> OK, so let me ask this:
+19:00:40 <gregdek> Are we comfortable being the testers/reviewers in this case?
+19:00:41 <bcoca> Jmainguy: or the people that 'want it' dont have the skills to test it
+19:00:45 <Jmainguy> true
+19:00:58 <bcoca> gregdek: dont we always end up being that?
+19:01:06 <misc> or no one want it, but delivering that to someone is rude
+19:01:07 <gregdek> bcoca: for some value of "we".
+19:01:25 <Jmainguy> I can see yall providing feedback, and nothing being done for a year, and then killing it
+19:01:31 <gregdek> Well.
+19:01:36 <bcoca> misc: facts can be hard to take, but it is not really rude to point them out (depends on how)
+19:01:54 <gregdek> We already routinely kill PRs when they are put into "needs_*" and the submitter never acts on them. That's as it should be, I think.
+19:01:55 <Jmainguy> if the original dev isnt going to fixup the concerns found in review, yeah it shouldnt sit around forever
+19:02:00 <bcoca> gregdek: what people have foudn annoying is 'rebase bot' when the ticket isn't getting reviewed
+19:02:05 <gundalow> If someone raises a PR with a new module can we accept the PR into a branch, add/flesh out automated tests (onces the tests have been moved into a-m-core, a-m-extras this is a lot cleaner). Do extra testing then go though manual review process and accepting the new module into ansible-modules-extras?
+19:02:11 <gregdek> bcoca: yes. But that's on us.
+19:02:36 <gregdek> gundalow: that bar is too high for 95% of extras submitters.
+19:02:48 <bcoca> gregdek: is it when 'community review' is the tag?
+19:03:14 <gregdek> bcoca: it is for existing modules because there's a reviewer of record to nag.
+19:03:16 <bcoca> gundalow: that alreayd happens with PRs, travis tests get run
+19:03:16 <gundalow> roughly how many new module PRs are there at the moment?
+19:03:17 <abadger1999> gregdek: I'm not comfortable in the sense that we don't scale to the scope of that problem.
+19:03:19 <gregdek> For new modules, it is not.
+19:03:31 <gregdek> abadger1999: fair enough.
+19:03:40 <gundalow> bcoca: only if the new module has tests?
+19:03:51 <bcoca> 167 'new plugins' in extras
+19:03:57 <gregdek> Yep.
+19:04:01 <bcoca> gundalow: all tests
+19:04:26 <misc> ok, have to go, see you all
+19:04:33 <gregdek> thanks misc :)
+19:04:35 <abadger1999> bye misc !
+19:04:50 <rbergeron> misc: thanks for coming :)
+19:05:22 <gregdek> OK, so this is one of the reasons I say "we should review non-shipit PRs with the most comments" instead of "we should review non-shipit PRs that are oldest".
+19:05:34 <gregdek> Because comments indicate interest.
+19:05:40 <bcoca> https://github.com/ansible/ansible-modules-extras/issues?q=is%3Aopen+sort%3Acreated-asc+label%3Anew_plugin
+19:05:48 <gregdek> At least, they're the best proxy we have.
+19:05:58 <bcoca> ^ by age
+19:06:02 <bcoca> https://github.com/ansible/ansible-modules-extras/issues?q=is%3Aopen+label%3Anew_plugin+sort%3Acomments-desc
+19:06:05 <bcoca> ^ by comments
+19:06:36 <gregdek> OK, so.
+19:06:40 <gregdek> We're past our hour. :)
+19:06:51 <gregdek> But that's ok.
+19:07:15 <gregdek> I think we understand some things and have some ideas.
+19:07:25 <Jmainguy> got to run, thanks for holding the meeting
+19:07:30 <Jmainguy> look forward to the next one
+19:07:34 <rbergeron> gregdek: for future meetings, do we want to include the list of things we will be reviewing?
+19:07:36 <gregdek> Thanks for coming Jmainguy :)
+19:07:37 <gundalow> bcoca: We can talk more about that in 2 hours :)
+19:07:47 <rbergeron> is that the combo of "new modules coming in" + "things we'll be reviewing" all in one mail maybe?
+19:08:05 <gregdek> rbergeron: as soon as we figure it out. It should really be "this list as always" and then it's shipits + most commented, maybe.
+19:08:17 <bcoca> he
+19:08:23 <rbergeron> gregdek: ack
+19:08:42 <gregdek> And that can really go in the single weekly update.
+19:08:49 <gregdek> Which is already on my plate. :)
+19:09:56 <gregdek> ok, I'm gonna wrap up and then we'll flip into community working group meeting.
+19:10:15 <gregdek> Thanks everyone! We'll do it again same time next week!
+19:10:23 <gregdek> #endmeeting

@@ -1,0 +1,316 @@
+16:01:01 <gundalow> #startmeeting Network Meeting
+16:01:01 <zodbot> Meeting started Wed Mar 29 16:01:01 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:01:01 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:01:01 <zodbot> The meeting name has been set to 'network_meeting'
+16:01:20 <gundalow> #chair Pilou rcarrillocruz Qalthos
+16:01:20 <zodbot> Current chairs: Pilou Qalthos gundalow rcarrillocruz
+16:01:26 <gundalow> bah
+16:01:31 <gundalow> sorry Pilou tabcomplete fail
+16:01:42 <st8less> @djustice from NTC here.
+16:01:44 <lanyon> hello
+16:01:52 <Qalthos> hello
+16:01:57 <gundalow> st8less: Welcome
+16:02:05 <gundalow> hi lanyon, you from networktocode?
+16:02:14 <lanyon> yea aka ebeahan :-)
+16:02:47 <gundalow> ah, welcome :)
+16:02:58 <gundalow> Peter (privateip) will be joining shortly
+16:03:11 <gundalow> will just wait for him, and others to join in
+16:03:17 <gundalow> #topic Core Update
+16:03:41 <kennc> hi kcelenza here as well :)
+16:04:51 <gundalow> z3nbr3w: Hi :)
+16:05:17 <gundalow> #info Ansible 2.3 RC2 has been released, RC3 should be out this week
+16:05:30 <z3nbr3w> Hello there! I feel bad, as I wanted to start making this a common thing each week
+16:05:30 <gundalow> #info Thanks to everyone that's been testing and reporting bugs
+16:05:39 <gundalow> #chair privateip
+16:05:39 <zodbot> Current chairs: Pilou Qalthos gundalow privateip rcarrillocruz
+16:05:44 <z3nbr3w> But then I schedule late night maintenance for the past two months
+16:05:45 * privateip waves
+16:05:56 <gundalow> z3nbr3w: no problem at all, Are you from networktocode?
+16:06:19 <Qalthos> #unchair Pilou
+16:06:19 <zodbot> Current chairs: Qalthos gundalow privateip rcarrillocruz
+16:06:25 <gundalow> Qalthos: Thanks :)
+16:06:59 <z3nbr3w> gundalow: I am not
+16:07:25 * skg-net waves
+16:07:29 <gundalow> z3nbr3w: ah, just wondred. Have you had a chance to play with 2.3 yet?
+16:07:32 <gundalow> hi skg-net
+16:07:43 <gundalow> I think that's everyone I was expecting
+16:07:54 <gundalow> Thans for making the time for this
+16:08:08 <gundalow> Ansible 2.3 RC2 has been released, RC3 should be out this week
+16:08:16 <z3nbr3w> gundalow: I have not yet but am looking forward to doing more with it
+16:09:02 <gundalow> cool
+16:09:31 <z3nbr3w> In all honesty, I'm pretty much a fledgling with the nitty-gritty but wanted to start reaching out and gaining experience
+16:09:57 <gundalow> All: So thank for all the feedback so far. From what we've seen once your connection issues are sorted everything seems to be working OK, is that a fair summary?
+16:11:21 <skg-net> We have an issue with the partial output randomly
+16:11:44 <gundalow> skg-net: is that across all dellos versions?
+16:11:52 <skg-net> yes..
+16:12:34 <skg-net> Also, when the output is large, it gets split into multiple items. There is seem to be a issue with the header / data length calulation
+16:12:46 <gundalow> skg-net: OK, keep us posted, as soon as you've got a PR please ping me directly so I don't miss it
+16:13:00 <skg-net> I guess the previous issue is also, related to the header/data length
+16:13:11 <gundalow> Do you believe that's a persistent connection manager issue?
+16:13:11 <skg-net> sure, will do
+16:13:35 <privateip> skg-net: are there issues to track these?  I remember discussing last week but dont recall if there were open issues for tracking purposes?
+16:14:00 <privateip> if there are open issues already we can flag them so they dont get lost in the shuffle
+16:14:13 <kennc> still have ios_banner issue, though I don' think that is netcli related
+16:14:28 <skg-net> not yet :( I am collecting some more data to raise the same..
+16:14:29 <gundalow> kennc: Got a link to that one?
+16:14:37 <privateip> skg-net: thanks
+16:14:52 <gundalow> skg-net: cool, again ping me the links (here or networktocode) and I'll make sure they get tracked correctly
+16:14:55 <privateip> even if you can open a summary issue you can also update it
+16:14:59 <kennc> https://github.com/ansible/ansible/issues/22216
+16:15:03 <privateip> but we should get it opened so it gets flagged
+16:15:16 <skg-net> sure will do it by today
+16:15:25 <gundalow> Thanks
+16:16:06 <privateip> kennc: looks like we are awaiting some response to rcarrillocruz: instrumented code?  does that should right?
+16:16:39 <gundalow> Also #22216 has Milestone 2.4
+16:17:00 <privateip> hmmm we might need to check out rcarrillocruz on status
+16:17:02 <kennc> it had a 2.3 :(
+16:17:28 <rcarrillocruz> yeah, we bumped it cos it didn't have a response for RC2
+16:17:37 <kennc> what?
+16:18:02 <gundalow> #action gundalow to ask rcarrillocruz about #22216. Also need a comment regarding which milestone it's tracking
+16:18:03 <kennc> I got back within 3 works days....
+16:18:51 <rcarrillocruz> right, but i was asked by calfonso to bump it to milestone 2.4 as the day rc2 was flagged we were waiting on response
+16:19:01 <kennc> lol
+16:19:13 <gundalow> ok, so to move it forward, what do we need
+16:19:14 <rcarrillocruz> it's ok, if you are back to work on it w can change it and mark it for 2.3 if we are on time
+16:19:48 <gundalow> the extra detail mentioned in the last comment?
+16:19:54 <gundalow> Anything else?
+16:19:55 <rcarrillocruz> not sure about the lol
+16:20:27 <rcarrillocruz> we were just tracking the p1/p2 intrenally and moved whatever we deedm we didnt have ready for rc2 for 2.4
+16:20:48 <kennc> really confused
+16:21:23 <gundalow> kennc: We only use milestone 2.3 to indicate what should block the release
+16:21:47 <kennc> and if no response in 3 business days, it's deemed not worthy?
+16:22:08 <gundalow> I think they may have been some confusion there
+16:22:22 <rcarrillocruz> no, this is not because you haven't responded in 3 days
+16:22:33 <rcarrillocruz> is because there was no response right before rc2 was flagged
+16:22:56 <rcarrillocruz> it's not about what's deemd worthy or not worthy
+16:23:09 <rcarrillocruz> it's flagged as a P2, so it's deemed witht the appropiate priority
+16:23:17 <rcarrillocruz> just it wasn't on time for our RC schedule
+16:23:19 <rcarrillocruz> makes sense now?
+16:23:34 <kennc> kinda :)
+16:24:08 <rcarrillocruz> not sure what else to say to make it full sense :/
+16:24:27 <kennc> sorry, I understand you
+16:24:37 <kennc> The logic doesn't make sense
+16:24:47 <kennc> updated ticket
+16:25:09 <kennc> but I understand, if those are the rules, then they are the rules
+16:26:02 <gundalow> #chair funzo
+16:26:03 <zodbot> Current chairs: Qalthos funzo gundalow privateip rcarrillocruz
+16:26:19 <gundalow> kennc: Thanks for the update
+16:26:48 <gundalow> ok, so I don't think their is anything else on that
+16:26:59 <gundalow> Keep an eye out for email from GitHub
+16:27:06 <gundalow> and we will try and work out the issue
+16:27:14 <gundalow> which brings me onto
+16:27:25 <gundalow> #topic Debugging issues
+16:27:55 <gundalow> privateip: There have been some questions regarding Paramiko keys
+16:28:07 * gundalow finds the actualquestion
+16:28:48 <gundalow> > Seems odd to me that the same playbook works in 2.2 without needing to explicitly set `look_for_keys=False`
+16:29:10 <privateip> ahhh thanks for the memory reminder
+16:29:38 <privateip> ok so to understand whats going on here i need to chat a bit about the new connection framework
+16:29:52 <privateip> please feel free to interject questions as they arise
+16:30:38 <privateip> with 2.3 we are transitioning to a new connection framework in order to accomplish two major goals
+16:30:58 <privateip> 1) move to a persistent connection over the course of the playbook run; and ..
+16:31:15 <privateip> 2) build the cli connection on a more stable base than it currently is (shell.py)
+16:31:32 <privateip> in order to accomplish both goals
+16:31:46 <st8less> Persistent connections won't help modules that make API calls, right?
+16:31:58 <privateip> we built a new connection plugin call network_cli (found in plugins/connection/network_cli.py if interested)
+16:32:02 <gundalow> dgarros: FYI we are talking about: Seems odd to me that the same playbook works in 2.2 without needing to explicitly set `look_for_keys=False`
+16:32:03 <privateip> st8less: correct
+16:32:35 <privateip> network_cli is built on top of the paramiko_ssh connection plugin that has been in Ansible since its inception
+16:32:49 <st8less> So cli transport _should_ work much faster than api - potentially?
+16:32:54 <privateip> paramiko_ssh handles the underlying SSH connection to the device
+16:33:16 <privateip> st8less: in theory that is correct.... i haven't compared the two yet but i believe that to be the case
+16:33:42 <privateip> but paramiko_ssh is also the underlying library for many other modules outside of network modules for connecting to linux machines
+16:34:02 <kennc> I think @gundalow did some testing pushing a ton of vlans, and has seen speed improvements
+16:34:06 <privateip> in paramiko_ssh the defualt is to use ssh keys (look_for_keys=True) as that is the norm since its inception
+16:34:24 <privateip> the down side is shell.py defualted to disabling that feature
+16:34:42 <privateip> so with 2.3 we added a configure option to achieve the same behavior
+16:34:55 <privateip> thats why you need to add look_for_keys=False
+16:35:20 <privateip> as some network devices cannot handle transitioning from key based authentication failing and falling back to password authentication
+16:35:32 <privateip> many network OSs allow you to configure that
+16:35:38 <privateip> IOS comes to mind for instance
+16:35:45 <lanyon> ok that last statement is what i was looking for - i didn't understand why you wouldn't offer multiple auth methods
+16:36:16 <privateip> in IOS you can configure ssh to fall back to password auth if keys faile
+16:36:17 <dgarros> @gundalow, thanks
+16:36:56 <privateip> the benefit of the change is that we are now built on a much better base that has been tested extensively for a number of years
+16:37:05 <privateip> and get the benefit of persistence
+16:37:27 <privateip> the trade off is the config line for look_for_keys either in ansible.cfg or env var (ANSIBLE_PARAMKIKO_LOOK_FOR_KEYS=0)
+16:37:34 <lanyon> i would just advise (i'm sure you all are aware) to really make that clear in the 2.3 docs and release announcements. I could see many getting burned if they upgrade without realizing
+16:37:41 <dgarros> @privateip, do we get proper facts as well now ?
+16:38:44 <privateip> lanyon: good point ... we have a blog post coming out shortly that discusses the changes made in 2.3 around authentication for network modules
+16:38:58 <privateip> we can also update the docs to emphasis it
+16:39:39 <privateip> dgarros: not yet, still need to put a task to call *_facts
+16:39:47 <privateip> but its in the works .... hopefully 2.4
+16:39:58 <lanyon> cool. I would just want someone to avoid my headache of downloading 2.3 and trying to run a known working 2.2 playbook and spend a good deal of time scratching their head when it doesn't work :-)
+16:40:03 <privateip> im assuming that was the context of your question
+16:40:04 <dgarros> Nice, looking forward to it
+16:40:11 <dgarros> it was
+16:40:40 <privateip> fair enough and thanks for going through the pain and reporting back... i cannot emphasis how much it is appreciated by the dev team here
+16:41:19 <lanyon> yes no worries - thank you guys for all the awesome work. I understand from the dev side changes like these can be a pain to get done
+16:41:27 <privateip> other questions / comments / concerns about the new connection framework?
+16:41:54 <kennc> somewhat related, but not entirely
+16:42:06 <privateip> kennc: fire away
+16:42:44 <kennc> will there be non-provider support ( think -u, -k, or ansibl_ssh_password) for devices that require enable?
+16:43:11 <privateip> yes absolutely
+16:43:18 <privateip> it actually works with the 2.3 modules
+16:43:35 <privateip> but we wanted to make the transition seamless so we support both methods today
+16:43:58 <privateip> its also part as to why we are deprecating the top level auth arguments in favor of provider
+16:44:07 <kennc> so what flag can I set for that?
+16:44:53 <privateip> no flag necessary ... just dont supply the auth args (either top level or provider) and call ansible-playbook with apporpriate switches
+16:45:30 <kennc> what is the switch for enable password?
+16:46:14 <privateip> ahh thats one of the drawbacks why we dont "officially" support it yet .... one of the roadmap items is to integrate "enable mode" with the become system in Ansible
+16:46:18 <privateip> thats a 2.4 item
+16:46:36 <privateip> today is basic auth only (ssh username/password)
+16:46:37 <privateip> but
+16:47:02 <privateip> you can still use the command line for username/password via -u <user> -k and define authorize: yes in the playbook
+16:47:05 <privateip> does that make sense?
+16:47:26 <kennc> yes, do I get a giant warning when I do that?
+16:47:37 <privateip> nope
+16:47:50 <privateip> not saying you couldn't
+16:47:56 <privateip> what warning would you expect?
+16:48:05 <lanyon> passing in username and password at the command line will not override the look_for_keys setting correct?
+16:48:07 <kennc> that it was a top level command
+16:48:25 <privateip> lanyon: correct the two are independent
+16:48:38 <privateip> kennc: yes you do get a warning that top level args are deprecated
+16:48:45 <privateip> that doesn't mean dont use them
+16:48:59 <privateip> it means that you should start the process of learning the new way to do things
+16:49:01 <kennc> ok, so I can use provider with authorize: yes
+16:49:14 <privateip> we wont remove the top level args for a few releases yet and will communicate that
+16:49:21 <privateip> kennc: correct
+16:49:28 <privateip> provider isn't going anywhere anytime soon
+16:49:40 <privateip> so one note of clarification
+16:49:46 <kennc> thanks
+16:49:51 <privateip> provider *is not* deprecated
+16:50:06 <kennc> no way to reuse -K and ansible_sudo_pass for authorize?
+16:50:14 <privateip> username, password, transport, authorize, auth_pass are ... but only as top level args ... you can still supply via provider
+16:50:51 <kennc> I assume no, just double checking :)(
+16:50:55 <kennc> :)
+16:51:12 <privateip> in 2.4 "enable mode" will be integrated with become so you would do --become --become-method=enable --ask-become-pass (or -K)
+16:51:23 <kennc> got it
+16:51:35 <privateip> in a playbook you will also be able to do become: yes
+16:51:46 <kennc> @gundalow is this marked for documentation?
+16:51:52 <privateip> but still need to prompt with -K for become password if configured
+16:52:04 <gundalow> kennc: I've been updated my doc while you guys talk :)
+16:52:13 <kennc> danke :)
+16:52:57 <gundalow> Bitte
+16:53:53 <privateip> unless there are other questions i can answer... back to you gundalow:
+16:54:30 <gundalow> Thanks
+16:54:37 <st8less> Just so I'm clear - 'provider' has to be defined under each task?
+16:55:00 <privateip> yes
+16:55:40 <st8less> Any plan to make it where that can be defined globally instead of each task?  Or are there drawbacks to that?
+16:56:35 <privateip> st8less: yes thats what i was just describing thats coming is full integration with the ansible command line
+16:56:49 <st8less> :P Sorry, ok, cool.
+16:56:55 <privateip> in 2.3 you can specify username / password combination and 2.4 will bring enable mode
+16:57:02 <privateip> no worries .. all good :)
+16:57:10 <kennc> also can configure ansible_ssh_user and ansible_ssh_password in all.yml, right?
+16:57:28 <privateip> correct
+16:57:31 <privateip> ummm
+16:58:13 <st8less> Something like that would be preferable to the cli switch.  My arg list is already fairly long.
+16:58:14 <privateip> ansible_ssh_pass not ansible_ssh_password
+16:58:19 <st8less> Cool
+16:58:42 <kennc> got it
+16:59:09 <gundalow> I'm adding a section to the docs regarding the changes in 2.3, and what is planned for 2.4 (and higher), that should help explain wy we are changing things and what the final result will look like, (e.g. the steps to using `become`), and killing `provider:`
+16:59:14 <privateip> st8less: understood ... you can definitely use the ansible_ssh_* vars to do the same in inventory or yaml files
+16:59:23 <kennc> @gundalow can you add the equivalencies for -u  to ansible_ssh_user and -k for ansible_ssh_pass in documentation :)
+16:59:37 <gundalow> kennc: Good idea, will do
+16:59:52 <gundalow> #action gundalow < kennc> @gundalow can you add the equivalencies for -u  to ansible_ssh_user and -k for ansible_ssh_pass in documentation
+17:00:07 <kennc> thanks :)
+17:00:17 <gundalow> #action gundalow Document 2.4 (become);  2.? (kill provider)
+17:00:23 <privateip> even better yet is to use the same user to run the playbook as used to authenticate to the device and use ssh keys
+17:00:32 <privateip> then no need to provide any auth anywhere :)
+17:00:57 <gundalow> Show of hands, in Ansible 2.2 who uses
+17:01:02 <gundalow> ssh keys
+17:01:14 <kennc> -1
+17:01:15 <funzo> o/
+17:01:17 <funzo> :)
+17:01:30 <st8less> What are those?  -1  :)
+17:01:35 <lanyon> -1
+17:01:36 * privateip sits on his hands
+17:01:51 <gundalow> -1 = I don't use ssh keys
+17:02:00 <st8less> Where are the *nix admins when we need them?  :D
+17:02:01 <gundalow> +1 = I do use ssh keys
+17:02:10 <privateip> lol
+17:02:12 <kennc> @privateip run into file creation issues if per user playbooks
+17:02:15 <z3nbr3w> 0 == both?
+17:02:29 <privateip> kennc: can you elaborate?
+17:03:07 <gundalow> Show of hands: Who uses username: & password: options (either directly or under provider:
+17:03:30 <z3nbr3w> +1
+17:03:43 <st8less> provider +1
+17:03:43 <kennc> ken gather facts, write to file, then pete later runs same playbook, and attempts to write file, but was set with 644 privs for some reason
+17:03:51 <kennc> + 1
+17:04:25 <privateip> kennc: add a task to the playbook to change the file perms
+17:04:27 <st8less> We use nxapi for 90%+ of our tasks.  ssh keys don't work there, or we would consider them.
+17:04:39 <privateip> to ensure they are group or world read/writeable
+17:04:41 <gundalow> st8less: good point wel made
+17:04:55 <privateip> st8less: good point
+17:05:16 <privateip> in that case you could use certificates
+17:05:16 <kennc> after the fact? when it fails half way nothing works in future
+17:05:29 <privateip> kennc: block...rescue
+17:05:42 <gundalow> skg-net: It's likely that RC3 (Tomorrow) will be the final release candidate for 2.3.0, so it would be really good to get your fix in by then
+17:05:54 <kennc> of course I can design around it
+17:06:09 <privateip> success = plan for failure :)
+17:06:11 <kennc> but adds complexity
+17:06:18 <kennc> lol
+17:06:30 <skg-net> sure..I will raise a PR for dellos6 today.
+17:06:39 <kennc> KISS = success (often)
+17:06:51 <skg-net> but I am not sure about the truncation issue, will try to get that in as well
+17:07:15 <gundalow> skg-net: Thanks
+17:07:27 <skg-net> privateip: can you explain how does the header/data len calculation work?
+17:08:34 <skg-net> https://github.com/ansible/ansible/blob/devel/lib/ansible/module_utils/connection.py#L43
+17:09:26 <privateip> is that where its failing?
+17:10:21 <skg-net> yes.. If I increase the data len to fixed size 3K then everything is working fine..
+17:11:21 <privateip> hmmmm thats really strange ...
+17:11:45 <privateip> the header/data is byte packed
+17:12:17 <privateip> so the header should always be 8 in every case
+17:12:46 * gundalow has to step out, privateip are you OK to continue, and #endmeeting at the end?
+17:12:53 <privateip> sure
+17:12:59 <gundalow> Thanks
+17:13:10 <gundalow> And thanks for everyone with their help & feedback on 2.3
+17:13:40 <skg-net> how is the data len calculated?
+17:13:52 <privateip> data is everyhing left over
+17:14:28 <privateip> basically we skim 1 byte off the top and read everything else as data
+17:15:03 <privateip> is it payload size dependent or does it happen every time regardless of payload?
+17:15:19 <skg-net> its payload size dependent
+17:15:35 <skg-net> that's is consistent
+17:15:39 <privateip> i wonder if they underlying socket is fragmenting it
+17:16:33 <privateip> that gives me enough detail to go test some stuff out
+17:16:37 <skg-net> some times we hit randomly irrespective of payload size, but its 1 in 20 times
+17:16:54 <skg-net> okay, we will continue from our end as well..
+17:17:04 <skg-net> will keep you posted
+17:17:12 <privateip> great will do the same from my end
+17:18:30 <privateip> anyone have any final business today?
+17:18:46 <z3nbr3w> I don't but just wanted to thank everyone for letting me be a fly on the wall :)
+17:18:59 <privateip> anytime ... happy to have you here
+17:19:09 <skg-net> privateip:may be I can try increasing the socket buffer size..can you point me to the code where sockets are created
+17:20:54 <privateip> skg-net: https://github.com/ansible/ansible/blob/devel/bin/ansible-connection#L136
+17:21:44 <skg-net> privateip:Thanks !!
+17:21:48 <privateip> as gundalow said, thank you all for your time, testing and reporting issues on 2.3
+17:21:55 <privateip> talk to you next time
+17:22:00 <kennc> one sec :)
+17:22:06 <z3nbr3w> cheers!
+17:22:19 <privateip> kennc: fire away
+17:22:39 <kennc> ProxyCommand is there a way to set passwords via variables in the actual ansible_ssh_common_args?
+17:23:56 <privateip> kennc: ansible_ssh_common_args: '-o ProxyCommand="ssh -W %h:%p -q user@gateway.example.com"'
+17:24:06 <privateip> %p = ansible_ssh_pass
+17:24:14 <privateip> sorry
+17:24:19 <privateip> you want passwords not port
+17:24:23 <privateip> fail
+17:24:43 <privateip> no i dont believe there is
+17:25:09 <privateip> you might ask in ansible-devel just to be sure though
+17:25:19 <kennc> can you add an action to document? and provide example there with fake passowords?
+17:25:20 <privateip> i might be forgetting something
+17:25:51 <kennc> like I would think %h was host
+17:26:10 <kennc> but seems like that is defined in gateway.example.com
+17:26:20 <privateip> #action document ProxyCommand and password usage
+17:26:57 <kennc> think was mentioned in slack, but rough 2.3 release date?
+17:27:11 <privateip> 4/12 i believe
+17:27:13 <Qalthos> kennc: %h and %p are the destination host and port
+17:27:58 <kennc> %h = switch? and @ = bastion host?
+17:28:01 <Qalthos> which gets autofilled by ansible as that's been defined elsewhere
+17:28:33 <kennc> really lost about autofilled, as long as examples are provided should be good :)
+17:28:38 * gundalow returns
+17:29:30 <gundalow> #action gundalow ProxyCommand is there a way to set passwords via variables in the actual ansible_ssh_common_args? need example adding to doc
+17:30:10 <kennc> I'm done :)
+17:30:29 * privateip puts a fork in kennc
+17:30:36 <kennc> lol
+17:30:46 <privateip> thanks gang
+17:30:51 <privateip> talk to you next time
+17:31:00 <privateip> #endmeeting

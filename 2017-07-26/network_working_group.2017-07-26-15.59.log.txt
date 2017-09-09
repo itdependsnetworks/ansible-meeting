@@ -1,0 +1,111 @@
+15:59:25 <gundalow> #startmeeting Network Working Group
+15:59:25 <zodbot> Meeting started Wed Jul 26 15:59:25 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:59:25 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:59:25 <zodbot> The meeting name has been set to 'network_working_group'
+15:59:57 * skg-net waves
+16:00:03 <gundalow> #chair funzo ganeshrn Qalthos trishnag newswangerd skg-net caphrim007
+16:00:03 <zodbot> Current chairs: Qalthos caphrim007 funzo ganeshrn gundalow newswangerd skg-net trishnag
+16:00:07 <jmighion> o/
+16:00:11 <trishnag> o/
+16:00:12 <caphrim007> o/
+16:00:16 <gundalow> #chair jmighion
+16:00:16 <zodbot> Current chairs: Qalthos caphrim007 funzo ganeshrn gundalow jmighion newswangerd skg-net trishnag
+16:00:17 <newswangerd> hello!
+16:00:28 * ganeshrn waves
+16:00:41 <gundalow> #info Agenda https://github.com/ansible/community/issues/110
+16:01:18 <gundalow> funzo: did FrederikSuijs question about ios get answered?
+16:01:35 <gundalow> #chair mikewiebe
+16:01:35 <zodbot> Current chairs: Qalthos caphrim007 funzo ganeshrn gundalow jmighion mikewiebe newswangerd skg-net trishnag
+16:02:15 <gundalow> ah, I see FrederikSuijs to open issue with playbook example to reproduce
+16:02:27 <gundalow> so assumed that's now tracked in an issue
+16:02:45 <gundalow> #topic aruba_config module #27130
+16:02:56 <gundalow> #link https://github.com/ansible/ansible/pull/27130
+16:03:14 <gundalow> jmighion: Nice try giving your own PR a shipit, but it doesn't do anything :P
+16:03:36 <jmighion> i tried
+16:03:52 <jmighion> first time with the power. gotta use it
+16:04:07 <jmighion> so does it just need a reviewer?
+16:04:44 <jmighion> going forward what should i do? because ill have the same thing with aireos_config soon
+16:04:51 <gundalow> Is "Aruba + ansible" enough to come up in Google search, or does it need HPE in there?
+16:05:19 <gundalow> see http://docs.ansible.com/ansible/latest/list_of_network_modules.html
+16:05:55 <gundalow> jmighion: we will review and get back toyou
+16:06:30 <gundalow> Is this using persistent connection?
+16:07:10 <jmighion> gundalow using persistent connection. i assume "Aruba + ansible" should be good for google
+16:07:11 <gundalow> Where is extends_documentation_fragment: aruba
+16:07:22 <gundalow> has that already been merged?
+16:07:24 <jmighion> yes
+16:07:30 <gundalow> cool
+16:07:32 <jmighion> that was apart of the aruba_command pr
+16:07:37 <gundalow> ah, OK
+16:07:38 <gundalow> cool
+16:07:41 <gundalow> will review offline
+16:07:44 <jmighion> thanks
+16:07:59 <gundalow> that pattern should be fine for the other modules
+16:08:22 <gundalow> #topic NXOS
+16:08:25 <gundalow> mikewiebe: Hi :)
+16:08:44 <mikewiebe> gundalow: Hi there
+16:09:07 <gundalow> mikewiebe: Are you available for tomorrows meeting so we can get you hooked up into the Distributed CI work?
+16:09:18 <gundalow> Qalthos: youthere?
+16:09:36 <gundalow> so there are a few NXOS issues & a PR from rahushen
+16:09:48 <Qalthos> gundalow: yes
+16:09:49 <gundalow> #link https://github.com/ansible/community/issues/110#issuecomment-318089698
+16:09:57 <gundalow> #chair rahushen
+16:09:57 <zodbot> Current chairs: Qalthos caphrim007 funzo ganeshrn gundalow jmighion mikewiebe newswangerd rahushen skg-net trishnag
+16:10:09 <mikewiebe> gundalow:  Are you referring to the testing working group meeting?
+16:10:18 <akasurde> 0/
+16:10:25 <rahushen> Yes, the PR has been open for a while. Can someone review and merge
+16:10:48 <Qalthos> mikewiebe: no, the 9:30 call
+16:10:57 <gundalow> mikewiebe: the "Ansible / Cisco working session"
+16:11:17 <mikewiebe> gundalow/Qalthos:  Yes, I will be on the call
+16:11:57 <Qalthos> rahushen: that PR is big and complicated and not working here, will get back to you
+16:12:11 <gundalow> rahushen: Though big +1 for adding tests
+16:13:06 <rahushen> Sure ... let me know if any questions regarding the tests.
+16:13:22 <gundalow> #action Qalthos to review #26924
+16:13:38 <gundalow> Qalthos: How do you want to do the issues?
+16:13:44 <gundalow> #chair pdellaert
+16:13:44 <zodbot> Current chairs: Qalthos caphrim007 funzo ganeshrn gundalow jmighion mikewiebe newswangerd pdellaert rahushen skg-net trishnag
+16:14:38 <Qalthos> gundalow: good question, rahushen do you have any you'd like to highlight?
+16:14:39 <pdellaert> Hi, just following along, no immediate agenda topics from my side at the time
+16:14:48 <gundalow> pdellaert: ack
+16:15:32 <gundalow> ok, lets start at the begining
+16:15:43 <gundalow> https://github.com/ansible/ansible/issues/26024
+16:15:47 <rahushen> Some issues have been open for a while and wondering when they'd be assigned. Feel free to reach out to me if you're having trouble reproducing the issues.
+16:17:17 <gundalow> Qalthos: Since there is a number of them, do you want to review and add comments on the issues?
+16:21:24 <Qalthos> I'll review the newer ones that I've not seen yet, but other than that, they're still on the pile of things to do
+16:21:58 <Qalthos> That said, I swear I have a PR for 26024 somewhere
+16:22:54 <gundalow> https://ansible.sivel.net/pr/byfile.html may help you find it
+16:23:38 <mikewiebe> Qalthos: You might be thinking of https://github.com/ansible/ansible/pull/26370, but that is for nxos_bgp_neighbor_af .. there were some idempotence isssues
+16:23:59 <mikewiebe> I still owe you a re-test on that
+16:24:12 <Qalthos> mikewiebe: no, I specifically remember the event-history parameters
+16:24:30 <Qalthos> probably just a branch and not a PR
+16:25:10 <Qalthos> yup, there it is
+16:25:24 * gundalow has to ditch now, can someone carry on
+16:25:34 <gundalow> only thing after this are mikewiebe's two PRs
+16:26:21 <Qalthos> https://github.com/ansible/ansible/pull/27329 is a start to 26024
+16:26:27 <funzo> ansible/ansible#26913
+16:26:27 <funzo> ansible/ansible#27190
+16:26:31 <funzo> those?
+16:26:48 <funzo> https://github.com/ansible/ansible/pull/26913
+16:26:53 <funzo> https://github.com/ansible/ansible/pull/27190
+16:26:54 <Qalthos> those, yes
+16:27:19 <funzo> Qalthos: want to talk to the first, i see you have comments
+16:27:34 <funzo> or i guess are there any questions
+16:27:38 <rahushen> @Qalthos ... I'll wait for you to finish up that PR before attempting to retest #26024
+16:28:38 <Qalthos> rahushen: right, suppress_fib was the blocker on that, will continue to go after the rest of those issues in sequence unless you want to pull one up higher
+16:28:49 <mikewiebe> Qalthos: I will nudge the originator of 26913 since you added comments earlier today
+16:29:21 <mikewiebe> Qualthos: Prior to your comments we had approval so just wanted to see if it could be merged
+16:29:56 <rahushen> @Qalthos ... going in sequence is fine. Thanks.
+16:30:03 <Qalthos> mikewiebe: Yeah, moving all the output munging to one place would clean that up a lot and you would also lose the shippable errors as there's no need to test type
+16:30:27 <Qalthos> rahushen: sorry it's taking so long (:
+16:31:13 <mikewiebe> Qalthos: For #27190 just looking to get it reviewed/merged.  It was related to a customer issue
+16:31:51 <Qalthos> mikewiebe: that one I haven't looked at yet, but if I can get a clean test run it's probably good
+16:32:24 <mikewiebe> Qalthos: Thanks
+16:32:28 <rahushen> Qalthos: no worries. I'll jump in on a few issues after I'm done testing.
+16:32:57 <funzo> great, any other issues to cover?
+16:33:07 <mikewiebe> Not from my end
+16:33:20 <funzo> #topic Open Floor
+16:33:23 <Qalthos> And to both of you and everyone else, thank you for all these tests in the PRs
+16:33:24 <rahushen> Nothing from me
+16:34:50 <funzo> I'll wait a couple more minutes before closing
+16:35:16 <mikewiebe> Certainly.  More coming :)
+16:36:02 <funzo> Thanks for coming everyone, see you next week!
+16:36:07 <funzo> #endmeeting

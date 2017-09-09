@@ -1,0 +1,86 @@
+17:04:51 <mattclay> #startmeeting Testing Working Group
+17:04:51 <zodbot> Meeting started Thu Jan 12 17:04:51 2017 UTC.  The chair is mattclay. Information about MeetBot at http://wiki.debian.org/MeetBot.
+17:04:51 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+17:04:51 <zodbot> The meeting name has been set to 'testing_working_group'
+17:05:07 <mattclay> #chair gundalow
+17:05:07 <zodbot> Current chairs: gundalow mattclay
+17:06:00 * gundalow waves
+17:06:22 <gundalow> internet connection died
+17:06:49 <allanice001> wow, you also have those types of issues
+17:06:52 <gundalow> Agenda as always https://github.com/ansible/community/issues/114
+17:07:02 <gundalow> allanice001: *everyone* does
+17:07:33 <mattclay> Who's here?
+17:08:17 <gundalow> mattclay: Did you have anything, doesn't look like their is anything on the Agenda
+17:08:26 <gundalow> Who's going to AnsibleAutomates Paris?
+17:08:35 <mattclay> No, nothing from me.
+17:08:58 <mattclay> I'm just working on adding network device support to ansible-test.
+17:09:07 <gundalow> yay :)
+17:09:14 <sivel> Just an observation here...
+17:09:15 <gundalow> #topic Open Floor
+17:09:20 <gundalow> hey sivel :)
+17:09:34 <sivel> Would be super cool, if test-ansible could support docker containers for the connection tests
+17:10:07 <sivel> not exactly sure why it didn't work for me, but I had to end up enabling ssh on my mac for it to work
+17:10:18 <mattclay> sivel: Yeah, that's on my list to add support for.
+17:10:21 <mattclay> As well as jail tests on freebsd, since we have that on Shippable.
+17:10:44 <sivel> cool, just ran into it this morning, and spent about 5 seconds looking into it, so just wanted to ping you about it
+17:10:52 <mattclay> At least the jail test works, we just don't run it currently on Shippable.
+17:11:07 <mattclay> Thanks for the reminder. It's always good to know what kind of testing is important to people.
+17:11:29 <sivel> I got it working, but had to go through setting up ssh to localhost on my mac
+17:11:43 <sivel> which I hadn't needed previously
+17:12:24 <mattclay> Wait, maybe I misunderstood what you meant. I was thinking about the docker connection test running inside a docker container.
+17:12:36 <sivel> no, ssh connection test, running inside of docker
+17:12:59 <mattclay> Ah, yeah, known issue with docker on mac.
+17:13:13 <sivel> I imagine because ansible-test runs locally, and it just tries to ssh to my mac before progressing, instead of trying ssh to the container
+17:13:19 <mattclay> The docker implementation on mac doesn't support running the ssh service in the docker containers.
+17:13:44 <mattclay> At least not the way we have it set up right now. It's due to the very minimal distro that runs docker on mac.
+17:13:55 <mattclay> If you run it on a linux host it should work just fine.
+17:13:57 <sivel> hrm, I've SSHed to containers before, but not sure of what technical difficulties there have been
+17:14:37 <mattclay> It's actually documented here: https://github.com/ansible/ansible/blob/devel/test/integration/README.md#tests-in-docker-containers
+17:16:34 <sivel> Ok, I'll have to give it a shot.  I may need to look into things more
+17:16:47 <sivel> What I was seeing is:  http://dpaste.com/29Z744N
+17:16:53 <mattclay> When you use ansible-test to run tests in docker, it checks to make sure the ssh service is working (if you're running a test marked with n"needs/ssh"). If it can't connect, it aborts the test. You can skip those tests with the "--exclude needs/ssh" option.
+17:17:05 <sivel> which is coming from ansible-test, and not the actual tests
+17:17:15 <mattclay> Yep, that's the message I was referring to.
+17:17:36 <sivel> ok, from my cursory look, I thought it was trying to SSH to Mac, and not the container
+17:17:36 <mattclay> Sorry, that's "--exclude needs/ssh/" (needs trailing slash)
+17:17:48 <sivel> yeah, just so happens I needed to run those tests for a PR I was doing
+17:17:49 <mattclay> No, it's checking for ssh within the container.
+17:18:26 <mattclay> Which doesn't start when running on a mac.
+17:18:48 <mattclay> Use a Linux VM or a remote docker host (running Linux).
+17:19:36 <mattclay> Or, if you can figure out how to get services to start properly in a docker container on mac, I'd be very grateful. :)
+17:20:36 <sivel> I'll play with it more
+17:20:56 <sivel> Unfortunately I cannot connect to my remote docker servers while at work, so I was forced to use Docker for Mac
+17:21:18 <mattclay> Can you run docker in a Linux VM on your mac instead? That's what I do.
+17:21:57 <mattclay> Just be sure to use a "full" linux distro, not something stripped down like alpine (which is what Docker for Mac uses, I believe)
+17:22:04 <sivel> <secret>I can actually connect to my remote docker servers, but the method I use is frowned upon</secret>
+17:22:23 <sivel> but I will play with the docker for mac stuff
+17:22:26 <allanice001> Maybe use lxc / box with vagrant on Mac
+17:22:39 <sivel> and using my remote docker servers worked
+17:22:49 <allanice001> But ports could be blocked by firewall
+17:22:55 <allanice001> Especially with Mac
+17:24:05 <allanice001> sivel, you can also try boot2docker
+17:24:54 <mattclay> I wonder if that will have the same issue as Docker for Mac. If anyone tries it, let me know the results.
+17:25:33 <allanice001> Boot2docker running in vbox works very nicely
+17:26:33 <mattclay> allanice001: Have you tried running the ssh connection test using that?
+17:27:17 <allanice001> yes, but remember that the docker port nat will be mapped to the vm ip address
+17:28:03 <allanice001> Even with native Mac - ssh 127.0.0.1:2200
+17:28:05 <sivel> mattclay: interesting observation, the ssh tests work find for docker for mac with the ubuntu1404, as well as centos6.  It fails with centos7, and ubuntu1604
+17:28:30 <sivel> so it seems related to systemd I would guess
+17:29:06 <sivel> --docker-privileged resolves it
+17:29:24 <sivel> so, all I good then I suppose
+17:29:50 <mattclay> sivel: Interesting, privileged mode didn't used to solve the problem, but I actually didn't try it since I implemented ansible-test.
+17:30:06 <mattclay> allanice001: So does it work with this? test/runner/ansible-test integration connection_ssh -v --docker
+17:30:32 <sivel> I had noted in the past that systemd didn't work well in containers without running in priviledged mode.  Seems I should have remembered that
+17:30:51 <allanice001> havnt tried that directly, just speaking about my Mac experience
+17:30:54 <sivel> at least not on docker for mac
+17:31:21 <mattclay> sivel: Hmm.. ansible-test must have fixed whatever else was an issue. Using --docker-privileged makes it work for me too. Very good to know
+17:32:24 <mattclay> I'll be sure to include that info when I update the docs for ansible-test.
+17:32:30 <sivel> sweet, thanks!
+17:32:49 <mattclay> Thank you for figuring out it works. I had just assumed it was still not working.
+17:33:09 <sivel> now I need to go figure out what all unit tests I broke with this PR :)
+17:34:17 <mattclay> Anyone else have anything?
+17:35:53 <gundalow> Nothing from me
+17:36:13 <gundalow> Just to say there are some more Ansible Paris tickets available
+17:36:22 * gundalow -> afk
+17:37:14 <mattclay> OK, ending the meeting in 3 minutes if nobody has anything else.
+17:40:10 <mattclay> #endmeeting

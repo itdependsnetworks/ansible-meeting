@@ -1,0 +1,196 @@
+15:00:01 <thaumos> #startmeeting Ansible Core Meeting
+15:00:01 <zodbot> Meeting started Thu May 25 15:00:01 2017 UTC.  The chair is thaumos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:00:01 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:00:01 <zodbot> The meeting name has been set to 'ansible_core_meeting'
+15:00:05 <thaumos> #chair thaumos
+15:00:05 <zodbot> Current chairs: thaumos
+15:00:40 <sivel> howdy
+15:00:46 <thaumos> #chair sivel
+15:00:46 <zodbot> Current chairs: sivel thaumos
+15:00:50 <thaumos> hello
+15:01:05 * gundalow waves
+15:01:11 <thaumos> #chair gundalow
+15:01:11 <zodbot> Current chairs: gundalow sivel thaumos
+15:01:29 * thaumos waves back
+15:02:16 <jtanner> hey
+15:02:31 * jtanner was signing up for openshift stuff and forgot to look at this screen
+15:02:45 <thaumos> #chair jtanner
+15:02:45 <zodbot> Current chairs: gundalow jtanner sivel thaumos
+15:02:54 * akasurde waves
+15:02:59 <thaumos> #chair akasurde
+15:02:59 <zodbot> Current chairs: akasurde gundalow jtanner sivel thaumos
+15:03:00 <akasurde> hi All
+15:03:57 <thaumos> I'll give two more minutes before we start
+15:05:45 <thaumos> #topic Feedback asked for ansible/ansible#24822
+15:06:08 <thaumos> #link https://github.com/ansible/ansible/pull/24822
+15:06:32 <thaumos> @akasurde is there any specific feedback you are looking for?
+15:07:08 <akasurde> yes, As per my testing this is working as per requirements in bug. Looking for feedback from Core team
+15:07:14 <gundalow> akasurde: Maybe an example showing you can use this to *only* install security updates
+15:07:38 <jtanner> i wonder how we can test this
+15:07:39 <akasurde> thaumos, once this is merge I start working on --cve and --advisories
+15:08:07 <akasurde> jtanner, if there is security update for package we can specify --security update <pkg_name>
+15:08:12 <akasurde> gundalow, Sure
+15:08:31 <jtanner> akasurde: i meant within the integration tetss
+15:08:46 <akasurde> jtanner, ohk
+15:08:53 * akasurde thinking
+15:09:03 <thaumos> could it be tested by spinning up a centos 7 system and just calling the module.  I think it's somewhat safe to assume an image may not have all security updates applied
+15:09:23 <jtanner> depends on the dockerfile and last build time
+15:09:25 <thaumos> in integration testing, I am sure the same applies as well.
+15:09:30 * thaumos nods
+15:10:11 <jtanner> i suppose we don't have to have a test right now, but i can see this being one of those "ZOMG, YOU MUST FIX IT NOW!" features
+15:10:11 <gundalow> I wonder if you'd need to downgrade a package, not sure if that's possible with yum
+15:10:53 <thaumos> so before this gets merged, I think we should require integration tests updated to test this as well.
+15:10:56 <akasurde> gundalow, yes that can be done.
+15:11:08 <jtanner> https://access.redhat.com/solutions/29617
+15:11:13 <jtanner> yum downgrade foo
+15:11:32 <thaumos> @akasurde, can you test this, and think about how to do this in integration tests?
+15:11:47 <jtanner> so maybe an integration test that rolls back a specific package first and then checks for security update?
+15:11:50 <akasurde> jtanner, I am not sure if we can unroll security update
+15:11:57 <akasurde> jtanner, but I will try
+15:11:59 <jtanner> really? hrmm
+15:12:02 <akasurde> thaumos, Yes sure
+15:12:22 <akasurde> jtanner, I will try this today and will let you know
+15:12:29 <thaumos> #action akasurde to test rolling back specific pkg using yum module and then security parameter
+15:12:38 <gundalow> +1
+15:12:40 <akasurde> thaumos, cool
+15:12:47 <gundalow> (back in 5)
+15:12:50 <thaumos> #action akasurde to investigate how to implement security parameter in integration test for yum module
+15:12:51 <jtanner> akasurde: i'd offer more advice, but i'm not sure what packages usually fall under "security" besides kernel/glibc
+15:13:08 <jtanner> ssh?
+15:13:26 <akasurde> jtanner, A lot of them, samba, nfs etc.
+15:13:39 <jtanner> so samba is probably not installed in our test containers
+15:13:53 <akasurde> jtanner, even product like FreeIPA gets security patches
+15:13:56 <jtanner> you could install n-2 version and then use your feature to upgrade it
+15:14:32 <jtanner> just a thought
+15:14:48 <akasurde> jtanner, Yes sure
+15:15:06 <thaumos> anything else, if not let's move on
+15:15:11 <akasurde> anything else. Once this is done I will start with cve and advisories
+15:15:16 <jtanner> +1 on feature from me
+15:15:47 <thaumos> +1 from me too
+15:15:52 <thaumos> okay, moving on
+15:16:00 <thaumos> #topic ansible/ansible#24867
+15:16:15 <thaumos> #link https://github.com/ansible/ansible/pull/24867
+15:16:32 <thaumos> @bcoca, are you lurking?
+15:16:34 <jtanner> dag-: ?
+15:16:41 <thaumos> ^^
+15:17:02 <bcoca> no
+15:17:16 <sivel> Looks like a vote was asked for
+15:17:20 <sivel> -1 for me
+15:17:48 <bcoca> im +1, this should not break anything and ensures uniform returns
+15:18:00 <jtanner> there's not enough explanation in PR for me to make judgement
+15:18:39 <sivel> I am a -1 as that is a lot of changes to keep current behavior, and fix a small number of issues.  I'm more in favor of just making the changes where needed, instead of everywhere
+15:18:54 <bcoca> well, he mixes several issues 'rc' return and failure handling , 'failed' and 'changed'  always being present .. so PR is a bit overloaded
+15:19:21 <bcoca> sivel: agreed, so my +1 is for changed/failed always present, -1 on PR as it does too much
+15:19:33 <jtanner> so ... win_chocolatey should get it's own targeted fix first?
+15:19:42 <jhawkesworth> hi.  I've not seen this 'non-zero return code is actually success' with chocolatey but have seen talk of it when installing packages - sometimes you get something like 3010 which means 'installed, but you need to reboot'.
+15:19:47 <thaumos> #chair jhawkesworth
+15:19:47 <zodbot> Current chairs: akasurde gundalow jhawkesworth jtanner sivel thaumos
+15:19:54 <thaumos> #chair bcoca
+15:19:54 <zodbot> Current chairs: akasurde bcoca gundalow jhawkesworth jtanner sivel thaumos
+15:20:19 <bcoca> windows does not have the POSIX requirement of rc codes being 0 for success
+15:20:35 <alikins> I've ran into some of the same issues that 24867 is aiming for, albeit usually while debugging/troubleshooting obtuse module failures
+15:20:38 <jhawkesworth> windows also has lot of crappy installers
+15:20:43 <thaumos> #chair alikins
+15:20:43 <zodbot> Current chairs: akasurde alikins bcoca gundalow jhawkesworth jtanner sivel thaumos
+15:20:50 <thaumos> windows is crappy
+15:21:01 <bcoca> +1
+15:21:24 <thaumos> I think it is fair to ask to be specific on making a fix for what the issue is opened for.
+15:21:38 <bcoca> i would make it 2 or 3 issues
+15:21:47 * thaumos nods
+15:21:53 <bcoca> 1) changed/failed presense 2) rc issue on win_ 3) rc elsewhere
+15:22:19 <sivel> bcoca: agreed
+15:22:27 <sivel> he tends to overload PRs a lot
+15:22:28 <jtanner> there's some code reformatting in the PR too
+15:22:48 <gundalow> I'd like to see explicit testing for the functionality as well
+15:24:08 <thaumos> for the changed/failed presence functionality, @gundalow?
+15:24:52 <jtanner> i'm starting to think we should just take it
+15:25:21 <bcoca> a lot of the tests (he corrcts them) look for 'failed' being missing as success .. incorrectly so
+15:25:34 <jtanner> yeah
+15:25:42 <jtanner> +1 to merge ... might as well
+15:28:06 <thaumos> if we do merge, should we still have follow up for 2 & 3 mentioned by bcoca?
+15:28:57 <bcoca> its all in there
+15:29:00 <gundalow> thaumos: yup
+15:29:01 <bcoca> that is the problem
+15:29:10 <bcoca> too many things
+15:30:23 <thaumos> ah, okay... I should have looked at files changed.
+15:30:29 <thaumos> I was stuck on the issue name
+15:30:59 <thaumos> I think we should be specific per issue.  It will be easier to track to a single commit
+15:31:21 <bcoca> ^ that is where sivel and i are at
+15:31:46 * thaumos nods
+15:32:29 <thaumos> ok
+15:32:57 <thaumos> bcoca, can you update the ticket?
+15:33:20 <thaumos> ask dag to make two follow up issues for win_* and one for everything else.
+15:34:05 <thaumos> It's totally fair to ask to not overload issues.  It's easy enough to amend a commit and create pr's individually
+15:35:47 <thaumos> or I can
+15:36:41 <thaumos> #action thaumos to update #24687 asking dag to make this pr for only changed/failed presence.
+15:36:56 <gundalow> Thanks thaumos
+15:37:12 <thaumos> #action thaumos to also ask dag to create individual prs for rc issue on win_* and everything else.
+15:37:32 <thaumos> #topic ansible/ansible#24871
+15:37:45 <thaumos> #link https://github.com/ansible/ansible/pull/24871
+15:38:21 <sivel> In an answer to the comment left by bcoca on this issue, I think it should either
+15:38:35 <sivel> 1) handled specially in individual modules
+15:39:02 <akasurde> sivel +1
+15:39:03 <sivel> 2) We add another param to the argspec that indicates whether the supplied value must not be None
+15:39:20 <sivel> which is still specified at the individual module level
+15:39:41 <sivel> But not sure it is worth the effort right now to add the additional argspec option
+15:39:43 <akasurde> Yes I like combination of both, Let module decide what to do
+15:43:06 <thaumos> @sivel, that being said is there something akasurde could do quickly in the meantime to solve the one issue, and then we have something on a 2.5 milestone to cover the rest?
+15:43:29 <sivel> I believe that PR already handles it with #1
+15:43:30 <thaumos> or with guidance, is something akasurde could do for 2.4?
+15:44:03 <thaumos> right, and are we fine with that with a contingency that akasurde will follow up with doing it the right/preferred way
+15:44:49 <sivel> I think if we were to discuss #2, that should be a larger discussion here.  Currently handling it as a 1 off is fine imo
+15:45:11 * thaumos nods
+15:45:14 <sivel> which I think is what bcoca likely added it to the agenda for
+15:45:17 <akasurde> same here
+15:45:18 <thaumos> yep
+15:45:25 <sivel> but doesn't look like we are getting that discussion today :)
+15:45:27 <thaumos> I figured he did, but he's afk
+15:45:30 <thaumos> exactly
+15:45:48 <thaumos> so that being said, can we get +1's to merge this, and revisit this again?
+15:45:54 <sivel> I am +1
+15:46:07 <gundalow> +1 to merge PR as it stands
+15:46:18 <thaumos> jtanner, thoughts?
+15:46:45 <jtanner> 24817?
+15:46:52 <jtanner> 24871
+15:46:52 <sivel> yes
+15:47:06 <sivel> https://github.com/ansible/ansible/pull/24871
+15:48:07 <jtanner> if people need to set null/blank vals for sysctl, i guess we need this
+15:48:19 <thaumos> k
+15:48:34 <jtanner> another thing we should probably have a test for
+15:48:56 <jtanner> i would open a new bug with "sysctl null/blank vals missing tests" and assign to akasurde
+15:49:02 <thaumos> Who'd like to do the merge action for the PR?
+15:49:02 <jtanner> after this one is merged
+15:49:15 <thaumos> +1 to test issue suggestion
+15:49:25 <jtanner> it's done
+15:49:31 <thaumos> 👍
+15:49:47 <sivel> I'm however unsure exactly why we are passing None, but hey, who am I to judge :)
+15:49:59 <thaumos> #action jtanner merged pr
+15:50:11 <sivel> what was the original intention?  these are lifes great questions
+15:50:21 <thaumos> #action akasurde to pr/issue "sysctl null/blank vals missing tests"
+15:50:32 <akasurde> jtanner, Do you know any example where people will set any blank or null vaule to kernel param
+15:50:49 <thaumos> #action thaumos to revisit greater discussion of argspec None type for all modules.
+15:51:05 <akasurde> jtanner, thanks for merge
+15:51:37 <jtanner> akasurde: i would try to copy what is in the initial bug report
+15:52:21 <akasurde> jtanner, Ok
+15:52:26 <jtanner> akasurde: https://github.com/ansible/ansible/issues/25035
+15:52:39 <akasurde> jtanner, I am on it :)
+15:52:43 <jtanner> thanks
+15:53:06 <thaumos> #topic Open Floor
+15:53:28 <thaumos> Anything else people want to bring up in the last few minutes?
+15:53:43 <gundalow> #topic Module argspec validation
+15:54:33 <gundalow> sivel: validate-modules has the ability to ensure that DOCUMENTATION matches argspec. I know it's slow to run across all modules as once, though for PRs that touch modules, do you thik it may be useful to run in CI?
+15:55:17 <sivel> probably. however it would could limit it to the specific module that would be best I think
+15:55:21 <gundalow> ack
+15:55:27 <gundalow> cool, I'll have a look at that
+15:55:31 <gundalow> #topic Open Floor
+15:55:37 <sivel> Also, I haven't really played with that functionality in a while.  Let me know if you run into any issues
+15:56:36 <jtanner> ansible's 3nd(?) SIG [after networking and windows]  is  now vmware ... join #ansible-vmware if you want to get SOAPy
+15:57:04 <akasurde> jtanner, +1 SOAPy hehe
+15:57:07 <jtanner> s/3nd/3rd
+15:57:49 <thaumos> are you washing your mouth with that soap?
+15:58:13 <jtanner> something like that
+15:58:18 <akasurde> Laugh a lot
+15:58:19 <thaumos> lol
+15:58:23 <thaumos> alright
+15:58:30 <thaumos> thanks for the discussion today folks!
+15:58:35 <thaumos> #endmeeting

@@ -1,0 +1,232 @@
+16:00:12 <gundalow> #startmeeting Network Working Group
+16:00:12 <zodbot> Meeting started Wed Jul 12 16:00:12 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:00:12 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:00:12 <zodbot> The meeting name has been set to 'network_working_group'
+16:00:16 <gundalow> names
+16:00:29 * caphrim007 is here
+16:00:33 <dag> o/
+16:00:46 <gundalow> #chair funzo ganeshrn privateip Qalthos caphrim007 dag rcarrillocruz trishnag
+16:00:46 <zodbot> Current chairs: Qalthos caphrim007 dag funzo ganeshrn gundalow privateip rcarrillocruz trishnag
+16:02:28 <itdependsnetwork> here
+16:02:31 <gundalow> #info Agenda https://github.com/ansible/community/issues/110
+16:02:34 <gundalow> #chair itdependsnetwork
+16:02:34 <zodbot> Current chairs: Qalthos caphrim007 dag funzo ganeshrn gundalow itdependsnetwork privateip rcarrillocruz trishnag
+16:02:34 <newswangerd> o/
+16:03:22 * Qalthos 🌊🌊
+16:03:47 <gundalow> #chair mikewiebe
+16:03:47 <zodbot> Current chairs: Qalthos caphrim007 dag funzo ganeshrn gundalow itdependsnetwork mikewiebe privateip rcarrillocruz trishnag
+16:03:56 <gundalow> #action gundalow will review F5 PRs next week
+16:04:39 <gundalow> #info Partner Modules Submission Deadline: 2017-Jul-15
+16:04:45 <gundalow> #info Partner Modules Development Freeze Date: 2017-Aug-01
+16:05:23 <gundalow> #topic make panos security rule more idempotent #26573
+16:05:29 <gundalow> #info https://github.com/ansible/ansible/pull/26573
+16:05:45 <gundalow> itdependsnetwork: panos is community maintained, so need them to review
+16:05:54 <itdependsnetwork> So to me this is bare min
+16:05:56 <gundalow> How else can we help
+16:06:09 * privateip waves and takes a seat
+16:06:32 <itdependsnetwork> when I push a rule, what should happen? Should that rule be declarative?
+16:07:04 <itdependsnetwork> I just fixed it so it doesn't fail if pushing the exact same rule
+16:07:51 <itdependsnetwork> but not sure what next step should be from a standard ansible methodology. Just ensure it is there, or ensure it is as stated (declarative)
+16:08:33 * trishnag waves
+16:09:17 <privateip> itdependsnetwork: ideally it would be fully declarative
+16:09:29 <privateip> that said .... most modules don't follow that rule today
+16:09:37 <privateip> so i think your PR is appropriate
+16:10:04 <itdependsnetwork> Well I am not even ensuring it is there, only if there is an exact match, don't fail
+16:10:11 <itdependsnetwork> I can add that though.
+16:10:40 <itdependsnetwork> then finally, when does community (I think Ivan is maintainer ) to be in by 2.4?
+16:12:34 <privateip> freeze is 8/1
+16:12:52 <privateip> no net new anything after that date ... only bug fixes
+16:13:23 <itdependsnetwork> ok
+16:13:38 <itdependsnetwork> so good on this then, will try an hunt down maintainer
+16:13:58 <gundalow> itdependsnetwork: :)
+16:14:16 <gundalow> cool, so next
+16:14:21 <privateip> he should have been cc'ed by the bot already
+16:14:43 <gundalow> Bot has issue with CC'ing people over the last day or two
+16:14:53 <privateip> ahh
+16:15:28 <gundalow> they've been added manually by itdependsnetwork so all good
+16:15:49 <gundalow> #topic Kc update ip filter #26566
+16:15:54 <gundalow> #link https://github.com/ansible/ansible/pull/26566
+16:16:18 <gundalow> itdependsnetwork: looks good
+16:16:28 <gundalow> Does this need documenting anywhere?
+16:16:42 <itdependsnetwork> Probably :)
+16:16:50 * gundalow isn't sure to what extent we document the filters
+16:16:54 <itdependsnetwork> most of all, you good with naming?
+16:17:46 <privateip> i think i already +1'ed it
+16:18:00 <gundalow> merged
+16:18:04 <itdependsnetwork> nice!
+16:18:16 <itdependsnetwork> thanks!
+16:18:25 <itdependsnetwork> good to go then :)
+16:18:26 <privateip> thanks for the effort
+16:18:31 <gundalow> itdependsnetwork: could you raise a PR to update CHANGELOG and add a couple of lines (if you think it's worth it)
+16:18:37 <itdependsnetwork> np, even though I am a pain :)
+16:18:43 <privateip> lol
+16:18:53 <itdependsnetwork> Sure
+16:19:00 <gundalow> haha
+16:19:12 <gundalow> right, I'm going to skip over nxos and do that last
+16:19:14 <gundalow> so dag
+16:19:27 <dag> o/
+16:19:32 <gundalow> #topic network/aci/aci_rest 26029
+16:19:36 <gundalow> #chair dag
+16:19:36 <zodbot> Current chairs: Qalthos caphrim007 dag funzo ganeshrn gundalow itdependsnetwork mikewiebe privateip rcarrillocruz trishnag
+16:19:38 <privateip> hi dag
+16:19:51 <gundalow> #link https://github.com/ansible/ansible/pull/26029
+16:20:10 <dag> So I was wondering what exactly I need to do for this module, integration tests will be near impossible (no ACI infra), and I don't really see how to do unit tests here
+16:20:14 * gundalow wonders if dag is going to ask about tests
+16:20:17 <gundalow> oh, I was right :)
+16:20:18 <dag> :-)
+16:20:26 <gundalow> aye
+16:20:39 <gundalow> mattclay and I have been talking a lot about unit test
+16:20:40 <dag> I've heard rumors about mocking stuff
+16:21:10 <gundalow> and unit tests generally don't make as much sense for modules
+16:21:28 <caphrim007> i'll have to disagree with that
+16:21:40 <caphrim007> my own unit tests have caught problems in my modules during dev
+16:21:47 <dag> and I could capture a few rest results from real hardware, but if that's just to test the aci_response function, that's a bit moot.
+16:22:09 <gundalow> caphrim007: I'm happy to be proved wrong
+16:22:33 <privateip> im with caphrim007 on this one
+16:22:42 <gundalow> I guess I should have said that generally speaking integration tests are better for Modules, however for Networking that can be a pain
+16:22:51 <privateip> even basic mocked modules should have some unit tests
+16:22:56 <dag> caphrim: I guess it really depends on the modules, this module is an interface to the low-level REST api, so there's not much more then doing a request, and parsing the result
+16:23:08 <dag> so the only thing I can really tests is parsing the result
+16:23:12 <privateip> if not for the initial commit but for down the road when modules get updated
+16:23:18 <caphrim007> dag: i see
+16:23:25 <caphrim007> mine are also to my products rest api
+16:23:30 <dag> right, still don't see how that would work with this module
+16:23:39 <caphrim007> but my unit tests are there to handle all of th data munging that happens between user and rest
+16:23:41 <dag> any pointers ?
+16:23:58 <dag> but the deadlin is 2017-07-15, so this is becoming quite urgent now
+16:24:53 <gundalow> So ignoring the tests are we happy with the module
+16:25:01 <privateip> +1
+16:25:02 <dag> yesterday in the core meeting the freeze was in august, but a deadline announced 3 days before is a bit problematic
+16:25:13 <dag> (probably this was public, I just wasn't aware)
+16:25:33 <gundalow> We are working on improving comms (all of Ansible)
+16:25:38 <dag> I know
+16:25:42 <privateip> i believe that was the submission deadline no?
+16:25:52 <privateip> you are submitted at the moment
+16:26:09 <itdependsnetwork> yea I thought everything got pushed out based on yesterday's meeting
+16:26:15 <gundalow> Networking people have been informed by email & this agenda in june for the 15th July PR raise deadline
+16:26:19 <dag> privateip: I know it was mentioned in London during conversation, but I wasn't aware this was a submission deadline, I thought it was a target date for everything ACI
+16:26:28 <dag> privateip: ah ok
+16:26:56 <gundalow> So moving forward these dates will be added to ROADMAP_X.Y.rst
+16:27:15 <dag> so, I'll work on some unit-tests this evening (based on caphrim007's references) and will put it on next week's agenda
+16:27:22 <gundalow> dag: +1
+16:28:08 <gundalow> #action dag  to add unit tests
+16:28:54 <gundalow> #topic Error with paramiko 2.1.0 <--> 2.2.1: Unicode-objects must be encoded before hashing
+16:28:57 <gundalow> ￼￼ 1￼
+16:29:07 <gundalow> #link Error with paramiko 2.1.0 <--> 2.2.1: Unicode-objects must be encoded before hashing
+16:29:10 <gundalow> ￼￼ 1￼
+16:29:18 <gundalow> bah
+16:29:22 <dag> hehe
+16:29:33 <gundalow> #link https://github.com/ansible/ansible/issues/26146
+16:29:39 <gundalow> privateip: ^
+16:29:41 <dag> happens to me all the time
+16:29:57 <privateip> sorry my bad on that one
+16:30:10 <privateip> im going to self assign it now
+16:30:15 <privateip> and work it this week
+16:30:15 <gundalow> #info This is a strange one, would have expected more people to shout out
+16:30:24 <gundalow> #action privateip to investigate
+16:30:25 <gundalow> Thanks
+16:30:31 <gundalow> #topic NXOS
+16:30:38 <caphrim007> gundalow: dont forget mine too https://github.com/ansible/community/issues/110#issuecomment-313542637
+16:31:09 <gundalow> [17:03] <@gundalow> #action gundalow will review F5 PRs next week
+16:31:31 <gundalow> caphrim007: don't worry :)
+16:31:42 <caphrim007> k
+16:31:50 <gundalow> mikewiebe: Just checking, you on for the meeting tomorrow?
+16:32:11 <gundalow> rahushen: Hi
+16:32:14 <mikewiebe> gundalow: yes
+16:32:15 <rahushen> Hi
+16:32:26 <gundalow> Qalthos: hi
+16:32:27 <gundalow> right
+16:33:08 <rahushen> #26617 needs to be reviewed and merged
+16:33:09 <gundalow> #topic Add nxos_command IT and generalize UT #26617
+16:33:21 <gundalow> #link https://github.com/ansible/ansible/pull/26617
+16:34:10 <gundalow> #action Qalthos to check this passes on our test kit, if it does merge
+16:34:23 * dag needs to go, thanks gundalow
+16:34:24 <Qalthos> The integration tests seem to be... mostly testing nxos_bgp? I mean I see what you're doing, but this looks like the wrong way to go about a sanity check
+16:34:42 <rahushen> I disagree
+16:35:14 <rahushen> the module checks command ... don't really care which commands
+16:35:43 <itdependsnetwork> slightly off topic, I have seen some some stuff, but how are you doing integration tests? Is this ran with each PR now?
+16:36:36 <rahushen> we are running it across several platforms and improving module ITs for a few weeks now
+16:37:09 <gundalow> itdependsnetwork: right now we all unit test and only vyos_command get run in Shippable (ie part of GitHub CI)
+16:37:33 <rcarrillocruz> not sure who you were asking that itdependsnetwork
+16:37:37 <itdependsnetwork> "we all" == redhat?
+16:37:38 <rcarrillocruz> rahushen , us or in general
+16:37:39 <gundalow> itdependsnetwork: in addition we have a scheduled test framework that is running some of the platforms twice a day on devel
+16:37:40 <rcarrillocruz> ?
+16:38:20 <rcarrillocruz> we have a platform internally thhat we run periodic jobs (not on commit, but post-merge), currently VyOS, OVS and EOS
+16:38:20 <rahushen> sorry, us = mikewiebe, rahushen and saichint from cisco
+16:38:27 <itdependsnetwork> i'll ping you in ansible-network to not confuse more than I have :)
+16:38:55 <rcarrillocruz> we plan to onboard more platforms as we get access to VM images from other vendors
+16:39:46 <rcarrillocruz> the on PR testing will come too via Zuul
+16:40:48 <gundalow> ok, back to NXOS, we can discuss testing in #ansible-network
+16:40:51 <Qalthos> rahushen: I assume the unit changes reflect some kind of version incompatibility?
+16:41:33 <rahushen> qalthos : yes, the show version output no longer matches the one in the fixtures for the newer platforms
+16:41:41 <mikewiebe> Qalthos: There are already quite a few tests covering the nxos_command module.  rahushen added essentially a smoke test that can be run quickly to detect very basic issues with the module.
+16:42:11 <mikewiebe> Qalthos: We picked bgp but it could have been any command that is supported on nxos.
+16:44:51 <Qalthos> Alright, I have the info I need
+16:45:51 <gundalow> Qalthos: Would it be easier for you to drive this section?
+16:45:58 <gundalow> https://github.com/ansible/community/issues/110#issuecomment-314795342
+16:46:06 <Qalthos> I'd like a bit more specificity on what is broken how for the unit tests, just in case we need to track this down later, or modify the tests further, but I'll merge it
+16:46:22 * gundalow -> afk
+16:46:25 <Qalthos> gundalow: sure
+16:46:29 <gundalow> Thanks
+16:47:20 <rahushen> qalthos .. roger that, will add a comment to PR with an explanation to the change in show ver output
+16:47:20 <Qalthos> All of those bgp issues are on my list to tackle next, is there anything you want to bring up here?
+16:48:03 <Qalthos> #info #26024 #26159 #2620 #26262
+16:48:03 <rahushen> #26544 is not bgp related
+16:48:16 <Qalthos> rahushen: I'm getting there (:
+16:48:48 <Qalthos> #topic nxos_bgp_* issues #26024 #26159 #2620 #26262
+16:48:52 <rahushen> nothing on the bgp ones ... just wanted to check when they'll get addressed
+16:49:12 <Qalthos> rahushen: soon as it can be arranged, which should be pretty soon
+16:49:28 <rahushen> qalthos - sounds good
+16:49:39 <mikewiebe> Qualthos:  Just a quick note that I updated all the issues I filed with info or responses you were asking for
+16:50:15 <Qalthos> mikewiebe: Roger, I'll be sure to go through those as well
+16:50:24 <Qalthos> #topic nxapi not json by default in 2.4 #26544
+16:50:36 <Qalthos> privateip: still here?
+16:50:55 <privateip> yeah
+16:50:58 <rahushen> not the best header for the issue
+16:51:20 <rahushen> but it seems to me the nxapi behavior has changed over time
+16:51:55 <rahushen> the IT for the nxos_command/nxapi expects structured output with '| json' which no longer is the case
+16:52:10 <rahushen> without*
+16:53:44 <privateip> afaik the default output for cli is structured ascii and for nxapi is json
+16:53:49 <Qalthos> rahushen: I've been looking into this, and I think I might have worked out where we can turn this back
+16:54:13 <rahushen> ok
+16:55:10 <mikewiebe> Qualthos and privateip: We should move towards an architecture that allows us to ask for structured or non-structured output regardless of transport (nxapi or cli) and let the api do the right thing
+16:56:00 <Qalthos> mikewiebe: So we do have that, you can `| json` or `output: json` (or, presumably, `outout: text`) anywhere you like
+16:56:14 <privateip> mikewiebe we already have that
+16:56:20 <Qalthos> and the right thing should happen
+16:56:35 * privateip zips it, Qalthos has it covered
+16:57:19 <Qalthos> there is a certain amount of extra munging that's happening that overrides `output: whatever`, which is also causing this issue
+16:57:53 <Qalthos> but What I really want to know is if it makes any sense to have different output formats for different transports
+16:58:07 <Qalthos> (by default anyway)
+16:58:13 <mikewiebe> I have seen that but I think there are a few cases where it does not work as expected.  I will collect data but in general we don't use | jason for nxapi structured.  We build the http request with a tag that means structured output desired
+16:58:25 <mikewiebe> | json
+16:59:25 <privateip> yeah im pretty sure we catch that, drop the | json and set the request field correctly
+16:59:29 <Qalthos> mikewiebe: as do we internally, it is only for user convenience, the `| json` gets stripped and the request is built properly
+17:00:13 <mikewiebe> Qualthos: You are referring to the methods in module_utils/nxos right?
+17:00:51 <Qalthos> mikewiebe: Those ones, yes
+17:01:09 <mikewiebe> Qalthos: Ok.
+17:01:23 <Qalthos> I think we're getting a tad off-track though
+17:02:31 <Qalthos> privateip: mikewiebe is https://github.com/ansible/ansible/issues/26544 an issue in that the transports have different expectations
+17:02:54 <Qalthos> or do we want to preserve that difference for a reason
+17:03:59 <mikewiebe> rahushen:  You have more background on that issue.  Can you comment?
+17:04:42 <rahushen> historically, it's been json by default for nxapi
+17:05:47 <Qalthos> that is the most compelling reason anyone has been able to give me, and I
+17:06:00 <Qalthos> 'm willing to fix the issue on that basis
+17:06:16 <Qalthos> unless anyone else has any ideas, we can move on
+17:07:26 <Qalthos> Okay, then
+17:07:52 <Qalthos> #topic nxos_acl_interface tests #26616
+17:08:25 <Qalthos> mikewiebe: I am more confused than the last time I looked at this, is `feature nxapi snadbox` a thing?
+17:08:36 <Qalthos> er, s/snad/sand/
+17:09:03 <Qalthos> okay, I take it back, you removed it
+17:09:08 <Qalthos> merging
+17:09:10 <mikewiebe> Qualthos: Nope.. :)
+17:09:26 <mikewiebe> Thanks!
+17:10:13 <Qalthos> #topic not NXOS
+17:10:22 <Qalthos> we did #26029, right?
+17:11:11 * Qalthos looks back
+17:11:21 <Qalthos> it looks like we di
+17:11:31 <Qalthos> #topic Open Floor
+17:11:49 <Qalthos> We're a bit over, but does anyone else have anything to say?
+17:13:00 <mikewiebe> Nothing here
+17:13:04 <Qalthos> Alright, thanks everyone for coming out
+17:13:09 <Qalthos> #endmeeting

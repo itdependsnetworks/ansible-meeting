@@ -1,0 +1,241 @@
+15:11:17 <bcoca> #startmeeting Ansible Core Team Public Meeting
+15:11:17 <zodbot> Meeting started Thu Jun  9 15:11:17 2016 UTC.  The chair is bcoca. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:11:17 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:11:17 <zodbot> The meeting name has been set to 'ansible_core_team_public_meeting'
+15:11:26 <quinot> Aaaaah :)
+15:11:38 <bcoca> sorry, got held up and other team member that would have started meeting also seem held up elsewhere
+15:11:57 <quinot> No problem :) hello everyone!
+15:12:01 <underyx> no worries!
+15:12:25 <nitzmahone> Yo
+15:12:50 * mattclay waves
+15:13:13 <bcoca> #agenda item https://github.com/ansible/ansible-modules-core/issues/3256
+15:14:07 <bcoca> ^ anyone present that wants to make a case?
+15:14:37 <quinot> sounds to me like heuristics based on job contents might lead to unexpected results
+15:14:44 <quinot> Always requiring a name seems more robust
+15:15:21 <bcoca> it takes away flexibility, would adding docs about the behaviour in module not be a better solution?
+15:15:47 <bcoca> ^ i would not use it w/o name .. but other people seem to do
+15:16:21 <robinro> one could fix the actual use case that the issue stated: check if an identical line exists and give it the name
+15:16:30 <robinro> this would also allow to rename cronjobs
+15:16:34 <bcoca> there is a use case, 'remove this cron job that was unmanaged before we started using ansible'
+15:16:56 <jtanner> behavior should remain the same but possibly add an option for "dedupe"
+15:17:09 <jtanner> default to no
+15:17:27 <robinro> why should one keep the behaviour "duplicate job"? I can't think of a situation where this is wanted
+15:17:35 <mattclay> Allowing Ansible to take over a previously unmanaged job would be good, but should be explicitly opt-in.
+15:17:54 <jtanner> identical command args don't necessarily mean identical function
+15:18:09 <bcoca> ^ could be new instance of same job
+15:18:10 <jtanner> someone might want to spawn two identical jobs to mine bitcoin or something on two cores
+15:18:17 <robinro> k
+15:18:27 <bcoca> there are too many 'what ifs'
+15:18:29 <underyx> I don't think it's unreasonable to expect people to manually name their cronjobs if they want to use ansible to manage them, if this process is documented
+15:18:56 <jtanner> dedupe=yes would give them an 'option' to bring other jobs under ansible management
+15:18:57 <underyx> 'manually' as in with lineinfile, probably
+15:19:05 <bcoca> ^ i think documentation and new options would mitigate this, i don't think restricting the functionality or changing current behaviour by default will work well
+15:19:08 <quinot> Maybe name could be optional *if state=present*
+15:19:17 <quinot> I mean "absent" of course
+15:19:34 <bcoca> why not with present? ^ use case has been established above
+15:19:35 <quinot> (for the use case mentioned by bcoca of removing a previously unmanaged job)
+15:19:38 <jtanner> at the very least, this is feature request. not bug report ... imo
+15:19:46 <bcoca> agreed
+15:20:11 <bcoca> its a 'change of funcitonality' ... i would even take a docs bug, cause current functionanlity can be confusing
+15:20:42 <quinot> I think it might violate POLA if ansible adds an unnamed entry due to an initial run of the playbook, and then the user changes just the schedule in the playbook, and Ansible adds a new entry but does not remove the previous one
+15:21:31 <jtanner> name not required?
+15:21:41 <bcoca> not going to dispute that, but it is how it has been working for a long time now, i would not change the default lightly, i would add a note to inform users of teh behaviour
+15:22:12 <quinot> Right IOW we need to mention clearly that if there's no name then the only thing the module will ever do is *add* jobs, and if the user wants to add *or update parameters of* a job then a name is necessary
+15:23:17 * bcoca is still happy just using template ....
+15:23:54 <bcoca> if you want to submit a docs PR i'm happy to review, jtanner if you want to add additional flag, I think it will be good also
+15:24:05 <quinot> sounds good
+15:24:08 <bcoca> ok
+15:24:28 <bcoca> #action quinot to submit docs clarifying cron behaviour, optionally jtanner will add dupe control option
+15:24:48 <bcoca> next item https://github.com/ansible/ansible-modules-core/pull/901
+15:24:55 <underyx> heck yeah!
+15:25:14 <bcoca> ah, yes i reverted, several reasons (though it seems my commit message got broken)
+15:25:25 <underyx> see this comment for an example use case: https://github.com/ansible/ansible/pull/10399#issuecomment-125667511
+15:25:48 <bcoca> a) it adds another copy: content= type field, which leads to 'inline templating', a problematic feature that is source of many issues
+15:26:11 <bcoca> b) can already be achievd mostly by just having a header/footer files in the assemble
+15:26:37 <bcoca> c) the least important part, it did not describe the interactions with delimiter (this is part of comenet that survived)
+15:27:18 <underyx> a) I'd argue that people would only ever use header for syntactic elements of a file, such as the `<?php` tag in my example
+15:27:54 <underyx> the same way as delimiter works currently
+15:27:56 <bcoca> underyx: that was same argumet that got copy: content= in ..., which experience has really disproven
+15:28:02 <bcoca> even delimiter has been abused this way
+15:28:10 <bcoca> ^ you are making my point
+15:28:16 <bcoca> we want less of this, not more
+15:29:11 <underyx> well, either way, b) the header/footer files are unreliable, you need to make an assumption that no fragment will ever come before or after the arbitrarily named (000-header) files in alphabetical order
+15:29:27 <bcoca> which is under user's control
+15:29:45 <underyx> c) is an implementation detail and I think we can safely ignore it and record it as an action for me if we decide to accept this PR
+15:30:02 <bcoca> c) was not the grounds for the revert, was additional note
+15:30:17 <underyx> I know, just wanted to leave it out of the discussion here
+15:30:22 <bcoca> agreed
+15:30:49 <underyx> either way, I obviously have way less experience with user behavior with ansible, so can't really refute any of these points
+15:31:10 <underyx> I personally am uncomfortable with the alphabetical sorting hack that is needed currently
+15:31:21 <bcoca> we try to keep templating in plays as simple as possible, mostly variables, it gets really nasty when people are doing 'inline content'
+15:31:43 <bcoca> i would not mind a 'sort/order' feature if that is what you want
+15:31:59 <bcoca> even header/footer that specifyc a specifc file name
+15:32:15 <underyx> how exactly would that work?
+15:32:25 <bcoca> header: header.php
+15:32:28 <underyx> right
+15:32:41 <underyx> sounds like that would solve the issue
+15:32:53 <bcoca> with ignore_missing_header=no|yes ? if we want to get complicated
+15:33:14 <underyx> I'd consider it safe to just error out on a missing header
+15:33:28 <underyx> can't really imagine a scenario where it'd just disappear
+15:33:38 <bcoca> ^ header and footer should be in path if relative, skipped for rest of assemble if so
+15:34:11 <underyx> thoughts on delimiter behavior?
+15:34:16 <bcoca> underyx: when relative, user might not want header for 'this set' but want it by default (spitballing here, not requrieing it for the feature)
+15:34:24 <underyx> is it okay to not delimit between header and first fragment?
+15:34:42 <bcoca> i think that should be default, if you want toggle to remove, im fine also
+15:35:58 <mattclay> If header/footer can be files, should there be a delimiter_file option as well?
+15:36:53 <bcoca> ^ that would have been my preference for delimiter option
+15:37:31 <mattclay> Adding it would give consistency with the proposed header/footer for files.
+15:37:47 <mattclay> We could even deprecate the non-file delimiter option if we wanted to.
+15:38:21 <underyx> I don't really like where this is going by the way :D
+15:39:13 <mattclay> underyx: You prefer the ability to have inline content for header/footer/delimiter instead of using files?
+15:39:25 <underyx> I mean, I get that it's more difficult to abuse and maybe easier to maintain, but I really liked the simplicity of delimiter="# whatever"
+15:40:35 <mattclay> I agree inline is more convenient to use.
+15:40:54 <underyx> again I'm an absolute outsider here, but I wonder why y'all care about users abusing features more than a mention in the docs
+15:40:56 <bcoca> #action redo new header/footer to user files instead of inline content and resbumit
+15:41:04 <bcoca> ^ lets leave other modifications for later
+15:41:28 <underyx> you know, what with the python philosophy of every user being a consenting adult
+15:41:31 <bcoca> underyx: abuse --> more tickets/bugs/support == more work
+15:41:45 <bcoca> we are not developing python
+15:41:50 <underyx> fair enough
+15:42:04 <underyx> again, not really disagreeing, just wondering
+15:42:22 <bcoca> and simpler features lead to less confusion and less user frustration
+15:43:00 <bcoca> i prefer to give good simple building blocks over very complex 1/2 buildings
+15:43:20 <bcoca> less bugs, less confusion, still have all the power you need
+15:43:29 <bcoca> but that is my opinion
+15:43:35 <underyx> well, as building blocks the inline variant definitely has a lower 'complexity floor'
+15:43:50 <bcoca> ok, moving onto next items, we can discuss dev philosophy later
+15:44:14 <bcoca> https://github.com/ansible/ansible-modules-core/pull/3794
+15:44:37 <robinro> that's a fix for git in combination with depth but without version
+15:44:50 <robinro> which is what runs when you use ansible-pull with minimal arguments
+15:45:11 <robinro> it doesn't fetch changes from the repo since early 2.2
+15:45:21 <bcoca> and the issue with the PR is?
+15:45:54 <robinro> it should make it into 2.2 soon
+15:46:21 <bcoca> need more eyes on it, but the people i would like to ping are not available right now
+15:46:27 * abadger1999 would not change delimiter but is fine with header/footer being files
+15:46:38 <bcoca> ^ and one appears!
+15:46:59 <bcoca> abadger1999: yeah, just settled on the header/footer for now, leaving other changes for later discussion
+15:48:55 <abadger1999> +1 for 3794 .. robinro, you want to generate some test cases as well?
+15:49:31 <robinro> abadger1999: https://github.com/ansible/ansible/pull/16055
+15:49:43 <robinro> already done :D
+15:50:14 <abadger1999> Excellent.
+15:50:54 <abadger1999> I'll merge both of those now
+15:51:02 <robinro> thanks
+15:51:18 <robinro> then I have another PR to discuss: https://github.com/ansible/ansible/pull/16056
+15:51:26 <robinro> check_mode for individual tasks
+15:54:37 <abadger1999> +1 for the concept here.
+15:54:50 <abadger1999> It seems like we should be deprecating always_run if we implement this?
+15:54:57 <robinro> yes
+15:55:05 <abadger1999> (Quick review of the implementation looks okay)
+15:55:38 <robinro> I already setup the deprecation warning for always_run, just needs a version number
+15:56:55 <abadger1999> ah, I see it... Cool.
+15:57:22 <abadger1999> We might want to notate that in the docs as well (since we're still single version of docs only)
+15:57:48 <abadger1999> bcoca: Code  looks good. +1 from me.
+15:58:05 <abadger1999> (on https://github.com/ansible/ansible/pull/16056 )
+15:58:48 <robinro> so would you leave always_run in the docs forever?
+15:59:42 <nitzmahone> Remove in 2.4?
+15:59:49 <abadger1999> robinro: Maybe.... at least until 2.1 goes EOL.  I would probably just make it a small addition to your doc update.
+16:00:01 <nitzmahone> +1 also, we've needed this for a long time
+16:00:19 <abadger1999> .. note:: Prior to 2.2 only the ability to turn this on per-task existed.  The notation for that was always_on: True
+16:00:28 <abadger1999> robinro: something like that ^
+16:00:44 <robinro> I'll add your comment
+16:00:55 <robinro> deprecate in 2.4 sounds good to me
+16:01:10 <abadger1999> That way if someone comes into a new job where they're running old ansible, they'll be able to port to the new syntax easier.
+16:01:21 <nitzmahone> Well, nuke in 2.4, deprecate in 2.2.
+16:01:45 <nitzmahone> abadger1999: makes good sense
+16:03:23 <robinro> then one can also merge the proposal https://github.com/ansible/proposals/blob/master/rename_always_run.md
+16:03:24 <robinro> it's the same up to naming details
+16:04:45 <robinro> that's it from me then
+16:09:37 <abadger1999> Hmmm I think if we're deprecating always_run, we don't need to rename it... the option will be removed in 2.4, just the documentation that it used to exist will stick around for a while.
+16:09:54 <abadger1999> bcoca: do you have a next topic?
+16:10:27 <quinot> I did submit one (#11810, allow multiple interpreters)...
+16:11:50 <abadger1999> #topic https://github.com/ansible/ansible/pull/11810 Allow multiple interpreters to be specified
+16:12:27 <quinot> Alright, so, this is IMO a useful feature when managing a pool of heterogeneous machines :)
+16:12:40 <gundalow> abadger1999: Are you a chair?
+16:12:47 * gundalow returns from holiday
+16:12:53 * abadger1999 scrolls up to see
+16:12:59 <gundalow> #chair
+16:13:17 <abadger1999> Looks like bcoca is the only chair
+16:13:18 <gundalow> I think only bcoca is chair
+16:13:28 <gundalow> nm, just means logs will not be clear
+16:13:30 <MichaelBaydoun> #chair
+16:13:33 <gundalow> sorry, so carry on
+16:13:45 <quinot> Thanks :-)
+16:13:46 <abadger1999> Oh well, we can continue to discuss and hopefully bcoca will come back later.
+16:14:22 <quinot> Remarks have been sent on the PR over time (from bcoca, amenonsen, and abadger), all of which have been addressed as far sa I could determine
+16:14:38 <quinot> This PR was tagged for the 2.1.0 milestone, but that was missed
+16:15:18 <quinot> I'd be happy if we could move forward with it now that 2.1 is out
+16:18:21 <bcoca> sorry, freeze, server rebooted and my connection stalled, just got back in
+16:18:25 <bcoca> #chair abadger1999
+16:18:26 <zodbot> Current chairs: abadger1999 bcoca
+16:19:22 <bcoca> quinot: im not against it anymore, i think its at a usable state, need inpout from other core team members before adding
+16:20:28 <quinot> OK great :) What's the process then? (Sorry if I sound a bit pressing, I submitted this 18 months ago and am eager to see it merged :) )
+16:20:44 <bcoca> we need to document use case well, as i think it can be a bit confusing to user that don't understand how/why ansible_x_interpreter works
+16:21:32 <quinot> The PR includes documentation
+16:21:35 <robinro> how stable is "command -v $interp" on non-linux systems?
+16:21:58 <quinot> It's POSIX
+16:22:21 <quinot> I can easily double check that it works on AIX, Solaris, FreeBSD
+16:22:26 <robinro> fair enough
+16:24:13 <quinot> Just verified on all of these, as well as Cygwin
+16:26:26 <abadger1999> Hmm
+16:26:34 <abadger1999> on my Linux system, that's provided by bash
+16:26:43 <quinot> (regarding documentation: I introduced a full section on interpreter selection)
+16:27:30 <quinot> abadger1999 it's a standard shell builtin
+16:29:04 <abadger1999> k
+16:29:13 <bcoca> quinot: still, want to make sure peole select the 'right interpreter' instead of just putting a list they think will work
+16:29:15 <jtanner> abadger1999: you on slack?
+16:30:01 <abadger1999> quinot: yep, confirmed, appears to be available as a builtin in dash if bash is not installed on ubuntu14
+16:30:10 <abadger1999> so seems reasonable
+16:30:33 <quinot> bcoca: could that concern be addressed by documentation somehow?
+16:30:56 <quinot> I think it's really convenient to not have to make this decision explicitly in inventory
+16:32:21 <abadger1999> jtanner: yep, but can't multiplex any more than I am-- I'll look at that report once this meeting ends.
+16:32:28 <jtanner> k
+16:36:18 <abadger1999> quinot: Does fish have command?
+16:36:46 <Qalthos> abadger1999: looks like it
+16:36:48 <bcoca> quinot: yes, it can be addressed with docs
+16:37:02 <bcoca> fish is not posix, but it does implement some of the spec
+16:37:11 <quinot> fish does have it, yes
+16:37:11 <bcoca> POSIX == should work .. but not alwys does
+16:38:01 <Qalthos> fish's command is a little different, though
+16:38:30 * bcoca is not suprised
+16:38:41 <quinot> quinot@malevil ~> command -v /bin/sh ; and echo OK
+16:38:41 <quinot> /bin/sh
+16:38:41 <quinot> OK
+16:38:41 <quinot> quinot@malevil ~> command -v /nonexistent; or echo NOK
+16:38:41 <quinot> NOK
+16:38:46 <bcoca> but fine with that, we do tell people ansible requires posix systems
+16:38:48 <quinot> (taht's with fish)
+16:39:02 <bcoca> ^ worst case, we call stat module
+16:39:28 <quinot> bcoca there would be a chicken and egg issue, you need a Python interpreter to call the stat module!
+16:39:43 <bcoca> true!
+16:40:19 <abadger1999> quinot: also need to change the use of "||" to self._SHELL_OR
+16:40:32 <abadger1999> quinot: Looks like fish does not have command that uses -v
+16:40:46 <quinot> abadger1999, good point about SHELL_OR, will do
+16:41:00 <quinot> abadger1999, regarding -v: I'm surprised, cf above transcript
+16:41:16 <quinot> quinot@malevil ~> type command
+16:41:16 <quinot> command is a builtin
+16:41:16 <quinot> quinot@malevil ~> command -v /bin/sh
+16:41:16 <quinot> /bin/sh
+16:41:22 * bcoca wants to stuff fish shell someone on fish shell users
+16:41:34 <abadger1999> badger@ubuntu14 ~> command -v test
+16:41:35 <abadger1999> command: Unknown option “-v”
+16:41:49 <quinot> (root@malevil) ~ # fish --version
+16:41:49 <quinot> fish, version 2.2.0
+16:41:49 <quinot> (root@malevil) ~ #
+16:42:19 <abadger1999> fish, version 2.0.0
+16:42:39 <abadger1999> So might have been changed in an update... this is ubuntu14.
+16:43:30 <quinot> OK, Debian 8.4 here
+16:43:35 <abadger1999> not sure what to do... I don't particularly like supporting fish but it is something that worked before.
+16:43:50 <quinot> Nothing that worked before is impacted by this PR
+16:44:19 <quinot> The code doesn't kick in unless the new feature is used
+16:44:24 <abadger1999> I guess I mean -- is a platform that was supported before.
+16:44:54 <bcoca> i'm fine with this feature not working with fish ...
+16:44:54 <quinot> But in any case, I'm making a note of the case of fish 2.0 and will see if I can make it work in that case too.
+16:45:07 <abadger1999> bcoca: Cool.  If you're fine with it, I can be too.
+16:45:13 <abadger1999> <nod>
+16:47:47 <quinot> Sorry gotta leave urgently
+16:47:53 <quinot> I'll look at the minutes tonight
+16:47:54 <abadger1999> quinot: I don't really like the design of having module_common call back into action.
+16:47:56 <abadger1999> quinot: k
+16:48:11 <abadger1999> quinot: worst case... we'll discuss more next meeting.
+16:49:27 <bcoca> end it?
+16:50:48 <bcoca> #endmeeting

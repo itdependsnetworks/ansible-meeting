@@ -1,0 +1,257 @@
+19:00:12 <thaumos> #startmeeting Ansible Meeting
+19:00:12 <zodbot> Meeting started Tue Jul 25 19:00:12 2017 UTC.  The chair is thaumos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:00:12 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:00:12 <zodbot> The meeting name has been set to 'ansible_meeting'
+19:00:26 * chillysurfer waves
+19:00:26 <nitzmahone> boop
+19:00:40 <thaumos> #chair chillysurfer nitzmahone
+19:00:40 <zodbot> Current chairs: chillysurfer nitzmahone thaumos
+19:00:46 <abadger1999> Óla
+19:01:07 * mkrizek lurks
+19:01:25 <thaumos> #chair mkrizek abadger1999
+19:01:25 <zodbot> Current chairs: abadger1999 chillysurfer mkrizek nitzmahone thaumos
+19:02:27 * resmo waves
+19:03:07 <thaumos> #chair resmo
+19:03:07 <zodbot> Current chairs: abadger1999 chillysurfer mkrizek nitzmahone resmo thaumos
+19:04:37 <jtanner> hello
+19:04:42 <thaumos> #chair jtanner
+19:04:42 <zodbot> Current chairs: abadger1999 chillysurfer jtanner mkrizek nitzmahone resmo thaumos
+19:07:02 <rohitkum> Hello, I am Rohit from Cambridge Semantics Inc
+19:07:27 <rohitkum> We use Ansible heavily and would like to take this chance to thank the community
+19:07:43 <rohitkum> Great work
+19:07:51 <thaumos> #chair rohitkum
+19:07:51 <zodbot> Current chairs: abadger1999 chillysurfer jtanner mkrizek nitzmahone resmo rohitkum thaumos
+19:08:02 <thaumos> thanks @rohitkum
+19:08:25 <rohitkum> In the recent times we have started realizing some limitations because of dependency on libcloud
+19:08:33 <thaumos> Sorry all, I have gotten sidetracked by the immense list of issues on the community repo.
+19:09:00 <rohitkum> I wanted to understand the community's view towards moving away from libcloud, or any plan to fill in the gaps?
+19:09:10 <thaumos> @rohitkum, one sec please.
+19:09:26 <rohitkum> Sure
+19:10:58 <thaumos> #topic ansible/ansible#15460
+19:11:06 <thaumos> #link https://github.com/ansible/ansible/issues/15460
+19:11:22 <thaumos> @mkrizek this was your's
+19:11:46 <mkrizek> yeah, wanted to check with you if this is something we want
+19:12:19 <thaumos> Personally, I think it's a bad idea.
+19:12:33 <thaumos> Or at minimum make it configurable
+19:12:45 <mkrizek> bcoca mentioned, iirc, that he would limit it to when force_handlers == yes
+19:13:06 <thaumos> Ok
+19:14:14 <mkrizek> hm, looks like he's not around
+19:14:17 <thaumos> I don't think it's a horrible idea if configurable.  I just foresee people complaining because some config didn't get deployed or some app was deployed properly, and Ansible runs a handler to restart; then their app is messed up
+19:14:25 <thaumos> or someone's database gets corrupted.
+19:14:27 <abadger1999> mkrizek: his internet access is currently down.
+19:14:35 <thaumos> eesh
+19:14:48 <thaumos> I can imagine all hell breaking loose
+19:15:08 <thaumos> If I were bcoca at that moment, I'd raise all unholy hell with my ISP
+19:15:22 <abadger1999> yeah, I don't see there being a right way to handle this if ansible is interrupted mid-task
+19:16:02 <misc> thaumos: seems he did
+19:16:02 <nitzmahone> Would this also affect ctrl-c?
+19:16:03 <thaumos> the right way would be, "I user wants this to happen, let me configure ansible to force_handlers: true in configuration or set the directive for the play"
+19:16:20 <thaumos> #chair misc
+19:16:20 <zodbot> Current chairs: abadger1999 chillysurfer jtanner misc mkrizek nitzmahone resmo rohitkum thaumos
+19:16:29 <abadger1999> nitzmahone: that sends sigint so I think that's the way the reporter wants it
+19:16:31 <nitzmahone> (I would assume so)
+19:16:36 <thaumos> yep
+19:16:57 <abadger1999> handlers aren't really the mechanism that we wrote for rescuing from a task failing.
+19:17:12 <jtanner> blocks
+19:17:27 <nitzmahone> Definitely shouldn't be the default (even if force handlers is on). If I ctrl-c something, I want it to stop, not go run another potentially long wad of stuff.
+19:17:40 <abadger1999> yep.  I could see ansible running a rescue: block if ansible is sent sigint.
+19:18:06 <jtanner> although tower wants it to die completely if they kill any one of the child pids
+19:18:37 <abadger1999> thaumos: yeah, config would be okay... I think it should be more than just force_handlers=True though, as that has a meaning already.
+19:18:51 <nitzmahone> (or at least watch for another signal after starting handlers that'd allow hard abort)
+19:20:09 <mkrizek> yeah, definitely not making it default and having a config option to enable it
+19:20:11 <thaumos> @abadger1999 I think both could work.  I am thinking of the folks who aren't A) willing to write rescue blocks or B) Not saavy enough to write complex rescues
+19:20:40 <mkrizek> have we heard more people complaining about this and/or wanting the feature?
+19:20:44 <abadger1999> nobodies saavy enough to write complex rescues...
+19:20:53 <thaumos> mkrizek: not that I have heard.
+19:21:00 <abadger1999> handlers are worse though, as they aren't actually a rescue.
+19:21:18 <thaumos> yeah, but it's a simple task to do X
+19:21:23 <thaumos> however...
+19:21:28 <thaumos> Now that I think about it...
+19:21:49 <thaumos> I am thinking a rescue block on a playbook would be a much better approach
+19:22:16 <alikins> maybe a way to turn on set a default rescue task (to flush_handlers for ex) and a way to create implicit default rescue blocks
+19:22:43 <abadger1999> jimi|ansible: ^ We're spitballing abunch of idea here ;-)
+19:23:04 <thaumos> lots of good ideas here.
+19:23:29 <thaumos> More and more, I think it's worth having, IF AND ONLY IF, we make it configurable and not the default.
+19:23:31 <jimi|ansible> alikins: an implicit rescue will mean nothing ever fails
+19:23:40 <alikins> more or less playbook equiv of python sys.excepthook  (kinda, sorta)
+19:24:41 <nitzmahone> In our quest not to become a programming language, now we need a rethrow directive in rescue blocks...
+19:24:56 <bcoca> -1 to this .. dont control C if you want play to continue
+19:25:00 * jimi|ansible smacks nitzmahone
+19:25:12 <jimi|ansible> don't give people ideas ;)
+19:25:16 <bcoca> nitzmahone: we have it already, `fail` module
+19:25:20 <chillysurfer> bcoca: +1 to your comment
+19:25:37 <alikins> assert?
+19:25:52 <chillysurfer> i don't see why ctrl-c would be the natural way to go about desired end state
+19:25:52 <bcoca> alikins: also, but `fail` seemed better fit name wise
+19:26:09 <bcoca> or kill -15 <ansible pid>
+19:26:32 <thaumos> people freak out and Ctrl+C
+19:26:45 <chillysurfer> thaumos: in hopes of...?
+19:26:58 <alikins> (https://github.com/ansible/ansible/issues/15460#issuecomment-287032050  mentions similar idea)
+19:27:01 <thaumos> ¯\_(ツ)_/¯
+19:27:06 <thaumos> beats the hell out of me
+19:27:10 <thaumos> I sure as hell never did it.
+19:27:18 * chillysurfer laughs
+19:28:13 <jimi|ansible> i ctrl+c all the time with ansible, however i don't expect the rc to be representative of what happened at all
+19:28:18 <jimi|ansible> i expect it to stop, not do more stuff
+19:28:25 <jtanner> same here
+19:28:30 <bcoca> ^ hence my -1
+19:28:33 <jtanner> and tower team generally agrees
+19:28:44 <alikins> not that anyone would ever understand what to expect when combined with when:/fails_when: or any_errors_fatal or ignore_errors etc
+19:28:59 <chillysurfer> jtanner jimi|ansible what do you expect ansible to do when you ctrl-c?
+19:29:04 <bcoca> its mostly a guy that gives some other user the ability to use bplaybook, the other guy Ctrl+C and now instead of 'training' he wants to insulate his playbook from operator error
+19:29:07 <jimi|ansible> i expect it to stop
+19:29:12 <jtanner> chillysurfer: to die a horrible death
+19:29:18 * chillysurfer hahahaha
+19:29:26 <nitzmahone> and stop NOW
+19:29:33 <jtanner> now now
+19:29:38 <bcoca> next they'll ask us to handle kill -9 w/o patching the kernel
+19:29:40 <jimi|ansible> when is now? soon
+19:29:41 <thaumos> Lol okay.
+19:29:48 <thaumos> So here's the question
+19:29:52 <nitzmahone> We already have issues where remote task often continue after death
+19:30:00 <bcoca> nitzmahone: not much we can do there
+19:30:11 <thaumos> Are we to enforce how we all feel about it, and say no. or should we give them an option?
+19:30:32 <bcoca> the option requries signal handling code across forks ....
+19:31:02 <bcoca> which will directly conflict with existing signalhandling code .. that actively kills forks
+19:31:12 <thaumos> lol....
+19:31:29 * thaumos sees someone feverishly pounding CTRL+C and hoping that all sigterms hit properly
+19:31:30 <nitzmahone> I know, just saying this potentially exacerbates such issues
+19:31:31 <bcoca> im all for giving users options .. this is not one of those times
+19:31:41 <thaumos> yeah...
+19:31:45 <thaumos> let's call it then
+19:31:54 <thaumos> I take back my niceness
+19:31:56 <thaumos> No
+19:32:12 <thaumos> I tried being nice for once, you all convinced me to be a jerk again
+19:32:33 <thaumos> So, vote
+19:32:48 <thaumos> All in favor of this being an option +1 or -1
+19:32:53 <thaumos> -1
+19:32:55 <mkrizek> -1
+19:32:59 <nitzmahone> -1, too many potential issues
+19:33:02 <chillysurfer> -1
+19:33:19 <mattclay> -1
+19:33:19 <abadger1999> -0.5
+19:33:22 <thaumos> lol
+19:33:25 <bcoca> -1, its easier to smack the userin hitting Ctrl+C like an elevator button
+19:33:25 <chillysurfer> haha
+19:33:30 <thaumos> I knew you'd do something like that @abadger1999
+19:33:42 <nitzmahone> Rounds to -1 ;D
+19:33:49 <thaumos> hahaha
+19:34:12 <thaumos> jimi|ansible we can consider you as -1, amirigh?
+19:34:18 <jimi|ansible> yes, -1
+19:34:28 <thaumos> ok settled.
+19:34:29 <jimi|ansible> not that i appear to be anywhere close to a deciding vote
+19:34:33 * bcoca has been tempated to take job developing control systems to ensure elevator slows down prortionally to number of times button is pressed
+19:34:35 <thaumos> whatever
+19:35:46 <thaumos> #info #15460 voted against
+19:35:56 <abadger1999> nitzmahone: does U.S. rounding of negative numbers round to the higher value or higher absolute value? ;-)
+19:36:02 * nitzmahone wants to hack the elevator to say "stop that" in its British accent
+19:36:29 <bcoca> nitzmahone: need to hack the lobby/floors as that is button i was reffering to
+19:36:30 <nitzmahone> When I'm doing the rounding, whichever fits the result I want ;)
+19:36:36 <thaumos> LOL
+19:36:49 <thaumos> who wants to update the issue?
+19:36:51 <bcoca> nitzmahone: just like banks
+19:36:58 <abadger1999> perfect answer ;-)
+19:37:21 <mkrizek> thaumos: I can
+19:37:29 <thaumos> thanks @mkrizek
+19:37:47 <thaumos> #action mkrizek to update the issue
+19:37:58 <thaumos> any other feedback for the topic before I move to the next one?
+19:38:59 <thaumos> alrighty
+19:40:24 <thaumos> #topic Open Floor
+19:41:33 <thaumos> @rohitkum, you had a question about libcloud earlier...
+19:42:14 <rohitkum> Right, as recognized there are limitations which crop every now and then because of libCloud
+19:42:21 <thaumos> We haven't had any discussions about it afaik.
+19:42:26 <thaumos> Where are these limitations?
+19:42:34 <thaumos> that's a very general statement.
+19:42:47 <jtanner> or a relevant issue
+19:42:49 <thaumos> can you provide a specific use case?
+19:42:52 <thaumos> or issue
+19:42:57 <bcoca> we'v had a couple of discussions on libcloud
+19:43:01 <nitzmahone> Which module are we talking about- libcloud is used in several (GCE most prominent IIRC)
+19:43:05 <thaumos> yep
+19:43:12 <thaumos> when bcoca?
+19:43:13 <rohitkum> Google network modules
+19:43:31 <jtanner> k, what is your proposition/question?
+19:43:32 <nitzmahone> supertom was going to do a rewrite to nuke libcloud,
+19:43:35 <bcoca> thaumos: 1) proposal to use it for all cloud modules, we declined 2) migrate GCE modules away from it, we punted to supertom
+19:43:46 <thaumos> gotcha!
+19:43:49 * abadger1999 remembers talk about it occurring but didn't participate in it.
+19:43:50 <thaumos> well...
+19:43:51 <rohitkum> for e.g - there is no provision to add privateIpGoogleAccess
+19:44:05 <thaumos> So @rohitkum, I stand corrected.
+19:44:09 <thaumos> It apparently has been discussed.
+19:44:10 <rohitkum> I wanted to know if the community has any plan to move away from libcloud
+19:44:19 <rohitkum> and adapt google SDK per say?
+19:44:20 <thaumos> There are plans, but no one to work on it.
+19:44:30 <bcoca> rohitkum: yes and no, plans were made, guy doing them left
+19:44:42 <thaumos> #chair bcoca
+19:44:42 <zodbot> Current chairs: abadger1999 bcoca chillysurfer jtanner misc mkrizek nitzmahone resmo rohitkum thaumos
+19:44:46 <nitzmahone> Google folks were going to rewrite in native SDK, but they've been re assigned to other things
+19:45:30 <nitzmahone> Basically we're agreed it's the right thing to do, but nobody's stepped up to do the work.
+19:45:52 <thaumos> 😞
+19:45:52 <rohitkum> Does that sound like its an agreed upon work hanging around?
+19:46:04 <thaumos> yes, it's agreed upon. No one to do it
+19:46:28 <rohitkum> okay, so @jbaublitz(github) has some modules updated to use native sdk
+19:46:28 <bcoca> i would check with eric johnson (guy that created initial plugins and boss of last guy that was maintaining them)
+19:46:58 <bcoca> we barely look/touch these modules
+19:47:51 <thaumos> @rohitkum you are referring to https://github.com/ansible/ansible/pull/19446 aren't yoyu
+19:47:57 <thaumos> I see you on that thread as well.
+19:48:04 <rohitkum> Yes, these are humungous modules which will need quite a lot of rework
+19:48:50 <nitzmahone> ... a rewrite is highly unlikely without an active maintainer and a CI system to ensure they're not horribly broken. We're in the the process of getting that in place for AWS and Azure, no discussion for GCE I'm aware of
+19:49:03 <jtanner> none that i know of
+19:49:14 <bcoca> ^ so that PR seems g2g as soon as tests pass
+19:49:15 <thaumos> it's up in the air for now.
+19:49:27 <thaumos> yep, and that PR got the okay from erjohnso too
+19:50:09 <thaumos> so @rohitkum, this PR is waiting on the submitter to check the failures
+19:50:23 * nitzmahone ducks out for WWG prep
+19:50:26 <jtanner> and then for erjohnso to re-approve it
+19:50:31 <rohitkum> I propose to start working network modules to start with to adapt native sdk along under the able guidance/support of a active contributor, would that sync with the communiy's plan forward?
+19:50:57 <rohitkum> for GCE modules
+19:51:18 <thaumos> @rohitkum, sorry... are you proposing to do the work yourself?
+19:52:05 <rohitkum> Yes, with support of an active contributor
+19:52:07 <thaumos> Feel free to reach out to the folks listed in the PR thread to discuss your proposal.
+19:52:40 <abadger1999> rohitkum: the "guidance/support of an active contributor" is the hard part.  We can guide you as much as we guide anyone else in #ansible-devel but (esp. since we don't have gce knowledge) we can't guide you further than that.
+19:53:03 <thaumos> The recent most "active" contributors are jbaublitz and erjohnso
+19:53:15 <thaumos> but even then what @abadger1999
+19:53:16 <thaumos> just said
+19:53:21 <thaumos> We just don't know.
+19:53:32 <thaumos> I am only going off of the thread in the PR I mentioned.
+19:53:37 * jtanner doesn't have gce account either
+19:54:04 * bcoca had a $500 credit gce account but probably expired after 3 yrs of non use
+19:54:16 <thaumos> does that help, @rohitkum?
+19:54:30 <jtanner> rohitkum: usually this is a case where someone like you comes along and says "i want to work on this", so you get marked as a container and you help lead the community
+19:54:39 <jtanner> s/container/maintainer
+19:54:42 <thaumos> heh
+19:54:49 <bcoca> ^ nice freudian slip
+19:54:55 <rohitkum> I can work on it independently as well, I wanted to know/confirm that this matches the community's plan forward
+19:55:05 <thaumos> you're the community!
+19:55:18 <thaumos> From our perspective, have at it!
+19:55:18 <rohitkum> Thanks a lot for you kind inputs
+19:55:27 <thaumos> :thum
+19:55:32 <thaumos> 👍
+19:55:46 <thaumos> any other items to discuss?
+19:55:49 <rohitkum> Great, thank you
+19:55:55 <abadger1999> anouncement from me.
+19:56:04 * thaumos braces
+19:56:13 * bcoca ducks
+19:56:14 <abadger1999> I've been working on cleaning up all the undefined variables that pylint reports.
+19:56:25 * chillysurfer wipes sweat of brow
+19:56:31 <jtanner> whew ... thought he was going to announce his love for ruby
+19:56:35 <abadger1999> Later toady I'm going to merge that in along with turning on pylint's checks for undefined variables.
+19:56:38 <bcoca> jtanner++
+19:57:01 <abadger1999> So shippable runs will start complaining if your PR has undefined variables in the future.
+19:57:02 <bcoca> abadger1999: i expect many 'stale ci ' to fail when 'unstaled'
+19:57:12 <abadger1999> Yep.
+19:57:15 <jtanner> abadger1999: that will only help me not be a dummy, so shipit
+19:57:15 <bcoca> abadger1999++
+19:57:29 <abadger1999> That's definitely going to happen... there was a lot of cleanup needed inthe existing code ;-)
+19:57:49 <bcoca> ^ i wish we would have had this instead of PEP8 checks
+19:57:51 <jtanner> btw, stale_ci is only auto-kicked right now if the PR is "shipit" and not needs_revision/rebase
+19:58:04 <abadger1999> Also, one thing to know... since we're running pylint under py3, this will catch things that don't exist in py3 anymore (like unicode or basestring)
+19:58:25 <bcoca> which we should, since we pretend to support py3
+19:58:29 <bcoca> er .. ensure
+19:58:30 <abadger1999> Which is actually a good thing.
+19:58:32 <bcoca> er asure?
+19:58:46 <abadger1999> But some submiters may grumble... so be aware :-)
+19:59:35 <abadger1999> EOF
+19:59:47 <thaumos> --end of line
+19:59:51 <thaumos> #endmeeting

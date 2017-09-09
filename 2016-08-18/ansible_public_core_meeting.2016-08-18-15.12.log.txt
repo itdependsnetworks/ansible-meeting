@@ -1,0 +1,173 @@
+15:12:15 <abadger1999> #startmeeting Ansible Public Core Meeting
+15:12:15 <zodbot> Meeting started Thu Aug 18 15:12:15 2016 UTC.  The chair is abadger1999. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:12:15 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:12:15 <zodbot> The meeting name has been set to 'ansible_public_core_meeting'
+15:12:16 * bcoca is picturing abadger1999 in a suit behind a desk on a tv set
+15:12:27 <abadger1999> #topic Roll call
+15:12:30 <abadger1999> who's here?
+15:12:48 <shertel> hi!
+15:12:58 <Qalthos> hiya
+15:12:59 <misc> hi
+15:13:06 <abadger1999> #chair shertel bcoca Qalthos misc
+15:13:06 <zodbot> Current chairs: Qalthos abadger1999 bcoca misc shertel
+15:13:35 <linuxdynasty> hello
+15:14:12 <abadger1999> linuxdynasty:
+15:14:18 <abadger1999> #chair linuxdynasty
+15:14:18 <zodbot> Current chairs: Qalthos abadger1999 bcoca linuxdynasty misc shertel
+15:14:30 <abadger1999> #topic Open floor
+15:14:45 <abadger1999> Anyone have topics/issues/PRs they especially want to get to?
+15:15:33 <linuxdynasty> Any updates on https://github.com/ansible/ansible/pull/17039 ? I know I asked yesterday, but this is blocking me from creating new prs that is based on this decorator
+15:15:49 <abadger1999> bcoca: ^
+15:16:07 <abadger1999> #topic CloudRetry/AWSRetry backoff decorator with unit tests  https://github.com/ansible/ansible/pull/17039
+15:17:01 <linuxdynasty> Would be nice if in the 2.2 release, some of the AWS modules will not be plagued by those common issues anymore.
+15:17:07 <bcoca> need to find time to come up with standard, got day full of meetings today
+15:17:13 <linuxdynasty> kk
+15:17:23 <bcoca> so bear with us, abadger1999 can we make time tmrow?
+15:17:54 <abadger1999> Sure.... I don't have much to contribute unless you need info on how this interacts with ansiballz (which should be pretty transparent)
+15:18:16 <linuxdynasty> np at all, sorry for pestering on this, just trying to help out with the AWS modules :D
+15:18:19 <bcoca> kind of that and what would be best pattern for reuse across modules
+15:18:24 <abadger1999> <nod>
+15:18:24 <abadger1999> k
+15:18:27 <bcoca> linuxdynasty: pester, its only way we'll keep on it
+15:18:50 <abadger1999> ryansb might be interested too since he's been working on AWS stuff in general
+15:18:52 <bcoca> probably also want ryansb on this too
+15:18:57 <bcoca> JINKX
+15:18:57 <abadger1999> jinx
+15:19:08 <abadger1999> :-)
+15:19:10 <ryansb> oh hey
+15:19:11 <bcoca> we spend waaay too much time toghether
+15:19:13 <linuxdynasty> hehe
+15:19:22 <linuxdynasty> work  wife?
+15:19:24 <linuxdynasty> lol
+15:19:25 <linuxdynasty> jk
+15:20:09 <abadger1999> #action bcoca, ryansb, abadger1999 to talk about https://github.com/ansible/ansible/pull/17039 tomorrow.  linuxdynasty to continue prodding with with a progressively hotter poker.
+15:20:17 <linuxdynasty> lol
+15:21:32 <abadger1999> We have a large number of proposals out there... I get the impression we haven't gone through them in a while.
+15:22:23 <jimi|ansible> we have not
+15:22:26 <bcoca> 1/2 seem to be mine, feel free to ignore
+15:22:35 <bcoca> we' valready discussed most of those
+15:22:38 <abadger1999> k
+15:22:56 <bcoca> https://github.com/ansible/proposals/issues/22 < = there is even pr that started implementing this
+15:22:58 <jimi|ansible> do we have a procedure for removing/cleaning up? we can kill the pub/sub one since it's implemented
+15:23:42 <abadger1999> jimi|ansible: I don't think we do -- Close with a comment that it's implemented is probably fine.
+15:24:20 <jimi|ansible> well, the PR creates a doc, and we accept the PR to create the doc... now we have to remove the doc
+15:24:29 <jimi|ansible> yeah if it's just an issue/PR we can close it
+15:24:50 <jimi|ansible> i guess technically we should open a PR to remove the doc
+15:24:56 <jimi|ansible> then if there are no comments merge it to remove it?
+15:25:19 <bcoca> @gregdek ?
+15:25:33 <abadger1999> #info For community members, he Core team is going to choose between https://github.com/ansible/proposals/issues/30  and https://github.com/ansible/proposals/issues/28  (The Module metadata proposals) next week.
+15:25:35 <bcoca> ^ probably community team needs to establish rule, i remember discussing this initially
+15:26:03 * gregdek reads
+15:26:36 <gregdek> Ah.
+15:26:54 <abadger1999> So if you have any thoughts on the metadata please add them to one of those two tickets ASAP
+15:27:43 <gregdek> We've gone round and round on the proposal stuff, and in the end I don't know that we've clarified it much. I'm just happy to have a place where proposals can be seen.
+15:27:47 <bcoca> also I shifted to using 'issues' not 'PR's for the proposals, i thought that was new way to go
+15:27:58 <gregdek> It's ok.
+15:28:35 <bcoca> so we can just 'make note: this was implemented in #XXXX'  at top of docs? or when closing issue?
+15:28:45 <gregdek> I like that.
+15:29:09 <jimi|ansible> yeah just having it be issues is a bit easier, nothing to clean up
+15:30:08 <abadger1999> Cool.
+15:30:55 <abadger1999> So proposals....
+15:31:13 <jimi|ansible> i'll just nuke the pubsub one and we can close any other issue that's still open regarding that
+15:31:18 <abadger1999> I think this is the oldest one inthe list that hasn't been presented at a meeting:
+15:31:32 <abadger1999> #topic Define a standard way to document playbooks  https://github.com/ansible/proposals/issues/19
+15:32:07 <jimi|ansible> https://github.com/ansible/proposals/commit/9d8c15811e200bb8918ca149d0d102cd489a8666
+15:32:09 <bcoca> currently we only have 'name:' , drybed has created his own standard for debops
+15:32:48 <bcoca> jimi|ansible: remove the doc? why not just comment, that way doc/discussion is easily accessed
+15:33:05 <jimi|ansible> it's in the git history
+15:33:10 <bcoca> good enough
+15:34:18 <abadger1999> There's a lot of discussion there but much of it is for roles.
+15:34:20 <bcoca> proposal 19 has a big problem, playbooks are not yaml files anymore
+15:34:28 <abadger1999> The original submitter wanted something inside of playbooks.
+15:35:00 <bcoca> drybed's format uses # , which keeps the files as yaml, sadly no yaml multiline
+15:35:01 <abadger1999> <nod> so it sounds like we would instead need a new field in the yaml schema?
+15:35:11 <abadger1999> ah... using comments.
+15:35:35 <linuxdynasty> More documentation is always good. I am using a README.md in each role and in each directory in my vars. Having a standard would be awsome though
+15:35:42 <bcoca> im not happy with any of the implementations, been thiking about a 'play level meta/ dir that can have conig.yml and readme.md
+15:36:06 <bcoca> or playname.md
+15:36:32 <abadger1999> I'm unclear on what hte use cases are here.
+15:37:04 <abadger1999> I see it as useful in general but I'm not sure what we're trying to achieve other than "more documentation".
+15:37:07 <jimi|ansible> yeah, i don't see why the docs of that have to be ingrained in the playbook
+15:37:08 <bcoca> or docs/ dir?
+15:37:19 <abadger1999> Who writes this? Who consumes this?  How do they get access  to it?
+15:37:50 <bcoca> well, drybjed has his own system with those things worked out, but it does not work with any of our infra
+15:38:03 <jimi|ansible> it doesn't have to, it's a user-side thing
+15:38:30 <abadger1999> drybjed's case seems to be role author writes this.  Users of galaxy consume it.  They access it via a web page.
+15:38:38 <bcoca> jimi|ansible: then it shoudl be ansible-doc compatible or something easy, not require users to have sphinx/readthedocs
+15:38:48 <linuxdynasty> It is a user side thing, but when you give the community a standard, it gives them something to strive for and than sharing playbooks/roles/etc is easier and well defined
+15:38:50 <linuxdynasty> imo
+15:38:53 <abadger1999> which is fine.  But it isn't the same as the proposal author at all.
+15:39:28 <bcoca> agreed, but i think most see initial prposal as lacking and not as usable
+15:39:46 <bcoca> as you said, no consumer also 'breaks yaml'
+15:40:22 <abadger1999> linuxdynasty: <nod>  Could you lay out the use case?  Alice is a W and wants to document X in her playbooks.  Bob uses Y to read the documentation so that he can Z.
+15:41:14 <bcoca> i would ask that any documentation added, should be usable from ansible-doc or other cli tool, requiring a specific web app/service seems too onerous
+15:43:39 <abadger1999> Y being a CLI tool without web service backing it seems like this is for playbooks that I already have on my machine (slightly different from drybjed's case of documenting a role for people who might want to download it from galaxy)
+15:44:26 <bcoca> im not saying w/o a webservice, i'm saying that require CLI tool ALSO
+15:44:38 <bcoca> so people have the option to not need a webservice
+15:45:09 <bcoca> you might want to look at 'shared' plays/roles or just check the one you are about to run
+15:45:25 <bcoca> if we are gonig to add this documentation, it should be available at all points
+15:45:34 <bcoca> s/available/accessible/
+15:46:44 <abadger1999> #info requirement: have a way to view documentation in playbooks that are on your current machine via a cli tool.
+15:47:04 <abadger1999> bcoca: How does this differ from vim playbook.yml, read inline documentation?
+15:47:25 <bcoca> that might be a way, if the doc format is legible that way
+15:47:41 <misc> that assume that the doc is in 1 single place in the playbook
+15:47:42 <bcoca> if there is any formatting/processing i would move to ansible-doc
+15:47:54 <misc> what if that's split accross the file or something ?
+15:48:03 <bcoca> misc: depends on standard adopted
+15:48:09 <misc> bcoca: yeah
+15:48:36 <abadger1999> #info Would like some use cases "Alice is a W and wants to document X in her playbooks.  Bob uses Y to read the documentation so that he can Z."  That way we can understand the problemspace we want to address.
+15:48:48 <bcoca> https://github.com/debops/ansible-environment < =drybed example, uses docs/ dir
+15:49:10 <bcoca> agreed, we need example usages to narrow this down
+15:49:27 <bcoca> original proposal is for 'inline in plays'
+15:49:43 <abadger1999> bcoca, misc: <nod.  So we're envisioning that this is documentation spread throughout the playbook, perhaps throughout several roles as well...  How does that get organized?
+15:50:41 <bcoca> i would use same order in which ansible does play> role(in order of ref)
+15:51:05 <bcoca> playbook?, we conflate playbook and play but they are diff units
+15:51:16 <bcoca> playbook>play>role
+15:52:40 <bcoca> ok, so to cut this short, the proposal seems insufficient, a more detailed one is needed, no one against the idea of more docs, just need a) use cases, b) more detailed proposal with consumers and dealing with playbooks/plays/roles
+15:52:46 <bcoca> probably also include files
+15:52:54 <abadger1999> <nod>
+15:53:06 <abadger1999> Sounds good, I'll post that to the ticket.
+15:53:10 <jimi|ansible> frankly, i'd prefer to see this as `ansible-playbook --docs` as opposed to extending ansible-doc
+15:53:25 <bcoca> jimi|ansible: fine with that, as --list-tasks is currenlty the 'playbook doc'
+15:53:37 <jimi|ansible> ansible-doc is very much about the existing module documentation, and i don't really want it building things on the fly
+15:53:57 <bcoca> well ... it does build those on fly right now
+15:54:16 <bcoca> but diff discussion, i think we just need a more complete proposal first
+15:54:22 <abadger1999> #topic Open floor
+15:54:36 <abadger1999> One more call for other issues from anyone here.
+15:54:46 <bcoca> https://github.com/ansible/proposals/pull/27 <= close as dupe of roles revamp?
+15:54:57 <abadger1999> We only have 7 minutes left which likely isn't enough to get through another ansible/proposal
+15:55:12 <abadger1999> #topic https://github.com/ansible/proposals/pull/27 Make role re-use easier
+15:55:18 <linuxdynasty> in my opinion the playbook documentation should be how the playbook works and what globals are set and why are some roles included etc.. and the role explains the tasks, includes, and vars
+15:56:04 <linuxdynasty> usecase, is the other engineers on my time, use to read my confluence page and they felt it was and overwhelming amount of information
+15:56:27 <linuxdynasty> But when I broke it down by playbooks, role, vars
+15:56:30 <linuxdynasty> that made alot more sense
+15:56:34 <linuxdynasty> to the team
+15:57:31 <bcoca> linuxdynasty: we all agree feature is useful, just want a more 'usable proposal'
+15:57:54 <linuxdynasty> yep
+15:58:20 <abadger1999> linuxdynasty: k.  So you're after some structured overall view of the playbook.
+15:59:15 <linuxdynasty> yes
+15:59:20 <bcoca> so no objections on current topic? everyone prefers to discuss previous one?
+16:00:16 <bcoca> closing as dupe of https://github.com/ansible/proposals/blob/master/roles_revamp.md then
+16:00:19 <abadger1999> bcoca: For proposal 27... it's a PR against your proposal.
+16:00:43 <abadger1999> but from the comments, it sounds like the author doesn't understand how your proposal is implemented in the playbook?
+16:01:10 <bcoca> mostly
+16:01:19 <bcoca> i added comment, which i should update the doc with
+16:01:27 <bcoca> might just do PR and close this one as fixed by mine
+16:02:21 <bcoca> ^ why i like 'issues' more as it can have all the current discussion in one place and not over several PRs
+16:03:35 <abadger1999> bcoca: Is there some aspects of the changes that are already part of what is being done and others that are not being implemented?
+16:04:35 <abadger1999> It seems like he covers a lot of ground and I'm not clear whether there's anything new or if it's all misunderstanding of what the role revamp proposal is.
+16:05:21 <bcoca> both
+16:05:50 <bcoca> he is hinting to something not clear in the proposal but that i'm already implementing, see my last comment
+16:05:57 <abadger1999> k
+16:06:29 <abadger1999> so yeah -- I suppose make a PR that clarifies those things that he's trying to point out that closes this PR.
+16:06:32 <bcoca> i've been bad on posting updates, had design discussions during all hands, jimi|ansible and tima gave me good feedback
+16:06:56 <abadger1999> Probably the best way to leave a trail now.
+16:07:09 <bcoca> yep
+16:07:22 <abadger1999> #topic Open floor
+16:07:28 <abadger1999> #undo
+16:07:29 <zodbot> Removing item from minutes: <MeetBot.items.Topic object at 0x7f78363ab750>
+16:07:30 <bcoca> <- lunch, my only chance as i got backtoback meetings rest of day
+16:08:05 <abadger1999> #action bcoca to writeup new PR to clarify the points that proposal/27 is trying to address
+16:08:09 <abadger1999> #topic Open Floor
+16:08:17 <abadger1999> Anything else?  Or I'll close in 60s
+16:09:22 <abadger1999> #endmeeting

@@ -1,0 +1,388 @@
+19:00:25 <gregdek> #startmeeting Big-Module-Meeting
+19:00:25 <zodbot> Meeting started Wed Nov  9 19:00:25 2016 UTC.  The chair is gregdek. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:00:25 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:00:25 <zodbot> The meeting name has been set to 'big-module-meeting'
+19:00:32 <gregdek> Who wants to be chair?
+19:00:32 <ryansb> hi folks
+19:00:52 <sivel> howdy
+19:01:24 <sivel> is bluejeans going to be necessary, or is IRC sufficient?
+19:01:30 <ryansb> reminder: the audio/video portion of this meeting is here https://public.etherpad-mozilla.org/p/ansible-module-discussion
+19:01:38 <sivel> guessing that means yes :)
+19:01:40 <ryansb> oops, https://bluejeans.com/3008457278/
+19:01:41 <gregdek> sivel: I think bluejeans is necessary.
+19:01:42 <gregdek> https://redhat.bluejeans.com/3008457278
+19:02:07 <sivel> yeah, I'll join.  It just often gets noisy here and I'm just at my desk.  Didn't want to take up a conference room
+19:03:29 <gregdek> Leading the call: Jason McKerr, mgr of Ansible core team
+19:03:52 <gregdek> Current proposal: https://public.etherpad-mozilla.org/p/ansible-module-discussion
+19:04:02 <resmo> hi
+19:04:18 <gregdek> abadger1999 will be leading the review of the current proposal, and then we will go through implementation discussion
+19:04:26 <gregdek> abadger talking about metadata tagging
+19:04:50 <gregdek> * There will be a variable at the top of new modules for metadata
+19:04:58 <gundalow> Proposal: https://github.com/ansible/proposals/blob/master/modules-management.md
+19:05:05 <gregdek> thx gundalow
+19:05:32 <gregdek> The key Q that metadata will answer: who is in charge of a module? Ansible folks or community?
+19:06:06 <gregdek> Next important Q for metadata: how stable is the interface for the module? Will the interface change at some point?
+19:06:12 <gregdek> Those are the big first two Qs.
+19:06:37 <gregdek> abadger1999 has a script for parsing/adding metadata to existing modules.
+19:06:53 <gregdek> We have a tentative list of what we think will be "core supported" vs "community supported".
+19:07:00 <gregdek> That's where we are at for now.
+19:07:07 <gregdek> Any Qs on IRC?
+19:07:27 <sivel> do we have a metadata sample?
+19:07:32 <jtanner> are we applying to meta -before- the merge? would make some bot stuff easier
+19:08:19 <sivel> I'm on bluejeans too gregdek, was just on mute so I asked here.  I can see you typing btw ;)
+19:08:35 <abadger1999> https://github.com/ansible/proposals/issues/30#issuecomment-241805430
+19:08:45 <gregdek> sivel: inside of the proposal itself ?
+19:08:49 <gregdek> sivel: that's fine :)
+19:08:57 <gregdek> I'm sharing my screen for a reason, LOL
+19:10:28 <jimi|ansible> i don't consider that a bug
+19:10:45 <jtanner> are we applying to meta -before- the merge? would make some bot stuff easier
+19:10:49 <gundalow> We are planning extending validate-modules to sanity check all of these fields
+19:10:49 <jimi|ansible> ^ re: invalid dict syntax causing modules to fail
+19:11:09 <gregdek> jtanner: that is the plan currently, to add metadata before merge
+19:11:18 <jtanner> very well
+19:11:46 <jimi|ansible> if we were doing it after, we would have merged things already
+19:12:12 <gregdek> OK, time to talk implementation and timing
+19:12:22 <gregdek> abadger1999: close to code complete on initial run?
+19:12:42 <gregdek> abadger1999: yes, this will add metadata to existing modules, still need to figure out how to use it once it's in place
+19:12:50 <sivel> https://github.com/ansible/proposals/blob/master/modules-management.md
+19:13:50 <abadger1999> Note -- I'm not able to modify the ehterpad now: https://github.com/ansible/proposals/issues/30#issuecomment-241805430
+19:13:52 <gundalow> newtMcKerr: The todo list is the main part of the document, I migrated everything from Google Doc into modules-management.md
+19:14:06 <newtMcKerr> ah cool.. thanks.
+19:14:16 <ryansb> #link todo list https://github.com/ansible/proposals/blob/master/modules-management.md
+19:15:03 <gundalow> 1) List needs reviewing to ensure the order is right
+19:15:36 <gundalow> 2) Once metedata PR has been reviewed and merged we enforce that with validating-modules
+19:15:41 <resmo> question: will maintainer list still be outside the module or will become part of the metadata?
+19:16:49 <resmo> IMHO it would simplify the process for the bot if the maintainers are IN the metadata
+19:17:23 <resmo> ^^ abadger1999
+19:17:43 <gregdek> resmo: maybe a caching mechanism that gathers from the metadata periodically, we've moved back and forth on it
+19:17:43 <sivel> we tried in metadata before, and it was actually a big pain
+19:18:48 <resmo> ok
+19:20:03 <gregdek> resmo: the separate file also allows us to to file globbing :)
+19:20:04 * gundalow votes separate
+19:20:21 <gregdek> So sounds like consensus is we're going to keep maintainer data separate.
+19:20:33 <resmo> gregdek: I see :)
+19:20:53 <sivel> ref in what I was talking about from Docker: https://github.com/docker/docker/blob/master/MAINTAINERS
+19:21:02 <gregdek> thx sivel!
+19:21:14 <gundalow> 1) Is the list in the right order, are their any dependencies in the tasks?
+19:21:25 <gundalow> It feels like we need to get the meta data live first
+19:21:49 <gregdek> abadger1999 may take packaging out and do that later, but nothing else blocks for 2.3.0 necessarily
+19:22:29 <gregdek> gundalow, yes, that will be one of the first things
+19:22:52 <gregdek> And then the core team walks through this list and just Does Stuff :)
+19:23:01 <gregdek> newtMcKerr is now asking about timeframe
+19:23:32 <gregdek> jtanner says that bot work will likely have to wait until post-merge anyway
+19:24:06 <gregdek> Should be able to get metadata and doc generation based on metadata in "a couple of weeks"
+19:24:32 <gundalow> Does Thanks Giving block out a week?
+19:24:38 <gregdek> Probably
+19:28:35 <gregdek> sivel is volunteering to write a first cut at a PR mover :)
+19:28:59 <gregdek> (i.e. a webapp to move PRs from the old repos to the new unified repo so contributors don't have to)
+19:29:00 <gundalow> \o/
+19:29:09 <abadger1999> sivel: +1000  Thank you!
+19:29:45 <gregdek> sivel asking about what the packaging considerations are
+19:30:03 <gregdek> bcoca wants us to move to a place where we've got multiple tarballs, but we're not sure how it will work yet
+19:30:23 <gregdek> abadger1999 saying that figuring out which module goes into which tarball can be problematic
+19:30:45 <gregdek> sivel says would be awesome to have separate packages and an external plugin mechanism
+19:31:02 <gregdek> for example: an ansible-extras-modules plugin and use pip
+19:31:55 <gregdek> (which we have discussed in the past as well)
+19:33:48 <gundalow> Modules sometimes require changes in (say) module_utils
+19:34:05 <resmo> gundalow: exactly
+19:34:18 <gundalow> We've (Mattclay & I) have already been moving all the tests to be into ansible/ansible/test
+19:34:19 <resmo> that would not be easy for modules with module_utils
+19:34:54 <gundalow> Vendors would like something like this
+19:35:28 <gundalow> Is their anything we are doing with the repo merge (with single RPM/DEB) that will make it easier/harder to split in the future
+19:35:32 <tima> +1 to what sivel is saying.
+19:35:45 <gundalow> e.g. Do we need to actually consider this now, or can it be looked at after
+19:36:05 <jimi|ansible> to RPM/DEBs, it just looks like another directory
+19:36:09 <jimi|ansible> so it shouldn't matter at this point
+19:36:47 <fale> If all modules would be shiped indivindually, woudn't be easier with that many repos?
+19:37:28 <gregdek> fale: that forces us to make a very big decision that we can't undo.
+19:37:33 <abadger1999> I think if we get to individual modules we'll need to get bcoca's ansible-installer spec'd and pushed.
+19:37:33 <sivel> that wasn't my proposal, it was shipping them in "chunks" almost in a way that we divide core/extras
+19:38:04 <jimi|ansible> we discussed the many repos approach, it makes things messy when things need to move around
+19:38:11 <gregdek> newtMcKerr proposes early december
+19:38:31 <gregdek> We have an all-hands meeting at Ansible for the followup
+19:38:44 <gundalow> +1 in Durham
+19:39:09 <gregdek> i.e. get premerge stuff done before that December date, and then do the merge live when everyone is in Durham in early December.
+19:39:18 <ryansb> seems reasonable to do at the allhands
+19:39:37 <gregdek> ok, that's what we're doing. Targeting Dec 6 or 7 for the merge date.
+19:39:48 <gundalow> That gives us 3 weeks (less whatever people are taking off for Thanks Giving) to get *all* the pre merge stuff done
+19:41:24 <gundalow> 3 weeks assuming no holidays
+19:41:28 <gundalow> lol
+19:41:45 <jimi|ansible> and i'm out the week after thanksgiving
+19:42:25 <gundalow> Is there anything missing from the todo list
+19:42:34 <gundalow> sivel: resmo gregdek anything that we've not thought of
+19:42:49 <sivel> nothing is coming to mind right now
+19:43:13 <resmo> what about to make a merge window before the repo merge
+19:43:41 <gregdek> Oh shoot!
+19:43:49 <resmo> so get as most into the module repos before the repo merge
+19:43:50 <gregdek> Missed this before we bailed, sorry
+19:44:02 <gregdek> abadger1999 newtMcKerr ^^^
+19:44:03 <resmo> np, I have no mic so :)
+19:44:21 * abadger1999 reads
+19:44:57 <abadger1999> I have no objection... it's a manpower question.
+19:45:11 <gundalow> Someone mentioned a draft proposal for ansible module installer, was that something that bcoca had written up? I was going to link it into the "Post Repo Merge" section as a discussion
+19:45:39 <abadger1999> newtMcKerr: ^ I'd guess we'd say, everyone, work on merging module PRs for the next three weeks.
+19:45:53 <newtMcKerr> yeah
+19:45:55 <tima> sivel mentioned it gundalow
+19:46:06 <newtMcKerr> I think that kinda is militated I spose
+19:46:12 <abadger1999> gundalow: I don't believe it's made it onto (electronic) paper yet.
+19:46:23 <gregdek> So should we add to the Big Checklist?
+19:46:24 <abadger1999> gundalow: it's also a bit different than sivel's idea.
+19:46:27 <resmo> and probably also a "freeze for new modules aka new PRs" would make sense
+19:46:34 <gundalow> abadger1999: ah, OK, that explains why I can't see it. I can only see ansible-config
+19:46:36 <abadger1999> (individual modules rather than targetted conglomerations)
+19:47:03 <ryansb> resmo: does it though? New module PRs would be easier to move than patches
+19:47:06 <gundalow> gregdek: Add which to big checklist? I'm about to add "Discussion about packaging" into the "post merge section"
+19:47:41 <ryansb> I mean, if a new module is ready, merging it is going to be less work overall
+19:47:46 <gregdek> gundalow: the "focus on merging module PRs" in the next few weeks
+19:48:04 <gundalow> gregdek: Ah, that's newtMcKerr's call
+19:48:13 <resmo> ryansb: true
+19:48:33 <ryansb> one less thing to move is never a *bad* idea
+19:48:38 <gundalow> +1
+19:48:43 <gregdek> Here's a thing I should have asked but didn't: when do we "lower the bar" for new module merge? Immediately post-merge?
+19:49:07 <newtMcKerr> yeah, that works I think.  I think the bar should be lowered post merge as long as we’re comfortable with the metadata?
+19:49:23 <gregdek> i.e. new modules get "community unstable unsupported" tagged?
+19:49:31 <gundalow> gregdek: Once we have better sanity checks in place, which is something mattclay and I are going to be working on *after* the repo merge
+19:49:34 <gregdek> And then we figure out how to re-tag them later?
+19:49:44 <abadger1999> Soonest reasonable answer would be right after metadata PR is merged.
+19:49:47 <gregdek> gundalow: ok. What sanity checks, and how much later, do you think?
+19:50:02 <abadger1999> gregdek: We could do that too.
+19:50:08 <gundalow> We have a list of things that we can check by just looking at the source code that we'd like to get in
+19:50:22 <gundalow> Depends on the "fallout" of repo merge, though we are making good progress
+19:50:26 <gregdek> Because if you have the sanity checks documented, we can just eyeball some of those or run them piecemeal until the full checks are implemented.
+19:50:36 <abadger1999> Since we're not planning on shipping 2.3.0 without metadata tagging we don't necessarily need to block.
+19:51:02 <newtMcKerr> agreed.  I think we shouldn’t wait unless those checks are critical, just because we’ve already backed this up kind of far
+19:51:06 <bcoca> need to remove tags from that doc and point at tohio's ticket
+19:51:17 <gundalow> Prioritising bug fix PRs in ansible-modules-core would be good, then extras. Then looking at new modules
+19:51:18 <bcoca> pluginloader filtering was not part of 2.3 afaik
+19:51:29 <bcoca> gundalow: alreayd doing that
+19:51:35 <gundalow> I'd say that 1) reduces the number of PRs in flights 2) Gives the best value to users
+19:51:40 <gundalow> bcoca: ace
+19:52:03 <bcoca> we prioritized bugfixes when we discussed roadmap and in triage meeting
+19:52:24 <gundalow> yup, wasn't sure how we'd managed to get on with that
+19:52:43 <gundalow> If it's progressing, then that's cool
+19:52:44 <gregdek> If we lower the bar for new modules, that means we're potentially shipping 2.3 with a bunch of "meh" modules that don't get filtered out by default. Is that what you're saying when you talk about pluginloader filtering, bcoca?
+19:53:09 <bcoca> gregdek: i thought we were not lowering bar till after 2.3
+19:53:14 <bcoca> no automerge yet
+19:53:21 <newtMcKerr> no….2.2
+19:53:40 <gregdek> lower the bar doesn't necessarily mean automerge.
+19:53:59 <newtMcKerr> yeah.  although I sure would like to get to both :)
+19:54:05 <bcoca> at durham we decided that as long as we ship it all toghether, we were not lowering bar
+19:54:13 <bcoca> ^ not sure when that was reversed
+19:54:45 <newtMcKerr> I sorta remember that differently.  But I could be wrong
+19:54:46 <gundalow> 2.3 = The stability relase, but with loads of lower-bar modules??!?!
+19:54:52 <gregdek> lol
+19:55:00 <gregdek> not the message we want to send, I suppose :)
+19:55:00 <bcoca> ^ exact5ly
+19:55:00 <newtMcKerr> haha. ok. fair point.
+19:55:02 <abadger1999> I remember it differently too.
+19:55:23 <gundalow> So, to back up a bit. What are the problems we are trying to solve
+19:55:24 <bcoca> i remember it being proposed and james and i not agreeing, then we left it for 'future' when automerge was reality
+19:55:41 <gundalow> 1) Reduce the pain for us and contributors in having to move PRs around
+19:55:45 <gundalow> 2) what else?
+19:55:48 <gregdek> The fact is, I've been asking for some ability to lower this bar for two years now, because our process for getting new modules in is basically non-functional if you don't have someone at Ansible directly advocating for it.
+19:55:57 <jtanner> s/submodules//
+19:56:01 <jtanner> gundalow: ^
+19:56:05 <abadger1999> I'm stretching my memory here but I think jimi|ansible might have switched to the lower the bar camp if we emitted at least a warning when using different classes of modules.
+19:56:08 <newtMcKerr> have a way for contributing modules to become significantly easier is one of the key results of this
+19:56:20 <newtMcKerr> and I don’t really want to wait 4 more months
+19:56:22 <gregdek> abadger1999: I *think* that's right.
+19:56:27 <jtanner> AND no more ticket shuffling
+19:56:46 <gregdek> "warning: foo and bar modules are unstable, blah blah blah"
+19:56:50 <gregdek> Is that a hard thing to do for 2.3?
+19:57:03 <bcoca> gregdek: we dont have an 'unstable' tag
+19:57:10 <resmo> "experimental" :)
+19:57:12 <gregdek> I know, whatever tag we're using
+19:57:14 <bcoca> the tags are not about code stability at all
+19:57:28 <bcoca> we only have about sla: supported/curated/community
+19:57:30 <abadger1999> Not too hard.  We need to decide what tas we'll warn on (or make it configurable in ansible.cfg or something)
+19:57:34 <bcoca> and 'interface maturity'
+19:57:54 <gregdek> "preview"
+19:57:55 <bcoca> preview/stable interface (none about stable code)
+19:58:12 <gregdek> preview is good enough. Something that says "hey this is brand new, take it easy now"
+19:58:16 <newtMcKerr> we either need to tag them or solve the packaging problem.  Either is fine I think.  But we do need to not wait for 2.3 for the bar to er…change places
+19:58:52 <gregdek> And new modules all come in as "preview" by default, yes?
+19:59:04 <gregdek> Unless someone from Ansible throws the switch?
+19:59:05 <bcoca> its going to create a support storm if we start shipping crapy modules ... we cannot keep up with current ... but if that is what is decided ....
+19:59:18 <gundalow> So all modules get a warning saying "This is preview" untill someone proves that it's stable
+19:59:26 <gregdek> gundalow: basically
+19:59:26 <jimi|ansible> abadger1999: that wasn't necessarily preventing me from supporting it
+19:59:26 <abadger1999> gregdek: yes, preview is the default
+19:59:45 <gundalow> That feels like we are merging *then* maybe sometime/never doing a code review
+19:59:46 <newtMcKerr> not sure why it would create a support storm.  the maintainers are on the hook.
+20:00:02 <abadger1999> There may be a lot of currently shipped modules that get preview though.
+20:00:02 <jimi|ansible> i just thought it might be a good idea to show a warning if a user was using modules from a certain lower class that was essentially untested new code
+20:00:11 <bcoca> newtMcKerr: they are on the hook now and yet most tickets languish there waiting for us
+20:00:24 <gregdek> Most?
+20:00:25 <bcoca> most modules are not being maintained by original maintainers
+20:00:25 <abadger1999> jimi|ansible: <nod>
+20:00:34 <gregdek> Some, certainly
+20:00:52 <gregdek> But the majority of modules are not "ansible maintained" in the maintainers file.
+20:00:59 <gregdek> Especially not in Extras.
+20:01:17 <bcoca> yes, but most of those maintainers ignore the modules and we keep getting pinged on them
+20:01:29 <newtMcKerr> then those tickets need to be kicked back to the maintainers or we need a rule about decayed modules with no maintainers or something. We can’t do it all...
+20:01:34 <bcoca> and we have too many that are pointing at ansible-core also
+20:01:36 <gregdek> ^^^
+20:01:40 <gregdek> what newtMcKerr said.
+20:01:52 <bcoca> ^ yet we said we did not want to remove modules from repo?!??!
+20:01:59 <bcoca> im confused now
+20:02:08 <gregdek> We can come up with a proper orphaning process -- but the reason we haven't done that to date is because it's all a moving target.
+20:02:12 <bcoca> cause that was major reason for not pushing them to galaxy
+20:02:14 <gundalow> status: bitrotted
+20:02:16 <newtMcKerr> I was making that a strawman a bit
+20:03:03 <gregdek> No, the major reason for not pushing them to Galaxy was that we'd be redesigning how the entire project works and making the core project depend upon Galaxy in a way it doesn't now.
+20:03:15 <newtMcKerr> maybe we add a tag that has some rules around “unmaintained.”
+20:03:35 <newtMcKerr> but we need to get this done and let people do their thing.
+20:03:36 <bcoca> either way it is a major redesing, one way we become responsible for shipping code we dont maintain
+20:03:37 <gregdek> This becomes possible with metadata, yes. I'd like to explore it.
+20:03:47 <gregdek> bcoca: we already do that. :)
+20:04:05 <bcoca> gregdek: not really, we at least curate the code that goes into release
+20:04:27 <bcoca> and we 'try' to maintain it, but it is untennable due to the growth
+20:04:45 <gregdek> We already delegate the majority of Extras maintenance to our community. "shipit" analysis of extras is fairly cursory, yes?
+20:04:46 <bcoca> adding more code to what we distribute AND lowering the threshold .... i dont see it ending well
+20:04:50 <newtMcKerr> It is untenable.  Tagging needs to me the outlet for this
+20:05:19 <bcoca> gregdek: except that out of 35 shipit i can normally merge 5 and return 30 cause of review faults
+20:06:57 <gregdek> Aren't most of those review faults in shippable at this point?
+20:07:19 <bcoca> no
+20:07:57 <gundalow> hum, wonder if we need somewhere to record a list of issues that we are finding later on so we can reduce them happening
+20:08:17 <gundalow> as I'm only aware of the issues I see, and same for mattclay
+20:08:53 <gundalow> so those are the ones we (slowly) get arround to adding tests for
+20:09:23 <gundalow> in 2.3 I'm going to be rewriting all of developing_modules.html, inc the checklist to main it easier for developers & reviewers, though that's only part of it
+20:09:40 <fale> imho if a maintainer fails to reply to open tickets for N days (ie: 90) he should be removed as a maintainer and the module go in "orphan" mode. An announce is made in ML. If no one picks it up for N days (ie: 30) it should be marked as unsupported (and/or removed)
+20:09:40 <bcoca> some of the faults i find are already in shippable 'improt from basic *' but MANY PRs are much older, others are not that easy to cuantify (he used 'ssl=no' intead of validate_certs
+20:10:11 <gregdek> fale: yes, something like this
+20:10:15 <newtMcKerr> I like fale’s thing yes
+20:10:45 <fale> Fedora and many other distros have similar processes for packages
+20:10:55 <bcoca> that has been proposed several times but the issue about 'modules disappearing from distribution' was used to nix it, if htat has changed now +10
+20:10:56 <fale> I think we should look at them and get inspired
+20:11:18 <gundalow> I believe the first things shippable does it try and rebase the PR before running the tests. I wonder if we could retrigger shippable on anything where shippable hasn't ran in (say) 30 days
+20:11:25 <gregdek> At the end of the day, at some point we *will* have more modules that do not live up to our curated standards. The question is, how do we deal with them?
+20:11:31 <gregdek> And when?
+20:11:37 <fale> bcoca: I think that a notice on the doc "This module is not maintained" written in big font could be an initial step
+20:12:14 <gregdek> If everyone agrees that the answer is "ship them separately" that's fine, but it means waiting another 4-6 months to break the new module backlog.
+20:12:15 <jtanner> we do need an orphan mode
+20:12:17 <gundalow> I_KNOW_WHAT_I_AM_DOING_LET_ME_USE_UNMAINTAINED_MODULES ansible-playbook ...
+20:12:18 <bcoca> ^ new workflow (im fine with) until now we just used deprecation, but normally cause we introduced substitute
+20:12:21 <fale> bcoca: atm is very hard for potential new maintainers to see the fact that a module is not maintained (and therefore to stepup)
+20:12:37 <gregdek> fale: this is a great point.
+20:12:39 <jtanner> gundalow: SHOOT_IN_FOOT=1
+20:12:51 <gundalow> =BOTHFEET
+20:13:09 <bcoca> the only way we can see it is looking at ignored tickets (bot has been helpful with that, wtih maintainers even comming back and orphaning after getting N notifications)
+20:13:40 <gregdek> Part of what I want here is stability in our process so we can make the bot adhere to a process we know we'll stick with.
+20:14:11 <bcoca> btw, does this mean metadata is now required? (custom modules), also plenty of other plugins that are in same state (though we have much less of those)
+20:14:12 <gregdek> Metadata is a necessary first step here, but not at all sufficient. We need policy around all this, and that's the harder part to agree on. :)
+20:14:23 <newtMcKerr> yes. metadata is necessary
+20:14:45 <bcoca> so people now need to add metadata to their internal modules????
+20:14:49 <bcoca> ^ i dont think that is right
+20:14:53 <agaffney> what about allowing no metadata with defaults of "unsupported" and "will probably kill your cat"
+20:15:51 <newtMcKerr> I’m fine with that I guess
+20:16:23 <bcoca> i would check with services, probalby anyone that has a set of custom modules will disagree with that
+20:16:25 <fale> also having a group of people (like fedora provenpackagers and debian maintainers) that have the power to merge everything could help out to process some easy/urgent tickets
+20:17:03 <bcoca> fale: easy/urgent are the ones that normally get taken care of, its the legion of rest that are an issue
+20:17:27 <gregdek> bcoca is right about this :)
+20:17:30 <fale> bcoca: I've requested a doc fix months ago and is still open
+20:17:44 <fale> with the bot that pings tireless
+20:17:46 <bcoca> fale: that is rare, docfixes normally get merged right away
+20:17:53 <gregdek> Or maybe they don't.
+20:17:53 <bcoca> fale: ticket?
+20:18:14 <gregdek> Once upon a time, I reviewed lots of tickets every week -- I handed that off, or so I thought :)
+20:18:58 <fale> bcoca: it's actually a bug and not a ticket, but still: https://github.com/ansible/ansible-modules-core/issues/2411#issuecomment-196606900
+20:19:36 <newtMcKerr> ok:  We need to open this up.  And we need a way to communicate decay of modules.  We may not have the perfect solution day one, but we need to try.  So I think we should start with opening up post merge, and add a task around metadata/bot actions for maintainers and old modules.  We already have this problem, and so we need to solve for the contribution problem first and the one we already have if we can.
+20:20:14 <newtMcKerr> so @bcoca, does fale’s solution above not solve the problem your positiing?
+20:20:36 <newtMcKerr> or you think we just aren’t “there” yet
+20:20:57 <newtMcKerr> oops. ctrl-w
+20:21:02 <newtMcKerr> back
+20:21:49 <bcoca> i've proposed same before ... the hold up was not wanting to remove modules from package, if we are fine with that i'm all for it
+20:21:52 <gregdek> fale: aaaaah. bug triage is much more challenging.
+20:22:06 <gregdek> fale: file a PR with your fix and it'll probably get fixed straightaway :)
+20:22:15 <bcoca> fale: yep, if it was doc report it would have been probabaly done by now
+20:22:52 <gregdek> Instead of removing, we tattoo with OMG-NO-STOP-NO at doc level and when invoked. That would work for me.
+20:23:06 <bcoca> fale: also that is true for all cloud modules executed on remote machine
+20:23:11 <newtMcKerr> I think we have to be fine with it.  It’s just as bad as new stuff that crappy.  And we’re already stuck with them.  So let’s get unstuck. :)
+20:23:12 <fale> gregdek, bcoca: yeah, I guess I'll do it
+20:23:16 <bcoca> ^ but that is pretty obvious if module needs to authenticate
+20:24:29 <fale> bcoca: could be obvious to people that are used to those modules, but can be not obvious for people that are starting
+20:24:35 <bcoca> newtMcKerr: great, my only problem with the lower standards is that we were not able to remove modules when they became a problem (not sure how others are going to react to that, but im fine)
+20:25:07 <bcoca> fale: if you did by hand, login to remote machine and authenticate from there, its same issue, modules cannot magically remove that problem
+20:25:14 <newtMcKerr> cool. let’s roll with it.  I’ll grab you and some others maybe later in the week to work out the docs/rules/whatever for it and we’ll add it to the proposal
+20:25:34 <abadger1999> Are we clear we're talking about hte same solution?
+20:25:35 <abadger1999> <fale> imho if a maintainer fails to reply to open tickets for N days (ie: 90) he should be removed as a maintainer and the module go in "orphan" mode. An announce is made in ML. If no one picks it up for N days (ie: 30) it should be marked as unsupported (and/or removed)
+20:25:36 <fale> newtMcKerr, bcoca: I think we should not remove them for now, but just write in their doc page that they are not supported and list all modules that are looking for a new maintainer in a page so that potential contribute can pick from the list
+20:25:44 <bcoca> fale: i'm fine for adding a warning, but that is like having issues with a jumphost being compromised and having access to your credentials
+20:25:48 <newtMcKerr> fale.  agreed.
+20:25:53 <abadger1999> There's a difference between "marked unsupported" and "removed"
+20:26:07 <abadger1999> want to make sure we're on the same page about that :-)
+20:26:19 <bcoca> abadger1999: plenty of modules in which 'core' needs to be removed then :-)
+20:26:36 <newtMcKerr> true that
+20:26:47 <abadger1999> Okay, cool.  So we're saying "mark unsupported"
+20:26:50 <abadger1999> yes?
+20:26:52 <bcoca> abadger1999: agreed, not saying we 'remove right away', but im against having 'unsupported' indefinetly in codebase
+20:26:55 <newtMcKerr> yes
+20:26:57 <abadger1999> k
+20:27:05 <fale> abadger1999: I think that the "mark unsupported" would be better
+20:27:08 <abadger1999> bcoca: <nod>
+20:27:28 <bcoca> abadger1999: add 'unsupported' to support states, after 'community'
+20:27:29 <newtMcKerr> excellent
+20:27:51 <bcoca> we do have 'removed' state, but was mostly for deprecated modules, now we can use also for 'abandoned'
+20:28:13 <bcoca> ^ i still think its much better to push all to galaxy, but will take this as a workable solution
+20:28:39 <abadger1999> I don't have a good idea for how long (maybe based on how many or how severa the open bugs that are going unaddresssed are?) but I am fine with figuring out when to remove afterwards.
+20:28:43 <fale> I think we can face one problem at the time. Let's start having the unsupported modules marked as so, and then in the future we can deal with long time unsupported modules
+20:29:07 <newtMcKerr> k.  have to step away for a moment. Can someone throw this initial spaghetti somewhere in a doc?
+20:29:07 <jtanner> timeframes are going to be unique per module
+20:29:11 <bcoca> many 'unsupported' are currently marked with `ansible` as maintainer
+20:29:19 <jtanner> sadly.
+20:29:26 <bcoca> as we were 'default'
+20:29:55 <abadger1999> bikeshed moment:  What do people like best; unsupported, orphaned, or abandoned?
+20:30:13 <fale> I really believe in community and I believe that useful modules marked as unsupported soon enough will find a new maintainer
+20:30:25 * fale orphaned
+20:31:10 <jtanner> abadger1999: inactive
+20:31:40 <jtanner> because we're really talking about the volume of activity, right?
+20:31:45 <jimi|ansible> abadger1999: orphaned++
+20:32:02 <fale> jtanner: I think we are talking abount unresponsive maintainers
+20:32:16 <jtanner> which is a relative measure
+20:32:27 <fale> jtanner: if a module has no bugs and no PR against it, it can have no commits for months imho
+20:32:32 <abadger1999> jtanner: I think we aren't 100% sure of criteria but it does sound like that right now.  However, the field it's being placed in is:  "supported_by:  "
+20:32:33 <fale> (and be fine with that)
+20:32:34 <jtanner> some maintainers take 4+ months to get to their tickets
+20:33:03 <fale> jtanner: imho that's a little bit too much
+20:33:36 <jtanner> if the person is paid to support it, yeah ... volunteers have their own schedules though
+20:33:39 <fale> I'm not sure about the others, but I'm not talking about resolution time, but response time
+20:33:39 <abadger1999> supported_by: orphaned  ;; supported_by: inactive
+20:33:56 <jtanner> i like orphaned in that case
+20:34:31 <jtanner> err, abandoned ... sigh, hard to say
+20:34:37 <jtanner> what does our docs guy say?
+20:35:02 <jtanner> dharmabumstead: ^
+20:35:46 <jtanner> could it just be null?
+20:36:44 <abadger1999> jtanner: default currently is community which I think is more appropriate for no value.
+20:37:39 <abadger1999> since I have more votes for orphaned for now, I'll list it as such.  We can let it simmer and  decide if we should change it later.
+20:37:41 <dharmabumstead> Inactive, please
+20:37:54 <dharmabumstead> Not "orphaned"
+20:38:28 <fale> dharmabumstead: "supported_by: inactive" imho sounds weird
+20:38:45 <abadger1999> dharmabumstead: "supported_by: inactive".. that doesn't read as well to me...
+20:39:08 <dharmabumstead> well, orphaned sounds weird to me and it doesn't translate well.
+20:39:12 <abadger1999> I guess it also doesn't agree with the subject.
+20:39:28 <abadger1999> The maintainer is inactive.  But the metadata is about the module.
+20:39:29 <dharmabumstead> I'm just going with the suggestions listed above.
+20:39:30 <gundalow> "supported_by: nobody"
+20:39:36 <abadger1999> The module is orhpaned.
+20:39:44 <abadger1999> supported_by: needs_maintainer ?
+20:39:49 <gundalow> +1
+20:39:52 <gundalow> +1
+20:40:08 <dharmabumstead> That's a good one. Accurate yet concise.
+20:40:12 <dharmabumstead> +1
+20:40:12 <jtanner> supported_by: <mypaypal address>
+20:40:12 <abadger1999> Cool.
+20:40:13 <fale> I think "nobody" and "needs_maintainer" can be both ok
+20:41:19 <abadger1999> Alright, added "* needs_maintainer: This module currently needs a new community contributor to help maintain it. "  to the possible field values https://github.com/ansible/proposals/issues/30
+20:41:29 <jtanner> works4me
+20:41:37 <newtMcKerr> excellent
+20:49:38 <gundalow> abadger1999: does https://github.com/ansible/proposals/issues/28 need closing now?
+20:49:41 <gundalow> module metadata v Alternate module metadata
+20:49:44 <alikins> sounds like the status fields needs more maintenance than the plugins do
+20:50:09 <gundalow> answer: yes
+20:50:36 <abadger1999> gundalow: yep, closed now.
+20:53:32 <gundalow> gregdek: reminder to #endmeeting once we are done :)
+20:53:41 <gregdek> Just waiting :)
+20:53:42 <gundalow> and I'm done for today :)
+20:53:44 <gundalow> cool
+20:53:55 <gundalow> Thanks y'all
+20:54:01 <gregdek> #endmeeting

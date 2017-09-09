@@ -1,0 +1,112 @@
+19:11:01 <ryansb> #startmeeting Ansible Core IRC
+19:11:01 <zodbot> Meeting started Tue Aug 23 19:11:01 2016 UTC.  The chair is ryansb. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:11:01 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:11:01 <zodbot> The meeting name has been set to 'ansible_core_irc'
+19:11:09 <abadger1999> jimi|ansible, gundalow, shertel, bcoca, nitzmahone, mattclay, Qalthos, jtanner|t420: meeting ping
+19:11:13 <abadger1999> Thanks ryansb!
+19:11:14 <jtanner|t420> hello ... will be back n forth
+19:11:16 <shertel> Hi!
+19:11:24 <nitzmahone> Yo
+19:11:31 <MichaelBaydoun> present
+19:11:32 * jimi|ansible here now
+19:11:43 <jimi|ansible> also working on stuff in the background
+19:12:18 <Qalthos> hiya
+19:12:38 * abadger1999 multitasking
+19:13:19 <ryansb> huh, what happened to the `agenda` issue
+19:13:30 <ryansb> #chair Qalthos nitzmahone
+19:13:30 <zodbot> Current chairs: Qalthos nitzmahone ryansb
+19:13:42 <ryansb> #chair jimi|ansible shertel
+19:13:42 <zodbot> Current chairs: Qalthos jimi|ansible nitzmahone ryansb shertel
+19:14:34 <linuxdynasty> hello
+19:15:04 <ryansb> First order of business, RC for 2.1.2 is out for testing
+19:15:19 <ryansb> #link https://groups.google.com/forum/#!topic/ansible-devel/CGwPAmGnGA0 for 2.1.2 notes & instructions
+19:16:14 <ryansb> Anybody have items for the agenda today?
+19:16:18 <abadger1999> Thank you jimi|ansible for getting it out, thank you everyone who contributed bugfixes!
+19:17:00 <abadger1999> Informational: We decided how to implement metadata earlier today.  Details are in this ticket comment: https://github.com/ansible/proposals/issues/30#issuecomment-241805430
+19:18:00 <ryansb> #link Module metadata decision, including renaming "stable" to "stableinterface" https://github.com/ansible/proposals/issues/30#issuecomment-241805430
+19:18:20 <ryansb> If nobody has other items, this is about to be a super-short meeting, as I just have one other thing
+19:18:56 <ryansb> The feature freeze for the core repo (ansible/ansible) is going to be September 4th
+19:19:25 <ryansb> which means if you're adding stuff there, please get it reviewed and merged by then (basically in 2 weeks)
+19:19:35 <ryansb> because after that we'll just be doing bug fixes and the like
+19:21:22 <linuxdynasty> i have 1 PR that I added today in the ansible repo if someone would like to review it https://github.com/ansible/ansible/pull/17195
+19:21:28 <linuxdynasty> It is failing but not because of the PR
+19:24:53 <linuxdynasty> This PR as well https://github.com/ansible/ansible/pull/17039, which is waiting for the core team to make a decision
+19:25:18 <linuxdynasty> Both PRs include tests
+19:25:21 <abadger1999> jimi|ansible: Does https://github.com/ansible/ansible/pull/17195 look good to you?  You know more about vars than the rest of us.
+19:26:36 <abadger1999> bcoca is really busy with the roles revamp feature... So for cloudretry I'm thinking we should consider it a module-level change so that it can go in after the September 4th deadline.
+19:27:25 <linuxdynasty> kk :( This is holding back other PR's I am going to make for the AWS modules to include it. But I do understand.
+19:27:29 <jimi|ansible> not sure if that's really necessary, as the same can be done with include_vars and with_fileglob i think
+19:27:30 <ryansb> cloudretry is on my review list
+19:27:46 <abadger1999> I think what bcoca wanted was for cloudretry to be implemented in terms of the existing retry functionality in api.py... so either calling it or subclassing or soemthing.
+19:27:46 <ryansb> linuxdynasty: ^
+19:27:51 <linuxdynasty> jimi|ansible: the include_vars_dir allows to include a direcotry and nested directorie
+19:27:53 <abadger1999> ryansb: Cool.
+19:28:01 <caphrim007> abadger1999: could you point me to any docs/prs about said revamp so I can update my understanding?
+19:28:14 <linuxdynasty> and files to ignore as well as to search. fileglob allows for a subset
+19:28:18 <abadger1999> caphrim007: Roadmap... let me get you the link to that.
+19:28:22 <caphrim007> thanks
+19:28:48 <linuxdynasty> This will help users who have a complex nested vars dir that depend on how they load
+19:29:08 <caphrim007> abadger1999: found it
+19:29:10 <linuxdynasty> and control the depth
+19:29:34 <abadger1999> roles revamp: roadmap entry: https://github.com/ansible/ansible/blob/devel/docsite/rst/roadmap/ROADMAP_2_2.rst   and that links to moredetails at: https://github.com/ansible/proposals/blob/master/roles_revamp.md
+19:30:13 <ryansb> #link bcoca's role revamp https://github.com/ansible/proposals/blob/master/roles_revamp.md is in progress for 2.2
+19:30:24 <caphrim007> thanks all for the links
+19:32:40 <linuxdynasty> Also will load in alphabetical order. I agree it has a subset of the functionality, but it does do a bit more.
+19:33:13 <bcoca> easy to emulate with lookups + filters + loops
+19:34:20 <ryansb> bcoca: there's something to be said for not having to assemble a filter/lookup chain to do it though
+19:34:35 <linuxdynasty> This also make it easier on the user. The user does not need to be intermediate ansible user in order to use this module
+19:34:46 <ryansb> ^that
+19:35:19 <bcoca> i fear having modules that just do 'a bit more' than other modules, need to maintain 2 codebases that do almost same thing
+19:35:46 <bcoca> now we add feature B to include_vars, people will complain the other module does not have it
+19:36:23 <linuxdynasty> well it does contain test ;) if that counts for anything :P
+19:37:49 <linuxdynasty> I personally feel there is 2 distinct use cases here. One is meant for loading a file, that can load x amount of files by applying loops and filters
+19:38:04 <linuxdynasty> the other includes a dir of vars that does not need a loop or filters
+19:38:37 <linuxdynasty> With this power, power users can organize there vars in such a way to leverage this module
+19:39:10 <bcoca> they still can and we can easily show them how to do it with good examples
+19:39:31 <linuxdynasty> well that is enough of me defending this PR lol. you guys are the boss and I know you guys know better than me on this subject.
+19:39:34 <bcoca> when you can do something with 3 tools that each do 1 part well, vs creating a big tool that does 1 path of the 3 well, i prefere the 3 tools
+19:40:33 <linuxdynasty> 1 tool is working with a directory and the other is working with a file.
+19:40:49 <bcoca> directories are files that contain other files
+19:40:56 <linuxdynasty> not the same exact tool, just similar functionality
+19:41:08 <bcoca> and no, one uses a directory to get list of files to include, the other just takes a file to include
+19:41:30 <linuxdynasty> understood, let me know and I will close the PR.
+19:44:01 <bcoca> now, if you want to add directory detection and handling to include_vars, diff issue
+19:44:55 <bcoca> still think current way works well enough
+19:47:55 <jimi|ansible> bcoca: that was my thought too, extending include_vars to handle irs
+19:47:56 <jimi|ansible> dirs
+19:48:52 <caseylucas> I submitted https://github.com/ansible/ansible-modules-core/pull/4432 a few days ago. Is this the correct forum to ask for async_wrapper advice/recommendations?
+19:52:55 <ryansb> caseylucas: yeah
+19:54:22 <ryansb> I've not worked on it, but it looks like bcoca and jimi|ansible have
+19:54:46 <caseylucas> ryansb: thx. my main question is: can async wrapper rely on only two transient files (module and possible arguments) being pushed to remote? The mentioned PR assumes this.
+19:55:12 <bcoca> sleeps are there cause solaris is a problem child ....
+19:55:16 <bcoca> ^ among others
+19:55:30 <caseylucas> right, but i implemented the IPC to handle those cases
+19:55:46 <bcoca> not all posix forks are the same, some 'return ok' before actual fork happens, just get OK, OS knows how to fork this, go back
+19:56:16 <bcoca> ah, only read title
+19:56:23 <linuxdynasty> So from reviewing the  code in include_vars, all I will need to do is  to accept a param called file and accept raw params
+19:56:35 <bcoca> if you actually setup IPC .. that requires some review, but probably can get rid of sleeps
+19:56:42 <caseylucas> i did find an existing os.waitpid issue on freebsd btw.
+19:56:51 <bcoca> linuxdynasty: look in 2.2, already have file= param
+19:56:55 <caseylucas> shippable server found it
+19:56:59 <linuxdynasty> the question  I have is is the team ok with all the features I added to include_vars_dir and can I add them to include_vars?
+19:57:18 <jimi|ansible> linuxdynasty: yeah i think it's fine, i'd just merge the functionality
+19:57:25 <linuxdynasty> that is what I am looking at and thats what I meant
+19:57:35 <jimi|ansible> +1
+19:57:37 <linuxdynasty> ok I will close the current PR and merge the functionality
+19:57:48 <bcoca> im on fence, but it at least voids the code/path duplication
+19:58:15 <ryansb> +1
+19:58:38 <linuxdynasty> kk
+19:59:21 <linuxdynasty> thank you guys for the feedback, and i do feel bad about the pestering of the retry decorator. Just trying to help you guys make the AWS provisioning a 1st class citizen in Ansible :)
+19:59:53 <bcoca> dont feel bad, sorry i've been bogged down
+20:00:23 <bcoca> but basically what abadger1999 said above was my intent, to remove redundancy and allow extending these functions to multiple uses
+20:01:08 <caseylucas> linuxdynasty: I can second that. we (at work) are doing a lot of aws provisioning with ansible.
+20:01:30 <linuxdynasty> I've a;ready applied that decorator to most of the AWS modules I use locally
+20:01:55 <bcoca> need to so same for paging, already added it to a couple of modules
+20:02:06 <linuxdynasty> but can not create a PR, until merged. bcoca if I can be of any assistance, just let me know
+20:02:11 <linuxdynasty> refactoring it if needed
+20:02:40 <bcoca> i need time and/or clone
+20:03:47 <linuxdynasty> hehe, I meant from my time ;). But I would need your time to guide me on how you would like it refactored, which means you have no time, which means I just confused the hel out of myself
+20:03:49 <linuxdynasty> :p
+20:04:40 <ryansb> Righto - we're a few mins over
+20:04:56 <ryansb> so I'm going to close this down in 60 seconds if nobody has more
+20:14:33 <ryansb> #endmeeting

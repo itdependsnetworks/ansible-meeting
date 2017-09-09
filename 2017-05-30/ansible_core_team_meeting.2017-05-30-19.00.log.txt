@@ -1,0 +1,498 @@
+19:00:27 <jtanner> #startmeeting Ansible Core Team Meeting
+19:00:27 <zodbot> Meeting started Tue May 30 19:00:27 2017 UTC.  The chair is jtanner. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:00:27 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:00:27 <zodbot> The meeting name has been set to 'ansible_core_team_meeting'
+19:00:39 <jtanner> #chair jtanner
+19:00:39 <zodbot> Current chairs: jtanner
+19:00:45 <jtanner> #chair bcoca
+19:00:45 <zodbot> Current chairs: bcoca jtanner
+19:00:48 <jtanner> since i just saw you
+19:01:06 <bcoca> lies!
+19:01:23 <jtanner> who else is here?
+19:01:27 * akasurde waves
+19:01:32 <jtanner> #chair akasurde
+19:01:32 <zodbot> Current chairs: akasurde bcoca jtanner
+19:02:01 <shertel> hello
+19:02:04 <willthames> I'm here
+19:02:11 <jtanner> ping abadger1999 alikins funzo ganeshrn gundalow jimi|ansible nitzmahone privateip Qalthos ryansb
+19:02:18 <jtanner> #chair shertel willthames
+19:02:18 <zodbot> Current chairs: akasurde bcoca jtanner shertel willthames
+19:03:23 <jtanner> ok, just gonna roll with it
+19:03:34 <funzo> o/
+19:03:40 <jtanner> #chair funzo
+19:03:40 <zodbot> Current chairs: akasurde bcoca funzo jtanner shertel willthames
+19:04:16 <jtanner> i can't tell if https://github.com/ansible/community/issues/159#issuecomment-301614845 is resolved or not
+19:04:25 <jtanner> no strikethrough
+19:04:59 <jtanner> #topic using raw strings for documenation
+19:05:14 <jtanner> nitzmahone: i believe you were the missing party for this last discussion on this
+19:05:22 <bcoca> the answer was 'sometimes'
+19:05:28 <jtanner> dharmabumstead you get what you needed?
+19:06:07 <dharmabumstead> Awaiting my CT scan results and not really paying attention. Context?
+19:06:13 <ryansb> sup team
+19:06:21 <jtanner> #chair ryansb
+19:06:21 <zodbot> Current chairs: akasurde bcoca funzo jtanner ryansb shertel willthames
+19:06:37 <jtanner> dharmabumstead: related to using r''' for raw text in module docstrings
+19:07:06 <bcoca> ^ basically, use when you need \X to not be interpreted... mostly with windows examples
+19:07:20 <dharmabumstead> Works for me. As long as the text is within shouting distance of grammatically and mechanically correct. :)
+19:07:43 <bcoca> so i would add to dev docs as a hint, but not a requirement
+19:07:55 * bcoca does not want 300 PRs add r''' ....
+19:07:58 <dharmabumstead> I actually am at the doctors office and will have to bail any minute here
+19:08:12 <jtanner> #action no requirements, but should add a hint in docs
+19:08:21 <jtanner> alright, moving on
+19:08:40 <jtanner> #topic Ansible Contributor Summit 4 (Part of AnsibleFest 2017 London)
+19:08:41 * abadger1999 get sout of previous meeting
+19:09:17 <jtanner> is this something we need to discuss?
+19:09:23 <jtanner> looks like an announcement
+19:09:29 <abadger1999> gundalow: ^
+19:09:38 <jtanner> #chair abadger1999
+19:09:38 <zodbot> Current chairs: abadger1999 akasurde bcoca funzo jtanner ryansb shertel willthames
+19:10:02 <gundalow> hi
+19:10:13 <jtanner> oh, you made it ... working from pub?
+19:10:15 <jtanner> =P
+19:10:26 <jtanner> #chair gundalow
+19:10:26 <zodbot> Current chairs: abadger1999 akasurde bcoca funzo gundalow jtanner ryansb shertel willthames
+19:10:30 <nitzmahone> Yep, I'd concur- use raw string when necessary, but not required
+19:10:36 <gundalow> #info Please add topics and final voting (+1/-1) to https://public.etherpad-mozilla.org/p/ansible-summit-june-2017
+19:10:37 <jtanner> #chair nitzmahone
+19:10:37 <zodbot> Current chairs: abadger1999 akasurde bcoca funzo gundalow jtanner nitzmahone ryansb shertel willthames
+19:10:47 <gundalow> jtanner: pfft, I wish
+19:11:49 <jtanner> so ...?
+19:11:59 <jtanner> anything specific to note about contributors summit?
+19:12:01 <gundalow> next topic
+19:12:11 <gundalow> [20:10] <@gundalow> #info Please add topics and final voting (+1/-1) to https://public.etherpad-mozilla.org/p/ansible-summit-june-2017
+19:12:13 <willthames> I think gundalow has noted something specific
+19:12:23 <jtanner> oh, duh
+19:12:52 <gundalow> jtanner: :P
+19:13:03 <jtanner> #topic https://github.com/ansible/ansible/pull/24822
+19:13:22 <jtanner> akasurde: ^ please lay out it for us
+19:13:59 <willthames> 24822 also raises an interesting question around what constitutes authorship
+19:14:17 <akasurde> jtanner, I tried it CentOS and RHEL it works with downgrading and upgrading using --security option
+19:14:50 <willthames> does a 14 line PR put you on the authors list, or is it just that akasurde should now be considered a primary maintainer of yum?
+19:15:14 <akasurde> jtanner, I will write unit test for this and will remove WIP
+19:15:15 <jtanner> #info akasurde tested PR with downgrade + upgrade pattern
+19:15:26 <akasurde> willthames, I will love to
+19:15:32 <jtanner> #action akasurde to write integration test
+19:15:43 <akasurde> jtanner, Thanks
+19:15:55 <jtanner> willthames: can you add topic to agenda?
+19:16:47 <jtanner> #topic https://github.com/ansible/ansible/pull/24867
+19:16:56 <jtanner> bcoca: you wanted to vote on this
+19:17:13 <jtanner> dag: you around?
+19:17:14 <willthames> jtanner done
+19:17:20 <jtanner> tnx
+19:17:41 <jtanner> i'm guessing today's mega merges broke this PR
+19:18:27 <jtanner> maybe we should just vote another day? ....
+19:18:55 <willthames> lgtm after conflict resolved
+19:19:38 <jtanner> willthames: add shipit to PR. doesn't seem like voting is going to happen today
+19:19:58 <willthames> needs another commit so shipit is a bit pointless no?
+19:20:06 <bcoca> didnt we vote against that last meeting?
+19:20:06 <willthames> as my shipit bit gets ignored after commit
+19:20:09 <jtanner> it's not gonna get automerged anyway
+19:20:34 <bcoca> willthames: normal, you cannot 'shipit' future changes that you have not seen
+19:20:39 <jtanner> bcoca: nothing recorded in meeting comment
+19:20:45 <willthames> yep, I understand that bcoca
+19:20:49 <bcoca> jtanner: i remember vote
+19:21:02 <jtanner> result was "no" ?
+19:21:37 <bcoca> afair
+19:21:42 <willthames> if it's a no, there should be better objections in the PR
+19:22:17 <jtanner> #note previous vote is thought to have been to reject PR
+19:22:22 <bcoca> ^ someone was supposed to update after meeting, there were other objections .. dont remember them
+19:22:39 <jtanner> #action decide on action for PR and provide sufficient reasoning
+19:23:21 <jtanner> #topic https://github.com/ansible/ansible/pull/24871
+19:23:30 <jtanner> "do we allow 'none/null' values on required parameters?"
+19:23:34 <jtanner> bcoca: you added this one
+19:23:51 <bcoca> thought that was also answered
+19:23:58 <willthames> the previous logs have all the discussions https://meetbot.fedoraproject.org/ansible-meeting/2017-05-25/ansible_core_meeting.2017-05-25-15.00.log.html
+19:23:59 <bcoca> ^ seems someone dropped ball
+19:24:04 <willthames> for this one and previous one
+19:24:22 <bcoca> answer was 'yes' we allow, each module should then deal with values itself, but not forbidding them in arg_spec
+19:24:31 <jtanner> the meeting "issue" is too confusing, so can't blame anyone
+19:25:00 <bcoca> also ... supposed to have rotated each month ... and not everyone updates it
+19:25:11 <bcoca> </end gripes>
+19:25:22 <jtanner> #action vote results were "yes" at last meeting
+19:25:34 <jtanner> #note vote results were "yes" at last meeting
+19:26:05 <jtanner> #topic https://github.com/ansible/ansible/issues/25053
+19:26:10 <jtanner> willthames: this one is yours
+19:26:13 <willthames> it is!
+19:26:24 <willthames> There's a PR linked from it now
+19:26:31 <bcoca> there is also petition to eliminate the warning
+19:26:34 <jtanner> what's the ask?
+19:26:37 <jtanner> / discussion?
+19:26:43 <willthames> https://github.com/ansible/ansible/issues/25092
+19:26:45 <bcoca> ^ several tickets opened/closed, thread in ansible-devel
+19:27:01 <bcoca> i think we should discuss removing/not first, as that might make this PR obsolete
+19:27:20 <willthames> I think the PR fixes the warning in the expected way
+19:27:27 <jtanner> #note <bcoca> i think we should discuss removing/not first, as that might make this PR obsolete
+19:27:34 <willthames> I'm not sure anyone wants the warning removed entirely?
+19:27:42 <bcoca> willthames: still not needed when you are doing double interpolation on purpose
+19:27:45 <jtanner> #note https://github.com/ansible/ansible/pull/25092
+19:28:00 <bcoca> when: x == {{value_of_var_in_this_var}}
+19:28:17 <bcoca> willthames: some do
+19:28:43 <jtanner> i kinda think the example in the PR is a bit contrived and may not show how complicated this can get
+19:29:01 <jtanner> you might have a {{}} 3+ levels deep
+19:29:05 <willthames> jtanner it's supposed to be a trivial example showing that the current warning is way over the top
+19:29:12 <willthames> if you want to remove the warning, that's fine
+19:29:23 <willthames> but currently the warning is stupid as anything
+19:29:45 <willthames> bcoca, you added the warning didn't you? can't you just remove it if you don't like it?
+19:29:55 <bcoca> nope
+19:29:57 <bcoca> i di dnot
+19:30:10 <bcoca> https://github.com/ansible/ansible/issues/22397
+19:30:38 <bcoca> https://groups.google.com/d/msg/ansible-project/W_zIjyhCFPg/eLrTWO4XCgAJ
+19:30:52 <jtanner> so the primary issue here is that we munge a new template out out of the conditional and we don't want to have {{ }} in the source?
+19:30:57 <bcoca> ^ many more
+19:31:37 <bcoca> jtanner: the issue is that {{}} in when means 'interpolate', which is not always what user wants as the when already interpolates, so its only for x2 indirection of var names
+19:31:43 <bcoca> ^ confusing
+19:31:57 <bcoca> when: "{{a}} == b
+19:32:19 <bcoca> ^ if user meant 'var a' == b, its wrong, ifi user meant 'var that has its name stored in a', then its right
+19:33:20 <jtanner> this is one of those things that always frustrates me
+19:33:35 <jtanner> i have to look at code to understand what's going on behind the scenes in when:
+19:33:38 <abadger1999> bcoca: does it hurt for the user to do when: {{a == b }} ?
+19:34:03 <abadger1999> If it can never hurt, I lean towards warning should jus go away.
+19:34:04 <willthames> bcoca, you're right in that you didn't add the warning but one of your commits did make it trigger when I didn't expect it to
+19:34:09 <bcoca> abadger1999: no ... unless you have var named True/False
+19:34:35 <bcoca> willthames: when i fixed template detection?
+19:34:54 <willthames> https://github.com/ansible/ansible/commit/4594bee65ae made it far worse
+19:35:40 <bcoca> well, in my defense it DOES properly detect that templating will work on that string
+19:36:38 <jtanner> #note issue relates to https://github.com/ansible/ansible/commit/4594bee65ae
+19:38:06 <willthames> I'm happy with sivel's fix (the one I put in my PR) - it'll fix 99% of cases and if you're doing when: "{{ a }}
+19:38:08 <willthames> " == b
+19:38:18 <willthames> then you probably know what you're doing!
+19:38:20 <jtanner> bcoca: any concerns with that?
+19:38:49 <jtanner> shifts the warning message right above ...
+19:38:54 <willthames> probably better than reverting the relevant bit of 4594bee65ae
+19:38:56 <jtanner> if conditional in all_vars and VALID_VAR_REGEX.match(conditional):
+19:38:56 <jtanner> conditional = all_vars[conditional]
+19:38:56 <abadger1999> <nod> Yeah, I think we should accept the PR if we don't want to remove the warning.
+19:38:58 <bcoca> i thogyht the whole reason for the warnings was for when: {{a}} == b
+19:39:09 <bcoca> and the false postive was a: {{c}} when: a == b
+19:39:18 <jtanner> we have tests for those scenarios?
+19:39:36 <willthames> bcoca, isn't that what the PR provides?
+19:39:45 <bcoca> im confused now
+19:39:50 <willthames> you would get a warning for when: {{ a }} == b
+19:39:55 <willthames> but not for the false positive
+19:40:03 <bcoca> ah, that is what i thought you just said would NOT happen
+19:40:19 <willthames> the PR probably explains it better than I do (I hope)
+19:40:23 <bcoca> i think we dont need warning either way, which would make the PR obsolete
+19:41:36 <willthames> sivel are you about?
+19:41:44 <jtanner> so just remove the warning block altogether?
+19:42:05 <bcoca> that is what the PRs and ansible-devel thread were about
+19:42:12 <bcoca> ^ why i said we need to discuss that first
+19:42:19 <sivel> No, not really. Driving home from doctors appointment
+19:42:28 <willthames> original PR: https://github.com/ansible/ansible/pull/20312
+19:42:30 <jtanner> table this for another day?
+19:42:53 <willthames> can do I suppose
+19:42:58 <jtanner> bcoca: ?
+19:42:59 <willthames> needs sivel here really
+19:43:02 <sivel> Using jinja in a when is the cause for a number of problems we handle on list and in irc
+19:43:21 <willthames> don't want to be encouraging driving and ircing
+19:43:22 <abadger1999> I'm +1 to removing the warning altogether.
+19:43:22 <sivel> This helps with that, but of course seems to cause confusion
+19:43:29 <bcoca> sivel: understood, but now we handle problem of 'warnings when using when:'
+19:43:31 <jtanner> sivel: okay, we'll wait for a meeting where you can chat more aobout it
+19:43:38 <jtanner> plz no crashing
+19:43:47 <willthames> +1
+19:43:50 <abadger1999> <nod>
+19:43:53 <bcoca> if we table that +1 for merging willthames' for now
+19:43:59 <bcoca> as tabling == keeping for now
+19:44:07 <jtanner> #action discussion tabled for the next meeting sivel is able to attend
+19:44:35 <bcoca> https://github.com/ansible/ansible/pull/24974
+19:44:46 <bcoca> https://github.com/ansible/ansible/issues/22397
+19:45:09 <jtanner> what are those?
+19:45:11 <abadger1999> bcoca: +1
+19:45:27 <bcoca> https://groups.google.com/d/msg/ansible-devel/tjIpsz8VDtY/KEp1qwR6AAAJ
+19:45:33 <bcoca> ^ people complaingin about the warning
+19:45:48 <jtanner> oh ... so merge https://github.com/ansible/ansible/pull/25092 now?
+19:46:04 <bcoca> im on fence, but most cannot seem to make meetings, so told them i would express their view
+19:46:23 <bcoca> ^ i get as many bothering me in list/irc for warning as i did for when: {{a}} ==b misunderstandings ....
+19:46:55 <jtanner> possibly because the warning doesn't provide enough context
+19:47:05 <bcoca> or way to disable it
+19:47:09 <abadger1999> #info bcoca proposed merging 25092 (do not warn when a variable itself contains a template) now and discussing removal of warning at later meeting.
+19:47:13 <abadger1999> +1 to that proposal
+19:47:36 <jtanner> +1 to merge now, +1 revisit removal in later meeting
+19:47:41 <bcoca> +2 also
+19:48:15 <jtanner> so ... should i press the green button then?
+19:48:23 * dag likes to discuss https://github.com/ansible/ansible/pull/24867 before the end of this meeting
+19:48:25 <abadger1999> Do it.  seems uncontroversial
+19:48:39 <bcoca> yep, if we cannot discuss warning itself, this will help make it less noisy
+19:48:58 <jtanner> merged, thanks willthames + sivel
+19:49:03 <jtanner> #action https://github.com/ansible/ansible/pull/25092 merged
+19:49:37 <jtanner> dag: trying to move as quick as i can
+19:49:43 <jtanner> #chair dag
+19:49:43 <zodbot> Current chairs: abadger1999 akasurde bcoca dag funzo gundalow jtanner nitzmahone ryansb shertel willthames
+19:49:43 <dag> jtanner: sure
+19:50:29 <jtanner> dag: we actually already went over 24867
+19:50:44 <jtanner> #note previous vote is thought to have been to reject PR
+19:50:44 <jtanner> #action decide on action for PR and provide sufficient reasoning
+19:50:46 <dag> jtanner: yes, but the resulting feedback makes no sense :)
+19:51:15 <dag> and I wasn't involved in the discussion
+19:51:36 <jtanner> mikedlr: you around?
+19:51:52 <jtanner> if no mikedlr, i think we can go back to 24867
+19:52:14 <gundalow> mikedlr is in the UK, so probs logged off already
+19:52:44 <jtanner> #topic https://github.com/ansible/ansible/pull/24846
+19:52:56 <jtanner> #info mikedlr wants PR feedback
+19:53:24 <mikedlr> hi;
+19:53:44 <mikedlr> speak the name call the person.
+19:53:47 <jtanner> mikedlr: seems like discussion is happening on the PR
+19:54:18 <jtanner> anything specific you wanted to talk about?
+19:54:33 <mikedlr> I think the thing is that having looked at that module it should really have someone, probably from core team, want to do some serious fixing.
+19:55:04 <mikedlr> it has some serious inefficiencies; e.g. it makes three calls to dpkg as an external program for every package it examines.
+19:55:37 <mikedlr> the current structure has become a bit complex and difficult to deal with
+19:55:41 <abadger1999> <nod>  Someone who knows the dpkg/apt python bindings would be even better.
+19:55:45 <willthames> I'm not too worried about module inefficiencies
+19:55:54 <jtanner> we probably need to get some maintainers on the module too
+19:55:56 <jtanner> packaging/os/apt.py: ansible
+19:55:58 <mikedlr> I wrote a unit test for it but I don't feel it's really reasonable to merge.
+19:56:01 <willthames> anyone who is seriously worried will fix them, right? :)
+19:56:06 <jtanner> mikedlr: are you interested in maintainership?
+19:56:29 <mikedlr> not maintainership for me.  I don't reliably enough use dpkg and know rpm much better.
+19:56:37 <jtanner> same here
+19:56:45 <jtanner> i make due with apt+dpkg when i have to
+19:57:12 <mikedlr> but if a new (even temporary) maintainer  came along I'd work with refactoring to get unit tests merged.
+19:57:20 <jtanner> #info apt module has no maintainers outside of the core team
+19:57:58 <willthames> unless there is someone from core who is going to take it on, perhaps consider making it curated/community ? (this meshes nicely with my next topic)
+19:58:02 <mikedlr> gundalow strongly suggested bringing it up here to see if someone from the core team would be able to take an interst..
+19:58:20 <abadger1999> I looked over that Pr in an earlier incarnation and thought it would be okay to merge.
+19:58:29 <Pilou> mikedlr: so the apt module needs refactoring first (before adding new unit tests) ?
+19:58:37 <mikedlr> abadger1999: the PR IMHO is fine.  but it's very limmited
+19:58:37 <jtanner> i can "fix" anything, but deciding on rearchitecture/refactor on apt is not my deal
+19:58:41 <abadger1999> can't speak to the larger underlying architecture issues because I'm in the same boat... know rpm better than apt
+19:58:42 <mikedlr> Pilou: exactly;
+19:58:45 <jtanner> #chair mikedlr Pilou
+19:58:46 <zodbot> Current chairs: Pilou abadger1999 akasurde bcoca dag funzo gundalow jtanner mikedlr nitzmahone ryansb shertel willthames
+19:59:11 <bcoca> sorry, got called away
+19:59:15 <bcoca> i'll look at apt
+19:59:26 <mikedlr> the unit test I wrote works and seems correct but because the function is so large it will be horribly brittle.
+19:59:33 <bcoca> mikedlr: are you mandating arch? wouldnt that screw with noarch/any packages?
+19:59:39 <bcoca> or multiarch installs
+19:59:53 <jtanner> ok, so in the context of https://github.com/ansible/ansible/pull/24846, the patch is really small
+19:59:57 <jtanner> and includes new tests
+20:00:15 <mikedlr> in the PR I have made a set of proposed changes https://github.com/ansible/ansible/pull/24846#pullrequestreview-39463773
+20:00:18 <sivel> I didn't crash, and I made it home safe
+20:00:26 <jtanner> sivel: nice
+20:00:31 <mikedlr> evgeni /will not be able to
+20:00:36 <mikedlr> do those.
+20:00:52 <abadger1999> sivel: any drive you walk away from... ;-)
+20:01:14 <bcoca> mikedlr: dont know api that well, will it still find packages with no arch/any?
+20:01:15 <sivel> I was at a stop light when I messaged, so not too dangerous
+20:01:21 <Pilou> jtanner: the new integration tests should alwaus perform cleaning tasks but this isn't the case
+20:01:24 <jtanner> mikedlr: how much work do you think the refactoring is going to be?
+20:01:47 <jtanner> without a maintainer, i think a refactor is going to have to be handled like any other PR
+20:01:54 <jtanner> dag is familiar with that sort of thing
+20:01:55 <mikedlr> not too much for the stuff I know about ;  day or two.  I think that once the person started it they would want to do more.
+20:03:20 <mikedlr> there are integration tests already which makes it easier to do reliably
+20:03:31 <jtanner> ok, well i don't think we're going to get anything in terms of heavy lifint from the core side beyond code review / merging
+20:03:34 <bcoca> ah, nvmd this only affects deb files, which should have arch in name if followin standard,
+20:03:36 <bcoca> +1
+20:03:48 <bcoca> to patch, have not looked at tests
+20:04:11 <bcoca> mikedlr: might need to add those to 'destructive'
+20:04:45 <jtanner> mikedlr: you work with evgeni?
+20:04:50 <mikedlr> Evgeni says current tests are marked destructive;  I think that's going to be true for most of them.
+20:04:59 <abadger1999> <nod>
+20:05:02 <bcoca> that should be ok then
+20:05:26 * bcoca does not know where those are marked anymore .. used to be destructive.yml play ....
+20:05:51 <jtanner> somewhere buried in ansible-test
+20:05:53 <bcoca> should be good to merge afaict
+20:06:13 <jtanner> mikedlr: does this fix whatever you came across it for?
+20:06:42 <mikedlr> jtanner: did some work with him  and would support him.  He made a comment that he's probably not able to take on the refactoring
+20:06:54 <jtanner> understood
+20:07:01 <jtanner> in terms of this small patch, it works for you?
+20:07:13 <bcoca> jtanner: should not change install, but should change detection .. were we getting false negatives when using .deb?
+20:07:16 <mikedlr> jtanner: don't understand the comment.  I just came across this on Evgeni's request for a review and tried to write a unit test as part of reviewing.
+20:07:44 <jtanner> ah, i thought you might have run into the problem is was fixing
+20:07:58 <jtanner> s/is/it
+20:08:26 <jtanner> #info related issue https://github.com/ansible/ansible/issues/24673
+20:08:37 <bcoca> anyone oposed to merge?
+20:09:06 <jtanner> #info related PR https://github.com/ansible/ansible/pull/24703
+20:09:26 <jtanner> bcoca: +1
+20:09:59 <jtanner> #action bcoca merged PR
+20:10:03 <mikedlr> I support merge as is without unit test (but with integration test)
+20:11:10 <jtanner> mikedlr: since we don't really have committment from anyone on refactor, can you open bugs on what you think is wrong?
+20:11:20 <jtanner> we can then mark needs_contributor
+20:11:28 <mikedlr> jtanner: sure; will do.
+20:11:31 <jtanner> thanks
+20:11:47 <mikedlr> it will also give me a place to put a link to the commits with my unit test.
+20:11:49 <jtanner> #action mikedlr to open bugs on refactoring possibilities so they can be marked needs_contributor
+20:13:11 <jtanner> dag: you still here?
+20:13:36 * mikedlr wonders away but will read log later.
+20:13:43 <dag> jtanner: yes
+20:13:49 <jtanner> #topic https://github.com/ansible/ansible/pull/24867
+20:13:54 <dag> jtanner: I updated the PR with the rationale
+20:14:03 <jtanner> #info cycling back to topic for dag
+20:14:23 <dag> why a simple issue became a fix touching a few core modules + integration tests
+20:15:00 <dag> (and why splitting the PR makes no sense, because it is all tied together)
+20:15:23 <jtanner> sivel: you around still?
+20:15:27 <jtanner> bcoca: ^
+20:15:34 <sivel> I am
+20:15:42 <jtanner> i don't remember the previous vote / discussion
+20:16:13 <sivel> It was brief.  I mentioned it looked like it hit too much code at once
+20:16:29 <sivel> As we looked, we believed a targeted change for win_chocolatey could be made independent of the other changes
+20:16:37 <willthames> https://meetbot.fedoraproject.org/ansible-meeting/2017-05-25/ansible_core_meeting.2017-05-25-15.00.log.html from 15:16:00 onwards
+20:16:46 <willthames> jtanner ^^
+20:17:01 <sivel> There are also formatting changes in the PR, that aren't really necessary iirc
+20:18:02 <dag> sivel: The fix for win_chocolatey is: https://github.com/ansible/ansible/pull/24867/files#diff-76ffc0551f8cf3d6255500316568e60bL575
+20:18:18 <dag> that change will cause command/shell/script etc to behave differently from before
+20:18:27 <dag> so we need to add that logic in the module
+20:18:45 <dag> and as a result, the integration tests fail because they were testing things that they shouldn't
+20:18:52 <sivel> Is the `rc` of win_chocolately helpful in any way?
+20:19:07 <dag> sivel: yes, it provides feedback to the user
+20:19:39 <dag> but don't question the one module, question the default behavior
+20:20:20 <dag> if a module explicitly returns failed=False, ansible shouldn't be changing that
+20:20:39 <sivel> my opinion is, that things should continue to work, without making larger changes to things outside of the most minimal possible
+20:20:52 <dag> (the reason it does, is because it may not know if the module returned it explicitly, or it was added implicitly)
+20:21:01 <dag> right
+20:21:05 <dag> and that's what we did
+20:21:45 <sivel> I think a change is fesable that only impacts win_choclately, and maybe few lines elsewhere
+20:22:04 <sivel> allow things to continue working as is, except supporting rc=!0 and failed=False
+20:22:10 <jtanner> 15:36:41 <thaumos> #action thaumos to update #24687 asking dag to make this pr for only changed/failed presence.
+20:22:10 <jtanner> 15:37:12 <thaumos> #action thaumos to also ask dag to create individual prs for rc issue on win_* and everything else.
+20:22:16 <sivel> which shouldn't impact any other modules
+20:22:17 <jtanner> did that ever get relayed to you dag?
+20:22:31 <sivel> it did not
+20:22:42 <dag> sivel: it's not possible, unless you want to add something like if module.name == win_chocolatey inside ansible
+20:22:50 <abadger1999> Okay, I've reviewed the non-test changes and they look good.  If this is just a matter of breaking up or not, I think is good to merge.
+20:23:04 <dag> jtanner: it did, and that's why I asked to reconsider
+20:23:10 <jtanner> +1 on merge ... if tests pass. I can't think why not
+20:23:43 <abadger1999> sivel: the win_chocalatey fix seem to be the part requireing removal of -            if result.get('rc', 0) != 0:
+20:23:43 <abadger1999> -                result['failed'] = True
+20:23:50 <abadger1999> from task-executor.
+20:23:59 <abadger1999> Can't do that without the other changes going in as well.
+20:24:05 <jtanner> crud, tests failed
+20:24:28 <abadger1999> I guess if the first PR was the task-executor and all the module and test changes, then the win_chocolatey fix could come after that.
+20:24:31 <dag> I can remove the cosmetic changes
+20:24:44 <dag> they are non-PEP8 compliant anyway
+20:24:58 <jtanner> dag do you want to followup on #ansible-devel after you are done?
+20:25:07 <dag> sure
+20:25:15 <abadger1999> s/was the task-executor and all the modules/was all the modules/
+20:25:30 <jtanner> #action dag to remove cosmetic changes in PR and follow up on ansible-devel
+20:25:43 <jtanner> 5 more min left?
+20:26:42 <jtanner> willthames: you still here?
+20:26:46 <willthames> yep
+20:26:51 <willthames> it's like dawn here
+20:27:12 <jtanner> #topic supported_by field in aws modules
+20:27:27 <willthames> seems there are a lot of curated aws modules
+20:27:29 <jtanner> shertel: ryansb this one is probably for you guys to discuss
+20:27:42 <willthames> not sure, would like core input too
+20:28:12 <shertel> I believe ryansb is in another meeting
+20:28:15 <jtanner> most of the core team is in favor of marking almost everything community
+20:28:25 <willthames> do we even have enough committers contributing to aws modules
+20:28:34 <shertel> willthames no
+20:28:38 <willthames> I'm focussing on aws, but same might be true of loads of other subsections
+20:28:47 <willthames> there is a way to improve the numbers...
+20:28:56 <jtanner> which numbers?
+20:29:04 <willthames> but would still like to make most things community reviewed anyway
+20:29:13 <willthames> jtanner the number of committers working on ansible
+20:29:16 <willthames> aws sorry
+20:29:18 <jtanner> #info willthames would like aws modules to be "community" supported
+20:29:24 <bcoca> willthames: there is dedicated 'cloud' group, mostly they are responsible for those
+20:29:28 <willthames> or at least the majority
+20:29:51 <shertel> bcoca what is the cloud group?
+20:29:57 <bcoca> you!
+20:30:01 <shertel> heh
+20:30:06 <willthames> shertel and ryansb alone
+20:30:07 <jtanner> technically, curated vs community is only differentiated by bot automerge
+20:30:25 <bcoca> it only means that 'human with commit' does final push
+20:30:28 <jtanner> shipit process should still apply
+20:30:34 <willthames> getting the shipit tag is a bar
+20:30:50 <willthames> if it relies on committer shipit
+20:30:52 <jtanner> a high bar?
+20:30:53 <bcoca> willthames: that same bar applies to community
+20:31:07 <willthames> I can add shipit to community and have that count
+20:31:11 <bcoca> willthames: no, not commiter (they can) shipits works same as with community, only diff is automerge or not
+20:31:11 <shertel> is the author able to shipit if they have contributed before, or is that factored in automatically?
+20:31:16 <shertel> ^ jtanner
+20:31:20 <shertel> confused on how that works
+20:31:38 <bcoca> any maintainer/author should be able to have 'counted' shipit vs those modules
+20:31:39 <jtanner> i'm pretty sure maintainers can do shipit regardless of supported_by
+20:31:52 <jtanner> if not, bot bug?
+20:32:01 <bcoca> or 'missing maintainer'
+20:32:03 <willthames> it's also not clear to me that I'm supposed to shipit
+20:32:06 <willthames> on my own PRs
+20:32:13 <willthames> seems obvious that I'd want my PRs shipped
+20:32:16 <bcoca> you are not, should already be counted
+20:32:16 <willthames> that's why I wrote them
+20:32:24 <jtanner> hrm
+20:32:29 <bcoca> maintainer/author creating PR is supposed to be 'imlicit shipit'
+20:32:33 <shertel> yes
+20:32:34 <jtanner> that's one thing i'm not sure about
+20:32:42 <bcoca> ^ taht is bug then
+20:32:50 <jtanner> submitting a PR should not be implicit "shipit", as it might just be a WIP
+20:33:08 <bcoca> then they should use WIP tag, which is already ignored
+20:33:22 <jtanner> not everyone does that
+20:33:48 <Pilou> shipit is count regardless if the author of the comment is the submitter
+20:34:01 <jtanner> yes, that is known
+20:34:12 <willthames> concrete example
+20:34:13 <willthames> https://github.com/ansible/ansible/pull/24080
+20:34:22 <willthames> before shertel added wimnat as maintainer
+20:34:26 <willthames> waiting_on: maintainer
+20:34:29 <willthames> maintainers: willthames
+20:34:33 <bcoca> jtanner: last meeting we had on this, thought we agreed to implicit shipit
+20:34:57 <jtanner> i don't remember that
+20:35:17 <bcoca> when i was saying 3 shipits, you said 2, but then you were counting author as implicit ... something like that
+20:35:29 <bcoca> ^ vaguely remember
+20:36:13 <willthames> here's another problem with committer PRs
+20:36:13 <bcoca> in any case, seems silly to force author/maintainer to add shipit to his own pr .. we can assume he is submitting it cause he wants it merged
+20:36:14 <willthames> https://github.com/ansible/ansible/pull/25126
+20:36:27 <willthames> no-one notified at all
+20:36:29 <jtanner> ok, iam_role has a bug i think
+20:36:43 <jtanner> doh, nvm
+20:36:46 <shertel> If it's 3 shipits including author/maintainer then this won't improve the AWS workflow and maybe is a separate discussion.
+20:36:56 <jtanner> wimnat was only added as iam_role maintainer 6 days ago
+20:37:07 <willthames> jtanner, as I said, my bot_status was before that
+20:37:16 <willthames> I was maintainer, but it was waiting on maintainer
+20:37:20 <jtanner> yeah, i was on other screens
+20:37:36 <willthames> we do not have enough AWS committers
+20:37:39 <willthames> I would like to be a committer
+20:37:52 <willthames> try and unblock some of the trivially blocked PRs
+20:37:54 <bcoca> shertel: you should be able to merge w/o using shipit
+20:38:05 <shertel> bcoca I'm afraid
+20:38:18 <jtanner> willthames: there's no "aws committer"
+20:38:19 <bcoca> you should be ... but that should not stop you, just give pause
+20:38:30 <jtanner> there's committer for all of ansible/ansible or no commit at all
+20:38:32 <bcoca> shertel: there is always revert
+20:38:33 <willthames> jtanner, why am I not a committer?
+20:38:50 <willthames> five fucking years
+20:38:52 <willthames> seriously
+20:38:55 <jtanner> i have no idea ....
+20:39:01 <jtanner> i only manage maintainers
+20:39:10 <bcoca> willthames: i thought you already were
+20:39:37 <willthames> everyone seems to think this and never actually make it happen
+20:39:59 <shertel> Yeah, I thought so too.
+20:40:33 <abadger1999> we had an initial round of opening commit access and then never reviewed who else to add... do we some process ("add you name for consideration here!") so that we add more people?
+20:40:52 <jtanner> current list
+20:40:55 <jtanner> Abhijit Menon-Sen amenonsen
+20:40:55 <jtanner> René Moser resmo
+20:40:55 <jtanner> Matt Martz sivel
+20:40:55 <jtanner> Monty Taylor emonty
+20:40:55 <jtanner> Michael Scherer mscherer
+20:40:56 <jtanner> David Shrewsbury Shrews
+20:40:56 <jtanner> Trond Hindenes trondhindenes
+20:40:56 <bcoca> ah, that was it, he was in 2nd round ... but we never had that meeting ....
+20:40:56 <jtanner> jhawkesworth
+20:41:50 <sivel> I thought jtanner was really trying to get my attention :)  Used my name and nick
+20:42:07 <jtanner> sry, copy paste from teams page
+20:42:23 <jtanner> i am not trying to sound like your mother
+20:43:57 <jtanner> willthames: apologies, but i honestly had no idea
+20:44:26 <jtanner> i thought you were only slated for aws/* maintainership. did not know committer was on the table too
+20:44:55 <jtanner> #action abadger1999 to add willthames committer review to next internal team meeting
+20:45:06 <abadger1999> willthames: anyhow...  I'm putting "add more commiters" to the internal team meeting agenda.  internal team meeting happens on tuesdays a few hours before this one.
+20:45:22 <abadger1999> willthames: so we should have an updae for you next week.
+20:45:32 <willthames> thanks abadger1999
+20:45:43 <jtanner> ok, this has been an extra long meeting
+20:45:46 <jtanner> let's end for now
+20:45:52 <willthames> jtanner I might just raise some more ansibullbot bugs for the current issues
+20:46:00 <jtanner> willthames: works for me
+20:46:04 <willthames> not sure we got a resolution on the status of AWS modules
+20:46:08 <jtanner> the more the merrier
+20:46:30 <shertel> we didn't - maybe for next meeting? Are you around for the thursday meeting?
+20:46:41 <bcoca> willthames: curated should not impact merge times too much, it has basically same requirements as 'community'
+20:46:48 <jtanner> you guys should chat between meetings too
+20:47:01 <jtanner> as maintainers are usually expected to do
+20:47:28 <jtanner> start #ansible-aws if you must
+20:47:44 <willthames> fair point jtanner
+20:48:12 <shertel> sounds good
+20:48:19 <willthames> the joys of living in a completely different timezone
+20:48:24 <jtanner> heh
+20:48:44 <jtanner> having a separate irc channel makes that adhoc chat a little easier to scrollback
+20:48:49 <bcoca> willthames: we will soon have core member covering all zones
+20:49:04 <bcoca> lrn2greplogs
+20:49:16 <jtanner> ending ... thanks everyone
+20:49:18 <jtanner> #endmeeting

@@ -1,0 +1,208 @@
+19:11:35 <jimi|ansible> #startmeeting Public Core Meeting
+19:11:35 <zodbot> Meeting started Tue Aug 30 19:11:35 2016 UTC.  The chair is jimi|ansible. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:11:35 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:11:35 <zodbot> The meeting name has been set to 'public_core_meeting'
+19:11:40 * gundalow waves
+19:12:23 <jimi|ansible> #chair gundalow abadger1999 bcoca nitzmahone jtanner
+19:12:23 <zodbot> Current chairs: abadger1999 bcoca gundalow jimi|ansible jtanner nitzmahone
+19:12:25 * Qalthos 🌊🌊
+19:12:51 <jimi|ansible> i would have started the meeting a few minutes ago, but i had to go look up the proper name to use ;)
+19:13:19 <gundalow> jimi|ansible: there are so many to choose from
+19:13:21 <linuxdynasty> here
+19:13:26 <gundalow> Does anyone have anything for the agenda
+19:13:31 <gundalow> linuxdynasty: hey :)
+19:13:31 <jimi|ansible> gundalow: did you create an agenda issue for this meeting?
+19:13:54 <gundalow> jimi|ansible: nop, nor did I close the last one
+19:14:04 <abadger1999> Yeah, there's a few new items on the old agenda.
+19:14:07 <gundalow> did
+19:14:09 <gundalow> ffs
+19:14:10 <abadger1999> (I just tacked on there)
+19:14:20 <gundalow> https://github.com/ansible/community/issues/120
+19:14:20 <abadger1999> Because I didn't know better
+19:14:44 <gundalow> #topic Do we want the basic auth api reading from environment variables
+19:14:50 <gundalow> Do we want the basic auth api reading from environment variables: https://github.com/ansible/ansible-modules-extras/pull/2748/files#diff-d456352230dca855dd4a0606113e1a5aR107
+19:15:32 <caseylucas> here
+19:15:41 <abadger1999> I've considered this and I think the answer is no... aws and openstack read from the environment but htose are more or less single-service-provider.
+19:16:07 <abadger1999> basic-auth can be for several different service providers and each would need different keys.
+19:16:25 <abadger1999> I suppose a module could add an environment variable of its own.
+19:16:51 <abadger1999> But htose shouldn't use the generic "API_USERNAME" as their environment variable name.
+19:18:07 <abadger1999> Anyone want to say modules should/should not read those non-generic values from the environment?  I lean towards allow.
+19:18:38 <gundalow> consistency would say allow
+19:18:39 <gundalow> I think
+19:19:03 <bcoca> API_<modulename>_USERNAME ?
+19:19:24 <bcoca> ^ what we really need is auth plugins ...
+19:20:00 <abadger1999> bcoca: That would work for me.  I'm also okay with "non-generic" and the reviewers use best judgement.
+19:21:06 <abadger1999> I'm not hearing any objections so I think allow it is.
+19:23:25 <abadger1999> #info Modules using basic_auth from module_utils may read settings from environment modules but must use non-generic environment variables (like API_MODULENAME_USERNAME).  Using generic things like API_USERNAMAE would conflict between modules.
+19:23:58 <abadger1999> gundalow: Is there someplace that needs to be written up?  review guidelines?
+19:25:09 <gundalow> abadger1999: somewhere in the mess that is http://docs.ansible.com/ansible/developing_modules.html
+19:25:15 <abadger1999> k
+19:25:20 * gundalow has it on his post 2.2 backlog to redo that page
+19:25:43 <abadger1999> #action abadger1999 will add an entry for basic auth answer to developing_modules
+19:26:07 <abadger1999> Next topic?
+19:26:19 <gundalow> nod
+19:26:31 <gundalow> #topic Include vars updated to work with directories https://github.com/ansible/ansible/pull/17207
+19:26:35 <gundalow> https://github.com/ansible/ansible/pull/17207
+19:26:36 <gundalow> linuxdynasty: ^
+19:26:52 <linuxdynasty> yep
+19:27:40 <abadger1999> I think jimi|ansible was reviewing this last week?
+19:27:46 <linuxdynasty> yep
+19:27:51 <abadger1999> jimi|ansible: ^ Is 17207 good to merge?
+19:28:17 <linuxdynasty> Biggest change since last meeting was moving from unit tests to integrations tests
+19:28:57 <linuxdynasty> and removing the (default blacklist) and including a default whitelist (json, yml, and yaml)
+19:31:47 * jimi|ansible looks
+19:32:51 <bcoca> use path= as the var that works both for files and dirs, less options to think aoubt
+19:33:04 <jimi|ansible> yep looks good
+19:36:07 <linuxdynasty> You do not think being explicit of about including a file or dir is better, than using path? Also this way does not break compatibility with the current version of include_vars.py
+19:36:32 <bcoca> name was just added, can also be kept as alias
+19:36:40 <linuxdynasty> file and name
+19:37:06 <bcoca> sorry, meant file, name would work for either case
+19:39:35 <abadger1999> okay, so what are the actions here?
+19:39:42 <linuxdynasty> I personally prefer being explicit, but if you and the rest of the core team agree with using path instead of file and dir, than just let me know.
+19:39:58 <bcoca> it is just what we use in most 'file/dir' based modules already
+19:40:03 <abadger1999> no preference from me.
+19:40:46 <linuxdynasty> kk, I'll do what you guys think is best for the community :) I am just one individual :P
+19:42:00 <linuxdynasty> let me know how to proceed. Move to path from file and dir (yes or no)
+19:42:00 <linuxdynasty> ?
+19:44:02 <gundalow> afk for a bit, agenda is https://github.com/ansible/community/issues/120 next item is "Should we write facts modules that are targetting external devices?
+19:44:06 <gundalow> "
+19:44:12 <jimi|ansible> i'd like to keep them separate bcoca, mutually exclusive
+19:44:17 <gundalow> then after that archive module
+19:44:20 * gundalow -> afk
+19:44:24 <abadger1999> thx gundalow
+19:45:12 <abadger1999> Sounds like two votes for keeping it explicit.  But make the two parameters mutually_exclusive.
+19:45:55 <abadger1999> linuxdynasty: does that work for you?
+19:46:03 <linuxdynasty> yep and thats how it is currently set
+19:46:38 <jimi|ansible> yep
+19:48:04 <abadger1999> okay cool.  Sound sready to merge.  I'll do that after hte meeting.
+19:48:15 <jimi|ansible> +1
+19:48:18 <abadger1999> #action abadger1999 will merge 17207 after the meeting
+19:48:28 <abadger1999> #topic "Should we write facts modules that are targetting external devices?"
+19:48:50 <abadger1999> This also came up with the netapp module but it also applies to routers, network devices, etc.
+19:49:04 <abadger1999> (privateip and Qalthos might be interested in weighing in)
+19:49:46 <abadger1999> The netapp facts module runs on some ansible managed host and gathers facts from a netapp device accessible from that managed host over the network.
+19:49:50 <bcoca> cloud data not associated with machines (account info, etc)
+19:50:14 <bcoca> in the netapp case, i would argue it is associated to the appliance itself
+19:50:29 <abadger1999> Should we be writing this as a facts module?  (ramification is that the netapp device's information is associated with the managed host)
+19:50:53 <abadger1999> bcoca: "it is" or "it should be"?
+19:51:33 <bcoca> well, the association depends on how the inventory/play is set
+19:52:01 <sivel> feels weird to have the "facts" returned, associated with the host that executed the module
+19:52:15 <bcoca> devices facts, seem ok to me as they are 'hosts' in the end, jsut special, my issue is with facts not associated to a device/host
+19:52:36 <bcoca> sivel: that is what delegate_facts is for
+19:52:41 <bcoca> or delegate_to
+19:52:52 <sivel> sure, but I don't imagine that you would have a netapp in inventory
+19:52:58 <bcoca> but that is up to play/inventory setup how user associates the facts
+19:53:07 <bcoca> why not?
+19:53:33 <bcoca> they add network firewalls to it also, any 'device' you can  affect or query should be allowable
+19:53:45 <sivel> can you ssh to a netapp? does it have python?  I only put things in inventory that you can connect to via standard ansible means, and run modules on them by standard means
+19:53:58 <bcoca> ^ can you do same to all cisco switches?
+19:54:05 <sivel> I wouldn't put a switch in my inventory
+19:54:10 <bcoca> but others do
+19:54:13 <sivel> might just be me though
+19:54:16 <bcoca> this qualifies for me as the same
+19:54:22 <sivel> I would list it elsewhere
+19:54:50 <bcoca> i would put my devices in inventory, probably with info on where/how to delegate running the modules for them
+19:55:16 <abadger1999> bcoca: interesting... so the inventory entry just becomes a target for delegate_facts and maybe for iterating a group?
+19:55:48 <abadger1999> hosts: [router_group]   and then all tasks have delegate_to, for instance?
+19:55:53 <bcoca> as play target and yes, delegate_facts=no as the delegate_to would be 2ndary machine
+19:55:57 <bcoca> yes
+19:56:27 <bcoca> this is why we had to revert making delegate_facts=true the default, it broke all the plays for network admins
+19:56:45 <bcoca> which either  run them in 'local' or delegate to jump host to run modules against the network devices
+19:56:57 <bcoca> netapp ... same thing, its just storage vs network management
+19:57:01 <bcoca> still a 'device' i manage
+19:57:21 <bcoca> the only issue is that it needs specific modules and I have to be aware of delegation if i dont have direct access
+19:57:27 <abadger1999> Okay, cool.  Not an idiom I had thought of but that makes a sensible use-case now that I know about it.
+19:57:48 <bcoca> ask peter, this is the way they normally do it
+19:58:16 <sivel> makes it feel like we should be able to specify delegation info via inventory
+19:58:30 <bcoca> sivel: yes, i've thought of that
+19:58:57 <abadger1999> So  I'll propose: "yes, facts modules should be written for devices even if the facts module gathers facts on a remote box.  See http://docs.ansible.com/ansible/playbooks_delegation.html#delegated-facts for one way of using it correctly"
+19:59:10 <bcoca> what they normally do is set ansible_host to the 'delegation host' and just ssh to that to run against the actual inventory host
+19:59:41 <bcoca> a different question is about 'is all information queriable a fact'?
+20:00:00 <bcoca> ^ we have modules that query generic data, non related to host or devices and still set as 'facts'
+20:00:26 <bcoca> ^ i would argue we need an 'info'  standard and reserve 'facts' for things associated to an inventory entry
+20:00:44 * gundalow returns
+20:01:18 <sivel> bcoca: I was just thinking something similar
+20:01:24 <abadger1999> bcoca: That sounds right to me... Until we have a standard for that, should we let people (ab)use facts?
+20:01:30 <gundalow> AFAIK for all the Networking modules we either use CLI or SSH, we don't execute python (as generally speaking it isn't there)
+20:01:33 <bcoca> they are already
+20:01:34 <sivel> although have we ever dictated that a module with _facts in the name return ansible_facts?
+20:02:01 <bcoca> sivel: it should, that is another point we should 'make clear and document'
+20:02:02 <gundalow> I've not seen any examples of having network devices listed in Ansible's inventory
+20:02:03 <bcoca> many don't
+20:02:09 <sivel> we have some internal modules that are *_facts but don't return ansible_facts
+20:02:21 <sivel> but they are more "info" modules
+20:02:26 <abadger1999> sivel: Not sure but I just reviewed a module last week and said that it wasn't returning ansible_facts when it was named "facts"
+20:02:27 <bcoca> gundalow: it is how i've seen most network devices managed
+20:02:27 <sivel> we just didn't name them like that
+20:03:02 <sivel> although the information is still factual ;)
+20:03:12 <abadger1999> one would hope ;-)
+20:03:16 <sivel> lol
+20:04:01 <abadger1999> Running low on time do we want to table the info discussion for later?
+20:04:01 <gundalow> bcoca: You've seen network devices listed in Ansible's inventory?
+20:04:08 <bcoca> ys
+20:04:29 <bcoca> just like cloud hosts, you can do it 2 ways, but unless you use inventory you cannot paralellize
+20:04:38 <gundalow> bcoca: interesting
+20:04:49 <bcoca> putting in data structure means you use in with_ loop, which is serial
+20:04:58 <bcoca> when you want to do things in paralell, they MUST be in inventory
+20:04:59 * gundalow needs to see more real work examples. Most of what I've been looking at is examples/docs
+20:05:02 <gundalow> yup
+20:05:19 <gundalow> empty agenda for next time has been created https://github.com/ansible/community/issues/121
+20:05:30 <abadger1999> #topic Archive module:  archive vs simple compression  https://github.com/ansible/ansible-modules-extras/pull/2323#issuecomment-237360607
+20:05:48 <abadger1999> I think we discussed this some internally and on a previous ticket.
+20:05:59 <bcoca> 2 reasons people like to use data instead of inventory, 1) tower is priced by inventory entry, 2) people seem more comfortable having mutable data than mutable inventory (which is still data?)
+20:06:01 <abadger1999> Making it public for a public decision.
+20:06:25 <bcoca> im ok with single module ... tired of explaining to people that compression != archive ....
+20:06:42 <abadger1999> Okay... then someone has to figure out the UI.
+20:06:51 <abadger1999> Any ideas?
+20:07:27 <bcoca> too exhasted to think about it, does it need to be done now?
+20:07:46 <abadger1999> bcoca: well... it's a major revamp but it's to a new module.
+20:08:03 <bcoca> unarchive?
+20:08:16 <abadger1999> bcoca: (and then we'll need to deprecate unarchive and write a new module with the new params)
+20:08:18 <bcoca> wait ... *checking*
+20:08:20 <abadger1999> bcoca: archive.
+20:08:38 <abadger1999> At a new module meeting a few weeks to a month ago we added archive.
+20:08:46 <abadger1999> But it does both compression and archiving.
+20:08:47 <bcoca> archive/unarchive was staying, thought issue was compress/archive and uncompress/unarchive
+20:09:03 <abadger1999> unlike unarchive which currently only handles "archives"
+20:09:19 <bcoca> yes, but pr to add uncompress to it, no need to remove the module
+20:09:30 <abadger1999> bcoca: yes... but the current new archive module does both compression and archiving.
+20:09:31 <bcoca> also pr that added compress/uncompress modules?
+20:09:46 <bcoca> abadger1999: that does not mean we need to deprecate unarchive
+20:10:04 <abadger1999> bcoca: yes -- jmainguy created an uncompress module due to discussion on a previous unarchive ticket.
+20:10:28 <abadger1999> bcoca: well... unarchive would duplicate the functionality of a new module that did both unarchive and uncompress.
+20:10:47 <bcoca> yes, so uncompressed is never merged, functions moved to unarchive
+20:11:01 <abadger1999> bcoca: if we add it to the unarchive module then we have to work out the UI.
+20:11:02 <bcoca> or we remove 'compress' from archive and create compress?
+20:11:06 <bcoca> ^ i'm fine wither way
+20:11:28 * gundalow -> not here
+20:11:31 <abadger1999> bcoca: and we have to do that soon because otherwise the archive module UI will go one way and the unarchive module UI will go a different way.
+20:11:33 <bcoca> iirc it goes by extension, not sure what changes are needed
+20:12:11 <bcoca> abadger1999: only if we do it wrong
+20:12:16 <abadger1999> bcoca: what if I download a plugin as a tar.xz but the application needs to have an uncompressed tar file?
+20:12:31 <abadger1999> bcoca: the archive module is already in extras and I would argue the UI is defintiely wrong.
+20:12:47 <bcoca> did not realize that, thought it was still a PR
+20:12:52 <bcoca> we shoudl not have merged that way
+20:13:14 <abadger1999> bcoca: <nod> Yep.  It was marked shipit by dag so merged... then I started looking at the code and felt the same way.
+20:13:47 <abadger1999> We have to decide before 2.2 whether to revert it or how to fix the UI so the maintainer can update it.
+20:13:50 <bcoca> at this point, i would revert and discuss
+20:14:30 <abadger1999> <nod>
+20:14:48 <abadger1999> jimi|ansible, others: Do you feel the same way?
+20:15:13 <abadger1999> (Note -- maintainer is responsive.  Just has no direction as to how the UI needs to change)
+20:15:41 <bcoca> bad part is lack of time to actually work through this
+20:15:54 <abadger1999> yep.
+20:16:22 <bcoca> i feel like we are just going to stagnate on it and it wont get done for 2.2 cause ... priorities!
+20:16:42 <bcoca> but not sure what is worse, pushign something that is going to be incongruent or not pushing it
+20:18:31 <abadger1999> are we at the point where we can label it as "unstable parameters, will change in next version"?
+20:18:57 <bcoca> status=preview
+20:19:03 <abadger1999> yip.
+20:19:08 <bcoca> not sure we can do that
+20:19:30 <bcoca> people don't read
+20:19:41 <bcoca> and it is not 'norm' yet
+20:20:09 <bcoca> i really dont know ....
+20:20:44 <abadger1999> k
+20:20:53 <abadger1999> We have another public meeting on thursday.
+20:20:59 <abadger1999> Let's punt a final decision until then.
+20:23:00 <abadger1999> I'll update the ticket with -- "we want unarchive and archive to have similar parameter APIs and we know that the archive API needs work in order to support the full range of what people will want to do.  Going to continue discussing this at Thursday's meeting.  Need to make a decision on how to proceed before 2.2 ships."
+20:23:06 <abadger1999> #topic Open FLoor
+20:23:18 <abadger1999> Anyone else have something they want to bring up before we close?
+20:26:15 <abadger1999> #endmeeting

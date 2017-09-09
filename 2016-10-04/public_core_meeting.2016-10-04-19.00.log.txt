@@ -1,0 +1,244 @@
+19:00:01 <jtanner> #startmeeting Public Core Meeting
+19:00:01 <zodbot> Meeting started Tue Oct  4 19:00:01 2016 UTC.  The chair is jtanner. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:00:01 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:00:01 <zodbot> The meeting name has been set to 'public_core_meeting'
+19:00:15 <jtanner> #chair resmo dminca1
+19:00:15 <zodbot> Current chairs: dminca1 jtanner resmo
+19:00:46 <abadger1999> Greetings
+19:00:47 <jtanner> #chair abadger1999 alikins bcoca gundalow gundalow jimi|ansible mattclay mordred newtMcKerr nirik rbergeron Shrews
+19:00:47 <zodbot> Current chairs: Shrews abadger1999 alikins bcoca dminca1 gundalow jimi|ansible jtanner mattclay mordred newtMcKerr nirik rbergeron resmo
+19:01:08 <dminca1> greetings
+19:01:14 <jtanner> anyone else around?
+19:01:54 <ryansb> hi
+19:01:55 <jtanner> #topic https://github.com/ansible/community/issues/127#issuecomment-250963384
+19:02:31 <dminca1> ok
+19:02:38 <dminca1> @resmo
+19:02:44 <jtanner> resmo: i think you are discussing those handler issues in #ansible-devel, right?
+19:02:52 <resmo> right
+19:03:08 <nitzmahone> yo
+19:03:14 <jtanner> i told jimi|ansible that you'd be talking about handlers, so i'll grab him if he's needed
+19:03:21 <jtanner> and not responding
+19:03:30 <jimi|ansible> yo
+19:03:54 <jimi|ansible> ^ does not mean i'm actively paying attention at all times though :)
+19:04:12 <jtanner> resmo: so do you have some more debugging to do on your side before we can do something?
+19:04:38 <resmo> ok, first I would like to know the opinion about this PR
+19:04:38 * mordred waves
+19:05:17 <resmo> https://github.com/ansible/ansible/pull/17847
+19:05:17 <jtanner> resmo: 17070?
+19:05:33 <resmo> imho we should force handler to have a name.
+19:05:33 <jtanner> #link https://github.com/ansible/ansible/pull/17847
+19:05:50 <resmo> not sure if this is the best implementation...
+19:06:00 <bcoca> resmo: doesnt that go against the new directive?
+19:06:16 <jtanner> #topic https://github.com/ansible/ansible/pull/17847
+19:06:20 <bcoca> if handler is defined using 'subscribe', no need fo rname
+19:06:23 <resmo> bcoca: you are right but while I tested, I got a problem https://github.com/ansible/ansible/issues/17846
+19:06:40 <resmo> if they don't have a name. the module "name" is used
+19:07:15 <bcoca> yes, but that should not trigger their execution, if that is what is happening, its a diff bug
+19:07:18 <resmo> if you have 2 handler using same module, you have identical names which results in only exectues one
+19:07:19 <bcoca> requriing name is not right fix
+19:07:45 <jtanner> how do you notify an unnamed handler?
+19:07:46 <resmo> I am ok with a different approach
+19:07:52 <bcoca> name: handler <= if user does that but relies on listen ....
+19:08:20 <resmo> jtanner: you can find an example here https://github.com/ansible/ansible/issues/17846
+19:08:26 <resmo> it the issue I created
+19:08:46 <jtanner> i saw ... that's why i ask
+19:09:05 <jtanner> in the sense that i agree having an unnamed handler seems odd
+19:09:07 <bcoca> problem there is that we did not implement 'listen'  w/o disabling teh 'unique name per handler restriction', which should be 'on call' but not on definition
+19:09:29 <bcoca> jtanner: there is always a name, that is not the issue, the problem is duplicate names
+19:09:38 <resmo> right
+19:09:38 <bcoca> which 'non name' does by default when the action is the same
+19:09:44 <jtanner> "always", meaning it's "name" if not defined?
+19:10:03 <bcoca> since we introduced 'listen', handlers are not required to be uniquely named
+19:10:14 <bcoca> name is always defined
+19:10:26 <bcoca> as tasks will create a name when user does not supply one
+19:10:37 <bcoca> using 'action' and depending on config 'param's to create it
+19:10:46 <jtanner> got it
+19:10:56 <resmo> https://github.com/ansible/ansible/blob/devel/lib/ansible/playbook/task.py#L120
+19:11:14 <bcoca> so if using 'name' to trigger the handler, this works as expected, but using 'listen' it should allow for dupe names
+19:11:20 <jimi|ansible> resmo, i understand the problem
+19:11:36 <jimi|ansible> we keep track of notified listeners in a dict, so if more than one has no name it will cause a problem
+19:11:48 <resmo> and as bcoca pointed out if users use identical names the latter will be overwritten as well
+19:11:52 <bcoca> dupe names, no name is fine as long as the generated name does not match
+19:12:11 <resmo> or not taken to be more precise
+19:12:11 <jimi|ansible> perhaps we should track based on the uuid field instead, instead of the name
+19:12:26 <bcoca> jimi|ansible: only for the 'listen' ones
+19:12:38 <bcoca> the 'old handler invocation by name' shoudl still work like that
+19:12:38 <jtanner> #note issue is related to dict store of handlers which does not allow for duplicate names
+19:12:51 <jimi|ansible> well, that'd fix both problems, in the case of dupe names it would find the first and use its uuid instead of the later
+19:13:01 <jimi|ansible> which is how it behaves today
+19:13:24 * MichaelBaydoun is lurking
+19:13:37 <jtanner> #chair MichaelBaydoun
+19:13:37 <zodbot> Current chairs: MichaelBaydoun Shrews abadger1999 alikins bcoca dminca1 gundalow jimi|ansible jtanner mattclay mordred newtMcKerr nirik rbergeron resmo
+19:13:39 <bcoca> well, 2 diff features, listen was supposed to allow for dupe names as main reason was for handlers to be included from diff sources w/o regards of existing handlers
+19:13:55 <bcoca> old handler name, yes, should continue as is, but listen should be more flexible
+19:14:13 <jimi|ansible> that wasn't the intention with listen
+19:14:28 <jimi|ansible> it may have been kind of a side effect in some situations but it wasn't the primary motivation
+19:14:36 <bcoca> i would argue if we still force unique names, everyone adding their own 'apache config handler' will name them the same
+19:14:55 <bcoca> well, not the name uniqueness, but it is in spirit of the feature, 'arbitrary handlers'
+19:16:09 <bcoca> if we are fine with requireing unique names for handlers, i would say this is not a bug, works as expected
+19:16:10 <jtanner> is the handler dict scoped to the entire play or is their a dict for roles too?
+19:16:19 <bcoca> jtanner: roles are in play
+19:16:27 <bcoca> so its always play scoped
+19:16:38 <bcoca> ^ the handler list
+19:16:42 <jimi|ansible> yeah per-play, can't notify across plays
+19:16:44 <jtanner> but in the context of unnamed handlers, would the notification go to just the handler in the role?
+19:16:58 <jtanner> from a task inside a role
+19:17:00 <bcoca> no, handlers get imported onto play handler list
+19:17:05 <jtanner> k
+19:17:07 <bcoca> last one defined wth same name 'wins'
+19:17:27 <bcoca> jimi|ansible: if we are fine with listen having the same restriction, this is not a bug then
+19:17:55 <bcoca> i woudl argue we should not apply that limitation, but not going to make a fuss over it
+19:18:02 <bcoca> fix is not easy
+19:18:11 <bcoca> 2 diff lists of handlers
+19:18:48 <jimi|ansible> the lists of handlers is not the problem, it's the notified dict in TQM
+19:18:52 <jimi|ansible> that's easy to fix
+19:19:00 <bcoca> let me reprhase, 1 dict of handlers 'name is key', 1 dict of 'listen' with value being list of handlers to execute
+19:19:25 <bcoca> ^ can share same dict in tqm, probably want to give diff value?
+19:19:33 <bcoca> to indicate name vs listen?
+19:19:33 <jimi|ansible> if i remember right too, we actually put the handler object in the list, not just the name
+19:19:45 <jimi|ansible> and there's a separate dict for listeners yes
+19:19:54 <bcoca> then not sure why this happens
+19:20:03 <bcoca> unless we are forcing unique handlers on load?
+19:20:04 <jimi|ansible> because it's still matching on the name
+19:20:15 <bcoca> why? if listeners have their own ref?
+19:20:25 <jimi|ansible> and the name is "set_fact" for resmos example for both when `name: ` is not specified
+19:20:38 <bcoca> which woudl be expected on notify by name
+19:20:47 <bcoca> and is not a bug in that case
+19:21:00 <bcoca> its only a bug if we consider that handlres using listen do not require unique names
+19:21:20 <resmo> bcoca: I can understand your args
+19:21:38 <bcoca> which sounds liek we can go either way and code is almost there, but we need to decide on standard and then make it so
+19:21:44 <jimi|ansible> ok lets move on, just assign these to me if they're not already and i'll get to a definitive answer (i'm doing this from memory right now)
+19:21:53 <resmo> ok, next one
+19:22:06 <resmo> this is the issue https://github.com/ansible/ansible/issues/17855
+19:22:07 <jtanner> next issue in agenda?
+19:22:12 <jtanner> or in resmo's comment?
+19:22:38 <jtanner> #topic https://github.com/ansible/ansible/issues/17855
+19:22:45 <resmo> and this is the fix https://github.com/ansible/ansible/pull/17856
+19:23:10 <resmo> if you notify a value used for listen and as handler name, listen would be taken
+19:23:18 <resmo> the first implementation used the handler name
+19:23:34 <resmo> and ignored listen
+19:23:56 <bcoca> should we merge them or keep as separate channels?
+19:23:58 <resmo> (there is also another fix in this PR, which I come to it later)
+19:24:36 <resmo> bcoca: channels?
+19:24:38 <bcoca> ah, i see, we changed it from initial implementatio.n which used name first
+19:24:45 <bcoca> notify by name vs notify/listen
+19:24:49 <resmo> right
+19:24:58 <bcoca> but yes, makes sense
+19:25:06 <bcoca> name => listen
+19:25:09 <resmo> right
+19:25:40 <bcoca> but does that mean that if name matches, no listen is possible?
+19:26:17 <resmo> it means if you named your listen the same as a handlers name, listen is ignored
+19:26:32 <bcoca> is that what we want?
+19:26:56 <resmo> yes, I think so it makes sense
+19:26:58 <bcoca> if you have pay with 'listen' and add a role in which my handler happens to match by name, i invalidate your existing handlers?
+19:27:17 <jimi|ansible> yeah it's possible i just screwed that up when killing the results worker
+19:27:18 <bcoca> ^ not that you should add roles w/o inspecting them ...
+19:27:35 <bcoca> i'm fine with order, just thinking about 'why not both?''
+19:28:00 <resmo> good question,
+19:28:04 <jimi|ansible> might be confusing?
+19:28:14 <jimi|ansible> but yeah i think both might be good
+19:28:29 <bcoca> change looks good, we can sovle the 'just run both issue later'
+19:28:41 <resmo> ok, I'll change it
+19:28:55 <jtanner> #note named handler and listen order of precedence changed
+19:29:04 <bcoca> https://github.com/ansible/ansible/issues/17848 <= this, i thought we were making it configurable, error by default, but warning if config allowed
+19:29:15 <bcoca> jtanner: more like restored
+19:30:04 <resmo> bcoca: this is also in the PR https://github.com/ansible/ansible/pull/17856/files#diff-b893b8b8319cd4518208dd4fe53f3d7bR426
+19:30:17 <bcoca> resmo: separate PRs? its a bit confusing to have multiple fixes in
+19:30:23 <resmo> agree
+19:30:41 <bcoca> also that is a hardcoded change, we agreed on 'config dependant'
+19:30:59 <jimi|ansible> resmo: we decided to go back to raising an error when handlers were not found
+19:31:02 <resmo> ok, so I'll remove it from the PR
+19:31:02 <bcoca> so if not handler_found and C.MISSING_HANDLER_IS_ERROR: ....
+19:31:08 <jimi|ansible> that was the 1.9.x behavior
+19:31:20 <bcoca> yes, error by default, but we should let user turn into warning
+19:31:24 <resmo> i am fine with a config option
+19:31:46 <resmo> would someone take care for implementation?
+19:32:18 <bcoca> i'll do
+19:32:37 <resmo> great, thx
+19:32:43 * resmo is on vacation soon...
+19:33:01 <resmo> that is it from me :)
+19:33:05 <jtanner> so what's the result here?
+19:33:29 <jimi|ansible> #agreed bcoca will add an option to switch between errors/warnings for missing handlers upon notification
+19:33:45 <jtanner> ok, next agenda item?
+19:33:49 <jimi|ansible> #action bcoca will add an option to switch between errors/warnings for missing handlers upon notification
+19:34:11 <jimi|ansible> hrm, no bot feedback on those?
+19:34:18 <dminca1> no permissions
+19:34:18 <jtanner> guess not
+19:34:23 <jtanner> #topic https://github.com/ansible/ansible-modules-core/issues/4613
+19:34:27 <jtanner> dminca1: ^
+19:34:30 <jimi|ansible> i'm chaired, should be allowed
+19:34:32 <dminca1> thank you
+19:34:40 <jtanner> at first glance, that seems like a python lib issue
+19:34:49 <dminca1> I think the cloud/digitalocean module needs to be updated with new DigitalOcean API DigitalOcean v2 since the end-of-life for v1 has been declared on November 9, 2015 (as stated in https://developers.digitalocean.com/documentation/changelog/ )
+19:35:03 <dminca1> Since it's an important module (like all others), I think it requires utmost attention, because it's the era of Cloud :) and tbh, not only myself was disappointed to see that after writing 1h code to test digitalocean droplet creation, I received a stderr with `NameError: name 'DoError' is not defined`... (no offence to anyone)
+19:35:09 <abadger1999> jimi|ansible: yeah the only thing with bot feedback is #undo and  #topic (because that change the channel topic)
+19:35:21 <dminca1> I've also noticed on the official DigitalOcean dev website that dopy is no longer maintained ( https://developers.digitalocean.com/libraries/# ) and the link to dopy returns 404 ( https://www.digitalocean.com/community/projects/dopy ).
+19:35:41 <abadger1999> dminca1: I think I can come up with a fix for that... Can you test it?
+19:36:16 <dminca1> abadger1999 aye
+19:36:19 <dminca1> will do
+19:36:28 <abadger1999> Cool.  I'll submit a PR.
+19:36:58 <jtanner> #action abadger1999 to submit bugfix for dminca1 to test
+19:37:07 <dminca1> kgadek suggested to install `six`
+19:37:11 <abadger1999> dminca1: For dopy being deprecated... I don't think any of the core devs use digital ocean so we can't do big changes like porting to another library.
+19:37:14 <dminca1> but that's not a way to fix
+19:37:29 <jtanner> we would rely on community for porting
+19:37:48 <abadger1999> dminca1: If you can find a maintainer for the modules we might be able to expedite them becoming a comaintainer of hte module (if the modules are uncared for now)
+19:38:19 <dminca1> abadger1999 woah that's going to be difficult, but will try
+19:38:27 <abadger1999> :-)
+19:38:29 <dminca1> maybe someone from #ansible
+19:38:36 <jtanner> alukovenko's github activity is pretty low
+19:38:48 <abadger1999> <nod>  jus something to bear in mind.
+19:39:27 <dminca1> I don't get it why this module's not so popular, I think most of people make droplets on digital ocean, but don't do'it via Ansible (some of them)
+19:39:46 <dminca1> when I did a search on github for Ansible Digitalocean I found quite some projects tbh
+19:39:49 <jtanner> would be nice for d.o. to maybe own their modules
+19:40:05 <dminca1> why jtanner aws owns them ?
+19:40:24 <jtanner> i favor vendor participation in module dev
+19:40:36 <dminca1> ahh yes, me too
+19:40:41 <jtanner> testing is expensive for us
+19:40:54 <dminca1> testing can be done easily via Docker :D
+19:40:59 <jtanner> for DO?
+19:41:08 <dminca1> no lol
+19:41:13 <jtanner> is there a DO api mock container?
+19:41:29 <dminca1> well I'm willing to donate
+19:41:34 <jtanner> that's where the expense comes from ... having an endpoint to run integration against
+19:42:05 <dminca1> I just won 20 bucks for registering on docker.cloud
+19:42:33 <dminca1> how much cash do you guys need ?
+19:43:14 <bcoca> https://github.com/ansible/ansible/pull/17902 <= resmo, jimi|ansible
+19:43:16 <dminca1> ok, so will need to look for co-maintainer
+19:44:11 <jtanner> dminca1: it's a multi-faceted expense. cost of instances, cost of people to maintain account * every cloud we have modules for
+19:44:32 <jtanner> we don't even have aws in CI yet
+19:44:32 <jimi|ansible> https://github.com/ansible/ansible/pull/17902/files#diff-b893b8b8319cd4518208dd4fe53f3d7bR29
+19:44:39 <dminca1> jtanner yes I get it :)
+19:44:41 <jimi|ansible> ^ bcoca not a fan of doing it that way
+19:44:50 <jimi|ansible> we always import as C and do C.WHATEVER
+19:45:05 <bcoca> i can fix that, but seems like huge import for one constant
+19:45:19 <jtanner> #topic open-floor
+19:45:36 <dminca1> what's open-floor ?
+19:45:36 <jtanner> anyone have other topics to discuss?
+19:45:40 <dminca1> ah ok
+19:45:57 <dminca1> !#agreed
+19:45:57 <bcoca> jimi|ansible: fixed
+19:46:30 <bcoca> dminca1: i could swear we did update do to use v2 ....
+19:46:31 <resmo> bcoca: can't we now just remove the else here as the code should also run if listen are found https://github.com/ansible/ansible/pull/17902/files#diff-b893b8b8319cd4518208dd4fe53f3d7bL407
+19:46:36 <bcoca> or was that just inventory script?
+19:46:39 <abadger1999> dminca1: https://github.com/ansible/ansible-modules-core/pull/5154
+19:46:52 <resmo> or do you make a separate commit for it
+19:46:55 <bcoca> resmo: that was my point, but trying to keep 1 change per PR
+19:47:03 <resmo> sure, go ahead
+19:47:15 <bcoca> ^ jimi|ansible was going to decide on that
+19:47:24 <bcoca> we should also document the behaviour
+19:47:25 <resmo> yes, all fine
+19:47:38 <resmo> k
+19:47:43 <abadger1999> bcoca: I think we updated to v but now they're deprecating the library?
+19:47:47 <bcoca> change seems simple, im fine either way, think 'both is better' but not going to press it
+19:47:56 <dminca1> thank you abadger1999, will test tomorrow morning
+19:48:02 <abadger1999> Cool.
+19:48:09 <jimi|ansible> i thought we agreed both was fine, but do a separate PR please
+19:48:10 <bcoca> abadger1999: yeah, that requries full rewrite and no one has stepped forward
+19:48:14 <abadger1999> dminca1: Feel free to ping me in #ansible-devel if I forget about the ticket.
+19:48:27 <bcoca> jimi|ansible: ok, so then just unique names to decide
+19:48:39 <abadger1999> dminca1: I get tons of email but I can still keep up with IRC ;-)
+19:48:48 <jtanner> so, nobody has chimed in with topics .... so ...
+19:48:59 <jtanner> going to end meeting in 10?
+19:49:21 <dminca1> abadger1999 will do
+19:50:24 <jtanner> #endmeeting

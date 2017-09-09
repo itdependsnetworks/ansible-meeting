@@ -1,0 +1,247 @@
+15:00:48 <gundalow> #startmeeting Core Team Meeting
+15:00:48 <zodbot> Meeting started Thu Jan 12 15:00:48 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:00:48 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:00:48 <zodbot> The meeting name has been set to 'core_team_meeting'
+15:01:08 <ryansb> hello!
+15:01:19 <gundalow> #chair abadger1999 alikins jimi_|ansible bcoca jtanner masteinhauser mordred newtMcKerr Qalthos ryansb ryansb
+15:01:19 <zodbot> Current chairs: Qalthos abadger1999 alikins bcoca gundalow jimi_|ansible jtanner masteinhauser mordred newtMcKerr ryansb
+15:01:38 <rcarrillocruz> o/
+15:01:57 <gundalow> Agenda https://github.com/ansible/community/issues/148
+15:02:06 * mattclay waves
+15:02:48 <gundalow> #topic IRCBot https://github.com/ansible/proposals/issues/48
+15:02:51 <gundalow> Bikeshed time!
+15:03:01 <gundalow> allanice001: Not sure if you are around
+15:03:13 <gundalow> DocBot
+15:03:20 <bcoca> i thought that was a state of mind ... does that mean we have to stop bikeshedding the rest of the time?
+15:03:20 <gundalow> Searchy
+15:03:27 * bcoca goes back to yakshaving
+15:03:36 <bcoca> nagmenot
+15:03:47 <gundalow> bcoca: always bikeshedding, just need bikeshed++ now
+15:05:07 <gundalow> https://public.etherpad-mozilla.org/p/ansible-botname
+15:05:13 <gundalow> Please add ideas and votes
+15:06:12 <allanice001> yup
+15:06:26 <allanice001> Was just a few minutes late
+15:06:35 <bcoca> lmgtfybot
+15:06:51 <jtanner> "was that so hard?"
+15:07:01 <bcoca> whattodobeforeasking
+15:07:13 <bcoca> yeahitsdocumented
+15:07:24 <bcoca> tiredofansweringthis
+15:07:28 <jtanner> learnhow2computer
+15:07:31 * gundalow mutters, what have I done
+15:07:36 <bcoca> googleitMF
+15:07:36 <gundalow> FOCUS PEOPLE
+15:07:49 * bcoca stops now
+15:07:54 <allanice001> You know the definition of focus, right?
+15:08:14 <bcoca> we were focused! ... on the wrong thing ....
+15:08:39 <jtanner> so, what are we talking about?
+15:08:57 <gundalow> jtanner: a name for the IRC bot https://public.etherpad-mozilla.org/p/ansible-botname
+15:09:11 <allanice001> Well, we could call the bot Focus :P (feck off cuz u're stupid)
+15:09:17 <jimi_|ansible> oops
+15:09:22 <shaps> ^^ lol
+15:09:25 <allanice001> Wow, private got banned here?
+15:09:33 <jimi_|ansible> my bad
+15:09:48 <jimi_|ansible> i acidentally pasted wrong and did "flags privateip +ryansb"
+15:09:50 <gundalow> clearly jimi_|ansible thinks privateip should do more time coding, less time talking
+15:09:59 <gundalow> looooooooooooooooool
+15:10:13 <bcoca> jimi_|ansible: confess ... you just saw network_config and retaliated!
+15:10:35 <jtanner> how about "moobot"
+15:10:57 <shaps> I see 'foart' on etherpad, can I +1 that? :D
+15:11:26 <gundalow> shaps: +1 -1 as you wish
+15:11:35 <gundalow> Ask the Cow is cool
+15:12:02 <jtanner> mcdonalds wifi is slooooow
+15:12:12 <allanice001> Also, when do you want the bot in #ansible ?
+15:12:16 <gundalow> jtanner: That's a crap name for a bot
+15:12:17 <mordred> we should spin up a lambdamoo server and use that instead of IRC
+15:12:35 <jtanner> gundalow: poobot?
+15:12:42 <mordred> jssjr: ++
+15:12:45 <mordred> gah
+15:12:47 <mordred> jtanner: ++
+15:12:52 <gundalow> OK, VOTING CLOSED
+15:12:58 <ryansb> I think "bot" should be in the name regardless
+15:13:06 <gundalow> or rather we have better things to do
+15:13:25 <gundalow> Pleas add your thoughts and comments and we will revisit next week
+15:13:50 <gundalow> Once the name is sorted are people happy to add it to #ansible?
+15:13:50 <gundalow> +1
+15:14:06 <jtanner> i think it can go in there now
+15:14:11 <jtanner> the name isn't necessary to use it
+15:14:27 <gundalow> That's a good point
+15:15:04 <gundalow> +!
+15:15:07 <gundalow> +1
+15:15:32 <gundalow> Anyone else?
+15:15:44 <gundalow> allanice001: Anything stopping us putting it live now?
+15:15:50 <allanice001> nope
+15:15:54 <ryansb> yeah, would love to have it in
+15:16:16 <gundalow> #action allanice001 To put the bot live on #ansible
+15:16:19 <ryansb> any name with "bot" in it works for me
+15:16:33 <gundalow> #action Core team to pick a name that contains "bot", can rename later
+15:16:35 <gundalow> Thanks
+15:16:42 <gundalow> Anything else on Bot?
+15:16:47 <ryansb> not from me
+15:17:07 <gundalow> #topic SmartOS Timezone module: ansible/ansible#20105
+15:17:16 <gundalow> #link https://github.com/ansible/ansible/pull/20105
+15:17:19 <gundalow> abadger1999: ^
+15:17:30 <gundalow> Do we want this as a separate module or merged with the existing timezone module?
+15:18:22 <bcoca> im 50/50 here ... when we combine very disimilar systems into one module we get a mess *cough*service*cough* ... but we do have both patterns
+15:18:55 <bcoca> i would hope timezone would not be the case ... but ... timezones are one of those things humans made incredebly complex but always fail to realize and think its trivially simple
+15:19:09 <gundalow> So what are the concerns, usability, confusion about which module to use?
+15:19:32 <bcoca> code duplication/maintenance?
+15:20:46 * gundalow is a solid + zero on this
+15:21:06 <gundalow> Well, actually from an end user point of view a single module is easier
+15:21:27 <jtanner> but a pita to maintain
+15:21:58 <mattclay> Depending on how many options are specific to one use of the module, it may not even be easier to use.
+15:23:25 <alikins> if detecting a system is SmartOS is easy/reliable, then I would say add it to existing timezone
+15:24:55 <bcoca> alikins: detection is something we already do for service/facts/user/group/etc
+15:25:15 <bcoca> its the easy part, but the module itself can get very complicated ^ any of the above as example
+15:25:47 <bcoca> we've decided to break up service and facts, but not user/group so it also depends on fragmentation of the problem
+15:31:54 <gundalow> How do we move this forward then?
+15:32:40 <gundalow> Is one option "better" (no idea how you measure than) initially, and swap to separate/merged modules later
+15:32:40 <bcoca> ^ only count shipits AFTER last commit
+15:32:50 <gundalow> bcoca: Wrong discussion :P
+15:33:03 <bcoca> sorry .. 5 conversations .. .starting to meld
+15:33:03 <gundalow> Slacks over ---> here
+15:33:40 <bcoca> for timezone .... im +0, need a compeling argument to decide, right now i can see it both ways and they both suck
+15:33:51 <gundalow> OK
+15:34:01 <gundalow> #info We don't know what to suggest
+15:34:33 <gundalow> #topic Open Floor
+15:34:40 <gundalow> Looks like that's the end of the Agenda
+15:34:45 <gundalow> What else does anyone have
+15:35:08 <gundalow> Otherwise do we look at Proposals, or shall we close now and go back to Slack discussions?
+15:35:45 <abadger1999> Ola
+15:35:45 <gundalow> #topic Configurable fact path
+15:35:50 <gundalow> #link https://github.com/ansible/ansible/pull/18147
+15:38:28 <mattclay> bcoca: I added that to the agenda before you commented on it. Seems like you're OK with the change?
+15:39:38 <bcoca> mattclay: yeah, just saw that we need to standarize how we do this in general, my comment is not about this particular PR
+15:42:49 <abadger1999> bcoca: When you do, could you add the information to the developing ansible variables google doc?
+15:42:59 <abadger1999> https://docs.google.com/document/d/1vb9-OPXTLeySlPF40gXI3pRDkJzBPbJAJTYwcSAe7yI/edit
+15:44:00 <bcoca> abadger1999: once 'we' do
+15:44:12 <bcoca> wait ... google doc? not the rst?
+15:44:39 <abadger1999> bcoca: we do not yet have an rst.  and the doc has enough false/missing information that it's not ready to convert yet.
+15:45:02 <abadger1999> I'll make an rst once I know the doc has good information.
+15:45:11 <bcoca> i would work on the rst and just not link it, would allow contributors to update
+15:45:35 <bcoca> with WIP clearly on top
+15:46:14 <abadger1999> bcoca: <nod>  I can convert.... I was going by the proposed docs workflow but it seems we haven't had any input from there so...
+15:46:56 <bcoca> that was my thought, google doc will go stale unless we (rh employees) have time, in repo the 'we' is a larger group
+15:46:56 <mattclay> bcoca: The configurable fact path changes look good and the tests pass. Is it ready to be merged?
+15:47:59 <bcoca> mattclay: need to ammend docs to make sure people realize this is ONLY for the implicit setup
+15:48:06 <bcoca> but that can be done post
+15:50:19 <gundalow> #chair mattclay
+15:50:19 <zodbot> Current chairs: Qalthos abadger1999 alikins bcoca gundalow jimi_|ansible jtanner masteinhauser mattclay mordred newtMcKerr ryansb
+15:50:25 <jtanner> hi
+15:50:58 <abadger1999> #info https://github.com/ansible/ansible/pull/18147 (configurable facts_path ) ready to merge
+15:51:17 <bcoca> merged already, fixing docs
+15:51:23 <mattclay> #action need to amend docs to make sure people realize configurable facts_path is ONLY for the implicit setup (per bcoca)
+15:51:43 <abadger1999> bcoca: cool.
+15:52:03 <abadger1999> mattclay with action, one thing I like to do is always have a person tasked with the action.
+15:52:16 <abadger1999> (it's just convention but it's helpful)
+15:52:30 <mattclay> abadger1999: Yeah, good point. Thanks.
+15:52:51 <abadger1999> bcoca: do you want an action for changing where the fact-related variables are set as well?
+15:53:23 <bcoca> abadger1999: just add for next meeting, low priority
+15:53:32 <abadger1999> bcoca: k
+15:54:06 <mattclay> #topic shipit workflow for non-modules
+15:54:11 <mattclay> #link https://github.com/ansible/community/issues/148#issuecomment-270251944
+15:54:19 <abadger1999> gundalow: re: other topics.. some of the old items on the agenda are unresolved.
+15:55:12 <abadger1999> mattclay: +1 to all three... I think some will lean heavily on "core team" for a bit but we need to start somewhere.
+15:55:52 <mattclay> Yeah, I'm +1 as well. I discussed with jtanner earlier and he just wanted to get consensus on it before making the changes.
+15:56:00 <bcoca> module utils gives me pause, plugins would need to use metadata
+15:56:04 <bcoca> ^ we really should
+15:56:15 <jtanner> dyn inventory would be my first target tbh
+15:56:40 <jtanner> meta can go in FILEMAP.json
+15:56:40 <bcoca> contrib is clear, but once we start inventory plugins, we should also use metadata
+15:56:59 <mattclay> +1 to plugin metadata
+15:57:22 <bcoca> ^ need to make list and which ones are core ... i would say any with external deps == community
+15:57:30 <bcoca> mongodb/dig/etc
+15:57:50 <abadger1999> <nod> dyn inventory is almost exclusively external to core.
+15:57:55 <bcoca> filters/tests are harder as they use common file .. we might need to split those
+15:58:26 <bcoca> abadger1999: true but considering the importance of some, we might want to keep at least as curated *cough*ec2.py*cough*
+15:58:30 <abadger1999> We should alert the tower team to that, though... they might want to make sure someone from the tower team is responsible for changes to some of them
+15:59:00 <abadger1999> bcoca: <nod>
+15:59:28 <bcoca> ^ counting that as JINKX
+15:59:56 <jtanner> they should be marked as maintainers if they're going to gate them
+15:59:58 <bcoca> probably ec2/openstack ... might want to give gce and others to the respective 'cloud maintainers'
+16:00:33 <bcoca> jtanner: 2 decisions, a) support core/curated/community ... b) maintainers list
+16:00:47 <bcoca> i would not put any in core, but probably 2 or 3 in curated
+16:00:53 <bcoca> rest are community
+16:01:15 <allanice001> Unfortunately I need to duck, but bot is in #ansible
+16:01:36 <abadger1999> allanice001: Nice!
+16:01:36 <allanice001> gundalow is registering answerbot nick which will be used
+16:01:38 <bcoca> azure/ec2/vmware*/openstack <= curated .. openshift?
+16:01:49 <bcoca> docker?
+16:02:03 <bcoca> rest im fine with community
+16:02:08 <allanice001> gundalow, I should be online in just over an hour
+16:02:18 <abadger1999> only curated if they work well now and we have an expectation that someone is available to maintain them
+16:02:29 <jtanner> vmware is community, imo
+16:02:46 <gundalow> allanice001: ACK
+16:03:19 <allanice001> Catch y'all later
+16:05:51 <abadger1999> Okay, anything else for this topic?
+16:05:59 <abadger1999> I guess action items?
+16:06:27 <abadger1999> Do we want to start with just dyn inventory and then expand once we have that working?
+16:07:36 <abadger1999> #action abadger1999 will ping tower team about expanding external maintainership to dyn inventory; invite them to add maintainers for inventory scripts they care about.
+16:09:49 <abadger1999> #action abadger1999 to update script to add metadata to the inventory scripts
+16:11:32 <abadger1999> #action team to put together a list of metadata suggestions for dyn inventory and will approve it next week.
+16:11:57 <bcoca> https://docs.google.com/spreadsheets/d/1z-BfOkAaY60nYir6qx6L9yHMqcwT31UtrgaAFKnjH9w/edit#gid=0
+16:11:57 <abadger1999> jtanner, mattclay: anything else you want to have get done this week?
+16:12:23 <mattclay> No, that's it for me.
+16:12:24 <jtanner> not sure i understand
+16:12:47 <abadger1999> bcoca: I may modify the spreadsheet columns a litttle -- I already have a csv format in the metadata-tool script.
+16:13:05 <jtanner> i probably won't even start on this till next week
+16:13:25 <jtanner> shipits on modules is still a WIP
+16:14:24 <abadger1999> jtanner: <nod>  Cool.  I guess.. Anything else you'd need the rest of the team to finish up so that you aren't blocked when you do start?
+16:14:48 <jtanner> nope
+16:14:54 <abadger1999> excellent
+16:15:28 <bcoca> abadger1999: i think current is good for voting, we can add column and hide 'voting' when ready to script
+16:15:33 <abadger1999> bcoca: Remember to share that spreadsheet :-)
+16:15:35 <bcoca> column with 'results'
+16:15:45 <bcoca> abadger1999: my whole drive is shared by default
+16:16:18 <abadger1999> bcoca: huh.... I get request permission from all of my accounts (looking at it from red hat account now)
+16:17:33 <bcoca> try now
+16:17:37 <bcoca> rh account should work
+16:18:16 <bcoca> seems my change to the drive was reverted by 'admin policy'
+16:18:27 <abadger1999> works :-)
+16:18:41 <abadger1999> #link https://docs.google.com/spreadsheets/d/1z-BfOkAaY60nYir6qx6L9yHMqcwT31UtrgaAFKnjH9w/edit#gid=0
+16:18:51 <abadger1999> #topic "Ansible 2.0 no longer finds modules in library subdirectories"  https://github.com/ansible/ansible/issues/15432
+16:19:02 <bcoca> i'll make one per plugin type
+16:19:05 <abadger1999> https://github.com/ansible/community/issues/148#issuecomment-270201815
+16:19:11 <bcoca> though most of other plugins will be 'core'
+16:19:21 <abadger1999> Last week we talked about this and came up with three proposals.
+16:19:28 <abadger1999> Need to make a decision on it.
+16:19:47 <bcoca> -1 still on my side, i thnk it is extra complexity for a very niched need that 99.9999% of users dont care about
+16:20:20 <abadger1999> bcoca: Which is a vote for #3 (Do not add subdirectory support but document multiple ANSIBLE_LIBRARY_PATH paths[...]), correct?
+16:20:44 <bcoca> yes, .. but those are already documented?
+16:21:03 <abadger1999> I'm easily swayed on this but I'm also a #3 right now.
+16:21:31 <abadger1999> bcoca: I'll check... might be just a matter of adding this use case to teh documentation on ANSIBLE_LIBRARY_PATH
+16:21:58 <gundalow> + we should add some tests for it. It's something that none of us would nessarly have setup in our usual case
+16:21:58 <bcoca> i would argue .. you need to add it to all ANSIBLE_*_PATH
+16:22:08 <bcoca> ^ also to corresponding ansible.cfg entry
+16:22:09 <gundalow> ansible-test makes it easier to test these type of things
+16:22:54 <abadger1999> ANSIBLE_LIBRARY is only documented in the dev_guide right now...  We need to change that.
+16:23:32 <bcoca> intro_config should have the ansible.cfg path settings
+16:23:33 <abadger1999> Maybe add environment variable mentions to the relevant config file entries?
+16:23:40 <abadger1999> and then ^U
+16:23:42 <abadger1999> jinx
+16:23:43 <bcoca> which i think are more appropos for the use case that started this
+16:24:54 <abadger1999> #action abadger1999 to add mention of environment variables to intro_config
+16:25:32 <abadger1999> Anyone else want to weigh in here?
+16:26:04 <abadger1999> Even with don't care?  (otherwise it feels like two people are making the decision for everyone).
+16:27:15 <gundalow> did you end up with multiple paths in ANSIBLE_LIBRARY?
+16:27:22 <gundalow> That sounded clean to me
+16:27:45 <bcoca> silence == tacit approval
+16:27:56 <bcoca> ^ last chance to weigh in
+16:28:09 <gundalow> :)
+16:28:19 <abadger1999> gundalow: yeah, that's the proposed solution here, document the existing facility of multiple paths in ANSIBLE_LIBRARY as the way to do this.
+16:28:21 <bcoca> ^ smiling emoticons count as  +1
+16:28:30 <gundalow> +1
+16:28:40 <abadger1999> rather than adding a new feature to the code.
+16:28:44 <gundalow> aye, defo
+16:28:57 <abadger1999> The ayes have it :-)
+16:29:07 <gundalow> \o/
+16:29:16 <abadger1999> #action abadger1999 will take care of documenting the use case in intro_config.
+16:29:52 <gundalow> abadger1999: Once you've documented it add me on the review and I'll add some tests in for it
+16:30:58 * gundalow -> afk
+16:32:02 <abadger1999> will do  thanks!
+16:32:15 <abadger1999> #action gundalow to make tests for the use case
+16:33:28 <abadger1999> #topic Open Floor
+16:33:35 <abadger1999> Anything else from people?
+16:35:30 <abadger1999> jtyr: If you're around I think you had a PR you wanted to at least get on the agenda for next time?
+16:36:02 <abadger1999> jtyr: If you're not around, we'll get the info from you between meetings and put it on the agenda.
+16:36:19 <abadger1999> Okay, I'll close in 60s
+16:38:24 <abadger1999> #endmeeting

@@ -1,0 +1,300 @@
+15:02:51 <bcoca> #startmeeting core community meeting
+15:02:51 <zodbot> Meeting started Thu Aug 17 15:02:51 2017 UTC.  The chair is bcoca. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:02:51 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:02:51 <zodbot> The meeting name has been set to 'core_community_meeting'
+15:04:20 <bcoca> #topic changing names for set_facts and include_vars
+15:04:32 <bcoca> #url https://github.com/ansible/community/issues/220#issuecomment-322432419
+15:04:41 <bcoca> kustodian ?
+15:05:55 <jtanner> that feels "proposal" like to me
+15:06:23 <bcoca> its a rename .. not sure i agree on it requriing proposal
+15:06:37 <jtanner> rename without alias?
+15:06:40 <bcoca> and not a 'general rename' like plural/singular
+15:06:48 <bcoca> jtanner: we dont allow those afaik
+15:07:12 * mikedlr waves hello.
+15:07:13 <bcoca> there should be deprecation periods like with previous renames, we've used this process several times before
+15:07:39 <shertel> Hi
+15:07:42 * bcoca waves
+15:08:16 <jhawkesworth_> is changing set_facts to set_host_vars actually any clearer?  I may be wrong but I tend to think of host_vars as being 'host_constants'.
+15:08:30 <jtanner> well, one counterpoint to the rename might be that later down the road if we decide that not all vars have to be squished in to hosts, "set_host_vars" may not be totally accurate
+15:08:56 <jtanner> bcoca: chair me please
+15:09:08 <bcoca> #chair jtanner shertel
+15:09:08 <zodbot> Current chairs: bcoca jtanner shertel
+15:09:15 <jtanner> #chair mikedlr andriusb
+15:09:15 <zodbot> Current chairs: andriusb bcoca jtanner mikedlr shertel
+15:09:26 <jtanner> #chair jhawkesworth_
+15:09:26 <zodbot> Current chairs: andriusb bcoca jhawkesworth_ jtanner mikedlr shertel
+15:09:31 <bcoca> jtanner set_fact would have same issue
+15:09:55 <bcoca> and i dont see a path on changing how vars are currently structured  w/o major engine rewrite
+15:10:15 <jtanner> yep, way down the road if ever
+15:10:23 <bcoca> anible 5.0?
+15:10:23 <shertel> #chair alikins
+15:10:23 <zodbot> Current chairs: alikins andriusb bcoca jhawkesworth_ jtanner mikedlr shertel
+15:11:06 <bcoca> +0 from me, fine with getting a 'better name' ... really dont want to discuss what 'better name' looks like ... current and proposed all have problems and infer slightly incorrect meanings
+15:11:36 <jtanner> if +0 is indifference, that is my vote also
+15:11:40 <bcoca> and set_host_vars_but_unrelated_to_host_vars_dir ... is a bit long
+15:11:49 <jtanner> i wasn't aware that the terms were confusing to people
+15:12:11 <bcoca> hostvars vs host_vars vs facts vs ansible_facts vs set_fact vs include_vars actually setting facts ...
+15:12:36 <bcoca> alikins: did we add cacheable to include vars?
+15:13:06 <alikins> tend to agree. set_host_vars etc is better and more accurate name, but hard to change names. If it works as an alias though, +1, +0 if not
+15:13:39 <bcoca> alikins: any and all renames work as an alias, with at least a deprecation period (currntly 4 versions)
+15:13:43 <alikins> bcoca: re cacheable, I don't think so
+15:13:57 <bcoca> alikins: might want to add it jsut for parity, not a priority though
+15:15:09 <bcoca> soo .. this seems to have little support but also no opposition
+15:15:35 <bcoca> not sure what to do now .. open to survey on 'best name'?
+15:15:50 <jtanner> i thought that was something the proposal process was supposed to help with
+15:16:26 <alikins> sorta starts to become set_fact_for_playbook / include_vars_for_playbook  (and/or, set_fact_for_invocation, don't remember off hand if cacheable persist across multiple playbooks.)
+15:16:30 <jhawkesworth_> I am -1 on set_fact -> set_host_vars.  although 'facts' is wrong it hints that these vars are immutable.
+15:16:39 <bcoca> proposals normally big design elements and/or impact, i think this does not qualify, but if others insist, fine
+15:17:11 <jtanner> i don't insist, only suggest
+15:17:21 <bcoca> alikins: multiple plays , playbooks also, if in same run
+15:17:48 <bcoca> jhawkesworth_: most vars ARE immutable ... just 'overridable' .. not really overwritable
+15:18:30 <alikins> it would be nice to have a general solution for setting a var for some specific context/scope/lifetime
+15:18:48 <bcoca> debug
+15:19:07 <shertel> +0 I don't think the aliases make it particularly more clear.
+15:19:36 <dag> o/
+15:19:42 <bcoca> ok, so im going to table this as 'not opposed, but need better names'
+15:19:45 <bcoca> ^ agreed?
+15:19:46 <jtanner> #chair dag
+15:19:46 <zodbot> Current chairs: alikins andriusb bcoca dag jhawkesworth_ jtanner mikedlr shertel
+15:20:00 <jhawkesworth_> +1 to better names.  but that may be can of worms.
+15:20:02 <jtanner> bcoca: yep
+15:20:14 <bcoca> jhawkesworth_: its  a barrel of cans of worms
+15:20:15 * dag needs to look up the discussion with Michael wrt. this, because I know it was contentious back then
+15:20:27 <bcoca> dag: i already did, set_local!
+15:20:29 <jtanner> barrel of canned monkey worms
+15:20:31 <dag> right :-)
+15:20:38 <alikins> I don't think it's ever been clear what scope/context/lifetime a 'fact' applies to
+15:20:53 <bcoca> dag: look at minutes from prev meeting, i even got the ticket in which this was added
+15:21:03 <dag> bcoca: cool !
+15:21:06 <dag> will do
+15:21:37 <bcoca> alikins: which type of fact? there are 2, but in any case their scope is 'associated to host' which is 'global to run' once defined
+15:22:20 <bcoca> the problem with vars is that we really don't 'just have scope' ... we have scopes with vars: <= 'for this object and those contained by it'
+15:22:39 <bcoca> but things like roles and set_fact and extra vars and inventory ... dont have real scopes nor interactions
+15:23:04 <bcoca> they have precedence and availability ... which are not really related to scope
+15:23:24 <bcoca> i.e host related variables are always available once defined .. just via hostvars[hostname][varname]
+15:23:38 <bcoca> vs directly available hosts: hostname .. then u can use varname
+15:24:11 <bcoca> context is more important than scope with our vars (or semi constants ...) which is not what most programmers would expect
+15:24:42 <bcoca> it helps if you think of plays as 'for loop on hosts that locallizes vars by dumping hostvars into locals()'
+15:24:53 <bcoca> ^ if that makes sense
+15:25:50 * bcoca suspects everyone is now in a corner sobbing ...
+15:25:56 <dag> :-)
+15:26:22 <jhawkesworth_> can make the names 'truer' to what they actually are, but may not actually benefit understanding.
+15:27:27 <jtanner> it's a study in psychology and linguistics
+15:27:39 <bcoca> i should make a presentation 'understanding ansible vars ... straight jackets in the back for when you are ready'
+15:27:45 <jhawkesworth_> :-)
+15:27:56 <shertel> heh
+15:28:55 <dag> the only reason people are still here is because they want to discuss my next topic, I am sure
+15:29:02 <dag> :-P
+15:29:03 <jtanner> dag: always
+15:29:10 <bcoca> /endmeeting
+15:29:15 <dag> haha
+15:29:43 <bcoca> ok, updating ticket .. need to figure out naming .. letting future meetings loose time on that
+15:29:52 <bcoca> #topic sleep action
+15:29:54 <mikedlr> +1 on naming waits to see who is still sane after bcoca's presentation
+15:30:02 <bcoca> #url https://github.com/ansible/ansible/pull/26889
+15:30:11 <bcoca> mikedlr: pretty much have to be insane going in
+15:30:53 <bcoca> took me rewriting var manager to get grasp on how vars really work internally , i had more or less figured out functionally ... but did not know why
+15:30:53 <dag> so we need to have a variable sleep per target
+15:31:06 <dag> pause is not a solution
+15:31:19 <bcoca> its one solution, just does not apply 'per target'
+15:31:28 <bcoca> wait_for is the one that does
+15:31:35 <dag> other solutions were proposed, but I still prefer a 'sleep' module
+15:31:57 <dag> bcoca: why doesn't sleep apply per target ?
+15:32:01 <bcoca> i find it redundant with wait_for (and others like loops/until/etc which also have  pauses)
+15:32:17 <bcoca> dag: refered to pause
+15:32:29 <dag> ok
+15:32:56 <bcoca> ^ i actually like my with_sequence as it shows a countdown ...
+15:32:59 <dag> well, there is a second use-case for sleep, since pause is run only once (for the first target) there is no guarantee the playbook actually will pause
+15:33:15 <dag> if that first host happens to skip that task, pause is skipped as well
+15:33:24 <dag> (to me that is a huge mistake in the design)
+15:33:45 <dag> at least sleep can prevent this
+15:33:52 <bcoca> dag:  agreed that pause does not solve all cases, but neither does sleep, yet we solve all cases currently with examples given in ticket, specifically wait_for: timeout=10
+15:34:22 <dag> bcoca: wait_for to me is band-aid for the simple reason that the timeout is an error-condition
+15:34:24 <bcoca> pause was meant as a sync point, does it's job
+15:34:30 <dag> normally when the timeout is reached, the tasks fails
+15:34:48 <bcoca> dag: no, timeout is only error when in conjuntion with other conditions, otherwise its a sleep (designed specificaly that way)
+15:34:52 <dag> for some strange reason this is exceptional behaviour and would not come to mind
+15:34:58 <dag> bcoca: right, exceptional
+15:35:10 <bcoca> so wait_for: port=22 timeout=10 <= its error  when timeout reached
+15:35:17 <bcoca> wiat_for: timeout=10 <= not an error
+15:35:30 <bcoca> ^ well, spelling error
+15:35:37 <dag> the documentation does not even describe that behaviour
+15:35:46 <dag> or that it is an exception
+15:35:54 <bcoca> well, that is easy to fix
+15:36:07 <jhawkesworth_> 'wait_for: timeout=10 'is a bit harder to read than sleep: seconds=10
+15:37:03 <bcoca> i dont dispute that , but i find it redundant .. would like to minimize redundancy
+15:37:08 <jhawkesworth_> so I like sleep for the syntatic sugar.  But figuring out which of sleep, pause and wait_for to use is more head scratching
+15:37:17 <bcoca> if this can be fixed with doc line vs new module ... i go doc
+15:37:30 <dag> jhawkesworth_: yes, I would prefer not having to have the distinction between sleep and pause to be honest
+15:37:40 <dag> but they both work at a different level
+15:37:54 <dag> I don't mind renaming sleep if there's a better name
+15:38:51 <bcoca> i would prefer making sleep a alias for wait_for ... which is really 'sleep_until: ...'
+15:40:34 <bcoca> wait_for docs: " You can wait for a set amount of time C(timeout), this is the default if nothing is specified"
+15:40:55 <bcoca> should be a bit clearer and include a  'sleep example' .. but its documented
+15:41:10 <dag> bcoca: but the timeout is the error condition, that's the part that is not documented
+15:41:28 <bcoca> its not by itself
+15:41:34 <dag> in all uses it causes an error, which is what I assumed
+15:41:37 <bcoca> which is badly implied in that phrase above
+15:41:41 <dag> right
+15:41:45 <bcoca> im fixing that now
+15:42:10 <dag> I don't mind if that is fixed, but I still think using wait_for is band-aid
+15:42:34 <dag> if nobody is weighing in, I guess we'll have to use seniority to make a decision
+15:42:37 <dag> :P
+15:43:45 <jhawkesworth_> pause wait sleep - all similar ideas - would be nice to have 1 module that can do all with aliases.
+15:43:49 <dag> *yawn*
+15:44:01 <jhawkesworth_> but not looked at the code so maybe that's daft
+15:44:14 * jhawkesworth_ gotta go. later all
+15:44:37 <dag> jhawkesworth_: wait_for runs remotely per target, sleep runs locally per target, pause runs at the playbook level (once for all targets if you're lucky)
+15:44:39 <bcoca> well, wait_for + run_once can emulate the pause behavioru on waiting .. but pause was created for prompting
+15:45:08 <dag> so in fact, in my case it's not just: wait_for: timeout=10, you actually have to add: delegated_to: localhost
+15:45:14 <bcoca> if we add 'prompt' to wait_for .. pause then becomes obsolete
+15:45:30 <dag> because the target does not exist
+15:45:38 <bcoca> or local_action ... yes
+15:45:38 <dag> that's why I think sleep should exist
+15:45:48 <dag> local_action should die
+15:45:49 <bcoca> to avoid 1 keyword ....
+15:46:00 <dag> if we killed `action:` we should get away with local_action IMO
+15:46:08 <bcoca> action still lives
+15:46:16 <dag> you avoid local_action, and introduce `module`
+15:46:20 <dag> so you don't gain a thing
+15:46:27 <bcoca> you lost me
+15:46:43 <dag> ansible -- automate in a language that approaches plain English
+15:47:01 <dag> bcoca: with local_action you have to add the module in a second key
+15:47:19 <dag> local_action:
+15:47:19 <dag> module: wait_for
+15:47:19 <dag> timeout: 10
+15:47:22 <alikins> a handler attached to a sleep could be interesting , more or less a timer event  (more or so if handlers are configed to run 'immediately')
+15:47:24 <dag> sleep:
+15:47:25 <dag> seconds: 10
+15:47:25 <bcoca> same with action:
+15:47:43 <dag> wait_for:
+15:47:43 <dag> timeout: 10
+15:47:43 <dag> delegate_to: localhost
+15:48:03 <dag> did the indentation wrong
+15:48:15 <alikins> (albeit, a blocking timer event)
+15:48:31 <dag> so yes, I prefer the more natural english
+15:48:54 <dag> ansible -- automate in a language that approaches plain English
+15:49:13 <dag> yes, when you want to sleep you have to delegate that to your localhost
+15:49:18 <dag> makes no sense to me
+15:49:34 <dag> I understand where that comes from, but it's band-aid
+15:49:39 <bcoca> for me wait_for makes more sense .. since no one is naping
+15:50:14 <dag> but it shouldn't matter where you're waiting
+15:50:28 <dag> waiting for time to pass on a remote target is silly at best
+15:50:36 <bcoca> if 'only' waiting, i agree, but that is easy to fix w/o new module
+15:50:37 <dag> it's an unneeded round-trip
+15:51:01 <alikins> but either, 'sleep' is a portable thing, it's simple, and intuitively named and findable, and otherwise harmless. +1 from me.
+15:51:18 <bcoca> -1 as redundant
+15:51:46 <jtanner> +1 ... i find it similar to reboot
+15:52:06 <bcoca> reboot?
+15:52:18 <dag> which reminds me to finish the reboot module :-/
+15:52:30 <bcoca> i know of win_reboot .. but not reboot
+15:52:43 <jtanner> yes, there are ways to accomplish it with existing language, but the behavior is not tested and all the examples out there are wrong
+15:52:43 <dag> bcoca: it's a platform-agnostic reboot module
+15:53:01 <bcoca> jtanner: there is good role for linux reboot
+15:53:17 <bcoca> ^ you can add win_reboot to it .. cause windoez is 'special' and pretty hard to do
+15:53:28 * bcoca needs to find it
+15:53:42 <bcoca> was mostly using command: reboot + wait_for
+15:53:43 <jtanner> sorry, it's a tangent
+15:53:52 <dag> bcoca: hmm, I never made a PR for it: https://github.com/dagwieers/ansible/tree/reboot-module
+15:53:55 <bcoca> jtanner: not sure how it is same as this case
+15:53:57 <jtanner> only using it as an example
+15:54:05 <alikins> could sleep be considered a meta action for influencing strategy behavior?  (not this particular implementation, but the general idea)
+15:54:08 <bcoca> no redundant module
+15:54:30 <bcoca> yes, it can be done in a few tasks on linux side .. but many OSs make this much harder
+15:54:32 <jtanner> it's the same in the sense that without a clear module to do the function, people come up with 50 different suggestions on how to do it and most of them are wrong in some way
+15:55:13 <bcoca> which is more a question of good docs than creating a module for every possible combo ... you want to maintain more modules which do almost same thing?
+15:55:29 <jtanner> your loop control examples look odd to me for  simple sleep ... i would have just done shell: sleep 10
+15:55:50 <bcoca> wait_for shoudl be the norm, that was just to show 'counter'
+15:56:04 <bcoca> wait_for: timeout=10
+15:56:11 <jtanner> it's only my opinion
+15:56:14 <bcoca> ^ would be almost same as your shell: sleep 10
+15:56:15 <jtanner> it doesn't mean you are wrong
+15:56:24 <dag> jtanner: right, but I need to delegate that to localhost as well (as the target needs to be created)
+15:56:33 <bcoca> jtanner: that was one of many examples of ways to do same thing
+15:56:41 <dag> here is the issue ticket for the reboot action plugin: https://github.com/ansible/ansible/issues/16186
+15:56:43 <bcoca> until/retry/pause <= another 'sleep'
+15:57:24 <dag> so somehow I was fearing this would be one of those topics that go on forever
+15:57:33 <dag> I am sorry to have caused another one of those :-/
+15:57:53 <dag> productivity goes down the drain
+15:58:17 <jtanner> bad dag.
+15:58:38 <dag> yeah, ansible development halted for an hour because of me, again !
+15:58:58 <bcoca> dag: im not saying that your interface lacks merit, i just want to not maintain more code in main repo than rwe really need
+15:59:13 <dag> so you guys figure it out, it's there for the taking, or leaving :)
+15:59:19 <bcoca> if wait_for can do same .. .really hard to justify more of same code
+15:59:35 <dag> bcoca: to be honest, this is easier to maintain than an exception in wait_for with an action plugin
+15:59:38 <bcoca> as for reboot, i fail to see the similarity
+15:59:43 <dag> that's more complexity IMO
+15:59:59 <bcoca> dag: if it were either/or .. but this is AND
+16:00:16 <bcoca> we are maintaining that code already, this will not eliminate that code
+16:00:23 <dag> bcoca: read that ticket, you'll see a plethora of solutions for doing reboots but none looks really the right way
+16:00:30 <dag> bcoca: a reboot should just be that
+16:00:36 <dag> like a sleep should just be that
+16:00:46 <dag> and not delegated_to: localhost
+16:00:50 <bcoca> dag: i fail to see the connection
+16:01:01 <dag> or using a timeout that by default is an error condition
+16:01:12 <bcoca> dag: no, by default it is not
+16:01:17 <bcoca> its actually the opposite
+16:01:29 <dag> I spelled it out, maybe you don't want to see it ;-)
+16:01:31 <bcoca> it was made an error condition when other conditions were applied
+16:01:57 <dag> bcoca: ok, if you have 10 use-cases, and in 1 it acts differently, that to me is the exception
+16:02:05 <alikins> how do wait_for: or sleep: handle being ran with async: ?
+16:02:13 <dag> but I don't want to discuss semantics about exceptional here
+16:02:25 <dag> alikins: sleep is an action plugin
+16:02:27 <bcoca> alikins: wait_for runs with async, sleep does not
+16:02:45 <dag> if you want to sleep asynchronously, then I think you need to see a docter :-)
+16:02:47 <abadger1999> Would the idea of documenting wait_for be to document it in the pause module?
+16:02:48 <bcoca> but async basically defeats the purpose of this feature
+16:03:07 <bcoca> abadger1999: i can add that, already have PR documenting wait_for as a 'sleep'
+16:03:14 <dag> abadger1999: still, delegating your sleep to localhost feels so wrong
+16:03:19 <abadger1999> "pause is not what you want if _____. Use the wait_for: timeout=SECONDS if you need that.
+16:03:31 <bcoca> dag: you dont NEED to , but it is saner to do so
+16:03:50 <dag> bcoca: YES, i NEED to because the target still has to be created
+16:04:01 <bcoca> well, depends on what you are doing
+16:04:13 <dag> well, there is firmly disagree with you
+16:04:22 <dag> there is no real use-case for sleeping remotely
+16:04:52 <dag> so no, if we are talking about sleeping, there is no "depends what you are doing"
+16:05:02 <bcoca> no, but it also does not break in many cases, i.e restarting tomcat and waiting cause service script lies to you and you know it takes 200s to be ready
+16:05:12 <dag> you shouldn't be making a connection
+16:05:17 <bcoca> ^ my actual first usage of wait_for: timeout=250
+16:06:13 <dag> it should be as simple as: sleep: seconds=10 in EVERY use-case
+16:06:42 <dag> the only problem I have is the sleep vs pause discussion, which is something we cannot fix
+16:07:16 <dag> and we probably ought to make a note in both module docs to explain the difference
+16:07:43 <bcoca> already done
+16:08:00 <dag> can't be done, unless you also merged my sleep PR :)
+16:08:18 <bcoca> we disagree on that
+16:08:32 <dag> you disagree with me, jctanner and alikins
+16:08:40 <dag> but yes "we" disagree on that too :)
+16:09:13 <dag> so let's discuss next week again
+16:09:21 <dag> and continue the meeting
+16:09:25 <dag> because I cannot call it a day
+16:11:51 <abadger1999> bcoca: next topic?
+16:12:01 <bcoca> none left
+16:12:35 <abadger1999> Okay open floor then
+16:12:41 <bcoca> #topic open floor
+16:13:05 <bcoca> though we are over, so if noone has anything closing in 5
+16:13:07 <abadger1999> Ansiblefest SF is coming up
+16:13:28 <abadger1999> And there will be a contributor summit on 2 days this time, one the day before and one the day after (Wed and Fri)
+16:13:35 <abadger1999> Feel free to sign up to attend
+16:13:39 <abadger1999> Or join on video.
+16:13:48 <abadger1999> We're getting input on agenda items here: https://public.etherpad-mozilla.org/p/ansible-summit-september-2017
+16:13:54 <dag> abadger1999: 2 days, do we plan something like a sprint ?
+16:13:55 <abadger1999> So feel free to add items or to vote.
+16:14:14 <abadger1999> dag: Not yet but feel free to put it on the list.
+16:14:18 <abadger1999> I'll be there both days.
+16:14:22 <mikedlr> Still looking for people interested in testing cloud modules.  AWS team has limited resources and will be in conferences and stuff
+16:14:33 <dag> I had already booked my flight, need to reschedule it if I still can
+16:14:37 <abadger1999> i think nitzmahone and several others might be leaving partway through friday.
+16:15:08 <abadger1999> i'd be happy to help but I'm not much help on either windows or cloud.
+16:15:24 <abadger1999> gregdek:  You around?
+16:15:36 <abadger1999> gregdek: dag wa swondering if we're planning sprints.
+16:15:42 <mikedlr> Anyone who wants to do manual testing / learn about setting up serverless systems should drop by #ansible-aws
+16:16:00 <dag> abadger1999: I'll put it on etherpad, no problem
+16:16:04 <abadger1999> dag: Cool.
+16:16:08 <dag> don't need to wake up gregdek for this :p
+16:16:12 <abadger1999> That's all from me on this topic
+16:16:25 <dag> let me quickly see if I have anything still in queue
+16:17:17 <dag> nope, I only got module-related PRs open
+16:17:36 <dag> sleep was the only think standing out because of bcoca's remarks
+16:17:42 <dag> thing
+16:18:01 <abadger1999> Cool.
+16:19:12 <bcoca> #endmeeting

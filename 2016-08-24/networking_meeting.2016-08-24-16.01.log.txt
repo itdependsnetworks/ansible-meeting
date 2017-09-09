@@ -1,0 +1,156 @@
+16:01:00 <gundalow> #startmeeting Networking meeting
+16:01:00 <zodbot> Meeting started Wed Aug 24 16:01:00 2016 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:01:00 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:01:00 <zodbot> The meeting name has been set to 'networking_meeting'
+16:01:08 <gundalow> #chair Qalthos privateip
+16:01:08 <zodbot> Current chairs: Qalthos gundalow privateip
+16:01:27 <gundalow> Hey eveyone, who's around?
+16:01:34 * caphrim007 raises hand
+16:01:35 <gundalow> caphrim007: hi
+16:01:40 * mhite waves
+16:01:45 <privateip> good day all
+16:01:46 * Qalthos 🌊🌊
+16:02:18 <gundalow> Agenda as always https://github.com/ansible/community/issues/110
+16:02:48 <gundalow> #topic Tracking Network OS versions
+16:04:06 <caphrim007> gundalow: i've added some topics
+16:04:11 <gundalow> For now on we will be including details of the version of the network appliance that's been tested in when doing bug fixing
+16:04:14 <gundalow> caphrim007: Thanks :)
+16:05:30 <gundalow> privateip: You got the example, I can't see it now
+16:05:56 <privateip> https://github.com/ansible/ansible-modules-core/pull/4523
+16:05:56 <gundalow> For example a string like: Tested with VyOS 1.7
+16:06:01 <gundalow> Thanks
+16:06:06 <privateip> np
+16:06:11 <gundalow> We also ask for that information when people raise bugs
+16:07:11 <gundalow> Just as freeform text, the aim is we can 1) Track what a PR has been tested against, which helps if bugs are found later on 2) Lets us know what people are using
+16:07:15 <gundalow> privateip: anything you'd like to add?
+16:08:30 <stianvi> gundalow - this should also include hardware version/type too?
+16:08:44 <gundalow> stianvi: excellent question. I think that would be useful
+16:08:53 <stianvi> i.e. qfx5100 junos 15.1R4
+16:09:36 <gundalow> One would hope that the APIs are common across appliances, however that may not be the case
+16:10:13 <privateip> hw is nice to have but the os will be the req element
+16:10:24 <privateip> in some cases hw just doesn't make sense
+16:11:54 <gundalow> It's a new thing, we will try it out and see how it works. Easy to adjust in the future
+16:12:42 <gundalow> Any other questions/thoughts on that?
+16:12:47 <mhite> Seems reasonable.
+16:13:49 <gundalow> #topic 2.2 code freeze
+16:14:11 <gundalow> #info Ansible 2.2 is coming. https://groups.google.com/forum/#!topic/ansible-devel/Ce5uNA5TnJ0
+16:14:27 <gundalow> #n preparation for major releases, we will be instituting a "feature freeze" before the first release candidate. For 2.2, the last day to add features will be Monday, September 5th.
+16:14:31 <gundalow> During this period, no new features will be added to the devel branch as we stabilize the code and prepare to create the stable-2.2 branch. This freeze will last at least 2 weeks, but could last up to a month or more depending on any bugs we find related to the new features we've created in the devel branch.
+16:14:41 <gundalow> ..
+16:15:27 <gundalow> So the Network group, like the rest of the Core Engineering Team are busy finishing off their features for that
+16:15:29 <caphrim007> does that date apply to -extras too?
+16:16:04 <gundalow> caphrim007: -extra will be ~ 2 weeks after that
+16:16:08 <caphrim007> k
+16:16:19 <gundalow> I see you have more modules for us :)
+16:16:46 <stianvi> so just for the core and core-modules?
+16:16:46 <caphrim007> yeah i wanted to get them in before 2.2 window closed
+16:16:54 * privateip labels caphrim007 "the module machine"
+16:17:00 <gundalow> +!
+16:17:03 <gundalow> +1
+16:17:10 <linuxdynasty> +1
+16:17:42 <mhite> @caphrim007 is definitely beast mode on the F5 modules right now.
+16:17:56 <gundalow> stianvi: I think we will allow some modules-core changes in, though maybe not as long a window as modules-extras
+16:18:33 <stianvi> thanks gundalow
+16:19:22 <gundalow> #topic Ansible 2. Network Modules updates
+16:19:27 * gundalow hands over to privateip
+16:19:34 <privateip> thx
+16:19:46 <privateip> just a quick update for those here (and those reading at home later)
+16:20:00 <privateip> you might have noticed a flurry of commits this week
+16:20:12 <privateip> we are starting to get the network 2.2 refactor merged back into devel
+16:20:27 <privateip> as of now the following are code complete (still in testing)
+16:20:35 <privateip> ios_config, ios_commnad, ios_facts
+16:20:41 <privateip> nxos_config, nxos_command
+16:20:50 <privateip> eos_command, eos_config
+16:21:00 <privateip> iosxr_command, ios_config (coming today)
+16:21:08 <privateip> iosxr_command, iosxr_config** (coming today)
+16:21:16 <privateip> vyos_command, vyos_config
+16:21:21 <privateip> still to come
+16:21:32 <privateip> ops_command, ops_config (openswitch)
+16:21:37 <privateip> junos_command, junos_config
+16:21:44 <privateip> facts modules for all
+16:22:08 <privateip> i would suggest starting serious testing next week
+16:22:21 <privateip> please file issues for anything you find
+16:22:33 <privateip> lots of goodness added to both
+16:22:48 <caphrim007> do those command modules use...a webservice api?
+16:23:00 <privateip> where available
+16:23:00 <caphrim007> or is it a cli via paramiko?
+16:23:03 <caphrim007> or something else?
+16:23:21 <privateip> all support cli, we have implemented api calls for those platforms that support them
+16:23:53 <privateip> the two biggest changes: *_command will now enforce no config commands and *_config will now load a config from disk
+16:24:07 <caphrim007> ahh ok
+16:24:07 <privateip> this will ultimately allow us to deprecate *_template
+16:24:41 * privateip takes a bow and returns to gundalow
+16:24:48 * gundalow wakes up
+16:24:59 <gundalow> Any other questions on that?
+16:25:08 <privateip> haha i have a habit of doing that to people :)
+16:25:30 <gundalow> nah, was just realising other stuff we needed to do and making notes :(
+16:25:54 <gundalow> #topic caphrim007's F5 modules
+16:26:32 <caphrim007> i sent in several. they've been baking in our other repo for a while now
+16:27:29 <gundalow> privateip: Are you happy for me to merge any that have "shipit" LABEL
+16:27:38 <privateip> yep
+16:27:51 <caphrim007> i think i've tried to address any comments on them from mhite, gundalow, etc
+16:28:06 <gundalow> Cool, I'll review after meeting and do so
+16:28:10 <gundalow> caphrim007: in https://github.com/ansible/ansibullbot/blob/master/MAINTAINERS-EXTRAS.txt
+16:28:12 <caphrim007> i added another pr for a bigip_facts enhancement a couple moments ago
+16:28:30 <gundalow> Should the whole of network/f5 just be allocated to you?
+16:28:43 <caphrim007> yeah probably, at a minimum
+16:28:52 <caphrim007> mhite: want to be on that list too?
+16:29:04 <caphrim007> (sees he's there)
+16:29:11 <gundalow> being on that list means you will get a ping when someone raises a PR
+16:29:22 <caphrim007> that's fine
+16:29:29 <gundalow> `network/f5/: mhite caphrim007`
+16:29:55 <gundalow> caphrim007: did you take over bigip_gtm_wide_ip.py from perzizzle?
+16:30:16 <caphrim007> i think they mentioned they were ok with that?
+16:30:21 <caphrim007> so I'm ok with that
+16:30:28 <gundalow> cool, I'll update that
+16:30:46 <caphrim007> i'll need to make sure that it's part of the f5-sdk before i move forward on it
+16:31:00 <caphrim007> so it may not be ready for 2.2
+16:34:14 <gundalow> caphrim007: https://github.com/ansible/ansible-modules-extras/pull/2777/files did you decide to remove the singular option ntp_server, and just use ntp_servers (with s)
+16:35:04 <caphrim007> ....y......e....s.....
+16:35:14 * caphrim007 goes to look at his tests
+16:35:25 <gundalow> YAY TESTS
+16:35:37 <gundalow> I think the docs just need trimming don
+16:35:39 <gundalow> down*
+16:36:09 <caphrim007> yeah it looks like i decided against the two different params
+16:36:16 <caphrim007> lemme update that
+16:36:24 <gundalow> aye, one option is much better
+16:38:12 <gundalow> #topic Open Floow
+16:38:14 <gundalow> #topic Open Floor
+16:38:24 <gundalow> What else do people have?
+16:38:37 <gundalow> Qalthos: Anything?
+16:39:37 * Qalthos looks for the tab
+16:40:12 <gundalow> #topic Provide options for SSH key checking https://github.com/ansible/ansible/pull/15736
+16:40:16 <gundalow> #link https://github.com/ansible/ansible/pull/15736
+16:40:23 * gundalow hands over to Qalthos
+16:40:52 <Qalthos> Basically, as it is now, using shell to provide SSH connections doesn't actually do any sort of host checking
+16:41:28 <Qalthos> It pretends to, but doesn't actually consult any known_hosts files, making it somewhat pointless
+16:42:53 <Qalthos> This change adds three options for using shell... 'ignore', which preserves the current behavior, 'strict', which checks user and system host files and rejects hosts it doesn't know, and 'loose', which does the thing most people want
+16:43:45 <Qalthos> ie, allow hosts, but check host files and write back to ~/.ssh/known_hosts (unless I misunderstand paramiko docs)
+16:44:40 <privateip> +1 for loose as the default for 2.2
+16:45:12 <gundalow> caphrim007: mhite stianvi What are your thoughts?
+16:45:26 <gundalow> + anyone else lurking in here :)
+16:45:46 <mhite> I'm ok with loose
+16:46:03 <skg_net> +1 loose as default as well
+16:46:08 <caphrim007> i concur
+16:46:09 <Qalthos> sweet
+16:46:14 <gundalow> skg_net: hi :)
+16:46:45 <skg_net> @gundalow Hi
+16:46:50 <Qalthos> unless anyone has any objections, I will change the default to loose and merge today, then
+16:48:29 <gundalow> cool, thanks Qalthos
+16:48:37 <gundalow> #topic Open Floor
+16:48:41 <gundalow> Anyone got anything else?
+16:49:09 <skg_net> is there a way for Ansible to persist the ssh connection
+16:49:17 <skg_net> I tried ssh_args = -o ControlMaster=auto -o ControlPersist=60s but no luck
+16:50:05 <privateip> not today when using connection=local (ie cli over ssh)
+16:50:31 <skg_net> Thanks
+16:50:36 <privateip> for devices that offer a true linux environment then the connection can be changed to ssh in which case the control channel is persisted
+16:51:27 <skg_net> ok got it..let me play around and get back
+16:53:35 * gundalow makes a note to add that to the docs (when I update them)
+16:55:31 <gundalow> Anything else, otherwise I'll close the meeting
+16:56:13 <skg_net> Monday I will be raising PRs for DELL modules
+16:56:34 <gundalow> skg_net: ah yes
+16:57:29 <gundalow> skg_net: ping me here, or "@gundalow" in the PR and I'll look at it
+16:57:34 <gundalow> #closemeeting
+16:57:43 <gundalow> #meetingclose
+16:57:48 <skg_net> ok will do it
+16:57:51 <gundalow> #endmeeting

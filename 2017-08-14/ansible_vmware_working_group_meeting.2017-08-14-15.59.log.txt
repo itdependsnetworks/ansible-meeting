@@ -1,0 +1,204 @@
+15:59:40 <akasurde> #startmeeting Ansible VMware Working Group Meeting
+15:59:40 <zodbot> Meeting started Mon Aug 14 15:59:40 2017 UTC.  The chair is akasurde. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:59:40 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:59:40 <zodbot> The meeting name has been set to 'ansible_vmware_working_group_meeting'
+16:00:28 <jtanner> hello
+16:00:28 <pdellaert> o/
+16:00:34 <akasurde> #chair jtanner
+16:00:34 <zodbot> Current chairs: akasurde jtanner
+16:00:39 <akasurde> #chair pdellaert
+16:00:39 <zodbot> Current chairs: akasurde jtanner pdellaert
+16:00:41 <dag> o/
+16:00:47 <dericcrago> hi
+16:00:48 <akasurde> #chair dag
+16:00:48 <zodbot> Current chairs: akasurde dag jtanner pdellaert
+16:00:53 <akasurde> #chair dericcrago
+16:00:53 <zodbot> Current chairs: akasurde dag dericcrago jtanner pdellaert
+16:00:54 <dag> #action dag will ask for a meeting bot here
+16:01:07 <jtanner> you mean in ansible-vmware?
+16:01:13 <dag> yes :-)
+16:02:14 * dag still needs to add action items to the Plan from previous meetings
+16:02:19 <kaneda-f_> Hi
+16:02:27 <akasurde> #chair kaneda-f_
+16:02:27 <zodbot> Current chairs: akasurde dag dericcrago jtanner kaneda-f_ pdellaert
+16:02:30 <jtanner> side note: i am no longer the only one in this group with god powers on the github repos
+16:02:54 * akasurde wondering who else ?
+16:03:15 <akasurde> Hello everyone, let us start meeting
+16:03:25 <jtanner> our friendly neighborhood dag
+16:03:41 <pdellaert> friendly?
+16:03:45 <akasurde> Cool
+16:03:46 <pdellaert> ok...
+16:03:50 * dag probably complained too much ;-)
+16:04:19 <akasurde> #topic What are the problems with govcsim
+16:04:21 <dag> pdellaert: :-)
+16:04:28 <akasurde> #link https://github.com/ansible/community/issues/206#issuecomment-321696010
+16:04:29 <bcoca> dag: MPD did same to me .. once i complained too much,  ... now i'm 'complained to'
+16:04:46 <akasurde> #chair bcoca
+16:04:46 <zodbot> Current chairs: akasurde bcoca dag dericcrago jtanner kaneda-f_ pdellaert
+16:04:51 <dag> bcoca: so it's punishment :)
+16:05:06 <pdellaert> Background: I've been looking at doing something useful on the VMworld Hackathon (Barcelona one)
+16:05:27 <jtanner> didn't know there was a vmworld barcelona
+16:05:43 <pdellaert> and i was wondering what is the most useful: trying to add functionality to govcsim for the vmware modules
+16:05:54 <pdellaert> or work on modules themselves (and in that case, i'd suggest a new module)
+16:05:57 <dag> pdellaert: I prepared a sprint to tackle open issues
+16:06:21 <akasurde> pdellaert, Me and dag listed few here - https://github.com/ansible/community/wiki/VMware%3A-testing-efforts#limitations-of-vcsim
+16:06:23 <dag> pdellaert: at PyCon there was also a sprint IIRC
+16:06:30 <jtanner> contributing to vcsim is a hefty topic ... are we really at a point to train people on that?
+16:06:35 <pdellaert> dag: working on open issues (on existing modules), is hardly exiting for others at a hackathon :)
+16:06:51 <jtanner> i still don't know jack about golang
+16:07:10 <dag> akasurde: Yes, I was going to add references to open tickets for govcsim (and we should open tickets for each one that hasn't)
+16:07:21 <akasurde> jtanner, same here
+16:07:40 <dag> jtanner: contributing is one thing, we should at least report them...
+16:07:43 <akasurde> dag I remember that is action item for me
+16:07:45 <jtanner> filing vcsim bugs/features is probably doable
+16:07:59 <pdellaert> i agree
+16:08:23 <dag> pdellaert: it's all perception, the Windows sprint was very exciting, we almost closed them all (with some delay)
+16:09:20 <pdellaert> dag: i get that, but i can't take over the hackathon event as a sprint to fix issues with people who might have never or hardly worked on Ansible modules
+16:09:53 <kaneda_> Pretty new here, are you al guys mainly working on vcenter or also on vCloud ?
+16:09:54 <pdellaert> doing a sprint on VMware modules issues, is great, just not something for during a public hackathon event
+16:09:55 <dag> pdellaert: true, govcsim is more attractive, and doesn't have to be Ansible-related as such
+16:09:57 <jtanner> i suspect you might have to cater your sprint topics based on the attendees general ability levels
+16:10:27 <jtanner> who's going?
+16:10:40 <pdellaert> kaneda_: i think most here are involved with vCenter only... however, if there is something you want to discuss on vCloud, we can add it at the end of the meeting?
+16:10:41 <akasurde> pdellaert, are you targeting golang or Python (ansible) in Hackthon
+16:10:50 * dag is trying to get his flight rescheduled to go to the second contributors meeting day
+16:10:51 <pdellaert> akasurde: i'm open to both
+16:11:01 <dag> out of the blue there was a second day announced :-(
+16:11:13 <kanedafr> pdellaert: sure
+16:12:17 <dag> #action akasurde + dag will document / report the various vcsim issues on the Wiki
+16:12:21 <pdellaert> akasurde: i haven't added a topic yet, first thing i wanted to discuss: There might be some interest in Ansible functionality during the hackathon (i saw some tweets on that for VMworld US)
+16:13:00 <akasurde> pdellaert, ok
+16:13:14 <dag> #action pdellaert will do something exciting at VMWorld related to govcsim/ansible (TBA)
+16:13:58 <pdellaert> and either we see a chance for a simple module that a team might be able to work on, or we propose expanding govcsim with something useful for Ansible testing
+16:14:15 <akasurde> pdellaert, I can tell you two features in govcsim that we can have for Ansible - Snapshot and Maintenance mode
+16:14:17 <pdellaert> personally, getting a simple module going, seems more interesting
+16:14:27 <jtanner> if you go with a module, make sure it's something vcsim supports
+16:14:42 <dag> creating integrations tests is something doable too
+16:15:15 <dag> but you may have to select which modules can be supported
+16:15:18 <pdellaert> dag: far less exciting ;), the team has to present it to try and win the competition ;)
+16:15:25 <dag> ah
+16:15:55 <jtanner> speaking of which ... https://github.com/vmware/govmomi/blob/master/simulator/license_manager.go
+16:16:02 <jtanner> does that imply vcsim handles licensing now?
+16:16:15 <akasurde> maybe we can use experts available in hackthon for Ansible
+16:16:48 <akasurde> jtanner, last time I tried it didn't work for me
+16:16:54 <jtanner> doh
+16:16:55 <pdellaert> jtanner: on the hackathon, you get a full vCenter 6.5 + NSX environment, so it might be more interesting of something that is useful in Ansible, but not necessarily supported by vcsim (tho it would be nice, of course)
+16:17:10 <jtanner> who's providing that?
+16:17:10 <pdellaert> Anyway, there's two things here we are discussing at once:
+16:17:33 <pdellaert> 1) Get govcsim limitations as issues on govcsim so they can be resolved
+16:18:21 <akasurde> jtanner, VMware :)
+16:18:39 <pdellaert> 2) Proposals for the VMworld Hackathon activities: is there a module we could use that is exciting (if no-one can think of something, i'll do an analysis on current functionality and see if i can come up with something :))
+16:18:51 <jtanner> ok
+16:19:10 <pdellaert> on (1) Let's start with getting the limitations in issues
+16:20:07 <jtanner> a suggestion: every example in the modules should ultimately have a tested path
+16:21:41 <pdellaert> on (2): i'm willing to lead a team, just trying to find the most exciting thing to do... And that might be different from what is crucial to do at this stage. I want to use the hackathon to get people excited to work on VMware Ansible stuff, once they work on something fun, they might be more eager to also work on the integration tests, other module issues, etc
+16:22:10 <jtanner> i have no advice on that front
+16:25:05 <pdellaert> ok, anyway, we don't need to talk to long on this, i just wanted to inform of the opportunity
+16:25:33 <akasurde> OK Let us discuss PR review then
+16:25:50 <akasurde> #topic Code review
+16:26:17 <akasurde> pdellaert, you have a PR to discuss right ?
+16:26:29 <pdellaert> we had the issue with CDROM support in vmware_guest
+16:26:33 <akasurde> #link https://github.com/ansible/ansible/pull/28155
+16:26:39 <pdellaert> i've opened a PR for it
+16:27:48 <pdellaert> tested on vCenter with adding CDROM on VM creation, CDROM update on existing shutdown VM and CDROM update on running VM
+16:27:51 <akasurde> pdellaert, I haven't read whole code but look good to me
+16:29:14 <pdellaert> take your time, it's just the requested functionality that was missing from vmware_guest vs vsphere_guest
+16:30:14 <jtanner> how do you initiate a kickstart with that? (i'm dumb, educate me)
+16:30:44 <jtanner> and then how do you detach the cdrom aftewards?
+16:30:57 <pdellaert> you create a VM, attach a kickstart ISO on it, and by default, if the VM has no bootable partition on its HDs, VMware will boot from CDROM
+16:31:23 <pdellaert> detach isn't supported on the module yet (wasn't supported on vsphere_guest either), but it is something i want to add
+16:31:29 <pdellaert> i just wantted to get the PR started
+16:31:36 <jtanner> that implies the ISO is automatically initiating kickstart?
+16:31:56 <pdellaert> so that initial functionality is there and can be reviewed
+16:32:03 <pdellaert> jtanner: yes
+16:32:09 <pdellaert> or you open the console
+16:32:45 <jtanner> the old module had no way to provide kernel/kickstart args?
+16:32:51 <pdellaert> no
+16:33:07 <jtanner> k, that's something i was confused about then
+16:33:09 <pdellaert> at least, not that i'm aware of
+16:35:52 <akasurde> Next one - https://github.com/ansible/ansible/pull/26819
+16:35:55 <akasurde> #link https://github.com/ansible/ansible/pull/26819
+16:35:59 <pdellaert> ok, so vsphere_guest did also support client cdrom, missed that... i'll be adding some more functionality (specifying an extra sub param on the cdrom: type: iso/client/none)
+16:37:43 <jtanner> akasurde: merged
+16:38:09 <akasurde> Thanks jtanner
+16:38:29 <akasurde> #link https://github.com/ansible/ansible/pull/25772
+16:38:47 <akasurde> pdellaert, dag could you please comment on 25772
+16:38:57 <akasurde> jtanner, ^^
+16:39:02 <pdellaert> #action pdellaert to add removal of cdrom iso (introducing type, with two values: iso or client)
+16:39:04 <jtanner> i have never used VCA before
+16:39:30 <dag> akasurde: will do, on phone call
+16:39:38 <akasurde> dag ok
+16:39:44 <pdellaert> akasurde: LGTM
+16:40:05 <pdellaert> (only checked code, not tested)
+16:40:12 <jtanner> akasurde: merged
+16:40:18 <kanedafr> i can test that
+16:40:28 <jtanner> file bug if test fails
+16:40:34 <akasurde> kanedafr, thanks
+16:40:45 <akasurde> jtanner, thanks for merge
+16:40:52 <akasurde> anyone has anything else to discuss
+16:41:38 <jtanner> what's the general consensus on how this working group is functioning?
+16:41:43 <jtanner> are we happy?
+16:42:39 <dag> I don't think the action plan is actively being managed :-)
+16:42:45 <dag> but if it works without it, I'm good
+16:42:57 <dag> just worried that some of the action-items from the meeting are not being followed up
+16:43:35 * dag is happy we have this forum
+16:44:17 <akasurde> I am happy with WG (atleast we have someone to talk with :))
+16:44:34 <dag> indeed
+16:45:07 <pdellaert> same, happy we have a team looking at this and a forum to discuss how to move forward
+16:45:08 <dag> a lot of people signed up for the WG, so pdellaert you should probably announce your hackathon to those people
+16:45:32 <dag> these are VMware-people with Ansible knowledge and may be present at VMWorls
+16:45:43 <dag> we should also get these people more involved
+16:45:50 <pdellaert> i will, thanks, what's the best place, wiki or one of the community threads?
+16:45:57 <dag> that's why I wanted to do that sprint
+16:46:13 <akasurde> maybe a issue like invitation
+16:46:19 <dag> pdellaert: you could open an issue on the community repo with these people in cc:
+16:46:50 <dag> (it's not that easy to get the github handles from the current page though, would be nice if this was managed from a YAML file)
+16:46:55 <akasurde> +1
+16:46:57 <dag> (just like kubernetes is doing)
+16:48:03 <pdellaert> #action pdellaert to trigger a bit of spam on VMworld EU hackathon
+16:48:08 <dag> :-D
+16:48:16 <pdellaert> ;)
+16:48:27 <dag> We have some work to do on the new VMware modules before v2.4
+16:48:33 <dag> the deadline is 29/8
+16:48:46 <dag> maybe we may want to schedule some time for working on those ?
+16:49:07 <dag> (e.g. one or two hours after next week's meeting ?)
+16:49:23 <jtanner> what is special about 2.4?
+16:49:58 <jtanner> fyi, the ansible org is having an allhands meeting next week so our response is going to be limited
+16:50:34 <pdellaert> I'll be out next week (unless i find a gap in my conference presenting schedule that overlaps with this meeting)
+16:50:34 <dag> jtanner: if people submitted modules before the submission deadline, they would be disappointed if (for lack of feedback) these modules won't ship
+16:51:27 <pdellaert> i'll do my action points this week (also traveling starting wednesday afternoon, but that should be fine)
+16:53:03 <akasurde> #topic open floor
+16:53:24 <kanedafr> I have one question regarding API integration
+16:53:35 <kanedafr> Today teh vcloud
+16:53:35 <akasurde> kanedafr, yes please
+16:54:03 <kanedafr> Today the vcloud API integration is based on pyvcloud, which doesn't cover the entire API
+16:54:45 <kanedafr> to increase the scope, would the direction be to push pyvcloud to cover more (not much activity there) or add that directly in the vca / vcloud modules ?
+16:55:09 <jtanner> is there an alternative to pyvcloud?
+16:55:37 <pdellaert> i'd suggest to push pyvcloud development more, especially as it is the official VMware library.
+16:55:50 <kanedafr> it's not really official
+16:56:01 <kanedafr> only Java, .Net & PHP are official
+16:56:08 <pdellaert> It's on their github, it is more official than any 3rd party one ;)
+16:56:13 <kanedafr> sure ;)
+16:56:47 <pdellaert> the point being: If it is in a library from VMware, there's more confidence in it being the best way of using the API
+16:56:52 <kanedafr> alternative would be to add teh API support directly in ansible module. I did one to manage independant disks
+16:57:50 <kanedafr> the challenge on I see on pyvcloud is taht there is no active development
+16:58:08 <pdellaert> Well, it's certainly not against the rules (i'd say, others will correct me) to do that, and if it is the only way, perhaps it can be accepted? But it should clearly be marked as such, and tracked to be cleaned up if pyvcloud evolves to support something
+16:59:19 <kanedafr> ok, I'll check with the current contact on pyvcloud first, then move on developing ansible modules
+16:59:30 <pdellaert> The problem on developing the own API integration, is going to be maintenance, support, and testing
+16:59:44 <akasurde> also trust
+17:00:08 <akasurde> people prefer things if it is from VMware or actual vendor
+17:00:08 <pdellaert> yeah (part of support, in my view)
+17:00:08 <kanedafr> indeed
+17:00:29 <pdellaert> anyway: I'd try and trigger the pyvcloud maintainers to see what their future plans are
+17:01:12 <kanedafr> on vcenter integration, you are using a vmware library ?
+17:01:15 <dag> kanedafr: If you like to lead any effort related to vcloud, you don't need to ask for permission
+17:01:21 <dag> it's been granted here and now :-P
+17:01:29 <kanedafr> thanks ;)
+17:01:31 <pdellaert> :p
+17:01:37 <akasurde> ok
+17:01:55 <akasurde> if we don;t have anything then we can close the meeting for today
+17:02:00 <pdellaert> what dag basically is saying: Fix the whole vCloud integration!
+17:02:01 <pdellaert> ;)
+17:02:07 <dag> kanedafr: you can add stuff to the Wiki, track progress there, find people with similar interest etc.
+17:02:07 <pdellaert> thanks akasurde !
+17:02:20 <akasurde> #endmeeting

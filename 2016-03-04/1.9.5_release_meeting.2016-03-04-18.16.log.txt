@@ -1,0 +1,305 @@
+18:16:09 <abadger1999> #startmeeting 1.9.5 release meeting
+18:16:09 <zodbot> Meeting started Fri Mar  4 18:16:09 2016 UTC.  The chair is abadger1999. Information about MeetBot at http://wiki.debian.org/MeetBot.
+18:16:09 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+18:16:09 <zodbot> The meeting name has been set to '1.9.5_release_meeting'
+18:16:41 <abadger1999> #chair abadger1999 jimi|ansible bcoca
+18:16:41 <zodbot> Current chairs: abadger1999 bcoca jimi|ansible
+18:17:01 <abadger1999> mdavis is currently in another meeting
+18:17:15 <abadger1999> where do we want to start guys?
+18:18:31 <jimi|ansible> prs in stable-1.9
+18:18:36 <abadger1999> #info list of tickets market stable-1.9 in ansible/ansible repo https://github.com/ansible/ansible/milestones/stable-1.9
+18:19:00 <abadger1999> #info prs only: https://github.com/ansible/ansible/pulls?q=is%3Aopen+milestone%3Astable-1.9+is%3Apr
+18:19:17 <abadger1999> #topic PRs tagged for stable-1.9
+18:19:34 <abadger1999> https://github.com/ansible/ansible/pull/14652
+18:19:52 <abadger1999> "Extra vars precedence is not respected when they overwrite a variable within another variable interpolation used inside a role."
+18:20:17 <abadger1999> According to the bug reporter this was broken in 1.7 and fixed in 2.0
+18:21:00 <abadger1999> The patch is only one line but messing with var precedence in 1.x sometimes has unexpected consequences.
+18:21:39 <abadger1999> afaik, extra_vars should override everything... so maybe this is not a problematic patch to accept?
+18:22:20 <jimi|ansible> i think that looks mostly sane, but yeah i have concerns about messing with var precedence
+18:22:43 <jimi|ansible> if there are any problems the test_var_precedence test _should_ catch that
+18:23:02 <bcoca> 646 already adds extra vars with highest
+18:23:16 * bcoca is back from grabbing lunch, had left meeting after being alone for 10mins
+18:23:31 <jimi|ansible> bcoca: yes, but we're creating a temporary dict there at 614 to template module_vars specifically
+18:23:43 <abadger1999> bcoca: <nod>  But not before templating of some vars occurs.
+18:23:54 <jimi|ansible> well, on 615 now
+18:24:14 <bcoca> diff between task/hsotvars and vars we had in 1.x
+18:24:16 <jimi|ansible> i'd pull that down via the cli and run the integration tests on it
+18:24:33 <jimi|ansible> if thy pass i'd be ok merging it in
+18:25:21 <bcoca> now that i look at it, many wrong things happening in inject as it is using vars from same sources on diff scopes some templated, some not
+18:25:31 <bcoca> so depends on how you reference them ... you'll get wrong data
+18:26:01 <bcoca> so this is an issue of vars[] not including extra-vars
+18:26:09 <bcoca> but vars[] itself is wrong ...
+18:26:36 <abadger1999> Okay, I can do that.
+18:27:03 <abadger1999> #action abadger1999 to checkout the PR and run integration tests on it.  If those pass will merge.
+18:27:04 * bcoca is starting to cry again cause of looking at runner ....
+18:27:14 <jimi|ansible> i know right?
+18:27:32 <abadger1999> https://github.com/ansible/ansible/pull/14619
+18:27:33 <bcoca> abadger1999: considering how fragile this is and how many times it has bitten us in the ass .. -1
+18:27:34 <nitzmahone> ok, I'm here
+18:27:38 <abadger1999> Check for closing sequence before templating
+18:27:41 <jimi|ansible> looking at that, and that's the _improved_ version where i first decided to squash everything down in one place instead of 20
+18:27:43 <abadger1999> #chair nitzmahone
+18:27:43 <zodbot> Current chairs: abadger1999 bcoca jimi|ansible nitzmahone
+18:28:22 <bcoca> 14619 shouldn't we do that in 2.0 also?
+18:29:23 <bcoca> nvmd, in 2.0 we actually report 'unbalanced' error
+18:29:53 <jimi|ansible> bcoca: yeah this is a backport
+18:29:56 <jimi|ansible> so +1
+18:29:57 <bcoca> -1 it does not do much nor go far enough (end can appear before start chars)
+18:30:18 <bcoca> to do it right we would hav eto do as in 2.0 and check balance
+18:30:26 <bcoca> not only in number but positionally
+18:30:41 <jimi|ansible> where do we do that in 2.0?
+18:30:42 <bcoca> though this change is minor
+18:30:47 <jimi|ansible> template/__init__.py?
+18:30:59 <bcoca> jimi|ansible: mod_args/split_args
+18:31:28 <bcoca> before templating
+18:31:47 <abadger1999> It's simple and it looks better than current code... If we don't think it will cause any new bugs I'd be inclined to accept it.
+18:31:59 <abadger1999> Bandaid until people can move on to 2.x
+18:32:22 <bcoca> goodenough ...
+18:32:27 <jimi|ansible> agreed
+18:32:39 <abadger1999> k
+18:32:53 <bcoca> at least does not have horrible fragility of vars code
+18:33:10 <abadger1999> #agreed merge 14619 -- it's not perfect but it should make things better until people can move to 2.x
+18:33:16 <bcoca> done
+18:33:24 <abadger1999> https://github.com/ansible/ansible/pull/13995
+18:33:31 <abadger1999> Prefer delegate when getting variables from inventory
+18:33:52 <bcoca> onlyy connection vars ... really need to fix that in 2.x
+18:33:57 <bcoca> still a huge mess
+18:34:08 <bcoca> this should not be getting ALL vars
+18:34:46 <bcoca> -1 as it pulls in too many vars that might not be wanted
+18:35:07 <bcoca> wait .. this is ONLY for accelearte plugin?
+18:35:15 <bcoca> ok, much less issue
+18:35:26 <bcoca> +0
+18:35:33 <abadger1999> yes, only for accelerate
+18:35:50 <bcoca> not right ... but dont care enough and narrow enough that i wont opose
+18:36:12 <abadger1999> +0 -- I'm not familiar enough with how 1.9.x does this to make an informed judgment.
+18:36:54 <bcoca> jimi|ansible nitzmahone ?
+18:37:12 <nitzmahone> Would tend to agree
+18:37:17 <jimi|ansible> looking
+18:37:37 <bcoca> weird part ... i dont see anything setting delegate ...looks like noop as he inits it to none
+18:38:33 <jimi|ansible> that might cause problems if self.delegate isn't templated
+18:38:43 <jimi|ansible> because it could be a variable there
+18:39:03 <jimi|ansible> i say -1 as we don't really want to continue supporting accelerate down the road
+18:39:16 <jimi|ansible> and i think this has the potential to break things in unexpected ways
+18:39:40 <jimi|ansible> so much better in 2.0 now that we do all that crap with PlayContext...
+18:40:14 <abadger1999> k.  How do we want to resolve the bug?  Close it saying we think the risk to 1.9 is too great, migrate to 2.0 if you need the feature?
+18:41:01 <nitzmahone> seems reasonable to me
+18:41:43 <bcoca> sorry but we are not going to pass on this change, there are several issues with scope, setting and tempting of delegate. As this is fixed in 2.x and we expect that 1.9.5 is the last release of this tree we don't expect this issue to be fixed.
+18:41:59 <bcoca> ^ templating
+18:41:59 <jimi|ansible> s/tempting/templating/
+18:42:04 <nitzmahone> s/not going to/going to/
+18:42:14 <abadger1999> Sounds good.
+18:42:17 <bcoca> done
+18:42:29 <jimi|ansible> not sure if 1.9.5 will be the last release but sure
+18:42:35 <bcoca> 'expect'
+18:42:43 <abadger1999> https://github.com/ansible/ansible/pull/13802
+18:42:53 <abadger1999> Correctly parse dependency YAML dict
+18:43:02 <jimi|ansible> i'd say more along the lines of critical bugs only will be fixed from this point on
+18:43:03 <abadger1999> Referenced bug: https://github.com/ansible/ansible/issues/13800
+18:43:05 <bcoca> using wrong parser
+18:43:24 <bcoca> taht is not correct solution, using wrong role spec in wrong place
+18:44:01 <nitzmahone> bcoca bad copypasta of issue text on that one
+18:44:06 <bcoca> jimi|ansible: expect used x2 there, that issue was not critical and even if we do critical release we would not fix that issue
+18:44:07 <jimi|ansible> and it should be .get('name', None) at the end to avoid a traceback
+18:44:50 <bcoca> its wrong at many levels
+18:46:03 <jimi|ansible> push back on that, needs_revision
+18:46:21 <nitzmahone> (eg not likely to make 1.9.5 train?)
+18:47:11 <jimi|ansible> let me look at the original bug
+18:47:46 <bcoca> he is mixing formats .. since we had 7 of em ... cant blame him
+18:48:51 <bcoca> jimi|ansible: will let you comment then, just labeled
+18:50:06 <jimi|ansible> hrm, trying to figure out if that's required
+18:50:22 <jimi|ansible> because the problem is we use the meta dependencies for things we install from galaxy
+18:50:26 <jimi|ansible> that was a mistake
+18:50:37 <jimi|ansible> we should have used a different field for it, called galaxy_dependencies or something
+18:51:03 <bcoca> going to write proposal to remove roles
+18:51:31 <jimi|ansible> it's a discrepency in the way we specify the role name vs. what gets downloaded
+18:51:32 <bcoca> add resources, which get 'imported as roles' but then can call for execution of bits at any point
+18:52:53 <jimi|ansible> the easier way to fix this is to do `orig_path.get('role', orig_path.get('name', None))`
+18:54:22 <jimi|ansible> i'm actually fine with that patch
+18:54:26 <jimi|ansible> go ahead and merge it
+18:54:43 <jimi|ansible> it's really essentially what role_yaml_parse() does
+18:56:52 <abadger1999> jimi|ansible: k.  you're saying merge 13802 as is, correct?
+18:57:55 <jimi|ansible> yep
+18:58:12 <abadger1999> https://github.com/ansible/ansible/pull/13556
+18:58:25 <abadger1999> fix loading host/group vars when inventory is directory and using --limit
+18:59:18 <abadger1999> bug report here: https://github.com/ansible/ansible/issues/13557
+18:59:52 <bcoca> think we fixed that in 2.0 in similar way
+18:59:55 <bcoca> +1
+19:01:04 <jimi|ansible> that doesn't look like the way i fixed it in 2.0, but it looks fine
+19:01:17 <jimi|ansible> +1
+19:02:14 <abadger1999> Okay... module PRs... I don't think we had a stbale-1.9 milestone there until last week.
+19:02:19 <abadger1999> This is the only PR listed: https://github.com/ansible/ansible-modules-core/pull/2421
+19:02:20 <gregdek> rbergeron: around?
+19:02:33 <bcoca> well, 2.0 has much more, but boils down to similar, though its for when inventory is dir and has nothing to do with --limit
+19:03:06 <bcoca> +1
+19:04:27 <abadger1999> I would have liked willthames to have replied as I don't use any of those myself but the code didn't have any flaws that I saw.
+19:04:31 <abadger1999> +0.5
+19:05:46 <jimi|ansible> yeah it looks sane, but it should be tested
+19:06:04 <jimi|ansible> i guess rc1 is a place to get wider testing of it
+19:06:10 <abadger1999> k
+19:06:14 <jimi|ansible> so +0.5 from me too
+19:06:43 <gregdek> OK y'all, rbergeron is tied up in another meeting, so we'll start community wg meeting in 25min.
+19:06:58 <bcoca> stabe-1.9 .... the l cost too much?
+19:07:36 <abadger1999> Pat, I'd like to buy a consonant
+19:07:47 <jimi|ansible> lol
+19:08:11 <jimi|ansible> or maybe it's that the old code base makes you "stabby"
+19:08:35 <abadger1999> That's all the stable-1.9 pull requests.
+19:08:47 <bcoca> sold ...
+19:08:59 <abadger1999> #topic other things for 1.9
+19:09:04 <nitzmahone> It is? I see 8 more
+19:09:08 <jimi|ansible> P1/P2 issues?
+19:09:10 <bcoca> jimi|ansible: yes, it makes me stabby, shooty and abomby
+19:09:12 <nitzmahone> https://github.com/ansible/ansible/pulls?utf8=%E2%9C%93&q=is%3Apr+is%3Aopen+base%3Astable-1.9+
+19:09:25 <nitzmahone> Ah, P1/P2 only.
+19:10:06 <abadger1999> nitzmahone: ah -- I was looking at milestone... you're looking at what's targetted at 1.9
+19:10:28 <jimi|ansible> interesting
+19:10:32 <jimi|ansible> i closed https://github.com/ansible/ansible/pull/11966
+19:10:49 <nitzmahone> I got the one thing I *really* cared about in there (2.7.9+ cert validation backport for winrm)...
+19:12:21 <jimi|ansible> that's a cool search option, i've never seen that before
+19:12:25 <jimi|ansible> base:
+19:12:36 <jimi|ansible> nitzmahone: which is that? i don't see it
+19:12:38 <nitzmahone> yeah, pretty handy
+19:13:00 <nitzmahone> I merged it to stable-1.9 back in Dec I think
+19:13:12 <jimi|ansible> we just fixed this
+19:13:14 <jimi|ansible> https://github.com/ansible/ansible/pull/14652/files
+19:13:50 <nitzmahone> jimi|ansible: https://github.com/ansible/ansible/commit/54d4225e231ffcf907a30c85d8dbafc9106784af
+19:13:54 <abadger1999> jimi|ansible: fixed?  Or looked at and were going to test?
+19:14:06 <jimi|ansible> oh well yeah sorry you were still going to test it
+19:14:09 <jimi|ansible> my bad
+19:14:28 <jimi|ansible> nitzmahone: ahh ok, so yeah that's merged
+19:15:53 <abadger1999> https://github.com/ansible/ansible/pull/12118
+19:15:58 <abadger1999> Make sanitze_output function catch other forms of passwords
+19:16:18 <abadger1999> Not sure I like this one.... I definitely don't like throwing -p in there.
+19:16:27 <jimi|ansible> ^ abadger1999 is that still an issue with your no_log fix?
+19:16:37 <jimi|ansible> should just tell him to use no_log at this point
+19:16:39 <abadger1999> In 2.x you mean?
+19:16:50 <jimi|ansible> i thought it was back-ported to 1.9.x too?
+19:17:04 <nitzmahone> agreed on -p for sure
+19:17:12 <bcoca> idem
+19:17:20 <jimi|ansible> maybe not as extensive, but it would seem preferable to playing whackamole with cli params
+19:18:14 <nitzmahone> especially -p, that's just ridiculous
+19:18:42 <abadger1999> yeah, I think no_log is the right thing to do.
+19:19:06 <abadger1999> I'm not sure which no_log things made it back to 1.9... some things were 2.x only and other things would only work on 2.x.
+19:20:08 <abadger1999> I'm going to reply that the heuristic log_santize() code is best effort only that -p is too broad a net, and that using no_log is probably the best thing to do in this case.
+19:20:35 <jimi|ansible> mark it as needs_info/pending_closure and mention no_log would be the preferable course there
+19:20:41 <jimi|ansible> that's not critical enough to fix
+19:20:43 <abadger1999> k
+19:20:57 <jimi|ansible> pending_action now i guess
+19:21:07 <abadger1999> https://github.com/ansible/ansible/pull/14770
+19:21:12 <abadger1999> Ensure provided mode is compared on equal grounds with existing mode (Python 1.9)
+19:21:26 <abadger1999> backport proposal from dag
+19:21:30 <jimi|ansible> +1
+19:21:48 <jimi|ansible> otherwise the mode has a lot of crap in it which is not valid for chmod
+19:21:54 <jimi|ansible> or could have
+19:22:40 <bcoca> as i mentioned in main ticket, i dont think we should accept 'file type' in mode=
+19:22:51 <bcoca> his fix is not correct, we should validate on input
+19:23:04 <bcoca> 1010775 is an invalid mode to be passed
+19:23:09 <bcoca> specially for a file
+19:23:29 <bcoca> which is why did not merge into 2.0 yet
+19:23:33 <bcoca> eitehr
+19:24:01 <jimi|ansible> but that mode may have come from a stat call if i remember right
+19:24:40 <bcoca> so? stat also gives you the correct mode if you want to, nobody is forcing him to pass the wrong one
+19:25:09 <jimi|ansible> no the os.stat() call returns more high-order bits
+19:25:11 <bcoca> https://github.com/ansible/ansible/issues/14771
+19:25:34 <bcoca> jimi|ansible: which you dont pass to chmod either, you can use stat module to get the correct bits to pass to it
+19:25:54 <bcoca> if you are smart enough to use os.stat to get the mode, you should also know to provide to chmod the correct mode
+19:26:02 <bcoca> chmod will not change file type
+19:26:12 <bcoca> makes no sense to pass that info in
+19:26:28 <jimi|ansible> well i'm torn, because this is a super trivial thing, which is both an argument for and against merging it
+19:26:30 <bcoca> we SHOULD validate that the info passed is correct or not, but not do conversions
+19:26:46 <bcoca> cause if someone now mistypes mode and adds extra numbers ... magic happens!
+19:27:01 <bcoca> what should happen is 'invalid mode entered' instead
+19:27:10 <jimi|ansible> the higher order bits are informational, they don't set state they show state
+19:27:31 <bcoca> yes, then why are you passing them to a utility that SETS state?
+19:27:35 <jimi|ansible> so yes it's invalid to pass them to chmod
+19:27:43 <jimi|ansible> but this doesn't hurt anything
+19:28:09 <bcoca> specially since the there are very few people aware that they even exist, this is clear issue for validation not conversion
+19:28:22 <jimi|ansible> if you really wanted you could instead do `if mode != stat.S_IMODE(mode): self.fail_json(...)`
+19:28:24 <bcoca> specially silent conversion
+19:28:35 <bcoca> yep
+19:28:39 <bcoca> that was my alt fix
+19:28:54 <bcoca> if mode is numeric and not group symbol
+19:28:55 <jimi|ansible> ok, reply to him and mark it needs_revision
+19:29:02 <bcoca> did in the 2.0 ticket
+19:29:16 <bcoca> 3 tickets, 1 for bug, 1 for fix in 2.0 and anotehr in 1.9
+19:29:28 <jimi|ansible> i believe at that point it's been converted from symbolic to numeric
+19:29:42 <jimi|ansible> yes, it's one right above that
+19:29:50 <jimi|ansible> https://github.com/dagwieers/ansible/blob/mode_check19/lib/ansible/module_utils/basic.py#L660
+19:29:55 <abadger1999> So gregdek is going to want this channel presently for the community meeting.
+19:30:03 * gregdek can wait.
+19:30:13 <abadger1999> Do we want to continue this on Monday?
+19:30:14 <gregdek> rbergeron is still trying to escape a meeting.
+19:30:17 <abadger1999> k
+19:30:32 <gregdek> When she pings, then we'll ask you guys if you're ready to wrap it up.
+19:30:33 <chouse> is this a meeting about meetings?
+19:30:40 <gregdek> INCEPTION
+19:30:43 <chouse> :-)
+19:31:09 <bcoca> metameeting
+19:31:10 <abadger1999> https://github.com/ansible/ansible/pull/14206
+19:31:15 <abadger1999> Remove the range part while parsing hostname and port
+19:32:18 <nitzmahone> ugh, hostname + port... Was there talk of deprecating that in 2.0+
+19:32:29 <bcoca> yes, but backtracked
+19:32:57 <jimi|ansible> i remember looking at this problem a LONG time ago and never came up with a decent solution, so i'd want this tested heavily
+19:33:20 <jimi|ansible> i thought we settled on the [ip:v6:style]:port syntax to avoid this problem?
+19:33:36 <jimi|ansible> i guess not if we're still seeing a traceback
+19:34:23 <abadger1999> Maybe that mde it in 2.x only?
+19:34:31 <jimi|ansible> nm, that syntax conflicts with INI file syntax, which is why we didn't use it
+19:34:49 <jimi|ansible> well crab fixed it i thought, might want to compare notes on how it was done there
+19:35:17 <jimi|ansible> again, high potential to break something, low impact to users, so -1 from me
+19:35:21 <bcoca> it should not traceback in 2.0, but we never fixed in 1.x
+19:35:25 <bcoca> -1 also
+19:35:59 <nitzmahone> ditto
+19:36:08 <abadger1999> k.  I'll reply that it should be fixed in 2.0.
+19:36:22 <abadger1999> https://github.com/ansible/ansible/pull/12523
+19:36:29 <abadger1999> Merge properties instead of reading only the first cfg file found
+19:36:58 <jimi|ansible> if nothing else i'd say fix the traceback in 1.9.x but again, minor
+19:38:00 <jimi|ansible> feature_pull_request, flat no
+19:38:17 <nitzmahone> yeah, also seems like potential for breaking changes if people have multiple configs now
+19:38:48 <abadger1999> Roger.  I'll write that we're not accepting new features for 1.9
+19:39:03 <abadger1999> https://github.com/ansible/ansible/pull/12270
+19:39:08 <abadger1999> Fix rsync connections to IPv6 addresses
+19:40:08 <nitzmahone> seems pretty innocuous so long as all versions of rsync we might encounter understand the bracket syntax (as it'd hit all addresses, yeah?)
+19:41:31 <nitzmahone> Fixed in 2007, so probably reasonable: https://bugzilla.samba.org/show_bug.cgi?id=1675
+19:42:18 <nitzmahone> Interesting in that bug- they say the username has to be inside the brackets (at least for some ancient version of rsync)
+19:43:43 <abadger1999> This code is more simplistic than the code in 2.0's synchronize plugin.
+19:43:52 <abadger1999> Not sure if that's on purpose or not.
+19:44:11 <bcoca> i would not touch sync in 1.x
+19:44:27 <abadger1999> https://github.com/ansible/ansible/blob/devel/lib/ansible/plugins/action/synchronize.py#L51
+19:44:50 <abadger1999> bcoca: <nod>  If it's okay not to I don't want to either.
+19:45:09 <nitzmahone> 2.0's doing the user inside the brackets too, looks like. "upgrade"..
+19:45:12 <jimi|ansible> that patch was put in devel, so yeah it's pretty innocuous but if we don't want to risk it i'm fine leaving it off
+19:46:14 <bcoca> so syncronize is like a jenga tower on top of a moving train in the middle of a blizzard, don't touch it if you dont really have to
+19:46:30 <bcoca> ^ same with vars/templating in runnner
+19:46:31 <abadger1999> I'm just weaseling out of having to fix any potential breakage in code that's arcane enough in 2.x but even worse in 1.9.x... so I'll leave it up to others whether this is must-fix or not.
+19:46:59 <nitzmahone> +1 for "upgrade to 2.0"
+19:47:05 <bcoca> im fine in this case with saying 'if you want this fixed, go to 2.x'
+19:47:33 <abadger1999> Cool.  I'll say fixed in 2.0.
+19:47:41 <bcoca> i think we all agree, no fixes that can cascade into more issues, lets keep it simple and non controversial
+19:47:53 <bcoca> ^ to 1.9.5
+19:48:02 <jimi|ansible> +1
+19:48:15 <nitzmahone> bcoca: s/1.9.5/ever/ ;)
+19:48:52 <bcoca> nitzmahone: no, future versions do requrie us to fix stuff, but minor back releases .. notasmuch
+19:49:16 <nitzmahone> (j/k, hence the wink)
+19:49:30 <bcoca> jimi|ansible: the RC release for 1.9.5 make sure that 'only issues from 1.9.4 to 1.9.5 will be considered to be patched before final release
+19:50:44 <abadger1999> Okay, that's all of those PRs too.
+19:51:23 <jimi|ansible> ok, now back to P1/P2 bug_reports
+19:51:33 <abadger1999> One P1 bug report: https://github.com/ansible/ansible/issues?q=is%3Aopen+milestone%3Astable-1.9+label%3AP1
+19:51:48 <abadger1999> #topic bug reports for 1.9
+19:51:52 <abadger1999> environment variable evaluated as template --> fatal error
+19:51:57 <abadger1999> https://github.com/ansible/ansible/issues/12469
+19:52:30 <bcoca> -1 that requires a lot of work in templating, fixed in 2.0 so 'upgrade'
+19:55:58 <jimi|ansible> torn on this one, as it's a semi-security issue - we should not be templating data we get back from a module
+19:56:10 <jimi|ansible> but fixing it in 2.0 was not easy (UnsafeProxy)
+19:56:48 <abadger1999> yeah
+19:56:50 <bcoca> exactly
+19:58:02 <bcoca> jimi|ansible: i fear for your life as im pretty sure you will jump off RH tower if you try to implement unsafeproxy in runner
+19:58:17 <jimi|ansible> i'm curious why the cleaning function in 1.9 isn't removing this
+19:58:46 <bcoca> not full template
+19:58:50 <jimi|ansible> bcoca: at the end, UnsafeProxy ended up being a relatively simple thing, but i'd probably have to backport some of the YAML parsing stuff we did in 2.0 too
+19:58:54 <jimi|ansible> so the scope is quite large
+19:59:40 <bcoca> actually .. this might be fixed by previous templating fix that looked for start+end moustaches
+19:59:51 <bcoca> not perfect, but should 'fix his case'
+20:00:41 * jimi|ansible -> meeting
+20:02:33 <gregdek> Are you guys done-ish?
+20:03:25 <abadger1999> yep.  we can wrap here.
+20:04:16 <abadger1999> alright -- I think we wrap up.  Can make the decision Monday whether to have another meeting for the rest of these issues or just cut rc1 and leave the others for a potential 1.9.6.
+20:04:19 <abadger1999> #endmeeting

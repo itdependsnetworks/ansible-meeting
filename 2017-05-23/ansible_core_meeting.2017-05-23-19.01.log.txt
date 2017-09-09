@@ -1,0 +1,249 @@
+19:01:16 <thaumos> #startmeeting Ansible Core Meeting
+19:01:16 <zodbot> Meeting started Tue May 23 19:01:16 2017 UTC.  The chair is thaumos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:01:16 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:01:16 <zodbot> The meeting name has been set to 'ansible_core_meeting'
+19:01:25 <thaumos> #chair thaumos
+19:01:25 <zodbot> Current chairs: thaumos
+19:01:27 <jtanner> hello
+19:01:32 <thaumos> #chair jtanner
+19:01:32 <zodbot> Current chairs: jtanner thaumos
+19:01:50 * jtanner has to walk away for a sec
+19:01:56 <thaumos> kk
+19:02:12 * akasurde waves
+19:02:31 <thaumos> #chair akasurde
+19:02:31 <zodbot> Current chairs: akasurde jtanner thaumos
+19:02:54 <akasurde> thaumos, good to see you again
+19:03:03 <thaumos> you too 😃
+19:03:40 <funzo_> o/
+19:04:00 <thaumos> holy moly
+19:04:04 <thaumos> #chair funzo_
+19:04:04 <zodbot> Current chairs: akasurde funzo_ jtanner thaumos
+19:04:12 <thaumos> #chairs
+19:04:24 <thaumos> #chair funzo
+19:04:24 <zodbot> Current chairs: akasurde funzo funzo_ jtanner thaumos
+19:04:42 <thaumos> funzo is trying to hide
+19:04:53 <funzo> :) always
+19:04:54 <jtanner> he likes to have fun
+19:05:24 <thaumos> yeah, and spittake coffee out of his nose
+19:05:55 <funzo> these ansible folks just don't know how to behave
+19:06:02 <funzo> no sense of propriety
+19:07:36 <thaumos> stiff upper lip and pinkies extended whilst drinking tea
+19:07:46 <thaumos> #topic Open Floor
+19:08:25 <jtanner> no agenda?
+19:08:26 <akasurde> thaumos, my last meeting point about having "Easyfix" like tags to welcome new-comers like me
+19:08:48 <thaumos> Nothing today, @jtanner
+19:09:01 <thaumos> ah yes, thanks akasurde
+19:09:30 <thaumos> #topic open discussion around having a low-hanging fruit tag
+19:10:02 <thaumos> So jtanner, do we have any pointers for low hanging fruit stuff.  People, like akasurde, would love to be involved, but may be overwhelmed with our very extensive issue list.
+19:10:22 <bcoca> sadly anything like that we tend to solve and close quickly
+19:10:22 <akasurde> thaumos, People who are learning Python or Ansible try to find issue which are easy to fix, we can avail that opportunity to them
+19:10:36 <thaumos> So akasurde suggested a tag/label, but there has to be other things for him to grab.
+19:10:39 <bcoca> if it is easy .. it does not linger
+19:10:50 <jtanner> stay away from core bugs and stick to modules
+19:10:58 <thaumos> translation, close/won't fix, right bcoca?
+19:11:01 <thaumos> #chair bcoca
+19:11:01 <zodbot> Current chairs: akasurde bcoca funzo funzo_ jtanner thaumos
+19:12:28 <bcoca> thaumos: well, those even faster
+19:12:34 <thaumos> So akasurde, I suggest looking through labels and picking what you define as easy related to what you're interested in.
+19:12:39 <bcoca> but if its something we can fix in 5 mins .. normally gets done in triage
+19:12:39 <thaumos> bcoca 😉
+19:13:08 <akasurde> I am talking in terms of general public, not just me
+19:13:08 <bcoca> also, easy != simple, easy is subjective as it takes in user's experience and knowledge
+19:13:16 <bcoca> so what is easy for me, might not be easy for otehrs
+19:13:25 <bcoca> and viceversa .. like spelling ...
+19:13:34 <akasurde> like College students or people who started with programming might want to get their hand dirty
+19:13:37 <thaumos> eaxactly the point I was trying to make
+19:13:59 <abadger1999> We have the easyfix tag... just haven't applied it to much
+19:14:03 <bcoca> so to be precise, any simple fixes get done quick, backlog probably have very few things that have a simple fix
+19:14:14 <bcoca> ^ those get done by core or contributors pretty quickly
+19:14:30 <bcoca> abadger1999: cause 'easyfix' issues dont live long enough ...
+19:14:44 <abadger1999> <nod>  and perhaps they should...
+19:14:56 <bcoca> we purpusefully would have to STOP fixing them
+19:15:06 <abadger1999> People at sprints are looking for easyfix bugs right now :-)
+19:15:07 <thaumos> umm...
+19:15:08 <akasurde> bcoca +1
+19:15:20 <thaumos> the list will just continue to get larger.
+19:15:21 <jtanner> well ... move to FIFO instead of LIFO for triage
+19:15:32 <bcoca> abadger1999: wtih 1000+ issues i bet there are a few, but not 10 or more
+19:15:35 <abadger1999> There was a short talk  about purposefully not fixing easyfix bugs in the python.org tracker.
+19:15:56 <abadger1999> so that there would be some bugs that new contribs to upstream python would be able to jump onto.
+19:16:04 <bcoca> jtanner: that is how i do triage
+19:16:08 <abadger1999> (short talk at pycon)
+19:16:17 <bcoca> jtanner: but once 'triaged' we need to revisit 'backlog combing'
+19:16:18 <akasurde> whenever I give talk on Ansible, people ask me how do they can contribute to Ansible
+19:16:42 <bcoca> module are the easiest way in, then maybe other plugin types
+19:16:43 <akasurde> so I can point them there or something like that
+19:17:02 <jtanner> modules, inventory scripts, filter plugins, etc
+19:17:03 <bcoca> but 'easyfix' .. wont live long, even if we in core stop fixing them, the 1000+ contributors will
+19:17:43 <akasurde> bcoca, agreed
+19:17:45 <jtanner> once the coverage reports go live, there's going to be lots of test targets to write
+19:17:45 <bcoca> i've read an issue that looked 'easy to fix', then i realized there is already PR cause guy in switzerland saw the issue 1h before i did
+19:17:53 <thaumos> Agreed, point them to the list of issues labeled module
+19:18:13 <akasurde> thaumos, Cool
+19:18:52 <jhawkesworth> hello.  I'd suggest testing existing PRs  - no coding required (although helps to have git-fu).  really helps to get PRs merged if there's lots of feedback to say stuff works.
+19:18:58 <thaumos> #chair abadger1999 jhawkesworth
+19:18:58 <zodbot> Current chairs: abadger1999 akasurde bcoca funzo funzo_ jhawkesworth jtanner thaumos
+19:19:09 <thaumos> great point jhawkesworth
+19:19:23 <thaumos> people forget that being qa/qe on pr's is contribution as well!
+19:19:24 <bcoca> ^ also review, looking at other people's code, understanding it and finding flaws is a great way to learn
+19:19:25 <akasurde> jhawkesworth, point noted
+19:19:55 <jtanner> i think the crux of this discussion though is the intent to have -someone- mark easyfix bugs
+19:20:26 <jtanner> i rarely know it's "easy" unless it's a clear traceback and even then it's not always easy in the end
+19:20:52 <akasurde> jtanner, But typo, documenation can be always mark as "easy"
+19:21:04 <akasurde> with little guidance people can fix them
+19:21:05 <jtanner> i haven't seen much of those
+19:21:09 <jtanner> they usually come in as PRs
+19:21:35 <jtanner> however
+19:21:39 <jtanner> docs_report is a label
+19:21:45 <jtanner> there's a bunch of those issues
+19:23:05 <jtanner> i just wouldn't count on getting more labels applied that can't be applied automatically
+19:23:14 <jtanner> the queue is too deep
+19:23:24 <akasurde> ok
+19:23:35 <jtanner> maintainers can add certain labels to their module issues
+19:23:41 <jtanner> i could add easy fix to that list
+19:23:59 <bcoca> i dont expect taht even if we label easyfix, there will be any living longer than a day as there are MANY people actively developing ansible and creating PRs
+19:24:13 <jtanner> depends on the module
+19:24:17 <bcoca> you would have 1 issue and 10 devs competing
+19:24:30 <defionscode> it really would depend on the module
+19:24:36 <thaumos> #chair defionscode
+19:24:36 <zodbot> Current chairs: abadger1999 akasurde bcoca defionscode funzo funzo_ jhawkesworth jtanner thaumos
+19:24:40 <bcoca> jtanner: even in core, there are people spellchecking my comments in commits ... really, they send PRs right away
+19:24:52 <defionscode> might be 'easy' but only if you have the hardware in teh case of some networking stuff for example
+19:25:14 <bcoca> ^ i expect begginers to not have access to 100K worth of network appliances
+19:25:15 <jtanner> bcoca: wasn't disputing that ... in fact, i think that's what i said was happening
+19:25:24 <jtanner> re docs PRs
+19:25:25 <jhawkesworth> yeah I was going to say - come and tackle some windows powershell issues, but that requires non-free operating systems too.
+19:25:38 <bcoca> jhawkesworth: but more commonly available
+19:25:45 <defionscode> the point is 'easyfix' != will be fixed quickly
+19:25:49 <bcoca> jhawkesworth: just not the target audience for pycon ...
+19:26:04 <bcoca> defionscode: i dont see a universe in which that is true
+19:26:24 <defionscode> ha
+19:26:29 <jhawkesworth> yep, not for pycon!
+19:26:32 <bcoca> people really gravitate to the 'easy fix', sometimes even having 2 or 3 PRs for same fix in rapid succession
+19:27:04 <jtanner> if people are targetting easyfix just to learn the ropes, we can create more contrived exercises to learn from
+19:27:17 <bcoca> i'm sorry to be negative here, but i dont see how we'll ever be able to have a 'stack of easy to fix issues' available for people starting out
+19:27:23 <jtanner> if it's about building resumes and github profiles, i don't know that we have time to mark a bunch of stuff to enable that
+19:29:28 <defionscode> what about the inverse? a 'hardfix' or 'moderatefix' tag?
+19:29:29 <jhawkesworth> best to fix stuff that you need working.  Its more motivating if you need it, after all!
+19:30:14 <bcoca> ^ what he said
+19:30:15 <thaumos> personally, I don't think a label is needed.  I always operated on finding issues that I was interested in/had knowledge, and worked on them.
+19:30:23 <jtanner> defionscode:  that would just be a default label =P
+19:30:37 <defionscode> thaumos same here
+19:30:42 <dag> what's the point of working on them, if your PRs sit idle for weeks in the queue ?
+19:30:51 <bcoca> if its easy, its been fixed, if its moderate, its been fixed, if it is hard or hard to test .. that is why its in backlog
+19:30:54 <defionscode> jtanner ha
+19:31:09 <bcoca> dag: you get to complain about it
+19:31:24 <dag> bcoca: :-)
+19:31:30 <jtanner> dag: the fact that you say "weeks" instead of "months" shows major improvement!
+19:31:40 <dag> jtanner: optimist ;-)
+19:31:42 <defionscode> 'xactly
+19:31:55 <jtanner> dag: probably the first time anyone has called me that
+19:32:00 <defionscode> one could _almost_ say years not that long ago
+19:32:09 <dag> well, I am hunting core people for mine...
+19:32:30 <jtanner> i've seen a similar requirement across other projects
+19:32:47 <thaumos> #chair dag
+19:32:47 <zodbot> Current chairs: abadger1999 akasurde bcoca dag defionscode funzo funzo_ jhawkesworth jtanner thaumos
+19:32:48 <bcoca> s/hunting/hounding/
+19:32:52 <dag> but aside from the jokes, there's lots of stuff that sits, and the backlog is growing, not shrinking
+19:32:58 <jtanner> and the ones that automerge don't necessarily copy the patch over to the release branches
+19:32:59 <bcoca> dag: but to be fair, its the best way to get your stuff in
+19:33:09 <dag> sits idle
+19:33:26 <bcoca> dag: our close rate has grown enourmoouslly .. sadly not enough to keep up with the contribution rate
+19:33:43 <thaumos> well, @dag, re: backlog, the goal is to have people work on that as a part of our irc meetings too
+19:33:54 <jtanner> i think the testing framework had to improve before we could really begin work on mass PR merges
+19:33:57 <jhawkesworth> truth is.. more people want to cut code than review it and test it.  result is lots of untested changes queued.
+19:34:17 <defionscode> agreed with jtanner and jhawkesworth
+19:34:21 <akasurde> jhawkesworth, I agree
+19:34:21 <dag> thaumos: that's good
+19:34:26 <bcoca> and when we test (weeks/months later) people are not always willing to readjust
+19:34:34 <jtanner> dag: and some of your vmware patches are stuck because it's a PITA for me to find a place to test
+19:34:44 <thaumos> and if you don't attend dag, they're all getting asigned to you
+19:34:52 <dag> jhawkesworth: but even if people would review/test (because they need something) they cannot merge...
+19:35:22 <dag> jtanner: then we need more vmware-enabled maintainers ;-)
+19:35:39 <jtanner> dag: last time i went to the maintainers supermarket, they were fresh out
+19:35:40 <defionscode> ha, the vmware struggle is real
+19:35:44 <thaumos> ^ few and far between to find
+19:35:52 <bcoca> dag: yes, cause random people saying +1 when they have not reivewed, dont konw the criteria and have not tested .. not useful
+19:36:29 <bcoca> dag: and yes, we need more maintainers, but it is not a commitment most people are willing to make
+19:36:53 <akasurde> bcoca, also, VMWare is paid :(
+19:37:06 <akasurde> so we don't have something to test on
+19:37:09 <jtanner> ... which gets back to whether or not we should even take in more modules
+19:37:13 <dag> jtanner: I am sure if we had a forum to ask, maybe people would step up
+19:37:30 <jtanner> an ansible specific forum?
+19:37:52 <dag> it's true that more maintainers doesn't equate more quality, but less maintainers surely does not help
+19:38:11 <dag> jtanner: there is no forum now for this, except maybe a broad mailinglist mail
+19:38:31 <dag> it would be nice to have maybe circle around a technology
+19:38:49 <jtanner> you want module topic communities
+19:39:01 <dag> yes, something like that
+19:39:42 <dag> not sure how that would work technology-wise, but now everything is centered around a bug or a feature
+19:39:50 <jtanner> or a doc
+19:40:04 <defionscode> hmm module topic communites is an interesting concept
+19:40:19 <dag> the Windows WG is nice to get some progress, and it's something people could join and monitor before making commitments
+19:40:27 <dag> for e.g. vmware stuff I don't see that
+19:40:44 <jtanner> but has the windows wg grown membership?
+19:40:57 <jtanner> and would it work if nitmahone wasn't running it?
+19:41:02 <defionscode> i didnt even know about it
+19:41:05 <dag> (BTW I noticed vmware has lots of own ansible modules in their github, made by the same contributor that created some of the upstreamed ones)
+19:41:06 <bcoca> #ansible-vmware
+19:41:12 <bcoca> #ansible-aws
+19:41:14 <thaumos> there are talks about SIG's for module groups... We just are very slim on attendance imo
+19:41:16 <defionscode> i dont _think_ I saw it on the community page on docs
+19:41:26 <dag> jtanner: no, because nobody would be able to merge anything
+19:41:29 <bcoca> ?
+19:41:29 <jtanner> if the core team tried to manage a community for each module topic/subtopic, they'd litterally do nothing else
+19:41:32 <defionscode> yeah that's a pretty deep level of desire
+19:41:48 <dag> jtanner: maybe you need more core people, from the community ?
+19:41:55 <dag> maybe that's what we need to focus on
+19:41:57 <bcoca> dag: we talked with them, that is how we eneded up with  current modules
+19:42:17 <jtanner> the counter question: why does the community need the core team?
+19:42:28 <bcoca> dag: we expanded core, 1/2 of those disappeared after a few weeks, it did bringclosed PRs up a bit, but very short time
+19:42:36 <bcoca> its a lot of work
+19:43:05 <bcoca> jtanner: mostly to keep a cohesive direction
+19:43:16 <dag> jtanner: issue triage, moderating, authority, ...
+19:43:18 <bcoca> some would argue we also keep the quality and standards up
+19:43:20 <jtanner> that sounds like playing BDFL for modules
+19:43:39 <jtanner> and with 1000+ modules, we can't do that
+19:43:42 <bcoca> jtanner: well, instead of Dictator .. comitee
+19:43:55 <bcoca> which is why i want to removve 900+ modules
+19:44:12 <jtanner> we'll just merge 900+ more after that
+19:44:33 <jtanner> have to stop the merging if you want the git rm to stick
+19:44:34 <defionscode> i still would like to see a package manager specifically for ansible modules
+19:44:36 <defionscode> make it pip like
+19:44:41 <jtanner> we all would
+19:44:55 <dag> I don't think that will help TBH
+19:45:00 <akasurde> ansible package manager ?
+19:45:11 <jtanner> dag: true, it won't make the bugs magically fixed
+19:45:16 <dag> it will not make Ansible feel more rigid, or give a better experience
+19:45:28 <dag> it will become harder to know what works, and what not
+19:45:32 <jtanner> but it does defer the PRs to another repo in which someone else can press the green button instead of the core team
+19:45:38 <dag> what's old and what's new, people would fork more
+19:45:57 <dag> jtanner: that's because only a very close-knit group can actually do something
+19:46:06 <dag> ansibot could be made more helpful
+19:46:09 <jtanner> i'm with you ... but i'd hesitate to say that all modules in devel "work" right now
+19:46:28 <dag> but with so few maintainers, even vmware-stuff does not get merged (and it has 3 maintainers IIRC)
+19:46:33 <defionscode> right, the idea is that there'd be a minimal set of modules shipped, think python core libs, and then everything else is managed separately
+19:46:34 <jtanner> dag: i'm always looking for new bot features to write
+19:46:41 <jtanner> just need suggestions and concensus
+19:46:55 <dag> I think we need this discussion in London (well-moderated) ;-)
+19:47:09 <thaumos> yes, that's part of the plan in London
+19:47:14 <thaumos> along with proposal process.
+19:47:27 <jtanner> you just have to prevent it from getting timeboxed and assert that an action item is made
+19:47:38 <dag> this will be a hard topic (lots of opinions, no solutions)
+19:47:39 <jtanner> otherwise it'll be another "we'll keep thinking about this ..."
+19:48:53 <dag> maybe something to prepare/discuss informally Tuesday evening
+19:49:13 <dag> over a beer
+19:49:35 <thaumos> @dag, we all have lots of opinions, all the time.
+19:49:49 <thaumos> so to echo what jtanner said, and close this out.
+19:50:10 <thaumos> #action thaumos to make sure that discussing SIGs, labels, and proposal process is a part of the London contrib conference discussion
+19:50:39 <thaumos> #Open Floor
+19:50:44 <thaumos> ugh
+19:50:48 <thaumos> #topic Open Floor
+19:50:58 <thaumos> anything quick for 10 mins
+19:51:00 <thaumos> ?
+19:51:24 * jhawkesworth gotta go - till next time all
+19:51:30 * thaumos waves bye
+19:51:34 <jtanner> buhbye
+19:51:35 <dag> o/
+19:54:22 <thaumos> alright
+19:54:25 <thaumos> that's all folks!
+19:54:29 <thaumos> #endmeeting

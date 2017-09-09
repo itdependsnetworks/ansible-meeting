@@ -1,0 +1,388 @@
+18:00:45 <gregdek> #startmeeting new-modules
+18:00:45 <zodbot> Meeting started Wed Apr 20 18:00:45 2016 UTC.  The chair is gregdek. Information about MeetBot at http://wiki.debian.org/MeetBot.
+18:00:45 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+18:00:45 <zodbot> The meeting name has been set to 'new-modules'
+18:00:53 <gregdek> #chair rbergeron
+18:00:53 <zodbot> Current chairs: gregdek rbergeron
+18:01:03 <thaumos> yo
+18:01:11 <gregdek> #chair bcoca jimi|ansible
+18:01:11 <zodbot> Current chairs: bcoca gregdek jimi|ansible rbergeron
+18:01:43 <gregdek> So who's around?
+18:01:52 <bcoca> im just big boned!
+18:02:03 <thaumos> lol
+18:02:40 <gregdek> we'll wait a couple of minutes
+18:02:41 * misc is in another meeting for now
+18:02:49 <misc> (and going home after)
+18:03:38 <tima> hello.
+18:04:27 <jtanner> here
+18:04:28 <MichaelBaydoun> present, representing https://github.com/ansible/ansible-modules-extras/pull/1868
+18:04:30 <gregdek> OK, let's do it.
+18:04:55 <ryansb> o/
+18:05:09 <gregdek> Let's start with 1868 then.
+18:05:16 <gregdek> #topic https://github.com/ansible/ansible-modules-extras/pull/1868
+18:05:18 <bcoca> needs review
+18:05:28 <gregdek> bcoca: ?
+18:05:31 <bcoca> probably little as it has had several iterations
+18:05:42 * abadger1999 here
+18:05:53 <bcoca> gregdek: just pointing out current state
+18:06:00 <gregdek> Yes.
+18:06:06 <bcoca> was updated after last review, waiting for another
+18:06:11 <gregdek> gundalow was responsible for most of the reviewing.
+18:06:14 <alikins_> The new modules are here! The new modules are here!
+18:06:16 <gregdek> gundalow: are you around?
+18:06:36 <gregdek> (He pinged me earlier that he might be in and out)
+18:07:15 <gregdek> Perhaps the sensible thing is probably to wait on his feedback here, unless MichaelBaydoun has particular questions to resolve
+18:07:43 <MichaelBaydoun> negative, waiting for gundalow to review is perfect
+18:07:49 <bcoca> quick survey: looks ready, but i would let gundalow do final review as he has been ahn dling until now
+18:08:11 * bcoca must not type and try to sneez at same time
+18:08:14 <gregdek> Sounds good. Thanks MichaelBaydoun. bcoca: when it hits shipit, that's when we'll really know what you think. ;)
+18:08:34 <gregdek> Anyone else want to attack a specific module? Because if not, I've dumped some into shipit that we can look at!
+18:09:09 * gregdek waits for anyone to argue for a specific module... anyone... Bueller...
+18:09:18 <tima> quick aside -- we should put shipit in the comments of a new module PR when we've tested it and are satisfied with its state?
+18:09:25 <gregdek> tima: yes.
+18:09:50 <tima> ok. thanks.
+18:09:51 <gregdek> The bot process around that continues to be unresolved and poor, and I WILL FIND CYCLES to fix that. In the meantime, I'm just scanning text for shipit notices.
+18:10:05 <gregdek> OK.
+18:10:24 <bcoca> works_for_me and meets_requirements are now unused?
+18:10:50 <gregdek> bcoca: the bot doesn't support them yet.
+18:11:13 * bcoca saw the robyn bot use them in past!
+18:11:32 <gregdek> And we've introduced confusion with overloading "shipit". The fix is to get back to the works_for_me and meets_guidelines labels.
+18:11:41 <gregdek> MY FAULT TERRIBLE PROCESS SORRY
+18:11:53 <gregdek> But to have something happen rather than nothing while we're resolving that (sigh(
+18:11:57 <gregdek> https://github.com/ansible/ansible-modules-extras/pulls?utf8=%E2%9C%93&q=is%3Aopen+label%3Anew_plugin+is%3Apr+label%3Ashipit
+18:11:59 <gregdek> I'm using this.
+18:12:11 <gregdek> If someone says shipit, I'm labeling it for a closer look in this meeting. :)
+18:12:14 <gregdek> Thus:
+18:12:49 <gregdek> https://github.com/ansible/ansible-modules-extras/pull/1119
+18:12:57 <gregdek> ...is the current oldest "shipit".
+18:13:01 <gregdek> #topic https://github.com/ansible/ansible-modules-extras/pull/1119
+18:13:16 <gregdek> nitzmahone: are you around, perchance?
+18:13:33 <bcoca> ^ youreadmymind
+18:13:43 <gregdek> No, I read the PR, LOL
+18:13:54 <gregdek> Mindreading is not one of my gifts.
+18:14:22 * gregdek waits a moment before pinging nitzmahone out-of-band and ruining whatever flow he's currently in
+18:14:26 <bcoca> hmm, got 'shipit' but from comments its missing final review
+18:14:36 <bcoca> ^ looks like another mislabeled
+18:14:46 <bcoca> ready_for_review
+18:15:14 * gregdek looks closer.
+18:16:31 <gregdek> Right. But it's nitzmahone who basically stopped the bus here.
+18:16:54 <bcoca> yep, still needs ping, but reclassifying as community review
+18:17:17 <gregdek> Community folks said "looks good". Core team member said "fix this pls." So what should the state be if we're waiting on a particular core team member to review? I think "community_review" is the wrong state.
+18:17:30 <bcoca> ok, core_review
+18:17:56 <thaumos> nitzmahone is doing a webinar atm
+18:18:19 * bcoca really needs the instaclone module working
+18:18:26 <gregdek> thaumos: thanks!
+18:18:35 <gregdek> Moving on:
+18:18:50 <gregdek> #topic https://github.com/ansible/ansible-modules-extras/pull/1324
+18:19:46 <gregdek> This one got two shipits over the course of its life: one from mscherer and one from hedii, both after requesting changes.
+18:20:10 <alikins_> that version_added field... is it worth the pr overhead it causes?
+18:20:53 <gregdek> alikins_: I would love a mechanism to do that at build time, but we don't have such a mechanism at present.
+18:21:08 <bcoca> alikins_: worse overhead is having it in docs and people complaining it does not work in version 1.6
+18:21:15 <gregdek> But yes, we kick back a significant number of PRs because version_added is missing or incorrect.
+18:21:25 <bcoca> gregdek: not ONLY on that
+18:21:29 <gregdek> (Because submitters have no way of knowing when it will be accepted.)
+18:21:30 <bcoca> at least i don't normally
+18:21:38 <alikins_> it's the 'I need that in triplicate. back of the line!' of prs
+18:21:39 <bcoca> its something i normally fix after merge
+18:21:47 <bcoca> yeah, that is dickish
+18:21:48 <gregdek> bcoca: good point. If that's the only thing, usually it gets through.
+18:22:18 <gregdek> Having a variable that gets resolved at merge time would be ideal. But again, we don't have it, so it's best effort.
+18:22:24 <gregdek> We do Try To Do The Right Thing.
+18:22:38 <bcoca> also not fan of forcing it back for pep8
+18:22:47 <bcoca> ^ this was not 'us'
+18:22:56 <gregdek> Yeah.
+18:23:20 <bcoca> so shipit was added and then 'retracted'
+18:23:52 <bcoca> ah, then 2 in row
+18:24:03 <abadger1999> The msg's are not going to be formatted right.
+18:24:22 <abadger1999> For me, I'd be willing to fix that after merge,though.
+18:24:46 <bcoca> need stub for return doc, also something fixable post merge
+18:24:57 <jimi|ansible> alikins_: i never ask for a revision due to version_added being wrong, i fix it myself
+18:25:00 <abadger1999> ugh... actually every single msg has the problem.
+18:25:15 <abadger1999> Maybe I would require him to fix it so I wouldn't have to spend time on it
+18:26:09 * rbergeron arrives fashionably late, sorry (arguing with pharmacy and insurance)
+18:26:12 <bcoca> abadger1999: missed taht, what is issue
+18:26:27 <abadger1999> msg = 'blah blah\
+18:26:35 <abadger1999> more blah blah'
+18:26:36 <jimi|ansible> rbergeron: same here, got mulch delivered and was excited to see how it looked in place :)
+18:26:50 <jimi|ansible> ended up filling one whole planter before i checked the time
+18:27:00 <gregdek> abadger1999: should we merge and fix, or kick back? Any other issues?
+18:27:11 <abadger1999> at minimum, if you don't close the quotes and reopen on the new line, formatting goes wonky.
+18:27:15 <jtanner> jimi|ansible: #firstworldproblems =P
+18:27:23 <gregdek> And is that a class of issue that we can catch in Travis?
+18:28:07 <jimi|ansible> if it's less than 20 lines, and we really want to merge it, i say fix it ourselves, otherwise kick it back
+18:28:22 <bcoca> abadger1999: he changed that as response to pep8 comment, missed that
+18:28:50 <bcoca> agreed
+18:29:14 <jimi|ansible> if the pep8 fix was a separate commit, could also just cherry-pick others and leave that one
+18:29:36 <jimi|ansible> assuming there's no conflicts, but honestly just fixing it is probably not that time consuming
+18:30:04 <gregdek> pep8 is great! pep8 is evil! pep8 is great! pep8 is evil!
+18:30:29 <abadger1999> pep8 is fine... he just doesn't know how to do multiline strings.
+18:30:40 * alikins_ wishes github had a better 'let me just fix that up for you so we can get moving' workflow
+18:30:57 <bcoca> did not say his fix was pep8 compliant, it was in response to pep8 comment
+18:31:04 <jimi|ansible> pep8 is the devil
+18:31:06 <jtanner> alikins_: http based code edit?
+18:31:15 <gregdek> pep8 is the angel!
+18:31:17 <gregdek> ANYWAY.
+18:31:22 <bcoca> jimi|ansible: no, pep8 is not hte problem its the pep8 cultists
+18:31:26 <jimi|ansible> pep8 is actually good, pep8 fanatics are bad :)
+18:31:32 <jimi|ansible> ^ what bcoca said
+18:31:45 <abadger1999> gregdek: There's so much reformatting due to the string formatting -- I think kick it back.  I'll update the ticket with examples of what needs to be fixeed.
+18:31:46 <jtanner> my opinion is whatever raymond hettinger's opinion is
+18:31:53 <gregdek> thanks abadger1999 :)
+18:32:14 <ryansb> jtanner: a 302 opinion
+18:32:23 <jtanner> eggzachery
+18:32:41 <gregdek> So while abadger1999 is poking that PR, let's move on.
+18:33:20 <gregdek> #topic https://github.com/ansible/ansible-modules-extras/pull/1593
+18:33:36 <gregdek> Two shipits: one from jmainguy, one from tersmitten
+18:35:10 <alikins_> jtanner: more like a pr on the pr (which you can do, if the changed branched hasn't been deleted). Basically, a better version of the old school 'applied a modified version of patch from blah@example.com', but without editing merges or pushing out of band
+18:35:12 * gregdek wanders afk for a sec while waiting for Wisdom.
+18:35:18 <bcoca> not sure this should be amodule or a lookup
+18:35:22 <bcoca> probably both
+18:35:27 <jimi|ansible> can't wait till someone does a quadruple join on multi-million row tables with that module...
+18:36:07 <bcoca> its missing required ....
+18:36:20 <tima> yeah i was just thinking this module could be used to make a big mess.
+18:36:33 <bcoca> its enough rope to shoot yourself in foot
+18:36:37 <bcoca> but so is shell:
+18:36:38 <jimi|ansible> password fields need no_log=true
+18:36:44 <jtanner> the docstrings should match the argument spec, imo
+18:36:50 <bcoca> password not from 'common'?
+18:37:09 <bcoca> ah, not using common args spec, but using common docs for common/copied args
+18:37:10 <tima> does this mean we'd have to accept a query module for ever database?
+18:37:14 <bcoca> eek
+18:37:25 <bcoca> tima: that is my terryfing thought
+18:37:32 <bcoca> mongodb_query
+18:37:36 <bcoca> cassandra_query
+18:37:41 <bcoca> mssql_query
+18:37:42 <bcoca> ...
+18:37:44 <jimi|ansible> -1
+18:38:14 <thaumos> Well, think of it from a operator stand point, they may want to query using us, so why not?  I used command/shell to do it, but it was messy.
+18:38:26 <ryansb> In principle I feel like adding INSERT is a bit far
+18:38:28 <thaumos> Inserts are a bad idea.
+18:38:31 <thaumos> exactly
+18:38:31 <tima> yeah i'm with bcoca and jimi|ansible here.
+18:38:41 <gregdek> Beware turning away modules for philosophical reasons.
+18:38:49 <thaumos> agreed with gregdek
+18:39:05 <thaumos> philosophically it is a horrible idea to do inserts, but you can’t stop people.
+18:39:08 <gregdek> Multiple users have said "I want this" -- that's why it got to shipit in the first place.
+18:39:14 <jtanner> i would like it
+18:39:20 <jimi|ansible> it's not philosophical, modules generally aren't designed to run random things, they're there to enforce a state
+18:39:20 <gregdek> This is why we have extras, remember? :)
+18:39:36 <jimi|ansible> we tell people not to use command/shell, and we're introducing one for mysql
+18:39:37 <tima> but you shouldn't encourage them either thaumos ;)
+18:39:39 <gregdek> Except for all the modules that run random things.
+18:39:45 <thaumos> I would like it myself to do only reads, but I am not one to do inserts.
+18:40:01 <thaumos> Well then would a good suggestion to be in documentation, we strongly suggest you do reads with this.
+18:40:06 <jimi|ansible> i believe things like this fit better with lookups
+18:40:09 <jimi|ansible> as bcoca said
+18:40:13 <gregdek> That's fair.
+18:40:19 <thaumos> that is definitely fair
+18:40:28 <gregdek> If the answer is "yes we want to help you do this but here's a better way," that's great.
+18:40:39 <thaumos> but then begs the question, what if they wanted to adhoc do a query?
+18:40:40 <gregdek> It means that our contributor has to start over, unfortunately.
+18:40:43 <thaumos> they couldn’t with a plugin
+18:41:16 <jimi|ansible> gregdek: this module probably took 30 minutes to whip together, it's not complex 172 lines, much of which is comments/docs/blank lines
+18:41:21 <bcoca> gregdek: this is where we also have galaxy and people can drop stuff from the internet into library/
+18:41:28 <bcoca> i really don't want to ship loaded nukes
+18:41:42 <gregdek> But that's. The Point. Of Extras.
+18:42:07 <tima> bcoca: why's that doctor strangelove?
+18:42:14 <tima> ;)
+18:42:22 <alikins_> potentially useful for ad hoc
+18:42:27 <jimi|ansible> - rope: hang=myself
+18:42:29 <gregdek> rm -rf from the command module is a loaded gun.
+18:42:33 <bcoca> gregdek: extras is supposed to be more free, not anarchy
+18:42:37 <jimi|ansible> - gun: shoot="my foot"
+18:42:41 <thaumos> lol
+18:42:49 * jtanner writes gun module
+18:42:52 <alikins_> jimi|ansible: add a johny.droptables role to galaxy
+18:43:09 <bcoca> gregdek: yes, but some come inherit with ansible's job, running db queries is not inherit (my view)
+18:43:42 <gregdek> So even if you're right, and I'm not conceding the point: how do you define the rule?
+18:43:52 <gregdek> "No database modules that talk to the database"?
+18:44:05 <gregdek> Databases are kind of important!
+18:44:09 <rbergeron> extras should be a place where people can experiement with new things. if it turns out that that's a *bad idea*, then we have actual evidence of such things, which is a bit more than just gut feeling and philosophies.
+18:44:16 <thaumos> Think of it from this standpoint too, how would we allow a user to automate creating a schema using Ansible at this point?
+18:44:17 <rbergeron> "for the moment, this is not necessarily a recommended way to use ansible"
+18:44:17 <jimi|ansible> gregdek: i would probably be more ok with this if it was a generic query module that talked to multiple db's
+18:44:36 <jimi|ansible> i really don't want it because i don't want a single module for every  db out there
+18:44:38 <rbergeron> "but if people actually find this super useful, then.... maybe we discuss better ways to handle it?"
+18:44:41 <gregdek> jimi|ansible: in the same way that you prefer a package module that talks to multiple package DBs?
+18:44:42 <rbergeron> such as what jimi is mentioning
+18:44:44 <bcoca> no, modules that configure/setup/manage are ok, modules that step into buisness intelligence area ... noe
+18:45:03 <rbergeron> but we can't find out if it's useful enough to be a generic query module until something is actually out there and we know it's useful for us or someone to invest more time in.
+18:45:12 <jimi|ansible> gregdek: that's a bit different, SQL is at least something of a standard, packaging is not across platforms
+18:45:41 <bcoca> jimi|ansible: 'something of a standard' ... generous!
+18:45:46 <gregdek> LOL
+18:45:50 <rbergeron> regardless: i think it's a super slippery slope to let people's modules be in and up for review by lots of people until they get to the end and we say, "well, it's an undocumented philosophy of ours that blah blah blah"
+18:45:57 <gregdek> ^^^
+18:46:01 <rbergeron> we do that enough times, people will just stop submitting modules. period.
+18:46:09 <gregdek> Which may be what we want!
+18:46:15 <rbergeron> because undocumented philosophies are bars that people can't get over.
+18:46:28 * gregdek hands the mic to rbergeron. Preach it!
+18:46:42 <alikins_> lots of folks do things like db querys in nagios checks etc
+18:46:49 <jimi|ansible> bcoca: it's usually the DDL that's somewhat platform specific, the rest is generally ok to run across different DBs
+18:47:04 <bcoca> jimi|ansible: oracle joins ...
+18:47:14 <jimi|ansible> joins are usually the exception :)
+18:47:22 <bcoca> mysql ... almost everything
+18:47:22 <jimi|ansible> mysql has lots of weird ones too
+18:47:30 <tima> does this module support idempotency? is it declarative?
+18:47:38 <bcoca> tima: none of teh above
+18:47:45 <bcoca> ^ taht is other issue i have
+18:47:48 <rbergeron> and we can say all we want that it's only 170 lines or whatever but that doesnt affect the level of demoralization. not to mention 170 lines times how many modules, times how many people took the time to check them out, test them, comment on them, want them, etc.
+18:48:11 <tima> there is our written philosophy.
+18:48:15 <jimi|ansible> anyway, it's not necessarily undocumented that we don't want things like this, like i said we tell people using command/shell is bad all the time, plus we also tell people in the module writing guidelines that writing modules that do nothing but fetch data is generally not good either
+18:48:39 <gregdek> And then bcoca gives a talk that says "all these things are bad, I do them all the time" at Ansiblefest.
+18:48:56 <bcoca> gregdek: if that is the problem, i wont give talks anymore
+18:49:19 <jimi|ansible> no need to get combative over this
+18:49:21 <gregdek> My point is, do we *really* want people not to use shell or command?
+18:49:24 <tima> bcoca: no presentation decks for you!
+18:49:25 <bcoca> ^joking
+18:49:37 <gregdek> Because this *forces* them to use shell or command.
+18:49:55 <jimi|ansible> by giving them something that pretty much does the same thing
+18:50:02 <gregdek> "No module to make Ansible to do the thing I want it to do? I'll use shell/command/"
+18:50:06 <gregdek> And maybe that's okay!
+18:50:13 <bcoca> gregdek: no, but in words of linsday grahm, 'this is chosing between being shot and being poisoned'
+18:50:14 <gregdek> But if it is, then maybe we want to say this:
+18:50:32 <gregdek> "If it isn't idempotent, it's a shell/command use case."
+18:50:37 <gregdek> That is, at least, consistent.
+18:50:57 <rbergeron> is that consistent with every module that currently exists right now?
+18:51:06 <gregdek> We could make it so.
+18:51:30 <jimi|ansible> rbergeron: i ripped all of the kubectl stuff out of the kubernetes module based on this principal
+18:51:31 <bcoca> not really
+18:51:31 <gregdek> Because if this is actually the *implicit* philosophy that we simply haven't ever properly teased out, and it actually informs all of our decisions, then that's okay.
+18:51:48 <rbergeron> or is that simply a defining line between expectations of core modules and extras modules?
+18:51:49 <bcoca> but we have plenty of modules I would not accept as they are now
+18:52:00 <jimi|ansible> but we also discussed putting it in a dedicated module to do the same thing
+18:52:14 <gregdek> :)
+18:52:17 <bcoca> we accepted a lot before we 'knew better'
+18:52:18 <jimi|ansible> which we may not do, but there is that
+18:52:57 <bcoca> ^ my real fear is that now ansible becomes a distributed query system ....
+18:52:58 <thaumos> I feel that we should always have a module that makes it easier for the end user to do what it is they are doing.  That is the whole point of it all, isn’t it?
+18:53:04 <rbergeron> s/a defining line/a potential defining line
+18:53:12 <alikins_> I would say it may be worth differentiate modules intended for adhoc/non-idempotent from those that are 'playbook approved'
+18:53:15 <bcoca> ^ which I Have used as, but mostly against files
+18:53:24 <alikins_> thats more useful than the version_added
+18:53:47 <rbergeron> thaumos: one would hope
+18:53:49 <gregdek> version_added is super useful, just not easy to manage currently :)
+18:54:03 <bcoca> alikins_: examine how our docs work before you keep hammering version_added
+18:54:11 <gregdek> Anyway. I've got a hard stop here shortly, but this is a useful and important conversation.
+18:54:30 <gregdek> I wonder if this: "If it isn't idempotent, it's a shell/command use case." ...is an idea to explore.
+18:54:55 <gregdek> If we started over today with this rule and all modules magically conformed, would we be happy with that guideline?
+18:55:02 <gregdek> I dunno. Maybe!
+18:55:32 <thaumos> I don’t think so personally… there are a lot of cases where this would apply. think ec2 module
+18:55:33 <gregdek> But if that's *not* what we think, then the last thing I want to do is use idempotence as a magical barrier that allows us to say no to modules that make us feel icky.
+18:55:48 <bcoca> im not sure i understand shell/command use case as a exception on being declaritive and handling change state
+18:55:59 <bcoca> ^ i would argue the opposite
+18:56:25 <bcoca> as the 'correct' way to eliminate a shell/command case you create a module that is both declartive and handles desired state
+18:56:30 <thaumos> ^^
+18:56:33 <gregdek> How many playbooks in the wild would you say there are that are built on 100% shell/command? More than we'd like to admit, I'm guessing. :)
+18:56:34 <rbergeron> would we? possibly. does that continue to let ansible be as easy and useful to end users? maybe not quite as much so.
+18:56:47 <bcoca> gregdek: outside of openstack? not that many
+18:56:55 <thaumos> you’d be surprised bcoca
+18:57:01 <gregdek> And this is my point.
+18:57:03 <thaumos> I have had heart attacks
+18:57:03 <bcoca> 100%?
+18:57:17 <thaumos> honestly bcoca, 75% of users I have spoken with
+18:57:17 <gregdek> People use Ansible as a bridge from shitty shell scripts to Real DevOps.
+18:57:21 <thaumos> ^^
+18:57:30 <thaumos> it is scary
+18:57:34 <gregdek> If we burn the bridge, we strand the users on their learning paths.
+18:57:35 <bcoca> ^ that is normally 'stage 1 of ansible use: copy my shell scripts into play'
+18:57:40 <rbergeron> and if we flat out stop accepting things like this (or demoralize folks to the point that they stop submitting them) -- i have to expect that inevitably people will post them in their own repositories, and we will wind up with the questions relating to them regardless.
+18:57:56 <gregdek> And maybe that's okay! Maybe it's time to create npm for Ansible!
+18:58:06 <rbergeron> so i'd rather see us have a way to either mark them as idempotent / not / set expectations for a group of these in some way.
+18:58:16 <rbergeron> because if people find them useful, they'll be found no matter what.
+18:58:23 <bcoca> rbergeron: and my answer to 'i used random module from internet and it broke' is 'why are you asking me and not the author?'
+18:58:34 <tima> i've seen it too -- it usually a RTFM symptom. I'm not sure we should be endorsing abuse.
+18:58:39 <bcoca> but when it is in extras, there is a legitimate reason they ask us
+18:58:47 <bcoca> we ship it!
+18:58:53 <thaumos> in some cases you can definitely mark them as a desired end state, but tying back to this specfic module, that can’t be done.
+18:59:02 <gregdek> Anyway. rbergeron you have the baton. :)
+18:59:15 <thaumos> yeah but put your ops hat on bcoca, if someone blew up their db with or without the module, you’d say, what dumb query did you run?
+18:59:18 * gregdek heads off to 3pm meeting
+18:59:37 <bcoca> thaumos: and i would blacklist the mysql_query module immediatly
+18:59:43 <thaumos> exaclty
+18:59:49 <thaumos> that’s one them
+18:59:53 <thaumos> s/one/on
+19:00:04 <rbergeron> bcoca: i would rather us be the source of usefulness, rather than decentralize it. at least then there is general level of guidance.
+19:00:12 * jimi|ansible back, kid craziness
+19:00:29 <rbergeron> anyway: i think as gregdek pointed out, there is thinking to do here.
+19:00:31 <thaumos> So philosophically aside (which I totally agree with to say again), it would be easier for a user to write a module task than a craptastic command / shell string of it
+19:00:46 <tima> useful in creating a mess.
+19:00:56 <thaumos> Okay, but that’s on them once agani
+19:00:58 <bcoca> rbergeron: we provide teh framework and guidance and plenty of modules, im not against people providing module collections we don't want to deal with
+19:01:00 <thaumos> How about this as a suggestion.
+19:01:04 <thaumos> params to say reqd/insert
+19:01:11 <thaumos> read can be a query string
+19:01:11 <bcoca> if someone publishes 'query modules'  in galaxy i wont ask to take it down
+19:01:12 <thaumos> required
+19:01:23 <rbergeron> thaumos: yep
+19:01:24 <thaumos> if someone does insert, it forces them to use a sql file?
+19:01:31 <thaumos> that would make most sens
+19:01:36 <tima> what bcoca said.
+19:02:30 <bcoca> im insane and i can deal with a lot of crazyness, this module just opens a pit i don't think we can deal with
+19:02:32 <jtanner> are doing the CWG meeting now?
+19:02:33 <tima> its clear we aren't endorsing something when they have to go out and install something else whereby in extras its just there amongst hundred of others.
+19:02:37 <thaumos> yeah, but that isn’t as useful to the community at large because who is going to sift through the many repos to find a module that is worth it?
+19:02:38 <jimi|ansible> gregdek / rbergeron: the thing i've always learned to ask is, what are you trying to accomplish? why would these users want a module to run random queries? the answer is almost certainly that there should be a module to accomplish the goal
+19:02:57 <rbergeron> jtanner: that's the plan, trying to wrap things up so i can get to that, although it's just me and not greg for a little bit
+19:03:07 <bcoca> thaumos: for me, this modules is NOT worth it
+19:03:19 <jimi|ansible> are they wanting to create tables? truncate tables? load data? all of those should be some kind of module rather than just an adhoc query
+19:03:25 <bcoca> adds little/almsot nothing over using shell: msql "query"
+19:03:33 <rbergeron> gregdek has to give some internal song and dance to a group of librarians
+19:03:39 <jtanner> jimi|ansible: i agree with that
+19:03:47 <thaumos> bcoca that is what I did, but I always though, man if I had a module, the string would be so much simpler
+19:03:58 <rbergeron> jimi|ansible: so, have we asked?
+19:03:58 <abadger1999> rbergeron: maybe we need to get extras to the point where it's not shipped with the ansible tarball?
+19:04:08 <bcoca> take away the 'database query side', if the module itself does not add enough over using command line directly, i find it to be a poor module anyways
+19:04:10 <thaumos> shell mysql -e “SELECT * FROM TABLE” is a messy return string
+19:04:12 <rbergeron> abadger1999: yeah, precisely
+19:04:19 <jimi|ansible> rbergeron: probably not
+19:04:19 <thaumos> I did it, but that’s all I had
+19:04:21 <chouse> you could make the same argument about modules that accept a template... say that kube module you're working on @jimi
+19:04:22 <bcoca> having them use a module cause shell: looks bad is not a reason for a module
+19:04:58 <rbergeron> jimi|ansible: i mean, if that's the case, then it's possible that a module might actually *get to that point* or become a more obvious thing to create -- and having something like this is a ... pathway to that happening, in some ways
+19:05:03 <chouse> what's the diff between a random sql script and a random kube template?
+19:05:07 <jimi|ansible> chouse: that's a deliberate compromise for people that have been using kubectl already, but also the reason i push for that to have the data embedded in ansible rather than an opaque file
+19:05:21 <thaumos> this module is very generic jimi|ansible it allows them to do anything that you would do in mysql read|insert with query string or use a sql file
+19:05:26 <chouse> i disagree.
+19:05:27 <alikins_> I'd add it if it supported specifying db user/creds, at that point it potentially less rope than any module that runs with more priv than it needs
+19:05:27 <rbergeron> but - some folks don't always have the skills / time to make the full-blown thing happen
+19:05:28 <jimi|ansible> if someone already has a .sql file, they can still execute that with command using mysql
+19:05:30 <chouse> it's the same
+19:05:48 <bcoca> chouse: i agree, which is why i said same thing aobut the simple 'load script' module
+19:06:14 <abadger1999> i think there is value in non-idempotence (/usr/bin/ansible is the entrypoint to people using ansible, not /usr/bin/ansible-playbook)... but it feels like there is a line somewhere... if it's easy to replicate with shell: or command: then a module is useless overhead.
+19:06:16 <bcoca> ^ it CAN/should be a feature of a more complete module, but if it does just that it is not a worthwhile one
+19:06:49 <thaumos> I don’t think that should be the argument here.
+19:07:07 <rbergeron> okay, so: I think on this module we are "still discussing" or .. what's the scoop? because it's time for the next meeting in here, folks
+19:07:07 <thaumos> Having a module vs not a module is in the simplicity of working against what you are trying to orhestrate.
+19:07:13 <bcoca> i think it is germain to the argument, the entry point at which a module is useful
+19:07:18 <jimi|ansible> chouse: the difference is that we can look at the data here no matter what format it's in, and potentially write a module that does something idempotent/via check mode
+19:07:22 <jimi|ansible> with a raw command, you can't do that
+19:07:22 <bcoca> i can create an 'ls' module
+19:07:28 <bcoca> ls: <pattern>
+19:07:32 <bcoca> ^ not very useful
+19:07:34 <rbergeron> this is clearly a longer discussion that we're out of time for :)
+19:07:47 <jimi|ansible> we can read a kube config file and compare that data against what's actually in kubernetes and make decisions
+19:08:44 <bcoca> chouse: in this case, the kube module WILL be expanded to do more than just that
+19:09:12 <rbergeron> abadger1999: thoughts on where to leave this? :)
+19:09:22 <tima> a mysql_create_table module wouldn't be a bad thing because presumably it would check "does this table exist already?" before proceeding.
+19:09:35 <jimi|ansible> tima: no, a mysql_table module
+19:09:37 <abadger1999> I think we need to defer this and let the next meeting have the room.
+19:09:43 <jimi|ansible> ^ state = present|absent|truncate
+19:09:44 <thaumos> agreed
+19:09:45 <bcoca> tima: we already have postgresql_schema
+19:09:51 <abadger1999> We're not going to decide this today.
+19:09:55 <thaumos> agreed ^
+19:09:59 <rbergeron> abadger1999: excellent. do we need to leave any notes in that particular PR or just leave it for the moment?
+19:10:11 <thaumos> I suggest leave it for the moment.
+19:10:12 <jtanner> mysql -> ansible/proposals ?
+19:10:15 <tima> jimi|ansible & bcoca: right or something like those.
+19:10:17 <jimi|ansible> rbergeron: just leave it
+19:10:34 <bcoca> for PR needs_info: comment about how we are deciding on the threshold for acceptance
+19:10:39 <rbergeron> #info PR 1593 -- still under discussion -- will save for next time or when we get some of this discussion resolved
+19:10:41 <jimi|ansible> and/or add the core_review label (if it's not there already)
+19:10:44 <abadger1999> I'll write something about it being tricky and that we'll have an ongoing (and heated ;-) discussion at our next meeting
+19:10:52 <rbergeron> abadger1999: thank you! :)
+19:11:06 <bcoca> labled
+19:11:06 <rbergeron> #action abadger1999 to note ongoing discussion in 1593, with robyn's gratitude
+19:11:23 <rbergeron> anything else? I think that's it.
+19:11:24 <alikins_> an ls module would be useful if it returned structured data
+19:11:32 <rbergeron> #endmeeting

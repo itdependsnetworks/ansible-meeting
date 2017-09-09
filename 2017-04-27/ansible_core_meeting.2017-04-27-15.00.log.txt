@@ -1,0 +1,267 @@
+15:00:47 <thaumos> #startmeeting Ansible Core Meeting
+15:00:47 <zodbot> Meeting started Thu Apr 27 15:00:47 2017 UTC.  The chair is thaumos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:00:47 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:00:47 <zodbot> The meeting name has been set to 'ansible_core_meeting'
+15:01:01 <thaumos> #chair bcoca gundalow thaumos
+15:01:01 <zodbot> Current chairs: bcoca gundalow thaumos
+15:01:01 * gundalow waves
+15:01:08 <trishnag> hi
+15:01:12 <thaumos> @albertom are you still lurking?
+15:01:16 <gundalow> albertom: we are live
+15:01:17 <thaumos> #chair trishnag
+15:01:17 <zodbot> Current chairs: bcoca gundalow thaumos trishnag
+15:01:20 * sivel is here
+15:01:22 <thaumos> welcome trishnag!!!
+15:01:25 <thaumos> #chair sivel
+15:01:25 <zodbot> Current chairs: bcoca gundalow sivel thaumos trishnag
+15:01:32 <trishnag> thanks thaumos :)
+15:01:42 <thaumos> :)
+15:02:06 * thaumos refreshes issues to see if any topics snuck in
+15:02:16 <albertom> i didnt add anything on the agenda
+15:02:16 <albertom> but
+15:02:23 <thaumos> #topic Open Floor
+15:02:31 <thaumos> fifo topic gogogogogo
+15:02:45 <albertom> would like more review on https://github.com/ansible/ansible/pull/23717
+15:03:17 <thaumos> #topic Review ansible/ansible#23717
+15:03:55 <thaumos> @sivel, you have any further feedback on the PR?
+15:04:05 <thaumos> I see you as one of the reviewers.
+15:04:35 <sivel> I'll check it out after the meeting, I had not seen the message that my comment was addressed
+15:04:41 <bcoca> from quick look, wouldn't it be easier to push this into the_run method?
+15:04:41 <sivel> It'll need tested
+15:04:51 <thaumos> 10-4 @sivel
+15:05:06 <thaumos> #action sivel to review PR 23717 again.
+15:05:17 <thaumos> #info PR 23717 needs some testing.
+15:06:01 <albertom> thanks sivel
+15:06:05 <albertom> and i have another one
+15:06:20 <albertom> https://github.com/ansible/ansible/pull/20333
+15:06:42 <thaumos> @albertom, any thoughts on @bcoca's question?
+15:07:13 <albertom> thaumos: bcoca: maybe ill need to take another look at it
+15:07:19 <thaumos> okay
+15:07:26 <abadger1999> Greetings
+15:07:35 <thaumos> #action albertom to take a look at the_run method for PR 23717
+15:07:46 <thaumos> #chair abadger1999
+15:07:46 <zodbot> Current chairs: abadger1999 bcoca gundalow sivel thaumos trishnag
+15:07:51 <thaumos> hola abadger1999
+15:08:00 <thaumos> #chair albertom
+15:08:00 <zodbot> Current chairs: abadger1999 albertom bcoca gundalow sivel thaumos trishnag
+15:08:19 <thaumos> any other feedback on 23717?
+15:08:24 <thaumos> if not, we'll move to the next one
+15:08:47 <thaumos> ....... going once
+15:09:00 <thaumos> ...... going twice
+15:09:18 <thaumos> #topic Review ansible/ansible#20333
+15:09:31 <sivel> bcoca: _ssh_retry raises an exception instead of returning 255, and _ssh_retry wraps _run.  I'll look at the feasability of returning the "return tuple" from _ssh_retty also before I sign off on the PR
+15:10:28 <thaumos> #link https://github.com/ansible/ansible/pull/20333
+15:10:37 <bcoca> i would suggest a flag then, which that 1 call uses and the rest just expect 255
+15:10:54 <bcoca> exception: ... if flag: return 255 else raise
+15:11:04 <bcoca> ^ less code
+15:11:26 <thaumos> @gundalow, you were the first to review 20333, any other feedback?
+15:11:52 <sivel> bcoca: I commented on your comment on the issue, we'll take a look
+15:11:53 <thaumos> Should we also have @alikins take a look at the module as a reviewer since he touched it before as well?
+15:11:54 <abadger1999> I've pinged ignatenkobrain in #ansible-devel but I don't know if he's available for this meeting or not.
+15:12:23 <thaumos> thanks @abadger1999
+15:12:40 <albertom> so the thing is igor said he didnt like theu se of undocumented methods fromt he dnf api. that resulted in a new api method for dnf>=2 which is not yet available in fedora25
+15:12:47 <albertom> andi  dont know how to proceed now :P
+15:14:24 <abadger1999> albertom: Our usualy course would be to make the feature depend on a new enough dnf api and return an error if it was used without a new enough library.
+15:15:50 <albertom> I can update the patch then.
+15:15:57 <albertom> ihope it becomes usefull in fedora 26
+15:16:06 <abadger1999> albertom: Regarding the way this is structured... I think that we'd probably add autoremove as a choice for state instead of its own option.  bcoca, does that sound right?
+15:16:35 <bcoca> depends
+15:16:45 <thaumos> @albertom has there been any updates on your RFE that makes it possible for F26?
+15:16:54 <abadger1999> ahhh... I see this is amodifier.
+15:17:02 <albertom> thaumos: yes the fix is alredy merged
+15:17:03 <bcoca> there are 2 cases for autoremove, 1 as a standalone action, 2 as a way to perform other actions (remove + autoremove newly unused)
+15:17:07 <bcoca> ^ not sure how dnf uses em
+15:17:18 <albertom> i dont know if F26 will have dnf>=2
+15:17:18 <abadger1999> but a modifier that can operate with no package name specified.
+15:17:21 <bcoca> 1 = state, 2 = flag
+15:17:34 <bcoca> so in this case it does both?
+15:17:49 <bcoca> ^ would lean towards flag then
+15:17:57 <abadger1999> as a modifier with no package name specified this might break squashing... I'll have to look at that code.
+15:18:26 <bcoca> not sure how it breaks squashing .... if possible to execute module w/o name .. squashing would just create empty list
+15:18:29 <abadger1999> I think I'd lean towards state.
+15:18:34 <abadger1999> I don't think it's a true modifier.
+15:18:39 <abadger1999> I think it's jus coded that way
+15:19:13 <albertom> dnf: name=tmux state=autoremove ?
+15:19:15 <bcoca> we have it as flag in other packge plugins
+15:19:16 <albertom> what does that mean?
+15:19:17 <abadger1999> as in, "do this AND this"   rather than "do this IN THIS way"
+15:19:40 <thaumos> we should keep it consistent with the other pkg plugins then, no?
+15:20:00 <abadger1999> albertom: okay, so maybe you also need:
+15:20:11 <abadger1999> +        mutually_exclusive=[['name', 'list'], ['autoremove', 'list'], ['name', 'autoremove']],
+15:20:29 <bcoca> abadger1999: i dont see it as exclusive
+15:20:32 <sivel> in `apt` we use `autoremove` as an arg, so I think it would be best to stick with the same in `dnf`
+15:20:46 <bcoca> you should be able to use autoremove with install/remove operations
+15:20:55 * abadger1999 retracts state comment if it's added to mutually_exclusive
+15:21:00 <albertom> otherwise touqwould need one task to remove a package and then another to autoremove the remainings
+15:21:11 <bcoca> ^ exactly
+15:21:22 <abadger1999> I kinda think two tasks is appropriate.
+15:21:38 <abadger1999> sivel: can apt's autoremove be used bare?
+15:21:54 <abadger1999> ie: "apt: autoremove=True"   (no name argument)?
+15:22:19 * abadger1999 also notes some pieces of apt's options strike me as.... funny.
+15:22:23 <bcoca> required_one_of = [['package', 'upgrade', 'update_cache', 'deb', 'autoremove']]
+15:22:25 <bcoca> yes
+15:22:33 <bcoca> same with pkgng
+15:22:48 <sivel> abadger1999: I believe so
+15:22:48 <abadger1999> okay, yep, follow what they do then even though I think they're wrong-ish.
+15:22:52 <albertom> so we can keep it as a flag... and add it to required_one_of to make it standalone too
+15:23:20 <abadger1999> albertom: correct -- I saw that you had it in required_one_of already which is what got me wondering how it's supposed to work.
+15:23:23 <bcoca> yeah, user should be able to decide if they just want autoremove
+15:23:31 <thaumos> agreed
+15:23:38 <bcoca> abadger1999: its 'extra operation' but can be 'only operation'
+15:23:39 <albertom> i wrote it some time ago.. just wanted to follow up now :P
+15:23:52 <abadger1999> bcoca: right... but it's not a modifier then.
+15:23:59 <bcoca> abadger1999: i would make this equivalent to daemon-reload in systemd
+15:24:07 <abadger1999> it's entirely separate from name
+15:24:16 <bcoca> ^ its an extra operation you ight want standalone or in conjunction
+15:24:23 <thaumos> #action albertom will add required_one_of to module to make arg standalone.
+15:24:39 <bcoca> abadger1999: cache_update is same
+15:24:57 <bcoca> enable/disable repo ...
+15:25:01 <abadger1999> bcoca: yeah... but we consistently reject PRs that just allow doing multiple independent actions in a single task.
+15:25:08 <bcoca> many options are 'extra actions', theymake little sense as 'state'
+15:25:19 <thaumos> #action albertom to add an error for use outside of api, per usual course.
+15:25:28 <abadger1999> bcoca: right.. cache_update is actually the one that I was thinking of when I said apt has options that I think are handled wrong.
+15:25:32 <bcoca> abadger1999: when they are 'multiple' tasks, these are operations that normally deal with very narrow issue
+15:25:46 <abadger1999> anyhow...
+15:26:00 <bcoca> abadger1999: but those are very intertwined and are requried in many cases
+15:26:00 <thaumos> any other direct input for albertom to move forward?
+15:26:07 <abadger1999> There's precedent so whether it's good ui or not, I don't object to doing it this way.
+15:26:36 <bcoca> ^ i give these more lattitude as the original tool and normal procedure would require 2-5 tasks every time otherwise
+15:26:54 <thaumos> For pkg installs, a good ux in my mind is the less tasks the better.
+15:27:03 <thaumos> pkg mgmt already takes a long time.
+15:27:09 <bcoca> i would like repo disable/enable out of yum .. but original tool has them
+15:27:09 <abadger1999> eh...
+15:27:38 <thaumos> alright, if there is no other direct feedback, I will close this one out.
+15:27:42 <abadger1999> you can do installs, removes, and updates all in a single yum transaction.... but I don't think we would contemplate adding that to the ansible module would we?
+15:27:44 <bcoca> validate_certs< = having this in yum for example is worse in my mind than the autoremove
+15:28:26 <bcoca> abadger1999: its been proposed, i think that keepign 'state' simpler is a better option
+15:28:32 <thaumos> No, because those are very distinct functions. Don't be so literal.
+15:28:47 <thaumos> #topic Open Floor
+15:28:51 <abadger1999> thaumos: <bcoca> ^ i give these more lattitude as the original tool and normal procedure would require 2-5 tasks every time otherwise
+15:28:59 <abadger1999> it directly follows from that.
+15:29:03 <bcoca> abadger1999: i know its a fuzzy line
+15:29:07 <abadger1999> bcoca: yep.
+15:29:19 <thaumos> remember, the point is simplicity
+15:29:37 <abadger1999> thaumos: exactly... and if there wasn't precedent, I'd say that this UI voilates simplicity.
+15:29:37 <bcoca> and we already have enable/disable repo in dnf
+15:30:00 <bcoca> wtf is 'list' param in dnf?
+15:30:24 <abadger1999> bcoca: in contrast to the other params we're tlaking about, enable/disable repo are pure modifiers
+15:30:28 <thaumos> same param list exists in yum as well, doesn't it?
+15:30:32 <abadger1999> yep.
+15:30:49 <abadger1999> because people are switching from yum, dnf has the same param support as the yum module.
+15:31:24 <thaumos> yep.
+15:31:27 <abadger1999> anyhow... decision made based on precedent... we don't have to take up meeting time with this :-)
+15:31:35 <bcoca> i was hoping to make interface better with dnf .. but ... i see why that might trump my hopes
+15:32:01 <thaumos> does it even matter, isn't the rumour going around that dnf is dead?
+15:32:08 <bcoca> ?!?!?!?
+15:32:19 <bcoca> doa?
+15:32:21 <abadger1999> thaumos: ?
+15:32:26 <thaumos> I heard a rumour somewhere.
+15:32:33 <bcoca> RHEL is using .deb now?
+15:32:37 <abadger1999> You'll have to point me to the rumor mill after the meetng.
+15:32:40 <thaumos> no, going back to yum
+15:32:46 <thaumos> will do, if I can find it.
+15:32:51 <abadger1999> Cool.
+15:33:04 * bcoca closes shades and lies in fetal position for a while
+15:34:18 <thaumos> rumours are rumours though.... You never know what to believe.
+15:34:25 <thaumos> anywho
+15:35:27 <thaumos> Anyone have anything else to add?
+15:35:39 <Pilou> I haven't added anything on the agenda either but I would like reviews on #23613, #23631, #23686 (not sure if this is the right place/time to ask).
+15:35:48 <thaumos> #chair pilou
+15:35:48 <zodbot> Current chairs: abadger1999 albertom bcoca gundalow pilou sivel thaumos trishnag
+15:35:50 <gundalow> If anyone would like to review Testing documentation: https://github.com/ansible/ansible/pull/23925
+15:36:06 <thaumos> #topic Review ansible/ansible#23613
+15:36:34 <thaumos> #link https://github.com/ansible/ansible/pull/23613
+15:37:15 <sivel> I won't be of any help with any postgres PRs, unless you need non-postgres feedback
+15:37:28 <thaumos> @pilou for 23613, the requested reviewer has been out of pocket. that's why you haven't gotten any feedback there.
+15:37:56 * jtanner is here
+15:38:02 <thaumos> #chair jhawkesworth
+15:38:02 <zodbot> Current chairs: abadger1999 albertom bcoca gundalow jhawkesworth pilou sivel thaumos trishnag
+15:38:08 <thaumos> #chair jtanner
+15:38:08 <zodbot> Current chairs: abadger1999 albertom bcoca gundalow jhawkesworth jtanner pilou sivel thaumos trishnag
+15:38:09 <gundalow> Pilou: 23613 looks sensible, though I'd like to get Matt's approval before it gets merged
+15:38:26 <thaumos> @pilou, are you okay for waiting for a response from @mattclay
+15:38:40 <Pilou> ok
+15:38:43 <thaumos> ok cool
+15:39:03 <thaumos> #action thaumos to set a reminder for #23613 when @mattclay is more available.
+15:39:07 <abadger1999> Pilou: Does 23613 also work for redhat family?
+15:39:21 <abadger1999> thaumos: note: mattclay is working this week -- just in a different TZ
+15:39:30 <jtanner> and asleep right now
+15:39:32 * thaumos nods
+15:39:40 <abadger1999> yeah.
+15:39:40 <thaumos> ^ thus later time
+15:39:44 <abadger1999> In APAC right now
+15:39:48 <jtanner> the ci guy who must not be named
+15:39:49 * thaumos nods
+15:39:50 <Pilou> abadger1999: there is a condition "when: ansible_os_family == 'Debian'"
+15:40:06 <abadger1999> Pilou: I mean... can we consolidate with the red hat family locale generation
+15:40:35 <gundalow> aye, should we use the
+15:40:54 <Pilou> i guess the tasks related to locales in this playbook could be added to locale-gen module
+15:40:56 <gundalow> aye, should we use the locale_gen module for all OS, rather than than + localdef command
+15:41:15 <abadger1999> line 110-118
+15:41:26 <gundalow> would be 1) consistent 2) better test of Ansible
+15:42:37 <Pilou> So i need to do another PR on locale-gen module, right ?
+15:42:49 <abadger1999> Pilou: If it works, consolidate; if it doesn't work, I'm +1 to the PR right now.
+15:44:13 <thaumos> okay, so for actions... Pilou to investigate if consolidation can happen with Red Hat family locale
+15:44:22 <thaumos> #action Pilou to investigate if consolidation can happen with Red Hat family locale
+15:44:31 <Pilou> "consolidation" means refactoring ?
+15:44:45 <gundalow> use locale_gen module for all distros
+15:44:48 <Pilou> k
+15:44:53 <gundalow> Thanks :)
+15:45:02 <abadger1999> Pilou: I've just looked, it won't work for rht family without modifications to the locale_gen module.
+15:45:35 <gundalow> oh :(
+15:45:48 <Pilou> because locale_gen is Debian/Ubuntu only ?
+15:46:09 <abadger1999> Pilou: I'll put a +1 into your PR as is.  if mattclay doesn't get a chance to look you can ping me to merge it in a few days (or next week since hte weekend is coming up)
+15:46:44 <abadger1999> Pilou: correct.  it modifies config files that are correct on either Ubuntu or Debian but doesn't know about the rht ones.
+15:47:01 <Pilou> my proposal was to improve locale_gen first, then use only locale_gen here :)
+15:47:14 <thaumos> is that a huge undertaking for you pilou?
+15:48:03 <thaumos> I think the suggestion by abadger1999 is merge now barring anything else.  We can then get a PR from you or someone else to locale-gen and then the test could be updated later.
+15:48:15 <Pilou> k
+15:48:23 <thaumos> /s/locale-gen/locale_gen
+15:48:46 <abadger1999> yep.  I don't want to block an obvious improvement on future work if I don't have too :-)
+15:48:50 <thaumos> #action abadger1999 to +1 PR as is.  No refactor from pilou needed now.
+15:48:53 <thaumos> agreed.
+15:49:04 <thaumos> there always the ability to update it later if something cooler comes along.
+15:49:15 <thaumos> alright, let's move on for sake of time.
+15:49:28 <thaumos> #topic ansible/ansible#23631
+15:50:05 <thaumos> #link https://github.com/ansible/ansible/pull/23631
+15:50:31 <bcoca> https://github.com/ansible/ansible/pull/22477
+15:50:50 <bcoca> ^ abadger1999 brought of if we really need/want this in ansible/ansible
+15:51:21 <bcoca> initially tool was also going to 'manage' inventory scripts .. but new inventory plugins make that function obsolete
+15:51:21 <thaumos> k, we'll address that one in a bit
+15:51:34 <thaumos> let's get through Pilou's really quickly.
+15:51:43 <bcoca> ^ ah, sorry thought we just ended that
+15:51:59 <thaumos> it's a new one :)
+15:52:05 <bcoca> he , 613 vs 631 .. my dslexia wins
+15:53:00 <thaumos> haha, I got caught in that as well... because I saw postgres still
+15:53:26 <thaumos> Pilou, for both of your other PR's, do you want someone to just review them offline and comment?
+15:53:33 <thaumos> for the sake of time?
+15:53:48 <Pilou> yes, fine :)
+15:53:52 <thaumos> cool
+15:54:20 <thaumos> #action thaumos to find reviewers for #23686 and #23631
+15:54:58 <thaumos> #topic ansible/ansible#22477
+15:55:03 <thaumos> #link https://github.com/ansible/ansible/pull/22477
+15:55:16 <thaumos> alright, so 5 mins go!
+15:56:15 <thaumos> I would like it in ansible/ansible
+15:56:30 <thaumos> There's always a question somewhere of how ansible sees inventory.
+15:56:34 <thaumos> same with config
+15:56:39 <thaumos> hence the need for ansible-config
+15:57:39 <bcoca> i would like to add more features to it (where did var come from?)  but those will ahve to wait for #23001 to be merged
+15:57:41 <abadger1999> <nod> so th two quesitons I had are: (1) does it need to be in ansible/ansible (2) Do we want to do entirely our own thing or do we want to take one of the other, similar codebases in as a base and add our other desired features to it?
+15:58:39 <abadger1999> (1) I just wanted to raise... I have no opinion.  (2) I lean towards working with something the community already supports unless none of the other codebases actually do something similar... they're alike in name only.
+15:58:42 <thaumos> 1) yes 2) I am for code re-use.
+15:59:30 <thaumos> For instance, similar to ansible-console... we worked with the ansible-shell maintainer to pull it in.  I'd like for the same to happen with the community if it could happen.  Because then they feel involved.
+16:00:15 <thaumos> but there's also a point of where no feedback comes back from them, or a roadblock could happen. In those cases, I'd say we just have to push forward with our own implementation.
+16:01:02 <abadger1999> thaumos: <nod>  Once it's in our repo, they do surrender a bit of control in exchange for wider exposure for their project.
+16:01:03 <bcoca> i pinged authors of similar tools, could not do exactly same as the 'grapher' as i did not want graphviz dep, commented we could add that as 'optional dep'
+16:01:20 <bcoca> ^ why i created ascii tree graph
+16:01:43 <bcoca> the other ansible-invenotry dumped in format that did not work for 'dynamic reimport' so i created my own code
+16:02:06 <bcoca> rest is very similar, but that is why i mainly coudl not use the existing ones
+16:02:24 <bcoca> mine overlaps with their goals but is subject to our restrictions
+16:02:44 <thaumos> I think the right thing was done.
+16:03:03 <bcoca> in any case, chris has already forked/backported it to work with more ansible versions
+16:03:27 <thaumos> heh, how many more?
+16:03:43 <bcoca> 2 or 3, have not tested
+16:03:52 <thaumos> also, we're at time.  shall we keep discussing for a few more minutes, or shall I close the meeting?
+16:04:18 <bcoca> close, i think we lack quorum to vote on this one
+16:04:20 <abadger1999> bcoca: what do you need here?  Just for us to vote on include or no include?
+16:04:28 <jtanner> on ansible-inventory?

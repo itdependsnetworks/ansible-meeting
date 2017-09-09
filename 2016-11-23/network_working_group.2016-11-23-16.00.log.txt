@@ -1,0 +1,196 @@
+16:00:24 <gundalow> #startmeeting Network Working Group
+16:00:24 <zodbot> Meeting started Wed Nov 23 16:00:24 2016 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:00:24 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:00:24 <zodbot> The meeting name has been set to 'network_working_group'
+16:00:35 <gundalow> Hi ericchou1
+16:00:46 <ericchou1> Hi
+16:01:17 <gundalow> Agenda as always is https://github.com/ansible/community/issues/110
+16:03:06 <ericchou1> ack, ready to discuss my ansible/ansible#18104 if needed
+16:03:17 <gundalow> #topic ansible/ansible#18104
+16:03:51 <gundalow> https://github.com/ansible/ansible/pull/18104
+16:03:52 <Qalthos> #link https://github.com/ansible/ansible/pull/18104
+16:04:10 <ericchou1> so in AXAPIv2 there were some instances where the body is not JSon, such as when uploading aFlex scripts
+16:04:11 <Qalthos> though I think I'd need chair for that to stick in the minutes
+16:04:26 <gundalow> #chair Qalthos
+16:04:26 <zodbot> Current chairs: Qalthos gundalow
+16:05:08 <ericchou1> I need to verify with developer, but there might be some instance that needs to be outside of JSon as well. So I figure I will just take that part out.
+16:07:01 <ericchou1> and make it explicit
+16:07:57 <gundalow> ganeshnalawade: Hi :)
+16:08:03 <ganeshnalawade> gundalow, hi
+16:09:41 <Qalthos> ericchou1: so are you advocating waiting on some additional change (or verification) for this PR?
+16:10:12 <ericchou1> Qalthos: No, I am just providing ground on why I am making this change.
+16:10:35 <gundalow> So I think we are good to merge it then
+16:10:41 <Qalthos> Oh, okay, I was completely misunderstanding then
+16:10:48 <Qalthos> yup
+16:10:56 <ericchou1> Thanks guys :)
+16:11:02 <Qalthos> done
+16:11:19 <ericchou1> woohoo!
+16:11:29 <ganeshnalawade> sorry i joined late
+16:11:32 <gundalow> ericchou1: on https://github.com/ansible/ansible-modules-extras/pull/3239/files I'm confused
+16:11:54 <gundalow> ganeshnalawade: Not at issue, glad you an make it. We are just looking at some a10 modules
+16:11:57 <ericchou1> sure, which part? I am new so it is probably me.
+16:12:23 <gundalow> ooooooooooooh
+16:12:51 <ganeshnalawade> gundalow, thanks... i had couple of issues and a PR to discuss
+16:12:54 <gundalow> I was getting confused as to ahy a10_server.py is listed as a new file (hence the discussion about version_added) I think the file is in the wrong dir
+16:13:09 <ericchou1> oh, is it?
+16:13:23 <ericchou1> my apology, which directory should it be in?
+16:13:50 <gundalow> network/a10/
+16:14:04 <gundalow> That's why GitHub is showing it as a new file
+16:14:09 <Qalthos> ericchou1: looks like some are in network/a10, and some are in the root of the repository
+16:14:16 <ericchou1> that is where I put it, I think
+16:14:26 <gundalow> all the a10 modules should be in network/a10/
+16:14:36 <ericchou1> right
+16:14:50 <gundalow> https://github.com/ansible/ansible-modules-extras/pull/3239/files "297  a10_server.py"
+16:15:05 <Qalthos> ericchou1: your PR has 2 each of a10_server.py, a10_service_group, and a10_virtual_server
+16:15:06 <ericchou1> let me check
+16:15:51 <ericchou1> sorry my connections seems a bit flaky this morning
+16:16:05 <gundalow> no problem, we didn't say anything after you said "let me check"
+16:16:24 <ericchou1> ok, so I have two of the same files
+16:16:51 <gundalow> I guess you made a backup and that accidently got added to the commit, which is easily done
+16:17:19 <gundalow> phil-dileo: Hi :)
+16:17:24 <phil-dileo> Hey!
+16:17:32 <phil-dileo> Sorry I’m late
+16:17:46 <ericchou1> got it
+16:17:50 <gundalow> phil-dileo: No problem, not got to your stuff yet. Just looking at some a10 bits first
+16:18:32 <gundalow> ericchou1: Cool. Once you get the PRs updated I'll have another look. Appologies for not spoting the issue sooner and giving you confusing advice
+16:18:37 <ericchou1> sorry, I only see 1 file in my local directory
+16:19:02 <ericchou1> I will try to figure out, but if you can provide any pointers on how to correct this I'd appreciate it
+16:19:20 <gundalow> ericchou1: What we generally suggest is to create a branch, rather than working directly on `devel`
+16:19:25 <ericchou1> maybe we can take it offline
+16:19:33 <ericchou1> right, ok
+16:20:10 <gundalow> git checkout deve ; git checkout -b a10_server_axapi3 ; $EDITOR network/a10/a10_server.py ; git commit ; git push origin a10_server_axapi3
+16:20:32 <ericchou1> ok got it
+16:20:33 <gundalow> Feel free to jump into #ansible-devel later and ask for pointers
+16:20:33 <ericchou1> thank you
+16:20:40 <ericchou1> appreciate that
+16:20:50 <gundalow> No problem, it's a PITA at first
+16:20:56 <gundalow> then a pain in other places later
+16:21:05 <gundalow> #topic phil-dileo's questions on eos
+16:21:06 <ericchou1> :)
+16:21:39 <gundalow> Banner: Yes
+16:21:39 <phil-dileo> Hey, not sure if you want me to list them again?
+16:22:03 <phil-dileo> Banner in 2.3?
+16:22:48 <gundalow> I believe so
+16:23:05 <gundalow> though I'm relaying privateip's comments, I'm not 100% sure on context
+16:23:43 <phil-dileo> I’ve looked through the code and there’s no mention of it today, so hopefully 2.3
+16:23:49 <gundalow> phil-dileo: This is the functionality required for https://github.com/ansible/test-network-modules/pull/56 ?
+16:24:25 <phil-dileo> Right, banner was the first issue, but it also applies to ssl keys, etc.
+16:26:10 <gundalow> phil-dileo: Could you please raise a feature request issue so we don't forget it
+16:26:19 <phil-dileo> np
+16:26:19 <gundalow> and mention https://github.com/ansible/test-network-modules/pull/56
+16:26:21 <gundalow> Thanks
+16:26:43 <gundalow> timeouts I'll talk about in a bit
+16:27:10 <phil-dileo> And ‘updates’ when using src?
+16:29:34 <gundalow> Yup, that can be added. Could you please raise a feature request issue (or PR :P)
+16:30:04 <phil-dileo> It isn’t a bug? :-)
+16:30:17 <phil-dileo> It makes me sad
+16:30:20 <gundalow> oh yes, sorrym, that';s a bug
+16:30:28 <gundalow> ergh, as my typing is
+16:30:34 <gundalow> #topic Timeouts
+16:30:39 <gundalow> Good news everybody!
+16:31:15 <gundalow> As a number of you have spotted, across the different network platforms we occasionally trigger timeouts when performing various opperations
+16:32:14 <gundalow> In Anisble 2.3 we will be changeing to using a persistent connection manager (think along the lines of SSH's ControlPersist) which should resolve those issues
+16:32:47 <gundalow> We realise however that this is causing you all issues with 2.2. Therefor we will put in a different fix for 2.2
+16:36:31 <gundalow> #topic ganeshnalawade Junos fixes
+16:36:34 <gundalow> ganeshnalawade: you there?
+16:36:39 <ganeshnalawade> gundalow, yes
+16:36:55 <gundalow> Timeout: Fix #4281 Add timeout param to junos_config module  https://github.com/ansible/ansible-modules-core/pull/5679
+16:37:11 <ganeshnalawade> Timeout param support added in this PR is related to netconf transport.
+16:37:11 <ganeshnalawade> Since there are two transports (Netconf and CLI) should the
+16:37:25 <ganeshnalawade> parameter
+16:37:25 <ganeshnalawade> name be renamed to "netconf_timeout" to me more specific
+16:37:25 <ganeshnalawade> or current name "timeout" is fine?
+16:38:32 <gundalow> Hum, that's a good question
+16:39:02 <gundalow> Qalthos: What do you think?
+16:39:12 <gundalow> I'm leaning towards netconf_timeout
+16:40:59 <gundalow> ganeshnalawade: yup, please change to netconf_timeout
+16:41:19 <ganeshnalawade> gundalow, ok thanks will make that change
+16:41:59 <gundalow> junos_config broken configurations and idempotency https://github.com/ansible/ansible-modules-core/issues/5483
+16:42:15 <ganeshnalawade> Interface given in format 'ae11.0' expand to 'ae11 unit 0' on device
+16:42:15 <ganeshnalawade> which cause issues while taking diff in junos_config.
+16:42:19 <Qalthos> gundalow: I think it should probably be implemented at the module_utils level, as Shell's timeout is
+16:42:41 <Qalthos> unless I misunderstand the situation
+16:42:51 <gundalow> Qalthos: hum, good point. I wonder if privateip's existing plans will fix that
+16:43:30 <Qalthos> at which point it could reasonably inherit the timeout parameter, with no issues as they shouldn't be interchangeable
+16:43:38 <gundalow> allanice001: Welcome. https://github.com/ansible/community/issues/110 is the agenda. We've been through the a10 topics. Currently going through the junos items. The /topic gets updated with the topic
+16:43:56 <allanice001> thnx gundalow
+16:43:58 <ganeshnalawade> Qalthos, it is a Netconf session timeout
+16:44:00 <allanice001> taking a look
+16:44:31 <ganeshnalawade> Qalthos, need to have a active nectonf connection handle to set timeout for a particular session
+16:45:15 <Qalthos> ganeshnalawade: right, and you're setting it against module_utils.junos.Netconf.device, can't that be handled in the connect() method of module_utils.junos.Netconf?
+16:46:05 <allanice001> gundalow: is this for #4103 #4104 #4715 ?
+16:46:11 <Qalthos> that's what creates the jnpr.junos.Device()
+16:46:56 <ganeshnalawade> Qalthos, yes
+16:47:22 <Qalthos> again, I could be completely wrong here, but if it gets set in module_utils, it gets added for free in all other junos modules
+16:47:48 <gundalow> allanice001: We are going through https://github.com/ansible/community/issues/110#issuecomment-262233203 "ganeshnalawade commented a day ago • edited"
+16:48:11 <allanice001> gotcha, thnx
+16:48:56 <ganeshnalawade> Qalthos, ok will explore this and check if it can be implemented in module_utlis
+16:49:27 <gundalow> ganeshnalawade: Cool. Could you just add that as a note on the PR please, so if someone else looks at it we have a record
+16:49:41 <ganeshnalawade> gundalow, sure
+16:50:14 <gundalow> Next: https://github.com/ansible/ansible-modules-core/issues/5636
+16:50:38 <ganeshnalawade> JUNOS get_config does not support 'set' format so to support 'set'
+16:50:38 <ganeshnalawade> format in junos_facts module we can get
+16:50:38 <ganeshnalawade> the config in text format and convert it to set format inside
+16:50:38 <ganeshnalawade> junos_facts module and render it in output.
+16:50:40 <gundalow> So I believe the fix for this was https://github.com/ansible/ansible-modules-core/commit/f5658f4e5048ae6f2cf1d8eb434be3602fc6bb3a which I merged ysterday
+16:50:49 <ganeshnalawade> If support for 'set' format is required, I can create a new issue and work on it.
+16:51:44 <ganeshnalawade> gundalow, new
+16:52:22 <gundalow> I don't know if we need Set format. From reading the issue it seemed like a documentation issue
+16:54:00 <ganeshnalawade> gundalow, ok...but going through code i think it possible to support set format as well
+16:54:27 <gundalow> ganeshnalawade: ah, got you. In that case a Feature Request PR would be welcome if you think it's something that others would find useful
+16:55:38 <ganeshnalawade> gundalow, ok sure
+16:55:40 <ganeshnalawade> gundalow,
+16:55:54 <ganeshnalawade> gundalow, will raise a feature request PR
+16:55:59 <ganeshnalawade> gundalow, thanks
+16:56:00 <gundalow> Thanks
+16:56:12 <gundalow> ganeshnalawade: Any other Junos questions?
+16:56:22 <ganeshnalawade> gundalow, nopes
+16:57:13 <gundalow> hum, ismc was here but has left
+16:57:45 <gundalow> The last there are GGabrieles
+16:57:48 <gundalow> #topic Open Floor
+16:58:04 <gundalow> allanice001: phil-dileo ganeshnalawade Qalthos Anything else?
+16:58:14 <Qalthos> yes
+16:58:16 * Qalthos looks
+16:58:20 <allanice001> nope, just lurking
+16:58:53 <Qalthos> What looks like a paramiko bug led to https://github.com/ansible/ansible-modules-core/issues/5308
+16:59:25 <Qalthos> ie, paramiko overwriting known_hosts before finishing the last one, leading to corrupted host keys
+17:00:27 <Qalthos> if anyone has experiences this or wants to try to see if they can replicate, a larger number of hosts will make the bug show up more frequently
+17:00:34 <allanice001> is this in any way using py3 ?
+17:00:40 <Qalthos> (but as with race conditions, it's random)
+17:00:41 <allanice001> the paramikto bug?
+17:01:01 <Qalthos> allanice001: we don't so I doubt it
+17:01:10 <allanice001> ack
+17:01:24 <allanice001> any work going into ansible py3?
+17:01:35 <bcoca> constant
+17:01:37 <Qalthos> https://github.com/ansible/ansible/pull/18238 fixes the issue, but is technically a security regression, though it is the same behavior as 2.1
+17:02:17 <Qalthos> basically, I won't push it if it doesn't fix someone's problem, and I have no idea if it even does or not
+17:02:26 <bcoca> actual fix is to add locking as we do in ssh
+17:02:43 <Qalthos> bcoca: right, and that's coming with 2.3^TM
+17:03:41 <Qalthos> If anyone has the issue and can verify the fix, we can move this along, otherwise it's back to low priority
+17:03:44 <Qalthos> that's all
+17:04:17 <gundalow> Cool
+17:04:32 <phil-dileo> Related to paramiko, has anyone tested transport: cli with encrypted keys?
+17:04:33 <gundalow> Thanks as always. Good meeting today, nice to get through a set of PRs
+17:05:15 <phil-dileo> (not urgent, we can discuss next time)
+17:05:51 <allanice001> phil-dileo: the only wat
+17:05:58 <Qalthos> phil-dileo: not to my knowledge
+17:05:59 <allanice001> ..way is to
+17:06:09 <allanice001> unlock the keys beforehand
+17:06:36 <allanice001> i store them in ssh-agent
+17:07:14 <phil-dileo> k, thanks.  I recently heard someone mention an issue where they were trying to use encrypted keys with ‘ssh_keyfile’
+17:08:26 <allanice001> problem is parsing the encrypted part of the key
+17:11:06 <allanice001> standard key ||| -----BEGIN RSA PRIVATE KEY-----
+17:11:07 <allanice001> MIIEowIBAAKCAQEArXwsOTVE13t3ZY69FRxyiu1Nhh77r8S/PfloV+4e9IIBqE/g
+17:11:28 <allanice001> encrypted key ||| -----BEGIN RSA PRIVATE KEY-----
+17:11:29 <allanice001> Proc-Type: 4,ENCRYPTED
+17:11:30 <allanice001> DEK-Info: AES-128-CBC,FC362CD318C3B43A1B3D310E96EDE263
+17:11:31 <allanice001> QfLkOsI4NU3ClJs/G6ZukfYvhcqsYiD/4bee+Cxffwy+y4Pkrdtljsq668fsVhxN
+17:11:55 <phil-dileo> Right, I was thinking perhaps we could pass the private key + keyphrase into the provider and have paramiko decrypt
+17:12:48 <allanice001> it needs to get handled with the aes encryption cipher
+17:13:42 <allanice001> and i dont think youd want to pass the keyphrase over the wire - technically in clear
+17:14:18 <phil-dileo> It isn’t over the wire since it’s connection: local. and the module sanitizes sensitive info
+17:14:47 <phil-dileo> Anyway, not a critical topic
+17:18:32 <gundalow> Cool
+17:18:59 <gundalow> As always, feel free to add items onto the agenda https://github.com/ansible/community/issues/110
+17:19:02 <gundalow> Thanks all
+17:19:05 <gundalow> #endmeeting

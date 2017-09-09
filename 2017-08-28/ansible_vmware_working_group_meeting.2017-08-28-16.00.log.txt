@@ -1,0 +1,151 @@
+16:00:31 <akasurde> #startmeeting Ansible VMware Working Group Meeting
+16:00:31 <zodbot> Meeting started Mon Aug 28 16:00:31 2017 UTC.  The chair is akasurde. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:00:31 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:00:31 <zodbot> The meeting name has been set to 'ansible_vmware_working_group_meeting'
+16:00:47 <dag> o/
+16:01:05 <akasurde> #chair dag
+16:01:05 <zodbot> Current chairs: akasurde dag
+16:02:07 <dag> Let's wait a little longer to see if anyone is turning up :-)
+16:02:31 <jtanner> hi
+16:02:38 <jtanner> i'm distracted by ssh debugging
+16:02:58 <akasurde> #chair jtanner
+16:02:58 <zodbot> Current chairs: akasurde dag jtanner
+16:03:20 <akasurde> #topic General Discussion
+16:04:44 <dag> In the meantime I requested a meetbot: https://github.com/ansible/community/issues/231
+16:05:08 <dag> akasurde: If nobody else is turning up, maybe we can look at open issues and PRs instead ?
+16:05:31 <akasurde> dag, sure
+16:05:51 <dag> and leave the VMware WG issues to another meeting (it's quite likely that everybody is at VMworld today :-D)
+16:06:02 <kaneda-fr> Hi
+16:06:17 <dag> hey kaneda-fr !
+16:06:17 <akasurde> #chair kaneda-fr
+16:06:18 <zodbot> Current chairs: akasurde dag jtanner kaneda-fr
+16:06:22 <kaneda-fr> anyone going to Barcelona next month ?
+16:06:28 <akasurde> hi kaneda-fr
+16:06:28 <jtanner> not me
+16:06:34 <kaneda-fr> I have 2 speakers slot, so will be there
+16:06:41 <akasurde> not me
+16:06:56 * jtanner wonders if warthog9 went to vmworld
+16:07:01 <dag> I wish I could, but VMware is a sidejob :-/
+16:07:13 <kaneda-fr> ;)
+16:07:44 <akasurde> kaneda-fr, Cool
+16:07:58 <dag> kaneda-fr: What's the topic ?
+16:08:28 <akasurde> I tried to couple of VMware people about Hardware for VMware Ansible modules but no help
+16:08:38 <akasurde> *talk to
+16:08:49 <kaneda-fr> why do you ned hardware ?
+16:08:50 <jtanner> akasurde: for your personal dev needs?
+16:09:09 <dag> kaneda-fr: We need infrastructure to test out modules against
+16:09:21 <akasurde> Not personal but overall Ansible
+16:09:44 <akasurde> kaneda-fr, we have limitations in Govcsim so need real hardware to test
+16:10:11 <kaneda-fr> mainly working with vcloud in my team
+16:10:20 <jtanner> i have an esxi box with and i7, 48GB ram and a few gigabytes of disk ... i'm willing to let a few people have free reign on it.
+16:10:36 <jtanner> you'd have to do all of the nested vcenter setup yourselves
+16:11:05 <jtanner> that's the part that i'm personally sick of doing
+16:11:10 <dag> that would already be useful
+16:11:10 <akasurde> jtanner, I can try on that
+16:11:18 <dag> automated vcenter setup should not be a problem
+16:11:25 <kaneda-fr> too bad we can't use the vmware labs
+16:11:25 <dag> I already have those playbooks
+16:11:30 <jtanner> dag+akasurde let's have an offline chat about making that happen for you two
+16:11:44 <akasurde> jtanner, Sure thanks
+16:11:46 <dag> ok
+16:11:55 <akasurde> Does anyone tried VMware on AWS
+16:12:01 <akasurde> how does it work
+16:12:06 <jtanner> via ravello?
+16:12:15 * dag knows nothing
+16:12:36 <akasurde> jtanner, I am quiet sure
+16:13:15 <jtanner> ravello does software cpu feature emulation
+16:13:34 <akasurde> ok
+16:14:24 <dag> still it would be useful to have Shippable test against the real thing
+16:14:56 <dag> (or get govcsim people involved in our testing, maybe they are interested in helping our community to help them ?)
+16:15:05 <akasurde> yes agree
+16:18:37 <dag> So let's skip the VMware WG issues, and leave it to another meeting with more people involved
+16:19:32 <akasurde> yes sure.
+16:20:05 <dag> Do we have any open questions from participants today ? :-)
+16:20:21 <dag> if not we can look at open issues/PRs to make this time meaningful
+16:20:46 <dag> this is the last meeting before the v2.4 freeze (tomorrow)
+16:20:50 <akasurde> dag would like to discuss powerstate / clone action in VMware guest before proceeding ?
+16:21:07 <dag> so I think we should focus on everything that is related to the v2.4 release
+16:21:17 <jtanner> freeze is tomorrow
+16:21:49 <dag> akasurde: I don't think that's v2.4 material, is it ?
+16:22:17 <akasurde> not related to 2.4 but an overall discussion
+16:22:35 <dag> akasurde: we should put it on the agenda for next week's meeting
+16:22:51 <dag> pdellaert's CDROM fixes might be v2.4 material
+16:23:02 <akasurde> jtanner, dag I am thinking of new module which is explicitly for powerstate
+16:23:15 <dag> akasurde: yes, me too
+16:23:17 <akasurde> I am OK with CDROM changes
+16:23:28 <akasurde> there were of couple of questions though on PR
+16:23:34 <jtanner> vmware_guest was 2 separate modules when i first wrote it
+16:23:53 <dag> akasurde: have you tested them ? I don't mind merging it, but I prefer not to deprecate vsphere_guest just yet
+16:24:30 <akasurde> same here
+16:24:48 <akasurde> jtanner, what was the decision to merge in one ?
+16:25:01 <jtanner> iirc, bcoca
+16:25:05 <akasurde> separate module seems logical to me.
+16:25:39 <akasurde> how other modules like AWS handles powerstate ?
+16:25:45 * akasurde have no idea about AWS modules
+16:26:12 <jtanner> https://github.com/ansible/ansible-modules-extras/pull/2649
+16:26:54 <bcoca> jtanner: i believe i suggested vsphere_guest become 3 diff modules, not a copy
+16:27:30 <bcoca> iirc, the only part i thought should be kept in same module was template/clone
+16:28:23 <dag> #chair bcoca
+16:28:23 <zodbot> Current chairs: akasurde bcoca dag jtanner kaneda-fr
+16:28:44 <akasurde> thanks dag
+16:31:27 <dag> akasurde: of the 28 open vmware PRs, is there something we should include in v2.4 ?
+16:31:42 <dag> so I have the CDROM code in my list
+16:31:54 * akasurde looking
+16:33:09 <dag> https://github.com/ansible/community/wiki/VMware:-community-plan#ansible-v24-freeze
+16:34:09 <dag> https://github.com/ansible/ansible/pull/25221 This one has your shipit and is docs only
+16:34:51 <dag> is that still relevant ? (it appears so, but with the latest folder changes...)
+16:35:19 <akasurde> yes looks like
+16:35:31 <akasurde> https://github.com/ansible/ansible/pull/26859
+16:36:25 <akasurde> I think thats it
+16:36:34 <akasurde> every thing else is pending
+16:36:45 <akasurde> on some comment or something other
+16:37:06 <dag> So do I merge 25221 as well ?
+16:40:58 <akasurde> Yes you can. wanna wait for one more shipit
+16:41:44 <dag> if the content is fine, I'm ok with it
+16:43:47 <akasurde> ok
+16:43:52 <dag> we still have 5 new modules in the pipeline, but none of these are ready to be merged, correct ?
+16:44:21 <dag> https://github.com/ansible/ansible/pull/26558
+16:44:29 <dag> the author thinks it's ready
+16:45:11 * akasurde checking
+16:46:07 <akasurde> 26558 needs rebase
+16:46:27 <akasurde> also lacks testcases
+16:46:33 <akasurde> I mean unit tests
+16:46:51 * jtanner will bbl
+16:48:10 <dag> akasurde: Can you reply to the PR ? papertrail...
+16:49:52 <akasurde> sure
+16:50:36 <kaneda-fr> have to go, will join for meet next week. c ya
+16:51:28 <akasurde> dag, Done
+16:52:27 <dag> We have 73 open VMware issues :-(
+16:53:10 <dag> Can we do a VMware sprint the week after AnsibleFest ?
+16:53:23 <akasurde> yes. I am in
+16:53:57 <akasurde> or maybe a hackthon
+16:54:02 <dag> we will have to prepare that a bit if we want to make that a success
+16:54:29 <dag> not sure what a hackathon is supposed to be, for VMware it's a prize-contest apparently
+16:55:12 <dag> you want to send an Ansible shirt to the person who closed the most issues (or created the most PRs) during the sprint ? :p
+16:55:57 <akasurde> I would love to but sad part is that I don't have tshirt or any other merchandise
+16:56:36 <dag> akasurde: I am sure we can ask gregdek if we want to do this, but I'm not convinced this is a good motivator :-/
+16:57:15 <akasurde> yeah thats true
+16:57:15 <gregdek> People don't close issues for t-shirts.
+16:57:26 <akasurde> #chair gregdek
+16:57:26 <zodbot> Current chairs: akasurde bcoca dag gregdek jtanner kaneda-fr
+16:57:32 <gregdek> They close issues to make their own pain go away. :)
+16:57:49 <dag> gregdek: :-)
+16:57:54 <dag> right
+16:58:06 <bcoca> i'll take t-shirts
+16:58:13 <akasurde> same here
+16:58:14 <gregdek> That said, we're happy to send swag to friendly community folks if you want.
+16:58:34 <gregdek> Not as an inducement, but as a thank you.
+16:59:07 <akasurde> gregdek, dag deserves one
+16:59:15 <dag> akasurde: I get my share ;-)
+16:59:37 <akasurde> hehehe
+16:59:42 * dag still has his AnsibleWorks t-shirt
+16:59:59 * bcoca is wearing ansible socks
+17:00:15 <akasurde> I got my t-shirt in Last Ansible Pune meetup :)
+17:00:24 <bcoca> dag: i never got my ansibleworks one!
+17:01:17 <dag> gregdek: I think akasurde wants one more shirt ;-)
+17:02:02 <akasurde> Nope :) I am happy with one
+17:02:24 <gregdek> If anyone in this meeting needs a t-shirt, ping me privately and we'll take care of it. :)
+17:02:32 <dag> akasurde: if you want to continue going over open issues, we can continue in #ansible-vmware
+17:02:48 <akasurde> Ok
+17:03:00 <akasurde> I will close the meeting for the day
+17:03:00 <akasurde> #endmeeting

@@ -1,0 +1,279 @@
+15:00:00 <thaumos> #startmeeting Public Core Meeting
+15:00:01 <zodbot> Meeting started Thu Jun  8 15:00:00 2017 UTC.  The chair is thaumos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:00:01 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:00:01 <zodbot> The meeting name has been set to 'public_core_meeting'
+15:00:05 <thaumos> #chair thaumos
+15:00:05 <zodbot> Current chairs: thaumos
+15:00:19 <sivel> howdy
+15:00:26 <thaumos> #chair sivel
+15:00:26 <zodbot> Current chairs: sivel thaumos
+15:00:28 * shertel waves
+15:00:31 <thaumos> hello
+15:00:33 <erasmix> Hello
+15:00:34 <thaumos> #chair shertel
+15:00:34 <zodbot> Current chairs: shertel sivel thaumos
+15:00:39 <thaumos> #chair erasmix
+15:00:39 <zodbot> Current chairs: erasmix shertel sivel thaumos
+15:00:39 * gundalow waves
+15:01:08 <sivel> I'm here, but may be a little distracted for the first few minutes. Getting a production hotfix pushed through and then I have to deploy
+15:01:17 <thaumos> #chair gundalow
+15:01:17 <zodbot> Current chairs: erasmix gundalow shertel sivel thaumos
+15:01:22 <jtanner> yo
+15:01:24 <thaumos> It's all good, @sivel
+15:01:26 <thaumos> #chair jtanner
+15:01:26 <zodbot> Current chairs: erasmix gundalow jtanner shertel sivel thaumos
+15:02:17 <ryansb> sup team?
+15:02:18 <chillysurf> hello
+15:02:19 * dminca waves
+15:02:22 <thaumos> #chair ryansb chillysurf
+15:02:22 <zodbot> Current chairs: chillysurf erasmix gundalow jtanner ryansb shertel sivel thaumos
+15:02:31 <dminca> hi guys
+15:02:31 <thaumos> #chair dminca
+15:02:32 <zodbot> Current chairs: chillysurf dminca erasmix gundalow jtanner ryansb shertel sivel thaumos
+15:02:39 <dminca> nice to finally be with you all
+15:03:20 <thaumos> welcome, @dminca
+15:03:59 <dminca> thanks thaumos
+15:04:18 <jtanner> ics link for new attendees https://github.com/ansible/community/blob/master/ansible_community_meetings.ics
+15:04:37 <thaumos> #topic discuss ansible/proposals#65
+15:04:49 <thaumos> #link https://github.com/ansible/proposals/issues/65
+15:04:51 <dminca> awesome
+15:05:10 <gundalow> bcoca: https://github.com/ansible/proposals/issues/65
+15:05:31 <chillysurf> thanks!
+15:05:41 <gundalow> So it would be good to get some extra input & votes on this
+15:05:56 <gundalow> the meeting on 1st June didn't have that many people in
+15:06:17 <thaumos> +1 from me on this proposal.
+15:07:18 <shertel> +1 too
+15:07:22 <gundalow> jtanner: ryansb chillysurf dminca erasmix What do you think
+15:07:28 <thaumos> shertel is a +2 vote now 😄
+15:07:35 <thaumos> shertel really wants this
+15:07:36 <gundalow> shertel: Nice try trying to vote twice :P
+15:07:36 <chillysurf> +1
+15:07:45 <dminca> so after that gets accepted we need to update all docs with that key?
+15:08:02 <ryansb> +1
+15:08:05 <ryansb> only the deprecated ones
+15:08:08 <gundalow> dminca: Yup, if a module has a deprecated option
+15:08:12 <thaumos> I imagine once the ability to do so is there, then work will ensue
+15:08:14 <gundalow> Not sure how we can identify that
+15:08:18 <dminca> ah ok seems legit
+15:08:19 <ryansb> the default would be "not deprecated, so none of those keys exist"
+15:08:19 <dminca> +1
+15:08:20 <jtanner> +1 ... nice to have, shouldn't really be controversial
+15:08:31 <ryansb> gundalow: the leading _ is an indicator
+15:08:32 <gundalow> I guess looking for the deprecated marker in argspec
+15:08:37 <ryansb> should be easy to find
+15:08:40 <gundalow> ryansb: this is options, not modules
+15:08:47 <thaumos> yeah, I don't think it is controversial.  I think it's bcoca's way of saying, "Hey who wants to work on this?"
+15:08:55 <ryansb> ah, yeah then I'd grep for `\.deprecat`
+15:09:14 <gundalow> sounds like that's agreed
+15:09:21 <thaumos> yep
+15:09:22 <gundalow> #agreed Do it
+15:09:33 * gundalow adds the agreed label
+15:09:35 <thaumos> 🙌
+15:09:57 <gundalow> Cool, I'll update the PR
+15:10:15 <gundalow> next topic (unless anyone wants to offer to work on it)
+15:10:16 <dminca> good :)
+15:10:16 <thaumos> #action gundalow to update the pr
+15:10:26 <thaumos> any other takers? if not I'll move on
+15:10:29 <bcoca> gundalow:  i might do it as part of asnible config projectg
+15:10:35 <thaumos> #chair bcoca
+15:10:35 <zodbot> Current chairs: bcoca chillysurf dminca erasmix gundalow jtanner ryansb shertel sivel thaumos
+15:10:45 <gundalow> bcoca: Ace
+15:11:05 <gundalow> next time I'm doing stuff in schema.py I'll add those fields in
+15:11:24 <thaumos> k, next topic
+15:11:26 <branko> (I forgot to join :)
+15:11:33 <thaumos> #chair branko
+15:11:33 <zodbot> Current chairs: bcoca branko chillysurf dminca erasmix gundalow jtanner ryansb shertel sivel thaumos
+15:11:52 <thaumos> #topic ansible/ansible#21857
+15:11:59 <thaumos> #link https://github.com/ansible/ansible/pull/21857
+15:12:09 <thaumos> @erasmix, you have the floor
+15:12:31 <erasmix> Hello. I'd like this PR to be reviewed
+15:13:09 <dminca> so many labels on that PR
+15:13:21 <thaumos> @jtanner and @bcoca, looks like @erasmix has updated with our your requested reviews
+15:13:45 <square1> heh so many labels
+15:13:46 <erasmix> We got the feedback from Tuesday's meeting and implemented all the recommendations
+15:14:25 <dminca> I see there are 2 pending changes requested by jtanner and bcoca
+15:14:33 <sivel> Overall I think there could be a wider update to the code style in that PR.  A lot of headlessCamelCase, instead of lowercase_with_underscores
+15:14:38 <sivel> also some unnecessary blank lines
+15:14:54 <sivel> some confusing string concatenation
+15:15:09 <sivel> I can make comments on the code itself
+15:15:10 <square1> he's gone
+15:15:16 <cyberark-bizdev> he is back
+15:15:24 <bcoca> i dont consider 'style' unless its really unreadable/unmaintainable
+15:15:25 <square1> yup
+15:15:33 <bcoca> think that is a distraction vs actual code correctness
+15:15:48 <thaumos> please feel free to review the code @sivel 🙂
+15:16:00 <thaumos> #chair square1
+15:16:00 <zodbot> Current chairs: bcoca branko chillysurf dminca erasmix gundalow jtanner ryansb shertel sivel square1 thaumos
+15:16:15 * square1 waves
+15:16:25 <erasmix> What did I miss?
+15:16:29 <cyberark-bizdev> for the labels on the PR... the bot seemed to be broken last night... and it added a few labels during a failed
+15:16:36 <thaumos> #chair cyberark-bizdev
+15:16:36 <zodbot> Current chairs: bcoca branko chillysurf cyberark-bizdev dminca erasmix gundalow jtanner ryansb shertel sivel square1 thaumos
+15:16:39 <square1> erasmix: nothing
+15:17:44 <thaumos> @cyberark-bizdev, I am sure @jtanner will look into
+15:17:51 <thaumos> it, the bot issue
+15:17:57 <jtanner> yeah, i need to
+15:18:00 <cyberark-bizdev> thanks
+15:18:02 <jtanner> been a busy month
+15:18:25 <cyberark-bizdev> @jtanner let us know how either me or @erasmix can help
+15:18:32 <thaumos> anyways, so I think at this point, @bcoca and @jtanner will re-review that their requested changes are taken care of, and @sivel is adding things
+15:18:48 <Pilou> I guess some tests should be added.
+15:18:55 <dminca> could docstrings go over 80 chars line width?
+15:18:58 <thaumos> #chair Pilou
+15:18:58 <zodbot> Current chairs: Pilou bcoca branko chillysurf cyberark-bizdev dminca erasmix gundalow jtanner ryansb shertel sivel square1 thaumos
+15:19:17 <dminca> is it PEP8 OK ?
+15:19:17 <cyberark-bizdev> excellent.. I will wait for @sivel review
+15:19:18 <gundalow> dminca: 160char limit
+15:19:24 <dminca> oh oke then :)
+15:19:32 <cyberark-bizdev> it is PEP8 compliant
+15:19:59 <thaumos> #action jtanner and bcoca to re-review
+15:20:08 <thaumos> #action sivel may add some review comments as well
+15:20:34 <thaumos> anything else about this PR?
+15:20:44 <dminca> here says 72 chars for docstrings http://pep8.org/#maximum-line-length
+15:21:26 <Pilou> if it wasn't PEP8 compliant, the bot would complain, isn't it ?
+15:21:51 <cyberark-bizdev> correct... it passed the PEP8 process through the bot
+15:22:11 <branko> I think Ansible project redefines some length limits in couple of cases?
+15:22:16 <gundalow> pep8 --ignore=E402 --max-line-length=160
+15:22:21 <gundalow> For new files
+15:22:21 <branko> (like 160 chars line limit at least for code)
+15:22:27 <thaumos> okay, closing topic
+15:22:47 <thaumos> @topic ansible/ansible#21764
+15:22:48 <cyberark-bizdev> Thanks
+15:22:55 <gundalow> thaumos: #
+15:23:03 <thaumos> #topic ansible/ansible#21764
+15:23:12 <thaumos> #link https://github.com/ansible/ansible/pull/21764
+15:23:20 <erasmix_> Can we have this PR reviewed as well?
+15:23:20 <thaumos> too many keys on this keyboard apparently
+15:23:28 <thaumos> I assume it's the same with this PR.
+15:23:39 <erasmix_> Yes
+15:24:59 <cyberark-bizdev> For PR#21764 ... we incorporated the feedback from Tuesday's meeting
+15:25:10 <thaumos> anyone care to chime in in chat?  if not, I'll assign actions for people to review
+15:25:58 <thaumos> ok
+15:26:40 <thaumos> #action alikins abadger1999 jtanner gundalow and thaumos to review again
+15:26:55 <thaumos> moving to next topic
+15:27:02 <cyberark-bizdev> thanks
+15:27:03 <sivel> I've hit both of those PRs
+15:27:30 <erasmix_> Thank you all
+15:27:39 <thaumos> Discuss what is needed to move forward ansible/ansible#24576
+15:27:44 <thaumos> #topic Discuss what is needed to move forward ansible/ansible#24576
+15:27:59 <thaumos> #link https://github.com/ansible/ansible/pull/24576
+15:28:05 <sivel> nice, was about to ask for that :)
+15:28:09 <sivel> the link, that is
+15:28:21 <branko> So... That pull request is one of mine.
+15:28:21 <thaumos> I got you!
+15:28:42 <thaumos> @branko, are you azaghal on GH?
+15:28:42 <sivel> Didn't nitzmahone just get a PR merged to build a single doc page?
+15:28:54 <branko> thaumos: Yep
+15:28:59 <thaumos> 👍
+15:29:05 <nitzmahone> Yes
+15:29:07 <sivel> https://github.com/ansible/ansible/pull/25313
+15:29:19 <branko> Eh?
+15:29:26 <nitzmahone> make htmlsingle (whatever.rst)
+15:29:39 <nitzmahone> (from docsite dir)
+15:29:47 <branko> Are we still on 24576?
+15:29:48 <thaumos> #chair nitzmahone
+15:29:48 <zodbot> Current chairs: Pilou bcoca branko chillysurf cyberark-bizdev dminca erasmix gundalow jtanner nitzmahone ryansb shertel sivel square1 thaumos
+15:30:04 <sivel> branko: yes, nitzmahone just merged a PR to build a single docs page from an RST file
+15:30:23 <branko> So, does that one account for modules too?
+15:30:39 <sivel> as long as the module has a built rst file, it will work
+15:30:50 <sivel> and building rst files from a module is very fast
+15:31:09 <branko> Erm, is it?
+15:31:44 <nitzmahone> Compared to building html, yeah
+15:32:04 <nitzmahone> (20s or so locally for me)
+15:32:12 <branko> So, if I do a fresh clone and run make htmlsingle rst=setup.rst - how long should it take?
+15:32:31 <sivel> it's the sphinx stuff that takes a long time when building all doxcs
+15:32:43 <bcoca> its mostly the indexing
+15:32:46 <nitzmahone> Maybe 30-40s the first time, then a few sec each time after
+15:32:46 <bcoca> and xrefing
+15:33:09 <bcoca> takes 9mins on mine ... but i get all 16 cores at 100% and fans spin like its going to take off
+15:33:24 <square1> do you hold it down? :)
+15:33:31 <branko> So, what would I run s a full command to build a single module page?
+15:33:33 <nitzmahone> bcoca: I assume you mean a full doc build
+15:33:51 <sivel> took 28 seconds to build the RST of all the modules
+15:34:36 <bcoca> nitzmahone: yep
+15:34:54 <bcoca> sivel: rst is fast, its the 'metadata' that takes foreeeever
+15:34:54 <sivel> and about 10 seconds for htmlsingle
+15:35:03 <nitzmahone> Nice, at least parallelism helps cut that down, but still feels HELLA long for what's going on
+15:35:17 <sivel> make modules && make htmlsingle rst=debug_module.rst
+15:35:31 <bcoca> xref and indexing are always 'intensive'
+15:35:42 <bcoca> no matter what the source or destination look like
+15:36:14 <nitzmahone> Yeah, just feels like something's not getting cached that should be, but I don't feel like taking sphinx apart enough to figure it out.
+15:36:29 <gundalow> `make htmlsingle rst=yum_repository_module.rst` appears to work correctly
+15:36:49 <gundalow> Though `make htmlsingle` doesn't clear out old html files
+15:36:55 <branko> Seems to be reading all module sources for me?
+15:36:59 <gundalow> which may be a feature/bug depending on how you look at it
+15:37:13 <sivel> I'd prefer we have only 1 way to do this, that works for modules and non-mouldes
+15:37:21 <sivel> and the htmlsingle seems to meet that requirement
+15:37:22 <gundalow> branko: Yup, it generates all the RST, but only renders the specified file
+15:37:41 <gundalow> htmlsingle (which I didn't know about till today) seems to work well for modules + rst
+15:37:43 <nitzmahone> It also sanity checks all the docs, but IIRC that's about the indexing
+15:39:22 <thaumos> okay, so to move this forward... Is there a need for this PR?  I think that everyone is suggesting that it's covered in the PR that was merged earlier.
+15:40:10 <branko> Has anyone documented the feature?
+15:41:09 <nitzmahone> I don't think there are any docs on how our docs work at all, unless I've missed something.
+15:42:31 <branko> Hm...
+15:42:46 <gundalow> nitzmahone: YOu will want something similar to https://github.com/ansible/ansible/pull/24576/files
+15:42:48 <bcoca> yeah, its not something user really have access to, might be good in developer section
+15:42:48 <branko> If you make changes to module inline docs, and rebuild single html thing, will it rebuild rst?
+15:42:50 <gundalow> last tow files
+15:43:12 <bcoca> branko: normally checking witn ansible-doc should give you 'correctness' of your docs
+15:44:11 <thaumos> Does someone need to work offline with branko to understand more, since we're limited on time?
+15:44:14 <branko> bcoca: I've been pointed to that before, but sometimes visual verification can help. For example, "see C(ls(1))" will be more noticable in html.
+15:44:18 <branko> Anyway...
+15:44:25 <branko> I'm fine if people are fine.
+15:45:02 <dminca> guys I have to go, sorry
+15:45:11 <dminca> I'll keep up with changes from the logs
+15:45:13 <thaumos> okay, branko how about this... if you wanna discuss further bring it up in #ansible-devel, sound good?
+15:45:13 <dminca> peace
+15:45:21 <branko> thaumos: Yeah
+15:45:25 <thaumos> cool
+15:46:03 <thaumos> #action branko to discuss further in #ansible-devel if needed.  Move PR forward as appropriate.
+15:46:22 <thaumos> #topic ansible/ansible#23015
+15:46:35 <thaumos> #link https://github.com/ansible/ansible/pull/23015
+15:46:43 <branko> One more of mine :)
+15:46:54 <branko> So, this one got discussed a couple of times already.
+15:47:25 <branko> I think everything previously pointed out was covered, so was interested in finding out what can I do to make it move forward.
+15:49:13 <branko> This is the dconf module, for the record (if anyone remembers that whole  D-Bus discussions)
+15:49:29 <thaumos> @bcoca, you were involved somewhat in the discussions, anything you wanna bring up?
+15:50:18 * abadger1999 perks up too
+15:50:49 <thaumos> #chair abadger1999
+15:50:49 <zodbot> Current chairs: Pilou abadger1999 bcoca branko chillysurf cyberark-bizdev dminca erasmix gundalow jtanner nitzmahone ryansb shertel sivel square1 thaumos
+15:50:58 <thaumos> yeah, you too @abadger1999
+15:52:21 <branko> Looks like a tumbleweed situation :)
+15:52:47 <alikins> +1 for the examples
+15:52:50 <thaumos> yeah, I think folks are busy this morning
+15:53:22 <branko> alikins: As in adding more, or they're good as-is?
+15:53:40 <sivel> I think it is hard to keep everyones attention as the meeting goes on
+15:53:49 * thaumos nods
+15:54:04 <abadger1999> I think this s okay now.  I'd have to test it in a variety of situations on various distros to really know for certain but it looks like branko and others did the testing in the comments already.
+15:54:06 <alikins> branko: Meaning they are very good now.
+15:54:18 <branko> Ok.
+15:54:32 <branko> abadger1999: Be warned it has some minimal requirements that are not meant by quite a bit of stable-ish distros.
+15:54:57 <abadger1999> branko: meaning that there's no psutil on those distros?
+15:55:18 <branko> abadger1999: Yeah, or to be precise it being outdated. Plus D-Bus 1.8.0+ is needed.
+15:55:40 <abadger1999> <nod>  I'm okay with newer deps being needed... time marches forward and all that.
+15:55:42 <branko> So, RHEL/CentOS 7 + Debian Jessie do not actually satisfy either of those (iirc)
+15:56:06 <branko> psutil could be worked-around, but for now I won't touch it unless people ask for it.
+15:56:31 <branko> So, people doing some more testing and then hopefully merge?
+15:56:57 <thaumos> yep sounds like it.
+15:57:50 <branko> #action abadger1999 will test pull request https://github.com/ansible/ansible/pull/23015 a bit more on more distros, and if no issues are found, module will probably get merged. branko/azaghal will correct issues found
+15:58:00 <branko> Sounds good? Move on?
+15:58:02 <abadger1999> I'd say ready to merge (its community preview anyhow... can fix bugs or document more limitations if they come up later)
+15:58:02 <thaumos> thanks @branko!
+15:58:19 <thaumos> @abadger1999, do you want to hit the button then?
+15:58:26 <abadger1999> Unless bcoca wants to say something I'll merge after the meeting.
+15:58:31 * alikins ponders a jinja2 to_g_variant filter and collapses
+15:58:49 <thaumos> he's quiet this morning
+15:59:07 <thaumos> like you said, it's community, so no big deal really
+15:59:10 <branko> Next topic? I'm hopeful we can touch on gconftool2 :)
+15:59:40 <thaumos> Time's up technically
+15:59:45 <thaumos> let me look at it really quick
+15:59:57 <branko> It's gonna take a while, just for the record.
+16:00:07 <thaumos> yeah
+16:00:10 <branko> So might be better to move it to next meeting if we're out of time.
+16:00:11 <thaumos> let's save it for next meeting
+16:00:16 <branko> Otherwise, I'm available for discussion on -devel :)
+16:00:24 <thaumos> but ping people on the issue
+16:00:34 <thaumos> That too
+16:00:37 <branko> Whom would be best to ping?
+16:01:09 <thaumos> Thanks everyone!
+16:01:12 <thaumos> #endmeeting

@@ -1,0 +1,93 @@
+16:00:33 <gundalow> #startmeeting Network Meeting
+16:00:33 <zodbot> Meeting started Wed Apr 26 16:00:33 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:00:33 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:00:33 <zodbot> The meeting name has been set to 'network_meeting'
+16:00:34 <funzo> heheh
+16:00:40 <Qalthos> close enough
+16:00:51 <gundalow> #chair funzo ganeshrn Qalthos rcarrillocruz trishnag
+16:00:51 <zodbot> Current chairs: Qalthos funzo ganeshrn gundalow rcarrillocruz trishnag
+16:00:55 <rcarrillocruz> Heya
+16:01:26 <gundalow> dkasberg: Hello there. If you have a topic could you please add it to the agenda https://github.com/ansible/community/issues/110
+16:02:03 <dkasberg> no topic for today, just listening in, thx
+16:02:14 <gundalow> dkasberg: cool, glad you could make it
+16:02:39 <gundalow> #Topic Network Team update
+16:02:57 <gundalow> #info Work is progressing on the 2.4 features
+16:03:46 <gundalow> #info All new network modules going into Ansible 2.4 MUST include unit tests in the same PR where the module is added.
+16:04:52 <gundalow> #info Functional changes to existing modules should also include unit tests to defend the new functionality
+16:05:34 <gundalow> dkasberg: stacywsmith Any questions on that?
+16:06:13 <gundalow> Currently working on documentation that will explain how this can be achived https://github.com/ansible/ansible/pull/23925
+16:08:28 <gundalow> ok
+16:08:39 <gundalow> #topic Spliting of lib/modules/networking
+16:08:51 <gundalow> #info https://github.com/ansible/ansible/pull/24024
+16:09:52 <gundalow> #info Currently lib/modules/networking contains modules that this team is responsible for (or we help look after) and things unrelated, such as DNS modules. The unrelated items will be moved out
+16:10:15 <gundalow> Shouldn't effect anyone here, just a heads up
+16:10:21 <gundalow> #topic Open Floor
+16:10:27 <gundalow> Now it's your chance to speak :P
+16:11:27 <Qalthos> gundalow: might want to update the description of 24024 now that nmcli got removed
+16:11:47 <gundalow> Qalthos: good spot, done
+16:12:29 <gundalow> caphrim007: Hey.
+16:12:33 <caphrim007> hi
+16:12:40 <gundalow> caphrim007: All new network modules going into Ansible 2.4 MUST include unit tests in the same PR where the module is added.
+16:13:11 <caphrim007> my unit tests use pytest is that going to be a problem?
+16:13:18 <gundalow> Has been mentioned a few times before, As we are on 2.4 it's now enforced
+16:13:51 <gundalow> caphrim007: as long as `ansible-test units` runs them I'm not aware of it being an issue
+16:14:09 <caphrim007> ermm. i dunno, i use tox to run everything. or just pytest directly
+16:14:14 <caphrim007> whats special about ansible-test
+16:14:23 <gundalow> It's what Shippable runs
+16:14:28 <gundalow> I'll find out and get back to you
+16:14:53 <caphrim007> i'm also -1 on that split of the network modules. for all the same reasons that the team re-merged all the other modules from -extras
+16:15:13 <sivel> we are slowly moving to use pytest for all of our tests, in fact new units should probably only use pytest
+16:15:15 <Qalthos> they're not being ejected, just moved to a different folder
+16:15:22 <caphrim007> we'll get right back into that mess we were in with separate unrelated PRs that need to be merged at different times
+16:15:32 <sivel> but ansible-test invokes pytest with all of our flags
+16:15:50 <caphrim007> Qalthos a different folder that....network?
+16:15:51 <gundalow> caphrim007: git mv network/nmcli.py net_tools/
+16:15:53 <Qalthos> so that ansibot can be a little more intelligent without having to maintain a giant whitelist of modules
+16:16:25 <Qalthos> caphrim007: stuff we collectively are working on stays in network
+16:16:30 <jtanner> well, moreso that the "networking" label doesn't confuse the "networking" team
+16:16:54 <jtanner> and folder maintainership makes more sense
+16:17:08 <gundalow> At the moment the topic (networking) gets added to any PR that touches modules/networking. Currently their are module in therewe  that (network team) don't care about
+16:17:17 <caphrim007> that should be better clarified then. because the first thing i thought was another ansible-modules-extras
+16:17:30 <gundalow> so when we search label:networking it's difficult to tell what's ours
+16:17:44 <caphrim007> ok
+16:17:55 <gundalow> caphrim007: Sure, I'll update the description, no heart attacks meant
+16:18:05 <jtanner> git mv lib/ansible/modules/networking/basics lib/ansible/modules/net_tools ...
+16:18:43 <jtanner> the bot is going to need some cleanup afterwards
+16:18:47 <jtanner> so let me know once it's done
+16:19:12 <caphrim007> where is ansible-test found?
+16:19:27 <gundalow> caphrim007: test/runner
+16:19:27 <Qalthos> test/runner/ansible-test
+16:19:34 <jtanner> should be in your path once you source hacking/env-setup
+16:20:01 <gundalow> caphrim007: I'm improving the docs on that https://github.com/ansible/ansible/pull/23925
+16:21:29 <bjolivot_> hello :)
+16:21:37 <gundalow> hey bjolivot_
+16:22:54 <sivel> caphrim007: there is some good info to be found in the readme files in the test dir:  https://github.com/ansible/ansible/tree/devel/test
+16:23:05 <sivel> that shows how to use ansible-test
+16:23:14 <gundalow> sivel: see https://github.com/ansible/ansible/pull/23925 all that's moving to /dev_guide/
+16:25:16 <gundalow> Anyone got anything else?
+16:25:34 <bjolivot_> I have waiting network PR with integration tests
+16:25:53 <gundalow> caphrim007: If anything isn't clear please add comments on https://github.com/ansible/ansible/pull/23925 and I'll improve the docs
+16:26:00 <bjolivot_> https://github.com/ansible/ansible/pull/23275
+16:26:01 <gundalow> bjolivot_: link
+16:26:36 <bjolivot_> and I don't understand why haproxy is not in same directory than F5
+16:26:44 <bjolivot_> after the split
+16:27:42 <gundalow> haproxy doesn't (and is not plan to) use any of the shared network frameworks
+16:27:58 <gundalow> and this team doesn't have anything to do with haproxy
+16:28:06 <bjolivot_> ok
+16:28:38 <gundalow> #action gundalow to re-review https://github.com/ansible/ansible/pull/23275 Fortios filemode & tests
+16:29:49 <gundalow> Anything else?
+16:30:28 <gundalow> caphrim007: if you have any issues ping me or mattclay (who's currently on Chinese hours)
+16:30:36 <caphrim007> gundalow: ok
+16:32:55 <gundalow> Cool, will close then
+16:33:00 <gundalow> Thanks as always
+16:33:15 <bjolivot_> thanks too :)
+16:33:22 <bjolivot_> bye
+16:33:26 <gundalow> As always, feel free to add topics to https://github.com/ansible/community/issues/110
+16:34:46 * privateip waves
+16:34:49 <funzo> o/
+16:35:03 <gundalow> #chair privateip
+16:35:03 <zodbot> Current chairs: Qalthos funzo ganeshrn gundalow privateip rcarrillocruz trishnag
+16:35:10 * gundalow has to run away now
+16:35:22 <privateip> was it something i (didn't) say?
+16:35:34 <funzo> privateip: gundalow was just about to close the meeting unless anyone had more topics
+16:35:42 <gundalow> #endmeeting

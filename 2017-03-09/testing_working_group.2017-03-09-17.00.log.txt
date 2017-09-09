@@ -1,0 +1,106 @@
+17:00:02 <gundalow> #startmeeting Testing Working Group
+17:00:02 <zodbot> Meeting started Thu Mar  9 17:00:02 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+17:00:02 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+17:00:02 <zodbot> The meeting name has been set to 'testing_working_group'
+17:00:07 <gundalow> #chair mattclay
+17:00:07 <zodbot> Current chairs: gundalow mattclay
+17:00:19 <gundalow> Matt will join in a few minutes
+17:00:31 * gundalow waits for people to appear
+17:00:47 <sivel> howdy
+17:01:59 <gundalow> hey sivel
+17:02:19 <gundalow> #topic Module DOCUMENTATION validation
+17:03:26 <gundalow> #info Mass tidy up of module documentation has been completed https://github.com/ansible/ansible/pull/22297
+17:03:55 <gundalow> #info gundalow still working on the tool to enforce this https://github.com/ansible/ansible/pull/22353
+17:04:29 <alikins> assert alikins == present
+17:04:31 <gundalow> #info Added support for "suboptions" e.g. dict's as options https://gist.githubusercontent.com/gundalow/4bdc3669d696268328ccc18528cc6718/raw/5c7cfabb6e33d6ff127fddb86bccd5d4e5ffedc0/nested-provider.png
+17:04:36 <gundalow> hey alikins :)
+17:04:53 <sivel> gundalow: where did the PR for the `module` name validation go?
+17:05:08 <gundalow> sivel: I killed it and I'll move it into 22353
+17:05:22 <sivel> Ok, I was going to recommend that
+17:05:36 * mattclay waves
+17:05:38 <gundalow> Your suggestion made sense, just not got to it yet
+17:05:40 <sivel> since you were modifying doc_schema anyway, converting into a factory could go there
+17:05:40 <gundalow> hey mattclay
+17:05:48 <sivel> :)
+17:05:59 <gundalow> Bingo :)
+17:06:40 <gundalow> So 22353 will contain the updated schema validation & updates to eveloping_modules_documenting.html
+17:06:44 <gundalow> developing_modules_documenting.html*
+17:07:03 <sivel> nice
+17:07:21 <gundalow> In my travels around hacking/template I found that we have an undocumented feature of "type: bool" which expands to choices Yes/No. So I'll document that
+17:07:36 <gundalow> mattclay: Thanks for your suggestions https://gist.githubusercontent.com/gundalow/4bdc3669d696268328ccc18528cc6718/raw/5c7cfabb6e33d6ff127fddb86bccd5d4e5ffedc0/nested-provider.png
+17:07:46 <gundalow> My aim is to get this in before we branch
+17:07:53 <sivel> cool
+17:07:58 <mattclay> gundalow: It's looking good now. Nice work.
+17:08:06 <gundalow> As we will be having branch documenttion soon*
+17:08:14 <sivel> I have a big E1 pep8 clean up going in after we branch
+17:08:28 <gundalow> should free up a lot of time when doing reviewing
+17:08:52 <sivel> yeah, the better we can get our validation, the less time needed on manual validation
+17:09:06 <gundalow> Still some work left, like making sure version is a string of X.Y
+17:09:32 <gundalow> and to add in nested schemas (though I found some notes)
+17:10:27 <sivel> I looked at your voluptuous reference, and seems like that is in their docs for recursive schemas, so +1 on that
+17:10:39 <gundalow> ah, cool
+17:10:54 <gundalow> Thanks
+17:11:01 <gundalow> Any other suggestions on that?
+17:12:35 <gundalow> #topic General updates
+17:12:36 <sivel> Sounds like you have plans on better validation on version_added, if you have questions let me know.  but I'm guessing you are OK there.  Voluptuous is pretty straight forward
+17:12:55 <gundalow> sivel: Yup, I just need to read more of their docs
+17:13:00 <gundalow> so far it's been really nice
+17:13:06 <gundalow> once again, thanks for the tool
+17:13:10 * gundalow hands over to mattclay
+17:13:15 <sivel> I use it everyday, so if you have questions, let me know
+17:13:22 <mattclay> Thanks to jtanner's bot work, the bot is now commenting on failed PRs with the details of compile and sanity failures: https://github.com/ansible/ansible/pull/22419#issuecomment-285391904
+17:13:55 <sivel> yay!  I saw he got validate-modules being included yesterday
+17:14:01 <mattclay> Eventually we'll be able to expand that to include unit and integration test results.
+17:14:13 <gundalow> sivel: If you have any other big schemas examples you could point me at, that would be cool
+17:14:28 <gundalow> That's great, will save everyone loads of time
+17:14:30 <sivel> mattclay: My only "concern" with those is how we display them, since they are likely to be really big
+17:15:01 <mattclay> I'm working on updating ansible-test to distinguish between failures that are PR related and those that are not, so we can hopefully avoid false positives due to failing tests merged to devel.
+17:15:28 <mattclay> sivel: Yeah, we probably will link to the Shippable tests tab after we get those cleaned up. That's why they aren't in there right now.
+17:16:12 <mattclay> We've been focusing on the majority of failures, which is compile and sanity tests.
+17:16:47 <sivel> I feel like I am a bad person, but I get a decent amount of enjoyment everytime I see CI fail
+17:17:13 <gundalow> Means we are testing useful stuff
+17:17:20 <mattclay> Once we're able to check compile/sanity failures against PR changes, the bot will be able to label issues with `ci_verified`, which will reduce the amount of manual review required for failed PRs.
+17:18:32 <mattclay> I'm also working on updating how we write our code-smell tests so that they can behave more like a normal sanity test. That will include testing only changed files, as well as having lint friendly output.
+17:19:17 <mattclay> The end goal being that most sanity test failures will be "lint like" in the form: file:line:column: message
+17:20:20 <sivel> I have on my to do list, to update how errors/warnings/traces are added to the reports in validate-modules.  I don't think a tuple is the best long term soltuion, especially when line/column is moved out of the message
+17:21:48 <sivel> I kinda like how ansible-test handles the messages using SanityMessage (some implementation like that)
+17:22:12 <mattclay> After we branch for stable-2.3 I'm going to be back porting improvements to test infrastructure (mainly ansible-test) to that branch when possible. Most new tests won't be able to be enabled, unless they happen to already pass in stable-2.3, as I don't want to be backporting fixes just to keep tests happy.
+17:22:56 <gundalow> +1
+17:23:30 <sivel> Once I merge the E1 fixes into devel after the 2.3 branching, we have line length errors left in legacy.  Once we empty out legacy, then current should become legacy right?
+17:23:40 <mattclay> sivel: Yes
+17:23:47 <sivel> cool, just double confirming :)
+17:23:54 <alikins> a feature I would (sometimes) like that everyone else would hate: for CI failures that can point to file:line, comment on the line with the info in the pull request 'files changed view'
+17:24:21 <sivel> I'm not sure people would hate it
+17:25:21 <mattclay> I've thought about that. I think it's something worth considering later, once things have stabilized more.
+17:26:30 <sivel> I am probably forgetting, but do we have a planned date for the 2.3 branching?
+17:26:36 <mattclay> However, to avoid spamming lots of comments to users, it would need to be a review rather than individual comments.
+17:27:50 <mattclay> I believe around March 15th, when we expect RC1 to be ready.
+17:29:01 <mattclay> That's it for me on updates.
+17:29:20 <gundalow> Nothing else from me
+17:30:10 <mattclay> #topic Open Floor
+17:31:20 <alikins> how would I go about getting the 'cryptography' module installed/available for the unit tests envs?
+17:32:09 <mattclay> alikins: Add it here: https://github.com/ansible/ansible/blob/devel/test/runner/requirements/units.txt
+17:32:10 <alikins> it's a compiled ext, so just adding it to requirements doesnt work with docker (since the docker images dont have a compiler)
+17:32:33 <mattclay> You're using docker for unit tests? Or you want this for integration tests?
+17:33:20 <alikins> I do not use docker for unit tests, but adding the requirement seemed to break the docker intg tests iirc
+17:33:49 <alikins> let me confirm
+17:33:57 <jtanner> needs to go into the dockerfiles and built+pushed to the docker registry?
+17:34:18 <alikins> suspect so
+17:34:22 <mattclay> If you only need it for unit tests, you can add it to `units.txt`. However, that will prevent us from running unit tests inside docker, so I'll need to update the docker containers.
+17:34:39 <mattclay> jtanner: Yeah, we update the Dockerfiles in the repo then I rebuild them on Docker Hub.
+17:35:16 <alikins> (oh, and 'cryptography' is just to speed up the vault tests)
+17:35:26 <mattclay> I was just going to ask why you wanted it.
+17:36:08 <mattclay> Are you planning on committing the change, or you just wanted to do this for local testing?
+17:37:58 <mattclay> alikins: I assume you're using the --tox option to run unit tests? If so, and you have cryptography installed globally, you could use the --tox-sitepackages option to make it available without any further changes.
+17:42:02 <alikins> ah, adding 'cryptography' to requirements/integration.txt and 'ansible-test integration --docker centos7 --requirements' fails  (presumably needs cryptography installed/built at docker build time)
+17:42:38 <mattclay> Yeah, that's why I was asking if you wanted it for just unit tests.
+17:43:03 <mattclay> If we want it in docker, we should use distro packages instead of pip.
+17:43:05 <alikins> haven't benchmarked it for intg tests, likely insignificant
+17:43:18 * gundalow has to head off now
+17:44:25 <alikins> but I run just the vault unit tests often, and it's 2-3x different for that case but also solvable by local installs of cryptography
+17:44:39 <mattclay> alikins: Does the --tox-sitepackages option work for your needs?
+17:44:53 <mattclay> I'd rather not add cryptography to units.txt to avoid making it a requirement for tests.
+17:46:20 <alikins> I currently dont use the --tox options. But I also have it working for my local testing.  It's just slow if you dont know to get that setup.
+17:47:10 <mattclay> If you're not using --tox then adding it to units.txt won't do anything for you anyways.
+17:50:59 <mattclay> If there's nothing else, I'll end the meeting in 1 minute.
+17:53:03 <mattclay> #endmeeting

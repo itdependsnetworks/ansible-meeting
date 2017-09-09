@@ -1,0 +1,200 @@
+======================================
+#ansible-meeting: Ansible Core Meeting
+======================================
+
+
+Meeting started by gundalow at 15:00:29 UTC. The full logs are available
+at
+https://meetbot.fedoraproject.org/ansible-meeting/2017-02-09/ansible_core_meeting.2017-02-09-15.00.log.html
+.
+
+
+
+Meeting summary
+---------------
+* Agenda https://github.com/ansible/community/issues/150  (gundalow,
+  15:01:11)
+* Discuss extending the module "shipit" workflow to non-modules
+  (gundalow, 15:01:41)
+  * LINK:
+    https://github.com/ansible/community/issues/150#issuecomment-277025899
+    (gundalow, 15:02:01)
+  * LINK:
+    https://docs.google.com/spreadsheets/d/1z-BfOkAaY60nYir6qx6L9yHMqcwT31UtrgaAFKnjH9w
+    (bcoca, 15:02:52)
+  * spreadsheet exists  (bcoca, 15:03:15)
+  * votes being cast  (bcoca, 15:03:19)
+  * ACTION: bcoca to organise vote for inventory plugins  (gundalow,
+    15:06:30)
+  * ACTION: bcoca to speak with abadger2000 to find out howe we add
+    python metadata to config files  (gundalow, 15:08:55)
+
+* ansible/ansible#19283 hosts module (for /etc/hosts)  (gundalow,
+  15:09:11)
+  * LINK:
+    https://github.com/ansible/community/issues/150#issuecomment-277028142
+    (gundalow, 15:09:41)
+  * LINK: https://github.com/ansible/ansible/pull/19283   (gundalow,
+    15:09:54)
+  * Imports have been moved to match "house style"  (gundalow, 15:10:40)
+  * LINK:
+    https://github.com/ansible/ansible/pull/19283#issuecomment-277007481
+    (allanice001, 15:12:28)
+  * New module policy requires two(+) shipits  (gundalow, 15:12:32)
+  * Although we have modules that are aren't as good we are continually
+    learning from what we've done in the past and trying to raise the
+    bar  (gundalow, 15:28:58)
+  * [15:28] <@bcoca> jtyr: you can distribute it through galaxy in role
+    for now, i'm working on making it easier to install/share custom
+    plugins w/o having to put in ansible/ansible  (gundalow, 15:29:15)
+
+* ansible/ansible#19297 Fix for wildcards inside of a path for fileglob
+  lookup (ie: with_fileglob: "/tmp/*/some.conf")  (gundalow, 15:30:15)
+  * LINK:
+    https://github.com/ansible/community/issues/150#issuecomment-277029768
+    (gundalow, 15:30:27)
+  * LINK: https://github.com/ansible/ansible/pull/19297   (gundalow,
+    15:30:38)
+  * ACTION: bcoca to review
+    https://github.com/ansible/ansible/pull/19297  (gundalow, 15:31:23)
+
+* ansible/ansible#20440 valid directives on include (for execution or
+  inheritance)  (gundalow, 15:31:56)
+  * LINK:
+    https://github.com/ansible/community/issues/150#issuecomment-277030715
+    (gundalow, 15:32:07)
+  * LINK: https://github.com/ansible/ansible/issues/20440   (gundalow,
+    15:32:14)
+  * issue is not as much the problem as the implication of what is
+    inhertited and what isnt  (gundalow, 15:34:03)
+  * we dont have clear rules or docs  (gundalow, 15:34:17)
+  * LINK: http://docs.ansible.com/ansible/playbooks_directives.html <=
+    fullest list i have  (bcoca, 15:41:51)
+
+* ansible/ansible#20058 Add systemd-nspawn connection driver  (gundalow,
+  15:51:29)
+  * LINK:    (gundalow, 15:51:51)
+  * LINK: https://github.com/ansible/ansible/pull/20058   (gundalow,
+    15:51:58)
+  * ACTION: abadger2000 to review
+    https://github.com/ansible/ansible/pull/20058  (gundalow, 15:53:19)
+
+* ansible/ansible#19264. "Added in bullet of Python 2.4+ support
+  discontinuation"  (gundalow, 15:54:02)
+  * LINK: https://github.com/ansible/ansible/pull/19264   (gundalow,
+    15:54:24)
+  * Merged  (gundalow, 15:57:06)
+
+* ansible/ansible#20834 Add swupd plugin  (gundalow, 15:57:22)
+  * LINK: https://github.com/ansible/ansible/pull/20834   (gundalow,
+    15:57:38)
+  * LINK:
+    https://github.com/ansible/ansible/blob/devel/lib/ansible/module_utils/facts.py#L159
+    (albertom, 16:02:37)
+  * ACTION: bcoca (if he has time) to review the code. albertom knows we
+    are close to the 2.3 cut off, so we can't guarantee it will make it
+    in for 2.3  (gundalow, 16:03:04)
+  * ACTION: albertom to review feedback from meeting, continue
+    discussion in #ansible-devel  (gundalow, 16:18:22)
+
+* ansible/ansible#20703 Fixing broken bind mount on CentOS  (gundalow,
+  16:18:57)
+  * believe most issues have been resolved. Revisit next week to ensure
+    it's merged  (gundalow, 16:20:10)
+
+* Open Floor  (gundalow, 16:20:45)
+
+* ansible/ansible#13206 Allow specifying Vault password from the
+  environment  (gundalow, 16:21:54)
+  * Main question is do we allow or not  (gundalow, 16:27:35)
+  * Discussion that a runtime warning is needed if this feature is used
+    (most seem to agreed, needs vote)  (gundalow, 16:28:15)
+  * If implemented maybe make it impossible for the warning to be
+    disabled  (gundalow, 16:29:03)
+  * < allanice001> Perhaps also add a step ::
+    os.environ["ANSIBLE_VAULT_PASSWORD"] = "". This would may help avoid
+    teh password being leaked  (gundalow, 16:30:29)
+  * [16:32] < abadger2000> If they're only sticking it into the
+    environment for running ansible, that's fine... if it's in a login
+    script or something then we can't clear the password from every
+    other program.  (gundalow, 16:32:42)
+  * LINK: https://docs.travis-ci.com/user/private-dependencies/
+    (allanice001, 16:36:15)
+  * AGREED: Rejected, use work around  (gundalow, 16:39:06)
+
+* Open Floor  (gundalow, 16:39:24)
+  * LINK: https://github.com/ansible/community/issues/152   (bcoca,
+    16:39:43)
+
+Meeting ended at 16:43:59 UTC.
+
+
+
+
+Action Items
+------------
+* bcoca to organise vote for inventory plugins
+* bcoca to speak with abadger2000 to find out howe we add python
+  metadata to config files
+* bcoca to review https://github.com/ansible/ansible/pull/19297
+* abadger2000 to review https://github.com/ansible/ansible/pull/20058
+* bcoca (if he has time) to review the code. albertom knows we are close
+  to the 2.3 cut off, so we can't guarantee it will make it in for 2.3
+* albertom to review feedback from meeting, continue discussion in
+  #ansible-devel
+
+
+
+
+Action Items, by person
+-----------------------
+* abadger2000
+  * bcoca to speak with abadger2000 to find out howe we add python
+    metadata to config files
+  * abadger2000 to review https://github.com/ansible/ansible/pull/20058
+* albertom
+  * bcoca (if he has time) to review the code. albertom knows we are
+    close to the 2.3 cut off, so we can't guarantee it will make it in
+    for 2.3
+  * albertom to review feedback from meeting, continue discussion in
+    #ansible-devel
+* bcoca
+  * bcoca to organise vote for inventory plugins
+  * bcoca to speak with abadger2000 to find out howe we add python
+    metadata to config files
+  * bcoca to review https://github.com/ansible/ansible/pull/19297
+  * bcoca (if he has time) to review the code. albertom knows we are
+    close to the 2.3 cut off, so we can't guarantee it will make it in
+    for 2.3
+* **UNASSIGNED**
+  * (none)
+
+
+
+
+People Present (lines said)
+---------------------------
+* gundalow (137)
+* bcoca (119)
+* albertom (43)
+* abadger2000 (32)
+* jtyr (27)
+* allanice001 (22)
+* jimi|ansible (21)
+* mattclay (11)
+* ryansb (10)
+* nitzmahone (7)
+* jtanner (7)
+* akasivel (6)
+* alikins (6)
+* zodbot (4)
+* rcarrillocruz (4)
+* shertel (3)
+* thaumos (3)
+
+
+
+
+Generated by `MeetBot`_ 0.1.4
+
+.. _`MeetBot`: http://wiki.debian.org/MeetBot

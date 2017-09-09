@@ -1,0 +1,277 @@
+15:00:05 <gundalow> #startmeeting Core Team Meeting
+15:00:05 <zodbot> Meeting started Thu Jan 19 15:00:05 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:00:05 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:00:05 <zodbot> The meeting name has been set to 'core_team_meeting'
+15:00:11 <ryansb> hi team!
+15:00:38 <gundalow> #chair abadger1999 alikins jimi|ansible jtanner masteinhauser nitzmahone Qalthos rcarrillocruz ryansb
+15:00:38 <zodbot> Current chairs: Qalthos abadger1999 alikins gundalow jimi|ansible jtanner masteinhauser nitzmahone rcarrillocruz ryansb
+15:00:45 <jtanner> morning
+15:01:26 <gundalow> Agenda https://github.com/ansible/community/issues/148
+15:01:30 * mattclay waves
+15:02:17 <gundalow> agaffney: abadger1999 Are you two here to discuss https://github.com/ansible/ansible/pull/18643
+15:03:04 <agaffney> I can be, but I'm watching Babylon 5 :)
+15:03:17 <jtanner> babylon 5AM
+15:03:44 <gundalow> #topic pull/18643 Add pipeline-ish method using dd for file transfer over SSH
+15:03:54 <gundalow> #info https://github.com/ansible/ansible/pull/18643
+15:04:06 <agaffney> I still need to update that PR to add tests for the new method
+15:04:30 <gundalow> +1
+15:04:40 <gundalow> What other discussion is needed on it?
+15:05:10 <gundalow> #action agaffney will update PR to add tests for the new method
+15:05:19 <allanice001> Hey all
+15:05:23 <gundalow> yo
+15:05:34 <agaffney> I don't think any is really needed, since it's non-default behavior
+15:06:06 <jtanner> someone should request changes through review on that PR for the tests
+15:06:11 <agaffney> that was the general consensus in the issue, iirc
+15:06:15 <jtanner> or use needs_revision command
+15:06:26 <mattclay> I'll do that.
+15:07:04 <mattclay> Done.
+15:07:27 <gundalow> bcoca: What would you like us to discuss regarding https://github.com/ansible/ansible/pull/18643
+15:08:03 <abadger1999> Good morning
+15:08:04 <bcoca> if we want to allow such method or not
+15:08:13 <bcoca> mornin
+15:08:26 * bcoca saves the good/bad qualification till more of the morning has happened
+15:09:17 <agaffney> I have no strong feelings about it, but it seems there is a general need for something like it. I only "needed" it for a one-off case
+15:10:03 <bcoca> im for it, as an option, my only concern is having it as default
+15:10:23 <agaffney> I don't think that it should be the default
+15:10:33 <bcoca> there are cases in which scp/sftp is disabled 'for security' (i can rant about that later) in which this would allow ansible to be useful
+15:10:48 <agaffney> the PR does not make it the default behavior
+15:11:17 <bcoca> agaffney: not saying that it does, just putting my original opposition in perspective
+15:11:20 <abadger1999> <nod>  I'm for it as non-default as well.  When I firsts looked at it, the implementation looked reasonable.
+15:11:40 <gundalow> Where should it be documented?
+15:12:00 <jtanner> smart mode by default, forever!
+15:12:02 <gundalow> is examples/ansible.cfg enough?
+15:12:16 <gundalow> #agreed off by default
+15:12:30 <bcoca> gundalow: as it is, in the new option , the other thing i wanted to do is deprecate scp_if_ssh
+15:12:52 <bcoca> since jtanner made these 'fallback' i think it works much better with the new transfer_method, which is also more generic
+15:13:09 <bcoca> a blurb in intro_configuration might also be helpufl
+15:13:58 <jtanner> deprecate or rename?
+15:14:08 <jtanner> people still might want to define a single method to use
+15:14:18 <bcoca> deprecate, the new one in this PR would override it
+15:14:30 <jtanner> ah, yeah
+15:14:36 <bcoca> https://github.com/ansible/ansible/pull/18643/files <= look at config
+15:14:59 <bcoca> it builds on your stuff, so old config option looks less useful
+15:15:24 <jtanner> i was going to minimal change at the time, but now that we're in 2.3 it should be fine
+15:15:51 <bcoca> deprecation means we'll still live with it till 2.7, but now we should warn 'when set'
+15:16:05 <bcoca> ^ also, we dont have a good way to warn for config items yet
+15:18:06 <bcoca> currently it already overrides the old setting if set (in the PR)
+15:18:56 <abadger1999> I think adding info to the call to get_config() would be the simplest.
+15:19:08 <bcoca> so ... no one seems oposed? I'll merge this and look at adding deprecation warning and a blurb in intro config about this new setting
+15:19:27 <mattclay> +1
+15:19:28 <bcoca> abadger1999: that was my thought, i had t as part of asnible-config, but might be worth introducing earlier
+15:20:05 <abadger1999> +1 merge
+15:20:15 <abadger1999> Cool.
+15:20:50 <jtanner> shipit
+15:21:17 <jtanner> but wait for tests?
+15:22:10 <bcoca> agaffney: can you rebase to pick up the new tests?
+15:22:57 <agaffney> I can, but later today, and I still need to add to those tests for the new method
+15:23:13 <mattclay> Rebase and minor change to test script is needed to enable testing the new transfer method.
+15:24:44 <gundalow> cookl, we good for next item?
+15:24:47 <gundalow> cool*
+15:25:19 <gundalow> #topic ec2_ami: Add support for registering Amazon Machine Images from EBS snapshots pull/19020
+15:25:24 <gundalow> https://github.com/ansible/ansible/pull/19020
+15:25:35 <allanice001> I had a quick look at that
+15:25:49 <gundalow> No response from maintainer, should we merge?
+15:25:59 <allanice001> And have 2 quick questions I need for clarification
+15:26:13 <gundalow> allanice001: sure
+15:26:53 <allanice001> If you look at the file changed, it mentions tags only being added in version anisble2.3, true?
+15:27:14 <bcoca> agaffney: ping me when done and i'll merge
+15:27:16 <allanice001> https://github.com/ansible/ansible/pull/19020/files  line 39 & 40
+15:28:06 <bcoca> that is 'architecture'
+15:28:42 <allanice001> yeah, but architecture is added in version 2.3
+15:29:05 <bcoca> tags are in 83 and version added there is 2.0
+15:29:26 <bcoca> we are not looking at same diff?
+15:29:35 <gundalow> https://github.com/ansible/ansible/pull/19020/files
+15:29:53 <allanice001> https://github.com/ansible/ansible/pull/19020/files#diff-dbbe5ac2528c8137437e22f5bf1cbca2R39 to be exact
+15:30:40 <bcoca> yeah, still not seeing tags there, if i expand on the bottom they are untouched and still 2.0
+15:30:44 <gundalow> When talking about line numbers we should use the "new" line numbers, e.g. the one at the right
+15:30:55 <allanice001> yeah
+15:31:10 <allanice001> New line 39 & 40
+15:31:12 <bcoca> that is what i'm using, line 39 for me is: +  architecture:
+15:31:17 <bcoca> no 'old' as it did not exist
+15:31:29 <allanice001> bcoca, true
+15:31:35 <allanice001> And just below that
+15:31:50 <bcoca> version added 2.3 ... which applies to architecture
+15:32:00 <allanice001> yes
+15:32:02 <bcoca> tags are down in 83 in new file
+15:32:06 <bcoca> not sure what you are getting at
+15:32:28 <bcoca> sorry 107 in new
+15:32:38 <allanice001> But the PR message said this is for ansible --version
+15:32:38 <allanice001> ansible 2.1.1.0
+15:33:07 <sivel> that is the version the person likely had when they started doing development and submitted the PR
+15:33:21 <bcoca> that is not really relevant to PR, that is probably just the version he was using at time of creating patch
+15:33:22 <ryansb> keep in mind that this is ported from pre-repomerge
+15:33:32 <allanice001> so, just wanted to make sure we don't merge it for 2.1.1.0
+15:33:34 <ryansb> so nbd that his main body has an older version
+15:33:39 <bcoca> allanice001: nope
+15:33:41 <allanice001> ok
+15:33:41 <ryansb> Oh, yeah, nope
+15:33:43 <allanice001> Thats fine
+15:33:45 <bcoca> allanice001: new features are not backported
+15:33:46 <gundalow> new features don't get back ported
+15:33:50 * gundalow hifives bcoca
+15:33:52 <bcoca> bugs might be
+15:33:53 <allanice001> It wrks as expected for me
+15:33:55 <ryansb> is there an echo in here?
+15:34:03 <allanice001> I'm ok to merge
+15:34:11 <ryansb> great, I'll go ahead and merge it, since it's been approved 2+ weeks
+15:34:21 <gundalow> Thanks
+15:34:29 <gundalow> #action ryansb to merge pull/19020
+15:34:31 <allanice001> Just wanted to make sure, as I didn't test it in 2.1x :D
+15:35:04 <ryansb> definitely
+15:35:15 <gundalow> #topic new AWS module for ec2 VPC vgw facts #19021
+15:35:20 <gundalow> https://github.com/ansible/ansible/pull/19021
+15:35:35 <gundalow> oh, that's still waiting on ryansb's update
+15:35:48 <gundalow> updates *requested* by ryansb
+15:37:38 <gundalow> #topic Open Floor
+15:37:49 <gundalow> I don't see anything else on the agenda that's with us
+15:38:00 <ryansb> \o/
+15:38:13 <gundalow> Do we want to discuss any proposals?
+15:38:23 <gundalow> Or do we want to leave that till post 2.3
+15:38:51 <abadger1999> If there's no open floor items we should chip away at proposals.
+15:39:18 <gundalow> https://github.com/ansible/proposals/issues
+15:39:21 <abadger1999> In future, proposals should probably start being looked at right after we branch stable-2.x from devel
+15:39:29 <gundalow> +1
+15:39:55 <gundalow> I'd like to know what we are doing with Top-level module directory reorg
+15:40:21 <gundalow> What was the last proposal we looked at?
+15:40:22 <rcarrillocruz> so, proposals are more formal specs for feature requests let's say
+15:40:24 <rcarrillocruz> ?
+15:41:03 <allanice001> Also, I thought we closed proposal #43
+15:41:05 <gundalow> rcarrillocruz: yup, geneally for large changes, though not just limited to code (we have on on using an IRC bot) generally used where we need a more formal discussion
+15:41:07 <bcoca> gundalow: yes, and we tabled that change in favor of prereq of 'using metadata categories to build docs vs directory layout'
+15:41:11 <rcarrillocruz> ++
+15:41:39 <gundalow> bcoca: oh, I don't see that in the proposal discussion
+15:41:46 <gundalow> duh
+15:41:48 <gundalow> yes I added taht
+15:41:56 <bcoca> ... i was going to say ...
+15:42:49 * gundalow changed it to be "Top-level module directory reorg (followup in 2.4 planning)"
+15:44:21 <bcoca> -1 on static type checking, lots of fuss for very little return and even less commonly used/supported option (we can revisit in a year or 2)
+15:44:52 <gundalow> bcoca: xenol is going to have a play and report back, so shouldn't require any effort on Core Team at the moment
+15:44:55 <bcoca> -1 to master, as no one seems to have researched any of the possible consequenses and github does not explicitly support (revisit when these things are addressed)
+15:45:11 <gundalow> Jimi invoked god power, I'll close the git alias
+15:45:23 <allanice001> bcoca, I did the research
+15:45:29 <allanice001> We discussed it in December
+15:45:49 <ignatenkobrain> hi
+15:45:54 <ignatenkobrain> anyone is still here? ;)
+15:45:57 <gundalow> ignatenkobrain: yup
+15:46:04 <allanice001> Github doesn't like it, and setting it up, and getting it working is a bit of a stuff up
+15:46:13 <ignatenkobrain> so, we were discussing with abadger1999 situation about yum and dnf modules
+15:46:20 <abadger1999> Ah ignatenkobrainHas something for open floor.
+15:46:27 <abadger1999> Since he's here we should discuss that
+15:46:31 <bcoca> allanice001: changes the reason for my -1 but not the score
+15:46:45 <gundalow> ignatenkobrain: abadger1999 Is their an open issue/PR for this?
+15:46:45 <ignatenkobrain> What would be better option to handle playbooks which use yum module, to automatically use dnf module
+15:46:51 <abadger1999> #topic dnf and yum module with dnf
+15:46:58 <gundalow> Thanks
+15:47:39 <ignatenkobrain> reason is that people should not change their playbooks for CentOS and Fedora
+15:47:46 <ignatenkobrain> and basically it's just s/yum/dnf/
+15:48:00 <ignatenkobrain> (given that options are same, will be at some point at least)
+15:48:29 <bcoca> i'm fine with yum falling back (it should return warnings to user ... fake yum detected, using dnf)
+15:48:41 <ignatenkobrain> I know about packaging module, but many ppl use exactly yum module
+15:48:57 <bcoca> also I would add this detection to our fact gathering so ansible_pkg_mgr and package module KNOW the actual package manager
+15:48:58 <ignatenkobrain> bcoca: yum failing back.... to what?
+15:49:00 <ignatenkobrain> subprocess?
+15:49:32 <abadger1999> yeah, two choices there... either subprocess or the dnf API.
+15:49:34 <bcoca> ignatenkobrain: how are you proposing we automatically switch yum for dnf?
+15:49:50 <bcoca> ^ which ever way, i dont mind as it works reliably
+15:50:20 <bcoca> i care more that ansible_pkg_mgr is correct/acurate
+15:50:31 <ignatenkobrain> bcoca: ideally, ppl still use yum module, but it uses dnf module internally
+15:50:54 <bcoca> ignatenkobrain: what is the logic that deterines that?
+15:50:59 <bcoca> determines
+15:51:02 <bcoca> !ispell
+15:51:13 <ignatenkobrain> bcoca: import yum fails -> there is only dnf
+15:51:31 * misc think people should use package module rather
+15:51:42 <bcoca> you realize that once that happens the module has already been dispatched?
+15:51:46 <abadger1999> ignatenkobrain: We'd need an action module to do that.  Not sure if that messes with the package module because it is also an action module.
+15:51:47 <bcoca> and has no access to other modules
+15:51:48 <misc> cause if people write non portable playbooks, we shouldn't encourage them and force them to fix stuff
+15:52:18 <abadger1999> (by do that I mean: have the yum module choose to execute the already written dnf module)
+15:52:22 <bcoca> +1 to fix fact gathering -1 to action plugin
+15:52:28 <bcoca> we already have package: for that
+15:52:39 <abadger1999> yeah
+15:53:09 <abadger1999> bcoca: question: does the package module send unknown parameters on to the underlying module?
+15:53:17 <bcoca> yes
+15:53:21 <abadger1999> Cool.
+15:53:25 * bcoca x2 checks
+15:54:06 <bcoca> it just removes 'use='
+15:54:20 <bcoca> service also sends, but has 'blacklist' to remove some options that are not supported by all modules
+15:54:41 <bcoca> package does not have these options so you need to be mindful that 'all the possible modules ' in your environment support those
+15:54:53 <abadger1999> Cool.  as long as we don't add a blacklist to package, it will work well for this case.
+15:55:50 <abadger1999> (so that something like package: [...] enablerepo='copr-blah'    will work as long as the backend is either yum or dnf)
+15:56:33 <bcoca> yep, but will fail with apt
+15:56:37 <abadger1999> <nod>
+15:57:07 * bcoca needs to add to package description .. no it will not translate package names!
+15:57:14 <abadger1999> ;-)
+15:57:32 <bcoca> but i cannot complain too much, people stopped asking for it
+15:58:17 <abadger1999> ignatenkobrain: So I think wrt "a module that selects either the yum or the dnf module and uses the appropriate one", we're all thinking package is the appropriate solution.
+15:58:29 * allanice001 outta here
+15:58:35 <abadger1999> ignatenkobrain: the other implementation you were thinking of, is entirely module-side, though, right?
+15:59:27 <abadger1999> add code to the yum module itself to handle using a system that has /usr/bin/yum implemented via dnf?
+15:59:33 <ignatenkobrain> hm
+16:00:10 <ignatenkobrain> abadger1999: you mean "package" module right?
+16:00:18 <bcoca> +1 to adding 'you might want to try using dnf' to import yum failure warning
+16:00:31 <ignatenkobrain> abadger1999: yeah, other option would be to use just cmdline yum
+16:00:35 <ignatenkobrain> reasons are:
+16:00:43 <ignatenkobrain> * yum never had documented python API
+16:00:46 <bcoca> ignatenkobrain: package is an action plugin, not a module (it runs controller side) it actually executes yum/apt/dnf/etc remotely
+16:00:56 <abadger1999> ignatenkobrain: For the module that selects between yum or dnf, yes.  Package module there.
+16:01:16 <ignatenkobrain> * no one is actually supposed o use it
+16:01:31 <bcoca> ignatenkobrain: well, yum module author was also yum author ....
+16:01:35 <ignatenkobrain> so, would it make sense to rewrite yum module to use only yum cmd?
+16:02:05 <jtanner> yum's output is difficult to parse in many cases
+16:02:16 <ignatenkobrain> yeah, that's true
+16:02:19 <ignatenkobrain> but do we parse it?
+16:02:28 * ignatenkobrain didn't check output of yum module recently
+16:02:33 <bcoca> we 'return it'
+16:03:01 <jtanner> if it's only going to use commands, we'll have to parse the output for update checks
+16:03:11 <ignatenkobrain> ohh
+16:04:21 <abadger1999> ignatenkobrain: Note last I looked, the heavy lifting is already done via CLI /usr/bin/yum
+16:04:52 <abadger1999> ignatenkobrain: things like determing what packages/groups/etc are already installed/need updates/etc were done via API.
+16:05:06 <abadger1999> Some of the latter had a fallback to rpm or repoquery.
+16:05:14 <bcoca> the install/remove is CLI, most of the 'what do we need to do' logic is API
+16:05:23 <abadger1999> ignatenkobrain: I'm not sure the status of repoquery in a dnf-only box.
+16:06:15 <ignatenkobrain> abadger1999: what do you mean?
+16:06:38 <ignatenkobrain> dnf repoquery works like a charm :D
+16:06:48 <ignatenkobrain> but actually there will be redirection script
+16:06:55 <ignatenkobrain> /usr/bin/repoquery -> /usr/bin/dnf repoquery
+16:07:08 <ignatenkobrain> https://github.com/rpm-software-management/dnf-plugins-core/pull/197
+16:07:12 <abadger1999> about repoquery?  I'm not sure if /usr/bin/repoquery is expected to exist on a box without yum.  If it uses dnf repoquery, I'm not sure if the dnf repoquery supports all of the options we need.
+16:07:35 <ignatenkobrain> abadger1999: if dnf's repoquery doesn't support all options we need -- we'll fix it
+16:07:38 <abadger1999> (It didn't when I last looked but that was about a year ago so things could have been added)
+16:07:43 <abadger1999> Cool.
+16:08:17 <abadger1999> ignatenkobrain: So most of the work might be done to make falling back to the CLI work.
+16:09:05 * ignatenkobrain shrugs
+16:09:31 <abadger1999> Just need to write code to trigger use of the fallback.
+16:09:51 <abadger1999> Does that sound like a reasonable way forward?
+16:10:13 <ignatenkobrain> yes, it does
+16:10:17 <abadger1999> Cool.
+16:10:32 <ignatenkobrain> btw, who's the maintainer of yum module?
+16:10:49 <bcoca> well, not original author, sadly
+16:11:19 <abadger1999> "Core team"  which means all of us take a stab at it once in a while.  I probably take a lot of the bugs/pr reviews of packaging modules in general.  bcoca also.
+16:11:25 <bcoca> core and Berend De Schouwer (github.com/berenddeschouwer), Eduard Snesarev (github.com/verm666)
+16:15:58 <abadger1999> ignatenkobrain: You were volunteering to work on this correct?
+16:16:12 * abadger1999 gets his #action ready ;-)
+16:16:34 <ignatenkobrain> abadger1999: well, I'm not sure if exactly I will work on it...
+16:16:45 <ignatenkobrain> but I will track this
+16:17:00 <ignatenkobrain> even someone else from DNF team will do this job, I will track it
+16:17:06 <abadger1999> ah.  k.  Cool.
+16:17:59 <abadger1999> #action ignatenkobrain to find a dnf team member to work on adding a fallback to the yum module when used on a system where yum is implemented by dnf.
+16:18:17 <abadger1999> #topic Open Floor
+16:19:11 <abadger1999> gundalow: We all seemed to fire out proposals that we thought needed to be closed.... was there other proposals that we want to go through?
+16:19:31 <abadger1999> Should we organize how we look at proposals for next meeting?
+16:20:24 <bcoca> https://github.com/ansible/proposals/issues?q=is%3Aissue+is%3Aopen+sort%3Acreated-asc <= we should look at list this way
+16:20:44 <bcoca> default is 'newest first' which i think punishes the ones that hve been aroudn longer
+16:23:17 <gundalow> I've just created a few labels in the /proposls/ repo that should make it a bit easier to track
+16:24:25 <gundalow> There are only *26*, I think we should oldest first during the meetings to clear them out
+16:25:00 <abadger1999> gundalow: Cool.
+16:25:07 <abadger1999> Maybe also some labels to tell status
+16:25:21 <abadger1999> For instance, the oldest of mine are appoved but waiting implementation
+16:25:46 <gundalow> so they would get "approved" but not "in progress"
+16:26:13 <abadger1999> <nod>
+16:26:20 <gundalow> https://github.com/ansible/proposals/labels
+16:26:38 * abadger1999 goes to add the label to tickets of his that were approved
+16:26:43 <gundalow> Thanks
+16:27:22 <gundalow> hum, we are over time, I'll add a note in the agenda to review that list next time
+16:27:28 <gundalow> Thank's y'all
+16:27:31 <gundalow> !chance this works
+16:27:34 <gundalow> #endmeeeting
+16:27:39 <gundalow> #endmeeting

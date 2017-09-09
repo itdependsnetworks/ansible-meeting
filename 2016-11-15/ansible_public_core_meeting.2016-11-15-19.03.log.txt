@@ -1,0 +1,269 @@
+19:03:36 <nitzmahone> #startmeeting Ansible Public Core Meeting
+19:03:37 <zodbot> Meeting started Tue Nov 15 19:03:36 2016 UTC.  The chair is nitzmahone. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:03:37 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:03:37 <zodbot> The meeting name has been set to 'ansible_public_core_meeting'
+19:03:41 <ryansb> is that alikins-ese for startmeeting?
+19:04:01 * jimi|ansible here
+19:04:19 <nitzmahone> #chair abadger1999 alikins bcoca jimi|ansible jtanner mattclay nitzmahone ryansb
+19:04:19 <zodbot> Current chairs: abadger1999 alikins bcoca jimi|ansible jtanner mattclay nitzmahone ryansb
+19:04:29 <alikins> ryansb: it's alikins-ese for 'smurf'
+19:04:33 <abadger1999> Greetings
+19:04:41 <ryansb> hey folks
+19:06:39 <nitzmahone> #topic https://github.com/ansible/community/issues/140#issuecomment-259252793
+19:07:03 <nitzmahone> Have we resolved the MySQL "security issue"?
+19:08:05 <bcoca> ibelieveso
+19:08:10 <bcoca> jimi|ansible: ?
+19:08:18 <nitzmahone> associated PR (https://github.com/ansible/ansible-modules-core/pull/5388) is still open
+19:09:19 <nitzmahone> Doesn't look like there's been any further activity on it since last week
+19:10:39 <nitzmahone> Sounds like nobody knows current status- moving on...
+19:10:42 <nitzmahone> #topic https://github.com/ansible/community/issues/140#issuecomment-259671839
+19:10:55 <jimi|ansible> did Jmainguy merge the fix?
+19:10:59 <nitzmahone> @gundalow said he might be late
+19:11:00 <jimi|ansible> i hadn't followed up on it
+19:11:14 <nitzmahone> jimi|ansible: doesn't look like it, no discussion in ~6 days
+19:11:19 <nitzmahone> PR is still open
+19:11:32 <abadger1999> There's now a cve for it I think so we need to reevaluate and merge the fix.
+19:11:51 <abadger1999> after whatever touchups are needed for it.
+19:12:06 <nitzmahone> I think that was the open question- what are we waiting for to merge?
+19:12:33 <jimi|ansible> yes it's a CVE but i still feel it's a relatively minor one, so i'm deferring to Jmainguy on the fix
+19:13:14 <nitzmahone> Looks like the yaml source linting stuff has already been merged, going to cross that one off the agenda unless there's any more discussion (@mattclay?)
+19:13:32 <mattclay> nitzmahone: Yeah, you can cross it off.
+19:14:01 <nitzmahone> @mattclay Apparently I can't- I don't have comment edit ability on the community repo.
+19:14:03 <Jmainguy> jimi|ansible: im being a lazy bum
+19:14:07 <abadger1999> Any volunteers to coordinate with jmainguy?  I usually try to coordinate but I'm working on metadata this week.
+19:14:12 <abadger1999> oh Jmainguy :-)
+19:14:19 <mattclay> nitzmahone: I'll fix that.
+19:14:19 <abadger1999> Howdy!
+19:14:25 <Jmainguy> howdy howdy
+19:14:30 <jimi|ansible> Jmainguy: heh ok if the original was "good enough", i'd say merge it
+19:14:46 <bcoca> does the fix have a version dependency?
+19:14:50 <Jmainguy> its a one line change, seeeems mainly harmless
+19:15:03 <Jmainguy> I think it depends on percona or mysql 5.7
+19:15:18 <Jmainguy> still dont have a clear path to test it
+19:15:28 <Jmainguy> he mentuioend using ubuntu, so I can try that
+19:15:35 <Jmainguy> he being the author
+19:15:52 <Jmainguy> so if it passes, and doesnt break anything its good to merge, but that test still needs to happen
+19:15:57 <Jmainguy> I was spose to do it last week and slacked off
+19:16:08 <Jmainguy> todays my birthday, so I will try and do it tomorrow
+19:16:50 <nitzmahone> k, noted in agenda
+19:17:02 <nitzmahone> #topic https://github.com/ansible/community/issues/140#issuecomment-259671839
+19:17:31 <abadger1999> thanks Jmainguy!
+19:17:47 <abadger1999> and happy birthday :-)
+19:18:33 <bcoca> hbd !
+19:19:34 <nitzmahone> bcoca: re https://github.com/ansible/proposals/issues/35 - my question on this is are we doing additive/stacking config from roles and such (ala VarMgr) where config settings "fall out of scope" when the role finishes exec, or is it "last change sticks"?
+19:19:51 <nitzmahone> s/stacking/scoped/
+19:19:58 <bcoca> nitzmahone: configurable
+19:20:11 <nitzmahone> ie, could be either?
+19:20:20 <bcoca> there are 'resource roles' that you might want to apply blanket configs
+19:20:29 <bcoca> by default it should be 'role scoped'
+19:20:39 <bcoca> also controllable from play if these are read or not
+19:22:02 <Jmainguy> =) ty
+19:22:09 <nitzmahone> I was wondering how we'd handle that with, say, plugin paths- are we zapping plugin caches when those things change (allowing possibility of N different versions of a module to run during exec, for example)? Or are we saying those get baked at initial load and don't change (ie, some config settings don't float)?
+19:22:45 <nitzmahone> Kind of a bigger case of some of the stuff that was still (IIRC) unresolved re plugin loading.
+19:23:34 <bcoca> nitzmahone: the plugin loading could be fixed via this by allowing global/role scopes
+19:24:12 <jimi|ansible> happy b-day from me as well Jmainguy :)
+19:24:24 <nitzmahone> So more dynamic plugin loader scopes would probably be a prerequisite for this...
+19:24:55 <nitzmahone> (and ideally making that fast so we're not chucking indexes and reloading everything when the path set changes)
+19:25:18 <nitzmahone> because that would also be tied in w/ metadata stuff as-proposed, yeah?
+19:25:36 <nitzmahone> (unless metadata cache hangs off pluginloader entries)
+19:27:08 <alikins> kind of worried the config proposal is inventing a new type of inheritance that may make the config/inventory/playbook/vars_manager even more complicated
+19:27:46 <nitzmahone> Feels a bit that way to me too, though I think if we did it right (and can minimize the number of exceptional cases) it should be relatively simple to slide into the stuff we have.
+19:28:04 <bcoca> it would be one system instead of 5
+19:28:26 <bcoca> hopefully we can start eliminating the others and rely on a unified system
+19:28:52 <bcoca> ^ nitzmahone one of the reasons i was against runtime metadata
+19:29:07 <abadger1999> -1 to dynamic config changing over the course of a run
+19:29:34 * mattclay will be away from the computer for a bit
+19:29:37 <bcoca> abadger1999: we already do this, but at host/task level
+19:29:44 <alikins> bcoca: which 5?
+19:29:46 <nitzmahone> I'd kinda agree w/ abadger1999, only because "config moving target" doesn't really seem like it fits with the "simple" aspect.
+19:29:58 <abadger1999> +0.5 to config file as yaml as an alternative to ini.
+19:30:35 <bcoca> alikins:  made up number, but we have plugin loading, action search path, lookup path, playbook relative (play, roles, includes), etc
+19:30:48 <nitzmahone> Though knocking down the false wall between config and play directives is very attractive
+19:31:15 <nitzmahone> It seems very arbitrary how we decide that something is available via config/play directive
+19:31:21 <bcoca> nitzmahone: since we added check_mode and now diff_mode is comming ....
+19:31:29 <abadger1999> -0.5 for config definition as yml..... I'm not sure I like that.. there's not a reason to serialize definition of the configs that I can see... I can see value in making config definition declarative, though.
+19:31:36 <bcoca> nitzmahone: it arbitrary
+19:31:37 <nitzmahone> bcoca: not seeing how check/diff apply to this?
+19:31:51 <bcoca> abadger1999: to allow for custom plugins to add their config
+19:32:02 <bcoca> ^ addresses the problem of non modules not having unified config
+19:32:43 <abadger1999> +1 to ansible-config tool
+19:33:02 <abadger1999> +1 to mergable option... Would love to just change this but can see that backwards compat needs it
+19:33:25 <bcoca> mergable is only if you use yaml configs, not ansible.cfg
+19:33:48 <abadger1999> bcoca: so if you have an ini in the way, you can't merge?
+19:33:51 <bcoca> also 2 way toggle, to make sure we allow for 'server not overridable' and other configs
+19:34:02 <bcoca> abadger1999: if you use ini, those features are not available
+19:34:21 <bcoca> ^ its so we eventually deprecate ini
+19:34:34 <alikins> +1 to ansible-config cli ( though -1 to cli editing of config)
+19:34:36 <bcoca> ansible.cfg OR ansible.yml, no mixing
+19:35:06 <alikins> +1 to nested/stacked/inherited/merged configs
+19:35:12 <bcoca> ^ also the spec has many aspects,  I laid out many as there are many needs based on config, we dont need them all
+19:35:51 <nitzmahone> I dunno, actually- it feels a little like Obamacare... Take out a leg and the whole stool falls over.
+19:35:52 <bcoca> some can be incrementally added (meta/config.yml for roles playbooks)
+19:36:23 <bcoca> nitzmahone: hehe, possibly, but the base part i think holds itself
+19:36:31 <nitzmahone> If we did the nested thing (eg, contributory config from roles), would we support ini or yml, or just yml?
+19:36:46 <bcoca> only yaml, i really dont want to deal with type infernece in ini
+19:36:49 <alikins> -1 to config inheritance potentially being something almost but quite like playbooks
+19:36:57 <alikins> but not quite like
+19:37:38 <bcoca> alikins: its for diff scenarios. tower might want unified config that does not allow users to override, for example
+19:37:48 <bcoca> others need specific configs for their roles to run
+19:38:06 * gundalow waves
+19:38:09 <bcoca> ^ both needs are in oposition, but if you need locked down central server, you should not be using random roles from internet
+19:38:22 <abadger1999> I can see adding config inside of a run but it should not overwrite config (even if that config is created by default valiues)
+19:38:26 <bcoca> im leaving the system flexible enough to accomodate both needs
+19:39:00 <abadger1999> I think allowing overwrite opens us up to all sorts of new problems, some of them even security related
+19:39:02 <bcoca> abadger1999: also both ways, you can have a 'company resource role' to include in all playbooks with company custom plugins, vars and configs
+19:39:08 <nitzmahone> This feels "bigger than a breadbox" - do we want to keep discussing here, or have a separate discussion somewhere/sometime? Just want to make sure we're on path to moving forward, not just bikeshedding/kibitzing on it- doesn't feel like we're going to get to "let's do it" today.
+19:39:13 <bcoca> abadger1999: yes, but it would be user controllable
+19:39:20 <abadger1999> So it's a feature that is just too difficult to manage.
+19:39:54 <bcoca> its complicated, but it also allows for many approaches, mostly hard to reconcile so i left it 'configurable'
+19:40:10 <nitzmahone> When we say overwrite, do we mean "mask" or actually "persist"?
+19:40:15 <bcoca> ^ 90% of it is from user requests and me trying to make the 'one' infra  to support it all
+19:40:16 <abadger1999> Not sure I like having an either or between ini and yaml.... there doesn't seem to be a reason.
+19:40:23 <bcoca> nitzmahone: both possible
+19:40:36 <nitzmahone> -1 to persist (aforementioned security issues, etc)
+19:40:40 <bcoca> abadger1999: complicates things too much
+19:40:40 <jtanner> hello
+19:40:51 <abadger1999> nitzmahone: I wouldn't be for either but persist is much more invasive than mask (and thus more potential holes opened up)
+19:40:55 <bcoca> nitzmahone: toggle, ^ see my 'resource role' scenario
+19:41:30 <bcoca> if you have mergable configs, both problems arise, both needs already exist and users have asked for both
+19:41:30 <abadger1999> bcoca: what's the complicatoin?
+19:41:45 <bcoca> i dont want to deal with merging non yaml files
+19:41:52 <abadger1999> bcoca: what's the complication though?
+19:41:54 <bcoca> merging yaml is easy, merging ini is not
+19:42:03 <abadger1999> you aren't merging files, you're merging options.
+19:42:04 <nitzmahone> I'd assume the merging occurs at a data level though, not file level
+19:42:10 <nitzmahone> abadger1999: yeah
+19:42:11 <abadger1999> nitzmahone: Right.
+19:42:34 <bcoca> abadger1999:  if all is yaml, its easy to merge files, options get resolved automagically, adding ini requires us to merge each option individually
+19:42:39 <nitzmahone> you might need to keep the source location for config forensics, but that shouldn't matter
+19:43:19 <abadger1999> Okay, not really in favour of that limitation... seems like it'll royaly screw up users.
+19:43:39 <bcoca> abadger1999: no, current users can continue as is, if you want the mergable feature, you migrate
+19:43:47 <bcoca> also, config.yml is not CWD
+19:43:55 <bcoca> ^ big change that breaks with ansible.cfg
+19:43:59 <abadger1999> -1 to merge without also accounting for ini files
+19:44:07 <jtanner> pr # ?
+19:44:08 <bcoca> i account for ini, i just dont merge them
+19:44:09 <alikins> +1/-1 on config persist/writing. I hate it when app config formats only have code to read config not save it, and there is utility to a unified interface to changing it. -1 to every attempt I've seen or made to write a reasonable cli config editor
+19:44:18 <nitzmahone> jtanner: https://github.com/ansible/proposals/issues/35
+19:44:46 <abadger1999> bcoca: right.. .that's what I'm -1'ing
+19:44:54 <bcoca> alikins: funny, i started ansible-config cause the request was 'can we get similar to git-config?'
+19:45:44 <abadger1999> Doesn't git-config just open up an editor?  Doesn't even validate that the entries are correct?
+19:45:44 * mattclay is back
+19:45:47 <bcoca> abadger1999: part of that is to get around the security issue that is reading from CWD
+19:45:50 <jtanner> is ansible-config being targeted for 2.3 ?
+19:46:08 <bcoca> abadger1999: you can do command line edits git-config author=bcoca@ansible.com
+19:46:15 <nitzmahone> It's just a proposal ATM
+19:46:15 <alikins> it's awesome if setting a flat key to a plain string. real types (lists, dicts, etc), shell quoting ruin it quickly though
+19:46:16 <bcoca> jtanner: no
+19:46:43 <jtanner> what are we trying to decide now then?
+19:47:12 <bcoca> ^ as i mentioned last time, if meeting is first time we read proposal, nothing gets decided
+19:47:16 <abadger1999> bcoca: That (different CWD behaviour for ini versus yml) seems wrong too... if you want to close the hole, close it for both, otherwise allow it for both.
+19:47:30 <bcoca> i really think that q&a session the first time is more valuable than decision making
+19:47:37 <jtanner> just wondering what action item we want to persist from this conversation
+19:47:43 <alikins> +1 to preserving the 'source' of a resolved config value and -1 to a opaque merge
+19:47:44 <jtanner> it's good that we're discussing either way
+19:48:02 <bcoca> abadger1999: i tried to close for .cfg, got rejected several times, by giving alternate and tying it to meta/ dir, hope to finally get it though
+19:48:22 <bcoca> jtanner: i expect none
+19:48:28 <jtanner> k
+19:48:30 <abadger1999> bcoca: I'm -1 for making them different.... Just bite the bullet or don't fix it.
+19:48:49 <abadger1999> making htem unequal is bad ui
+19:48:54 <bcoca> abadger1999: im giving alternate system that eventually phases out current
+19:49:06 <bcoca> if i make them equal, we'll never get rid of ini
+19:49:30 <bcoca> also yaml allows for explicit types, ini does not, merging that 'fun'
+19:49:44 <abadger1999> If they're separate systems then -1  (unless you want to propose an actual deprecation of the ini config.... that could be considered differently)
+19:49:55 <abadger1999> But I might vote -1 to that... ini is simple for new users.
+19:50:07 <bcoca> abadger1999: fine with deprecating, though most users will not like us removing it in just 2 versions
+19:50:14 <abadger1999> And we already have a problem getting new users comfortable with ansible
+19:50:30 <jimi|ansible> you can add it and not deprecate it for some versions officially
+19:50:35 <bcoca> abadger1999: funny then that k=v is not easy for new users? i thoguht that part of making it all yaml would appeal to you
+19:50:55 <abadger1999> bcoca: we can extend the period of time until it gets removed.... The important part would be that they get deprecation warnings for as long as they use it.
+19:51:14 <bcoca> diff topic, i thnk we need to deprecate/remove in 4 versions and not 2 .. users are moving slower and slower across versions
+19:51:35 <abadger1999> bcoca: they can still use k=v.  And I am of the opinion that k=v in addition to yaml in the docs is appropriate.
+19:51:45 <bcoca> abadger1999: fine with that, this is meant as a substitute, just did not want to push it out immediately
+19:52:14 <bcoca> then why are we removing all refs to k=v ?
+19:52:27 <bcoca> ^ i was only one opposing that last week
+19:52:29 <jtanner> in module docs?
+19:52:35 <jtanner> i opposed it
+19:52:51 <bcoca> well .. not only it seems
+19:53:05 <abadger1999> I beleive the last meeting was change everything to yaml and then re-add k=v as appropriate (because most uses of k=v... totally bogus...   Look at all the multiline k=v examples and die a little inside... ) ;-)
+19:53:32 <nitzmahone> abadger1999: +1 to that (dying inside w/ multiline k=v samples)
+19:53:36 <bcoca> we all agreed on multiline k=v, but the PRs have been removing all refs
+19:54:12 <bcoca> https://github.com/ansible/ansible-modules-core/pull/5619 <=
+19:54:24 <abadger1999> bcoca: yes.  Which is fine for me as long as we re-add some k=v where it makes sense down the line.
+19:54:26 <jtanner> the assumption was that because a few "new" users didn't understand k=v, that we should eliminate it from the examples
+19:54:48 <bcoca> ^ and now we get opposite argument, confusing
+19:55:08 <jtanner> although as a triager of issues, i don't come to the same conclusion
+19:55:19 <gundalow> We said we would remove k=v from docs unless it makes sense it's really likely that someon will use it as an ad-hoc, e.g. ping module
+19:55:47 <jtanner> it makes sense for ALL modules, except when it doesn't
+19:55:49 <bcoca> gundalow: copy/file/unarchive, most file modules are often used adhoc and those were already changed
+19:56:16 <bcoca> cloud modules, makes less sense as they normally require a lot of data
+19:56:32 <jtanner> much of which can be set in boto config or envvars
+19:56:33 <gundalow> ah, I reviewed them, I didn't realise the file modules would be used ad-hoc
+19:56:42 <bcoca> and debug, etc
+19:56:56 <abadger1999> What he's doing is making a blank slate.  Then we add a few k=v/commandline examples to the existing examples there so people know that there's an equivaleence.
+19:57:11 <bcoca> so back and forth ?
+19:57:16 <abadger1999> As long as the rules don't prohibit the second step, I'm fine with him taking the first step.
+19:57:27 <bcoca> also, we have plenty of issues to spend soo much time on that
+19:57:31 <bcoca> ^ more pressing
+19:57:39 <gundalow> yup, blanket change everything to k: v, then one PR that adds back in where needed and that PR will get more eyes
+19:57:41 <abadger1999> bcoca: Right.  that's why I didn't want to stop him.
+19:58:01 <abadger1999> bcoca: otherwise we end up having to make those changes.
+19:58:14 <bcoca> what im confused now is that its the opposite argument against yaml config, actually we have many users confused by are use of diff data formats and would prefer it all to be yaml
+19:58:56 <bcoca> gundalow: i lost the vote, i'm fine with that, im just pointing out the inconsistency in arguments
+19:59:24 <gundalow> I missed the inconsistency. Though we've probs spend enough time talking about it
+19:59:29 <abadger1999> No inconsistency.
+19:59:44 <gundalow> As bcoca has quite rightly said a few times, we have more important things
+19:59:47 <gundalow> so what's next
+19:59:54 <abadger1999> As we'll have k=v added back in for where it's appropriate.
+20:00:30 <abadger1999> jsut as ini is appropraite when dealing with config files.
+20:01:02 <jtanner> the one issue i have with yaml (there are few) is that it's ugly when you try to generate it from python
+20:01:30 <bcoca> jtanner: its ugly no matter what language you generate it from
+20:01:38 <jtanner> i'm not sure though if i recognized problems with the ini format
+20:02:01 <bcoca> 2 issues, only 1 heir level, bad data typing
+20:02:42 <jtanner> ok, typing i understand ... but don't we run into that with yaml too? think about our recent octal versus !octal discussions
+20:02:44 <bcoca> https://github.com/ansible/proposals/issues/35 <= check my example config plugins/callbacks/mail/key: val
+20:02:52 <abadger1999> need non-stdlib libraries is the ini + python problem... then again, so does yaml (but we already require that third party yaml library within ansible)
+20:03:01 <bcoca> jtanner: but with yaml we can control/specify it, with ini we cannot
+20:03:24 <abadger1999> [non-stdlib libraries for typing, heirarchies, read-write that preserves comments, etc)
+20:03:45 <abadger1999> that's all available in ini... but not with the stdlib ini library
+20:03:52 <bcoca> also, asdie from ansible-config 'edit' there is no real 'generating'
+20:04:02 <bcoca> ^ and i am happy to scrap that option
+20:04:12 <nitzmahone> We're already over time; do we want to cover the last agenda item (not even sure if there's anything new on it): https://github.com/ansible/community/issues/140#issuecomment-259718524
+20:04:23 <abadger1999> Yeah, let's move on.
+20:04:52 <nitzmahone> Good discussion, but we're clearly not going to resolve today
+20:04:54 <abadger1999> nitzmahone: I think that one we can close.
+20:04:57 <bcoca> as i said, did not expect resolution, but now at least you've all read it and we can play with the fine points
+20:05:07 <nitzmahone> (/ gross points ;) )
+20:05:10 <abadger1999> agaffney has the mandate to do the work.
+20:05:15 <bcoca> ^ i expect prposals to be always at least 2 meetings
+20:05:26 <abadger1999> so nothing for the meeting unless no one merges his PRs.
+20:05:39 <nitzmahone> K, I'll cross it off
+20:05:54 <bcoca> +1 for bare vars fix in examples
+20:06:03 <bcoca> ^ that i actually find more useful than the format change
+20:06:50 <nitzmahone> #topic open floor
+20:07:12 <bcoca> also happy to fine tune the prposal in ansible-devel after this
+20:07:34 <jtanner> so backing up a step
+20:07:35 <jtanner> "There is no current way to 'dump' the config and see the current settings"
+20:07:37 <bcoca> for open floor: extend deprecation/removal period
+20:07:41 <jtanner> i think we can solve that without moving to yaml
+20:07:54 <bcoca> jtanner: ansible-config does that with ini also
+20:07:56 <nitzmahone> bcoca: maybe some clarifications- I was often unclear in the proposal where you were talking about ansible-config the tool vs changes to the config system
+20:08:16 <bcoca> nitzmahone: many go hand in hand
+20:08:49 <nitzmahone> Yep, just a lot of "reading between the lines" req'd
+20:08:53 <bcoca> nitzmahone: also very ambitious/extensive proposal, trying to meet all config needs i've foudn we currently lack
+20:08:53 <jtanner> is it "ansible-config" or is it "ansible config" where config is a positional arg / subcommand ?
+20:09:14 <bcoca> jtanner: ansible-config, my subcommand proposal was denied
+20:09:15 <abadger1999> jtanner: in the new way that bin/ansible works, I think both
+20:09:26 <abadger1999> bcoca: ah... so this will be a separate scripts?
+20:09:44 <bcoca> jtanner:  https://github.com/bcoca/ansible/tree/cli_keywords
+20:09:55 <abadger1999> oh... I forgot subcommands weren't part of hte rewrite.
+20:09:57 <bcoca> abadger1999: the ansible-config to view/document/dump configs, yes
+20:10:09 <bcoca> but config would work wint ansible/ansible-playbook
+20:10:12 <nitzmahone> If we're doing config forensics with it along with config changes due to roles etc, you pretty much have to exec the play in check mode, and even then won't be 100% right (dynamic roles/includes as result of tasks that didn't run, etc)
+20:10:14 <agaffney> abadger1999: eh? did you mean to highlight someone else?
+20:10:48 <nitzmahone> OK, nothing for open floor? Closing in 5...
+20:10:50 <bcoca> nitzmahone: that is one limitation, but being able to specify multiple configs in order will give you a 'what if'
+20:10:59 <abadger1999> agaffney: Our topics are getting mixed... you were highlighted because of: https://github.com/ansible/community/issues/140#issuecomment-259718524
+20:11:10 <bcoca> ansible-config dump -c role1/meta/config.yml <= will merge default and that one
+20:11:25 <agaffney> abadger1999: ah, all of the PRs that I created were already merged, iirc
+20:11:33 <nitzmahone> #endmeeting

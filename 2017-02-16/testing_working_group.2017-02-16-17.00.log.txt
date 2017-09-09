@@ -1,0 +1,93 @@
+17:00:06 <gundalow> #startmeeting Testing Working Group
+17:00:06 <zodbot> Meeting started Thu Feb 16 17:00:06 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+17:00:06 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+17:00:06 <zodbot> The meeting name has been set to 'testing_working_group'
+17:00:17 <gundalow> #chair gundalow mattclay
+17:00:17 <zodbot> Current chairs: gundalow mattclay
+17:00:25 * mattclay waves
+17:00:36 <gundalow> #info Agenda, as always https://github.com/ansible/community/issues/114
+17:00:56 <gundalow> dag: jhawkesworth You around?
+17:01:57 <gundalow> #info work continues on Network integration tests
+17:02:02 <gundalow> That's the only update I have
+17:02:31 <alikins> bloop
+17:02:49 <dag> yup
+17:02:50 <mattclay> #info Test infrastructure has been stabilizing over the last week. Shippable will be deploying another release this weekend to resolve issues with webhook failures.
+17:03:08 <dag> mattclay \o/
+17:03:53 <mattclay> #info ansible-test has been updated to handle changes to module_utils more efficiently, which should speed up CI on PRs which need to make module_utils changes.
+17:03:55 <dag> I must be the only person who has witnessed every possible error Shippable is able to provoke :p
+17:04:48 <mattclay> That's it from me.
+17:05:20 <gundalow> dag: did you have some questions regarding Windows integratio testing?
+17:05:55 <dag> gundalow: wait_for_connection already has 2 integration tests that can run for all platforms/targets
+17:06:16 <dag> gundalow: but wait_for_connection could be used to test when the Windows targets are really working
+17:07:20 <mattclay> I can probably update the test infrastructure so we can test wait_for_connection as part of CI. I'll want to do that as a separate PR after wait_for_connection is merged.
+17:07:22 <dag> so part of core_ci may be replaced with wait_for_connection
+17:07:34 <dag> not sure if we want to
+17:07:39 <dag> (or if it helps)
+17:08:14 <dag> currently I added 2 tests, wait_for_connection to target, and wait_for_connection using local connection
+17:08:15 <mattclay> Yeah, I'm still undecided on whether it's a good idea or not.
+17:09:13 <dag> wait_for_connection also gives intermediates updates to what it is testing, but it is less specific to what is happening
+17:09:18 <dag> (as it doesn't really know/care)
+17:09:29 <mattclay> Instead of using it to test initial instance startup, it might be more useful to test on a reboot -- but we don't have support for that in CI yet either.
+17:09:54 <dag> right, but for a reboot we have specialized modules already (win_reboot on windows)
+17:10:16 <dag> I plan to adapt win_reboot to use the same mechanism as wait_for_connection, once it is merged
+17:10:17 <nitzmahone> It's basically the 2nd half of win_reboot
+17:10:21 <dag> indeed
+17:10:29 <dag> but less specific to windows
+17:10:51 <dag> so I'd like to have a review of wait_for_connection from some core people basically
+17:11:01 <nitzmahone> You'll get one from me soon
+17:11:07 <mattclay> Either way, we shouldn't hold up wait_for_connection on testing in CI.
+17:11:18 <dag> since it's based on win_reboot I think it's fine, except maybe the transport_test() in connection plugin
+17:11:29 <nitzmahone> Actually, I think the windows reboot stuff *could* be tested
+17:11:49 <dag> yes, but not for testing wait_for_connection ,-)
+17:12:14 <dag> ok, kids want me to go upstairs to watch their *show*
+17:12:26 <dag> so that takes priority, obviously
+17:12:43 <gundalow> dag: Thanks for your time
+17:12:45 <gundalow> enjoy the show
+17:18:54 <gundalow> cool, guess we can move on
+17:19:28 <gundalow> #topic ansible-test to ignore file not in git ansible/ansible#20944
+17:19:31 <gundalow> hey alikins
+17:19:43 <gundalow> #link https://github.com/ansible/ansible/pull/20944
+17:19:55 <alikins> bloop
+17:19:59 <gundalow> :)
+17:20:36 <gundalow> So is the use case you are running ansible-test locally (yay), though you sometimes other test files dotted around during test & development?
+17:21:01 <alikins> That patch is so I can run ansible-test sanity on my working checkout without tests failing on some_helper_script.py and repro_3454.yml etc
+17:21:15 <gundalow> Sounds sensible to me
+17:22:21 <gundalow> +1
+17:22:30 <mattclay> I have a few concerns about the current implementation. I'm not sure I like the requirement of using git commands in the sanity scripts, although I need to think about that one more. The other is that this only fixes it for individual sanity scripts, it doesn't help with any of the other tests.
+17:23:02 <mattclay> Actually, it only works for the code-smell portion of sanity.
+17:23:04 <alikins> That pr is just for the shell scripts. The builtin target finders ('walk_sanity_targets for ex, iirc) need to be updated as well.
+17:23:31 <mattclay> Which is a bit more complicated, but all that needs to work even without git.
+17:23:36 <alikins> why?
+17:23:40 <mattclay> s/but/because/
+17:24:03 <mattclay> There's no `.git` directory on the "remote" instances when running ansible-test.
+17:24:16 <mattclay> So we'd have to support working with and without git.
+17:25:24 <mattclay> So I'm thinking we might need a different solution to this. Is there a reason we can't have some kind of temp dir to put stuff in we don't want to test? That wouldn't require git.
+17:26:17 <gundalow> Or use git, if it doesn't exist fall back to current way of doing it
+17:26:26 <gundalow> and pull that out into some common code
+17:27:38 <mattclay> The other thing, specific to code-smell tests, is I'd like to rewrite them anyways so they aren't dependent on platform-specific tools. I don't know if the git versions of the commands we use are built-in, or if they delegate to the normal versions. Does anyone know?
+17:28:48 <alikins> not sure I understand. git versions of what commands?
+17:29:38 <mattclay> Things like `git grep` for example.
+17:30:14 <mattclay> Is the entire implementation of that in git, or does it delegate to grep?
+17:32:06 <alikins> think it is built in but not sure. docs dont mention relying on external tools
+17:34:53 <alikins> there is a git/builting/grep.c in git source, so I assume so
+17:34:56 <mattclay> alikins: Are the files you want to ignore spread around your working directory, or are they just in one place?
+17:35:20 <alikins> I want to ignore everything thats not in the git repo
+17:35:33 <alikins> but, all over the place
+17:40:02 <mattclay> I think we can come up with something that will work, and not just for the code-smell scripts.
+17:40:38 <alikins> for remote cases sans git, could build a manifest from git and use it
+17:41:23 <mattclay> If we do it right, we won't need to. We'll just filter the list of files before sending to the remote.
+17:45:31 <mattclay> I need to spend some time to write down the various issues around making this work, so we can do it for more than just code-smell.
+17:45:55 <gundalow> alikins: So i suppose for the moment you can use your patch locally
+17:48:59 <gundalow> #info Not as simply as it first seems - PR only works for code-smell portion of sanity
+17:49:22 <gundalow> #info The builtin target finders ('walk_sanity_targets for ex, iirc) need to be updated as well.
+17:49:33 <gundalow> #info There's no `.git` directory on the "remote" instances when running ansible-test.
+17:49:53 <gundalow> #action mattclay To spend some time to write down the various issues around making this work, so we can do it for more than just code-smell.
+17:50:41 <gundalow> #info The files to ignore could be anywhere in the directory tree
+17:50:47 <gundalow> Did I miss anything?
+17:55:40 <alikins> gundalow: seems to cover it
+17:55:53 <alikins> and some misc files I have in my check out ;->
+17:56:32 <gundalow> #topic Open Floor
+17:56:37 <gundalow> Anymore for any more?
+17:58:52 <gundalow> cool
+17:58:56 <gundalow> Thanks everyone
+17:58:58 <gundalow> #endmeeting

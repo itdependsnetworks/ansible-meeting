@@ -1,0 +1,111 @@
+17:00:22 <gundalow> #startmeeting Testing Working Group
+17:00:22 <zodbot> Meeting started Thu Jan 19 17:00:22 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+17:00:22 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+17:00:22 <zodbot> The meeting name has been set to 'testing_working_group'
+17:00:30 <gundalow> #chair gundalow mattclay
+17:00:30 <zodbot> Current chairs: gundalow mattclay
+17:00:36 <gundalow> #topic Roll call
+17:01:15 <gundalow> Agenda as always is https://github.com/ansible/community/issues/114 feel free to add items
+17:01:47 <jtyr> gundalow: dammit! ;o/
+17:02:40 <gundalow> jtyr: schedule https://github.com/ansible/community/blob/master/MEETINGS.md
+17:02:59 <jtyr> gundalow: ok, thanks
+17:03:08 * mattclay waves
+17:04:08 <gundalow> #topic Core Testing Update
+17:04:41 <gundalow> Really good progress on getting the Network testing into Shippable, huge thanks to mattclay for his help with that
+17:05:39 <gundalow> We are currently spinning up VyOS network appliances, very soon we will be running functional tests on Cisco's IOS as well
+17:05:53 <gundalow> This is all in AWS, similar to how we test Windows
+17:06:50 * allanice001 waves
+17:06:56 <gundalow> hey abadger1999
+17:07:05 <gundalow> [17:04] <@gundalow> Really good progress on getting the Network testing into Shippable, huge thanks to mattclay for his help with that
+17:07:08 <gundalow> [17:05] <@gundalow> We are currently spinning up VyOS network appliances, very soon we will be running functional tests on Cisco's IOS as well
+17:07:12 <gundalow> [17:05] <@gundalow> This is all in AWS, similar to how we test Windows
+17:07:13 <gundalow> allanice001: ^ as you are a Network person
+17:07:33 <allanice001> nice
+17:08:03 <gundalow> Got the AMIs for VyOS, Junos and IOS
+17:08:31 <gundalow> I don't see anything for NXOS or Arista's EOS
+17:08:49 <gundalow> Though I've heard a rumour that Arista *may* have something in AWS later in the year
+17:09:53 <gundalow> That's it on the Network testing side
+17:10:00 <gundalow> mattclay: anything you'd like to add?
+17:10:51 <mattclay> We're now testing Windows Server 2016 on Shippable, so we're up to 5 Windows versions now being tested: 2008, 2008 R2, 2012, 2012 R2, 2016
+17:11:28 <gundalow> \o/
+17:11:38 <allanice001> \o/
+17:11:45 <mattclay> I've also updated how we launch EC2 instances for Shippable. We now use multiple regions, to hopefully get faster and more reliable tests.
+17:12:27 <allanice001> mattclay, word of advice - try stay out of US-East-1 region
+17:12:42 <mattclay> I'm continuing to work on improving test reliability. I'm also working on enabling more of our tests on various platforms, mostly OS X and FreeBSD.
+17:12:47 <allanice001> Its at least 30 - 45 seconds slower on network propegation
+17:13:14 <mattclay> We were using only us-east-1 up until yesterday. Now we're also using us-east-2. Shippable runs out of us-east-1.
+17:14:44 <mattclay> General improvements to ansible-test also continue. I've also recently switched us over from nose to pytest for unit tests and updated the Makefile to use ansible-test to run tests.
+17:15:07 <mattclay> More of the existing docs have also been updated to refer to using ansible-test now instead of the old make based tests infra.
+17:15:25 <mattclay> Questions? :)
+17:16:31 <gundalow> What URL should we point people to for questions about running the tests?
+17:16:41 <gundalow> or is it spread around a bit
+17:16:57 <bcoca> readme?
+17:17:18 <mattclay> Yeah, the README files in the repo, such as under test/integration/
+17:17:30 <mattclay> More documentation is coming.
+17:17:38 <gundalow> ace
+17:18:01 <bcoca> we might want to link into docsite in devel section
+17:18:02 <gundalow> on, on that note, should hopefully have some previews of the developing_modules.html refacoring soon
+17:18:25 <gundalow> +1
+17:18:53 <allanice001> Do you / would you be using docstrings for generating docs, now or in the future?
+17:20:19 <gundalow> I'm not sure where we stand on that
+17:20:41 <gundalow> well, docs are good. And good docs along side code are really good
+17:21:09 <mattclay> At some point in the future we want to have a stable python API for using ansible. I'm sure we'll want to use docstrings to generate documentation when that happens.
+17:22:40 <bcoca> mattclay: we have the 'start of that' in module_utils
+17:22:52 <bcoca> abadger1999: ^ i believe you were the 'culprit'
+17:23:05 <mattclay> Are we generating docs from that yet?
+17:23:13 <bcoca> not afaik
+17:23:24 <bcoca> also .. need LOTS more documented
+17:23:36 <bcoca> at least all basic.py functions for module authors
+17:23:38 <abadger1999> For basic.py we decided that we didn't want to make it bigger so basic.py docs need to go in a separate file.
+17:24:10 <bcoca> abadger1999: what about splitting basic.py? basic/__init__.py basic/file.py basic/x.py?
+17:24:19 <bcoca> then we can use docstrings as normal
+17:24:26 <abadger1999> eventually basic.py will get split up into separate modules... not sure at that point whether we'll inline the docs (possibly but modules that don't port to use the new import locations will get bigger and bigger then)
+17:24:34 <abadger1999> bcoca: yep.
+17:24:50 <bcoca> abadger1999: also been thinking, when building ansiballz .. do we use -OO and pycs?
+17:25:07 <bcoca> ^ would strip docstrings so now size is not an issue
+17:25:09 <abadger1999> I suppoes the overhead of license headers will already inflate basic.py  usage at that point so we might not care.
+17:25:31 <abadger1999> bcoca: We don't.  pycs are portable between architectures but not portable between python versions.
+17:25:43 <bcoca> ah .. darnit ...
+17:26:10 <allanice001> If you break up a file into a package, why not just move the license out?
+17:26:12 <bcoca> same for pyo?
+17:26:23 <bcoca> allanice001++
+17:26:28 <allanice001> Something like __licence__.py
+17:26:31 <bcoca> have a basic/LICENSE
+17:26:52 <abadger1999> bcoca: (tangent: remember that we cannot use basic/__init__.py for the new, split modules if we want to both gain the benefit of splitting and keep backwards compat)
+17:26:56 <bcoca> then each file can just ref that (1 line comment)
+17:27:01 <abadger1999> bcoca: yes, same for pyos.
+17:27:15 <bcoca> abadger1999: basic * wont pickup the split?
+17:27:27 <abadger1999> <nod>  Yeah, if we're willing to host license info outside the files, that would work.
+17:27:38 <bcoca> can't we use sdome 'os os.path' type magic?
+17:27:55 <bcoca> +1 to external license in module_utils subdirs
+17:28:13 <allanice001> Wouldn't absolute imports solve for that?
+17:28:18 <abadger1999> bcoca: os.path works because os imports path.  If we do the same thing for basic, then anthing that imports any part of basic will end up importing all of basic.
+17:28:43 <bcoca> abadger1999: so it would have to be special case for * ... and there we go hacking the import lib ...
+17:28:47 <abadger1999> thus, we can't have both backwards compat and the benefits of splitting if we reuse basic/ for the split up.
+17:28:50 <abadger1999> yeah.
+17:29:00 * bcoca bring this up back in 3.0
+17:29:06 <abadger1999> much easier to split into a new location and reserve basic for the conglomerate.
+17:30:30 <abadger1999> allanice001: To get back to your original question: I have bits and pieces documented in docstrings.  alikins committed the backend for building api_docs there.  But we need someone to create the skeleton that pulls everything together
+17:30:37 <allanice001> Or in basic/__init__.py have "from . Import *"
+17:30:39 <abadger1999> and we need more people to write docstrings.
+17:30:56 <allanice001> Thus basic's usage stays the same effectively
+17:31:44 <abadger1999> allanice001: (continuing tangent): right.  the problem is that we don't get the benefit of splitting.  ie: when I import basic.files; I also implicitly import basic.__init__.  That in turn imports *.
+17:31:46 <allanice001> I can look at a skeleton probably early feb
+17:32:04 <allanice001> true
+17:32:24 <abadger1999> allanice001: Cool.  what alikins submitted already lives in docs/api.
+17:33:31 <allanice001> Will take a look there, thnx
+17:34:15 <mattclay> Anything else about api docs?
+17:34:47 <allanice001> Not from me
+17:36:26 <mattclay> #topic Open Floor
+17:36:51 <allanice001> i have a rfa (request for advice)
+17:37:08 * bcoca will start rfs trend
+17:37:25 <allanice001> Have 3 peeps in our team with 0 dev knowledge
+17:37:52 <allanice001> Need to teach / get them to use and understand ansible
+17:38:08 <allanice001> Any ideas of where I can start?
+17:38:59 <bcoca> have them write the steps to simple tasks (commands they woudl run) then go with them and translate into ansible playbook
+17:39:15 <bcoca> ^ did this with QA folk ... they ended up running with it and using ansible as QA tool
+17:39:50 <allanice001> Cool, will do that
+17:39:51 <allanice001> thnx
+17:42:33 <mattclay> Anyone else?
+17:43:09 <mattclay> If nobody has anything else, I'll end the meeting in 1 minute.
+17:44:28 <mattclay> #endmeeting

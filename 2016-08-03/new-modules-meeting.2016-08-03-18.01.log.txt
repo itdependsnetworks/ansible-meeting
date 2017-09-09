@@ -1,0 +1,245 @@
+18:01:19 <gregdek> #startmeeting new-modules-meeting
+18:01:19 <zodbot> Meeting started Wed Aug  3 18:01:19 2016 UTC.  The chair is gregdek. Information about MeetBot at http://wiki.debian.org/MeetBot.
+18:01:19 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+18:01:19 <zodbot> The meeting name has been set to 'new-modules-meeting'
+18:01:27 <gregdek> #chair rbergeron gundalow
+18:01:27 <zodbot> Current chairs: gregdek gundalow rbergeron
+18:01:34 <gregdek> #topic Roll Call
+18:01:40 <jimi|ansible> yo
+18:01:44 <gregdek> (gundalow notes that he'll be 15m late)
+18:02:13 <ryansb> hi
+18:02:19 * rbergeron waves
+18:02:22 <gregdek> Agenda, as always: https://github.com/ansible/community/issues/92
+18:02:30 <rbergeron> meetings, so missed
+18:03:13 <gregdek> Working the agenda from bottom to top:
+18:03:56 <gregdek> #topic Archive Module
+18:03:58 <gregdek> https://github.com/ansible/ansible-modules-extras/pull/2323
+18:04:02 <abadger1999> óla
+18:04:27 <gregdek> Hey abadger1999 :)
+18:04:55 <gregdek> So looks like dag gives this one a shipit, and since he's the author of the unarchive module, seems like his shipit carries disproportionate weight here
+18:05:16 <alikins> howdy
+18:05:34 <chouseknecht> yo
+18:06:37 * gregdek waits for folks to have a look
+18:07:25 <abadger1999> Concept is reasonable.  Don't like that the code is all in the main() function but we don't really patrol code quality in extras.
+18:08:00 <rbergeron> gregdek: it looks good to me. Lots of feedback back and forth and seems like everything has been addressed more or less?
+18:08:06 <gregdek> Seems like it.
+18:08:32 <rbergeron> plus, as you said, dag :)
+18:08:36 * gundalow waves
+18:08:48 <rbergeron> hey gundalow :)
+18:09:59 <gregdek> Any objection to putting this one in shipit for final review?
+18:10:17 <abadger1999> +1
+18:10:25 <gundalow> LGTM
+18:10:31 <gundalow> (looks good to me)
+18:11:03 <gundalow> I assume filecmp, zipfile and tarfile are part of default python
+18:11:15 <jimi|ansible> that's two +1's, any reason not to just merge it?
+18:11:28 <gundalow> Sure, just merge
+18:11:30 <gregdek> That's up to y'all. :)
+18:11:57 <gundalow> oh, am as I'm core do I get full vote rights?
+18:12:25 <gundalow> Do we want to be adding stuff to MAINTAINERS-EXTRAS as we give shipits (I can update that)
+18:12:46 <gregdek> Well, when we actually merge, yes.
+18:13:14 <jimi|ansible> gundalow: yes you are core and have full voting rights :)
+18:13:23 <mattclay> It would be nice if older PRs such as this had tests run on Shippable, but the only way I know to do that is to have the contributor push their branch again.
+18:13:59 <mattclay> In this case it won't matter, since it's a new module and has no tests.
+18:14:15 <jimi|ansible> shippable doesn't have a retest option in the github ui?
+18:14:39 <mattclay> Shippable doesn't know about the PR because we added Shippable after the PR was last updated.
+18:14:40 <jimi|ansible> anyway it was tested and passed, since this is modules that shouldn't have changed so not really worried about it
+18:14:53 <jimi|ansible> well, tested on travis then
+18:14:57 <jtanner> famous last words
+18:15:17 <jimi|ansible> and it will be tested on shippable after merging
+18:15:26 <gregdek> OK, so we're shippping, then.
+18:15:30 <gregdek> Seems like we're agreed.
+18:15:33 <gundalow> +1
+18:15:36 <gundalow> hey mattclay :)
+18:15:43 <gregdek> Who's doing it, and shall we move on?
+18:15:49 * mattclay waves
+18:15:54 * gundalow will, and I'll update MAINTAINERS
+18:15:58 <gregdek> Either we shipit now, or we add the "shipit" label to make sure we do it later...
+18:15:59 <gregdek> :)
+18:16:03 <gregdek> OK, thx gundalow
+18:16:08 <gregdek> Next up:
+18:16:29 <gregdek> #topic datadog_downtime module
+18:16:30 <gregdek> https://github.com/ansible/ansible-modules-extras/pull/2381
+18:17:04 <gregdek> Copious +1s after several attempts. :)
+18:17:09 * gregdek will brb
+18:17:56 <jeff-logicmonito> hi all. jeff from logicmonitor here. spoke to some of you at the fest last week. i'm late because i didn't realize there was a separate meeting room. just want to make sure i didn't miss discussion of our module.
+18:18:10 <ryansb> hi Jeff
+18:18:14 <gundalow> hey jeff-logicmonito :)
+18:18:39 <jeff-logicmonito> we meet again
+18:18:49 <jimi|ansible> jeff-logicmonito: hey, that was me :)
+18:19:02 <jimi|ansible> you didn't miss it
+18:19:12 * gundalow is vritual greg
+18:19:13 <rbergeron> gregdek: well -- aside from the "do we really mind if people are saying works_for_me for their own module submissions
+18:19:17 <rbergeron> "
+18:19:18 <rbergeron> thing
+18:19:44 <jimi|ansible> rbergeron: i don't mind if they do, but it adds no weight for me generally
+18:19:47 <rbergeron> ... it seems like others are okay with it that had been waiting on it
+18:19:59 <gundalow> alikins: oh, just noticed you added comment son file/archive
+18:20:24 <gundalow> oh and abadger1999
+18:20:55 <gregdek> well, skornehl and goekhanm both give it shipit
+18:21:08 <rbergeron> but otherwise... nobody else seems sad or anything
+18:21:10 <abadger1999> gundalow: sorry -- I saw "mark for final review" earlier so started putting comments in.
+18:21:17 <rbergeron> gregdek: indeed, i missed that there was a second person
+18:21:25 <gundalow> alikins: abadger1999 It's cool. I'm glad you spotted stuff
+18:21:28 * abadger1999 can always find something to nitpick about.
+18:21:35 <gundalow> I'll ask the submitted to patch it
+18:21:40 <gundalow> Not like anyone is using it yet
+18:21:45 <abadger1999> <nod>
+18:21:58 <gregdek> So then we're shipping it and we'll ask for a subsequent patch, or...?
+18:22:08 <gundalow> I'll ask for a patch
+18:22:16 <gundalow> It's safe as no one is using it
+18:22:25 <gundalow> if it was an update to a module I'd be more tempted to revert
+18:22:28 <gregdek> Before or after merge?
+18:22:30 <rbergeron> on which?
+18:22:44 <gregdek> Are we merging, or waiting for a new patch to merge?
+18:22:44 <gundalow> 2323 archive
+18:22:50 <rbergeron> ah
+18:22:57 <gundalow> sorry, I should have changed topic back
+18:23:03 <gregdek> Ohhhhh.
+18:23:06 <gundalow> OK, carry on
+18:23:11 <gregdek> Well, no, wait.
+18:23:11 <gundalow> datadog_downtime
+18:23:13 <rbergeron> it's all good. are we kosher with 2381? i think we are
+18:23:18 <gregdek> Are you merging 2323 or not?
+18:23:47 <gundalow> I've already merged 2323. I'm going to add a follow up comment asking him to raise a new PR to fix the few minor issues
+18:23:54 <gregdek> Got it. Thanks!
+18:24:10 <gundalow> .
+18:24:10 <gundalow> .
+18:24:11 <gundalow> .
+18:24:11 <gundalow> .
+18:24:11 <gundalow> .
+18:24:14 <gundalow> .
+18:24:16 <gregdek> OK, back to 2381... ok to put into shipit, or merge directly, or neither?
+18:24:17 <gundalow> datadog_downtime
+18:24:41 <ryansb> :ship:
+18:25:15 <rbergeron> also: jeff-logicmonito -- hi and welcome :) (sorry, got distracted by other typing of things)
+18:25:42 <rbergeron> gregdek: i am for at least shipit, not able to comment on the merge part of it but that sounds delightful if possible :)
+18:26:22 <gregdek> So, put it in shipit for final review?
+18:26:27 <gregdek> Sounds like the consensus.
+18:26:34 <gundalow> NO
+18:26:36 <gundalow> NO
+18:26:44 <gundalow> the docs for 2381 are all erong
+18:26:58 <gundalow> or some letters like that
+18:27:16 <gregdek> Ok!
+18:27:23 <gundalow> unless you already spotted that
+18:27:41 <gregdek> I'm just asking the questions, LOL
+18:28:11 <alikins> do we have a policy on using stdlib modules that are imported via the 'from ansible.module_utils.basic import *' ?   stuff like time,sys,re, etc
+18:28:30 <gundalow> alikins: ziploaded concerns?
+18:28:34 <bcoca> since 2.1, they are not 'autoimported'
+18:28:49 <bcoca> modules should specify their own if they use em
+18:28:52 <alikins> I'd prefer module to import those itself for clarity, even if the modules do get imported into the local namespace from the splat
+18:29:05 <gregdek> gundalow: so what's wrong with the docs?
+18:29:21 <bcoca> agreed, but that would go with removal of 'from ansible.module_utils.basic import *' form
+18:29:29 <alikins> yup
+18:29:30 <bcoca> to new 'actual improt'
+18:29:35 <bcoca> import
+18:29:37 <gundalow> I(api_key):
+18:29:43 <alikins> and general lower level of wtf
+18:29:55 <gundalow> (just adding comments
+18:30:07 <alikins> 'wheres that from' that is
+18:30:11 <bcoca> we should be doing that 'in passing' to modules we touch, not mandatory for 2.2, but proably should be for 2.3
+18:30:38 <gregdek> ok, so gundalow is adding comments to the PR directly, we will put back into needs_revision I imagine?
+18:30:40 <bcoca> for modules in the repo, not going to remove the facility  as custom ones might still use
+18:31:54 <rbergeron> gregdek: sounds like it
+18:33:07 <gregdek> Is someone also adding comments about expected usage of module_utils import?
+18:33:13 <gregdek> (And is that in the module guidelines?)
+18:34:50 <bcoca> http://docs.ansible.com/ansible/developing_modules.html#common-module-boilerplate
+18:34:53 <bcoca> it was updated
+18:35:14 <gregdek> OK, very good.
+18:35:19 <bcoca> but most of these PRs predate it
+18:35:25 <bcoca> so do most modules ....
+18:35:42 <gregdek> Yes, it's a moving target, of course. But at least we can point people to the new guidelines.
+18:36:23 <gregdek> I think we got that one covered.
+18:36:24 <gregdek> Moving on:
+18:36:44 <gregdek> #topic AWS NAT Gateways
+18:36:48 <gregdek> https://github.com/ansible/ansible-modules-extras/pull/1882
+18:37:34 <gregdek> This is from linuxdynasty, who was at the contributor conference
+18:37:52 <gregdek> And there was conflict among two modules, so I picked this one because it had tests and both had multiple advocates
+18:38:08 <alikins> wow
+18:38:11 <alikins> it has tests!
+18:38:29 <gregdek> inorite
+18:38:45 <bcoca> its a trap!
+18:38:52 <gregdek> linuxdynasty is *very* excited about testing.
+18:39:55 <gundalow> +10000000000000000
+18:41:30 <gundalow> (though I have a few minor docs things)
+18:41:42 <gundalow> If someone can look at the code that would be good :)
+18:42:37 <rbergeron> I think the various aws folks have all gone through this with a pretty srs comb haven't they?
+18:42:43 <rbergeron> gregdek ^^ ?
+18:43:04 <gregdek> Seems like a lot of them have.
+18:43:50 <gundalow> My comments are only nitpick. And only there because apparently I'm not allowed to go raise one EPIC PR to fix all formatting for all modules :(
+18:43:58 * ryansb hasn't personally tested, but would be pro-shipit
+18:44:13 <jtanner> you can't do "EPIC PRs" ?
+18:44:37 <mattclay> Once this is merged, lets make sure to ask for a PR to get the tests added.
+18:44:43 <gregdek> gundalow: you're core now. You can do whatever you need to do.
+18:45:04 <gregdek> Unless the core team says you can't, LOL
+18:45:15 <gundalow> jtanner: I was told I shouldn't go round just fixing typos/spelling. In the same way I shouldn't just do PRs that only fix PEP8
+18:45:39 <gundalow> (though I have ignored this for modules/networking/*) as there were spelling mistakes & formatting issues
+18:45:42 <gregdek> If this is the most feedback we have, I say we mark for shipit.
+18:45:45 <jtanner> i've never agreed with that
+18:45:48 <rbergeron> okay, so: can we shipit? let's do that. :)
+18:46:00 <jtanner> fix whatever you find
+18:46:39 <gundalow> jtanner: woot
+18:46:44 <gregdek> I vote we mark "shipit" and let submitter fix issues with separate PR. We know he's engaged.
+18:46:49 <gregdek> Any objection?
+18:46:50 <rbergeron> gregdek: +1
+18:46:51 <gundalow> sure :)
+18:46:53 <abadger1999> gundalow: typos/spelling +1 to just fix.  PEP8, I feel good about it but others do not... Figure networking is fair game since you are one of the primaries for that subcategory.
+18:47:30 * gundalow will add to MAINTAINERS
+18:47:31 <ryansb> I'm pro docs/typo fixing, but for whitespace I'm ambivalent about fixing just whitespace in a PR
+18:47:33 <gundalow> abadger1999: aye
+18:48:09 <gundalow> ryansb: oh, I agree. my vimrc screams if there is trailing whitespace. I only fix that if I'm making other changes that justify a PR
+18:48:20 <gregdek> OK!
+18:48:24 <gregdek> #topic Open Floor
+18:48:41 <jtanner> vmware_guest was merged into extras yesterday
+18:48:43 <gregdek> jeff-logicmonito: hello!
+18:48:46 <jeff-logicmonito> hi!
+18:48:50 <gregdek> What's your PR?
+18:48:58 * rbergeron suspects it is https://github.com/ansible/ansible-modules-extras/pull/2652 :)
+18:49:12 <jeff-logicmonito> correct
+18:49:55 <jeff-logicmonito> i appear totally incapable of updating my PRs and have them pass travis if i leave them untouched for awhile. sorry about that. =[
+18:50:00 <rbergeron> and looks like jimi removed the needs_revision on the previous PR
+18:50:12 <jtanner> are we picky on the order of DOCUMENTATION, EXAMPLES, RETURNS ?
+18:50:16 <gregdek> jeff-logicmonito: more our fault than yours.
+18:50:34 <gregdek> #topic Logic Monitor PRs
+18:50:38 <rbergeron> which seemed to have all the necessary shipits otherwise
+18:51:02 <jeff-logicmonito> correct. the only changes necessitating the new PR was some docs formatting fixes jimi pointed out at the fest
+18:51:04 <gregdek> jtanner: good question. It's generally in that order, don't know if it's a killer.
+18:51:25 <jtanner> the linter didn't seem to care, so i suspect not .. but i have to wonder
+18:51:25 <gregdek> I presume that jimi|ansible can vouch for these changes, since he recommended them personally ;)
+18:51:51 <jeff-logicmonito> he told me that docs build threw errors, so i fixed the errors
+18:52:39 <jeff-logicmonito> i should point out that the doc generator doesn't actually accept ALL valid YAML for the documentation string. it was freaking out on the line continuations i was using. not a big deal to take those out, but took some digging to figure out what it was complaining about
+18:53:08 <gundalow> jeff-logicmonito: Do you list Linux for a specific reason under requirements. Are there none linux versions of logicmonitor?
+18:53:09 <jtanner> "Manage your LogicMonitor account through Ansible Playbooks" ... technically modules can be used from ansible adhoc too
+18:53:30 <gundalow> s/ Playbooks/ will fix that
+18:53:47 <abadger1999> jtanner: I'd like to be picky about the order but no code relies on it.
+18:54:53 <jeff-logicmonito> re windows: i think there is some weirdness with our windows collector installer that the decision was made not to support it in ansible at this time
+18:55:04 <gundalow> jeff-logicmonito: cool
+18:55:34 <gregdek> Would sort of like feedback from jimi|ansible here...
+18:56:14 <rbergeron> gregdek: did his removal of needs_revision not provide enough feedback? :)
+18:56:15 <jtanner> "import urllib" ...
+18:56:25 <jeff-logicmonito> it's just for param encoding
+18:56:37 <jtanner> i think we have a 'safe' wrapper for that
+18:57:21 <gregdek> Oh, right, we're supposed to use the url stuff in module_utils before urllib, right?
+18:57:34 <jtanner> looking for example
+18:57:45 <jimi|ansible> we have a parsing method, not sure if we have an encoding method wrapper
+18:58:16 <gregdek> "When fetching URLs, please use either fetch_url or open_url from ansible.module_utils.urls rather than urllib2; urllib2 does not natively verify TLS certificates and so is insecure for https."
+18:58:26 <gregdek> Refers to urllib2, though, not urllib
+18:58:34 <gregdek> And don't know the difference in this case
+18:59:18 <abadger1999> jeff-logicmonito, jtanner: If it's just for param encoding it's fine.
+18:59:25 <jtanner> k
+18:59:34 <jeff-logicmonito> i swear that's all
+18:59:35 <jtanner> i see that outbound calls are through our lib
+18:59:46 <abadger1999> It really does mean urllib2 -- urllib2 fetches files (urllib does not).
+18:59:49 <jtanner> "self.urlopen = open_url"
+19:00:15 <jimi|ansible> yeah i checked all that already
+19:00:36 <jimi|ansible> as jeff-logicmonito said, it was only a docs issues, so if they compile now i'm ok with the module
+19:00:37 <jtanner> "santaba" is that a product codename?
+19:00:52 <jeff-logicmonito> correct
+19:01:25 <gregdek> Well then.
+19:01:37 <gregdek> jimi|ansible gives his thumbs up, so shipit.
+19:01:51 <jtanner> SHIP ZE DAMN MODULE
+19:01:53 <jeff-logicmonito> awesome. thanks everyone!
+19:01:54 * rbergeron is with that
+19:02:10 <gundalow> jeff-logicmonito: I've added some docs feedback
+19:02:15 <tima> nice work jeff-logicmonito.
+19:02:42 <gregdek> And that's our time for today. Thanks everyone!
+19:02:46 <gregdek> #endmeeting

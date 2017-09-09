@@ -1,0 +1,88 @@
+10:16:03 <gundalow> #startmeeting Contributors Follow up meeting
+10:16:03 <zodbot> Meeting started Thu Jun 22 10:16:03 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+10:16:03 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+10:16:03 <zodbot> The meeting name has been set to 'contributors_follow_up_meeting'
+10:16:04 <hyperized> o/
+10:16:52 <gundalow> #chair abadger1999 hyperized Shrews mordred hyperized
+10:16:52 <zodbot> Current chairs: Shrews abadger1999 gundalow hyperized mordred
+10:18:01 <gundalow> #action gundalow http://docs.ansible.com/ansible/dev_guide/developing_modules_general.html#testing-your-module should point to testing.html
+10:18:29 <gundalow> #action gundalow http://docs.ansible.com/ansible/dev_guide/ "Testing Your Module" should be removed
+10:20:14 <shaps> gundalow, https://github.com/ansible/ansible/issues/22647 <- opened Dec 2016 :O
+10:20:19 <gundalow> #info Wednesdays meeting notes: Main session: #actions & #infos: https://meetbot.fedoraproject.org/ansible-meeting/2017-06-21/ansiblefest_london.2017-06-21-08.27.html
+10:21:34 <gundalow> #info Wednesdays meeting notes: Main session: raw logs: https://meetbot.fedoraproject.org/ansible-meeting/2017-06-21/ansiblefest_london.2017-06-21-08.27.log.html
+10:22:06 <gundalow> #info Wednesdays meeting notes: Zuul #actions & #info https://meetbot.fedoraproject.org/ansible-meeting/2017-06-21/ansiblefest_developer_conference_-_zuul.2017-06-21-13.53.html
+10:22:19 <gundalow> #info Wednesdays meeting notes: Zuul #actions raw logs: https://meetbot.fedoraproject.org/ansible-meeting/2017-06-21/ansiblefest_developer_conference_-_zuul.2017-06-21-13.53.log.html
+10:22:23 <gundalow> hyperized: ^
+10:23:19 <gundalow> shaps: Got a link to your PRs?
+10:23:24 <gundalow> that you'd like reviewing
+10:23:27 <gundalow> #topic Open Floor
+10:24:23 <gundalow> #chair jhogarth
+10:24:23 <zodbot> Current chairs: Shrews abadger1999 gundalow hyperized jhogarth mordred
+10:24:49 <shaps> This one I believe still needs approvals? https://github.com/ansible/ansible/pull/24443
+10:25:30 <shaps> and not sure what the status of those 2 would be: https://github.com/ansible/ansible/pull/22744 - https://github.com/ansible/ansible/pull/24558
+10:26:03 <shaps> well, I probably need to fix something in both those. Guess I should have a chat with abadger1999 too?
+10:26:07 <shaps> gundalow ^
+10:26:59 <shaps> https://github.com/ansible/ansible/pull/19554 <- rebased now. Should be ok
+10:36:59 <hyperized> if anyone is bored, I have a tiny bug report that could use some love
+10:37:36 * abadger1999 waves
+10:38:26 <abadger1999> Follow up for the "how do I run under python3 " request from yesterday: https://docs.ansible.com/ansible/python_3_support.html#python-3-support
+10:39:20 <shaps> abadger1999, o/
+10:57:57 <hyperized> abadger1999: https://github.com/ansible/ansible/issues/25908 :D
+11:11:35 <mordred> https://github.com/openstack-infra/zuul/blob/feature/zuulv3/zuul/ansible/paths.py
+12:28:27 <gundalow> #topic Zuul & Ansible
+12:29:36 <gundalow> #action Zuul to add example test for "make authors" returns over 1000 lines which gives a basic test
+12:30:28 <gundalow> #action Zuul to add example test which ensures Ansible libs are available: "./test/runner/ansible-test --help"
+12:36:15 <gundalow> #agreed zuul will most likely just be a wrapper round ansible-test
+12:36:39 <misc> can we rename ansible-test to gozer ?
+12:38:20 <gundalow> #info in the future (post v1) we may want to use Zuul like ansible-core-ci to specify remote notes to test against against, which would be good for parallel runs, like Windows
+12:38:34 <gundalow> misc: alias ansible-test=gozer
+12:41:42 <gundalow> #info http://docs.ansible.com/ansible/dev_guide/testing_units.html shows how to use Ansible-test to install dependencies: e.g. ansible-test units --tox --python 2.7 --requirements apache2_module
+12:43:31 <gundalow> #chair jimi|ansible
+12:43:31 <zodbot> Current chairs: Shrews abadger1999 gundalow hyperized jhogarth jimi|ansible mordred
+12:46:42 <gundalow> Shrews: ^
+12:47:43 <Shrews> ?
+12:48:43 <Shrews> gundalow: not actually being in London, I have no idea what's happening atm
+12:54:32 <hyperized> I am but I still dont know :d
+12:55:39 <gundalow> Shrews: oh, sorry
+12:55:45 <gundalow> #unchair Shrews
+12:55:46 <zodbot> Current chairs: abadger1999 gundalow hyperized jhogarth jimi|ansible mordred
+12:56:22 <gundalow> mordred: ^
+12:56:50 * gundalow is struggling with Faces, GitHub & IRC mapping
+12:58:03 <bcoca> that is why irc handles is mandatory on those name tags
+13:01:55 <misc> we should replace our face by our irc nick
+13:03:31 <jimi|ansible> using an actual picture of myself on twitter/github might be useful too
+13:05:21 <gundalow> jimi|ansible: If you do make sure it's a *realy* close closeup
+13:05:30 <jimi|ansible> o_O
+13:47:30 <abadger1999> https://github.com/bcoca/ansible/commits/update_json
+13:48:02 <bcoca> abadger1999: that probably cannot even be rebased at this point
+13:48:19 <abadger1999> bcoca: <nod>  Is that your latest attempt?
+13:48:50 <bcoca> no, but was 'farthest along'
+13:49:18 <bcoca> what brought that one up? more people asking for 'immediate status on tasks'?
+13:49:37 <bcoca> or is this related to the zuul hack?
+13:50:58 <abadger1999> bcoca: related to the zuul hacks.
+13:51:15 <abadger1999> I wanted to make sure that we weren't discussing htings in this room that were vastly different than what you were thinking.
+13:52:01 <bcoca> well, their case also had the requirement of intermingled stdout/stderr
+13:52:17 <bcoca> and do they require the data being passed back to controller or just logged on remote?
+13:52:51 <abadger1999> <nod>  I think interleaved stdout/stderr is a separate feature though.
+13:52:58 <abadger1999> (And that's a lot easier to implement on its own)
+13:53:10 <abadger1999> bcoca: they need it passed back to the controller.
+13:53:39 <bcoca> well, they are kind of related in that they both need hacking run_command
+13:53:58 <abadger1999> For interleaved, we're thinking new paramter to run_command() to combine stdout and stderr into a single stream and then command module has a parameter to enable the single stream.
+13:54:37 <bcoca> the parts we need to modify are having an update_json sent from run_command + having the 'read loop' not end on the server side, but be able to take 'chunks' aka updates and send those to a callback, then wait for 'final' and exist once that is recieved
+13:54:48 <bcoca> not too hard, just needs to be done 'per connection'
+13:55:01 <bcoca> ^ which is where i got stuck, trying to make it generic
+14:27:59 <hyperized> just noticed pycompat24.py in the module docs, was I correct in understanding 2.4 is no longer supported?
+14:32:23 <bcoca> suported up to 2.3, 2.4 is dropping it
+14:42:56 <gundalow> #action gundalow to add links to https://codecov.io/gh/ansible/ansible/ from testing docs
+14:50:07 <gundalow> #action gundalow Look at https://skillsmatter.com/event-space#event_spaces
+14:58:25 <abadger1999> hyperized: Correct.  Ansible 2.4 is dropping support.  We'll kep the pycompat24.py module around for a while so that people have a chance to port away from using it.
+14:58:46 <abadger1999> But we'll deprecate it eventually.
+15:01:29 <gundalow> #action gundalow to get DCI group linked in with TWG
+15:01:40 <gundalow> #action gundalow to bring Matt Clay upto speed with DCI
+15:14:51 <gundalow> #action gundalow https://github.com/ansible/ansible/pull/25915
+15:17:40 <shaps> mordred, bot shouting at your easyfixes :D
+15:28:59 <mordred> shaps: that's because I'm a bad person
+16:18:49 <gundalow> abadger1999: (and others) anything anyone else wants to add into the IRC log before I #endmeeting
+16:19:03 <gundalow> Any actions or ideas or things that have been discussed that needs tracking?
+16:36:02 <gundalow> ok
+16:36:05 <gundalow> #endmeeting

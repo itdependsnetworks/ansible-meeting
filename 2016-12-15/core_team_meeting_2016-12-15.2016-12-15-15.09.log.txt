@@ -1,0 +1,117 @@
+15:09:10 <alikins> #startmeeting Core Team Meeting 2016-12-15
+15:09:10 <zodbot> Meeting started Thu Dec 15 15:09:10 2016 UTC.  The chair is alikins. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:09:10 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:09:10 <zodbot> The meeting name has been set to 'core_team_meeting_2016-12-15'
+15:09:19 <nitzmahone> Yo
+15:10:52 <alikins> #topic agenda: https://github.com/ansible/community/issues/147
+15:11:53 <alikins> #topic https://github.com/ansible/community/issues/147#issuecomment-266483246  https://github.com/ansible/proposals/issues/43  - Allow people to use master as an alias for devel in git
+15:12:07 <alikins> That looks like the only new agenda item.
+15:12:07 * mattclay waves
+15:13:32 * gundalow waves
+15:14:42 <bcoca> the only issue i see with that is the initial reasons we had for not issuing a master/ ... so people would not consider it stable
+15:14:55 <bcoca> that is why we have stable branches and push primarily against /devel
+15:15:07 <bcoca> i persontally dont care either way
+15:15:23 <agaffney> people already clone the git repo and pay no attention to the branch name and then complain that things are broken
+15:15:25 <ryansb> If it wouldn't change our process, I don't see a benefit
+15:15:30 <alikins> Seems reasonable to me. I guess https://github.com/ansible/proposals/issues/43#issuecomment-267122340 is kind of an issue  (if we can do this for the github repo)
+15:15:36 <bcoca> people will be confused by this no matter what we do ... also if this is biggest issue we have left in ansible ... i would be joyful
+15:15:49 <nitzmahone> Curious how the alias would interact with GH protected branches if we need to lock things down...
+15:16:29 <agaffney> I can understand *why* this was requested, but I think it would probably be more trouble than its worth
+15:16:50 * nitzmahone would tend to agree
+15:16:52 <ryansb> it would just be *more* confusing because then we'd need to keep both in sync etc
+15:16:55 <bcoca> if github interactions are not clear, we should defer any decisions until we know
+15:17:22 <bcoca> cannot decide w/o knowing full consequences ... its not like im POTUS
+15:17:38 <agaffney> needs more twitter rants
+15:18:09 <bcoca> agaffney: as author, object or bystander?
+15:18:21 * allanice001 votes for master == stable
+15:18:25 <alikins> main utility to me is to make random git tools that assume 'master' work by default. Also no master is kind of a unnecessary unexpected behavior without much utility aside being status quo.
+15:19:25 <bcoca> im fine if it does not affect current workflow, but we cannot make a decision when we don't know the consequences on the github side, i would defer this to next meeting and have someone investigate the interatcions
+15:19:36 <nitzmahone> Master as current stable would likely cause even more problems, since we rarely want direct commits to stable.
+15:20:03 <alikins> #info https://github.com/ansible/proposals/issues/43#issuecomment-267122340  Unclear if github supports the branch alias
+15:20:27 <bcoca> so any discussion now is not that useful until we KNOW
+15:20:31 <alikins> #info <nitzmahone> Curious how the alias would interact with GH protected branches if we need to lock things down...
+15:22:30 <alikins> #action Figure out if this works on github.  dag, bcoca, abadger1999
+15:23:03 <alikins> I'd say that topic is covered for now.
+15:23:26 <alikins> Next topic?
+15:26:17 <abadger1999> yep.
+15:26:34 <abadger1999> (Lots of merge requests to cover?)
+15:27:12 <nitzmahone> I'm doing fale's Windows set this am
+15:27:54 <fale> nitzmahone: thanks :)
+15:30:57 <alikins> #topic Pull request discussions
+15:32:39 <abadger1999> bcoca: wew were wondering if you'd be responsible for this one: https://github.com/ansible/ansible/pull/19027
+15:32:58 <abadger1999> launchd module.  You started the review in the extras repo.
+15:34:55 <abadger1999> Qalthos/gundalow: Are one of you okay to take: https://github.com/ansible/ansible/pull/19046 ?
+15:35:22 <bcoca> i had my own version well before that one, i was thinking of merging both (that one does not cover older OS X)
+15:37:05 * gundalow looks
+15:37:45 <gundalow> set Qalthos as the reviewer
+15:37:49 <abadger1999> k
+15:38:57 <abadger1999> gundalow: This one is waiting on networking group info: https://github.com/ansible/ansible/pull/19038.. Will you put it back on the radar when it's ready?
+15:39:30 <abadger1999> privateip: This one it looks like we're rejecting but need a note from you as to why? https://github.com/ansible/ansible/pull/19045
+15:41:22 <abadger1999> bcoca: <nod>  Maybe share your implementation with the reporter and see if they can merge?
+15:41:44 <abadger1999> jtanner: Not sure what to do about htis one: https://github.com/ansible/ansible/pull/19049  (vmware_guest) Looks like there's an alternate implementation and the two submitters are trying to hash out which is the right direction.
+15:42:09 <bcoca> i did in the original ticket
+15:42:10 <abadger1999> jtanner: We might have to make a decision for them to unblock them.
+15:42:29 <jtanner> ping davix, have him review
+15:43:17 <jtanner> oh, this is a merge conflict ...
+15:44:46 <jtanner> meh, i'll let dav1x pick the right one
+15:44:48 <abadger1999> bcoca: I think the reporter is saying they merged your changes here: https://github.com/ansible/ansible-modules-extras/pull/3073#issuecomment-251127070
+15:46:43 <abadger1999> nitzmahone: Is this one on your radar as well: https://github.com/ansible/ansible/pull/19070 ?
+15:46:58 <bcoca> abadger1999: need to look into that as that comment makes little sense to me
+15:47:11 <bcoca> also not having OS X ... makes it hard for me to test his assertions
+15:47:27 <nitzmahone> abadger1999: yep
+15:47:44 <abadger1999> bcoca: yeah -- at some point we jsut have to accept their code because it doesn't seem wrong and we can't test it.
+15:48:07 <mattclay> nitzmahone: Here's another one that just passed tests: https://github.com/ansible/ansible/pull/19147
+15:48:34 <bcoca> abadger1999: but it does things that are contrary to what the docs say is right
+15:49:08 <abadger1999> bcoca: <nod>  Can only point it out and ask.
+15:49:43 <bcoca> i did and his answer confuses me
+15:50:10 <nitzmahone> mattclay: the PS versions in there match aws AMIs, but not fresh installs (2008+R2 are both PS2 out of the box)
+15:51:02 <abadger1999> bcoca: yeah... Maybe ask for integration tests that can run in our macosx CI?
+15:51:12 <bcoca> do we have that now?
+15:51:17 <mattclay> nitzmahone: Yeah, I was assuming they knew the stock PS versions, my answer was just to address what we use in our CI infra.
+15:51:20 <abadger1999> If the tests pass then documentation is wrong
+15:51:42 <bcoca> not really, the thing is that it has changed wildly across OS X versions
+15:51:58 <bcoca> i just used the part that was common to most
+15:52:13 <bcoca> he is using the 'newer' version which has also been reported as faulty/unstable
+15:52:42 <abadger1999> mattclay: ^ Is our osx shippable testing able to test launchd/service?
+15:52:43 <bcoca> its not an easy one as the underlying tools are a mess
+15:53:24 <mattclay> abadger1999: It's just a regular osx VM, so I can't think of a reason why it wouldn't work.
+15:53:49 <mattclay> If I need to add more osx versions to CI, I can do that.
+15:55:32 <abadger1999> bcoca: <nod>  I think if it works on his machine and in our CI that's more testing than if we wrote the code ourselves... If he's responsive to issues then that's better than we can do ourselves (not having OSX to develop on)
+15:55:43 <bcoca> the problem is that many Mac users never upgrade, last i looked like 20% of them are using 'unsupported' versions
+15:56:26 <allanice001> bcoca: it may be a hardware limitation thing too
+15:56:33 <abadger1999> Then we document in the module that it doesn't work with those versions of macOS.
+15:56:42 <bcoca> yes, that is part of it, older hardwrae CANNOT upgrade
+15:57:41 <abadger1999> we already say that certain modules don't work if python is too old or python library is too old... that it's not supported if your OS version is ancient, etc...
+15:57:44 <bcoca> abadger1999: but mine would work with those
+15:57:54 <allanice001> abadger1999: perhaps document as “untested / unsupported”?
+15:58:10 <bcoca> and not even ancient, its 1-2 versions older the launch system has undergone many changes
+15:58:23 <bcoca> current is supposed to be backwards compat, that is why i prefered using the old semantics
+15:58:47 <allanice001> also on mac, with homebrew, you can run newer python
+15:59:03 <abadger1999> bcoca: Then push yours and let him add onto it with appropriate documentation that feature foo/param bar doesn't work unless macosx is >= $version
+16:00:08 <bcoca> allanice001: that was example, im pretty sure we can go back lots farther in os x versions than some linux distros and still have a minmal python we can use
+16:00:21 <allanice001> true
+16:00:33 <bcoca> abadger1999: that was my plan, as soon as i had time to incorporate some changes from his
+16:00:42 <allanice001> i guess it also becomes more complex in Wind0ze
+16:00:43 <bcoca> i just have not had the time
+16:00:53 * bcoca brings out 100' pole
+16:01:08 * allanice001 running latest os on mac, and just getting to grips with ansible codebase
+16:01:10 <bcoca> actually, windows has been mostly the same since everyting is NT based
+16:01:14 <abadger1999> bcoca: right... but we can't block people doing work on us not having time.
+16:01:15 <bcoca> net service
+16:01:24 <allanice001> let me know if you need assist with specific testing
+16:01:57 <bcoca> allanice001: both modules are out there, if you can check them and see what works/fails it would be great, we had some internal users with OS X but they never had time to test
+16:02:09 <bcoca> now we have OS X testing ... i should also test that out
+16:02:30 <bcoca> ^ have not touched any of this in a while cause of lack of OS X resources
+16:02:54 <mattclay> bcoca: You can use ansible-test to get a short-lived (45 minutes) shell on our osx CI infra, if you need it. You'll just need an access key.
+16:03:14 <abadger1999> bcoca: so we need to push it one step farther down the road... If that means pushing your code out and even though you aren't happy with it and letting him modify then we need to do that; if it means accepting his PR and slowly making it support older versions, then we do that.
+16:04:42 <allanice001> abadger1999 & bcoca : are you only using travis for CI ?
+16:04:51 <bcoca> shippable
+16:04:51 <alikins> any conclusions/info/agreed/actions from whatever the osx version discussion is about?
+16:05:20 <abadger1999> allanice001: https://app.shippable.com/projects/573f79d02a8192902e20e34b/status/
+16:05:36 <allanice001> #action allanice001 to test modules on OSx 10.12.2
+16:05:39 <bcoca> mattclay: i might ping you later, have not had time to look at any of that
+16:06:17 <bcoca> abadger1999: fine, if you have the time, feel free to take, im still playing catch up to last week and trying to fix async
+16:06:36 <alikins> #info osx launchd pr https://github.com/ansible/ansible/pull/19027
+16:06:37 <bcoca> also, we might have no_log leek to callbacks
+16:07:03 <alikins> thats an hour, so calling #endmeeting
+16:07:06 <alikins> #endmeeting

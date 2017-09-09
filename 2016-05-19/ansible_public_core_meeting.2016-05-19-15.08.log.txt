@@ -1,0 +1,186 @@
+15:08:54 <abadger1999> #startmeeting Ansible Public Core Meeting
+15:08:54 <zodbot> Meeting started Thu May 19 15:08:54 2016 UTC.  The chair is abadger1999. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:08:54 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:08:54 <zodbot> The meeting name has been set to 'ansible_public_core_meeting'
+15:09:01 <abadger1999> #topic Roll call
+15:09:06 * ryansb waves
+15:09:08 <Qalthos> hiya
+15:09:13 * mattclay waves
+15:09:17 <abadger1999> #chair ryansb Qalthos mattclay
+15:09:17 <zodbot> Current chairs: Qalthos abadger1999 mattclay ryansb
+15:10:04 <abadger1999> nitzmahone, jtanner|t420, jimi|ansible, bcoca, resmo, gundalow, jtanner|t420, anyone else that's interested -- Public core dev meeting starting.
+15:10:24 * resmo waves
+15:10:26 <nitzmahone> Yo
+15:10:35 <jtanner> hi
+15:10:47 <abadger1999> #chair nitzmahone jtanner
+15:10:47 <zodbot> Current chairs: Qalthos abadger1999 jtanner mattclay nitzmahone ryansb
+15:11:46 <abadger1999> #topic Agenda items
+15:11:56 <abadger1999> I think this is the agenda ticket: https://github.com/ansible/community/issues/94
+15:11:59 <abadger1999> and it's empty.
+15:12:43 <Jmainguy> so beer time?
+15:12:47 <ryansb> oh. Short meeting
+15:12:49 <abadger1999> #chair Jmainguy
+15:12:49 <zodbot> Current chairs: Jmainguy Qalthos abadger1999 jtanner mattclay nitzmahone ryansb
+15:12:53 <abadger1999> #topic Proposals
+15:13:11 <abadger1999> three new proposals
+15:13:37 <abadger1999> #topic Proposal: Module Rename Lifecycle  https://github.com/ansible/proposals/issues/14
+15:13:56 <bcoca> +1
+15:14:18 <bcoca> though we might want to give more leeway/time to removal of old names
+15:14:33 <bcoca> also might want to restrict to 'core' if we are spliting extras
+15:14:44 <abadger1999> <nod>
+15:14:52 <Qalthos> +1 to everything bcoca just said
+15:15:21 <Jmainguy> steps 2 and 3
+15:15:29 <Jmainguy> in 2.3 raise an error, in 2.4 allow old name to be used again
+15:15:33 <abadger1999> yeah, I think more time might be nice.  not sure what to do about extras in this case at all.  Might be that just falls out naturally once extras is separated
+15:15:48 <abadger1999> #chair bcoca
+15:15:48 <zodbot> Current chairs: Jmainguy Qalthos abadger1999 bcoca jtanner mattclay nitzmahone ryansb
+15:16:36 <ryansb> bcoca: so what, 2 cycles of warnings instead of 1?
+15:16:36 <abadger1999> gregdek: NOt urgent but if you have ideas about how we should think about module policy like ^ as applying to extras, you're welcome to chime in.
+15:17:20 <Jmainguy> I would like extras to resemble core as much as possible, if we are gonna have conventions
+15:17:33 <Jmainguy> extras isnt really the wild west, stuff not merged into core/extras would be wild west
+15:17:46 <Jmainguy> just my 2 cents
+15:18:05 <bcoca> Jmainguy: i dont disagree, but proposal was accepted to make extras into the wild west
+15:18:12 <bcoca> ^ not totally, but closer
+15:18:13 <abadger1999> Unlike code to implement deprecated playbook features, supporting old module names is relatively painless... so I could see supporting hte old names longer.  The only problem is when we'd want to reuse an old name.
+15:18:15 <Jmainguy> ah, well there u go
+15:18:20 <bcoca> so it would not have the restrictions of core
+15:18:58 <bcoca> abadger1999: since its modules that DONT follow naming conventions, i dont see us ever using those names
+15:19:05 <gregdek> I suspect we will change the guidelines for Core and Extras -- similar but different timeouts etc.
+15:19:17 <gregdek> I'm sure we'll sort it out.
+15:19:28 <gregdek> (but not today)
+15:20:03 <abadger1999> <nod>
+15:20:56 <abadger1999> Okay, so I think we can ignore how this applies to extras for now, when it separates, we'll figure out which policies no longer apply.
+15:22:34 <abadger1999> Does anyone have a gut feeling on how long the deprecation cycle should be?
+15:23:06 <nitzmahone> No more than 2 releases imho
+15:23:14 <Jmainguy> I am fine with 2 releases
+15:23:35 <mattclay> I'm good with 2 releases
+15:23:43 <bcoca> that is the standard and I agree for most cases, this is a bit of a convinience vs an actual bug/problem
+15:23:51 <bcoca> only reason i mentioned making an exceptoin
+15:24:17 <bcoca> but i'm fine if everyone wants to stick to the 2 releases
+15:24:40 <abadger1999> I could go longer but I don't care much aout it.
+15:24:55 <abadger1999> ryansb: How do you see us warning users?
+15:25:18 <ryansb> I imagined the same system we use for the sudo/become warning
+15:25:21 <ryansb> so at runtime
+15:25:55 <abadger1999> ryansb: hmm.. but then the deprecation information would have to be on the controller-side rather than contained in the modules.
+15:26:35 <mattclay> Deprecation information should be in the docs too.
+15:27:13 <bcoca> ^ the issue is that the alias system does not 'warn' right now, would need a list of 'deprecated names' and code that checks against it
+15:27:20 <abadger1999> #action Change deprecation warning period to two cycles instead of 1
+15:27:29 * gundalow waves
+15:27:36 <abadger1999> #chair gundalow
+15:27:36 <zodbot> Current chairs: Jmainguy Qalthos abadger1999 bcoca gundalow jtanner mattclay nitzmahone ryansb
+15:27:58 <ryansb> will do
+15:28:23 <abadger1999> #action add a step to add deprecated modules to the CHANGELOG.
+15:30:11 <gundalow> Would this be something that would be useful in the ROADMAP
+15:30:43 <abadger1999> ryansb: okay, so implementation-wise, there will be some issues to work out here that will require new code of some sort.
+15:31:21 <ryansb> ok, I'm totally up for making those changes
+15:31:23 <gundalow> If there are specific modules that we plan on putting through that process
+15:31:24 <abadger1999> gundalow: perhaps.  The last cycle's ROADMAP was about new features and work to perform but we could certainly add to that.
+15:31:54 <abadger1999> #action ryansb to work out the new code and design to implement warnings for deprecated modules
+15:32:34 * abadger1999 would like to see the timeline for removing support for python-2.4 on this cycle's ROADMAP
+15:33:15 <abadger1999> ryansb: it could end up that you design module metadata support to implement this -- but be wary of putting too much work on your plate ;-)
+15:33:29 <ryansb> hehe, noted
+15:34:44 <bcoca> abadger1999: probalby not until 2.4/2.5 release
+15:34:44 <abadger1999> gundalow: do you have strong feelings about adding it to the roadmap document?  I kinda think we should try this out and see about adding it to the roadmap afterwards.
+15:35:16 <abadger1999> Including it in the roadmap may require us to think further into the future than we are actually capable of as fallible human beings ;-)
+15:35:58 <gundalow> No strong feelings either way. If the Roadmap's purpose is to give people a heads up on changes then it feels like it would make sense to be include.
+15:36:41 <bcoca> ^ i go back to having 'over roadmaps' with goals that take more than 1 release
+15:36:50 <bcoca> cause we are not going to do anything to rmeove 2.4 in 2.2
+15:36:59 <abadger1999> <nod>
+15:36:59 <nitzmahone> +1, though synchronization is fun
+15:36:59 <gundalow> Do we have a list of what we want to kill? Or is this more of a "what would the process" discussion
+15:37:11 <abadger1999> there's some overlap between roadmap and changelog in this instance too.
+15:37:37 <bcoca> well, changelog should reflect roadmap
+15:37:55 <bcoca> roadmap == what we want, changlog == what we did
+15:37:55 <abadger1999> changelog is kinda "alert users to changes now and upcoming in ansible".  roadmap is "coordinate devs on what is going to be worked on for the next release"
+15:38:01 <abadger1999> <nod>
+15:38:06 <gundalow> Nod
+15:38:20 <bcoca> i dont see as  much overlap as a 'transfer'
+15:38:26 <gundalow> Nod
+15:38:36 <abadger1999> deprecation cycles are -- what we're going to do later because we implemented something else now.
+15:38:45 <alikins> I sometimes add items like this roadmaps under 'Looming just past the horizon'  to indicate we know it's coming and are thinking about it but no real plans yet
+15:39:15 <bcoca> abadger1999: and those should be in roadmap, like service module
+15:39:28 <bcoca> ^ we really have not had roadmaps till this release
+15:39:32 <abadger1999> yeah.
+15:40:00 <bcoca> and in 2.0 there were many 'well we fixed this bug, but people complained, so we 'unfixed' it and marked as deprecated'
+15:40:40 <abadger1999> So maybe a part of roadmap dedicated to deprecation status and that gets copied almost verbatim to the changelog every release?
+15:41:11 <gundalow> That's what I was thinking
+15:41:16 <bcoca> as long as we actually deprecate stuff
+15:41:32 <bcoca> ^ only 'copy' stuff that we cannot really 'deprecate warn'
+15:41:48 <nitzmahone> Mental jinx bcoca
+15:42:07 <abadger1999> it's nice to have a canonical list of all deprecations somewhere, though.
+15:42:35 <abadger1999> (also nice because then every release, we just look at that list for the things that need to be removed)
+15:42:47 <abadger1999> removed from the code because the deprecation period is over.
+15:43:04 <bcoca> we have not been good about marking the version (deprecation message supports this)
+15:44:28 <abadger1999> yeah..  Let's say this --
+15:44:39 <abadger1999> we'll add a deprecatio nsection to the 2.2 roadmap.
+15:45:17 <abadger1999> Not sure yet what will be in it -- we'll work that out as we write the roadmap and probably modify it to be more useful for the 2.3 release based on feedback.
+15:45:30 <abadger1999> wash, rinse, repeat.
+15:46:14 <bcoca> we have one item already, service module
+15:46:17 <abadger1999> #action abadger1999 will add a section to the 2.2 roadmap for deprecations -- we'll work out what to put in it as we go along.  Formalize it more for the 2.3 release.
+15:46:41 <abadger1999> #topic 2.1.0 release status
+15:46:48 <abadger1999> rc3 is out.
+15:47:39 <abadger1999> Final is probably going to be next week.
+15:48:34 <abadger1999> We've been discussing throughout the evening yesterday whether to push a mitigation for the ssh transient failure and do an rc4 today and still hit final next week.
+15:50:19 <abadger1999> script to reproduce the issue is here: https://github.com/mattclay/ansible/commit/a1ec6e3f97c25b4f4174aa812a3d674ee1494a34  (putting hte system under load makes the bug appear much more frequently)
+15:51:06 <abadger1999> proposed mitigation is here: https://github.com/mattclay/ansible/commits/ssh-quick-fix  and would require remote machines to have the sleep command in the PATH.
+15:52:04 <abadger1999> #topic Open floor
+15:52:19 <abadger1999> Anyone else have prs or topics they want talked about?
+15:53:21 <ryansb> I for one welcome our new 2.1 overlords
+15:53:36 <gundalow> :)
+15:54:23 <gundalow> Out of interest, how far into the future do the plans for Ansible releases go
+15:54:50 <abadger1999> gundalow: by and large, just the next release.
+15:54:54 <ryansb> 2050. There are already plans for Ansible on Mars
+15:54:59 <abadger1999> We may have a feature that spans multiple releases
+15:55:34 <bcoca> gundalow: we have many things that dont make a release, so that tends to get thrown down to next
+15:55:43 <abadger1999> but we don't really plan for this is a feature that we're going to start implementing in second quarter of 2017 or anything like that.
+15:55:59 <bcoca> ^ that would be bunch of lies anyways
+15:56:33 <gundalow> Cool
+15:56:35 <gundalow> Thanks
+15:56:48 <abadger1999> no problem.
+15:57:02 <bcoca> there are things like py3 support or role revamps that we have 'intentions' that span more than one release, but nothing in stone
+15:57:24 <bcoca> though py3 does have big external pressure (new distros)
+15:57:52 <abadger1999> yeah.
+15:58:15 <abadger1999> okay, if nothing else, I'll close in 60s
+15:58:19 <gundalow> Guess that's waiting for some of the old distros to be killed. Though I've seen various functional changes to allow compatibility with 2.x and 3.x
+15:58:42 <gundalow> Oh,  one from me
+15:58:47 * gundalow finds the pr
+15:59:05 <abadger1999> sure!
+15:59:20 <gundalow> https://github.com/ansible/ansible/pull/15692
+15:59:37 <gundalow> Adding dependencies into docker images to speed up tests.
+15:59:56 <gundalow> What other testing do people want/need to see before it can be accepted
+16:00:02 <abadger1999> gundalow: <nod> We're forging ahead with python3 on the controller and limited ways in modules now... but next year, when rhel5 goes EOL (and takes py2.4 with it) it should get much easier.
+16:00:16 <abadger1999> #topic https://github.com/ansible/ansible/pull/15692  Adding dependencies into docker images to speed up tests.
+16:00:24 <Jmainguy> abadger1999: you love 2.4 dont lie
+16:00:34 <Jmainguy> abadger1999: try, except, finally is for suckers
+16:00:55 <abadger1999> Jmainguy: it comes standar on my favorite distro! ;-)
+16:01:07 <Jmainguy> =)
+16:02:26 <ryansb> uhoh, soon we'll be in range of "2.4 bugs" referring to Python 2.4 or Ansible 2.4
+16:02:57 <misc> well, python 2.4 is perfect, so the bug is only in ansible
+16:03:05 <Jmainguy> go from 2.3 straight to 5.0
+16:03:07 <gundalow> :)
+16:03:14 <Jmainguy> misc++
+16:03:15 <abadger1999> ryansb: easy answer -- we can close any bugs about "2.4" because we won't support it anymore ;-)
+16:03:15 <gundalow> What other testing should I do?
+16:03:47 <abadger1999> The PR looks good to me.
+16:04:00 <abadger1999> jimi|ansible: ^ Do you wnat anything else from gundalow for that?
+16:04:11 <gundalow> My change is blocking then new distros and a test to defend the building of Ansible Deb and Rpm.
+16:04:23 <abadger1999> Or should he just update the image variable, we merge, and then you can rebuild the docker images?
+16:05:53 <mattclay> If we're going to change the image variable, it would be nice to make it the full image name. That would allow using other images for testing without modifying the script.
+16:06:15 <gundalow> mattclay: I plan to do that
+16:06:30 <gundalow> Not that it's clear from the PR
+16:07:22 <gundalow> DOCKER_BASE="gundalow/ansible"
+16:07:32 <abadger1999> gundalow: okay, I say, update and ping me after the meeting.  I'll merge unless jimi|ansible stops me.
+16:08:16 <gundalow> abadger1999: Which version, updating the official docker images, or just changing them to point to gundalow?
+16:08:41 <abadger1999> I'll have to get jimi|ansible to rebuild the docker images anyways so he will get a review in there somehwere.
+16:10:00 <gundalow> OK,  in that case I'll revert my changes to run_tests.sh and in a separate PR do as mattclay suggested
+16:10:01 <abadger1999> I'm not familiar enough with the test images to know what you're asking.  Could you clarify?
+16:10:18 <gundalow> I need to update run_tests.sh anyway to enable the tests
+16:10:42 <abadger1999> gundalow: Okay.  That works.
+16:10:51 <gundalow> Cool,  thanks all
+16:11:42 <gundalow> That's all from me
+16:12:24 <abadger1999> #action gundalow to make final changes to docker dependencies PR, abadger1999 to merge, will ping jimi|ansible to review and rebuild docker images
+16:12:30 <gundalow> :D
+16:12:38 <abadger1999> Alright -- I'll close in 60s unless there's more things to discuss.
+16:13:10 <bcoca> the dress was gold!
+16:13:12 <gundalow> Dinner time, back later :)
+16:13:51 <abadger1999> #endmeeting

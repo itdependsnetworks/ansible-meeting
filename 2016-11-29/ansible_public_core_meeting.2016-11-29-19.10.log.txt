@@ -1,0 +1,171 @@
+19:10:24 <abadger1999> #startmeeting Ansible Public Core Meeting
+19:10:24 <zodbot> Meeting started Tue Nov 29 19:10:24 2016 UTC.  The chair is abadger1999. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:10:24 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:10:24 <zodbot> The meeting name has been set to 'ansible_public_core_meeting'
+19:10:29 <abadger1999> #topic roll call
+19:10:34 <abadger1999> Who's here?
+19:10:48 <allanice001> allanice001 lurking
+19:11:22 <rcarrillocruz> lurking too
+19:11:28 <abadger1999> #chair jimi|ansible allanice001 bcoca alikins jtanner gundalow mattclay nitzmahone Qalthos privateip rcarrillocruz
+19:11:28 <zodbot> Current chairs: Qalthos abadger1999 alikins allanice001 bcoca gundalow jimi|ansible jtanner mattclay nitzmahone privateip rcarrillocruz
+19:12:21 <abadger1999> #topic Mysql user bug
+19:12:31 <abadger1999> https://github.com/ansible/ansible-modules-core/pull/5388
+19:13:23 <abadger1999> The PR now has shipit.  I'll take care of merging and backporting.
+19:14:00 <abadger1999> jimi|ansible: Where are we waiting on that?  just 2.2 and devel  or are there other stable-X.Y branches we want it on?
+19:14:55 <jimi|ansible> i guess we need to merge that into stable-2.1 as well
+19:15:03 <jimi|ansible> assuming it will apply
+19:15:25 <jimi|ansible> squashing and merging and cherry-picking
+19:15:31 <abadger1999> k.
+19:15:50 <abadger1999> #action abadger1999 to merge the Mysql user fix to devel, stable-2.2 and stable-2.1
+19:16:41 <abadger1999> #topic https://github.com/ansible/community/issues/140#issuecomment-261082175   DIFF_ALWAYS
+19:16:46 <abadger1999> shaps, bcoca: ping
+19:18:08 <abadger1999> Looks like we did discuss this but didn't definitely conclude anything.. there's an alternate implementation being written in the community that is supposed to cover more but no links or names..
+19:18:16 <allanice001> abadger1999: it would mean ansible would need to run from same virtualenv
+19:18:33 <abadger1999> allanice001: DIFF_ALWAYS?
+19:19:14 <allanice001> srry, wrong page :P
+19:19:19 <abadger1999> allanice001: Ah okay :-)
+19:19:31 <abadger1999> I'm going to move on from this one because shaps and bcoca aren't here.
+19:20:14 <abadger1999> #topic Better messages about missing module dependencies https://github.com/ansible/community/issues/140#issuecomment-262987471
+19:20:34 <abadger1999> gundalow, Qalthos, privateip: This looks like it came up in a Network Modules context.
+19:21:35 * privateip looking
+19:22:36 <privateip> for core supported modules this is already true
+19:22:37 <nitzmahone> Not sure we need a special API call for a dep failure...
+19:22:47 <privateip> we can agree to enforce better for community contributed modules
+19:22:48 <abadger1999> It looks like it's (1) Add information about which python is executing the module to the error and (2) add a helper function to do that.
+19:22:54 <nitzmahone> +1 to privateip
+19:24:18 <nitzmahone> Ah, I missed the python mod addition- so there is a *little* something more to it...
+19:24:24 <abadger1999> We could make the whole "conditional import and fail" thing more standardized.
+19:24:35 <nitzmahone> That seems like a better thing to do
+19:24:41 <privateip> +1
+19:24:49 <abadger1999> I think we'd have to rely on a global variable tho9ugh.
+19:24:56 <abadger1999> So implementation is a little icky.
+19:25:34 <privateip> tough question is where do we draw the line .... we continue to tread towards having a package manager :(
+19:25:36 <allanice001> i cant recall the exact reason why, but ansible runs with fixed python executable
+19:25:48 <allanice001> not environment variable
+19:26:25 <abadger1999> privateip: Yeah :-/
+19:27:01 <nitzmahone> abadger1999: depends on how we implement- if we're OK with "fail on first import fail" behavior, couldn't we make the exit internal to the import-and-fail function?
+19:27:06 <abadger1999> allanice001: The python interpreter run is set from the controller, not from the managed machine if that's what you mean.
+19:27:29 <allanice001> yeah
+19:27:39 <abadger1999> nitzmahone: that's true...
+19:27:52 <jimi|ansible> done merging and cherry-picking the mysql fix
+19:28:06 <abadger1999> nitzmahone: we won't have the full module information if we do it that way though (invocation and such)
+19:28:29 <nitzmahone> true
+19:28:47 <nitzmahone> Though couldn't we graft that in on the action side?
+19:28:56 <nitzmahone> (/ shouldn't?)
+19:29:10 <nitzmahone> Seems like that'd always be something we'd want
+19:29:10 <abadger1999> nitzmahone: yeah, we could... but we wouldn't know about no_log parameters if we do it there.
+19:29:18 <nitzmahone> metadata
+19:29:25 <nitzmahone> :)
+19:29:43 <abadger1999> nitzmahone: yeah, if we get to the point where we have that in metadata... but htat's a bit out in the future still :-)
+19:30:07 <abadger1999> Okay.. I think doing this by convention is heartily approved.
+19:30:26 <abadger1999> Code that can make module importing better needs to see a Proposal or implementation to proceed.
+19:30:58 <allanice001> depencancy management is working from proper metadata usage for roles
+19:31:00 <alikins> could pass most of the info as args to NetworkError init  (sys.executable, etc)
+19:31:18 <allanice001> couldnt the same be extended?
+19:32:46 <privateip> alikins: so much of that is going to change with the new connection plugins i would prefer to avoid that for now if we can
+19:32:57 <abadger1999> allanice001: I don't think so... this is client-side rather than controller-side and it is mostly for python modules (which have wrinkles like versioning).
+19:33:24 <abadger1999> but can also extend to command line tools, c-libraries, etc.
+19:33:25 <bcoca> facts also should already provide the 'expected python' for the remote
+19:33:48 <bcoca> we can document taht more clearly (though adding 'which python' to import error seems like good idea)
+19:34:36 <nitzmahone> bcoca: doesn't sourcing the interpreter from a fact start getting us into the same security-issue territory as the connection arg collision?
+19:34:45 <nitzmahone> (from facts)
+19:34:48 <bcoca> not sourcing, informing user
+19:34:53 <jtanner> i'm lost on the context, but isn't getting an interpreter from facts a chicken-n-egg situation?
+19:34:59 <bcoca> to GET facts you NEED interpreter to start with
+19:34:59 <nitzmahone> seems like it
+19:35:08 <bcoca> talking about feedback when missing a lib
+19:35:28 <jtanner> like the module tries to execute but died on an import failure?
+19:35:41 <bcoca> could not find requried library boto3 (using /usr/bin/python2)
+19:35:46 <abadger1999> jtanner: Yep.
+19:35:54 <jtanner> how do we handle it now?
+19:36:04 <jtanner> we give a traceback to the display, right?
+19:36:15 <bcoca> no, fail_json
+19:36:28 <abadger1999> HAS_FOO = True \n try: import foo \n except ImportError: \n HAS_FOO = False
+19:36:31 <abadger1999> in main():
+19:36:33 <bcoca> this is modules, normally set HAS_BOTO=false on import fail
+19:36:47 <abadger1999> if HAS_FOO is False:  module.fail_json('message')
+19:37:00 <jtanner> and we want to change that somehow
+19:37:01 <jtanner> ?
+19:37:43 <abadger1999> jtanner: yeah, gundalow's comment is just to have a better standard for message (and a helper function in module to help construct and return it)
+19:38:19 <jtanner> module.try_import() ... ?
+19:38:25 <abadger1999> jtanner: We started talking about whether we can enhance it to get rid of the boilerplate in the import as well.
+19:38:28 <allanice001> well, it is in the facts
+19:38:31 <bcoca> we can even do this now at controller side (attach python used to existing messages')
+19:38:40 <allanice001> ansible -m setup localhost | grep python
+19:38:41 <allanice001> [WARNING]: Host file not found: /etc/ansible/hosts
+19:38:42 <allanice001> [WARNING]: provided hosts list is empty, only localhost is available
+19:38:44 <allanice001> "_": "/Users/allans/.virtualenvs/libg/bin/python",
+19:38:45 <allanice001> "ansible_python": {
+19:38:46 <allanice001> "executable": "/Users/allans/.virtualenvs/libg/bin/python",
+19:38:47 <allanice001> "ansible_python_version": "2.7.10",
+19:38:48 <bcoca> no need to modify modules if they follow a pattern
+19:38:48 <allanice001> (libg)
+19:39:09 <jtanner> allanice001: setup is a module ... it runs a python script with a default interpreter
+19:39:32 <allanice001> yeah, but that is used to load the other dependancies, right?
+19:39:55 <jtanner> from whatever the default site-packages is, yes
+19:40:54 <abadger1999> bcoca: One thing about adding it controllerside.. we'd need to know if we should add it or not.
+19:41:26 <abadger1999> bcoca: since we don't know that the module failed due to missing dependencies on the controller at the moment.
+19:43:05 <abadger1999> Okay... I'll leave a comment for gundalow that adding the information sounds good.  But talk to bcoca about whether we can add it controller-side.
+19:43:48 <abadger1999> we'd need to think more about an AnsibleModule method... might want to expand it to make conditional_importing better.
+19:43:56 <abadger1999> #topic Open floor
+19:44:06 <abadger1999> Anyone else have something?
+19:44:14 <allanice001> i been reviewing the docca
+19:44:27 <allanice001> and chatted to @gundalow some
+19:44:36 <allanice001> but wanted the rest of the teams input
+19:45:02 <allanice001> a lot of the docca references ancient varions of both python & ansible
+19:45:03 <abadger1999> Cool.  Take it away.
+19:45:07 <abadger1999> dharmabumstead: ^
+19:45:16 <abadger1999> #chair dharmabumstead
+19:45:16 <zodbot> Current chairs: Qalthos abadger1999 alikins allanice001 bcoca dharmabumstead gundalow jimi|ansible jtanner mattclay nitzmahone privateip rcarrillocruz
+19:45:20 <bcoca> abadger1999: i think most have copy/pasted same message, if this is true we can do 'scannig', but i would prefer normalized function (but that is for future modules)
+19:45:29 <allanice001> should those be cleaned up / rebased to current ?
+19:45:56 <abadger1999> allanice001: Meaning in examples?
+19:46:17 <abadger1999> allanice001: Or workarounds and notes for old versions?
+19:46:18 <allanice001> both examples and references to specific functions
+19:46:48 <allanice001> like #intro pages points to paramiko option being available
+19:46:55 <allanice001> in v1.3/1.4
+19:47:39 <abadger1999> We probably do want a cutoff but it should go pretty far back.
+19:48:05 <abadger1999> Also... Our docs are rolling... we don't have checkpoints for older versions.
+19:48:57 <abadger1999> Without that people on older versions/migrating from older versions won't have easy access to what worked on vers ion X.Y.
+19:48:57 <allanice001> should we look at rebasing some of that?
+19:49:35 <allanice001> i would suspect latest version - 3 / 5 would be sufficient
+19:49:39 <abadger1999> So I think we have to keep those.
+19:49:44 <allanice001> ie 1/9 onwards
+19:49:50 <allanice001> i mean 1.9 ..
+19:51:11 <allanice001> so, perhaps have a rolling doc versions like rtd
+19:51:31 <allanice001> where each major version tag can be chosen for that versions docs
+19:51:35 <allanice001> and upgrades
+19:51:53 <abadger1999> Also.. I know when programming I find it incredibly useful to know that a feature was introduced in ANCIENT.VERSION so I'm inclined to keep the notes if they just say when something was introduced.
+19:53:19 <dharmabumstead> +1
+19:53:28 <allanice001> wouldnt that be more for Changelog
+19:53:57 <allanice001> V x.y - added features moo and zoo
+19:54:09 <allanice001> - depricated feture_deadbeef
+19:55:26 <allanice001> - docs.ansible.com/$lang/x.y/changes.html
+19:55:36 <abadger1999> locality is important.  I get hired into a new job where they mandate ansible-1.4 for their configuration.  I don't want to read the changelog to know what I can't do anymore... Instead I want to read about feature and find that I can't use it or that it changed in version 1.6, etc.
+19:56:02 <allanice001> understood
+19:56:19 <allanice001> but at some point v1.4 should be considered dead and burried
+19:57:10 <bcoca> maintaining N versions is painful, we've agreed to have 'last stable' and 'devel', then the maintenance is minimal (cherry picking to stable when it is correction)
+19:57:52 <bcoca> keeping 'version added' information is useful at many levels (though we mask anything older than 1.4 at the time)
+19:57:52 <allanice001> gotcha
+19:58:19 <bcoca> abadger1999: and if you are using 1.4 .... use ansible-doc cause the website wont be very useful to you
+19:58:42 <bcoca> also, people that REALLY want version dependant docs can generate their own
+19:58:45 <bcoca> its in the repo
+19:59:00 <abadger1999> bcoca: ansible-doc is only for modules :-(.... But the website should be okay for non-module older versions.
+19:59:23 <bcoca> abadger1999: true, but it is the most used part, module docs
+20:00:06 <bcoca> i do think we should expand our man pages ... but too many other things first on the list
+20:00:40 <abadger1999> <nod>
+20:01:01 <abadger1999> allanice001: Okay, does this all answer your question?
+20:01:06 <allanice001> yup
+20:01:14 <alikins> version_added for modules not included in core is a bit odd as well (normal use real version_added would be 'never', but may be module version...)
+20:01:24 <abadger1999> Cool.
+20:01:51 <abadger1999> alikins: By "core" you mean distributed in the ansible tarball (ansible-modules-core and ansible-modules-extras repositories)?
+20:02:57 <bcoca> alikins: version_added is not just for modules (still useful for custom modules to know min version tested on) its mostly for options/features
+20:03:32 <alikins> right, hence the 'for modules'
+20:04:06 <abadger1999> Okay.
+20:04:18 <alikins> abadger1999: yeah, version added usually reference the main ansible version that a module was added in, which may be N/A
+20:04:30 <abadger1999> <nod>
+20:04:37 <abadger1999> Alright, any other topics for Open Floor?
+20:05:04 <allanice001> not from mee
+20:05:11 <allanice001> me
+20:06:28 <abadger1999> Okay, I'll close the meeting.
+20:06:34 <abadger1999> #endmeeting

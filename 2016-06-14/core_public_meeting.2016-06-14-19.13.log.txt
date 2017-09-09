@@ -1,0 +1,147 @@
+19:13:07 <abadger1999> #startmeeting Core Public Meeting
+19:13:07 <zodbot> Meeting started Tue Jun 14 19:13:07 2016 UTC.  The chair is abadger1999. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:13:07 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:13:07 <zodbot> The meeting name has been set to 'core_public_meeting'
+19:13:12 <bcoca> and we seem only ones active here ...
+19:13:20 <nitzmahone> weird, my reminder didn't fire
+19:13:21 <abadger1999> #chair alikins jtanner bcoca
+19:13:21 <zodbot> Current chairs: abadger1999 alikins bcoca jtanner
+19:13:25 <abadger1999> #chair nitzmahone
+19:13:25 <zodbot> Current chairs: abadger1999 alikins bcoca jtanner nitzmahone
+19:13:29 * mattclay waves
+19:13:34 <abadger1999> #chair mattclay
+19:13:34 <zodbot> Current chairs: abadger1999 alikins bcoca jtanner mattclay nitzmahone
+19:14:15 <Qalthos> hiya
+19:14:19 <mattclay> Was there nothing for the agenda today?
+19:14:30 <jtanner> no issue that i can see
+19:14:32 <abadger1999> #chair Qalthos
+19:14:32 <zodbot> Current chairs: Qalthos abadger1999 alikins bcoca jtanner mattclay nitzmahone
+19:14:37 <abadger1999> k
+19:14:46 <abadger1999> Was there anything that we didn't finish last meeting?
+19:15:09 <abadger1999> quinot's PR to make multiple ansible_*_interpreters an option?
+19:15:56 <abadger1999> quinot: are you around by chance?
+19:16:37 <mattclay> The git shallow update from robinro was on the agenda last week, was merged, and then reverted due to failing tests. Not sure if there's more we need to discuss there or not.
+19:17:53 <abadger1999> mattclay: that one... I think robinro didn't have time to look at the failing cases... so it's an outstanding bug until someone has a chance to look at it.
+19:18:35 <abadger1999> So here's quinot's PR
+19:18:49 <abadger1999> #topic allow multiple interpreters to be specified https://github.com/ansible/ansible/pull/11810
+19:19:34 <abadger1999> It looks like all the things that we pointed out that can be easily fixed are now fixed.
+19:19:47 <abadger1999> The only thing remaining is somewhat architectural...
+19:20:23 <abadger1999> Right now it looks like the only way he can get it to work is for module_common code to call back into action plugin code to query the remote connection for the interpreter to be used.
+19:21:03 <abadger1999> quinot had some thoughts... let me post hte log...
+19:21:22 <abadger1999> https://gist.github.com/abadger/bbab020cf9d87652c8432a69088fca31
+19:22:42 <abadger1999> basically what he's discovered is that executor/module_common is in charge of operating on the data inside of the module -- which currently includes reading the shebang line to determine the interpreter to use with the module.
+19:23:38 <abadger1999> but the action plugin is responsible for talking to the remote host via the connection plugin.
+19:24:47 <abadger1999> so no matter what, we end up having to use module_common code first to determine which type of interpreter to use, then action code to determine where that interpreter lives on the remote machine, and finally module_common again to construct the module and ansiballz wrapper with that interpreter path.
+19:26:18 <abadger1999> anyone have ideas on what they'd like to see done here?
+19:26:32 <mattclay> The two steps for modify_module as suggested by quinot makes the most sense to me.
+19:26:49 <bcoca> im still on the fence on the feature itself
+19:27:19 <mattclay> bcoca: What's your concern on including it?
+19:27:22 <bcoca> was leaning towards yes when it seemed a simple thing to detect on initial connection .. but now it seems very complicatd for something most users have never even thought of
+19:28:43 <mattclay> Is the only use case for this simply a convenience?
+19:29:16 <bcoca> yes, and one i've never heard any other user invoke
+19:30:19 <mattclay> Given that, I agree it does seem a bit complex for what it's offering.
+19:31:55 <bcoca> and its touching code that is fundamental to module execution, adding a lot of complexity which i always shy away from
+19:32:20 <abadger1999> We could have the action plugin determine the type of module.
+19:32:21 <bcoca> i understand why he wants it, i doubt anyone else will understand the feature well enough to use it
+19:32:30 <nitzmahone> I could see it being more useful when we're supporting both py2/py3 on the remote side
+19:32:37 <abadger1999> and make executor/module_common only responsible for modifying the module.
+19:33:01 <alikins> @nitzmahone: yeah, could be interesting for that.
+19:33:13 <nitzmahone> although what does "python" do on a py3 only system (eg, U 16.04)?
+19:33:18 <bcoca> nitzmahone: only will prioritize 'which one to use' , his case is very particular in that he has very diverse hosts and does not want to deal with setting inventory var
+19:33:29 <jtanner> another option is to just make a module that simplifies bcoca's example (if not already suggested)
+19:33:42 <bcoca> module?
+19:33:49 <abadger1999> you mean like, try /usr/bin/python, if not available, try /usr/bin/python3 ?  (or /usr/bin/python2.7 for that matter)
+19:34:05 <bcoca> he is trying to get ansible_ _ interpreter to be a list and have the 'module executor' choose the 'first found'
+19:34:06 <jtanner> a module that iterates through interpreters over raw and sets a fact for the first valid one
+19:34:17 <bcoca> abadger1999: that is the feature
+19:34:53 <bcoca> ^ that might make more sense, except the module itself cannot be python
+19:35:11 <bcoca> as we would alreayd be choosing an interpreter
+19:35:11 <abadger1999> nitzmahone: For /usr/bin/python on fedora and ubuntu, I believe it is not installed unless a python(2) package is explicitly installed.
+19:35:12 <jtanner> it would be mostly an action plugin
+19:35:22 <jtanner> so doable with python from the controller side
+19:35:23 <alikins> taking that idea to logical end seems to end up with a inventory script that executes on the remote node (even before setup) and sets host vars. Which is interesting and weird and scary.
+19:35:35 <bcoca> jtanner: and just shell to the target ? fine with that
+19:35:38 <nitzmahone> abadger1999: I remember seeing a PEP about that, but that there were already things in violation of it
+19:35:43 <jtanner> bcoca: yeah, over raw
+19:36:05 <nitzmahone> ("python" should only be py2 until py2 is EOL, IIRC)
+19:36:08 <abadger1999> nitzmahone: yep -- arch violates it.
+19:36:13 <bcoca> nitzmahone: if the PEP were 'followed' we would not have a problem
+19:36:34 <abadger1999> the pep was written because everyone (except arch devs) thought that arch "was doing it wrong"(TM)
+19:36:43 <nitzmahone> IIRC the PEP was after the horse had left the barn, though
+19:37:29 <bcoca> ^ leave that can of worms alone, the fact is just that we cannot rely on the PEP
+19:38:07 <bcoca> even if PEP was followed, we'd have an issue when py2 is EOL as distros would still be using it
+19:38:20 <bcoca> and would not retroactively change the link
+19:38:50 <nitzmahone> alikins: I think it's basically just "python-free-mini-facts" to detect interpreter
+19:39:55 <abadger1999> nitzmahone: note we have to inject calls to that module/action method in various places...
+19:40:04 <bcoca> detect_interpreter: name=python candidates=list
+19:40:10 <abadger1999> it has to be pre-setup for the most common case
+19:40:20 <abadger1999> but other hosts might not be touched until delegate_to is called.
+19:40:30 <alikins> action plugin implies it's up to ansible to determine the right interpreter and that it would be up to ansible to be able to do it, but thinking something more like a just-in-time and per node inventory script would be more flexible
+19:40:35 <abadger1999> so they would need to have the detect-interpreter call later.
+19:41:34 <bcoca> first_found: files=list_of_paths <= generic module to find first instance of file, CAN be used to set_fact:
+19:41:54 <bcoca> ansible_python_interpreter
+19:42:01 <bcoca> or just set it itself
+19:42:55 <alikins> (granted, for the normal case of 'ssh to the box and run a command', delegating detection to a not-ansible script is a little weird, but for the abnormal case of 'uucp to the embedded erlang runtime and ask where python is' more reasonable
+19:45:15 <alikins> but, 'just set it in your inventory already' seems way more sane to me than trying to autodetect
+19:46:53 <bcoca> alikins++
+19:47:28 <bcoca> so if this was still a simple thing, i would be OK and ignore it, but being this involved and intrusive at this point for a feature only 1 person wants ... --1
+19:47:59 <alikins> (slippery slope fallacy warning) after 'find the best interpreter', the logical next request is 'bootstrap an agent'...
+19:48:23 <abadger1999> okay, so the new suggestion would be, take the action and shell changes and turn it into an action plugin that can be used to find the first command in a list of commands.
+19:48:52 <abadger1999> then write some documentation on how to use that command in a playbook in order to set ansible_python_interpreter via set-fact.
+19:49:32 <alikins> abadger1999: that sounds reasonable
+19:49:36 <abadger1999> hmm...   one thing here -- this doesn't work with /usr/bin/ansible
+19:49:40 <nitzmahone> In the interest of genericism, what if "script" had a way to interpret the result as a module?
+19:50:02 <nitzmahone> Then you could codify whatever crazy stuff you wanted, run the script and it would set facts automatically.
+19:50:04 <abadger1999> since it's a multi-step process. (1) run action plugin (2) set_fact 93) perform task you already want
+19:50:04 <bcoca> usr/bin/ansible should already have the shebang set 'on install'
+19:50:24 <abadger1999> bcoca: ?
+19:50:36 <bcoca> nitzmahone: sooo    script: myscript.sh\n register: myvar?
+19:50:49 <bcoca> abadger1999: it should never need to affect bin/ansible
+19:51:07 <nitzmahone> Except sans register (have a mode where we interpret script stdout as a module return)
+19:51:25 <nitzmahone> (so basically an arbitrary script could set facts, eg ansible_python_interpreter)
+19:51:37 <abadger1999> bcoca: ansible host1 won't work becaues there's no /usr/bin/python and the inventory does not know in and of itself what to set ansible_python_interpreter to.
+19:51:57 <bcoca> abadger1999: host1?
+19:52:18 <abadger1999> if host1 does not have a /usr/bin/python
+19:52:18 <alikins> (I would be tempted to punt it entirely as a core ansible feature, but provide a standalone tool and inventory script base that could use it to populate useful info)
+19:52:21 <nitzmahone> Gets you down to a single task that's python-free to get the interpreter (or do whatever other craziness you want).
+19:52:41 <bcoca> abadger1999: what does that have to do with bin/ansible  ?
+19:52:54 <abadger1999> bcoca: so /bin/ansible won't work with host1
+19:53:02 <bcoca> why would we care?
+19:53:12 <abadger1999> because /bin/ansible is then broken?
+19:53:14 <bcoca> bin/ansible just needs to work on controller
+19:53:28 <bcoca> and setup.py (installer) already resets the shebang
+19:53:30 <abadger1999> I think you're misunderstanding what I'm trying to say.
+19:53:36 <bcoca> abadger1999: clearly
+19:53:46 <bcoca> no clue what 'host1' is
+19:54:10 <abadger1999> /bin/ansible host1 -m ping   won't work if host1 does not have a /usr/bin/python and the inventory does not have an ansible_python_interpreter=/alt/path/to/python
+19:54:34 <abadger1999> So what we're proposing will only work for /usr/bin/ansible-playbook.  It won't work for /usr/bin/ansible
+19:54:49 <abadger1999> By contrast, what quinot's PR does will work with both.
+19:54:50 <bcoca> abadger1999: ah, you meant adhoc, not the script itself
+19:54:52 <nitzmahone> I guess my thing would just be a "bash" module- if we implement the custom setup module thing, that could be responsible for this.
+19:54:55 <abadger1999> bcoca: yeah.
+19:55:24 <bcoca> -e ansible_python_interpreter=$(ansible -m detect_blah ...)
+19:55:45 <mattclay> nitzmahone++
+19:56:39 <bcoca> nitzmahone: bash/action plugin that runs shell, either works, don't care enough to create em, i think this is a lot of time wasted by us for a feature most dont want/care about
+19:57:10 <nitzmahone> Right, I guess I'm saying if we had custom setup, he can do it himself and we don't need to do anything.
+19:57:14 <bcoca> what i really dislike is current invasive implementation which inserts itself into the hart of module execution and makes us jump thorugh hoops to make it work
+19:57:35 <alikins> nitzmahone: I like the idea of providing a minimal hook to 'do whatever your site needs to do to tell me the right ansible_*_interp. I won't judge.' And possibly triggering that hook from either inventory or just before it's needed
+19:57:52 <bcoca> we are already on our way to that, i even tually want 'facts_module = ec2_facts' config option
+19:58:07 <nitzmahone> setup *should* already be triggered in the right place, so if we had custom setup in inventory, done?
+19:58:19 <nitzmahone> bcoca: that's what I'm talking about
+19:58:23 <bcoca> nitzmahone: agreed, this would be one way to do it
+19:58:26 <sivel> I am +1 on finding a better solution, and -1 on the multi interpreters thing
+19:58:44 <bcoca> ^ i think we have quorum ... ran out of time ... and another meeting to go to
+19:59:01 <abadger1999> k
+19:59:03 <bcoca> sad to tell the guy (he has had this open foreeeever) but i think we reached consenus
+20:00:25 <abadger1999> I'll write up a summary of this discussion for the ticket -- let quinot come back to the next meeting if he thinks we've missed something or he can work on the action-plugin method.
+20:00:57 <bcoca> agreed
+20:01:14 <abadger1999> nitzmahone, alikins: we'd be okay with the action plugin that finds the first command from a list still, right?  We won't reject that because we have ideas about a new way of doing setup?
+20:01:47 <bcoca> ^ i would hate to reject yet another iteration from him, lets discuss this next meeting before we give him final
+20:01:52 <bcoca> as we ran out of time today
+20:01:52 <abadger1999> okay.
+20:02:23 <abadger1999> I'll summarize, not tell him to work on the action-plugin based solution and tell him we'll ocntinue discussion at hte next meeting in case he wants to join.
+20:02:28 <abadger1999> #topic Open Floor
+20:02:37 <abadger1999> Anyone else have anything before I close the meeting?
+20:03:12 <alikins> in a lot of ways, out of band host info gathering is what inventory is for. If inventory needs more flexibility
+20:03:23 <abadger1999> Alright.  closing. Thanks for coming everyone.
+20:03:26 <abadger1999> #endmeeting

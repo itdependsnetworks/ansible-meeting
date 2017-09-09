@@ -1,0 +1,169 @@
+17:00:46 <mattclay> #startmeeting Testing Working Group
+17:00:46 <zodbot> Meeting started Thu Mar 23 17:00:46 2017 UTC.  The chair is mattclay. Information about MeetBot at http://wiki.debian.org/MeetBot.
+17:00:46 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+17:00:46 <zodbot> The meeting name has been set to 'testing_working_group'
+17:00:52 <mattclay> Agenda: https://github.com/ansible/community/issues/114
+17:01:15 <mattclay> Who's here?
+17:01:16 <sivel> I'm here
+17:01:25 <mattclay> #chair sivel
+17:01:25 <zodbot> Current chairs: mattclay sivel
+17:01:32 <sivel> everyone else run away? ;)
+17:01:34 <ryansb> hey folks
+17:01:36 <shaps> I'm here too :)
+17:01:41 <mattclay> gundalow is on PTO this week
+17:01:51 <mattclay> #chair ryansb shaps
+17:01:51 <zodbot> Current chairs: mattclay ryansb shaps sivel
+17:02:13 <mattclay> #chair dag
+17:02:13 <zodbot> Current chairs: dag mattclay ryansb shaps sivel
+17:02:28 <shaps> Uh I've got a chair, I usually stand :P
+17:03:02 <mattclay> #topic Updates
+17:03:38 <mattclay> Things are settling down as we work towards the stable-2.3 release. No major testing related updates.
+17:04:07 <mattclay> #topic Test Reuse and Check Mode (https://github.com/ansible/community/issues/114#issuecomment-286513361)
+17:04:23 <mattclay> dag: Any updates on this? I see you tried the approach we discussed last week.
+17:07:44 <mattclay> #info Dag's latest example here: https://github.com/ansible/ansible/pull/22833
+17:08:16 <mattclay> Has anyone had a chance to review it?
+17:08:28 <abadger1999> Óla
+17:08:31 <sivel> I have not
+17:08:49 <mattclay> #chair abadger1999
+17:08:49 <zodbot> Current chairs: abadger1999 dag mattclay ryansb shaps sivel
+17:09:37 <mattclay> Since it doesn't seem dag is around currently, please leave comments on the PR and we can discuss again next week.
+17:10:24 <mattclay> #topic Testing Ubuntu 12.04 (https://github.com/ansible/community/issues/114#issuecomment-286513361)
+17:10:58 <mattclay> thaumos: Do you have an update for us on testing Ubuntu 12.04 as part of our CI process?
+17:12:08 <thaumos> @mattclay let's drop it
+17:12:49 <mattclay> thaumos: From testing in which branches?
+17:13:38 <thaumos> Definitely devel
+17:13:40 <mattclay> Our choices are: devel, stable-2.3, stable-2.2, stable-2.1
+17:14:48 <thaumos> Well... We still technically support 2.2 so may have to keep it there.
+17:15:03 <thaumos> 2.1 loses support after 2.3, no?
+17:15:13 <thaumos> So I think drop that.
+17:15:35 <mattclay> Well, if it's not supported, we won't be making any updates to it, so it won't matter either way.
+17:15:48 <mattclay> So we really only need to drop it from devel then.
+17:16:06 <mattclay> #action mattclay to remove Ubuntu 12.04 testing from CI for the devel branch
+17:16:43 <thaumos> Agreed
+17:16:47 <mattclay> #topic Testing Python 2.4 (https://github.com/ansible/community/issues/114#issuecomment-286903976)
+17:17:47 <mattclay> Just a quick update here. This was discussed with management and we're sticking with the original plan. Testing of python 2.4 has been removed. Breaking changes for python 2.4 will soon be merged (updated six).
+17:17:53 <mattclay> abadger1999: Anything to add?
+17:18:07 <abadger1999> Nope.
+17:18:11 <abadger1999> Good summary
+17:18:35 <mattclay> #topic Using `flake8` instead of `pep8` (https://github.com/ansible/community/issues/114#issuecomment-287982497)
+17:18:56 <mattclay> PR: https://github.com/ansible/ansible/pull/22820
+17:18:58 <sivel> I commented on that issue, I think it is a good thing, but now is too soon
+17:19:07 <mattclay> sivel: I agree.
+17:19:21 <sivel> I mentioned 2.5 at earliest for introducing flake8
+17:20:01 <sivel> we have something like 19000+ soon to be legacy pep8 issues to resolve
+17:20:09 <mattclay> I'm not sure we'll need to wait that long.
+17:20:22 <mattclay> The legacy/current handling we use for pep8 should work just as well for flake8.
+17:20:40 <sivel> yeah, my comment was I didn't want it distracting us from current goals
+17:20:57 <sivel> we still have a lot to do in regards to that
+17:21:05 <alikins> I usually end up using flake8 in lieu of 'ansible-test sanity' for local checks/syntastic so +1 from me
+17:21:44 <mattclay> alikins: Why is that? Is the flake8 output more user friendly? I know someone mentioned it does better about explaining indentation issues.
+17:22:46 <mattclay> sivel: I think the two efforts can be done somewhat in parallel, as long as there are no major pep8 changes in flight while trying to switch to flake8.
+17:22:57 <alikins> mattclay: mainly the issue with 'sanity' checking files that aren't in the git repo
+17:23:16 <sivel> you and you extraneous files ;)
+17:23:23 <abadger1999> mattclay: pylint does better at indentation issues, not flake8 (in my experience)
+17:23:27 <mattclay> alikins: OK. That's sitll on my list to fix. I'm getting closer.
+17:23:28 <alikins> I also have some experience writing flake8 extensions and have a couple of custom ones
+17:23:50 <mattclay> abadger1999: Yeah, OK, it was your comment on pylint I was thinking of.
+17:24:36 <sivel> I'm not a huge fan of pylint, but on one has recommended we start using that, so I'll leave that discussion for later :)
+17:25:28 <sivel> mattclay: so I guess, the decision is that it is too soon now, but we want it, and someone needs to come up with current/legacy exclusions
+17:25:29 <mattclay> So does anyone have objections to switching from pep8 to flake8, as long as it doesn't interfere with the existing work to clean up pep8 reported issues?
+17:25:33 <abadger1999> <nod>  Yeah... you can't fix everything that it complains  about (OTOH, it finds a lot of bugs that pyflakes can't)
+17:25:50 <sivel> no, I am +1 for flake8
+17:26:09 <alikins> I like both
+17:26:22 <mattclay> alikins: Both pep8 and flake8?
+17:26:29 <abadger1999> +1 flake8... pep8 isn't really useful for catching code errors whereas pyflakes/flake8 can catch some.
+17:27:10 <alikins> mattclay: meant pylint and flake8, but (but flake8 implies pep8 more or less)
+17:27:57 <sivel> start implementing mccabe complexity ;)
+17:28:07 <ryansb> you don't want to see the mccabe complexity
+17:28:09 <mattclay> #action mattclay to update PR with feedback from discussion
+17:28:10 <sivel> someone submitted a PR with like 270 mccabe complexity in one function
+17:28:15 <sivel> ryansb: lol ;)
+17:28:21 <shaps> lol
+17:28:27 <alikins> flake8 has a mccabe extension
+17:28:29 <ryansb> mccabe complexity of ec2.py: MAXINT
+17:28:33 <alikins> and yeah, not pretty at times
+17:28:44 <sivel> anyway, I kid :)
+17:28:50 <mattclay> #topic Continued PEP8 Cleanup (https://github.com/ansible/community/issues/114#issuecomment-288784871)
+17:28:56 <mattclay> sivel: All yours.
+17:28:59 <sivel> yay!
+17:29:10 <sivel> so, we've reached our goal of start of 2.4 legacy pep8 clean up
+17:29:20 <sivel> legacy-ignore is now empty
+17:29:36 <sivel> So we're going to move forward with moving current to legacy
+17:29:48 <sivel> which means new files would only exclude E402 and --mac-line-length=160
+17:29:53 <sivel> max*
+17:30:11 <sivel> I have a PR in that comment for that switch
+17:30:45 <sivel> This leaves us with about 19000 legacy pep8 issues to work on over the 2.4 release
+17:31:47 <sivel> We'll get that PR merged, and also it looks like action/__init__.py was added to the skip list, but only had 1 legacy issue, so I have a PR to remove that from skip
+17:31:53 <sivel> and get it in with all the others
+17:32:13 <sivel> That is about it from me.  Questions/comments?
+17:32:16 <mattclay> I know we discussed the process up to this point. However, did we actually agree on fixing the legacy pep8 issues in 2.4?
+17:32:45 <mattclay> The proposal: https://github.com/ansible/proposals/issues/50
+17:33:07 <sivel> > After the initial modification to adhere to the 30 ignore ruleset, the goal with pre existing files will be to convert them to adhere to the more strict standard that new files will follow, as outlined below
+17:33:18 <sivel> > Targeted Release: 2.4
+17:34:13 <mattclay> OK, I skimmed over it looking for that and didn't see it.
+17:34:17 <mattclay> Thanks.
+17:34:21 <sivel> no problem
+17:36:58 <mattclay> sivel: Tests have passed on the PRs. Do you need anyone to review?
+17:37:14 <sivel> Not unless you want them reviewed
+17:37:42 <sivel> I just marked the one as WIP (action/__init__.py), as it'll likely require a change after the current->legacy change
+17:37:54 <sivel> I'll move forward with them today if everyone is ok with that
+17:37:59 <alikins> (once we use flake8 we could ignore E402 and add a custom flake8 check for 'imports at top of module sans what we dont count (DOCUMENTATION first, etc)')
+17:38:19 <sivel> I'll do a local rebase, and make sure they won't cause an issue after merge
+17:38:35 <mattclay> They look good to me.
+17:38:50 <sivel> mattclay: cool, I'll handle them once this meeting is finished
+17:39:00 <mattclay> alikins: For that we'll need different rule sets for modules than non-modules.
+17:39:59 <mattclay> #topic Checks for subprocess.Popen in modules (https://github.com/ansible/community/issues/114#issuecomment-288789539)
+17:40:09 <mattclay> PR: https://github.com/ansible/ansible/pull/22744
+17:40:18 <mattclay> shaps: This one's yours.
+17:40:24 <shaps> yep
+17:40:54 <shaps> I just want to double check we agree to having a blacklist for subprocess.Popen
+17:41:15 <shaps> As per comments, some modules do actually require this
+17:42:13 <shaps> well, it's more a whitelist than a blacklist, but you get what I mean
+17:42:25 <mattclay> Seems appropriate to me.
+17:43:12 <shaps> Cool, I'll update PR then
+17:43:23 <mattclay> sivel: How much work is needed to be able to set line/column info on module validator errors?
+17:44:12 <sivel> mattclay: several hours
+17:44:18 <sivel> I have some idea on how I wanted to do it
+17:44:25 <sivel> I just haven't started on it
+17:44:27 <mattclay> sivel: Is that to add support and convert existing messages?
+17:44:48 <sivel> no, adding support, and where already available, using it
+17:44:59 <mattclay> OK
+17:45:08 <sivel> adding line/col to places where it doesn't already have line/col would take longer
+17:45:17 <mattclay> Yeah, that's what I meant.
+17:45:21 <sivel> ok
+17:45:37 <sivel> Yeah, I want to make the Reporter class into something that could be used through the validator
+17:45:50 <sivel> rather than the validator returning lists of errors, warnings, traces
+17:45:59 <sivel> the Reporter would hold that info
+17:46:09 <sivel> so that we have an easy to use interface for adding the info we need
+17:46:17 <sivel> since I don't think the tuple approach is maintainable
+17:46:19 <mattclay> If it was easy, I wanted shaps to set line/column in his PR, not as part of the message. Since it's not ready yet, we can do it later.
+17:46:37 <shaps> it's already set
+17:46:48 <sivel> yeah, I asked him to include it like how other places did it, so that we could use it when we make the change later
+17:47:00 <mattclay> shaps: Yes, as part of the message. We're  going to be adding support for discrete line and column values.
+17:47:20 <mattclay> ansible-test already accepts the values, but the validator doesn't provide them currently
+17:47:21 <shaps> Ah, yes sorry, misread.
+17:47:25 <sivel> so, he's done part of the work for me, we just don't have the facility ready yet to accept line/col
+17:48:14 <mattclay> #action shaps to update his PR to have a whitelist for use of subprocess.Popen
+17:48:43 <mattclay> shaps: Anything else regarding your PR?
+17:48:50 <shaps> no, that was it
+17:48:55 <mattclay> #topic Open Floor
+17:49:08 <shaps> I do have another question though
+17:49:17 <shaps> https://github.com/ansible/ansible/issues/18185 < is somebody working on this?
+17:49:32 <shaps> ansibot cc'd risaacson, but not sure why
+17:49:50 <sivel> yeah, not sure why, the bot likes to CC him
+17:49:55 <shaps> lol
+17:50:03 <mattclay> I'll ping gundalow about it next week when he's back from PTO.
+17:50:16 <sivel> yeah, he may be working on it
+17:50:19 <sivel> unsure
+17:50:27 <shaps> Ok, if he's not happy to take on that one too
+17:50:45 <shaps> if he's not working on it*
+17:51:19 <sivel> it should be relatively easy regardless, just adding a new schema, and adding the code to use it
+17:51:31 <shaps> yeah, already had a quick look
+17:52:44 <shaps> sivel, you meant: just do it regardless of if he's working on it already?
+17:52:58 <sivel> no, I mean regardless of who ends up doing it :)
+17:53:07 <shaps> :)
+17:53:32 <shaps> mattclay, I can have a chat with gundalow when he's back, we're same TZ
+17:53:47 <mattclay> shaps: OK, sounds good.
+17:54:18 <mattclay> Does anyone else have anything?
+17:54:45 <sivel> nope
+17:55:55 <mattclay> #endmeeting

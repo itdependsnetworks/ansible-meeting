@@ -1,0 +1,255 @@
+17:00:24 <gundalow> #startmeeting Testing Working Group
+17:00:24 <zodbot> Meeting started Thu Sep  8 17:00:24 2016 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+17:00:24 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+17:00:24 <zodbot> The meeting name has been set to 'testing_working_group'
+17:00:34 <gundalow> #chair gundalow mattclay
+17:00:34 <zodbot> Current chairs: gundalow mattclay
+17:00:47 <gundalow> #topic Roll call
+17:00:47 <gundalow> Who is here?
+17:00:47 <gundalow> Who is new this week?
+17:00:55 <shertel> hi!
+17:00:56 <_shaps_> I am!
+17:01:05 * mattclay waves
+17:01:14 <_shaps_> hi
+17:01:59 <gundalow> _shaps_: I believe (thanks to the wonders that are British Transport) this is your first Testing Working Group meeting. Could you please give a quick introduction (who you are, where you work, what your interest with testing is)
+17:03:34 <gundalow> linuxdynasty sivel jhawkesworth Jmainguy You around?
+17:04:25 <sivel> lurking, in another meeting for a few more minutes
+17:04:37 <gundalow> sivel: ACK :)
+17:05:03 <_shaps_> sure, I'm a guy in London, working as consultant at BP, I do only automated deployments stuff with Ansible. I'm mostly interested in how to effectively test playbooks
+17:05:19 <gundalow> cool, thanks
+17:05:20 <_shaps_> I'm not sure if that's in the etherpad, but it's why I'm here :D
+17:05:56 <gundalow> _shaps_: This is a community meeting, so in part we are shaped and directed by what you'd like to see :)
+17:06:00 <_shaps_> ( and the automated deployment stuff is where I work, I occasionally have a life too )
+17:06:05 <gundalow> :D
+17:07:03 <gundalow> #topic Internal Engineering update
+17:07:18 <gundalow> Work continue on 2.2
+17:08:20 <gundalow> (just trying to find the dates)
+17:08:37 <gundalow> https://groups.google.com/forum/#!topic/ansible-devel/4aEcvf-tho8
+17:09:15 <gundalow> This is a reminder that Ansible Core 2.2 is in feature as of 05 SEPTEMBER 2016.  All Ansible Core features are frozen, and testing has begun.  For modules all major features (parameter changes, etc), must be frozen as well.  We will accept minor feature changes to modules if there is time for the core team to review it.  This will happen on a case by case basis, so, new module requests will not necessarily make it in.  We'll continue to review as
+17:09:23 <gundalow> On 16 SEPTEMBER 2016 Ansible Core and Modules will be totally feature frozen for testing before we release our first 2.2 Release Candidate on 03 OCTOBER 2016.  ONLY bug-fixes will be accepted for inclusion for 2.2 Release Candidate 1 after the 16th of September.
+17:09:33 <gundalow> One important this
+17:09:47 <gundalow> We will still accept changes to tests :)
+17:10:22 <gundalow> feel free to @gundalow or add them to https://github.com/ansible/community/issues/114
+17:10:32 <Jmainguy> gundalow: im around now
+17:11:06 <gundalow> So I've been working on testing the network modules and adding extra test cases to https://github.com/ansible/test-network-modules
+17:11:09 <gundalow> Jmainguy: ace :)
+17:11:32 <gundalow> mattclay: Do you have anything you'd like to update the group on?
+17:11:58 <mattclay> We've continued to make progress on testing on python 3. More integration tests are now passing (and running) on CI for python 3.
+17:12:13 <gundalow> ace
+17:12:22 <gundalow> Who here is really looking forward to python3?
+17:13:06 * shertel is
+17:13:17 <gundalow> ah, someone is here :)
+17:13:21 <gundalow> shertel: ace:)
+17:13:48 * ryansb too
+17:13:52 <gundalow> #topic Module Best Practice
+17:14:34 <gundalow> So for new people, we said we would review https://github.com/ansible/ansible-modules-extras/blob/devel/cloud/amazon/kinesis_stream.py to use that as an example of a well designed and written module
+17:14:39 <Jmainguy> dunno about python3, but getting rid of 2.4 will be nice
+17:14:48 <gundalow> we've been collecting out thoughts at the end of https://public.etherpad-mozilla.org/p/ansible-testing-working-group
+17:14:52 <gundalow> Jmainguy: haha, well put :)
+17:15:02 <gundalow> So thank you to everyone that's added thoughts to https://public.etherpad-mozilla.org/p/ansible-testing-working-group
+17:15:17 <shertel> the etherpad has really grown
+17:15:17 <gundalow> If anyone else has time to add their ideas that would be great
+17:15:34 <gundalow> shertel: yup, we've been busy
+17:15:47 <linuxdynasty> sorry was late, but I had nothing new to add.
+17:16:12 <gundalow> linuxdynasty: sure, I know you've been busy with other stuff
+17:16:55 <gundalow> So post 2.2 we will look at updating developing_modules.html with that feedback
+17:17:16 <linuxdynasty> yep
+17:18:00 <gundalow> #topic Open Floor
+17:18:07 <gundalow> What would people like to attack next?
+17:19:05 <gundalow> something from https://public.etherpad-mozilla.org/p/ansible-testing-working-group or something else?
+17:20:26 <gundalow> _shaps_: what would you like to discuss?
+17:20:43 <_shaps_> I'm just reading etherpda
+17:20:58 <_shaps_> to see if there's anything
+17:21:09 <_shaps_> last time I saw it was 20 lines :D
+17:21:41 * MichaelBaydoun is late but now present
+17:22:48 <_shaps_> nothing I can think of atm
+17:23:01 <gundalow> Myself and mattclay have been focusing on 2.2 deliverables so don't have much else to add
+17:23:24 <shertel> I'm interested in the How to review (a reviewers guide) bullet point in the etherpad, but I'm not sure if that's particularly important to anyone else
+17:23:50 <gundalow> #topic How to review (a reviewers guide)
+17:24:03 <gundalow> shertel: sure, throw out ideas :)
+17:24:29 <shertel> uh...mostly interested in it because I would have no confidence in reviewing others' work
+17:24:42 <shertel> it's something I need to learn how to do :)
+17:24:50 <gundalow> Sure, that's how I started
+17:25:17 <shertel> do we have any documentation pertaining this?
+17:25:44 <gundalow> shertel: http://docs.ansible.com/ansible/developing_modules.html#module-checklist
+17:25:58 <gundalow> shertel: I'd love your open and honest views on that doc
+17:26:10 <shertel> Okay
+17:26:31 * gundalow is updating the etherpad as we speak
+17:26:57 <abadger1999> The doc definitely needs work -- probably *any* suggestion you make will be better than where it is now.
+17:27:28 <gundalow> abadger1999: well put, FYI I believe Scott will have some PRs to do an initial refactor of that page in the next few weeks
+17:27:43 <abadger1999> organization, clearer language, examples, yadda yadda.  It needs it all :-)
+17:27:56 * shertel reading doc
+17:27:58 <gundalow> So at the moment we are throwing thoughts on https://public.etherpad-mozilla.org/p/ansible-testing-working-group
+17:28:21 <shertel> Okay, if I have thoughts I'll add them to the etherpad
+17:28:33 <gundalow> shertel: Thank you :)
+17:29:23 <_shaps_> wow the community pages of the docs really received some love recently
+17:29:38 <gundalow> _shaps_: which ones?
+17:29:50 <_shaps_> https://docs.ansible.com/ansible/community.html
+17:30:22 <_shaps_> ah, no, it's the developer information the page that I always look at
+17:30:29 <_shaps_> that's still a bit sad
+17:30:51 <gundalow> Therefore lots we can improve :)
+17:31:30 <_shaps_> A bit more info here https://docs.ansible.com/ansible/developing_core.html
+17:31:32 <_shaps_> would be really good
+17:31:55 <gundalow> I do'nt think I've seen that page before
+17:32:20 <_shaps_> I spend a lot of time on docs.ansible.com
+17:33:35 <gundalow> Once I know how Scott plans on chopping up the pages it will be easier to get feedback
+17:34:44 * caphrim007 is late
+17:34:56 <gundalow> caphrim007: Just in time actually
+17:34:58 <_shaps_> One thing I'm interested in actually, is how do people test their playbooks
+17:35:19 <_shaps_> not sure if that makes sense
+17:35:25 <gundalow> _shaps_: cool, we can come to that after caphrim007 items which were on the agenda
+17:35:34 <_shaps_> sure
+17:35:34 <gundalow> (yes it makes sense)
+17:36:07 <gundalow> #topic F5 Networking modules - functional test
+17:36:11 <gundalow> caphrim007: Over to you :)
+17:36:58 <caphrim007> k, since i have a running set of functional tests for the bigip modules, i figured i'd toss this out as food for thought
+17:37:16 <caphrim007> if people want to pop on over to here https://github.com/F5Networks/f5-ansible
+17:37:20 <caphrim007> and follow along
+17:37:45 <caphrim007> my functional tests are modeled in the same way that ansible roles/playbooks would be written
+17:38:06 <caphrim007> except in my case instead of a playbooks directory, i called said directory "tests" to avoid confusion
+17:38:20 <caphrim007> so inside of the tests/ directory is a top-level playbook
+17:38:40 <caphrim007> we can pick one, for instance bigip_device_sshd.yaml
+17:38:58 <caphrim007> and all of my functional tests themselves are in the form of roles
+17:39:11 <caphrim007> so you'll see one role, usually, in the playbook
+17:39:34 <caphrim007> in this case i prefix my roles with double underscore to avoid conflicts with end users who might clone my repo here
+17:39:46 <caphrim007> and by chance happen to have a role called bigip_device_sshd
+17:39:54 <caphrim007> so the one role included is __bigip_device_sshd
+17:40:09 <caphrim007> here are the roles https://github.com/F5Networks/f5-ansible/tree/master/roles
+17:40:20 <caphrim007> and the device_sshd role https://github.com/F5Networks/f5-ansible/tree/master/roles/__bigip_device_sshd
+17:40:29 <caphrim007> again, modeled as a normal ansible role would be
+17:40:41 <caphrim007> so i include some default vars that i will use to test in defaults/
+17:40:51 <caphrim007> any files that i want to copy to the remote device in files/
+17:40:57 <caphrim007> and templates accordingly
+17:41:15 <caphrim007> and then the meat of the operation starts in tasks/main.yaml of course
+17:41:26 <caphrim007> https://github.com/F5Networks/f5-ansible/blob/master/roles/__bigip_device_sshd/tasks/main.yaml
+17:41:35 <gundalow> so in
+17:41:40 <gundalow> https://github.com/F5Networks/f5-ansible/blob/master/roles/__bigip_device_sshd/tasks/main.yaml
+17:42:08 <gundalow> on line 24 you are assering that `allow` has changed
+17:42:34 <caphrim007> yes
+17:42:49 <gundalow> on the 2nd run of the tests does that still come up as "changed"
+17:43:17 * gundalow expected to see some "pre/setup tasks" to get the device under test into a known state
+17:43:35 <caphrim007> in my case my DUTs are vagrant files
+17:43:40 <caphrim007> so they're already in a known state
+17:43:51 <gundalow> ah, that makes sense
+17:43:53 <gundalow> Thanks
+17:44:06 <caphrim007> there are usually always 2 tests
+17:44:18 <caphrim007> the first one changes something, like on line 13
+17:44:27 <caphrim007> and then it asserts the changed-ness on 24
+17:44:35 <caphrim007> arguably, it should do more than that
+17:44:48 <caphrim007> then it runs the second test
+17:44:52 <caphrim007> line 29
+17:44:59 <caphrim007> and asserts non-changed-ness
+17:45:05 <caphrim007> line 40
+17:45:22 <caphrim007> to ensure that the former task happened and then current task is idempotent
+17:45:39 <gundalow> yup
+17:45:40 <caphrim007> rinse and repeat for all the arguments and argument combinations
+17:45:52 <gundalow> it's really important to test idempotent
+17:46:05 <gundalow> Do you know what your test coverage is like?
+17:47:07 <caphrim007> i was thinking about that, and i havent gotten to the point of figuring coverage from a playbook out
+17:47:31 <caphrim007> so coverage at this point would be running nose/pytest stuff and doing it that way
+17:47:47 <caphrim007> unless someone has bright ideas on how to do that from an ansible playbook
+17:47:53 <gundalow> mattclay: Any ideas?
+17:48:30 <caphrim007> so far my "coverage" if you can call it that, is my tested platforms
+17:48:31 <caphrim007> https://github.com/F5Networks/f5-ansible/blob/master/tests/bigip_device_sshd.yaml#L21
+17:48:31 <gundalow> With the modules I believe even in localrun they are still copied, so I'm not sure how generate the coverage data
+17:48:38 <mattclay> I experimented with test coverage on playbook runs a while back. It works well, but it's quite slow.
+17:49:23 <mattclay> caphrim007: If you want, I can find my branch where I had a proof of concept for coverage on playbooks.
+17:49:39 <caphrim007> mattclay: sure, i'd be keen to try it
+17:50:04 <caphrim007> gundalow: if that ends up being lacking, then i would have pytest or nose coverage
+17:50:15 <caphrim007> in house we use pytest, but i can accomodate either
+17:51:14 <caphrim007> so that's my quick intro to how i functionally test my modules
+17:51:26 <gundalow> caphrim007: Thanks :)
+17:51:29 <gundalow> It looks really good
+17:51:29 <caphrim007> add in your own preference for ci and that finishes off the automated tests portion
+17:51:43 <mattclay> caphrim007: Here's the PR I had opened at one point to try code coverage analysis on our integration test playbooks on CI: https://github.com/ansible/ansible/pull/16180
+17:51:52 <gundalow> and given the rate that you and your team can churn out modules it seems to be working well for you
+17:52:10 <caphrim007> gundalow: my "team". you're so cute
+17:52:20 * caphrim007 is an army of one
+17:52:44 <caphrim007> mattclay: thanks!
+17:53:38 * gundalow dooks
+17:53:45 * gundalow ducks
+17:54:54 <gundalow> caphrim007: openended questions 1) What's next for this 2) If you were to start again from scratch what would you do differently?
+17:55:17 <caphrim007> i would like to test for more than just changed-ness
+17:55:35 <caphrim007> and i would like to see how coveralls.io can handle coverage tests and how those would compare to pytest coverage tests
+17:55:58 <caphrim007> and i havent had enough time to sit and think how i might do it again
+17:56:12 <gundalow> e.g. 1) change 2) read back and check it had actually been changed on the device 3) rewrite to ensure idempotency?
+17:56:53 <caphrim007> so one thing that i did in my modules is that the return value is what was changed
+17:57:04 <caphrim007> so my assertion tests would check that that returned value is what i expect
+17:57:19 <caphrim007> alternatively, yes i could do a read and check that value in another step
+17:58:34 <caphrim007> and i probably should have written my pytest stuff at the time i wrote the module. bad caphrim007
+17:59:56 <gundalow> :)
+18:00:18 <gundalow> Anyeone else got any questions on that?
+18:01:50 <gundalow> Are you testing with multiple transports?
+18:02:02 <gundalow> ssh, cli, rest, etc
+18:02:31 <_shaps_> smart/ssh or local
+18:02:34 <caphrim007> our modules use our soap and rest endpoints (come hell or high water)
+18:02:41 <caphrim007> so everything is local
+18:02:42 <gundalow> or is bigip only over web
+18:02:47 <gundalow> ah, cool
+18:02:49 <caphrim007> the one exception is bigip_command
+18:02:57 <caphrim007> but it needs to use paramiko instead of ssh
+18:03:08 <caphrim007> because bigip lacks a json module until ~ version 12
+18:03:42 <gundalow> coo, thanks
+18:03:44 <caphrim007> and i think the general consensus at f5 is if you dork with commands on the bigip except for tmsh, you're playing with fire
+18:04:02 <caphrim007> so to prevent that, i do the web services
+18:04:04 <gundalow> Thank you for taking the time to walk us through that :)
+18:04:08 <caphrim007> any time!
+18:04:15 <gundalow> _shaps_: over to you :)
+18:04:36 <_shaps_> It's more an open question really
+18:04:49 <gundalow> sure :)
+18:04:56 <_shaps_> how do usually other people test that a playbook has effectively done what it's supposed to do?
+18:05:22 <_shaps_> eg. setup a wp installation
+18:05:39 <_shaps_> with webserver/db and all the required stuff
+18:06:19 <_shaps_> I usually go with the vagrant approach, create clean vms run playbooks
+18:06:57 <_shaps_> then the test phase is really mainly manual steps
+18:07:17 <mattclay> We use docker images for the Ansible integration tests we run on Shippable.
+18:07:21 <_shaps_> maybe another playbook to run some tests
+18:07:35 <gundalow> personally when I think I've finished developing the playbook I kill the machine and rebuild. Then again after final code review
+18:08:08 <caphrim007> i use vagrant as well, although i restore snapshots. the ansible playbooks run in docker
+18:08:27 <gundalow> Having Ansible setup monitoring of the machine can be good, we did that at $JOB-1
+18:09:23 <_shaps_> yep that's something I used to do too ^
+18:09:33 <gundalow> So at the end of configuring the (say) a webserver Ansible would add the machine into the right Zabbix groups
+18:11:12 <gundalow> _shaps_: Where have you got to?
+18:11:25 <_shaps_> an approach similar to caphrim007's is good too
+18:13:05 <_shaps_> Anyway, I think that considering vagrant/docker as kind of standard answers most of the question
+18:13:57 <_shaps_> gundalow: where have I got to?
+18:15:01 <gundalow> _shaps_: What are you doing at the moment to test
+18:16:49 <_shaps_> Ah, currently I have a lot of nice people ready to test it worked
+18:17:14 <gundalow> :)
+18:17:25 <gundalow> Thats a sensible starting place
+18:17:53 <gundalow> Reivew the list of what they are manually testing and see what you can either 1) Add into Ansible 2) Add to monitoring
+18:17:55 <_shaps_> yeah, if you have enough money to afford that many people to do it, indeed
+18:18:17 <gundalow> Also ensure a 2nd run of your playbook just reports "OK", rather than "CHANGED"
+18:19:10 <_shaps_> yep, that's more likely. Monitoring I have no idea of what it is
+18:19:19 <_shaps_> ^ where I am now
+18:19:32 <gundalow> cool
+18:19:44 <_shaps_> thanks ;)
+18:19:49 <gundalow> Most welcome
+18:19:56 <gundalow> #topic open floor
+18:20:02 <caphrim007> i didnt think of having a nagios/monitoring tool at work monitoring the test targets
+18:20:06 <caphrim007> thats a good idea
+18:20:10 <caphrim007> hmm
+18:20:14 * gundalow will leave the meeting running for a bit incase anyone has anything else
+18:20:18 <caphrim007> got me thinking
+18:20:22 <gundalow> caphrim007: :D
+18:20:44 <_shaps_> caphrim007: yeah, that's very useful
+18:22:31 <_shaps_> I used to have Check_MK ( nagios with superpowers ), which has a sort of web api
+18:23:00 <_shaps_> So you set your vms up then send them to nagios
+18:23:05 <gundalow> see http://docs.ansible.com/ansible/list_of_monitoring_modules.html
+18:23:40 <_shaps_> The amount of time I used the nagios module to schedule downtime...
+18:24:36 <gundalow> Also, general reminder of https://www.ansible.com/blog/ansible-contributor-summit-brooklyn-2016 (You can join in person or online), current agends is https://public.etherpad-mozilla.org/p/ansible-summit-october-2016 please feel free to add your thoughts
+18:25:02 <_shaps_> Can I add "make it happen in London"?
+18:25:34 <_shaps_> :)
+18:27:51 <_shaps_> Anyway, I need to go now, thanks guys for your answers
+18:27:53 <gundalow> _shaps_: The first Contirbutor Summit was in London in Feb
+18:28:17 <gundalow> oh, if the EU people want to do something at EU sensible times then we can
+18:28:17 <_shaps_> "make it happen (again) in London" :D
+18:28:21 <gundalow> :)
+18:28:23 <gundalow> +100000000000
+18:28:31 <gundalow> _shaps_: Thanks :)
+18:28:37 <_shaps_> +100000000000
+18:28:44 <gundalow> Cool, so I guess that's it for today
+18:29:07 <gundalow> as always please add your thoughts & ideas onto https://github.com/ansible/community/issues/114
+18:29:15 <gundalow> Thank you everybody for your time
+18:29:16 <shertel> thanks gundalow!
+18:29:18 <gundalow> #endmeeting

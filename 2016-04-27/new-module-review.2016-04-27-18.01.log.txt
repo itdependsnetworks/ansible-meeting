@@ -1,0 +1,187 @@
+18:01:34 <gregdek> #startmeeting new-module-review
+18:01:34 <zodbot> Meeting started Wed Apr 27 18:01:34 2016 UTC.  The chair is gregdek. Information about MeetBot at http://wiki.debian.org/MeetBot.
+18:01:34 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+18:01:34 <zodbot> The meeting name has been set to 'new-module-review'
+18:01:44 <gregdek> #topic roll call
+18:01:46 <gregdek> who's around?
+18:01:51 * abadger1999 here
+18:01:54 <MichaelBaydoun> here, representing https://github.com/ansible/ansible-modules-extras/pull/1868
+18:03:42 <Qalthos> Hello 👋
+18:03:59 <gregdek> Hi abadger1999 MichaelBaydoun Qalthos thanks for coming :)
+18:04:02 <gregdek> Let's jump right in:
+18:04:11 <gregdek> #topic https://github.com/ansible/ansible-modules-extras/pull/1868
+18:04:14 * privateip here
+18:05:22 <MichaelBaydoun> has 1 shipit, but no other testers have come forward
+18:05:25 <gregdek> Looking, looks like we finally got the shipit from gundalow, so that's one. :)
+18:05:50 <abadger1999> https://github.com/ansible/ansible-modules-extras/pull/1868/files#diff-1297ea3e587fb67488d90791dcb2badeR131
+18:05:56 <gregdek> We've had some other commenters too, so I think the sensible thing is to ping them next...
+18:06:24 <abadger1999> MichaelBaydoun: that exception still needs to be fixed.
+18:06:41 <MichaelBaydoun> The  checks for has boto and has boto3 have been added
+18:07:42 <MichaelBaydoun> want me to ping other commentators seeking a second shipit?
+18:08:01 <gregdek> MichaelBaydoun: does that mean that, in your opinion, the botocore fix is not necessary / handled properly?
+18:08:34 <gregdek> We should have some of those people here too. Yes, feel free to ping them in the PR for more feedback. I think that makes sense.
+18:08:36 <MichaelBaydoun> Yes, it checks for and fails gracefully if botocore is not present
+18:08:59 <abadger1999> MichaelBaydoun: different line.
+18:09:27 <abadger1999> MichaelBaydoun: this one is where the module tries to catch boto.exception[...]   but we're importing botocore not boto above.
+18:10:14 <MichaelBaydoun> I understood that botocore is how exceptions were caught and handled when using boto3
+18:11:06 <abadger1999> Sure.... What I'm saying (and I think gundalow too) is that this:  except boto.exception.NoAuthHandlerFound, e:
+18:11:19 <abadger1999> will say that "boto is undefined".
+18:12:25 <MichaelBaydoun> ok, I'll check the except syntax and make sure to use the botocore exception instead, thanks
+18:13:18 <gregdek> Looks like that's a simple fix and all that's left, though, and shouldn't prevent getting a second +1 soon (I hope). Pinged wimnat and thaumos in the PR.
+18:13:18 <abadger1999> Cool.
+18:13:27 <MichaelBaydoun> Will do
+18:14:36 <gregdek> OK. Does anyone else want to advocate for any other new module PRs in extras?
+18:14:53 <gregdek> (Because if not, I think we'll probably call this meeting early.)
+18:15:06 * gundalow waves
+18:15:36 <gregdek> Hi gundalow. Thanks for your help on 1868. :)
+18:15:44 <gregdek> #topic open floor
+18:16:23 <gregdek> #info weekly new module report is undergoing some changes for full automation, will resume next week
+18:17:33 <gregdek> if no other topics, will close at :20
+18:17:52 <gundalow> gregdek: no problem
+18:18:12 <MichaelBaydoun> not every module submitter is going to show up here.  Shouldn't we review other modules, there are like a 100 waiting for review
+18:20:33 <abadger1999> that's a worthy idea -- if you have some you'd like to review and test, I can code review it as well.
+18:21:27 <gregdek> #chair abadger1999
+18:21:27 <zodbot> Current chairs: abadger1999 gregdek
+18:21:48 <gregdek> #chair MichaelBaydoun
+18:21:49 <zodbot> Current chairs: MichaelBaydoun abadger1999 gregdek
+18:22:13 <MichaelBaydoun> I would volunteer to review 1 or 2 modules per week that are for products we use, aws for example
+18:22:39 <bcoca> we do normally review all modules, this meeting is more of an attempt to make the cycle 'live' vs the succession of comments/rebases on tickets
+18:22:52 <bcoca> ^ and try to push things through faster
+18:23:18 <gregdek> Perhaps the right workflow for now is to use this time to agree on the ones that are best candidates for further review, and get commitments for which ones to discuss next time? That probably is no more than 2-3 per session, but then we all know which ones will be selected.
+18:23:36 <MichaelBaydoun> +1
+18:23:37 <gundalow> https://github.com/ansible/ansible-modules-extras/pull/1945 Do people think this is sensible for a new module, or is lineinfile OK.
+18:23:49 <gundalow> I've got a few things that are close
+18:24:18 <bcoca> lineinfile is not ok! but really dont like seeing more of the same, that said, we did leave 'extras' at for the community at large to decide
+18:24:22 <bcoca> ^ also ini_file
+18:24:49 <bcoca> ^ replace, blockinfile ...
+18:25:53 <MichaelBaydoun> we manipulate .gitconfig as a template, so personally, would not currently have a use for 1945, but others might
+18:26:43 <gregdek> One of the many tricky cases where it probably isn't "the right way" but many folks want the freedom to do things "not the right way". :/
+18:26:57 <gundalow> gregdek: gorrdam people!
+18:27:02 <gregdek> LOL
+18:27:42 <bcoca> what do you mean i cannot bunjie jump with a noose?!?!?
+18:27:57 <gundalow> bcoca: sure you can. It's just the 2nd time that's harder
+18:28:13 <gundalow> aaaaaaaaanyways
+18:28:14 <abadger1999> bcoca: piano wire is better!
+18:28:16 <gregdek> Re: git configuration, it's even weirder because it's perhaps even questionable why git has this configuration option in the first place as commands when it's really just touching files anyway. :)
+18:28:35 <gregdek> But! git provides the option, so I can see why people would want to use ansible to do it.
+18:29:05 <gregdek> So the question then becomes "does it pass the current guidelines?"
+18:29:32 <gundalow> I think so
+18:29:42 <bcoca> checking
+18:29:51 <bcoca> version_added needs update 2.2 now
+18:30:28 <gregdek> I continue to dream of an automated JIT process for that :)
+18:30:33 <abadger1999> I don't see anything wrong with the code.
+18:30:51 <gregdek> But I think we sort of agree that if that's the only thing wrong, we'll just fix it ourselves, right? (version_added)
+18:31:07 <abadger1999> gundalow: Not by any means a blocker but thought I'd mention, module.get_bin_path() has a parameter you can set for it to emit a nice error if the command isn't found.
+18:31:08 <bcoca> ^ i will fix after merge, i dont hold back PR just for that
+18:31:26 <gundalow> abadger1999: oh, cool. I'll add that as a comment.
+18:31:35 <bcoca> ^ and yep, no need for him to deal with get_bin error
+18:31:53 <bcoca> gundalow: he deals with it right under your comment
+18:31:54 <gundalow> Also does it need git squash
+18:32:03 <bcoca> not anymore, github does that now
+18:32:04 <alikins> configuring an application instance (a git repo) seems inline with many modules
+18:33:17 <bcoca> sadly ...
+18:33:22 <gregdek> So does that sound like a shipit then?
+18:33:28 <bcoca> i really hate having a module per config file
+18:34:35 <bcoca> ^ some style issues with 20 returns, would be easier to just update the return val and fall through to final return
+18:34:45 <gregdek> blocker or no?
+18:34:49 <bcoca> but nothing that will block this, from my part
+18:34:56 <alikins> though, i wouldn't mind seeing all those flags/options in the main 'git' module  (aside fom overwhelming # of options)
+18:35:06 <bcoca> pure hatred of the idea is not a blocker for extras
+18:35:16 <gundalow> bcoca: :)
+18:35:29 <gregdek> Notably: it is a perfect blocker for core :)
+18:35:42 <abadger1999> +1 shipit.
+18:36:05 <gregdek> ok! I'll add the label and the core team can merge at their discretion. Thanks!
+18:36:22 <gregdek> Or it can be merged immediately!
+18:36:28 <abadger1999> I'll do it!
+18:36:29 <gregdek> As bcoca just did LOL
+18:36:37 <abadger1999> okay, we're both too slow
+18:36:45 <gregdek> TOO SLOW ALL OF US
+18:36:57 <gregdek> bcoca-bot beats us to the punch once again.
+18:37:09 <gregdek> gundalow: any others you'd like to recommend?
+18:37:28 <bcoca> ah, sorry, went to merge did not see comments here ...
+18:37:46 <gregdek> bcoca: we were all just saying "merge it" anyway.
+18:37:55 <gundalow> https://github.com/ansible/ansible-modules-extras/pull/1862 I don't know if this adds value or not. Based on the "its' just a wraper round an API"
+18:37:57 <bcoca> <= pull the bandaid kind of guy
+18:37:59 <gregdek> So thank you bcoca :)
+18:38:33 <bcoca> gundalow: that is threshold for core or 'good modules', otherwise the one i just merged would also have been rejected
+18:38:39 <bcoca> as thin wrapper on git config
+18:38:50 <gundalow> ah. OK
+18:39:06 <bcoca> 'extras' threshold is 'correct/functioning', usefulness ...
+18:39:09 <bcoca> is not
+18:39:30 <bcoca> ^ i remember we rejected a javax one ...
+18:39:35 <bcoca> but that was before rules change
+18:40:21 <abadger1999> hmm... okay.
+18:40:37 * bcoca will need shower soon
+18:40:42 <abadger1999> I thought that the git config added more value than this one.
+18:41:00 <gundalow> jboss can't do check, it always fires
+18:41:18 <abadger1999> but if bcoca is okay with it then I suppose I am too... note that that reopens the java one for consideration as well as one that lightly wraps make, etc.
+18:41:46 <abadger1999> yeah -- this one says doesn't do check mode, isn't idempotent.  a very light wrapper around the cli indeed.
+18:42:10 * gundalow votes reject jboss for the reasons abadger1999 states above
+18:42:38 <gregdek> What do the current guidelines say? :)
+18:43:03 <gregdek> Or perhaps we could defer this one if we're not convinced that the current guidelines give us the right answer here.
+18:43:18 <gundalow> sure. Lets not waste too much time on it
+18:43:19 <bcoca> abadger1999: yes, this seems less value than gitconfig one .. but that is like saying a hairball tastes better than a dustbunny
+18:43:36 <gundalow> :)
+18:43:39 <gregdek> LOL
+18:44:12 <bcoca> ^ already adding a few issues with docs, will comment on 'check mode'
+18:44:22 <bcoca> also, this should return stdout/stderr?
+18:44:52 <bcoca> ^ really dislike 'command' ... declarative!
+18:45:07 <bcoca> command="/subsystem=ejb3/thread-pool=default:write-attribute(name=max-threads,value=3000)" <??!?!?!?
+18:45:25 <bcoca> yeah, module might need rewrite before acceptance
+18:45:26 <abadger1999> gundalow: note -- api I'm okay with as you can't utilize an api via command.  cli is differnt.
+18:45:39 * bcoca looks if there is any whiskey left before he can continue reading
+18:45:59 <gregdek> Currently, we do say "support check more if you can" and "document if it's not idempotent." That's the minimum, and it looks like it fails on both counts currently, right?
+18:46:10 <bcoca> ^ agreed with abadger1999, thin api wrappser are bad, thin cli wrappers are worse
+18:46:38 <alikins> would like to see a way to support wrapper/cli/non-idempotent 'ad hoc' modules and playbook style modules
+18:46:54 <gregdek> Though thin CLIs are sometimes the best protection for a rapidly moving API.
+18:46:55 <bcoca> gregdek: this does not even seem like 'thin', this is 'atom wide sheet' wrapper
+18:47:01 <jtanner> what is a module if not an api wrapper or a cli wrapper?
+18:47:17 <jtanner> what does that leave as a possibility?
+18:47:21 <gregdek> jtanner: I think it's the "thin" issue. How thin is too thin?
+18:47:30 <abadger1999> okay, I think the written guidelines are silent on cli wrappers being non grata.
+18:47:33 <jtanner> what is "thick" for that matter?
+18:47:48 <gregdek> Seems like "please at least say whether it's idempotent or not" and "please support check mode" are decent compromises.
+18:47:53 <jtanner> "so complicated we don't dare modify" ?
+18:47:58 <abadger1999> jtanner: Something like the git module is what I'd say is a thick wrapper.
+18:48:02 <abadger1999> around a cli tool.
+18:48:16 <abadger1999> It implements checkmode adn idempotence.
+18:48:50 <bcoca> -1
+18:48:50 <abadger1999> there's a lot of logic that is driving functionality that you can't get just from doing "command: git clone repo"
+18:48:52 <alikins> playbook module (check and idempotence) vs ad hoc module (maybe doesn't explode)
+18:48:55 <jtanner> k, i would say 90% of the modules could get deleted then if we implemented "checkcommand" as a param for shell+command
+18:49:01 <bcoca> added comment about commands
+18:49:10 <gregdek> bcoca: what was your -1 for?
+18:49:15 <bcoca> jboss
+18:49:23 <bcoca> also this jboss_cli module
+18:49:27 <gregdek> ah, in its current form.
+18:49:33 <abadger1999> jtanner: I don't think a module has to be as thick as the git module is to be okay... but I don't know where to draw the line.
+18:49:53 <gregdek> because "doesn't support check mode when it easily could" and "doesn't even bother to say it's not idempotent" right?
+18:50:16 <gregdek> abadger1999: for now, we have a line, however imperfect.
+18:50:41 <bcoca> also the non declarative use of 'command' <= big flag that its a bad module
+18:51:41 <gregdek> OK, I need to break for a bit before the next meeting at :00... I think we agree that the jboss_cli module needs more work.
+18:51:56 <gregdek> Any we want to tee up for next week, please #info them so I can send out notes for next week.
+18:52:06 * gregdek wanders afk
+18:52:18 <abadger1999> #chair jtanner bcoca
+18:52:18 <zodbot> Current chairs: MichaelBaydoun abadger1999 bcoca gregdek jtanner
+18:52:30 <abadger1999> #chair gundalow alikins
+18:52:30 <zodbot> Current chairs: MichaelBaydoun abadger1999 alikins bcoca gregdek gundalow jtanner
+18:52:41 <abadger1999> that way any of you guys can also do #endmeeting
+18:52:59 <gundalow> nod
+18:53:16 <gundalow> anyone else got anything they want looking at?
+18:54:18 <abadger1999> alikins: I think it's okay to have modules that are for orchestration/adhoc -- but the question is what's the value add vs doing it with command:
+18:55:33 <abadger1999> I think here (and in the java module referenced earlier) the problem was that there didn't seem to be much added value.
+18:55:35 <alikins> tiny bit of abstraction, but granted, not much for that module as is
+18:55:57 <abadger1999> Here liquidat is saying that it could be useful for keeping default values but we can already do that like this:
+18:56:44 <abadger1999> jboss_vars: { '--user': 'foo', '--password': 'bar, '--host: 'host1:port1'}
+18:57:06 <gregdek> So if this module were to implement check mode and say "NOT IDEMPOTENT" in glowing orange letters, would that be sufficient? Current guidelines say "yes"
+18:57:23 <abadger1999> then use filters to format jboss_vars
+18:57:32 <abadger1999> I think that becomes a yes.
+18:57:53 <abadger1999> because then there's a value add to using it over just the cli.
+18:57:56 <gregdek> perhaps worth noting in the pr
+18:58:17 <gregdek> re: using filters, that means to strip out scaries, i assume?
+18:58:55 <abadger1999> note that what most ansible users mean by idempotence is probably necessary to make a worthwhile check-mode
+18:59:19 <abadger1999> gregdek: to format, really turn the dictionary of defaults into a string.
+19:00:05 <abadger1999> for that matter, in something this simple, you can just use a string in the playbook.
+19:00:31 <abadger1999> (java module had many times this number of options so it needed a dict to stay organized)
+19:01:20 <gregdek> ok, it's time to flip to our community working group meeting.
+19:01:27 <gregdek> #endmeeting

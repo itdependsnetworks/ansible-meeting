@@ -1,0 +1,383 @@
+16:59:53 <gregdek> #startmeeting new-modules
+16:59:53 <zodbot> Meeting started Wed Mar 30 16:59:53 2016 UTC.  The chair is gregdek. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:59:53 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:59:53 <zodbot> The meeting name has been set to 'new-modules'
+17:00:03 * gregdek looks around to see who's about
+17:00:49 <gregdek> #topic https://github.com/ansible/ansible-modules-extras/pulls?q=is%3Apr+is%3Aopen+sort%3Acomments-desc
+17:01:01 <gregdek> So I'm going to start going down this list. :)
+17:01:30 <gregdek> First up: https://github.com/ansible/ansible-modules-extras/pull/213 with 42 comments.
+17:02:30 * gregdek is reading back for context.
+17:02:33 <bcoca> still need revision
+17:03:06 <gregdek> Yes. I suppose that any new module that's in "needs_revision" can safely be ignored because it should fall into other categories.
+17:03:08 <gregdek> Moving on:
+17:03:10 <bcoca> i would skip those on list with a 'needs' tag
+17:03:14 <gregdek> Yeah.
+17:03:16 <gregdek> Good point.
+17:03:20 <gregdek> Lemme revise the query:
+17:05:12 <gregdek> ok, better:
+17:05:14 <gregdek> #topic https://github.com/ansible/ansible-modules-extras/pulls?utf8=%E2%9C%93&q=is%3Apr+is%3Aopen+sort%3Acomments-desc+label%3Anew_plugin+-label%3Aneeds_revision+-label%3Aneeds_rebase
+17:05:22 <gregdek> Which means the top of the stack is:
+17:05:39 <gregdek> https://github.com/ansible/ansible-modules-extras/pull/1229
+17:05:45 <gregdek> Kubernetes module! Our favorite.
+17:05:55 <bcoca> -1
+17:06:03 <bcoca> my comments still stand
+17:06:40 <bcoca> should actually still be flagged needs_revision
+17:07:13 <gregdek> So your only comment is actually this one:
+17:07:30 <gregdek> "As for the PR we might want to keep as is to have a 'experts/advanced' mode in which you just repurpose existing json/yaml configs, but we also want easy to use modules for users to update using module options instead of the json/yaml."
+17:07:39 <gregdek> Which doesn't seem to be a clear -1.
+17:08:10 <bcoca> well, we talked bout it in many diff forums, it was mostly that the PR was a thin wrapper on pushing json config
+17:08:18 <gregdek> If someone gives a module a -1, it should be for reasons that are stated in the module guidelines.
+17:08:20 <gregdek> So that means:
+17:08:40 <gregdek> a. Prohibiting all modules that are thin wrappers in the guidelines;
+17:08:49 <bcoca> i'll update, but its just s small expansion on existing comments on that ticket to which mine just adds little on top
+17:08:50 <gregdek> b. Going through and removing all current modules that are thin wrappers?
+17:09:00 <gregdek> Don't update.
+17:09:06 <gregdek> Because I want to make the policy clear.
+17:09:10 <bcoca> ^ its in my 'still to be discussed' expansion to module guidelines
+17:09:21 <gregdek> So it's not a guideline yet. :)
+17:09:41 <gregdek> OK, so:
+17:09:46 <bcoca> we keep postponing the meeting about it, but i think enough people agree on that point
+17:10:13 <gregdek> OK.
+17:10:31 <gregdek> jimi|ansible: you around? Do you agree with ^^^?
+17:11:03 <bcoca> ^ we had same discussion on composer module
+17:11:04 <gregdek> That thin wrapper modules around CLIs are not useful and should be abolished?
+17:11:10 <gregdek> That's the proposal, right?
+17:11:12 <bcoca> cli/api
+17:11:31 <gregdek> So how do you define "thin wrapper"?
+17:11:40 <bcoca> little added value over using directly
+17:11:50 <gregdek> Because aren't most of our modules basically wrappers of APIs?
+17:12:14 <bcoca> 'thin' being the keyword here
+17:12:23 <gregdek> Prohibiting a thin wrapper of the CLI makes perfect sense. Prohibiting "thin" wrappers of APIs, less so.
+17:12:27 <bcoca> yes, they all wrap something, but they add value on top
+17:12:33 <bcoca> i disagree
+17:12:34 <gregdek> So how do we define that?
+17:13:00 <gregdek> If we're going to make a rule saying "don't do X" and we're going to enforce that rule, we should make sure that rule is well defined.
+17:13:07 <gregdek> So what do you mean by "thin"?
+17:13:13 <bcoca> must have added value on top of existing tool, checkmode/change management/detection, options instead of passing existing configs
+17:13:29 <gregdek> For each call?
+17:13:34 <gregdek> For at least one call?
+17:13:35 <bcoca> each module
+17:13:49 <gregdek> So a module can have multiple params. Must each param be "added value"?
+17:14:02 <bcoca> no, module itself must have added value
+17:14:17 <gregdek> OK. Probably close enough.
+17:14:35 <bcoca> every option should add value to the module, but that is diff story
+17:14:46 <gregdek> So if we're going to -1 this PR, should we just close it?
+17:15:01 <gregdek> (Note: I don't want to do that yet, but want to know your position.)
+17:15:07 <bcoca> possibly? kept open for when someone wanted to reimplement as commented
+17:15:30 <gregdek> Why keep a PR open if it just needs to be completely reimplemented?
+17:15:45 <gregdek> Well, no, ok.
+17:15:50 <gregdek> I get in some cases that would work.
+17:16:11 <gregdek> In any case:
+17:16:30 <gregdek> We need an official policy.
+17:16:43 <bcoca> working on it, but meeting keeps getting postponed
+17:16:52 <bcoca> you have my initial list
+17:16:55 <gregdek> I'll chase newtMcKerr. :)
+17:17:13 <gregdek> In the meantime, I'm going to go put this PR in needs_revision so it's at least in the right state.
+17:18:05 <newtMcKerr> gregdek, maybe make a ticket in your community queue and assign it to me? I’ll take care of that
+17:18:55 <gregdek> OK, thanks.
+17:19:01 <gregdek> Gimme one second to update some things.
+17:20:45 <gregdek> OK, comment added to that ticket and put back into needs_revision.
+17:20:53 <gregdek> Going to create the new ticket in community queue now.
+17:23:32 <gregdek> Community ticket created and assigned to newtMcKerr. Thanks. :)
+17:23:34 <gregdek> Moving on:
+17:23:52 <gregdek> https://github.com/ansible/ansible-modules-extras/pull/211
+17:24:05 <gregdek> An Ansible module to manage github keys.
+17:24:14 <gregdek> 48 comments.
+17:25:21 <gregdek> Looks like it's quite active and continues to be updated recently, so hoping we can get some shipits on this one soon.
+17:26:14 <gregdek> No need to comment since it's clearly quite active.
+17:26:17 <gregdek> Moving on:
+17:26:33 <gregdek> https://github.com/ansible/ansible-modules-extras/pull/1324
+17:26:44 <gregdek> Added OVH Ip loadbalancing module for managing backends
+17:26:46 <gregdek> 40 comments.
+17:27:13 <gregdek> Looks like we have another potential tester! I will ping.
+17:27:41 <gregdek> Actually... might be worth writing some better boilerplate for what "shipit" for new modules entails, but I'll just comment for now.
+17:27:50 <gregdek> Last comment was quite recent.
+17:29:33 <bcoca> wait, was still reviewing previous one
+17:29:50 <bcoca> i left comments on 211
+17:29:55 <bcoca> put in needs_revision
+17:31:11 <MichaelBaydoun> For 211, how do you handle a duplicate looking module submission, 692?
+17:31:32 <gregdek> MichaelBaydoun: good question!
+17:31:35 <bcoca> let both know about dupe, try to have authors discuss and consolidate
+17:31:41 <bcoca> if not we end up choosing one
+17:31:51 <MichaelBaydoun> In reviewing the 101 modules up for review today, there are a few dups
+17:32:00 <gregdek> MichaelBaydoun: thanks for that. Do you have a list?
+17:32:21 <gregdek> We could usefully go through and notify all PR submitters.
+17:32:31 <gregdek> Some boilerplate:
+17:33:37 <gregdek> "Hi @submitter. Please be aware that this PR is potentially in conflict with PR #foo. Please discuss with @othersubmitter. If you don't come up with a resolution, the Ansible core team will be forced to choose one of these modules."
+17:33:39 <gregdek> Sound ok?
+17:34:13 <MichaelBaydoun> Not a comprehensive list, but 1337 and 1868 are dups, I wrote 1868 not knowing that 1337 existed
+17:34:26 <gregdek> Right. Thus the need for a meeting like this :)
+17:34:37 <gregdek> Have you talked to the submitter of 1337?
+17:34:49 <MichaelBaydoun> No, just discovered it
+17:34:52 <MichaelBaydoun> I will
+17:34:55 <gregdek> (ha, 1337 is obviously the superior module by virtue of its PR number)
+17:35:13 <MichaelBaydoun> I rewrote 1868 to use boto3, 1337 uses boto2
+17:35:13 <gregdek> leet modules always get merged!
+17:35:23 <gregdek> Oh, great point.
+17:35:34 <gregdek> bcoca: can we finally say that all new modules must use boto3?
+17:35:37 <gregdek> pretty please?
+17:35:49 <bcoca> that has already been said
+17:35:52 <MichaelBaydoun> But 1868 was written by a python newb
+17:36:07 <gregdek> MichaelBaydoun: that would be you? :)
+17:36:12 <MichaelBaydoun> aye
+17:36:21 <gregdek> Policy trumps n00bness.
+17:36:41 <gregdek> bcoca: is that policy documented? /me looks
+17:37:44 <gregdek> I don't see it documented here: http://docs.ansible.com/ansible/developing_modules.html#module-checklist
+17:37:58 <gregdek> Can we add "All new AWS modules must use boto3 instead of boto2"?
+17:38:03 <MichaelBaydoun> There is a pull request for the boto3 policy, but it's not been merged yet
+17:38:10 <gregdek> Oh! Where?
+17:38:23 <MichaelBaydoun> Let me find it
+17:38:25 * gregdek wanders afk for a minute, brb
+17:39:25 <MichaelBaydoun> 1467 is the pull request for the boto3 guideline
+17:41:10 * gregdek looks
+17:41:55 <gregdek> Ahh, interesting.
+17:42:01 <gregdek> Those are separate.
+17:42:16 <gregdek> So part of the problem is that we've got multiple locations for new module guidelines.
+17:42:16 <bcoca> that is where we keep 'per subset guidelines'
+17:42:50 <gregdek> OK.
+17:43:02 <gregdek> So: 1. we need to merge that PR. bcoca, any reason not to do that?
+17:43:14 <gregdek> And 2. we need to reference this in the main module guidelines.
+17:43:39 <bcoca> 1. they are still discussing it
+17:43:49 <bcoca> 2. i thought we did ...
+17:44:08 <gregdek> I don't see it there.
+17:44:09 <gregdek> So:
+17:45:00 <gregdek> #action gregdek will link to AWS guidelines (extras/cloud/amazon/GUIDELINES.md) from main module checklist (http://docs.ansible.com/ansible/developing_modules.html#module-checklist)
+17:45:22 <gregdek> Re: the discussion of boto3, looks like everyone agrees that we need to go with boto3, the comments are what else we should add, right?
+17:45:26 <bcoca> don't link as each subset can have their own, point out that they MAY exists
+17:46:00 <bcoca> also need to add comment clearing up that we still need to maintain current boto compat
+17:46:22 <gregdek> Right, but for new modules that shouldn't matter, correct?
+17:46:24 <gregdek> So we can say:
+17:46:28 <bcoca> you can add new features only on boto3, fix existing features to work with boto3, but they MUST still work with boto
+17:46:44 <bcoca> well, those guidelines are for new modules and updaates to existing ones
+17:46:48 <gregdek> Right, ok.
+17:47:16 <gregdek> But I think saying "existing subsections may have their own guidelines" is insufficient if people don't know where to look for them.
+17:47:44 <gregdek> I think that when existing subsections of code create their own guidelines, we should link to them so reviewers know they exist.
+17:47:51 <gregdek> Anyway, that's process, I can sort it out.
+17:48:09 <gregdek> I'll wait for that PR to get merged. Shouldn't be long.
+17:48:34 <bcoca> if they are going to add to modules extras ... they ARE finding where they are
+17:48:36 <gregdek> In the meantime, it's clear that we should favor 1868 over 1337 because boto3, correct?
+17:48:47 <gregdek> bcoca: submitters are, but reviewers may not be.
+17:48:51 <bcoca> have not looked at either
+17:50:23 <bcoca> aren't authorized reviewers previous submitters?
+17:51:51 <gregdek> No. Anyone can give +1 so long as they test. And even with that, we're seeing very few reviews.
+17:52:26 <bcoca> missed that memo
+17:52:41 <bcoca> i ginore +1 of 'non authors'
+17:52:43 <gregdek> The problem with only previous submitters being reviewers is that the people with the most incentive to use a module are not likely the same people who have submitted other modules; the most likely reviewers are people who want to use it.
+17:52:57 <bcoca> specially since most +1 don't say if tested or not, mostly indicate 'i like the idea'
+17:53:06 <gregdek> Sorry, not +1. shipit.
+17:53:14 <gregdek> Anyone can give "shipit" if they test.
+17:53:33 <bcoca> even if they don't! (we've discussed that before)
+17:53:37 <gregdek> We have to tell people "only use shipit if you tested", and then trust that people do it.
+17:53:51 <gregdek> Again: it's a filter mechanism, and there's only so much we can do to enforce.
+17:54:38 <MichaelBaydoun> The "shipit" test requirement language should be added to the bot response
+17:54:53 <gregdek> #action gregdek to strengthen "shipit" bot language for new modules
+17:55:35 <bcoca> meeting about to begin
+17:55:52 <gregdek> LOL
+17:55:58 <gregdek> Which meeting?
+17:56:09 <gregdek> The one I accidentally convened an hour early?
+17:56:10 <bcoca> hmm, seems like 'this one' "extras meeting"
+17:56:13 <gregdek> Or a different one?
+17:56:16 <bcoca> ah, so, yes
+17:56:18 <gregdek> Yeah, it was this one. :)
+17:56:23 <gregdek> So we got a head start!
+17:56:25 <bcoca> probably why everyone else ignored
+17:56:27 <gregdek> (Sorry for late comers)
+17:56:30 <gregdek> Fair enough.
+17:56:45 <gregdek> #action gregdek will learn how to read a calendar properly
+17:56:57 <gregdek> Well, then.
+17:56:58 <MichaelBaydoun> At the rate of a few modules per hour, we can use the extra time ;)
+17:57:05 <gregdek> inorite???
+17:57:21 <gregdek> Anyway.
+17:57:49 <gregdek> #action MichaelBaydoun will work to deconflict 1467 and 1337
+17:57:56 <MichaelBaydoun> Community working group starts in 3 minutes unless I'm mistaken
+17:57:59 <jimi|ansible> gregdek: sorry, apparently i picked the wrong time to go to lunch
+17:58:07 <gregdek> jimi|ansible: totally my fault.
+17:58:18 <gregdek> MichaelBaydoun: that's actually in another hour. 1900GMT.
+17:58:25 <bcoca> jimi|ansible: no worries, we assigned you a bunch of stuff
+17:58:38 <gregdek> But feel free to read up for the fun stuff!
+17:58:52 <gregdek> Anyway, /me takes a 2min break to coffee/grab snack
+17:58:54 * jimi|ansible cries
+17:58:55 <gregdek> brb
+18:00:17 <rbergeron> wait, we had a meeting an hour early?
+18:00:24 <bcoca> coffee sounds good
+18:00:26 <gregdek> rbergeron: yes, because I'm an idiot.
+18:00:31 <gregdek> But we're gonna carry on!
+18:00:45 <gregdek> God knows there's plenty to do re: new modules.
+18:00:47 <rbergeron> gregdek: sorry i was not here to counteract your idiocy
+18:01:09 <rbergeron> but if you got stuff done, i don't think it was that idiotic :)
+18:01:43 <gregdek> lol meh
+18:01:45 <gregdek> ANYWAY
+18:01:52 <gregdek> Welcome to the meeting that's been going for an hour!
+18:02:01 <gregdek> See topic for the order we're working.
+18:02:04 <gregdek> #chair rbergeron
+18:02:04 <zodbot> Current chairs: gregdek rbergeron
+18:02:45 <gregdek> Let's return to 1324
+18:03:57 <gregdek> Added OVH Ip loadbalancing module for managing backends
+18:03:57 <gregdek> Looks like we're just waiting on another "shipit", which I encouraged a potential contributor to do
+18:03:57 <gregdek> Really, lag?
+18:04:26 <rbergeron> no, just reading the whole thing
+18:04:33 <rbergeron> i am now done scrolling :)
+18:04:40 <gregdek> No, I was complaining about my own lag
+18:04:46 <rbergeron> ahh
+18:04:56 <gregdek> So I think 1324 is ok for now.
+18:05:03 <rbergeron> also: i wonder if this is a case where it might have been nice to have a networking label? is this a networking thing?
+18:05:26 <gregdek> Currently those labels are done by bot, which looks at the current module file path.
+18:05:57 <gregdek> That one's in cloud, which is why it's labeled cloud.
+18:06:15 <rbergeron> oh, you're right
+18:06:17 <rbergeron> never mind
+18:06:20 * gregdek kinda wonders about the values of those labels anyway tbh
+18:06:51 <bcoca> initially they were done for us to prioritize clouds, we dont use em much anymore
+18:06:53 <rbergeron> I think back when we had no other way to automagically ping people it might have been right.
+18:07:08 <bcoca> bug/feature we do use a lot
+18:07:11 <gregdek> bcoca jimi|ansible any objection if we move on from 1324? Right now I think we just let it get a second shipit and then send it to you when it's ready
+18:07:13 <rbergeron> I'm not sure it has value either, though maybe it does to someone like peter or other folks who are more general
+18:07:19 <rbergeron> or windows folks.
+18:07:30 <bcoca> looking at 1324 now, was making coffee
+18:07:37 <gregdek> OK. I'll wait then. :)
+18:12:03 <bcoca> going to add several comments to it, ok to move on, no one has 'shipped it'
+18:12:17 <gregdek> bcoca: will you be putting it in needs_revision?
+18:12:47 <gregdek> And mscherer did give a "shipit" on 12/10, so that's one, we would need a second
+18:12:54 <gregdek> (unless you're putting it in needs_revision)
+18:13:15 <bcoca> will put it in needs
+18:13:33 <bcoca> and that shipit should not count as he then added more comments
+18:13:55 <gregdek> Ah, right.
+18:14:21 <gregdek> Well, the bot is now invalidating "shipits" that happen after revision for regular modules. But new modules have a different workflow.
+18:14:24 <bcoca> and i think he is mostly implying that he is not testing
+18:14:45 <gregdek> Well, moving forward we'll make it clear that no testing == no shipit.
+18:14:46 <bcoca> he did 'code review'
+18:14:53 <gregdek> Yep, that's not sufficient.
+18:15:04 <misc> yup
+18:15:06 <bcoca> ovh .. had never heard of em
+18:15:19 <misc> ovh, i heard of them, big hosting provider in france
+18:15:29 <gregdek> OK, so we can move to the next one.
+18:15:30 <bcoca> he, explains why i have not ...
+18:16:02 <gregdek> https://github.com/ansible/ansible-modules-extras/pull/692
+18:16:08 <misc> but yeah, I think it would be better to split testing from code review
+18:16:45 <gregdek> Trouble is that workflow is a pain in the ass even as it is.
+18:17:04 <gregdek> Wondering if maybe we could have "shipit" be for "I tested this and it works" and then review is a separate stage?
+18:17:22 <gregdek> Or code review happens after "shipit" by the core team?
+18:17:44 <gregdek> The problem is that, with new modules, the full cycle of test-review-rework-test-etc. is hella long.
+18:18:27 <gregdek> But the hardest thing to get is *actual testing*.
+18:18:32 <misc> because there is few testers, partially because new modules are lost in issues, and partially because this requires some knowledge of ansible to do the test
+18:18:52 <gregdek> Yep.
+18:19:00 <misc> having something like fedora-easy-karma for testing module might alleviate some pain
+18:19:03 <gregdek> But we must break that bottleneck somehow.
+18:19:10 <bcoca> and the feature the module provides might not be avialable to many
+18:19:22 <misc> listing the new module on some dedicated webpage could also bring some testers
+18:19:34 <misc> (and communication around "do test stuff")
+18:19:40 <misc> bcoca: that is a problem too
+18:19:42 <gregdek> Yes, on my plate to get that done.
+18:20:03 <gregdek> I'm already on that. But there are several bottlenecks in this process.
+18:20:15 <gregdek> 1. People knowing that these modules exist.
+18:20:17 <rbergeron> misc: yeah, a bit more advertising can help. or in some cases i've just known people in those other communities and said "hey, can you tell your ansible-happy peeps in $yourthingland that there's a thing they might be interested in and could use testing"
+18:20:21 <gregdek> 2. People knowing how to test the modules.
+18:20:38 <gregdek> 3. People knowing how to review the modules for code correctness.
+18:20:56 <gregdek> Working on fixes for each one of those is the way through.
+18:20:59 <bcoca> 4. people having access/resources to be able to test
+18:21:03 <gregdek> Yep.
+18:21:05 <rbergeron> getting people to actually say the right things and move it forward :)
+18:21:24 <gregdek> I've got #1 now, since we need to open the funnel wider.
+18:21:36 <gregdek> And then beyond that, just keep cranking and correcting :/
+18:22:18 <gregdek> Actually we can improve #2 by writing a good "how to test Ansible modules" guide.
+18:22:38 <gregdek> Which looks suspiciously similar to the Github "how to fork and test a branch in a PR" process.
+18:23:02 <misc> we could generate a playbook from the example and ask people to run it
+18:23:10 <misc> if it fail, there is a problem
+18:23:26 <misc> (minus "running random code from internet" issue, of course)
+18:23:36 <gregdek> Hmm.
+18:24:01 <misc> in fact, maybe running the code in --check in jenkins could be doable
+18:24:24 <gregdek> This bleeds into an infrastructure issue that's beyond the scope of what we can do now...
+18:24:33 <bcoca> actually modules are MUCH easier, mkdir library; cd library; wget github.com/module/pr/raw
+18:24:53 <gregdek> Oo!
+18:25:03 <gundalow> Once we have tests in ansible/ansible-modules-(core|extra) it will be slightly easier for people to add tests. Doesn't have to be the module creater. But they could be added to that branch
+18:25:08 <bcoca> only issue would be their dependancy on specific ansible features
+18:25:38 <bcoca> we already have tests (2 now?) we just need to run em in travis
+18:25:40 <gregdek> automated testing is out of scope for this meeting though.
+18:25:47 * gundalow hides
+18:26:23 <gundalow> I guess we should have the example usage that can be turned into a basic playbook for manual testing
+18:26:24 <gregdek> And besides, automated testing is not that useful for a new module, because someone needs to run it and say "this did the things I expected". There's no getting around that need.
+18:26:41 <gregdek> Example usage in new modules that is expected to work? Now, that's a good idea.
+18:26:52 <gundalow> Are we not getting that??!?!
+18:27:08 <gregdek> We might be. But we're not explicitly asking for it. :)
+18:27:11 <bcoca> that is required part of docs
+18:27:15 <bcoca> we ARE asking for it
+18:27:18 <gundalow> what bcoca said
+18:27:23 <gregdek> Oh, ok. My mistake.
+18:27:25 <gregdek> Well, then --
+18:27:27 <gregdek> Hm.
+18:27:52 <gundalow> We might not always be getting it, that's a different issue. I think it's fine to expect people to write some functional examples
+18:27:58 <gregdek> Maybe we could actually automate that, but then we run into the testing resource issues for paid apis, etc., etc.
+18:28:07 <misc> unless for checkmode
+18:28:13 <gregdek> We can absolutely expect people to write functional examples in the code.
+18:28:25 <misc> and we can run that on the tester system, so no need to do jenkins
+18:28:26 <gregdek> Err, in the docs.
+18:28:36 <misc> like ansible-test-module someurl
+18:28:40 <gregdek> But is that actually valuable?
+18:29:01 <misc> so we get doc validation + test of the code is running
+18:29:20 <bcoca> not really useful with closed/paid apis
+18:29:25 <bcoca> again, need access/resources
+18:29:41 <bcoca> even in check mode, as they  normally hit apis to confirm if change is needed and what it would be
+18:29:48 <misc> mhh
+18:30:04 <misc> indeed, for some, it might cause issue
+18:30:27 <misc> we could engage closed/paid apis providers to give a account to test ?
+18:30:34 <gregdek> so, again. meeting scope creep. :) can't necessarily automate, but we can make it as easy as possible for testers to test manually.
+18:30:38 <bcoca> also specfic hardware (nas? networking?) or OSs (AIX, Solaris)
+18:30:41 <bcoca> many issues with that
+18:31:08 <gundalow> gregdek: apologies, I'm interested in all testing, not just automation
+18:31:12 <gundalow> :)
+18:31:25 <gregdek> no worries. I respect the urfe to automate all of it. :)
+18:31:29 <gregdek> urge, rather.
+18:31:37 <misc> ah ah
+18:31:51 <gregdek> But in the short term, just making our expectations of testers clearer, and making their path easier, is a good win and not that hard to do.
+18:32:01 <gundalow> I agree
+18:32:30 <gregdek> So I've got that ticket in ansible/community: https://github.com/ansible/community/issues/58
+18:32:33 <gundalow> I've been working on getting ansible-validate-modules (the basic static analysis/module linter thing) clean on modules-core, so that should help
+18:32:41 <gregdek> Oh, nice!
+18:32:47 <gundalow> then Travis can do some validation
+18:33:05 <gregdek> Travis is already doing some validation, it can always do more.
+18:33:28 <gundalow> it's not doing ansible-validate-modules on  modules-core, only modules-extra. I've got that in hand and getting it fixed
+18:33:37 <gregdek> Ah, great!
+18:34:01 <gregdek> Sigh. Where were we?
+18:34:05 * gregdek scrolls back
+18:34:19 <gregdek> Ah, right. 692.
+18:34:37 <gregdek> Another github key module.
+18:34:45 <bcoca> already went over that
+18:35:02 <bcoca> linked to 211 for authors to figure out overlap
+18:35:04 <gregdek> Which we already know is in conflict with 211, so we're handling it.
+18:37:15 <gregdek> OK, moving on:
+18:38:38 <gregdek> AWS CLoudfront.
+18:38:39 <gregdek> https://github.com/ansible/ansible-modules-extras/pull/1223
+18:38:42 <gregdek> 24 comments.
+18:40:12 <rbergeron> looks like they were hoping for someone to retest and see if it fixes their issues, but it's been a while.
+18:40:55 <rbergeron> but he was also the person who was requesting the changes, so.
+18:42:43 <gregdek> Looks like it needs more testing. bcoca looking at this one?
+18:43:21 <bcoca> yep, but not testing
+18:43:49 <gregdek> ok, thx. lemme know when you're ok to move on.
+18:43:59 <bcoca> ready
+18:46:10 <gregdek> ok, next:
+18:46:24 <gregdek> https://github.com/ansible/ansible-modules-extras/pull/1730
+18:46:26 <gregdek> Jenkins module
+18:46:54 <gregdek> err, jenkins plugin module
+18:46:55 <gregdek> 24 comments
+18:47:03 <gregdek> Including one shipit-ish
+18:47:13 <bcoca> one implicit 'shipit'
+18:47:46 <bcoca> posted in our internal jennkins channel in case anyone there wants to put through wringer
+18:48:31 <gregdek> Ah, great!
+18:49:58 * gregdek is momentarily distracted, bbiab
+18:51:05 <gregdek> OK. Next:
+18:51:40 <gregdek> https://github.com/ansible/ansible-modules-extras/pull/1502
+18:51:44 <gregdek> AWS VPC ACLs
+18:51:47 <gregdek> YAY TLA
+18:52:15 <gregdek> 23 comments, one shipit.
+18:53:51 <gregdek> bcoca, any comment?
+18:53:53 <MichaelBaydoun> I can test 1502 this evening and reply back with comments or shipit
+18:54:08 <gregdek> Ah, excellent, thanks MichaelBaydoun!
+18:54:36 <bcoca> ^ i defer
+18:54:41 <gregdek> Sounds good.
+18:54:59 <gregdek> And we're at :54 (actually 1:54) so I think this is a good place to stop for today.
+18:55:02 <gregdek> Thanks y'all!
+18:55:04 <MichaelBaydoun> #action MichaelBaydoun to test this evening'
+18:55:18 <gregdek> #action MichaelBaydoun to test 1502
+18:55:25 <gregdek> (Wanted to be sure it was recorded)
+18:55:29 <MichaelBaydoun> thanks
+18:55:42 <gregdek> And that's it. :)
+18:55:45 <gregdek> #endmeeting

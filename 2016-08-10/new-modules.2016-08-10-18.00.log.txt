@@ -1,0 +1,196 @@
+18:00:23 <gregdek> #startmeeting new-modules
+18:00:23 <zodbot> Meeting started Wed Aug 10 18:00:23 2016 UTC.  The chair is gregdek. Information about MeetBot at http://wiki.debian.org/MeetBot.
+18:00:23 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+18:00:23 <zodbot> The meeting name has been set to 'new-modules'
+18:00:30 <gregdek> #chair gundalow rbergeron
+18:00:30 <zodbot> Current chairs: gregdek gundalow rbergeron
+18:00:35 <gregdek> #topic Roll Call
+18:00:46 <gregdek> Agenda, as always: https://github.com/ansible/community/issues/92
+18:01:06 <nitzmahone> yo
+18:01:20 <Qalthos> howdy
+18:01:26 <resmo> hiho
+18:01:41 * gundalow waves
+18:01:47 <MichaelBaydoun> Present
+18:02:02 <gregdek> A goodly array of worthies!
+18:02:32 <gregdek> Once more unto the breach, dear friends!
+18:03:19 <gregdek> #topic Added module to find Launch Configurations
+18:03:30 <gregdek> https://github.com/ansible/ansible-modules-extras/pull/1023
+18:03:58 <gregdek> Two "works_for_me" comments and a superfluous "shipit" from the submitter :)
+18:05:15 <jtanner> yo
+18:05:23 <ryansb> hey team
+18:05:30 <nitzmahone> my only feedback is that the sort + sort_start sort_end args are a little ... obtuse. I assume they're just for filtering?
+18:05:46 <gregdek> Obtuse?
+18:05:49 <bcoca> yeah, interface is not the best
+18:05:54 <bcoca> head/tail
+18:06:25 <gregdek> Sounds like time for feedback/needs_revision, hm?
+18:06:55 <gregdek> I'll put in needs_revision and ping submitter if someone can give feedback in the comments.
+18:06:59 <MichaelBaydoun> before we ask for modificatoins, see https://github.com/ansible/ansible-modules-extras/pull/1023#issuecomment-201232331
+18:07:35 <gregdek> Fair enough. The process is the process, and right now, it ain't fast.
+18:08:47 <bcoca> well, problem there was 'the bot', we should not as for rebase w/o a review
+18:09:06 <MichaelBaydoun> He asked for faster feedback.  What he will experiance is an additional 5 months passing and then new feedback presented that was never surfaced before, on a PR that is almost 1 year old.  I feel ... bad.
+18:09:38 <gregdek> Hundreds in the queue.
+18:09:42 <gregdek> Solution #1: more hands.
+18:09:47 <gregdek> Solution #2: less oversight.
+18:10:02 <gundalow> MOAR AUTOMATION
+18:10:04 <gregdek> We're setting things up for #2 in 2.3.
+18:10:06 <nitzmahone> Also looks like it doesn't handle paging, so anything more than 100 will get lost
+18:10:47 <gregdek> We keep talking about this. :)
+18:12:03 <gregdek> The bottom line is that, so long as we don't have standards that can be automated, we'll incur this cost.
+18:12:46 <gundalow> nod
+18:12:46 <bcoca> interface design is really hard to automate
+18:12:51 <gregdek> The whole purpose of this particular meeting is to give people a forum to expedite particular modules -- but it's an imperfect solution.
+18:13:00 <gundalow> I know
+18:13:03 <gundalow> moving on
+18:13:12 <nitzmahone> But in the meantime I think we'd agree it's better to try and have basic standard UI over every-module-for-itself?
+18:13:38 <gregdek> I don't actually agree. But that's not relevant right now.
+18:13:59 <gregdek> If it were "core only", I would completely agree.
+18:14:08 <gregdek> BUT: the current process is the current process.
+18:14:20 <gregdek> And feedback seven months after requested is better than no feedback. So.
+18:14:50 <gregdek> If someone can give the feedback, I will update to needs_revision and notify the submitter.
+18:15:04 <nitzmahone> Core only, I definitely agree. This one "works" for the most part (though will fail if more than 100 launch configs are present). That's not a deal breaker for most uses, so I'm OK to merge even with the iffy sort/filter stuff.
+18:15:46 <nitzmahone> I wasn't looking at this through the "extras wild west" lens- if we are, ship it.
+18:16:00 <gregdek> The problem is that they all ship together still.
+18:16:06 <gregdek> That's why I've been pushing so hard for the split. :)
+18:16:27 <gregdek> So it's ok if we want to tighten this one up, since it still ships with "ansible".
+18:16:45 <nitzmahone> OK, I'll leave the feedback
+18:17:57 <gregdek> Thanks nitzmahone.
+18:18:21 <gregdek> Moving on:
+18:19:23 <gregdek> https://github.com/ansible/ansible-modules-extras/pull/2588
+18:19:33 <gregdek> #topic New module - ec2_asg_facts
+18:20:24 <gregdek> Hm, actually, I don't think this one is ready. Moved it here because apolloclark was going to advocate for it, but he was then exceptionally rude privately to some folks, and took his ball and went home.
+18:20:43 <gregdek> So I'm actually removing this one.
+18:21:00 <gregdek> Moving on:
+18:21:47 <gregdek> https://github.com/ansible/ansible-modules-extras/pull/1765
+18:21:59 <gregdek> #topic Module to gather F5 gtm facts
+18:22:05 <gregdek> Lots of heat!
+18:22:10 <gregdek> Stuff movin'!
+18:22:29 * gundalow has been looking at F5 stuff as part of Network Meeting
+18:22:47 <gregdek> perzizzle is doin' work.
+18:23:02 <gregdek> gundalow: just want to take this on yourself and move on?
+18:23:05 <gundalow> So feel free to ping me those ones directly if they end up here, thoughI should be catching
+18:23:08 <gundalow> sure
+18:23:14 <gregdek> ok, thx
+18:24:03 <gregdek> #topic New module - s3_website
+18:24:14 <gregdek> https://github.com/ansible/ansible-modules-extras/pull/662
+18:24:49 <gregdek> Been in the pipe forever.
+18:25:03 <gregdek> Lots of shipits and +1s, wimnat has continued to address open issues.
+18:26:10 <gregdek> Seems to me like we should get this one in unless there's a super compelling case against it.
+18:26:14 * gregdek will be back in 1m
+18:26:30 <bcoca> there are some things in which he does not expect errors and can lead to unhandled exceptions, but they are minor
+18:27:01 <ryansb> I don't know if it's super compelling, but IMO this functionality should be in `s3_bucket`
+18:27:27 <ryansb> since it's a special-case configuration of S3, not a separate resource
+18:27:54 <bcoca> agreed
+18:28:12 <nitzmahone> ryansb: I'm not usually a fan of "all-singing, all dancing modules" but I think you're correct in this
+18:28:16 <nitzmahone> instance
+18:28:29 <bcoca> basically can be done with 3 new options to existing module
+18:28:58 <bcoca> i also prefer smaller single purpose, but theses are 'properites' of s3_buckets
+18:29:35 <nitzmahone> and s3_bucket is already extras, so maybe suggest change to PR on that module and call it a day?
+18:29:58 <ryansb> sure, I'll do that
+18:30:00 <gregdek> ok, imma step in here and say something.
+18:30:15 <gregdek> Is this module, in and of itself, problematic?
+18:30:30 <gregdek> The ideal is perhaps to put it all into one module.
+18:30:44 <gregdek> But we have, like, a dozen overlapping docker modules that share functionality.
+18:30:53 <ryansb> I think distributing the config of S3 bucket across multiple modules is a probelm
+18:30:58 <ryansb> *problem...
+18:31:01 <bcoca> not really, in the case of docker we are deprecating it
+18:31:15 <bcoca> and separated it's functions into components that made sense
+18:32:30 <gregdek> There is a difference between "suboptimal" and "broken".
+18:32:36 <gregdek> Does this module work? Yes, it does.
+18:33:02 <bcoca> agreed, but until we have a wild west, this is something we ship and should be more cohesive about where we want the functionality
+18:33:20 <gregdek> okay.
+18:33:25 <ryansb> ok, well yes it works, but the fact that we are deprecating the thing you used as an example indicates that it is an issue
+18:33:32 <ryansb> so let's not re-walk that path
+18:35:27 <gregdek> Then is this a core module?
+18:35:40 <gregdek> Will this be a "core" module after the split?
+18:35:42 <ryansb> no, it's extras
+18:35:50 <gregdek> I know which repo it's in. :)
+18:35:54 <bcoca> probably core after split ... consolidation
+18:35:56 <gregdek> This is the Extras Module Meeting.
+18:36:07 <bcoca> i thought this was 'new module' meeting?
+18:36:18 <bcoca> but fair, 99 of new is in extras ....
+18:36:27 <ryansb> I thought this was the modularizers anonymous meeting
+18:36:46 <jtanner> module supporters anonymous
+18:36:46 <gregdek> I'm asking "what's the criteria you're using to pull rank on this module that's been awaiting review for a year?" And if the answer is "because ultimately it's a core module," that's fine -- but it belongs in core review then, not community review.
+18:37:14 <bcoca> s3_bucket will end up a 'curated' if not 'supported' module
+18:37:16 <nitzmahone> s3_bucket is definitely a strong candidate for core adoption
+18:37:44 <gregdek> OK. So then some please make that case for wimnat when you close this.
+18:38:22 <nitzmahone> is ryansb doing that, or want me to?
+18:38:24 <ryansb> gregdek: the criteria I'm using is, I guess, as a community member saying "this belongs in $existing_module, not as a new thing"
+18:38:32 <abadger1999> docker seems to be deprecating for the opposite reason.
+18:38:36 <ryansb> I will post-meeting
+18:38:37 <jtanner> if the maintainer is responsive, it doesn't need to be a "core" module
+18:38:38 <bcoca> starting to think that the spilt/consolidation will not work as well as you want it ... since we still ship modules we will still want to avoid conflict/overlap even with 'contrib'
+18:39:01 <bcoca> jtanner: even if labeled 'core' does not mean we are first in line for the work
+18:39:31 <gregdek> No, but it means that you can apply your criteria for acceptance. That's all.
+18:39:36 <gregdek> And that's sufficient.
+18:39:46 <jtanner> we oughta make that assessment once the module has been given a chance to live
+18:39:52 <abadger1999> we have to allow contrib to overlap..
+18:39:58 <gregdek> And we will.
+18:40:53 <gregdek> So.
+18:40:55 <gregdek> For now:
+18:41:03 <gregdek> * We believe this is a "curated" module going forward.
+18:41:18 <gregdek> * Therefore, we will close this PR and ask for the functionality to be moved into s3_bucket.
+18:41:43 <ryansb> technically "we believe s3_bucket is a "curated" module going forward"
+18:41:51 <ryansb> but yes, overall
+18:41:55 <gregdek> * One day, there will likely be hundreds of modules like this in non-curated land that will overlap, and you will all have to accept that.
+18:41:58 <nitzmahone> ... and this is important functionality for it
+18:42:18 <bcoca> i would not like to ship overlapping modules
+18:42:25 <nitzmahone> ... and those will sometimes be good candidates for inclusion/addition to an existing curated module
+18:42:37 <nitzmahone> (that we ship directly)
+18:43:46 <gregdek> Which we can certainly ask for, but those modules will largely auto-ship before we get a chance to make that determination. Remember, it's taken us a *year* to come to this determination.
+18:44:02 <nitzmahone> Yeah, I just mean after they've been in the wild for awhile
+18:44:11 <gregdek> Yes. Absolutely.
+18:44:16 <nitzmahone> "hey, that's nice- let's grab that"
+18:44:20 <abadger1999> ryansb: Are you putting yourself on the hook to review wimnat's (potential) PR to add features to s3_bucket?
+18:44:24 <gregdek> YES THAT'S WHAT I WANT LOL
+18:44:31 <gregdek> *sigh*
+18:44:33 <abadger1999> ryansb: if so, that takes some of the sting out of refusing the new module PR.
+18:44:37 <ryansb> yes
+18:44:39 <gregdek> sorry y'all. I know I'm a little salty on this one.
+18:44:43 <ryansb> that seems fair
+18:44:48 <abadger1999> Excellent.
+18:44:50 <abadger1999> Thanks
+18:45:01 <nitzmahone> gregdek: It's been a long road, but I feel like we've finally got a plan that'll work.
+18:45:18 <gregdek> I agree. But now that we have that plan, I want it now, LOL
+18:45:25 <nitzmahone> me too
+18:45:28 <gregdek> Anyway.
+18:45:43 <gregdek> LET US SOLDIER ON. Thanks ryansb for handling that one.
+18:46:08 <bcoca> now that we have a plan, execute it 2yrs ago
+18:46:35 <ryansb> bcoca: k, will open feature request for time machine
+18:46:43 <gregdek> #topic New module: execute_lambda (AWS)
+18:46:49 <jtanner> reminds me of when someone asked me how much longer till the bot automerged shipits
+18:46:52 <gregdek> https://github.com/ansible/ansible-modules-extras/pull/2558
+18:47:06 <gregdek> Hey! ryansb's module!
+18:47:11 <gregdek> WOULD YOU LIKE TO ADVOCATE FOR IT?
+18:47:33 <ryansb> I ADVOCATE FOR IT
+18:47:37 <ryansb> consider it advocated
+18:47:40 <jtanner> author is @ryansb ... shipit.
+18:47:53 <jtanner> bot will ping him furiously
+18:47:56 <gregdek> DENIED
+18:48:04 <gregdek> SHIPIT
+18:48:11 <gregdek> bot_broken
+18:48:14 <jtanner> NOOOO
+18:48:19 <jtanner> that's abusing the bot
+18:48:29 <gregdek> How about the bot abusing me, man?
+18:48:35 * gregdek is punchy.
+18:48:38 <nitzmahone> ryansb: only minor nit I see is "await" vs "wait" (which is what most async-ish modules do)
+18:48:38 <jtanner> i can put in fortunelib
+18:48:47 <gregdek> OK, I'massuming we're good for the lambda module, right?
+18:49:12 <ryansb> I can swap await->wait
+18:49:14 <ryansb> no prob
+18:49:30 <gregdek> mattclay gave it a good beating and it got a community shipit.
+18:49:38 <nitzmahone> otherwise LGTM, +1000 for including log output!
+18:49:46 <bcoca> ryansb: when catching exceptions, dont just pack theminto fail_json
+18:50:08 <bcoca> ^ a nice user message is in order, to try to let user know what you were trying, why it failed and possibly indicate what they can do to fix it
+18:50:31 <bcoca> you can pack the traceback in an 'exception' field in results, will be displayed in high verbosity
+18:50:34 <nitzmahone> bcoca: can't remember if we ever came up with a standard way to return traceback text in modules fail_json that will get logged/displayed properly?
+18:50:47 <nitzmahone> answered the question while I was typing it
+18:50:54 <bcoca> nitzmahone: i am THAT GOOD
+18:51:05 * bcoca starts ego inflation
+18:51:07 * nitzmahone waves fingers and makes spooky noises
+18:51:28 <gregdek> ok y'all, I need to duck out before the next meeting for a bit. Thanks y'all. You can continue for :10 if you have the strength. :)
+18:51:31 * gregdek is afk
+18:55:20 <gundalow> Anyone got anything else?
+18:55:26 <nitzmahone> nawp
+18:55:47 <gundalow> cool
+18:55:49 <gundalow> #endmeeting

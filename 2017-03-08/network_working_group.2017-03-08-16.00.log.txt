@@ -1,0 +1,60 @@
+16:00:09 <gundalow> #startmeeting Network Working Group
+16:00:09 <zodbot> Meeting started Wed Mar  8 16:00:09 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:00:09 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:00:09 <zodbot> The meeting name has been set to 'network_working_group'
+16:00:15 <gundalow> #chair rcarrillocruz
+16:00:15 <zodbot> Current chairs: gundalow rcarrillocruz
+16:00:41 <gundalow> #info Agenda https://github.com/ansible/community/issues/110
+16:00:44 <gundalow> #topic Open Floor
+16:01:45 <gundalow> #info 2.3 is due on RC 1 is on the 15th March, there are a few networking issues we're working through
+16:03:00 <allanice001> Isn't module freeze tonight, though ?
+16:03:54 <gundalow> New feature freeze was (from memory) last week
+16:03:57 * gundalow finds the email
+16:04:05 <allanice001> ahh
+16:04:59 <gundalow> Core Freeze was March 5th
+16:05:10 <gundalow> Which means no new features (therefore no new modules)
+16:05:20 <allanice001> I see
+16:06:33 <gundalow> #info the `stable-2.3` branch will be created at RC1, at which point `devel` will become 2.4, and new modules & features can start to be merged again
+16:08:03 <gundalow> That's it from me
+16:12:04 <gundalow> allanice001: How you doing? Got anything you'd like to raise?
+16:12:13 <allanice001> I'm good
+16:12:17 <allanice001> Nothing from me
+16:13:44 <gundalow> cool
+16:13:53 <resmo> hi
+16:13:55 <gundalow> Will leave this running for a bit incase anyone joines later on
+16:13:58 <gundalow> Hello resmo :)
+16:14:34 <resmo> I have nothing to add but kind of likes the progress in this area
+16:14:53 <resmo> we are already working to use it
+16:14:56 <gundalow> resmo: what progress in particular?
+16:15:06 <resmo> network modules in general
+16:15:13 <gundalow> :)
+16:15:33 <gundalow> That's good to hear
+16:17:09 <resmo> since there is no other topics I would be curious how you test the network modules?
+16:17:25 <resmo> there seems to be an automated testing
+16:17:33 <resmo> how does this look like?
+16:17:56 <gundalow> Sure
+16:18:17 <resmo> (only if you have time)
+16:18:30 <gundalow> Got 5 minutes, it's a good question
+16:18:47 <allanice001> Remo, I think time is the least worry tonight :P
+16:18:47 <gundalow> https://github.com/ansible/ansible/blob/devel/test/integration/README.md#network-tests shows how the tests are structured
+16:19:48 <gundalow> Tests exist in https://github.com/ansible/ansible/tree/devel/test/integration/targets/ split by module name
+16:20:00 <resmo> ok, that clear to me so far
+16:20:02 <gundalow> Currently we run those manually against some VMs
+16:20:10 <gundalow> outside of the normal CI pipeline
+16:20:23 <resmo> ok, so you do not have e.g. cisco nexus devices etc
+16:20:36 <resmo> where you test against?
+16:22:25 <gundalow> The machines listed in https://github.com/ansible/ansible/blob/devel/test/integration/inventory.network exist as virtual machines behind a VPN that we have access to
+16:22:58 <gundalow> Moving forward we will be spinning up Docker or EC2 instances of appliances for testing as part of the usual CI pipeline
+16:23:47 <gundalow> So, for example if you test any of the ios_* modules (or module_utils/ios*) we will run all the ios integration tests via GitHub PRs, e.g. same as non-network code
+16:24:56 <gundalow> That was partly working, then got a bit broken, should be added back soon
+16:25:22 <gundalow> I had ios & vyos mostly working that way
+16:25:47 <gundalow> Arista will be providing a Docker Container image (if that's the right term) for EOS, so that will be tested in the same way
+16:26:57 <gundalow> resmo: that make sense?
+16:27:09 <gundalow> Bit of a state of flux at the moment
+16:28:32 <gundalow> Some of the network venders also have tests that they've created and run themselves. They live in test/integration/*roles* https://github.com/ansible/ansible/tree/devel/test/integration/roles
+16:28:55 <gundalow> test/integration/targets = runnable by ansible-ci, e.g. we can spin up a Docker/EC2 instances
+16:29:05 <gundalow> where as
+16:29:26 <gundalow> test/integration/roles = require manually setup things to test against
+16:29:51 <gundalow> We also have been adding unit tests
+16:29:58 <gundalow> https://github.com/ansible/ansible/tree/devel/test/units/modules/network
+16:39:20 <gundalow> #endmeeting

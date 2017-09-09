@@ -1,0 +1,165 @@
+19:00:35 <gundalow> #startmeeting Public Core Meeting
+19:00:35 <zodbot> Meeting started Tue Jan  3 19:00:35 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:00:35 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:00:35 <zodbot> The meeting name has been set to 'public_core_meeting'
+19:00:54 <gundalow> #chair abadger1999 allanice001 bcoca jimi|ansible jtanner mattclay nitzmahone Shrews
+19:00:54 <zodbot> Current chairs: Shrews abadger1999 allanice001 bcoca gundalow jimi|ansible jtanner mattclay nitzmahone
+19:01:04 * jimi|ansible lurks
+19:01:10 * allanice001 waves
+19:01:15 <gundalow> Happy New Year everyone!
+19:01:18 * mattclay waves
+19:01:27 <gundalow> #Jan 2017 Agenda https://github.com/ansible/community/issues/148
+19:01:37 <allanice001> welcome back all
+19:01:39 <jtanner> yawn
+19:01:52 <alikins> bloop
+19:01:57 <nitzmahone> mang
+19:02:46 <ryansb> hi
+19:03:47 * gundalow is just looking through the issues in https://github.com/ansible/community/issues/148 to see if any are back with us
+19:04:15 <gundalow> #topic Ansible Automates Paris and DC
+19:04:37 <gundalow> Ansible Automates Paris 2nd Feb 2017
+19:04:53 <gundalow> Ansible Automates Washington, DC, 8th March 2017
+19:05:19 <gundalow> More information and sign up at https://www.ansible.com/events
+19:06:51 <gundalow> #topic Open Floor
+19:07:01 <gundalow> allanice001: You got anything?
+19:07:08 <allanice001> nothing yet
+19:07:24 <allanice001> still need to fix my pr from last year
+19:07:51 <allanice001> i recall bcoca and i started talking around ansible-doc bot
+19:08:00 <gundalow> #topic 19664 Support Jinja2 in dict keys
+19:08:06 <gundalow> #info https://github.com/ansible/ansible/pull/19664
+19:08:12 <gundalow> bcoca: I see you added this to the agenda
+19:08:48 <jtanner> the bot marked it needs_revision for no logical reason
+19:08:58 <jtanner> i think it just needs to look at it again
+19:09:39 <gundalow> oh, OK
+19:09:58 <jtanner> ugh
+19:10:01 <gundalow> #topic 19800 Consistent path attribute for file-related modules
+19:10:01 <jtanner> github sucks
+19:10:07 <gundalow> #link https://github.com/ansible/ansible/pull/19800
+19:10:28 <gundalow> dag- dag_ You around?
+19:10:42 <dag-> I am
+19:10:48 <gundalow> Just looking at https://github.com/ansible/ansible/pull/19800
+19:10:58 <gundalow> dag-: Also see https://www.ansible.com/events :)
+19:11:24 <gundalow> "bcoca: wrote: I've been meaning to do this for a long time, just could not get everyone to agree on which 'name' should be the default ...."
+19:11:27 <dag-> Hmm, Paris, I think we can do that ! :)
+19:11:29 <gundalow> What do people think?
+19:11:51 <bcoca> i prefer name, but fine with path
+19:13:31 <jtanner> path makes more sense to me
+19:13:34 <dag-> I don't mind, as I said, the more important part is that name/path/dest would all work for the path-related item (so people don't have to remember which module supports what option)
+19:13:46 * gundalow agrees that it should be consistent, and it will make it easier
+19:13:53 <ryansb> toss-up IMO. Whichever is the default in the most existing modules is fine w/ me
+19:14:11 <dag-> but supporting 'dest' is something we would keep as well (to be compatible with the src/dest modules)
+19:14:47 <ryansb> Does this include supporting `name` with src/dest modules?
+19:14:49 <dag-> in some cases also destfile exists (I presume to make it more clear if dest is a file)
+19:15:09 <dag-> ryansb: no, I didn't touch src/dest modules, I think there it is fine
+19:15:19 <ryansb> ok, sounds good
+19:15:44 <gundalow> does "name" or "dest" imply a file vs directory
+19:15:54 <jtanner> name is too ambiguous
+19:16:01 <bcoca> yes, all this conditioned to 'previous/other being aliases'
+19:16:18 <dag-> jtanner: do you prefer we do not add 'name' if it was not already there ?
+19:16:20 <gundalow> I don't think it does, but that might imply one might be a better fit
+19:16:26 <jtanner> dag-: keep it as an alias
+19:16:36 <dag-> jtanner: sure, but if it wasn't there to begin with ?
+19:16:52 <jtanner> don't add it
+19:16:53 <dag-> now I add all three always (even if it wasn't the default)
+19:16:58 <dag-> ok
+19:17:01 <dag-> I'll fix that
+19:17:07 <jtanner> some modules have "name" for other purposes
+19:17:15 <bcoca> so seems a) 'path' is default namign for a module that deasl with a file/dir (except when they always haver src/dest)
+19:17:32 <bcoca> b) modify exisiting modules to use path and make current options aliases for backwardscopmat
+19:19:46 <bcoca> dag-: not sure we always need the 3
+19:19:57 <bcoca> im fine with just a and b from above
+19:20:19 <dag-> bcoca: sure, am fixing it right now
+19:25:28 <dag-> bcoca: so you don't want to have me add 'dest' if it wasn't there already either ? (to be compatible with src/dst modules)
+19:27:10 <dag-> most of them have 'dest', only stat has always had 'path' only
+19:27:10 <bcoca> yeah, just make it backwards compat, no need to force dest on all
+19:27:25 <dag-> and xattr only had 'name'
+19:27:27 <dag-> ok
+19:31:55 <dag-> https://github.com/ansible/ansible/pull/19800
+19:32:00 <dag-> ready_for_review
+19:33:49 <jtanner> if tests pass, shipit
+19:33:59 <bcoca> +    version_added: 'historical'????
+19:34:20 <bcoca> description should point out the change
+19:35:47 <bcoca> i see it in notes, but no one reads those
+19:36:12 <gundalow> bcoca: A few modules have historical, such as ping, setup, file, copy, etc
+19:36:25 <jtanner> is that going to render as "(added in historical)" in the docsite?
+19:36:27 <bcoca> that is just wrong
+19:36:49 <bcoca> not sure, but plenty of our doc stuff does number comparissons, must be failing silently
+19:36:55 <bcoca> or worse ... using alpha ordering
+19:37:04 <bcoca> going to remove those
+19:38:07 <gundalow> http://docs.ansible.com/ansible/copy_module.html
+19:38:43 <gundalow> version_added: historical ---> Don't print the version added under the module short_description
+19:39:10 <gundalow> well, when used at the top level
+19:39:15 <gundalow> erm, module level
+19:39:31 <bcoca> we already have a threshold in sphynx config
+19:39:49 <gundalow> No idea what it does at the option level, we don't seem to have used that
+19:39:50 <bcoca> either dont specify version or keep original
+19:39:57 <bcoca> yeah. lets not do this
+19:40:10 <jtanner> i think the linter is probably balking if he doesn't add something
+19:40:13 <gundalow> And currently we are not validating version_added in validate-modules (post repo merge it needs work)
+19:40:20 <jtanner> ah
+19:40:32 <gundalow> it's on my list to fix
+19:40:42 <jtanner> maybe dag- was properly trained =)
+19:41:19 <bcoca> going to ignore the modules, but lets really not add it to options (or any new modules)
+19:48:17 * gundalow -> afk, added something else to the agenda
+19:48:27 <gundalow> Can someone else #topic and chair, thanks
+19:54:40 <abadger1999> #topic Ansible 2.0 no longer finds modules in library subdirectories  https://github.com/ansible/ansible/issues/15432
+19:55:18 <bcoca> dag-: i know its redundant, but i can bet even with the change mentioned in 3 places ...we'll still get people/tickets complainign about it not working in 1.9
+19:56:07 <abadger1999> So this one has been around for a while... from the comments it looks like an undocumented behaviour in 1.9.
+19:56:38 <abadger1999> Do we want to reinstitute it, document that it doesn't work (and the workaround of multiple paths in ANSIBLE_LIBRARY_PATH) or something else?
+19:56:44 <abadger1999> bcoca, jimi|ansible ^
+19:57:04 <robinro1> is there a reason not to have it?
+19:57:16 <bcoca> i remember MPD not wanting that to work, i really dont think we shoudl encourage the packing of roles/plays with soo many custom plugins that they need this
+19:57:49 <dag-> I was told to use "version_added: historical" so the tests would not fail, but I removed it by request from bcoca
+19:58:19 <bcoca> yeah, tests are wrong if they look for that
+19:58:31 <bcoca> ^ mattclay was this your req?
+19:58:55 <jimi|ansible> abadger1999: i'm fine with fixing it to look in subdirs, however possibly only with modules
+19:59:05 <jimi|ansible> i don't think that historically worked with other plugin dirs
+19:59:21 <jtanner> i'm okay with it for modules
+19:59:23 <bcoca> he, 1.9 had issues with most plugins not working at all
+19:59:43 <mattclay> No, I didn't request using that.
+19:59:45 <bcoca> the issue is that you are mofidfying the plugin loader ... people will also want it for other plugins
+19:59:56 <bcoca> dag-: so yeah, remove
+20:00:05 <jtanner> side question, are we going to flatten the modules dir?
+20:00:22 <jtanner> and rely on meta for topic/subtopic/tags/etc
+20:02:43 <kennc> I personally never had a reason to have sub-directories in filter plugins, but have for library
+20:03:03 <kennc> I realize that is just personal experience
+20:03:03 <abadger1999> jtanner: I don't think so... we have talked about reorganizing it (pure alpha was the suggestion)  after/if we add categories to metadata.
+20:03:21 <mattclay> The last update on the module dir structure was here: https://github.com/ansible/proposals/issues/46#issuecomment-268340325
+20:07:44 <abadger1999> Okay, so it sounds like we are okay with making this a feature for modules.
+20:08:08 <abadger1999> However implementation could be a bit tricky as it goes through PluginLoader
+20:08:24 <abadger1999> so doing just modules would require more invasive changes.
+20:08:58 <abadger1999> options: special case modules, split ModuleLoader from PluginLoader, allow all plugins to have subdirs.
+20:09:08 <abadger1999> are there pros and cons to each of those?
+20:10:21 <bcoca> there is proposal to flatten the dirs
+20:10:40 <bcoca> abadger1999: -1 to this feature, specially if our own modules will stop using it
+20:12:20 <abadger1999> bcoca: -1 to what?  I'm still talking about #topic (library subdirs)
+20:12:24 <bcoca> yep
+20:12:27 <abadger1999> k
+20:12:37 <abadger1999> bcoca: so what's the rationale against?
+20:12:53 <bcoca> 99.99% of users dont use that, it adds complexity and hides isssues from matcing names
+20:13:09 <bcoca> library/c1/myplugin libarary/c2/myplugin
+20:13:29 <bcoca> not a feature we need, nor think we should support
+20:13:44 <bcoca> if you have that many custom modules, you should set standard location and library path
+20:13:56 <abadger1999> <nod>  Although ANSIBLE_LIBRARY_PATH=library/c1:library/c2     has the same issue.
+20:14:17 <bcoca> agreed, but at least there you clarify priority
+20:14:23 <abadger1999> <nod>
+20:14:30 <bcoca> next will be .. plugin_loader sorting controls
+20:15:27 <kennc> So from alpha -> 1.9, did anyone ask for sorting controls or filter_plugin functionality?
+20:16:19 <kennc> If the answer is no, and the response is many to that PR. I think that answers the question
+20:16:24 <kennc> but I'm a bit biased )
+20:16:27 <kennc> :)
+20:22:42 <abadger1999> Okay.. so proposals:  (1) Add subdirectory support to all Plugins (2) add subdirectory support to just modules (have to work out how to code this) (3) Do not add subdirectory support, document multiple ANSIBLE_LIBRARY_PATH paths with rationale that hten the user can control conflicts and sorting.
+20:23:41 <abadger1999> How do we want to proceed?
+20:23:52 <abadger1999> Discuss and vote next week?
+20:24:19 <jtanner> i vote #2
+20:24:23 <bcoca> #3
+20:25:02 <jtanner> #2 might allow for tricks like a library dir with git submodules for a scaled out organization
+20:25:17 <bcoca> you are proving my point
+20:25:31 <jtanner> one mans trash?
+20:25:42 <bcoca> is other ones herpes
+20:26:19 <jtanner> i'll alert the cdc
+20:26:56 <bcoca> they know, congress just does not allow them to do anything about it
+20:30:27 <abadger1999> k.  I'll summarize this discussion and we can talk more about it next week :-)
+20:30:39 <abadger1999> #topic Open Floor
+20:30:46 <abadger1999> Anyone have anything they want to bring up?
+20:30:54 <abadger1999> Otherwise I'll close the meeting out
+20:41:32 <abadger1999> #endmeeting

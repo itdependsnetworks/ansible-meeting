@@ -1,0 +1,54 @@
+16:00:40 <gundalow> #startmeeting Network Working Group
+16:00:40 <zodbot> Meeting started Wed May 31 16:00:40 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:00:40 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:00:40 <zodbot> The meeting name has been set to 'network_working_group'
+16:01:18 <gundalow> #chair trishnag ganeshrn Qalthos rcarrillocruz
+16:01:18 <zodbot> Current chairs: Qalthos ganeshrn gundalow rcarrillocruz trishnag
+16:01:29 <gundalow> rcarrillocruz: Ask jimi|ansible for Ops
+16:01:55 <gundalow> #info Agenda https://github.com/ansible/community/issues/110
+16:02:51 * gundalow waits a bit to see if others arrive
+16:04:47 * skg-net waves
+16:05:35 <gundalow> hi skg-net
+16:05:38 <gundalow> hi st8less
+16:05:44 <st8less> Hello!
+16:05:46 <gundalow> You got anything for the agenda todau?
+16:05:49 <gundalow> today*
+16:06:23 <st8less> Someone brought up errors in 2.2 in the NTC chat.  How long will 2.2 be officially "supported"?
+16:06:35 * gundalow will find out, one sec
+16:07:07 <st8less> It's in the NetworkConfig class which was boilerplate in 2.2.  I did a bit of work on it in 2.3 mostly because privateip refactored everything and it was easier to work on at that point.  :)
+16:08:07 <skg-net> can you please merge https://github.com/ansible/ansible/pull/25090.. This needs to be back ported to 2.3 as well.
+16:08:44 <gundalow> skg-net: sure, I'll do that now
+16:08:56 <gundalow> st8less: I've asked people that should know, just waiting for a response
+16:09:30 <st8less> Ok, I don't mind hacking on it in my spare time, but only if it will be around for a while.
+16:10:43 * gundalow would like to hope that most people will keep uptodate with Ansible releases, but I know that's not the case
+16:11:45 <gundalow> Have you looked at how much work it may be?
+16:11:56 <gundalow> Lots has changed in Networking between 2.2 and 2.3
+16:12:34 <st8less> Yeah, I have a patch in my local environment that addressed some of the issues that we are still using.  It should be pretty easy to brush the dust off.
+16:12:48 <gundalow> ah, that's good
+16:13:09 <st8less> We haven't moved to 2.3 ourselves.  I need to do lots more testing, but that time thing is a scarce resource.  :P
+16:13:21 <gundalow> haha, yup, always the way
+16:13:37 <gundalow> st8less: 2.2 will be supported untill 2.5 is out
+16:13:54 <st8less> Oh wow.  Cool, I'll go ahead and throw some time at it in that case.
+16:13:58 <gundalow> Ace
+16:14:22 <skg-net> Any updates on the zuul based test infra ?
+16:14:56 <gundalow> skg-net: Not from the Networking side, though I spoke with Zuul people earlier today and they are getting close to being able to test Ansible
+16:15:16 * resmo waves
+16:15:24 <gundalow> skg-net: Just waiting for Shippable on the 2.3 backporthttps://github.com/ansible/ansible/pull/25223
+16:16:03 <skg-net> gudalow: Thanks
+16:16:29 <resmo> gundalow: "Lots has changed in Networking between 2.2 and 2.3" you tell me! I wrote a book while 2.2 was out
+16:16:47 <rcarrillocruz> fwiw, github support on Zuul has landed
+16:16:55 <rcarrillocruz> i will try poking at it as time permits
+16:17:25 <gundalow> resmo: https://www.ansible.com/blog/topic/networks
+16:19:10 <resmo> gundalow: already re-worked the chapter but things moving fast in this area. I am not saying I don't like that boot for printed paper, it is horrible ;)
+16:19:22 <resmo> s/boot/but
+16:20:40 <gundalow> resmo: Networking will continue to change, feel free to poke me directly if you plan further update to the book
+16:20:53 * gundalow hasn't read it, so not sure what detail you go into
+16:21:17 <st8less> I have to bail, I'll catch the notes when I get back.  Have a good day everyone!
+16:21:25 <gundalow> st8less: thanks
+16:26:53 <gundalow> Anyone got anything else?
+16:31:17 <z3nbr3w> I've had something that is probably an easy fix, but I realize it doesn't necessarily pertain to network modules
+16:34:40 <gundalow> z3nbr3w: #ansible-devel may be the right place for that then
+16:35:09 <z3nbr3w> Perfect, I will not waste your time then :) thank you!
+16:35:49 <gundalow> skg-net: Merged into `devel` and cherry picked into `stable-2.3`
+16:37:59 <gundalow> Cool, thanks everyone
+16:38:00 <gundalow> #endmeeting

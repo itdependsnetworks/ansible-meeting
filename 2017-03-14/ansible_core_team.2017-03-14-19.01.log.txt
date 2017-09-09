@@ -1,0 +1,427 @@
+19:01:31 <abadger1999> #startmeeting Ansible Core Team
+19:01:31 <zodbot> Meeting started Tue Mar 14 19:01:31 2017 UTC.  The chair is abadger1999. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:01:31 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:01:31 <zodbot> The meeting name has been set to 'ansible_core_team'
+19:01:38 * thaumos waves
+19:01:39 <gundalow> abadger1999: beat me too it
+19:02:10 <abadger1999> #chair gundalow bcoca thaumos dag funzo  rcarrillocruz ryansb nitzmahone alikins jtanner mattclay Qalthos shertel
+19:02:10 <zodbot> Current chairs: Qalthos abadger1999 alikins bcoca dag funzo gundalow jtanner mattclay nitzmahone rcarrillocruz ryansb shertel thaumos
+19:02:15 <nitzmahone> boop
+19:02:19 <jtanner> hi
+19:02:21 <abadger1999> If I'm missing someone, just speak up :-)
+19:02:27 <ryansb> hi
+19:02:29 <shertel> hi
+19:02:32 <alikins> borp
+19:02:34 <abadger1999> gundalow: Happy to let you take it from here? ;-)
+19:02:42 <funzo> hullo
+19:02:44 <gundalow> gorrdam it, i fell for that
+19:02:47 <gundalow> :P
+19:02:54 <gundalow> abadger1999: should we do the thing from Slack last?
+19:03:01 * mattclay waves
+19:03:03 <gundalow> I see that taking up all available time otehrwise
+19:03:24 <abadger1999> gundalow: as long as it does get talked about today, yes.
+19:03:31 <gundalow> #info Agenda https://github.com/ansible/community/issues/156
+19:03:58 <gundalow> #topic How should paths work? 22546
+19:04:14 <gundalow> #info default to paths being relative to ansible.cfg https://github.com/ansible/ansible/pull/22546
+19:04:17 <gundalow> bcoca: ^
+19:04:54 <gundalow> #info proposed fix for Ansible callback_plugins configuration is relative to cwd instead of config file https://github.com/ansible/ansible/issues/22533
+19:05:25 <bcoca> i think we need to go over all path options and decide which are relative to config, which to cwd/when ansible evaulates it
+19:05:47 <gundalow> Maybe add tests and document it
+19:06:05 <bcoca> tests are there
+19:06:19 <bcoca> just had to change them as they tested 'what was happening' not what was intended
+19:06:22 <gundalow> ah, didn't scroll down, cool
+19:06:24 <gundalow> :)
+19:06:39 <bcoca> which makes the test a reflection, not really useful for intent
+19:07:34 <abadger1999> -1 to relative to config file.
+19:07:53 <abadger1999> especially with bcoca's feature to merge config files, config file path is not a good measure.
+19:08:26 <bcoca> abadger1999: i would argue the contrary in that case
+19:08:41 <bcoca> also, this is for current asnible.cfg, which is not mergable
+19:09:23 <bcoca> making it relative to ansible.cfg makes it predictable, making it cwd makes it unpredictable for a git checkout
+19:09:31 <abadger1999> bcoca: doesn't make sense to change it and then change it back.
+19:09:35 <bcoca> things liek ssh key file are an exception as that is normally 'user based'
+19:09:38 <abadger1999> I don't argue that cwd is good.
+19:09:45 <abadger1999> I just argue that ansible.cfg is also bad.
+19:09:47 <bcoca> abadger1999: not saying changing back either
+19:10:06 <bcoca> abadger1999: then what? we dont know play dir most of the time these get resolved
+19:10:15 <abadger1999> ansible.cfg is not predictable in the face of merging.
+19:10:56 <bcoca> https://gist.github.com/bcoca/03a05c5fdc7cd652a8e72f38684345c9 <= current list
+19:11:13 <bcoca> abadger1999: not sure how that is the case as we know both locations and which one has the setting
+19:11:15 <abadger1999> bcoca: If playbook is the most reasonable thing from an outside POV, then we have to rework the code to expand relative dirs when play dir is available.
+19:11:39 <abadger1999> bcoca: is it the most reasonable thing?
+19:11:40 <bcoca> abadger1999: hard to do in some cases when we resolve these BEFORE we have a play
+19:11:57 <abadger1999> bcoca: but from an outside POV, is it the best thing to resolve to?
+19:12:26 <bcoca> well, for stuff liek path lists, i would argue, config makes more sense
+19:13:18 <abadger1999> bcoca: you wouldn't expect that creating a ~/ansible.cfg just to set pipelining=False would make your custom callback plugins no longer findable.... that's why I consider config file location to be wrong.
+19:13:50 <bcoca> abadger1999: im not parsing that nor how those are related
+19:14:08 <alikins> could do something support $PLAYBOOK/$CONFIG/$CWD in path values to make it more explicit
+19:14:09 <bcoca> etting pipelining will not affect plugins
+19:15:18 <abadger1999> /etc/ansible/ansible.cfg has a setting for callback directory that's a relative path... that would get resovled to /etc/ansible/callback_dir   now I create an ansible.cfg.... suddenly, I can't access my callback plugins from /etc/ansible/callback_dir because the config path changed.
+19:15:32 <abadger1999> *now I create an ~/ansible.cfg
+19:15:54 <bcoca> that is independant of this conversation, since new ansible.cfg will override all settings
+19:16:05 <abadger1999> bcoca: not once you add mergable configs.
+19:16:28 <bcoca> abadger1999: forget mergable configs, we might not do them at all if ansible-pkgmgr is off the table
+19:16:41 <bcoca> and IF mergable, they would follow file in which they were defined in
+19:16:54 <bcoca> and ansible.cfg is not mergable, nor was planning on it ever being mergable
+19:17:29 <abadger1999> bcoca: that wouldn't work either because the only advantage of relative paths over absolute is that they can change in context without changing the files.
+19:18:13 <abadger1999> bcoca: ie: I place an ansible.cfg into a subdir.  Then I can use the callback plugins from that subdir instead of from /etc/ansible.
+19:18:18 <bcoca> abadger1999: which is mostly used for 'project chekcouts', which do want a predictable path
+19:19:37 <bcoca> most people would expect that ansible.cfg in their project checkout points to the ./cback_plugins dir relative to the file, not the one in /var/tmp which happens to be my cwd
+19:19:53 <abadger1999> bcoca: anyhow, play dir makes sense to me (but we'll have to do work to figure out how to make that work).  relative to config is fraught with cornercases that are not intuitive.  -1
+19:20:33 <bcoca> abadger1999: DEFAULT_FACT_PATH for example doesnt make sense either way
+19:20:43 <abadger1999> bcoca: no... the /etc/ansible/ansible.cfg has the relative paths.
+19:21:01 <bcoca> abadger1999: you canont have 2 config files active at same time
+19:21:06 <bcoca> period
+19:21:28 <abadger1999> bcoca: I was typing that out before you wanted to ignore mergable config ever being a thing.
+19:21:51 <bcoca> im discussing current state, not a state that might never be
+19:21:55 <abadger1999> which still seems like a good idea whether or not we have an ansible installer.
+19:22:12 <abadger1999> So anyhow -1
+19:23:02 <alikins> https://gist.github.com/alikins/8ea270e21fa233159bc4b1c477d674ee  ($PLAYBOOK/ sketch).  The various defaults still need to be decided
+19:23:59 <bcoca> the other issue with playbook_dir .. it changes in the middle of the run
+19:24:10 <bcoca> alikins: whatsi root?
+19:24:10 <abadger1999> relative DEFAULT_FACT_PATH  should not be expanded....  that's something that needs to be expanded on the remote machine.
+19:24:19 <bcoca> abadger1999: agreed
+19:24:20 <alikins> bcoca: /
+19:24:29 <bcoca> abadger1999: that is why im saying we need to go over EACH option
+19:24:43 <bcoca> alikins: then its not relative they should jsut put full path
+19:25:51 <bcoca> ^ i do like the idea of CWD/CONFIG/PLAYBOOK, the problem is that PLAYBOOK varies in many cases AFTER we use the config entry
+19:26:24 <bcoca> ROLES_PATH?
+19:26:29 <bcoca> isnt' that the setting you are setting?
+19:28:32 <alikins> bcoca: read the comment above it
+19:28:47 <bcoca> agree with comment ....
+19:29:16 <gundalow> CHAIRING: OK, that's almost 30 minutes, do we want to continue, we wanted to allocate some time to the ANSIBLE_METADATA
+19:29:31 <bcoca> cwd/config seems easy to implement, that is what expand_relative_paths=False|true basically controls
+19:29:39 <alikins> I think I've seen some tools use psuedo uris for similar cases  (ie, config_file:///callbacks/blippy, playbook_dir:///stuff/)
+19:29:50 <bcoca> gundalow: we have other items before that
+19:30:20 <gundalow> bcoca: another of yours, yup :)
+19:30:31 <alikins> gundalow: I will do almost anything if it means avoiding talking about ansible_metadata
+19:30:33 <bcoca> and others
+19:30:52 <jtanner> erhamgurd, murtadurta
+19:30:56 <bcoca> alikins: but what do we do with those not specified?
+19:31:13 <abadger1999> We need to move on.
+19:31:47 <abadger1999> Since we have another one before metadata and metadata is blocking stuff we need to get some sort of resolution for it.
+19:31:53 <gundalow> #action bcoca to update 22546 with notes so far from discussion.
+19:32:02 <bcoca> this is same, we have conflicting bugs on this
+19:32:31 <gundalow> OK, so I can see
+19:32:32 <bcoca> gundalow: inconclusion?
+19:32:53 <gundalow> bcoca: I didn't want to say conclusions, as I wasn't sure we arrived at any :)
+19:32:57 <gundalow> OK, so on the agenda we have
+19:33:04 <gundalow> 1) Proposal: Module Rename Lifecycle
+19:33:16 <gundalow> 2) versioned docs - No update, so skipping
+19:33:33 <gundalow> 3) RST - Approved
+19:33:35 <bcoca> 1) <= this basically reflects 'current norms' so not really a change
+19:33:44 <gundalow> 4) do we call them directives, attributes, keywords, etc?
+19:33:55 <bcoca> 3) was also already norm, we just never did the work
+19:34:07 <gundalow> ryansb: So we have anyting else to talk about on " Module Rename Lifecycle"
+19:34:13 <abadger1999> 4: Don't care, docs pick one and let us know so we can try to do it right.
+19:34:52 <bcoca> 4 same, we just need 1, he jsut have many names all over the place
+19:35:01 <gundalow> ok, lets do (4)
+19:35:04 <abadger1999> 2: I added a bunch of comments after the last meeting.  So there should be stuff for docs to sink their teeth into to refine it now.
+19:35:31 <gundalow> OK, what should we #topic from that list
+19:35:56 <gundalow> (4)
+19:36:08 <gundalow> #topic do we call them directives, attributes, keywords, etc? ansible/ansible#22524
+19:36:26 <gundalow> #info https://github.com/ansible/ansible/pull/22524 Doc directives
+19:36:38 <gundalow> Choices:
+19:36:40 <gundalow> A) directives
+19:36:50 <gundalow> B) attributes
+19:36:54 <ryansb> gundalow: no, just holding it until 2.4 & collecting a list to rename
+19:36:56 <gundalow> C) keywords
+19:37:00 <gundalow> ryansb: Thanks
+19:37:37 <bcoca> ^ iirc we probably have another 2-3 ways we refere to them in docs, but those are the ones i remembered off top of head
+19:37:47 <bcoca> i belive we also use 'commands'
+19:37:52 <bcoca> and keys
+19:38:46 <gundalow> -1 commands
+19:39:30 <jtanner> C for me
+19:39:40 <bcoca> -1 attributes, fine with A or C
+19:40:16 <gundalow> "Task Directives" "Task Keywords", they both "sound" right
+19:40:32 <gundalow> anyone got a preference between A or C
+19:40:39 <jtanner> C
+19:40:42 <gundalow> C
+19:40:50 <gundalow> #agreed "keywords"
+19:40:50 <jhawkesworth> C
+19:40:54 <gundalow> woot
+19:41:12 <abadger1999> make it so :-)
+19:41:13 <bcoca> so we have 48+ refs as directive, 29 as keyword, 31 as attribute
+19:41:19 <jtanner> if it's a bad idea to use the string as a varname, it's a "keyword" to me
+19:42:11 <bcoca> jtanner: 2.3 now warns when you do that
+19:43:10 <jtanner> that's nice, still a keyword =P
+19:43:20 <gundalow> ok, so metadata next?
+19:43:30 <jtanner> erhmagurd, murtadurta
+19:43:46 <gundalow> yes, no maybe so?
+19:43:56 <jtanner> i have no agenda items
+19:44:00 <gundalow> cool
+19:44:00 <abadger1999> yes
+19:44:14 <jtanner> the bot is slowly coming back online after recent meta changes
+19:44:22 <gundalow> abadger1999: Can you please set a sensible #topic
+19:44:48 <jtanner> "erhmagurd, murtadurta" not sensible enough?
+19:44:53 <abadger1999> #topic What should be expected from "curated" ?
+19:45:38 <abadger1999> So couple questiosn here: (1) When does core get involved in reviewing?  When PR's are raised or after maintainers have marked them shipit?
+19:45:54 <abadger1999> (2) Who gets pinged when a PR is raised against a curated module?
+19:45:59 <jtanner> or an issue
+19:46:22 <abadger1999> issues are whoever is maintaining the module... if it's orphaned, no one gets pinged.
+19:46:28 <jtanner> true
+19:47:02 <jtanner> i suppose i was going down that angle because until we have made "orphan" a thing, we probably shouldn't have curated+nomaintainer
+19:47:18 <jtanner> but that's just my opinion
+19:47:48 <thaumos> do we have a short list of what is curated+nomaintainer right now?
+19:47:56 <abadger1999> we probably need to make "doing something real with orphan" more of a priority.
+19:48:06 <jtanner> thaumos: there aren't any now =P
+19:48:24 <gundalow> #info We need to make "doing something real with orphan" more of a priority.
+19:48:28 <bcoca> i would argue curated is not related to mainter status
+19:48:39 <abadger1999> as orphans are a reality... we just aren't acknowledging them properly.
+19:48:44 <bcoca> always meant it as a lightweight gatekeeper
+19:48:46 <thaumos> I would argue that it is not a curated module if it has no maintainer.
+19:48:55 <jtanner> thaumos: yes, that is my logic too
+19:49:12 <bcoca> so goes to community, what happens once it gets  a mainainer?
+19:49:25 <bcoca> do we recurate? cause we wanted a say on it to begin with
+19:49:27 <jtanner> maintainer get's pinged for bugfix + reviews
+19:49:31 <thaumos> then it has to go through the motions again to be "graduated" once more.
+19:49:49 <bcoca> then its not 'curated'
+19:49:55 <bcoca> not sure what to call that state
+19:50:07 <bcoca> curation does not involve authorship
+19:50:07 <thaumos> sorry confused.
+19:50:11 <bcoca> nor maintenance
+19:50:20 <jtanner> brb, i broke the seal
+19:50:28 <bcoca> curated state then looses most meaning when you tie those into it
+19:51:00 <thaumos> who are you responding to @bcoca, me or @jtanner?
+19:51:08 <bcoca> both
+19:51:17 <thaumos> I had a feeling you'd say that.
+19:51:25 <bcoca> actually, all 3
+19:51:55 <thaumos> If a module is classified as curated, I feel it should meet a certain criteria.
+19:52:40 <bcoca> curation is more about our intereset in the module and it's stability than about module quality
+19:52:49 <bcoca> ^ if not, its not curation .. not sure what to call that
+19:53:01 <thaumos> 1. an active maintainer, 2. tests (eventually), 3. must pass our review process for inclusion.
+19:53:09 <bcoca> core is also not reflection on module quality nor stability, just our commitment to it
+19:53:21 <jtanner> 2+ maintainers
+19:53:24 <thaumos> Agreed on interest.
+19:53:35 <thaumos> because we're not just going to let any module be a curated module
+19:53:56 <bcoca> then lets remove all curated, most dont pass that
+19:54:04 <thaumos> for instance, honeybadger_deployment will never be curated.
+19:54:11 <bcoca> if that is the meaning, we should have 0 curated
+19:54:17 <jtanner> That makes it sound like a privilege to be curated
+19:54:23 <bcoca> its not
+19:54:29 <thaumos> okay, we're going to an extreme now.... some are unfortunately grandfathered
+19:54:29 * abadger1999 agrees with bcoca's statement that most current curated don't pass that bar.
+19:54:31 <bcoca> its a burden
+19:54:41 <bcoca> both to us and the community
+19:54:45 <bcoca> that def makes no sense to me
+19:54:51 <thaumos> I agree that all curated are not passing that.
+19:54:58 <thaumos> what makes no sense?
+19:54:58 <bcoca> might as well not have it (hears abadger1999 cheer)
+19:55:46 <abadger1999> bcoca: if you wait long enough, you should hear it again after it passes around the world and comes back again ;-)
+19:56:26 <daBONDi> If i'm allowed to make a succession, make only 2 types of Modules, the stuff thats in the repo is commited by the dev team and gets supported, all other stuff should not be in the repo :-) because it gets partialy maintaned, maybe make something like a Module Galaxy :-)
+19:56:33 <bcoca> at this point i question why have metadata at all, it certainly does not seem to deal with the problems it was initially prposed for
+19:56:55 <thaumos> @daBONDi, that's definitely a longer term discussion.
+19:56:58 <bcoca> daBONDi: metadata was a 'transition' to that since we cannot just remove those modules
+19:57:08 <abadger1999> daBONDi: That's the long-term plan.. we've been having other discussions how to get there in a timely fashion.
+19:57:13 <bcoca> make 'expectations' clear on what we support, what we need to be involved in, what we dont
+19:57:30 <bcoca> but ... clearly we cannot agree on this at all
+19:57:57 <thaumos> It's because we all have different definitions on words and how words are overloaded.
+19:58:36 <bcoca> i currenlty dont find metadata useful at all, quite the contrary
+19:58:49 <thaumos> why not?
+19:58:50 <mattclay> To be clear, what problems are we trying to solve by having "curated", instead of just "core" and "community"? Or rather, what problems do we have in all "curated" modules were "community" instead?
+19:59:00 * jtanner only uses it to determine if community can shipit or not
+19:59:17 <jtanner> other than that, it's noise to me
+19:59:26 <bcoca> mattclay: modules we cannot commit to maintaining but we want to supervise to ensure changes dont traumatize users
+19:59:53 <bcoca> jtanner: for me curate/community only big diff is automerge vs not
+20:01:02 <thaumos> curated should not allow automerge, so if that means no shipit, then no shipit
+20:01:11 <jtanner> pretty much
+20:01:15 <jtanner> shipit or no shipit
+20:01:18 <bcoca> thaumos: no, shipit means 'core can review as community approves'
+20:01:25 <bcoca> thaumos: automerge does not have 'shipit' .. its merged
+20:01:41 <thaumos> but that's the goal, is it not?
+20:01:51 <jtanner> it's the current state
+20:01:57 <jtanner> minus the merge not actually happening
+20:01:58 <bcoca> well, current state there is no automerge
+20:02:17 <bcoca> curated='mark as shipit instead of automerge'
+20:02:22 <bcoca> community=automerge
+20:02:25 <abadger1999> automerge or not is the only encoded-in-code difference I can think of... we have two other sets of differences "workflow" (I think the questoins I brought  up belong in there)  and definition (bcoca and thaumos and expressing different ideas of that)
+20:02:27 <bcoca> core=no shipt
+20:02:33 <jtanner> but the merge is not happening because i've purposefully disabled it till shipit algo is verified ... i think that's good now though
+20:02:49 <thaumos> hmm... I wouldn't use shipit as a keyword in curated's case.
+20:03:12 <thaumos> because ^ that could make the algorithm harder, right?
+20:03:29 <bcoca> also 'shipit' to merge,  is currently not happening due to freeze
+20:03:35 <jtanner> that too
+20:03:47 <bcoca> thaumos: same algo we have now
+20:03:51 <jtanner> so maybe i said it wrong earlier
+20:04:06 <abadger1999> thaumos: so shipit is coming up in relation to workflow -- If the workflow is "PR submitted => Core reviews => merge or reject) there's no shipit keyword.  If the workflow is ( "PR submitter" => "Community reviews" => "Core reviews" => merge or reject) then shipit comes between "community review" and "core review"
+20:04:07 <bcoca> again, as workflow i always saw the ONLY difference between curated and community is automerge
+20:04:08 <jtanner> it's automerge or not automerge ... those are the different results that metadata is driving
+20:04:26 <bcoca> curatged woudl be labeled shipit, community would just automerge
+20:06:16 <bcoca> ^ having maintainer or not, shoudl not make difference in the category
+20:06:47 <jtanner> it's orthogonal?
+20:06:53 <bcoca> exactly
+20:07:06 <jtanner> because no maintainer means it'll never get to the point of deciding to automerge or not
+20:07:07 <abadger1999> I think it could be a measure of health but yeah, I can see it being orthogonal.
+20:07:28 <bcoca> that was, the original intent .. but then we changed to 'supported_by' and i think that has muddied the waters ever since
+20:08:03 <jtanner> automerge: yes|no
+20:08:13 <thaumos> so are we all agreeing that "supported" is a bad word?
+20:08:18 <bcoca> ^ if that is less contentious +10
+20:08:38 <bcoca> thaumos: yes, we all agreed on that, changed it 5 times and ended back at not changing it
+20:08:46 <jtanner> thaumos: i think so ... it takes many lawyers to define the word
+20:08:52 <thaumos> yeah because we wanted to avoid a version bump
+20:08:56 <abadger1999> so there's probably a policy question tied in there... maybe we need to look at modules which are curated and unmaintained periodically and decide something else aobut them ("We don't care enough about this module to give it a maintainer, so move it out of curated" "We care enough about this module and no community member is stepping up s o we have to adopt it" "this module is hanging on without too many bugs so we'll continue to let it be
+20:08:56 <abadger1999> unmaintained for now")
+20:09:23 <thaumos> abadger1999, agreed. we do need a policy around those.
+20:09:30 <bcoca> abadger1999: i would argue we should do that with or without these categories
+20:09:41 <daBONDi> from a my personal expirience as a user, i always copied most of the win modules and rename it because the fixes taking to long to get into devel, so this workflow need to be simplified
+20:09:51 <bcoca> +1 remove curated, use automerge instead
+20:10:03 <thaumos> yeah, but when we get to a point of community being separate, it won't matter for them.
+20:10:17 <abadger1999> bcoca: in the eventual world, we don't have to do it for things labeled communit as those won't live in our repos or our tarballs.
+20:10:21 <bcoca> daBONDi: that is the point, to get to automerge of the community for most modules
+20:10:48 <bcoca> abadger1999: that might not happen since ansible-install is now in doubt
+20:10:56 <bcoca> ^ w/o it we cannot really migrate them to galaxy
+20:10:56 <thaumos> why is it in doubt?
+20:11:00 <bcoca> or other exteranl repo
+20:11:13 <bcoca> thaumos: cause you and jason just told us 3h ago?
+20:11:16 <thaumos> lol
+20:11:23 <thaumos> don't worry about that
+20:11:42 * bcoca goes to bed and hopes the world will make sense tomorrow
+20:11:50 <thaumos> it will never make sense my friend
+20:11:59 <thaumos> he's afraid of a pkg mgr
+20:12:38 <thaumos> anyways, tangent.  we can talk about offline
+20:13:22 <thaumos> so how about this, let's regroup here right now, and highlight the problem again.
+20:13:56 <bcoca> pkg mgrs are the things of nightmares, we shoudl ALL be afraid
+20:14:22 <bcoca> +1 to automerge key
+20:14:36 <jtanner> (1) When does core get involved in reviewing?  When PR's are raised or after maintainers have marked them shipit?
+20:14:36 <jtanner> 3:45 PM (2) Who gets pinged when a PR is raised against a curated module?
+20:15:29 <thaumos> have we info'd ^
+20:15:29 <bcoca> 2) i pose is 'wrong' quesiton, 'who gets pinged when PR is raised against module' <= answer: maintainer, if none, mark as orphan and let issue/pr user know
+20:15:51 <bcoca> ^ that workflow should be true not matter any other categorization of module
+20:16:12 <jtanner> informing the user is the only thing not being done right now
+20:16:21 <jtanner> s/user/submitter
+20:16:45 <bcoca> but does that sound right? you wont need any other logic other than 'mantainer exists or not'
+20:16:57 <bcoca> ^ folder maintainers included in that
+20:17:13 <jtanner> not so many folder maintainers
+20:17:19 <bcoca> i know
+20:17:29 <bcoca> but its at least 1 level of possible backup
+20:17:54 <jtanner> not sure i follow
+20:18:07 <jtanner> if docker_network gets a PR, who is pinged?
+20:18:15 <bcoca> orphan
+20:18:29 <bcoca> though they currently are mislabled as core maintained
+20:18:47 <thaumos> they shouldn't have been, imo
+20:18:51 <abadger1999> proposal from me: (1) Update the metadata docs to define curated as:"The Ansible Core Team is the gatekeeper for this module. The core team will review any PRs that are marked shipit by the community for additional concerns about code quality, consistency, completeness, and potential regressions and then merge if appropriate.  They are not on the hook for generating fixes or new features for these modules"
+20:19:17 <bcoca> -1, lets just eliminate curated
+20:19:23 <bcoca> automerge is better key
+20:19:44 <thaumos> this is the current wording of "curated"
+20:19:53 <thaumos> https://www.irccloud.com/pastebin/jPJHK3BQ/
+20:19:55 <abadger1999> +1 to what bcoca said about docker_network and orphan.
+20:20:08 <bcoca> This module is supported mainly by the community and is curated by core committers. <= current wording of curated
+20:20:09 <abadger1999> if we're updating the definition of curated.
+20:20:26 <bcoca> abadger1999: im for just removing the supported_by key
+20:20:29 <bcoca> ^ nix it
+20:20:32 <abadger1999> and we can rename the curated key to automerge with the new defintion as well.
+20:20:36 <bcoca> just add automerge key instead
+20:20:41 <bcoca> no def needed
+20:20:45 <abadger1999> bcoca: I'm throwing my hands up in the air right now.
+20:20:54 <bcoca> welcome to my world
+20:20:57 <abadger1999> I think that's too much change.
+20:20:58 <jtanner> \o/
+20:21:21 <thaumos> we shouldn't remove the ke
+20:21:30 <thaumos> s/ke/key
+20:21:30 <abadger1999> You want to remove supported_by and put in automerge: yes, no instead?
+20:21:44 <bcoca> the current key is counter productive as it transmists confusion and clarifies nothing
+20:21:46 <abadger1999> Just to make sure I'm not misinterpreting
+20:21:55 <jtanner> that's my suggestion too ... but i have more context about what our parent company is going to require of us
+20:22:00 <bcoca> hell, i would not add metdata at all, automerge can be kept in maintainers.txt
+20:22:12 <thaumos> abadger1999, we're just still fixated and overloading "supported_by"
+20:22:21 <thaumos> that's the problem
+20:22:24 <bcoca> nope, im outright removing it
+20:22:38 <thaumos> we need it there though @bcoca
+20:22:51 <abadger1999> Sooo..... I think that needs a proposal.
+20:22:58 <bcoca> thaumos: eventually, once it does something helpful
+20:23:06 <abadger1999> We'll need to modify ansible-doc and the files we have in release.
+20:23:12 <abadger1999> and website generation
+20:23:14 <bcoca> ansible-doc does not need modification
+20:23:18 <abadger1999> bcoca: it does.
+20:23:19 <bcoca> ^ website does
+20:23:29 <bcoca> abadger1999: why? if metadata is not there, it does nothing
+20:23:35 <thaumos> yes, abadger1999 everything needs a proposal... the problem here was we were trying to meet half way with definitions, and we still don't agree on them.
+20:24:05 <jtanner> 1-800-GET-BDFL
+20:24:39 <abadger1999> because *cough*certain people*cough* are expecting that ansible-doc will tell the difference between modules supported by ansible, inc and community.  removing metadata means we need to get that information from the maintainer.txt file
+20:24:58 <gundalow> Is that a real requirement/
+20:25:00 <jtanner> seriously, i don't think we're ever going to agree on terminology related to "support" ... until we're forced to by lawyers/managers
+20:25:01 <gundalow> not heard of that before
+20:25:24 <gundalow> jtanner: good point, I don't think Engineers should define it either
+20:25:29 <jtanner> we need someone to just make a call, end it and move on and let the pieces fall where they will
+20:25:29 <bcoca> abadger1999:  that is something we were trying to establish, since it seems we cannot, why have it?
+20:25:43 <abadger1999> well... although that came to me from higher up... i think bcoca was the actual cause of it.
+20:25:53 <thaumos> ok let's stop.
+20:26:14 <abadger1999> If he's okay with wild west modules and not making it obvious which modules are wild west in ansible-doc then who am I to get in the way?
+20:26:14 <gundalow> +1 to stopping :)
+20:26:15 <thaumos> everyone breathe
+20:26:18 <bcoca> i proposed it to establish a clear communication on what expectations we were setting, since we cannot clarify those expectations, wtf are we communicating?
+20:26:41 <jtanner> i only triggered the convo earlier because 3 modules were "curated" without maintainers and that seemed extra odd to me ... those are now "fixed", for varying definitions of the word
+20:26:59 <abadger1999> jtanner: no... you uncovered a bunch that are broken.
+20:27:01 <thaumos> ^ which was fair @jtanner
+20:27:13 <abadger1999> things which are curated or community and have ansible as maintainer.
+20:27:45 <jtanner> yes, i believe that to be a problem ... but i don't think we're going to solve it through majority agreement
+20:28:11 <abadger1999> jtanner: if we move those into community, then I think we'd all agree it's fixed.  If you make them orphaned, then I think some of us would agree it's fixed.
+20:28:32 <bcoca> we had 2 issues going in that metadata was going to solve a) set expectations, b) enable automerge, since a) we cannot do ourselves, lets just do b) which can be done w/o metadata
+20:28:55 <jtanner> yes, "fixed" to us ... but to the people who wanted it "curated" for some misperception, they are now "broken"
+20:29:06 <abadger1999> hmm...
+20:29:19 <abadger1999> jtanner: okay... so we labeled it curated.  But we did have the list reviewed.
+20:29:33 <thaumos> who reviewed it abadger1999?
+20:29:50 <abadger1999> So I guess we would have to say "We want to label these curated modules community" and then have newtMckerr run it up the flagpole.
+20:29:50 <thaumos> because I was just about to propose to do a review
+20:29:52 <jtanner> is misperception even a word? i feel like i just made it up
+20:29:58 <thaumos> okay, how about this...  I will take it on to review the current list of all modules.  I will review that list with the leads and jason and we'll  take action on them accordingly.
+20:30:22 <jtanner> here's the problem with that. ...
+20:30:25 <thaumos> yes it is @jtanner
+20:30:29 <jtanner> it goes like this ...
+20:30:53 <jtanner> "ec2.py is curated, so we want to make it community so that it can grow"
+20:31:04 <jtanner> "oh no, we can't break it, we have people depending on it"
+20:31:37 <jtanner> "so we're going to resource making it fully supported?"
+20:31:39 <jtanner> "no ..."
+20:31:48 <thaumos> cloud/amazon/ec2.py is a great example of curated.  It should not be community because of your point @jtanner
+20:32:04 <thaumos> fully supported == core, and that i don't think is ever the plan
+20:32:23 <jtanner> you don't see the issue there?
+20:33:24 <bcoca> this impasse is cyclical, lets jsut move passed it
+20:33:26 <abadger1999> That's the recipe for "These modules are stagnate.  But we want to sell that as a good thing!"
+20:33:33 <bcoca> anyone against automerge setting in maintainers?
+20:33:39 <jtanner> abadger1999: yes, i couldn't type it so eloquently
+20:34:04 <thaumos> Here's the issue I see with ec2.py, the core team has become the sole maintainer... however, we've resourced it to 1.5 individuals, and we classified it as curated because of that.  Ideally, we will be getting a partner to work on them in the future; which is a wip
+20:34:22 <bcoca> abadger1999, jtanner modules stagnate a lot more cause of lack of maintainer than because we reserve final review
+20:34:26 <abadger1999> bcoca: I'm okay with it but it needs a proposal because there's a fair amount of code to change and stakeholders to get buy in... given that, I'm not sure we can do it for 2.3.
+20:34:39 <bcoca> abadger1999: only code that chagnes is ansiblebott
+20:34:57 <thaumos> I am against removing it. I am for getting to an agreement on the definition, and proper words.
+20:35:09 <bcoca> abadger1999: not talking about metadata at all, now im exclusively proposing an automerge no|yes flag for ansibot
+20:35:25 * thaumos retracts statement above
+20:35:31 <abadger1999> *sigh*
+20:35:58 <bcoca> @here, anyone against having an automerge setting on asibot?
+20:36:02 <bcoca> asnibullbot
+20:36:08 <bcoca> ansibullbot?
+20:36:17 <thaumos> if it's doable, why not?
+20:36:22 <thaumos> that's the goal, right?
+20:36:22 <bcoca> jtanner: ?
+20:36:31 <abadger1999> bcoca: REason to have a proposal is to gather all the things that have to hcange.  We have to remove the usage of metadata from ansible-doc and website generation
+20:36:34 <jtanner> if anything, it reduces lines of code to determine automerge
+20:36:35 <bcoca> yes, want ot disociate the automerge discussion from others
+20:36:39 <abadger1999> Probably should remove it from testing as well.
+20:36:47 <thaumos> abadger1999: we're not removing metadata
+20:36:47 <abadger1999> (can remove it from modules at our leisure)
+20:36:47 <bcoca> abadger1999: this has NOTHING to do with metadata
+20:37:10 <abadger1999> Need to get buy in from thaumos and jmckerr... who are proxies for other people within the organization.
+20:37:28 <abadger1999> which takes time for them to do their work.
+20:37:45 <abadger1999> These are things that have to be done.  You asserting that they don't does not make it so.
+20:38:09 <thaumos> I agree what bcoca is suggesting has nothing to do with metadata
+20:38:15 <abadger1999> I do too.
+20:38:21 <abadger1999> But the end user has things that are visible
+20:38:44 <abadger1999> Like metadata supported_by: core means that core supports this module.
+20:38:47 <bcoca> this is not related to end user
+20:38:52 <abadger1999> so we need to remove that stuff.
+20:38:52 <bcoca> this is related to OUR workflow
+20:39:01 <thaumos> okay, let's stop then.  we need to talk about this with jmckerr
+20:39:01 <abadger1999> bcoca: it does relate to the end user.
+20:39:23 <abadger1999> if the two sources of information gets out of sync then we're promising to the end user something that won't happen.
+20:39:37 <abadger1999> that's why we get rid of the visible faces of metadata.
+20:39:43 <thaumos> well, it's good we're within the release to finalise it all
+20:39:46 <abadger1999> so that we don't have that potential confusion.
+20:39:50 <thaumos> we are not getting rid of that.
+20:39:55 <thaumos> stop saying that.
+20:39:59 <abadger1999> oaky then.
+20:40:00 <bcoca> abadger1999: diff discussion on how we communicate that workflow to users, you are assuming metadata
+20:40:02 <bcoca> im not
+20:40:08 <abadger1999> bcoca's proposal is unworkable.
+20:40:22 <abadger1999> -1
+20:40:29 <thaumos> #action thaumos to set follow up discussion with internal team to has this out.
+20:40:37 <thaumos> let's end the meeting
+20:40:42 <gundalow> #endmeeting

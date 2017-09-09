@@ -1,0 +1,522 @@
+19:00:10 <gundalow> #startmeeting Ansible Core Meeting
+19:00:10 <zodbot> Meeting started Tue Feb  7 19:00:10 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:00:10 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:00:10 <zodbot> The meeting name has been set to 'ansible_core_meeting'
+19:00:37 <gundalow> #chair abadger1999 allanice001 bcoca jimi|ansible jtanner mattclay nitzmahone ryansb
+19:00:37 <zodbot> Current chairs: abadger1999 allanice001 bcoca gundalow jimi|ansible jtanner mattclay nitzmahone ryansb
+19:01:42 <jtanner> hi
+19:01:44 * mattclay waves
+19:01:47 <gundalow> Feb's agenda https://github.com/ansible/community/issues/150
+19:01:51 <ryansb> hey team
+19:02:00 <abadger1999> Óla
+19:02:00 <gundalow> Hello ryansb :)
+19:02:11 <MichaelBaydoun> is present and lurking
+19:02:50 <alikins> bloop
+19:02:56 <gundalow> MichaelBaydoun: hey, long time no see
+19:03:06 * gundalow is just looking through the agenda for actionable stuff
+19:03:15 * sivel is here
+19:03:25 <gundalow> sivel: Thanks for updating prbyfile
+19:03:39 <gundalow> #topic extending the module "shipit" workflow to non-modules,
+19:03:41 <sivel> oh, I totally forgot to check if it was working
+19:03:42 <sivel> gundalow: lol
+19:03:46 <gundalow> https://github.com/ansible/community/issues/150#issuecomment-277025899
+19:03:54 <gundalow> sivel: "push and forget"
+19:04:05 <gundalow> abadger1999: You around?
+19:04:13 <abadger1999> yep
+19:04:22 <jtanner> about that metadata ...
+19:04:29 <gundalow> All approved. We'll start with contrib/inventory as most of those are community maintained as it is. * * Will come up with a list of dynamic inventory proposed metadata for next week.
+19:05:16 <abadger1999> bcoca: ^ You started a spreadsheet for that.  Status for the commuinity?
+19:05:31 <gundalow> I think he's just headed for lunch
+19:05:49 <jtanner> skip it then
+19:05:57 <abadger1999> k
+19:06:01 <gundalow> OK
+19:06:31 <gundalow> #action bcoca to update us next meeting
+19:06:54 <gundalow> Do we have enough people to vote on Update assemble to allow alternate source of files
+19:07:08 <abadger1999> Yeah, we can continue to collect new votes from people.
+19:07:10 <jtanner> man, didn't we argue that one enough?
+19:07:24 <gundalow> "Right now the decision could be weighted by which committers were attending the meeting so we'll ask for more votes next meeting before making a decision."
+19:07:38 <abadger1999> gundalow, jimi|ansible, mattclay, sivel, (other committers :-)
+19:07:38 <gundalow> hum, no extra people, here, so skipping
+19:07:44 <gundalow> oh
+19:08:10 * gundalow is a solid +0, I don't enough about use case/impact
+19:08:14 <sivel> I say, -1
+19:08:25 <allanice001> Another -1 here fwiw
+19:09:11 <alikins> -1 for me as well
+19:09:21 <ryansb> +0
+19:09:28 <abadger1999> alikins: ah -- you changed your vote?
+19:09:34 <alikins> wait, which vote?  shipit?
+19:09:50 <gundalow> sorry, I didn't update topic
+19:09:59 <gundalow> #topic Update assemble to allow alternate source of files
+19:10:00 <sivel> haha
+19:10:04 <abadger1999> alikins: https://github.com/ansible/community/issues/150#issuecomment-277026033   On assemble  allowing alternate sources of files: https://github.com/ansible/ansible/pull/19500
+19:10:25 <alikins> ah.  +1 on assemble,  -1 on shipit
+19:10:41 <sivel> There are many solutions to the problem.  I don't like the solution, but I am more for not making a change
+19:10:50 <abadger1999> <nod>
+19:11:08 <allanice001> My -1 is for assemble
+19:12:08 <allanice001> I agree with sivel here, other solutions provide sufficient means to solve the problem, without introducing more
+19:12:19 <allanice001> code
+19:12:36 <abadger1999> Okay, we're at -1 (3), +1 (1) +0 (3)... I think that's enough to make the decision?
+19:13:10 <gundalow> 7 votes, only one yes
+19:13:13 <sivel> so overall, we are at a -2 ?
+19:13:24 <sivel> I say, that is enough
+19:13:31 <abadger1999> I'll write up the rejection of the feature.
+19:13:36 <gundalow> #halp
+19:13:43 <gundalow> #help
+19:14:11 <gundalow> #agreed 7 votes, only one yes, rejected
+19:14:19 <abadger1999> In the future we probably should keep better track of how many active committers we have for cases where we feel the need to vote. (for some workable definition of active committers)
+19:14:23 <gundalow> #action abadger1999 to write up rejection
+19:14:42 <gundalow> abadger1999: Does that follow up on BlueJeans chat?
+19:14:43 <jtanner> could use github's reactions to make it simple
+19:14:51 <abadger1999> gundalow: yeah, likely.
+19:15:12 <gundalow> personally I like seeing a comment of +1, 0, -1 that gets updated with names
+19:15:41 <gundalow> podlesh: You around?
+19:15:41 <jtanner> the bot can display which comitters reacted in whichever way in the bot_status output
+19:16:03 <gundalow> #topic #19707 (enhanced rolling updates)
+19:16:04 <jtanner> *shrug* just a thought
+19:16:14 <podlesh> yes
+19:16:24 <gundalow> https://github.com/ansible/ansible/pull/19707
+19:16:42 <gundalow> hum, do we need bcoca and jimi|ansible
+19:16:50 <abadger1999> jimi|ansible or bcoca^ We need one of you here for this
+19:17:15 <gundalow> hum, they both seem to be offline
+19:17:29 <gundalow> #info need jimi|ansible or bcoca, nether are around
+19:17:35 <gundalow> podlesh: sorry, false alarm
+19:18:02 <podlesh> ok, next time then :-)
+19:18:05 * abadger1999 pinged them internally too just in case they're near the keyboard but not looking at this channel.
+19:18:18 <gundalow> skipping host module as he can't make todays meeting
+19:18:19 <allanice001> I also seem to recall dyn inv feedback was requested
+19:18:20 <bcoca> here .. no change on my side
+19:18:49 <gundalow> "Jan 31 meeting: podlesh has some examples of use case that don't seem to be solvable by merely enhancing sorting and grouping independent of serial. bcoca and jimi-c not present. Will discuss at meeting feb 7"
+19:18:51 <abadger1999> bcoca: So in 19707... podlesh listed some more examples
+19:19:10 <abadger1999> https://github.com/ansible/ansible/pull/19707#issuecomment-271683995
+19:20:10 <bcoca> yeah, we discussed those serial: 3,2,1
+19:20:17 <bcoca> serial can be a list
+19:20:37 <gundalow> (back in 5)
+19:20:38 <podlesh> yes, but that means playbook contains hardcoded values from inventory
+19:20:43 <bcoca> no
+19:21:20 <bcoca> you can use min/max and length filters to calculate it based on the groups
+19:22:22 <podlesh> I don't think min, max and length are sufficient
+19:23:14 <podlesh> but ok, filters can be added, if needed
+19:23:19 <sivel> I'm not a huge fan of the implementation, I don't know what a better implementation would be off the top of my head, but currently it feels...duct taped on
+19:23:33 <bcoca> probably a strategy plugin
+19:23:43 <sivel> that sounds reasonable
+19:24:35 <bcoca> serial: " {{ ['a','b','c']|length ,[groups['a']|length, groups['b']|length]|min}} "
+19:24:53 <bcoca> ^ but written right
+19:25:02 <podlesh> that's no sufficient, I don't know how many groups there are and what names they have
+19:26:24 <bcoca> at one point you need that info to run the play ....
+19:26:51 <podlesh> yes, in the inventory
+19:26:53 <bcoca> yoru serial group by wont work either in that case
+19:27:06 <podlesh> yes, it does work
+19:27:29 <sivel> I think one of the things I don't particularly like is it's openendedness.  It's not super obvious what the outcome will be
+19:27:30 <bcoca> 2 assumptions, a given host is only in 1 group (which is already false as 2 is minimum)
+19:27:32 <podlesh> example output:  https://github.com/podlesh/ansible-feature-test/tree/master/groups
+19:27:59 <podlesh> no, I don't have that assumption - groups are not even neccesary
+19:28:13 <sivel> I would be much more in favor, or something that is more well defined, say, a way that explicitly says something like:  Interleave by groups
+19:28:15 <bcoca> 2 if no using groups you assume the varaible is availabel for all hosts
+19:28:23 <sivel> as opposed to some templating that decides, that isn't really obvious
+19:28:23 <podlesh> another sample, that does not even use groups:  https://github.com/podlesh/ansible-feature-test/tree/master/variable
+19:29:11 <podlesh> yes, I agree that the universal template is quite too generic
+19:29:33 <sivel> As it is, I have no idea what the outcome would be by just looking at the play
+19:30:32 <sivel> We tend to get lost here sometimes, but I still like to go back and think of a playbook as "executable documentation"
+19:30:37 <sivel> and this is not self documenting
+19:30:44 <podlesh> but I have no better idea how to specify how should they be split...
+19:32:39 <bcoca> i really dont see it going forward in current form, its too contrived and there are workarounds for any case i can come up with
+19:32:47 <bcoca> either by alternate grouping or inventory
+19:32:54 <bcoca> and serial list + calcluations
+19:33:08 <sivel> Just throwing out some ideas off the top of my head, but if `serial` could be an "explict" set of hosts for chunking
+19:33:37 <bcoca> group_by directive would make more sense ... but  .. groups!
+19:33:58 <bcoca> i see a 'constructed groups' inventory plugin as a better solution to all this
+19:34:20 <podlesh> hmm, I should have chosen different name...
+19:34:38 <bcoca> i would say same to 'clustering'
+19:34:49 <abadger1999> are we tryikng to shoehorn a feature into the wrong concept?
+19:34:53 <sivel> I don't think we are anywhere near consensus here, and I don't think we will be.  At this point, I think the agreement is that we don't like the current implementation
+19:34:56 <sivel> abadger1999: I think so
+19:35:10 <bcoca> i agree with sivel
+19:35:27 <podlesh> ok, so should I try to implement strategy plugin for sorting?
+19:35:45 <bcoca> no, as i said in previous discusison sorting is different issue, related, but diff
+19:35:54 <bcoca> you want clustering, which requires sorting, but it is not JUST sorting
+19:35:59 <sivel> I'm still not sure that a strategy plugin to do this would be something we would accept
+19:36:25 <abadger1999> It could be shipped on galaxy, though (since it would then be a plugin)
+19:36:33 <bcoca> a 'sort' directive is something i have been contemplating for long time, but would not 'cluster' the hosts to serial, just the inventory processing order
+19:36:57 <sivel> overall, it still does feel kinda edge case, and I'm not sure I really think it's something I'm particualarly interested in
+19:37:05 <abadger1999> If it's strategy, then it's really operating on the hosts: field, not on serial right?
+19:37:25 <bcoca> abadger1999: it gets both
+19:37:44 <sivel> edge case / niche
+19:38:03 <abadger1999> from the hosts:, construct sets of targets to be executed together.
+19:38:14 <abadger1999> It might even disregard (or error) if serial were also given.
+19:39:06 <sivel> so my stance is:  It feels a bit shoehorned as is, but overall even with a better implementation, it feels very niche to me currently, and I'm not sure I would be in favor at all
+19:39:36 <sivel> something provided externally, maybe via galaxy, I'd be happy with
+19:40:04 <sivel> which somewhat limits the implementation to a strategy plugin
+19:40:59 <abadger1999> Once we can install plugins from galaxy in a propr manner, I'd be happy with it on galaxy.  If we have metadata on strategy plugins before then I'd probably be okay having it in the repo as a community plugin.
+19:41:38 <sivel> I suppose at least, that provides direction here either way
+19:42:05 <podlesh> ok, I'll try to find something
+19:42:27 <podlesh> and consider the PR rejected... but thanks for considering it, in any case
+19:42:36 <abadger1999> I think as a language feature (serial_grooup_by:) there's a lot of maintainance drawbacks but as a plugin, it's at least isolated and we can say "podlesh maintains that, not us!" ;-)
+19:42:55 <abadger1999> Okay.
+19:43:03 <abadger1999> podlesh: Thanks for understanding.
+19:43:45 <bcoca> podlesh: to clarify, i do see the usfeulness of your intent, but the current implementation seems forced
+19:43:53 <abadger1999> #action serial_group_by PR rejected.  May revisit the idea if it gets implemented as a strategy plugin.
+19:44:18 <bcoca> a 'strategy: cluster' might make a better way to do this and even include in ansible, 2 things, sorting i would make a new directive, the cluster condition ... we dont have good way of passing this in currently
+19:45:14 <bcoca> worst case a 'sort' AND a 'cluster' directive that can expose data to compute in 'serial'
+19:47:00 <sivel> should we tackle some more items on the agenda?
+19:47:30 <podlesh> ok, I understand, and I'll look at it...
+19:47:56 <podlesh> you can move on :-)
+19:48:14 <bcoca> podlesh: pinged jimi|ansible he'll also look at it, we all would like to support some of the use cases
+19:49:29 <bcoca> .. expand host patterns [groupa:groupb]one
+19:51:25 <abadger1999> As we're getting later, we should probably look at https://github.com/ansible/community/issues/150#issuecomment-277304534
+19:51:45 <abadger1999> #topic How to agree on proposals?
+19:53:01 <abadger1999> So last week, (I think it was in the testing group meeting) there was talk about enforcement of style rules on code.
+19:53:05 <bcoca> the original proposal for proposals (meta) ... left many thnings undefined, i think its time we do define them
+19:53:36 <bcoca> ^ in that meeting a proposal got 'retroactively' created + agreed + implemented, which looks like a bad use of the process
+19:53:42 <abadger1999> There was the impression that new files had been decided before but hadn't been properly documented.
+19:53:49 <abadger1999> And also a proposal for existing code.
+19:54:47 <sivel> bcoca: and I discussed this a bit, and we shoehorned what was effectively a "core dev directive" into the proposal process. We all agreed to push it through, but still gave the impression of a proposal in the current form, but without giving anyone time to weigh in
+19:55:08 <bcoca> so prposal workflow calls for a 'creation-> make public->get feedback ->schedule for core meeting discussion -> approve or reitarte previous steps -> in progress - >done/denied
+19:56:00 <bcoca> to avoid taht situation i prpose having a 2-4 week 'make public' before it gets scheduled for meteting/approval, this gives community time to weigh in
+19:56:12 <bcoca> ^ we also need more labels and to clearly define meaning and stage
+19:56:44 <abadger1999> We also need to publish a list of proposals that we're going to be looking after that time period
+19:57:19 <abadger1999> Right now, you'd have to watch all proposals to know what we might decide to talk about.
+19:57:19 <bcoca> meeting ticket works for that
+19:57:29 <allanice001> I would say we look at pep-426 for guidelines on meta implementation, which should become part of the proposal
+19:57:30 <bcoca> ^ proposal advocates should schedule once the 'period is passed'
+19:57:51 <abadger1999> bcoca: no.. needs to be before the period starts.
+19:58:12 <bcoca> abadger1999: ??! so we 'agree' to it before anyone gets input?
+19:58:29 <abadger1999> Right now we have a ton of proposals in various states and no commitment on our part as to when they will be reviewed and approved or rejected.
+19:58:48 <bcoca> which is why i prpose clear labling and workflow
+19:58:54 <abadger1999> bcoca: we need to tell people which of those to pay attention to because they are going to be discussed immienently.
+19:59:18 <bcoca> abadger1999: i would reverse that, proposal authors need to advocate
+19:59:33 <bcoca> ^ see workflow above and robyn's proposal proposal
+20:00:12 <abadger1999> So something like proposal author or we decide Proposal/50 is ready.  Need to announce it somehow and somewhere.  Input is gathered for 2 weeks and the proposal is updated.  proposal author (or we) push the proposal onto the meeting agenda.  Proposal is discussed at meeting and eventually approved or rejected.
+20:00:12 <bcoca> a) create b) engage communicy c) public feedback d) schedule for meeting e) here WE get involved and discuss approve/reject/send back
+20:00:52 <allanice001> Possibly use community meeting as a platform where proposal authors can table their proposals, and that sets the workflow / agenda ?
+20:00:56 <bcoca> f) its approved g) someone is working on it  ... then done/rejected
+20:01:14 <allanice001> S/sets/starts
+20:01:20 <jtanner> i think it's difficult to make any system work if the system isn't the full time job
+20:01:44 <bcoca> jtanner: volunteer systems also work, jsut not the same way
+20:02:15 <bcoca> jtanner: or you are advocating for killing proposals process?
+20:02:27 <jtanner> no, just saying it's never going to be perfect because we have other jobs to do
+20:02:53 <abadger1999> bcoca: <nod>  I think we're talking about the same workflow... I'm just wanting more clarity on [b] and [d].
+20:03:01 <bcoca> not looking for perfect .. just not 'completely disorganized'
+20:03:26 <bcoca> abadger1999: i would leave everything before e to author/advocates
+20:03:40 <bcoca> ^ as jtanner points out, we dont have the time to chase them
+20:04:36 <abadger1999> bcoca: Well... according to the "exact" steps you wrote down... proposal/50 was good all the wat to (e)....
+20:04:50 <bcoca> abadger1999: if author nor advocates care enough to advance it ....
+20:04:56 <abadger1999> So that's why I think there needs to be more details there.
+20:04:58 <bcoca> abadger1999: no, there was no public period
+20:05:11 <abadger1999> bcoca: you didn't say that there needs to be in your *exact* steps.
+20:05:23 <bcoca> c) public feedback
+20:05:24 <abadger1999> bcoca: You said "engage community"
+20:05:29 <bcoca> ^ also mentioned 2-4weeks
+20:05:30 <abadger1999> "public feedback"
+20:05:44 <abadger1999> Those were done for proposal/50 via the testing working group meeting.
+20:05:46 <bcoca> yes, period in which you allow the public to post feedback
+20:05:53 <abadger1999> That's why I think we need more details.
+20:05:57 <abadger1999> What's a proper venue?
+20:06:04 <abadger1999> What's the proper time period?
+20:06:06 <bcoca> abadger1999: they were not done IN proposals
+20:06:17 <bcoca> i think 4 weeks is good, others might find that too long
+20:06:37 <abadger1999> I think we need to answqer both of those questions in the meta-process.
+20:06:44 <abadger1999> Yeah, one week.
+20:06:52 <bcoca> b) community engagement => AT LEAST email to ansible-devel, 'public period' should start from taht date
+20:06:59 <abadger1999> I can stretch to your 2 weeks.  But 4 weeks is too long.
+20:07:27 <abadger1999> Because the end of hte 4 weeks, is just the beginning of the drafting process... it then goes to use where we ask for more changes.
+20:07:28 <allanice001> i think that at 4 weeks, without (e) being met, proposal rejected
+20:07:43 <bcoca> 2weeks tends to be short as people vacation or have projects and cannot pay attention, most proposals are impactful enough to require broad feedback
+20:08:58 <abadger1999> bcoca: 4 weeks is way too long for the release schedule that we drive ansible at.
+20:09:06 <abadger1999> We could ioncrease the release cadence.
+20:09:26 <sivel> I think 4 weeks is too long, for the reasons abadger1999 mentions.  If you don't get it going really early, you can't do anything for the current release
+20:09:27 <abadger1999> Or we could process proposals in a batch at a set time in the release cycle.
+20:09:34 <sivel> current = next release
+20:09:39 <bcoca> considering teh quick cadence, i dont see such big issue
+20:09:48 <bcoca> if proposal misses current, it hits next
+20:09:57 <abadger1999> But if we do that we want to do those changes as well.
+20:09:59 <bcoca> if we had longer release cycles .. i would consider shorter time frames
+20:10:20 <jtanner> i feel like we're always releasing
+20:10:28 <bcoca> lets do thsi 2-4weeks variable depending on proposal scope?
+20:10:28 <abadger1999> jtanner: +1 we are.
+20:10:49 <abadger1999> 1-3 weeks depending on proposal scope.
+20:10:59 <abadger1999> with 1 week and 3 weeks being the outliers.
+20:11:01 <bcoca> 1 seems too short
+20:11:09 <abadger1999> bcoca: depends on the proposal.
+20:11:13 <bcoca> 2-4 with 2 and 4 being outliers?
+20:12:00 <allanice001> 1 - 3, with week 2 being a decider if week4 needs to be added / considered ?
+20:12:01 <abadger1999> 1-4 with 1 and (3-4) being outliers?
+20:12:32 <abadger1999> defaulting around 2 with flexibility to go less is what I want.
+20:12:35 <bcoca> 2 weeks, expandable to 4 if we deem its needed?
+20:12:48 <bcoca> 1 week seems rushing it
+20:13:20 <allanice001> On small proposals, you may not need week2
+20:13:21 <abadger1999> bcoca: There are lots of proposals that don't need more than 1 week.
+20:13:22 <mattclay> If something feels like it should be 1 week, maybe it isn't significant enough to need a proposal?
+20:13:24 <bcoca> ^ that is how they passed patriot act
+20:13:37 <sivel> Also, in my opinion, and not sure if we want to get into it, but there should be a process for subverting proposals.  Not sure it even needs called out
+20:13:41 <bcoca> mattclay has point
+20:14:06 <bcoca> if you MUST pass it in one week .. its not a prposal worth issue
+20:14:11 <abadger1999> mattclay: Yes but proosals are the only way the community has of getting the core team to agree to something.
+20:14:38 <bcoca> abadger1999: its also how we push design decisions that affect the community out for public consultation
+20:14:39 <jtanner> beyond the core team, they also allow subject matter experts to weigh in
+20:14:40 <mattclay> abadger1999: What about showing up at core team meetings on IRC?
+20:14:44 <bcoca> ansible-config/ansible-inventory as examples
+20:14:50 <abadger1999> mattclay: so right now, proposals are the way we get small things as well as large things onto our radar.
+20:15:06 <bcoca> abadger1999: for really small things, we still have feature ideas
+20:15:08 <allanice001> +1 mattclay
+20:15:19 <allanice001> Also add to core agenda
+20:15:27 <bcoca> mattclay: that is requriement of proposals process i want
+20:15:49 <bcoca> 'creation-> make public->get feedback ->schedule for core meeting discussion -> approve or reitarte previous steps -> in progress - >done/denied
+20:16:10 <bcoca> proposal ONLY gets apprpoved in public meting
+20:16:46 <abadger1999> mattclay: Both of those are on iRC... so people who don't do IRC (or are in the wrong TZ's) are left out.
+20:17:23 <bcoca> abadger1999: that is why we have 2 meetings at diff times, irc is free and not a barrior, if people wont go on irc to push their proposal .... well, it was not that important to them
+20:17:46 <bcoca> IF author needs special meeting time, i think we can add/change one of existing for a week
+20:18:00 <allanice001> Also, if community is involved, someone will be awake and online for the irc meeting
+20:18:17 <bcoca> ^ probably, specially with proposals that have wide intereset
+20:18:20 <mattclay> We probably need either the flexibility to have shorter proposal periods, or an alternative to the proposal process for things that aren't  "proposal worthy".
+20:18:21 <abadger1999> bcoca: Although I want that to be rationale, I klnow that it isn't.
+20:18:37 <abadger1999> *I klnow that it unfair
+20:19:14 <bcoca> so we dont want public consultation, just want to get stuff done ? then why have them at all?
+20:19:19 <abadger1999> for instance, both of our meeting times are bad for AUS.  Some people may only care about Ansible for work.  Others may only be able to use IRC when not at work...
+20:19:43 <bcoca> abadger1999: i'm willing to be flexible and schedule speical meetings for those cases
+20:20:08 <bcoca> at least you and I have very strange sleeps schedules which can accomodate them, the problem is when we need bigger quorum
+20:20:12 <abadger1999> bcoca: I think we're confused about what is being talked about...
+20:20:17 <allanice001> Also, nothing prevents those people from reaching out to core when they're online
+20:20:25 <bcoca> ^ which is why the public feedback process is there, allows ASYNC comments
+20:20:28 <allanice001> outsi
+20:20:38 <allanice001> Outside of normal meeting times
+20:20:53 <bcoca> so even people that cannot make IRC can make opinions known on proposal ticket
+20:21:00 <sivel> I think roughly what we are saying here.  Items claiming to be proposals, should give the community time to comment, and to know when it will be discussed in a meeting
+20:21:03 <abadger1999> bcoca: mattclay is saying that irc meetings are an alternative to proposals for the little feature request... I don't think we want to schedule special meetingsa just for small, posibly trivial proposals.
+20:21:04 <bcoca> that is why 2-4 weeks gives AMPLE feedback opportunity
+20:21:13 <bcoca> sivel: yep
+20:21:25 <sivel> Let's not make this too complicated :)
+20:21:27 <bcoca> abadger1999: feature idea ticket
+20:21:37 <abadger1999> bcoca: which gets ignored.
+20:21:44 <abadger1999> just like proposal tickets get ignored.
+20:21:51 <bcoca> abadger1999: both require advocacy
+20:22:13 <abadger1999> Right.  And how do people advocate for a feature ticket?  By making a proposal ticket.
+20:22:19 <bcoca> you can bring them up to these meetings in same way, proposals just have higher impact and should be open for more discussion
+20:22:22 <abadger1999> That's what we've been telling people to do.
+20:22:29 <bcoca> abadger1999: no, that is misuse of propsals
+20:22:32 <bcoca> there is scope
+20:22:34 <allanice001> @mention in agenda, and whether you'll be attending, or a time you'll be online to discuss proposal
+20:22:44 <bcoca> 'change the eror message to be clearer in vault edit' is NOT a proposal
+20:22:44 <abadger1999> bcoca: it's what we've been telling people to do.
+20:23:12 <bcoca> abadger1999: not all, there are plenty of feature ticktes open and we've even discussed in previous meetings
+20:23:20 <bcoca> ^ being opened
+20:23:21 <mattclay> Even if someone can't attend on IRC and doesn't want to use the mailing list, they can put an item on the agenda to say "hey, this feature ticket could use your feedback, I've given mine in the ticket already".
+20:23:32 <bcoca> exactly
+20:23:43 <allanice001> +1 to that
+20:23:54 <bcoca> abadger1999: we dont have 1 processs fits all into proposals ... i tink this is where our disagreement comes from
+20:24:02 <bcoca> we are NOT pushign all requests there
+20:24:07 <abadger1999> Anyhow... I'm feeliong that we need a proposal to revamp all of this.
+20:24:13 <bcoca> that was not what ther purpose was
+20:24:15 <abadger1999> To lay out how it all fits together.
+20:24:39 <abadger1999> bcoca: that is nolt the purpose that you saw.
+20:24:40 <bcoca> abadger1999: that is why ipointed to robyn's doc, we just need to fill in details, it already had most of this
+20:24:59 <sivel> A proposal should typically be large scale work, that we want to see as a proposal, before there is code
+20:25:00 <abadger1999> That was the purpose that some people saw because that was what they were telling people to use it for.
+20:25:04 <bcoca> abadger1999:  not sure what you think i saw
+20:25:42 <bcoca> not sure who/how, for me it was clear that anything that requried invasive changes or was a big feature design, is a propposal
+20:25:51 <bcoca> small features or non invasive ,, feature idea
+20:26:06 <bcoca> when did it get decided that all change requests were porposals?
+20:26:10 <bcoca> ^ i missed that meeting
+20:26:12 <abadger1999> Definition of "big" is the problem.
+20:26:23 <abadger1999> anyhow... Write a proposal.
+20:26:44 <sivel> I think roughly, in a way, we don't want people to spend a bunch of time writing code on a "big" change, if in the end we decide we don't want it
+20:26:47 <bcoca> i've written several, those that i thought were big enough scope and needed discussion, again, ansible-config, invenory plugins, etc
+20:26:51 <sivel> Think of the serial_group_by
+20:26:59 <abadger1999> I think it should have an entry point to the process and clear escalation path.
+20:27:01 <bcoca> ^ that would have saved him a lto of time
+20:27:12 <bcoca> abadger1999: please define
+20:27:14 <abadger1999> bcoca: no -- I mean, write a proposal to change the way we process features and proposal.
+20:27:27 <bcoca> https://github.com/ansible/proposals/blob/master/proposals_process_proposal.md <= already exists
+20:27:34 <mattclay> Perhaps a good measure of "big" is time involved to make the change. Since reverting is easy, spending a small amount of time on something that we reject isn't a big deal.
+20:27:41 <bcoca> im saying we need to update/clarify it
+20:27:55 <bcoca> mattclay: that is one measure, the other is impact
+20:28:12 <abadger1999> I want to implement Foo.  What is my entrypoint to find out if Foo is acceptable?  What is my entrypoint to find out if my implementation of Foo is acceptable?
+20:28:22 <bcoca> depends on what foo is
+20:28:32 <bcoca> i cannot give you an answer that works for all cases
+20:28:39 <bcoca> i dont think anyone can
+20:28:56 <abadger1999> How do I get people to review Foo  or to work on Foo (in case it is a feature I am not going to code0.
+20:29:09 <bcoca> advocate
+20:29:17 <abadger1999> bcoca: Exactly! "depends on what foo is".
+20:29:27 <jtanner> i don't think proposal is going to get one of us to write it for someone else
+20:29:34 <jtanner> that's roadmap from $CORP
+20:29:49 <abadger1999> So we need a path for the user to define Foo and then present it to someone who can say => Advance this feature Foo by doing XXX, then YY, then ZZ.
+20:30:12 <bcoca> proposals are a godo way to make complex ideas known and get feedback before any code gets written, they arenot a corset to prevent people from writing code
+20:30:17 <abadger1999> versus, This feature Foo falls into this other category, advance it by doing YY and then ZZ.
+20:30:50 <bcoca> abadger1999: that is what ansible-deve/irc and feature idea tickets are for, when we triage and see 'this shoudl be  a proposal' we give that feedback
+20:31:11 <abadger1999> bcoca: Ugh.... that does not happen right now.
+20:31:17 <bcoca> abadger1999: why not? i do that
+20:31:28 <abadger1999> Then you should tgriage all tickets.
+20:31:31 <bcoca> please show me case?
+20:32:00 <abadger1999> Anyhow... This is a large change.;  I think that you should make a proposal for iot and then we can figure out he details.
+20:32:03 <bcoca> i'v responded to eamils in ansible-devel, feature tickets and to irc saying 'open feature idea ticket or proposal ticket' ... am i only one? did you all decide to remove 'feature idea' tickets?
+20:32:09 <bcoca> WHEN did that get decided??!??!
+20:32:27 <abadger1999> When did what get decided?
+20:32:32 <bcoca> abadger1999: not sure when this 'ONLY Proposals' happened
+20:32:43 <bcoca> THAT SI WHAT IM ASKING!
+20:32:50 <abadger1999> It didn't.
+20:32:55 <abadger1999> That's not the case.
+20:32:58 <bcoca> so why do you say that is the reality?!
+20:33:22 <abadger1999> Here's what I see happens.
+20:33:27 <abadger1999> Submitter files a feature ticket.
+20:33:34 <abadger1999> (Case A) It gets ignored.
+20:33:40 <abadger1999> End of story
+20:33:52 <bcoca> that is not always true
+20:34:07 <abadger1999> (Caee B) User drops by on IRC to ask what's happening with ticket 12345
+20:34:07 <bcoca> i've implemented many feature idea tickets, ive merged OTHER peole implementing them also
+20:34:15 <bcoca> i've redirected them to proposals also
+20:34:21 <abadger1999> (CaseB.1) Someone says open a Proposal
+20:34:28 <abadger1999> Proposal ticket gets ignored
+20:34:42 <abadger1999> (Case B.2) Someone says, I'll put that on the meeting agenda.
+20:34:53 <bcoca> abadger1999: tickets get ignored .. that is the whoel point of advocacy .. there is no human way we can do them all
+20:34:59 <abadger1999> Ticket gets reviewed and accepted or rejected.
+20:36:00 <abadger1999> (Case B.3) Someone deals with the ticket then and there.
+20:36:02 <mattclay> It would probably help to document the need to advocate for a proposal/feature and put a link to that doc in the issue template.
+20:36:26 <bcoca> mattclay:  https://github.com/ansible/proposals/blob/master/proposals_process_proposal.md <= has section about that
+20:36:32 <bcoca> "Proposals use public meetings as a mechanism to keep them moving"
+20:36:43 <abadger1999> Anyhow.... what we need is to tell people (*) To advocate, and (*) How to advocate.
+20:36:56 <bcoca> New proposals are explicitly added to the public IRC meeting agenda
+20:37:00 <abadger1999> bcoca: Which is untrue.
+20:37:04 <bcoca> Note: ample feedback in the comments of the proposal issue should allow for folks to come to broad consensus in one way or another i
+20:37:08 <abadger1999> strike what I just said.
+20:37:14 <abadger1999> Your clarification makes it true
+20:37:51 <bcoca> i'm saying we need to clarify the document, make it more prominent, fill in gaps ... not sure why you are opposing that complaingin about the non process we dont have?
+20:38:11 <bcoca> im confused as to where you want to get to
+20:38:16 <abadger1999> bcoca: make a proposal for it.
+20:38:17 <bcoca> i want a clear/public proposal process
+20:38:26 <abadger1999> Then we can work out the details and approve it.
+20:38:30 <abadger1999> As do i.
+20:38:34 <bcoca> ^ THAT DOCUMENT, just need to add schedule/tags and hints on how to advocate
+20:39:08 <bcoca> abadger1999: i've been discussing teh ony doc we had, you seem to have been discussing the process you percieve ... i really cannot reconcilate both
+20:39:55 <abadger1999> bcoca: right.  So make a proposal and then we can work out what needs to change.
+20:40:03 <bcoca> we have not been following the doc perfectly, that is one reason i brought up this topic
+20:40:21 <abadger1999> Currently, that document is for some fantasy workflow that no one follows.
+20:40:29 <bcoca> we follow most of it
+20:40:33 <bcoca> at least iw as
+20:40:49 <allanice001> I propose a change to the proposal which we can discuss over the next 2 - 4 weeks...
+20:40:53 <allanice001> :P
+20:41:02 <bcoca> it is more proactive on our side than we are, i propose moving the 'push' to author/advocates
+20:41:19 <bcoca> to make the workflow more realistic
+20:41:38 <abadger1999> alikins: +1 ;-)
+20:41:45 <abadger1999> allanice001:  I mean :-)
+20:42:36 <bcoca> i have no issue with that, i just wanted to discuss  how peopel wanted to imrpove it and how to make the process more 'community friendly' ... not sure how that devolved to this ...
+20:46:10 <allanice001> From my POV, I think the biggest impact will be to drive author / advocates here
+20:46:53 <allanice001> Using podlesh as an example, we were able to discuss a deep impacting feature extensively over 2 - 3 weeks
+20:47:03 <allanice001> Same can be done with proposals
+20:47:09 <abadger1999> bcoca: It's the story of the three blind men and the elephant.  We don't agree on whether the problem is a snake or a tree so we're all arguing about how to address something different.  That's why you should write a proposal.  Then we can all look at one complete vision for how things should be.
+20:47:25 <allanice001> And this platform allows anyone to join / have their say
+20:47:28 <abadger1999> allanice001: +1
+20:48:39 <bcoca> abadger1999: my point is ... wehave one, can we not discuss exsitign one and how to make it better instead of requireing a new one
+20:48:40 <bcoca> ?
+20:48:50 <bcoca> ^ that is what i was trying to do
+20:49:03 <abadger1999> bcoca: no.  Because we all have different ideas of what we have now.
+20:49:11 <abadger1999> there's the document that we don't follow.
+20:49:19 <abadger1999> There's the way you do triage versus other people.
+20:49:22 <bcoca> well, you dont follow, i mostly do
+20:49:30 <abadger1999> There's different answeres about when people should open a proposal.
+20:49:32 <bcoca> does everyone else also ignore the doc?
+20:49:34 <abadger1999> etc, etc, etc.
+20:49:51 <bcoca> abadger1999: ok, so those are things we can ADD to it, instead of just dismissing
+20:50:04 <bcoca> if you dont want a proposals process at all, that is diff issue
+20:50:08 <allanice001> i get where bcoca is coming from, and I believe doc awareness is generally lacking
+20:50:26 <abadger1999> bcoca: You could even submit the original doc with the blanks you see filled in.
+20:50:48 <abadger1999> bcoca: and then the rest of us will givew you feedback about what's missing.
+20:51:32 <abadger1999> there's different expectation about how a proposal gets pushed to the next level.
+20:52:10 <bcoca> you seem to want us to own that .. clearly that does not work, which is why i want author/advocate to push it ...not sure if we can bridge that
+20:52:12 <abadger1999> I re-read the doc... and we don't follow over 50% in small or large ways.... Some of the most important things we don't follow at all:
+20:52:32 <bcoca> i was estimating 70%
+20:52:58 <abadger1999> "New proposals are explicitly added to the public IRC meeting agenda for each week by the meeting organizer"
+20:52:59 <bcoca> we dont do the proactive discussion ,which  is why i was proposing the shift i just metnioend
+20:53:10 <bcoca> ^ exaclty my point
+20:53:17 <abadger1999> We don't even have a true meeting organizer and we've never laid out that person's duties.
+20:53:31 * allanice001 thought thats gundalow
+20:53:37 <abadger1999> "Existing new, not-yet-approved proposals are reviewed weekly by meeting organizer to check for slow-moving/stalled proposals,"[..]
+20:53:46 <abadger1999> gundalow: Have you ever done that^ ?
+20:53:49 <bcoca> it was robyn/gregdeck at one point, but now mostly gundalow/abadger1999
+20:54:03 <abadger1999> bcoca: I don't think it was ever robyn/greg.
+20:54:18 * gundalow looks up
+20:54:19 <bcoca> abadger1999: we did that for about 3 meetings, which is exactly what i want to change
+20:54:23 <gundalow> what was the question?
+20:54:23 <abadger1999> Because I don't think we ever processed proposals in that sort of manner.
+20:54:49 <gundalow> There isn't an official meeting organiser, though it's something I've generally done
+20:54:50 <abadger1999> gundalow: have you ever reviewed the proposal queue and decided what should be put on our agenda, pinged ones that are stalled, etc?
+20:54:55 <bcoca> we did, but very short time, which again is what i want to chagne and put onus on author/advocate cause we DONT have time
+20:54:57 <abadger1999> Exactly.
+20:55:19 <bcoca> so your complaint is that we dont do it that way and that since i want to change it, we shouldnt do it?
+20:55:38 <gundalow> abadger1999: Nop. We need to maybe add some proposals onto the agenda as specific items
+20:55:43 <abadger1999> bcoca: Where do I say that we shouldn't do it?
+20:55:51 <abadger1999> bcoca: I said, "Write a proposal"
+20:55:52 <allanice001> Well, same can be said for core touching PR's, if it's not on the agenda, it won't get looked at 9 times out of 10
+20:55:59 <bcoca> *sigh*
+20:56:38 <bcoca> abadger1999: im not advocating new proposal, just ammending existing ... both to come closer to reality and establish a workflow we CAN follow
+20:56:43 <abadger1999> bcoca: yes.
+20:56:48 <abadger1999> amending a proposal is a proposal./
+20:57:14 <abadger1999> unless the amendment is small enough to not warrant it (at least, ccording to your definition of the proposal process).
+20:57:15 <bcoca> im not sure this is productive anymore
+20:57:38 <allanice001> Also, we're close to an hour over
+20:57:48 <abadger1999> the changes you are advocating are unclear to me, large, and need to fix a process that's currentl;yy non-functional.
+20:57:53 <allanice001> Maybe need to wrap it up for tonight
+20:58:24 <abadger1999> #topic Open floor
+20:58:24 <bcoca> im just trying to fix the process, i dont know why you oppose even discussing it
+20:58:35 <gundalow> It's often good to set a time limit in these things :)
+20:58:35 <bcoca> i realisze we all dont follow it the same way, i want to fix that
+20:58:36 <abadger1999> bcoca: I'm not opposed to discussing it.
+20:58:41 <abadger1999> But we're arguing about apples and oranges.
+20:58:51 <bcoca> im not talking about fruit ....
+20:58:53 <abadger1999> Write up a proposal so that we can see what we're discussing.
+20:59:02 <allanice001> Just make a fruit coctail
+20:59:09 <allanice001> Cocktail..
+20:59:17 <abadger1999> #topic Divying up meeting responsibilities
+20:59:27 <abadger1999> Something I wanted to bring up,
+20:59:59 <abadger1999> We need to consider the responsibilities for running meetings and divy them up some way.
+21:00:23 <abadger1999> Starting the meeting on time and pinging people is the most important -- we've run a lot better since gundalow started doing that :-)
+21:00:30 <bcoca> https://github.com/ansible/proposals/blob/master/proposals_process_proposal.md <= done
+21:01:05 <bcoca> we are not meeting quorum most of the time, even though we decided most/all core should attend
+21:01:14 <bcoca> this meeting being almsot an exception
+21:01:28 <abadger1999> But there's also summarizing agreements, writing notes, making sure that merged tickets are removed from the agenda, etc.
+21:01:33 <bcoca> so not really sure we shoudl create rules if we dont follow them
+21:01:49 <abadger1999> That all takes time and we need to make sure that it happens after every meeting as well.
+21:02:45 <gundalow> +1
+21:02:49 <allanice001> +1
+21:03:16 <allanice001> Possibly shave 5 - 10 minutes of meeting time for meeting-admin time ?
+21:03:18 <abadger1999> We could make separate roles (meeting leader, secretary, etc) or we could rotate... the important thing is to make sure someone is responsible for them for every meeting.
+21:03:42 <allanice001> Also make sure responsible person is at meeting
+21:03:53 <gundalow> So, sometimes I find it difficult to know the right information to add into the agenda tickets.
+21:04:33 <gundalow> I like that we now edit and update the comment on the agenda issue. I'm happy with that
+21:04:50 <abadger1999> <nod> yeah, that's worked well.
+21:04:59 <allanice001> Make better use of #action and #info - it gets added to the meeting summary
+21:05:47 <gundalow> I'm tempted to say every 10 minutes we say "Do we want to continue", we often have items that take 40 minutes without conclusion. Sometime that's fine as their is a lot to understand
+21:05:57 <gundalow> allanice001: That's a great idea
+21:06:26 <allanice001> So a meeting-secratary doesnt need to scroll 2 hours of abadger1999 vs bcoca to see what the decision was
+21:06:33 <allanice001> (Sryy bcoca and abadger1999
+21:06:39 <allanice001> :D
+21:06:45 <abadger1999> <nod>  Do we also copy those into the agenda tickets?
+21:07:28 <allanice001> Good idea - action items for week / meeting #next
+21:07:40 <bcoca> allanice001: could be worse, no one brougyht up PEP8
+21:07:46 <abadger1999> allanice001: <nod>  Since I've been secretarying a lot recently, I'm happy when anyone else recognizes that pain point ;-)
+21:08:13 <allanice001> Again, I don't mind helping when I'm here
+21:08:18 <gundalow> That's because Dag is at Fosden :p
+21:08:19 <abadger1999> Also, though -- it is worst when there aren't any decisions made.
+21:08:58 <gundalow> What's "#next"
+21:09:14 <abadger1999> The proposal meta-discussion is an example of that... there were no #actions or #agreeds because nothing was decided or actions committed to.
+21:09:39 <abadger1999> We could have thrown a bunch of #infos in, though.
+21:10:35 <allanice001> ex: #action peanut to feedback on proposal gallary {{Meeting date feedback requested / tabled for}}
+21:11:22 <abadger1999> Alright... DOn't want to hold the meeting open for longer.
+21:11:50 <abadger1999> Think on it, have ideas next week :-)
+21:11:54 <abadger1999> #topic Open Floor
+21:11:59 <abadger1999> Anyone have last minute things?
+21:12:05 <abadger1999> otherwise I'll close in 60s
+21:12:10 <allanice001> nope, not from me
+21:12:12 <gundalow> So we have 2x Core meetings a week, so let's try and improve a few things at a time,  then in a few months they will be ammmmazing
+21:12:45 <abadger1999> :-)
+21:13:02 <gundalow> Core Team Update roadmap
+21:13:10 <gundalow> oh
+21:13:21 <gundalow> London AnsibleFest dates have been announced
+21:13:22 <allanice001> Again, feel free to reach out to me if you need assist with the above
+21:13:45 <abadger1999> gundalow: do you know what they are?
+21:13:52 <abadger1999> gundalow: You can #info them for the record
+21:14:09 <gundalow> I'm expecting there to be a contributors Summit the day before,  so of people can make it (in person in London) or online that would be ace
+21:14:56 <gundalow> 22nd June is the main conference
+21:15:05 * gundalow -> offline
+21:15:12 <allanice001> #info London AnsibleFest 22nd June
+21:15:18 <gundalow> https://www.ansible.com/ansiblefest
+21:15:29 <abadger1999> Cool.
+21:15:32 <abadger1999> #endmeeting

@@ -1,0 +1,126 @@
+17:00:09 <gundalow> #startmeeting Testing Working Group
+17:00:09 <zodbot> Meeting started Thu Feb  9 17:00:09 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+17:00:09 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+17:00:09 <zodbot> The meeting name has been set to 'testing_working_group'
+17:00:22 <gundalow> #chair mattclay gundalow
+17:00:22 <zodbot> Current chairs: gundalow mattclay
+17:00:41 * mattclay waves
+17:00:58 * gundalow waits around a bit to see who's here
+17:01:52 <gundalow> dag-: dag You around?
+17:02:11 <gundalow> #topic Lowering the bar for integration tests
+17:02:22 <gundalow> #link https://github.com/ansible/community/issues/114#issuecomment-276898935
+17:02:40 <gundalow> #info Example https://github.com/ansible/ansible/pull/20539#pullrequestreview-19247821
+17:04:15 <gundalow> mattclay: You looked at this before
+17:04:18 * allanice001 waves
+17:04:58 <gundalow> I don't think Shippable usually takes an hour, though I don't know where to get stats on that
+17:05:31 <mattclay> The linting tests can be run locally. We need to document better how to do that.
+17:05:59 <mattclay> Waiting on CI for tests that can be run locally isn't much of a reason for cutting back on tests, although there may be other reasons.
+17:06:51 <gundalow> Do we still have cases of
+17:07:05 <gundalow> 1) People editing directly (without PR) and breaking devel
+17:07:16 <gundalow> 2) Submitting PRs even though CI is failing
+17:07:53 <allanice001> On 2, I think ci only triggers on PR
+17:08:14 <mattclay> We have both still.
+17:08:31 <mattclay> As well as other causes of CI failing due to unrelated things breaking.
+17:08:53 <mattclay> Some of these things require technical solutions, others are process changes.
+17:09:18 <mattclay> CI triggers on PRs and merges.
+17:09:19 <gundalow> I have a bassball bat for (1)
+17:09:35 <gundalow> baseball*
+17:09:45 <bcoca> gundalow: i just did 1, but not breaking tests
+17:09:58 <bcoca> https://github.com/ansible/ansible/commit/2f1ab2985510a1c07482d3865dde45234549bb91
+17:09:59 <mattclay> gundalow: You're going to go around hitting people with a fish? ;)
+17:10:08 <bcoca> ^ and im about to do it again ;-)
+17:10:10 <gundalow> mattclay: This is mIRC right?
+17:10:19 <allanice001> Also, looking at https://app.shippable.com/projects/573f79d02a8192902e20e34b/status/dashboard
+17:10:28 <allanice001> There's at least 10 builds
+17:10:48 <allanice001> and each build has a mirriad of test env's
+17:10:52 <mattclay> allanice001: I only see 2.
+17:11:00 <allanice001> So I can see it taking an. Hour to complete
+17:11:22 <mattclay> The wait time is entirely dependent on the backlog and what changes are in a PR.
+17:11:36 <allanice001> Ctrl + f5 also helps :P
+17:11:48 <mattclay> Shippable has been having issues with their infrastructure the past week or so, but they've got some fixes in place now and more coming soon.
+17:12:03 <mattclay> GH has been having some issues as well.
+17:12:12 <mattclay> Both have contributed to larger than normal backlog for CI.
+17:12:23 <gundalow> #info Shippable has been having issues with their infrastructure the past week or so, but they've got some fixes in place now and more coming soon.
+17:12:55 <gundalow> #info GitHub has been having some issues as well. Both (Shippable & GitHub) have contributed to larger than normal backlog for CI.
+17:14:10 <gundalow> I wonder how much CIBot will help give information to people
+17:14:27 <mattclay> Any time a change is merged that doesn't pass CI, it tends to increase the backlog once the issue is fixed. The longer the issue remains unresolved, the more PRs pile up that need to have CI re-run.
+17:15:32 <gundalow> #info Gundalow: once I've got different parts of dev_guide/ updated I plan on linking to the docs in error messages. e.g. validate-modules links to how to document you module if that set of tests fail
+17:18:08 <mattclay> Focusing on the agenda item that dag added. If we want to consider making changes, we should have a list of the "silly checks" that people would like to see removed.
+17:18:09 <gundalow> I don't have many free cycles to look into any of that will 2.3 is done
+17:18:13 <allanice001> Could we add a timeout in shippable ?
+17:18:22 <mattclay> There's already a timeout in Shippable.
+17:18:42 <mattclay> allanice001: What kind of timeout are you thinking of?
+17:18:50 <allanice001> timeout to autodestroy failing builds
+17:19:06 <mattclay> Can you elaborate?
+17:19:18 <allanice001> Test_time expected = ~30 - 45  minutes
+17:19:23 <allanice001> (Worst case)
+17:19:31 <mattclay> Yeah, we already have that.
+17:19:40 <mattclay> It's at 60 minutes currently.
+17:19:41 <allanice001> If build not complete within that time, destroy it
+17:19:46 <allanice001> oh
+17:19:59 <mattclay> It was lower, but we had to raise it to accommodate Windows tests.
+17:20:32 <allanice001> and I guess the more tests we add in the future will also add to that time
+17:20:50 <mattclay> Generally our other tests run < 20 minutes.
+17:20:53 * allanice001 rants @micro crap
+17:21:09 <sivel> I am a -100 on dags "silly checks" removal
+17:21:29 <sivel> people have a hard time grasping non-functional requirements, but they are key to standardization
+17:21:30 <bcoca> +1 just cause im normally the -1 guy
+17:21:35 <mattclay> The Windows tests are largely slow due to cost issues. We don't run them in parallel as much to avoid spinning up too many EC2 instances for testing.
+17:21:55 <nitzmahone> Containers are cheap, Windows VMs are not. :)
+17:22:23 <allanice001> could the tests be run from .net core containers ?
+17:22:23 <sivel> we are interleaving topics here btw, did we not move on?
+17:22:28 <sivel> guess not
+17:23:27 <gundalow> sivel: We've only been on topic one
+17:23:47 <gundalow> though their was some initial discussion around why CI is sometimes failing
+17:24:06 <sivel> gundalow: ok, I saw mattclay say "Focusing on the agenda item that dag added."
+17:24:14 <gundalow> ah
+17:24:16 * allanice001 points to https://blog.docker.com/2016/09/build-your-first-docker-windows-server-container/
+17:24:19 <nitzmahone> allanice001: sadly no- 99% of the stuff requires full Windows/Powershell and has version-specific stuff that we can't test in container-ize-able Windows versions
+17:24:56 <allanice001> Understood nitzmahone
+17:24:59 <mattclay> I think the discussion has been somewhat of a mixed topic. I believe the reason behind dag's request to "lower the bar" is the pain of dealing with slow CI and iterating on PRs. Which led to discussion of other causes of that.
+17:25:14 <sivel> mattclay: ah, yes, I agree
+17:25:50 <sivel> would it be feasible to move the "sanity" checks into another CI so to speak?  So sanity and units/integration woudl run completely separately from one another
+17:25:59 <sivel> I'm guessing we couldn't do that with a single CI system though
+17:26:03 <mattclay> What would that give us?
+17:26:28 <sivel> the sanity checks run much faster than the integration.  If you got that feedback sooner, I think it would resolve some of that problem
+17:26:42 <sivel> as it is, you have to wait for the full CI to finish before you get that feedback
+17:27:19 <sivel> if sanity ran completely separate of the rest, you could have 2 CI tasks running, and the sanity would be available sooner
+17:27:26 <mattclay> Yes, we could. However, running the sanity checks locally is pretty easy.
+17:27:37 <sivel> yeah, I agree there too
+17:27:41 <sivel> and I do them
+17:27:58 <allanice001> but that doesn't prevent ci from running sanity checks too
+17:27:59 <mattclay> If someone is using Shippable to iterate on sanity tests, I recommend they run the tests locally.
+17:28:01 <sivel> but for people who see no benefit in non-functional requirements, they are less likely to care
+17:28:23 <sivel> and just run into problems later when it fails and they are asked to resolve it
+17:28:29 <sivel> likely after they have long switched context
+17:28:29 <mattclay> I can understand iterating using CI for things you don't have easy access to, which is generally the integration tests.
+17:28:58 <sivel> I'm just proposing an idea.  somewhat playing devils advocate
+17:29:06 <sivel> I am in complete agreement with you
+17:29:19 <gundalow> I wonder if Zuul will change any of this/
+17:29:30 <gundalow> If it has the concept of cancel tests if X fails
+17:29:31 <allanice001> Maybe seperate the load - sanity runs In travis (only needed once in any case) shippable runs rest ??
+17:29:41 <mattclay> I think the real issue for some people is having fewer checks around style.
+17:29:53 <sivel> mattclay: yes, and I am not in favor of that at all
+17:30:11 <gundalow> Nop, and I'm going to put my foot down on that as well
+17:30:21 <mattclay> I'm not in favor of that either -- just pointing it out.
+17:30:39 <sivel> some people don't fully grasp the need for non-functional requirements, like style checks, and thus will work to subvert them
+17:31:19 <sivel> so, I think some of the decision here is "run the sanity tests locally, to avoid having to wait for CI"
+17:31:19 <mattclay> There are definitely some style checks that are more helpful than others.
+17:32:58 <allanice001> I think that style checks will become more important with time, esp if the decision is made to move towards docstrings for documentation generation
+17:32:59 <mattclay> #info If you're iterating on a PR using CI, particularly for the "other" tests (sanity, compile), consider running those tests locally.
+17:33:20 <allanice001> Sphinx is very powerful if used for that
+17:33:42 <gundalow> So it seems like some of this can be helped by education ( ie docs) we we know, though we've been working on the functional changes
+17:33:50 * gundalow has to dissapear shortly
+17:34:58 <gundalow> mattclay: Are you OK to continue?
+17:35:02 <mattclay> Is there anything left we want to discuss on this topic?
+17:35:07 <gundalow> Thanks for #info'ing stuff
+17:35:13 * gundalow -> afk
+17:35:23 * mattclay will continue running the meeting
+17:35:27 <gundalow> Thanks
+17:36:58 <mattclay> Without dag here, I think we've discussed this topic as much as we can.
+17:37:02 <mattclay> #topic Open Floor
+17:37:41 <mattclay> Does anyone have anything else they'd like to discuss?
+17:38:30 <allanice001> Nothing here
+17:39:06 <sivel> not currently
+17:40:45 <mattclay> OK, that's it then. Thanks for coming. If you have anything for the next meeting, please add it to the agenda: https://github.com/ansible/community/issues/114
+17:40:49 <mattclay> #endmeeting

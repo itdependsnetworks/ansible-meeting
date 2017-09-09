@@ -1,0 +1,142 @@
+=============================================
+#ansible-meeting: Ansible Core Public Meeting
+=============================================
+
+
+Meeting started by abadger1999 at 19:06:46 UTC. The full logs are
+available at
+https://meetbot.fedoraproject.org/ansible-meeting/2016-04-26/ansible_core_public_meeting.2016-04-26-19.06.log.html
+.
+
+
+
+Meeting summary
+---------------
+* Meeting agenda: https://github.com/ansible/community/issues/84
+  (abadger1999, 19:07:31)
+* https://github.com/ansible/proposals/issues/7 Proposal Auto-install
+  roles  (abadger1999, 19:10:37)
+  * ACTION: bcoca to make alternative or supplementary roles proposals
+    to unblock  #7 Auto install ansible roles  (abadger1999, 19:45:29)
+
+* Proposal: Re-run handlers option
+  https://github.com/ansible/proposals/issues/9  (abadger1999, 19:46:01)
+  * bcoca wonders if we can add the test.handlers information into the
+    .retry file instead of having a separate file  (abadger1999,
+    20:10:10)
+  * sivel points out that the play could contain context that simply
+    running the handlers won't have (ex: a play could use set_fact: and
+    then fail.  I f the handler was run in the original it would have
+    access to that fact. )  (abadger1999, 20:11:29)
+  * sivel's use case is a play that: (1) tries to update an app (2) if
+    that happens, then it performs checks (3) those checks are used to
+    register vars (4) handlers then fire which make use of the
+    registered vars.  Simply running handlers won't work in this
+    instance.  (abadger1999, 20:14:00)
+  * ACTION: bcoca to update the handlers ticket with proposed changes
+    from the meeting.  (abadger1999, 20:22:22)
+
+* Module names should be singular
+  https://github.com/ansible/proposals/issues/10  (abadger1999,
+  20:22:53)
+  * LINK:
+    https://github.com/ansible/proposals/issues/9#issuecomment-214874966
+    (bcoca, 20:25:13)
+  * ACTION: abadger1999 to change existing modules strategy to rename
+    and alias  (abadger1999, 20:35:11)
+  * ACTION: abadger1999 to add the singular module name rule to the
+    module guidelines  (abadger1999, 20:35:32)
+
+* open floor  (abadger1999, 20:35:58)
+
+* Should we resurrect delegate_to as a var?  (abadger1999, 20:37:28)
+  * ACTION: Decided that we're not bringing delegate_to back as a
+    special task variable.  bcoca will update migration from 2.0 docs to
+    mention it.  (abadger1999, 20:41:46)
+
+* Open Floor  (abadger1999, 20:41:53)
+  * py2.4 compat question was answered as we're only keeping python2.4
+    compat for modules which do not have dependencies which require a
+    higher version of python.  So things like docker_common.py are
+    excluded from the python2.4 test in tests/utils/run_tests.sh
+    (abadger1999, 20:45:16)
+
+*   (abadger1999, 20:45:41)
+
+* PRs are being accepted before all tests pass (see
+  ansible/ansible#15586). How is this acceptable?  (abadger1999,
+  20:45:47)
+  * LINK: https://pypi.python.org/pypi/httpbin   (sivel, 20:51:40)
+  * LINK: https://github.com/lgarron/badssl.com   (sivel, 20:51:42)
+  * ACTION: alikins to look at pulling tests that hit flakey external
+    web servers into tests against web servers setup inside the test.
+    (abadger1999, 21:04:09)
+
+* Open Floor  (abadger1999, 21:04:58)
+
+Meeting ended at 21:06:41 UTC.
+
+
+
+
+Action Items
+------------
+* bcoca to make alternative or supplementary roles proposals to unblock
+  #7 Auto install ansible roles
+* bcoca to update the handlers ticket with proposed changes from the
+  meeting.
+* abadger1999 to change existing modules strategy to rename and alias
+* abadger1999 to add the singular module name rule to the module
+  guidelines
+* Decided that we're not bringing delegate_to back as a special task
+  variable.  bcoca will update migration from 2.0 docs to mention it.
+* alikins to look at pulling tests that hit flakey external web servers
+  into tests against web servers setup inside the test.
+
+
+
+
+Action Items, by person
+-----------------------
+* abadger1999
+  * abadger1999 to change existing modules strategy to rename and alias
+  * abadger1999 to add the singular module name rule to the module
+    guidelines
+* alikins
+  * alikins to look at pulling tests that hit flakey external web
+    servers into tests against web servers setup inside the test.
+* bcoca
+  * bcoca to make alternative or supplementary roles proposals to
+    unblock  #7 Auto install ansible roles
+  * bcoca to update the handlers ticket with proposed changes from the
+    meeting.
+  * Decided that we're not bringing delegate_to back as a special task
+    variable.  bcoca will update migration from 2.0 docs to mention it.
+* **UNASSIGNED**
+  * (none)
+
+
+
+
+People Present (lines said)
+---------------------------
+* bcoca (158)
+* willthames (129)
+* abadger1999 (99)
+* sivel (44)
+* tima (32)
+* samdoran (15)
+* alikins (9)
+* defionscode (8)
+* zodbot (4)
+* tima_ (1)
+* jtanner (1)
+* Qalthos (0)
+* nitzmahone (0)
+
+
+
+
+Generated by `MeetBot`_ 0.1.4
+
+.. _`MeetBot`: http://wiki.debian.org/MeetBot

@@ -1,0 +1,283 @@
+19:00:26 <nitzmahone> #startmeeting Core team public meeting
+19:00:26 <zodbot> Meeting started Tue Jul 12 19:00:26 2016 UTC.  The chair is nitzmahone. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:00:26 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:00:26 <zodbot> The meeting name has been set to 'core_team_public_meeting'
+19:00:54 <ryansb> hi folks
+19:00:57 * gundalow waves
+19:01:02 * ttom waves
+19:01:08 <nitzmahone> #chair ryansb gundalow
+19:01:08 <zodbot> Current chairs: gundalow nitzmahone ryansb
+19:01:15 <gundalow> thanks
+19:01:28 <Qalthos> hiya
+19:03:17 * nitzmahone looks for unfinished business from last meeting
+19:04:11 <ttom> in the mean time, we discussed https://github.com/ansible/ansible/pull/16491 last meeting, and agreed that i'd remove the strategy and refie the callback plugin. So I did. how can I move this PR forward?
+19:04:28 <ttom> refie == refine
+19:06:59 <gundalow> nitzmahone: I don't know anything about call backs. Who would be good to do an review of https://github.com/ansible/ansible/pull/16491 since ttom did the update that was requested last meeting
+19:08:08 <gundalow> ttom: Who was it that asked for that jtanner and jimi|ansible ?
+19:08:13 <nitzmahone> Whoever requested the update would probably be a good candidate
+19:08:20 <jtanner> ?
+19:08:21 * nitzmahone looks at log from last meeting
+19:08:45 <ttom> I think jimi|ansible and mattclay, but not sure.
+19:09:45 <jtanner> i made tangential comments about the type of strategy i want for integration testing
+19:09:54 <jtanner> not really relevant to current PR
+19:09:59 <nitzmahone> Looks like it was jimi, but he's plenty busy.
+19:10:15 <nitzmahone> I can take the review
+19:10:35 <nitzmahone> #action nitzmahone to review #16491
+19:10:40 <gundalow> Thanks :)
+19:11:30 <nitzmahone> It sounds like 2.1.1 RC3 is a foregone conclusion- anybody want to advocate for high priority bugs that should be included?
+19:11:41 <ttom> thanks nitzmahone
+19:11:43 <nitzmahone> s/bugs/fixes
+19:14:46 <nitzmahone> dag: you here?
+19:16:14 <nitzmahone> Looks like no. Might be a short meeting...
+19:16:17 <nitzmahone> #topic open floor
+19:16:38 <kustodian> so I can suggest a topic?
+19:16:44 <nitzmahone> fire away
+19:17:07 <kustodian> What do you guys think about modules storing state on managed hosts in special directories/files
+19:17:22 <kustodian> when it's not possible to keep state in e.g. configuration file
+19:17:29 <kustodian> or service memory or whatever
+19:17:44 <nitzmahone> I think I speak for most of us on the core team that we'd be very hesitant to ship modules that did that. You of course are free to write whatever you want. :)
+19:17:47 <kustodian> I had this discussion with bcoca and abadger1999 a few months ago
+19:18:02 <kustodian> bcoca: was against it, abadger1999 was ok with it
+19:18:03 <nitzmahone> I vaguely recall
+19:18:12 <abadger1999> yeah.
+19:18:12 <MichaelBaydoun> kustodian: do you have an example use case?
+19:18:19 <kustodian> I wrote a module and submitted a pull request to extrast
+19:18:21 <kustodian> yup
+19:18:29 <kustodian> https://github.com/ansible/ansible-modules-extras/pull/2531
+19:18:45 <kustodian> iptables module which keeps state in /etc/ansible-iptables
+19:18:59 <kustodian> since iptables-save dump doesn't have enough information for the module to work correctly
+19:19:15 <abadger1999> maybe that's something we should put on the agenda for either core meetup or contributor summit or both.
+19:19:29 <kustodian> and even if it does it would make it hard to put everything there and later parse it
+19:19:42 <jtanner> i would think the distros have a persistent store of rules somewhere. i know EL did prior to firewalld
+19:19:52 <kustodian> but also make it easy for a user changing iptables directly to f*** up something
+19:19:53 <ryansb> yeah, adding stored state seems like a really big increase of the testing surface
+19:20:00 <nitzmahone> My biggest concern with that (and I think other have mentioned as well) is that if changes are made out of band, the cached state will be wrong. Where when the state is gathered on the fly, it's much less likely for that to happen.
+19:20:09 <abadger1999> We do it already though...
+19:20:15 <abadger1999> For instance, the cron module
+19:20:28 <jtanner> cron.d ?
+19:20:33 <ryansb> isn't that just adding the #ansible comment to the crontab line?
+19:20:37 <abadger1999> Stores state about whether ansible added a cron entry or not.
+19:20:38 <kustodian> yeah cron uses a comment
+19:20:42 <abadger1999> as a comment in the crontab
+19:20:54 <jtanner> that's still just one store to rule them all though
+19:21:00 <ryansb> I feel like that's different from a separate store
+19:21:07 <kustodian> well the module has a locking mechanism
+19:21:11 <abadger1999> One store or multiple stores doesn't really feel any different to me.
+19:21:25 <abadger1999> You have the same usecases you're trying to satisfy and the same drawbacks.
+19:21:45 <jtanner> i think we're being hesitant to have modules attempting to merge stores and keep track of priorities
+19:22:07 <abadger1999> (Look at recent bugs on the cron module from a user who wanted ansible to magically know that it should replace an existing, manual cron entry with its own)
+19:22:13 <kustodian> I completely agree that if possible external store shouldn't be used, but sometimes it's not and because of that it's limiting the full potential of a module
+19:22:26 <ttom> I think that if you have a wrapper for iptables that manages it better (saves state) then you end up with the same issues (someoneusing regular iptables and mangles the state).
+19:22:39 <jtanner> is /etc/sysconfig/iptables gone in the firewalld world?
+19:22:42 <kustodian> this module doesn't have that problem
+19:22:49 <kustodian> jtanner: it is
+19:22:59 <kustodian> if you use firewalld you can use the firewalld module
+19:23:05 <kustodian> but not everyone has and uses firewalld
+19:23:14 <kustodian> Centos 6 for example
+19:23:21 <jtanner> do the other distros have /etc/sysconfig/iptables equivalents?
+19:23:29 <kustodian> some do, some don't
+19:23:48 <kustodian> Debian doesn't even have an official store
+19:23:51 <jtanner> what do they do on boot if no file holds the rules?
+19:23:55 <kustodian> you either use iptables-persistent
+19:23:57 <MichaelBaydoun> We have old rhel5 servers, and anything that would better manage iptables would get a +1 from me
+19:24:02 <kustodian> or write your own script which restores
+19:24:24 <kustodian> this module works with C5, 6 and 7 (if you disable firewalld)
+19:24:40 <jtanner> debian/ubuntu?
+19:24:58 <kustodian> yup debian/ubuntu, no official way to make iptables persitent
+19:25:03 <jtanner> lame.
+19:25:10 <kustodian> I also thought that as well :D
+19:25:30 <MichaelBaydoun> We wanted to use https://github.com/debops/ansible-ferm but it only works on rhel6 and higher
+19:25:34 <kustodian> iptables-persistent is the only way via package, but it doesn't come with core
+19:26:09 <kustodian> MichaelBaydoun: check out this module I wrote a blog about it how we use iptables, you'll like it :) http://blog.nordeus.com/dev-ops/managing-iptables-with-ansible-the-easy-way.htm
+19:26:12 <jtanner> this page (https://wiki.debian.org/iptables) claims there is a /etc/iptables.up.rules
+19:26:49 <kustodian> jtanner: if you install iptables-persistent
+19:26:50 <jtanner> is that not desirable because you have to then edit /etc/network/if-pre-up.d/iptables ?
+19:26:50 <MichaelBaydoun> So I'm supporting the pain, and like the solution, while at the same time not feeling great about the idea of storing state.  And with that confusing feedback, I need to head to a meeting.
+19:26:53 <kustodian> but not everyone uses it
+19:27:22 <kustodian> I had a discussion with a debian user a few days ago about it :D
+19:27:23 <abadger1999> MichaelBaydoun: :-)
+19:28:08 <jtanner> how do chef/puppet/salt store iptables rules on debian?
+19:28:12 <abadger1999> I'm owndering if what we're really debating is: https://en.wikipedia.org/wiki/Single_source_of_truth
+19:28:22 <nitzmahone> ^-- ding
+19:28:25 <abadger1999> Which is not straightforward to solve here.
+19:28:32 <ryansb> well...yeah
+19:29:00 <abadger1999> Because all of these things have "prexisting config on the target machine" + "One or more ansible playbooks"
+19:29:07 <kustodian> I don't know how others do it, but as far as I remember in puppet you define rules and it somehow keeps state :D
+19:29:36 <ryansb> and not all people run the same group of playbooks every run, so the risk of accidentally undoing rules seems kinda high
+19:29:49 <kustodian> what this module does is it distinguishes what ansible made and what didn't
+19:29:54 <abadger1999> yep.  Unless you keep a state local to the target machine.
+19:29:59 <bcoca> puppet keeps a 'central repo' with all the rules and tracks things there, not on each machine
+19:30:16 <jtanner> puppet can run in standalone mode though
+19:30:18 <kustodian> bcoca: that isn't possible with ansible for now
+19:30:25 <bcoca> jtanner: using teh rules from central repo
+19:30:34 <bcoca> kustodian: nor do we want it
+19:30:43 <bcoca> my whole point against keeping state
+19:30:44 <kustodian> so what puppet does doesn't help :D
+19:30:50 <bcoca> the PLAYS ARE THE STATE
+19:30:52 <jtanner> our "central state" is vars
+19:31:09 <bcoca> jtanner: inventory + plays + vars
+19:31:12 <jtanner> or what bcoca said
+19:31:20 <kustodian> to have a proper iptables module, it's not possible to do it with "external" state
+19:31:34 <kustodian> current iptables module is mostly useless
+19:31:45 <bcoca> kustodian: i disagree, as the current one has plenty of users
+19:31:48 <kustodian> not much different from running iptables with command
+19:31:57 <bcoca> if you WANT to keep state, tempalte the rules, use dump/restore
+19:32:19 <bcoca> i dont want to ship any module that keeps it's own state databases
+19:32:34 <kustodian> bcoca: makes it a lot harder to manage iptables like that, than with this module, at least read it once when you have time, a lot easier than anything with a template
+19:32:36 <bcoca> ^ bad precedent, if you want to use the module or share it galaxy, go ahead
+19:32:45 <abadger1999> bcoca: Then rewrite cron.
+19:33:02 <bcoca> abadger1999: making my point for me
+19:33:19 <jtanner> ah, salt doesn't attempt to persist across rebots
+19:33:35 <jtanner> it manages current in-mem state only
+19:33:47 <kustodian> does it have rules priority?
+19:33:54 <abadger1999> bcoca: <nod>  yeah -- cron is horrible but do we get rid of it or do we decide that there are things that people need to do where we can't do it without state so we have to allow it.
+19:34:08 <jimi|ansible> salt is akin to puppet, except written in python and using yaml
+19:34:10 <bcoca> abadger1999: this is where i stres the usfuleness of templates
+19:34:13 <jimi|ansible> functionally, they're very similar
+19:34:18 <jtanner> kustodian: https://docs.saltstack.com/en/latest/ref/states/all/salt.states.iptables.html
+19:34:26 <bcoca> cron/lineinfile are really hackky bad ways of maintaining 'partial state'
+19:34:55 <ryansb> bcoca: so you mean the alternative being templating jobs into cron.d
+19:35:08 <ryansb> err...ignore if that's not the rabbit hole you want to go down
+19:35:09 <kustodian> so how do I change a rule in salt?
+19:35:11 <abadger1999> ryansb: templating al jobs for cron I think.
+19:35:14 <abadger1999> *all
+19:35:23 <jtanner> lineinfile is a lifesaver though if you don't want to maintain templates for heterogenous environments
+19:35:27 <bcoca> ryansb: that is how i maintained my machines, current cron module is a horrible hack that causes many problems, i want less of that, not more
+19:35:34 <kustodian> it doesn't give an ID to rules, so not sure if you can change a rule
+19:35:49 <kustodian> also no order of rules
+19:35:59 <bcoca> jtanner: replace is better, but still a bad way of maintaining config files
+19:36:31 <bcoca> kustodian: they use big hammer and avoid the fine tuned existing/new rules interweve problem
+19:36:44 <jtanner> kustodian: didn't mean to imply it was a superior tool, just that it existed
+19:37:05 <kustodian> big hammer?
+19:37:09 <kustodian> delete everythign else?
+19:37:24 <bcoca> kustodian: that is the 'easy'way
+19:37:43 <kustodian> but that means the module needs to be executed at once? right?
+19:37:44 <bcoca> that is what puppet does essentially, declares itself 'source of truth' and then everything must match
+19:37:51 <bcoca> ^ most 'centralized' tools do this
+19:38:02 <ryansb> yes. It's only the easy way if you assume you are the 100% boss
+19:38:29 <kustodian> this module can also do this if you set one param to 'no'
+19:38:39 <kustodian> but it doesn't do it by default
+19:38:42 <bcoca> which is why i recommend the template for those cases, for the ones in which you are not 100%, current iptables modules is enough, specially if used in a role for complex interactions (fetch existing, merge, publish)
+19:38:56 <kustodian> it's not
+19:38:58 <jtanner> chef has a "role" like cookbook to manage iptables: https://github.com/chef-cookbooks/iptables
+19:39:11 <kustodian> we have 350+ hosts and it's pain to do it
+19:39:32 <bcoca> and chef uses templates to manage it
+19:39:33 <kustodian> now our roles open everything they need and everyone I showed what we do they liked it
+19:39:54 <kustodian> and Ansible is still a single point of truth
+19:40:13 <nitzmahone> Maybe to bring it back in- sounds like a quorum of the core team is still pretty strongly opposed to adding modules that do external state storage.
+19:40:29 <kustodian> as far as I can see mostly bcoca :P
+19:40:32 <bcoca> kustodian: not really, data on the 'servers' IS the source of truth, ansible becomes a middle man, not something i wantin a module
+19:40:37 <jtanner> i am opposed too
+19:40:50 <nitzmahone> I know I'm still at -1. I understand the issue, but I'm not sold that we want to take on another one that does that.
+19:40:55 <kustodian> the state is on the server, isn't it?
+19:41:10 <bcoca> kustodian: im not saying youre module is 'bad' or not useful, it jsut does things in a way that we don't want to support or deall with the implications
+19:41:17 <nitzmahone> ^-- that
+19:41:32 <kustodian> so if the whole state was in the iptables-save dump
+19:41:35 <kustodian> that would be fine?
+19:41:59 <bcoca> you can ALREADY do that, or just dump the 'firewall state' from the kernel
+19:42:12 <bcoca> that is what current iptables module does
+19:42:17 <kustodian> but it doesn't have everything you need to easily manage iptables
+19:42:22 <kustodian> doesn't have order
+19:42:23 <bcoca> hell, that is what iptables commadn does
+19:42:28 <kustodian> ids of rules
+19:42:39 <jimi|ansible> a state dump is not idempotent, so it's not a great way to do things
+19:42:43 <kustodian> doesn't have what rules are from ansible, what not, a lot of things
+19:42:43 <bcoca> iirc we updated it so you can insert the rule at specific position
+19:42:50 <bcoca> before it was just prepend/append
+19:43:24 <bcoca> kustodian: for those cases, i use template and i don't think that merrits having a 'data store' on the remote
+19:43:44 <bcoca> ^ but you can do as you wish, i'm not stopping you, i'm just not going to maintain such a thing
+19:43:47 <kustodian> just a question, what exactly is the problem having a "data store" on the remote?
+19:44:10 <bcoca> it makes it impossible for ansible to have a coherent picture at source
+19:44:19 <kustodian> bcoca: aren't the extas module now maintained by the community mostly? or is that a plan?
+19:44:20 <bcoca> now inventory + plays + vars ARE NOT your source of truth
+19:44:24 <jimi|ansible> kustodian: you can never know for sure what's there, ideally the module should ensure the state matches exactly what you specify, thus removing anything you don't have there
+19:44:36 <nitzmahone> (without external assurances that nobody's diddling the "actual truth" out from underneath us)
+19:44:44 <jtanner> those diddlers
+19:44:47 <bcoca> kustodian: its a plan, once we don't ship/maintain it ... go at it ... till then i opose the inclusion
+19:45:08 <abadger1999> jimi|ansible: But -- many of our modules are not like that.  Not just cron either.
+19:45:13 <nitzmahone> *you* can possibly make such assurances in your env, so use such a thing, but it's a trip hazard for people who can't make such assurances or use the module without understanding that
+19:45:27 <kustodian> pretty sure there are a few modules like that
+19:45:42 * nitzmahone doesn't want to add to that list
+19:45:43 <bcoca> abadger1999: and i'll celebrate when we split extras off and they are not our problem anymore
+19:45:57 <abadger1999> I bet if you choose 5 random cloud modules you'll find at least one where it doesn't work like the ideal.
+19:46:02 <bcoca> kustodian: mistakes im trying to remedy
+19:46:06 <jimi|ansible> the ec2 ones are
+19:46:14 <bcoca> abadger1999: 5 is a low number
+19:46:19 <abadger1999> bcoca: exactly.
+19:46:28 <kustodian> you're removing a lot of potential from modules because of that :(
+19:46:36 <bcoca> abadger1999: ^ repeating myself: that we made a mistake before does nto mean we should double down
+19:46:39 <abadger1999> bcoca: if it was choose 20 random cloud modules... maybe that's not a big deal...
+19:46:54 <abadger1999> bcoca: it's only a mistake if there's another way to do it.
+19:47:07 <bcoca> kustodian: yes and no, lookups and info modules are intended to gather info, you can create same logic using multiple tasks, really do not want to build that into single modules
+19:47:19 <bcoca> abadger1999: ^ the other way
+19:47:23 <abadger1999> bcoca: so perhaps what we need is to see an example of doing it hte other way.  And then kustodian and others can critique the approach.
+19:47:32 <bcoca> modules should stay small and composable, you are trying to do too much in one
+19:47:39 <kustodian> bcoca: the reason why is it in the module is that I don't have to write 3 tasks each time I want to change iptables
+19:47:58 <kustodian> the module only manages iptables and does it very easy for the user
+19:48:02 <kustodian> but anyway
+19:48:02 <abadger1999> and then we'll know if it's truly lacking things that we need in order to support the things that people want to do.
+19:48:02 <bcoca> role: task1 => iptables-dump, task2, local template with that data and 'ordered rules' task3: push template task4: iptables-restore
+19:48:26 <kustodian> and if I have 10 rules which I want to change that 40 tasks
+19:48:33 <kustodian> just for iptables instead of 10 tasks
+19:48:49 <bcoca> kustodian: if you want it to be, you can pass single task to role or list (i would use list)
+19:49:22 <bcoca> you can call the role 1 time or 40, i dont care, its up to you
+19:49:30 <kustodian> role is not good enough, I want to open a port in side a role
+19:49:37 <kustodian> not the same
+19:49:45 <bcoca> port in side a role?
+19:49:54 <kustodian> yeah
+19:49:55 <kustodian> why not
+19:49:56 <nitzmahone> include
+19:50:01 <bcoca> ^ not sure what that means
+19:50:02 <nitzmahone> + vars
+19:50:18 <kustodian> e.g. nginx role
+19:50:25 <kustodian> opens port 80 and 445
+19:50:27 <kustodian> 443
+19:50:44 <bcoca> make it depend on firewall role, passing  list of 2 rules to open those ports ...
+19:50:46 <kustodian> of course it's configurable in the role
+19:50:56 <kustodian> doesn't scale
+19:51:07 <bcoca> just as much as module does
+19:51:18 <kustodian> if you have a bunch of rules you have to open, I don't want to check which role needs what port, my roles open ports
+19:51:27 <kustodian> bcoca: not true
+19:51:40 <kustodian> when I include my roles in a host, iptables is setup
+19:51:49 <kustodian> nothing more I need to do
+19:52:02 <kustodian> which is the point of a role, to setup a service
+19:52:09 <kustodian> iptables is part of setting up a service
+19:52:15 <bcoca> no, the point of a role is to group related tasks and resources
+19:52:28 <bcoca> they are NOT equivalent to 'service setup' that is just ONE way to use them
+19:52:37 <kustodian> of course
+19:52:45 <kustodian> but in most situations it's the service
+19:52:51 <nitzmahone> regardless, there are other ways to accomplish that (include + with_items/vars)
+19:52:54 <bcoca> you CAN have an iptables_install role and an 'iptables_rules' role
+19:52:58 <nitzmahone> and you can do that inside a role
+19:53:11 <bcoca> ^ as he says, i said roles, but includes+vars also would work
+19:53:36 <bcoca> many ways to do this, w/o building soo much into a module
+19:53:42 <bcoca> specially state tracking
+19:53:48 <kustodian> if that is so easy
+19:54:11 <kustodian> why there is no explanation how to do it, best article I found is using ferm
+19:54:22 <bcoca> lininfile and cron (which i also opposed) do this by using an EXISTING state which was the file or cron file that they modify, your case adds an additional 'data store' to the target
+19:54:54 <bcoca> kustodian: many things are easy to do and no one has written an article about them
+19:55:14 <bcoca> i'll add to my list, but that is already long
+19:55:43 <kustodian> I wrote an article, if you have time read it, it's not that long 5 minutes
+19:55:56 <kustodian> give me suggestions how to do it your way
+19:55:57 <kustodian> :)
+19:56:20 <nitzmahone> OK, any other topics for open floor before we wrap up?
+19:56:54 <gundalow> Nothing from me
+19:57:08 <nitzmahone> ending meeting in 10
+19:57:08 <gundalow> Will the meeting be happening next week or week after?
+19:57:16 <ryansb> not I
+19:57:27 <nitzmahone> Oh, good question. We *will* mostly all be in the same room... :)
+19:57:44 <nitzmahone> Which could be good or bad
+19:57:58 <gundalow> Can we go to the pub instead?
+19:58:12 <bcoca> gundalow++
+19:58:13 <gundalow> 9
+19:58:14 <gundalow> 0~8
+19:58:15 <gundalow> 7
+19:58:15 <gundalow> 6
+19:58:15 <nitzmahone> It'll be early in the morning
+19:58:16 <gundalow> 5
+19:58:18 <gundalow> 5
+19:58:21 <gundalow> 6
+19:58:23 <gundalow> 2
+19:58:26 <nitzmahone> 42
+19:58:26 <gundalow> 1
+19:58:28 <gundalow> #endmeeting

@@ -1,0 +1,47 @@
+19:02:48 <gregdek> #startmeeting community working group
+19:02:48 <zodbot> Meeting started Wed Sep 28 19:02:48 2016 UTC.  The chair is gregdek. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:02:48 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:02:48 <zodbot> The meeting name has been set to 'community_working_group'
+19:02:52 <gregdek> Hi everybody.
+19:02:59 <gregdek> #topic roll call
+19:03:24 <gregdek> (don't think rbergeron is around, she's conferencing, so this will just be open floor most likely if anyone needs to chat)
+19:03:52 * gundalow is lurking
+19:04:24 <crawler> Hi gregdek, i would like to ask a question or two regarding  https://github.com/ansible/ansible-modules-core/issues/4857 if nobody else wants to talk :)
+19:05:05 <gregdek> crawler: that's generally a topic for the Core Modules meeting, which this is not -- see https://github.com/ansible/community/blob/master/MEETINGS.md for the schedule -- but I'm happy to chat about it.
+19:05:16 <gregdek> I'm not a core developer though, so I might not be much help, LOL
+19:05:19 * gregdek looks
+19:05:51 <crawler> Ok, its not that complicated, few of us in company want to write an elbv2 module for ansible as a part of ansible-extras, since we belive that it would not be possible to push it in core
+19:05:53 <gregdek> Ah, a feature suggestion.
+19:06:18 <gregdek> New module!
+19:06:22 <gregdek> I'd say go ahead.
+19:07:16 <gregdek> Starting in 2.3 (i.e. right after this release) we're going to start liberalizing the Extras processes (and tightening up the Core processes). So by the time you're ready to submit, we should have some simpler and clearer processes for acceptance.
+19:07:30 <gregdek> If the question is "is this module a good idea" the answer should be "it's a good idea if people use it."
+19:07:41 <crawler> We thought its better to ask first before we start, we would really like to see this feature in ansible, since we need it alot
+19:08:14 <gregdek> You'll be writing it anyway for yourselves, right?
+19:08:14 <crawler> we where just wondering would it be accepted in extras
+19:08:19 <crawler> Yes
+19:08:26 <jimi|ansible> what would the difference be for elbv2?
+19:08:39 <crawler> it has to use boto3
+19:08:52 <crawler> since boto2 does not have support for elbv2
+19:09:30 <gregdek> So long as it conforms to the policy guidelines, it should be accepted into extras at some point.
+19:09:32 <gundalow> I believe all new modules should use boto3 anyway, so that's fine
+19:09:33 <jimi|ansible> we've started moving towards boto3 in some of our other modules, it may be better to just move elb to that
+19:09:43 <gregdek> But this ^^^ may be correct.
+19:09:58 <crawler> we where looking in lets say https://github.com/ansible/ansible-modules-extras/blob/devel/cloud/amazon/ec2_vpc_peer.py
+19:10:03 <gregdek> Does that mean just patching the current elb modules?
+19:10:10 <crawler> it uses boto3, but as i said, its better to ask
+19:10:59 <crawler> our idea is maybe to push in extras first
+19:11:45 <crawler> not sure about patching current elb module
+19:12:10 <jimi|ansible> crawler: in the past we would have deprecated the old one and rewritten it. In the future the process will change a bit with the module metadata changes we're planning
+19:12:32 <jimi|ansible> essentially i believe that would downgrade the stability of the module as it's a rewrite
+19:12:48 <crawler> exactly
+19:13:11 <jimi|ansible> but yeah i wouldn't want elb hacked in place, that'd be just as messy and buggy
+19:13:28 <crawler> thats what we thought also
+19:13:54 <gregdek> Then I think that's the answer. Rewrite it in the hopes of deprecating the original at some point. And yes, we'll accept it when it meets the guidelines. (Which I hope will be 100% automated soon)
+19:13:56 <jimi|ansible> so yeah, long story short we're not opposed to it :)
+19:14:18 <crawler> Ok, ill pass the notes and we will start with writing, thank you guys
+19:14:20 <jimi|ansible> just make sure it's backwards compatible in terms of params (as much as possible) with the existing elb module so it's a smooth deprecation
+19:14:29 <gregdek> Thanks crawler! Great question.
+19:14:54 <crawler> Ok, i hope we will have it soon at the review, thanks again ;)
+19:39:16 <gregdek> OK, that's clearly enough open floor. See you next week. ;)
+19:39:18 <gregdek> #endmeeting

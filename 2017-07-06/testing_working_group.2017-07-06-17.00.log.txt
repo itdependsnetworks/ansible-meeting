@@ -1,0 +1,107 @@
+17:00:02 <gundalow> #startmeeting Testing Working Group
+17:00:02 <zodbot> Meeting started Thu Jul  6 17:00:02 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+17:00:02 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+17:00:02 <zodbot> The meeting name has been set to 'testing_working_group'
+17:00:08 <gundalow> #chair mattclay
+17:00:09 <zodbot> Current chairs: gundalow mattclay
+17:00:14 <gundalow> mattclay: over to you :)
+17:00:15 <spredzy> o/
+17:00:26 <gundalow> #chair spredzy
+17:00:26 <zodbot> Current chairs: gundalow mattclay spredzy
+17:00:28 <gundalow> Hey :)
+17:00:31 <newswangerd> I rebranded from davidn to newswangerd because IRC kept yelling at me over duplicate names
+17:00:31 * mattclay waves
+17:00:41 <gundalow> #chair newswangerd
+17:00:41 <zodbot> Current chairs: gundalow mattclay newswangerd spredzy
+17:01:37 <shaps> Hi!
+17:01:51 <mattclay> There isn't a lot to announce this week. However, one change I thought worth mentioning is that ansible-test now checks to make sure ~/.ssh/known_hosts isn't changed during a test run. This was added to avoid issues like the one I fixed with the git test where it deleted the file.
+17:03:35 <gundalow> (back)
+17:04:34 <gundalow> #info There isn't a lot to announce this week. However, one change I thought worth mentioning is that ansible-test now checks to make sure ~/.ssh/known_hosts isn't changed during a test run. This was added to avoid issues like the one I fixed with the git test where it deleted the file.
+17:04:48 <gundalow> #topic Use of test_pull_requests label
+17:06:07 <gundalow> #info Currently the `test_pull_requests` label gets applied to a PR if *any* file under ./test gets changed. So we often end up with that label added even if someone has just tied up pep8. This makes searching for PRs that add/alter tests a pain
+17:06:26 <gundalow> #info Should we ignore ./test/sanity/?
+17:06:58 <gundalow> +1
+17:07:04 <gundalow> what do other people think?
+17:07:30 <mattclay> I think that would be too much. I like the idea of ignoring just the pep8 legacy-exclusions.txt file.
+17:07:46 <gundalow> sure, I'm happy with that
+17:07:47 <mattclay> That should take care of the main issue of people cleaning up PEP 8 on files but otherwise not changing tests.
+17:08:09 <shaps> ^ +1
+17:08:20 <gundalow> #chair shaps
+17:08:20 <zodbot> Current chairs: gundalow mattclay newswangerd shaps spredzy
+17:08:25 <gundalow> Evening :)
+17:08:42 <shaps> hi :)
+17:09:15 <gundalow> #action just ignore legacy-files.txt
+17:12:08 <shaps> mattclay, gundalow suggests chatting about the requirements.txt here as there isn't much in the agenda
+17:12:29 <mattclay> #topic Installation of Integration Test Requirements
+17:12:47 * resmo waves
+17:13:17 <mattclay> Currently we handle integration test requirements in several ways. Some tests install requirements at the start of the test, others rely on the test environment already having the necessary requirements.
+17:13:57 <mattclay> For the tests that expect the environment to already be set up, we use test/runner/requirements/integration.txt for pip requirements.
+17:13:58 <resmo> huch, ignoring the pep8? -1
+17:14:13 <resmo> I mean ignoring  legacy-files.txt -1
+17:14:44 <resmo> if I do a bug fix of a legacy file, I don't want to fix pep8
+17:15:12 <resmo> otherwise the patches to backport get cluttered
+17:15:22 <mattclay> resmo: The proposed change for legacy-files.txt is only for labeling PRs, nothing else.
+17:15:43 <resmo> ah, ok, +1 then ;()
+17:16:23 <mattclay> For macOS and FreeBSD integration tests we also use test/runner/setup/remote.sh to configure the environment, mostly to install OS packages.
+17:16:30 <shaps> mattclay, so from a quick look there shouldn't be much in requirements.txt
+17:17:03 <shaps> other than 'cryptography and junit-xml (?)'
+17:17:21 <mattclay> We're moving away from installing requirements before tests start to doing so during the tests. As we do so, we should be able to remove test-specific requirements from test/runner/requirements/integration.txt as well as test/runner/setup/remote.sh
+17:17:38 <mattclay> The things that should remain are either required to run ansible or the test infrastructure.
+17:18:37 <mattclay> Basically, the criteria should be: Is this requirement needed only for specific test(s)? If so, the test itself should handle requirements installation.
+17:19:38 <shaps> well, at a guess ansible deps are already installed when integration tests run, right?
+17:20:04 <mattclay> shaps: No, that's not the case.
+17:20:11 <shaps> also, are we only considering integration.txt or integration*.txt?
+17:20:30 <mattclay> Just integration.txt -- the specialized ones for cloud tests are a different matter.
+17:20:34 <gundalow> resmo: context: We want it to be easier for the various working groups to do label:aws label:testing_pull_request to find PRs that add/extend tests
+17:20:38 <shaps> ok
+17:21:03 <resmo> gundalow: I see
+17:22:05 <shaps> mattclay, I know what the ansible requirements are, not sure about the test infra ones though
+17:22:07 <mattclay> I believe these requirements can be moved into tests: jmespath passlib pexpect
+17:22:42 <mattclay> jmespath is used by the json_query filter
+17:22:44 <shaps> yeah, that's what I was looking for
+17:23:03 <mattclay> pexpect is using the expect module
+17:23:08 <mattclay> s/using/used by/
+17:23:13 <shaps> yep, I know roughly where those deps are used
+17:24:08 <shaps> worst case 'grep -r ' in the docs will find the ones I'm not aware of :)
+17:24:34 <mattclay> CI should be able to help out here a lot. If we remove a requirement, the test(s) that fail depend on it. If everything fails, that's not one we should be changing.
+17:25:02 <shaps> that's a bit of a drastic way, but yeah, it works
+17:25:26 <mattclay> I wasn't suggesting we use that as the means to identify them -- only that it will catch any mistakes we make.
+17:26:38 <mattclay> Once we've taken care of requirements.txt, we can look at the packages installed by test/runner/setup/remote.sh and see which of those need to go into tests. For those, it's most likely just a case of adding support for macOS and FreeBSD, since the tests already handle their requirements for Linux.
+17:27:04 <shaps> yeah, had a look at the file, doesn't seem to scary
+17:27:12 <shaps> s/to/too/
+17:27:29 <mattclay> Well, actually that's not true. The docker images have a lot of pre-installed packages.
+17:27:52 <mattclay> So we'll have tests which don't install any of their own requirements, even for Linux.
+17:28:28 <mattclay> I'm only interested in focusing on the ones that are in remote.sh though. The fewer we have there, the less overhead we have to run tests there.
+17:28:57 <shaps> My suggestion would be to have a common 'setup_env' role, which will install the packages required, makes it easier for people to add requirements later
+17:29:28 <shaps> I believe we can probably have a closer look to the ones not installing their requirements later
+17:29:31 <mattclay> shaps: How would that work? The tests are already roles, and we need requirements installation to be per-test, not global for all tests.
+17:31:55 <shaps> we could use include_role
+17:32:30 <mattclay> How does splitting it into a role help? Most of the requirements will only be included once, since most tests don't share requirements.
+17:33:10 <shaps> yeah, that's true. Doesn't really make sense
+17:34:05 <mattclay> For example, looking at remote.sh there's the installation of mercurial. That's only needed for the hg test.
+17:34:15 <gundalow> Ones where there are groups, such as mysql_db/ mysql_user/ mysql_variables/ there often is a common role, such as setup_mysql_db which can be used
+17:34:30 <mattclay> So instead of remote.sh installing it for every test run, the hg test should install it before running the tests.
+17:34:43 * mattclay nods
+17:35:00 <shaps> yep, makes sense
+17:36:02 <mattclay> The goal here is to simplify global test requirements and speed up environment set-up. This benefits us both for CI (where we wait for fewer requirements to install when running a subset of tests) as well as manual testing locally, as people often focus on a specific test. There's no need to wait for requirements to be installed that you won't be needing.
+17:36:39 <shaps> agree
+17:36:56 <mattclay> shaps: Does this give you enough to work with?
+17:36:59 <shaps> I believe I have enough info
+17:37:09 <shaps> yep sure.
+17:37:11 <mattclay> Does anyone else want to work with shaps on this?
+17:37:56 * gundalow will be around for general questions
+17:38:02 * shaps looks at tumbleweed :D
+17:38:08 <mattclay> shaps: FYI - I'm going to be updating remote.sh soon, as I'm adding support for testing RHEL. I'll start with requirements installed there just like we do for the other platforms. We can move them out of there one test at a time.
+17:38:27 <gundalow> As always #ansible-devel for Testing questions (outside of Testing Working Group)
+17:38:57 <mattclay> shaps: Are you going to start with requirements.txt first?
+17:39:00 <shaps> mattclay, yeah. I'll focus on the integration.txt first, I'll have a look at remote.sh later
+17:39:18 <mattclay> Well, test/runner/requirements/integration.txt I should say.
+17:39:30 <mattclay> Sounds good.
+17:39:33 <shaps> I was going to keep them as 2 separate PRs anyway. So I think it works well with what you need to do
+17:39:37 <mattclay> Thanks for volunteering to work on this.
+17:39:56 <shaps> np
+17:40:18 <mattclay> #topic Open Floor
+17:40:49 <shaps> sorry if it took me a bit to get back to you, it's been a hell-week.
+17:41:15 <mattclay> No problem.
+17:46:47 <mattclay> Thanks for coming everyone!
+17:46:49 <mattclay> #endmeeting

@@ -1,0 +1,151 @@
+19:00:03 <thaumos> #startmeeting ansible meeting
+19:00:03 <zodbot> Meeting started Tue Aug  1 19:00:03 2017 UTC.  The chair is thaumos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:00:03 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:00:03 <zodbot> The meeting name has been set to 'ansible_meeting'
+19:02:16 * nitzmahone lurks
+19:02:33 <thaumos> #chair bcoca nitzmahone
+19:02:33 <zodbot> Current chairs: bcoca nitzmahone thaumos
+19:02:50 * bcoca pokes at thaumos to open august ticket
+19:03:03 <thaumos> i was debating that.
+19:03:05 <thaumos> lol
+19:03:37 * jtanner brb
+19:03:40 <newswangerd> O/
+19:03:47 <thaumos> #chair newswangerd jtanner
+19:03:47 <zodbot> Current chairs: bcoca jtanner newswangerd nitzmahone thaumos
+19:06:07 * mkrizek lurks
+19:06:22 <jtanner> so ... what's up
+19:06:56 <bcoca> #topic https://github.com/ansible/ansible/pull/18662
+19:07:25 <bcoca> ^ crab fixed ticket to desired functionality, but we still have to decide on name of the option (hard part)
+19:07:40 <thaumos> thanks bcoca
+19:07:46 <thaumos> august issue is now created.
+19:07:47 <bcoca> i didn't want overlap with existing names (he used vars, also mentined extra_vars)
+19:08:31 <bcoca> ^ mostly bikshedding, anyone got better name?
+19:08:40 <bcoca> we can table for later while you think
+19:08:42 <bcoca> or just ignore
+19:09:39 <abadger1999> Hi, sorry for my tardiness
+19:10:40 <thaumos> #chair abadger1999
+19:10:40 <zodbot> Current chairs: abadger1999 bcoca jtanner newswangerd nitzmahone thaumos
+19:10:45 <thaumos> I am reading the issue over again.
+19:12:20 <thaumos> lookup_vars?
+19:12:57 <bcoca> lookup('template', './some_template.j2', vars=dict(x=42)) <= passing vars to template lookup
+19:13:20 <bcoca> since you can use more than one instance per task, vars: is not a good way, only thing i think name should not be 'vars' as it is waaay overloaded
+19:13:25 <thaumos> right so I mean lookup('template', './some_template.j2', lookup_vars=dict(x=42))
+19:13:30 <abadger1999> additional_vars
+19:13:41 <bcoca> +anything that is not taken
+19:13:47 <thaumos> these vars are specific to lookups, are they not?
+19:13:57 <bcoca> to the template lookup
+19:14:04 <bcoca> not lookups, specifically this one
+19:14:07 <thaumos> ah ok
+19:14:13 <abadger1999> they're specific to the invocation.
+19:14:15 <bcoca> template_vars
+19:14:23 <thaumos> yeah I was thinking template_vars too
+19:14:30 <thaumos> That works in my head.
+19:14:35 <abadger1999> It's parameters that get passed through our lookup all the way to the jinja templating engine.
+19:14:44 <abadger1999> +1 template_vars
+19:14:52 <thaumos> +1 template_vars
+19:15:01 <bcoca> +1
+19:15:56 <bcoca> k, done, since no one else seems to care
+19:16:07 <bcoca> #action bcoca updates ticket with resolution
+19:16:44 <thaumos> thanks @bcoca
+19:17:17 * bcoca passes baton to thaumos
+19:17:20 <thaumos> #topic ansible/ansible#27519
+19:17:24 <thaumos> #link https://github.com/ansible/ansible/pull/27519
+19:17:31 <thaumos> @bcoca, I believe you're already reviewing this one, right?
+19:17:46 <bcoca> no, just finished their previous ones
+19:18:00 <thaumos> ah, okay.  I thought you started to based on your other chat msg.
+19:18:39 <cyberark-bizdev> @bcoca this is a 2nd module following the cyberark_authentication one
+19:18:45 <bcoca> hoices: [details, present, update, addtogroup, absent] <= choices for 'state' already tell me they did not look at the other modules they had ready after all our feedback on previous
+19:19:04 <thaumos> #chair cyberark-bizdev
+19:19:04 <zodbot> Current chairs: abadger1999 bcoca cyberark-bizdev jtanner newswangerd nitzmahone thaumos
+19:19:06 <bcoca> cyberark-bizdev: ^ those kind of states are things we try to avoid
+19:19:30 <bcoca> update shoudl be implied in present (diff between changed=true or false
+19:19:32 <bcoca> )
+19:19:53 <bcoca> addtogroup and detais are imperative not declarative
+19:20:03 <cyberark-bizdev> ok
+19:20:16 <cyberark-bizdev> bcoca... how do we implement those then ?
+19:20:22 <bcoca> you probably want a _facts module instead of details
+19:20:52 <bcoca> cyberark-bizdev:  as we discussed in the previous module, handle the changed states internally, let user use simple declarative language
+19:22:00 <bcoca> the return also has same issue, you show the fulls tructure in sample ... but its supposed to be documented outside of it
+19:22:08 <thaumos> @cyberark-bizdev, I really would like to ask you to work with us in #ansible-devel
+19:22:22 <thaumos> This back and forth in meeting is not working.
+19:22:41 <cyberark-bizdev> ok... this is the first time I submit this PR for discussion here.
+19:22:46 <bcoca> main reason we do one module at time is so systemic issues like the ones above can be corrected on subsequent submissions
+19:23:09 <bcoca> if there was no change to the modules you were submitting based on previous reviews ... kind of missing the point
+19:23:20 <thaumos> @cyberark-bizdev, you are missing the point of the meeting.
+19:23:25 <cyberark-bizdev> I understand that out, and this module has other functionality which was not present in the previous one
+19:23:36 <cyberark-bizdev> the other one only had present, and absent
+19:23:47 <bcoca> so i expect new problems
+19:23:59 <bcoca> well, previous one had add/edit features that we hammerd out early
+19:24:08 <bcoca> vis the password chagne
+19:25:26 <cyberark-bizdev> yes... I have followed, and updated according to feedback
+19:25:30 <thaumos> okay, for time's sake... I am asking this to move to #ansible-devel.  @cyberark-bizdev, will you please work with us there.
+19:25:37 <cyberark-bizdev> I will
+19:25:40 <thaumos> thank you
+19:26:19 <bcoca> delete user is not handling changed
+19:26:46 <bcoca> also making changed=false in check_mode ... not really what check_mode means
+19:27:11 <thaumos> okay, changing topics
+19:27:18 <thaumos> #topic ansible/ansible#27537
+19:27:41 <thaumos> #likn https://github.com/ansible/ansible/issues/27537
+19:28:06 <bcoca> house decided to solve himself
+19:28:11 <thaumos> @bcoca, was this merged affter?... okay
+19:28:14 <thaumos> so we cool?
+19:28:37 <bcoca> hmm, not really as we still have message in other case
+19:28:48 <bcoca> wanted to discuss if this should really be the way we handle roles
+19:28:57 <thaumos> k, gotcha
+19:29:28 <bcoca> as jmainguy points out, you can easlily write a role that work across several 'ansible wrappers' and ansible itself
+19:29:38 <bcoca> having these warnings seems uneccesary in ansible itself
+19:30:30 <thaumos> I guess the point is, why would we warn that this is a container role vs a infra role... I don't think we should have a warning.  A role is a role.  It should be able to work anywhere/everywhere.  If it doesn't it's broken imo
+19:31:14 <bcoca> agreed
+19:31:23 <bcoca> jimi|ansible, abadger1999, anyone else?
+19:31:52 <abadger1999> chouseknecht: any input from you on why we have a warning in the first place?
+19:32:19 <abadger1999> bcoca: I can't think of a reason.  Would like to hear if there was rationale, though.
+19:32:49 <jtanner> unshipit
+19:33:31 <bcoca> i believe it was mostly that they added this thing for 'ansible-container' (a meta entry) and taht roles flagged with it were meant for container .. did not know they added warning, i see no real reason for it in ansible (ansible-container might want to warn for roles that DONT have the key)
+19:33:43 <thaumos> I assume it was a nicety for a-c.
+19:33:54 <thaumos> what bcoca said
+19:34:07 <thaumos> even having it as a meta entry doesn't make sense to me
+19:34:44 <bcoca> he removed 1 warning, but kept another (i see container now has 2 keys)
+19:38:54 <bcoca> soo .. no answer? we can table for now, lets try to ping him offline
+19:39:36 <abadger1999> yeah .. I'm tentatively for removing but since I don't know why it was added, I hate to just remove arbitrarily.
+19:39:46 <jimi|ansible> i agree, a role should be a role
+19:40:07 <Jmainguy> ^^ seems like sound logic to me
+19:40:09 <bcoca> #action capture and interrogate chouseknecht
+19:41:02 <jtanner> using only NATO approved techniques
+19:41:17 <bcoca> but .. trump said its ok!
+19:41:24 <jtanner> oh, okay then
+19:42:56 <thaumos> chouseknecht already removed the message though
+19:43:11 <thaumos> so what's there to interrogate or being tentative about removing?
+19:43:52 <thaumos> I think bcoca just wanted to hash out why this was in Ansible in the first place, or am I completely lost as usual?
+19:43:56 <bcoca> he removed 1/2 of the messages
+19:44:00 <bcoca> and yes, that too
+19:44:05 <thaumos> ah, only half
+19:45:11 <chouseknecht> I removed the one geerlingguy objected to
+19:45:36 <thaumos> oh hai!
+19:45:40 <thaumos> #chair chouseknecht
+19:45:40 <zodbot> Current chairs: abadger1999 bcoca chouseknecht cyberark-bizdev jtanner newswangerd nitzmahone thaumos
+19:46:10 <bcoca> chouseknecht: question is why warn at all, the roles shoudl be executable from ansible w/o issues
+19:46:27 <bcoca> and the other warning is still in there
+19:46:49 <chouseknecht> They kinda don't make sense outside of AC though
+19:47:05 <bcoca> that seems to depend on construction
+19:47:25 <bcoca> even if role has extra files for container .. it could still be used normally
+19:47:31 <chouseknecht> For container enabled, yes
+19:47:33 <bcoca> as Jmainguy's ticket pointed out
+19:47:49 <chouseknecht> Jmainguy?
+19:48:01 <bcoca> ^ might have wrong alias, but ticket you closed
+19:48:03 <abadger1999> geerlingguy?
+19:48:09 <bcoca> ^ possibly ...
+19:49:54 <thaumos> It really doesn't matter what the role contains... Whether it has a file for AC or a file for whatever else. To me a role can contain whatever the hell the person wants to put in it.
+19:50:48 <thaumos> The fact that is has actual stuff in it that pertains to AC is cool, though!  At least it's valuable and not taking up disk space 😄
+19:54:45 <abadger1999> Okay... if there's no other reasons the warning should exist, then take it out?
+19:54:48 <thaumos> so... Is there any reason why we wouldn't remove everything else?
+19:54:49 <Jmainguy> yeah I am not familiar with this specific one, thing you got the wrong main guy
+19:55:01 <thaumos> lol @Jmainguy
+19:55:48 <Jmainguy> yeah a role can contain a huge number of tasks, for it to alarm at the role level seems wrong
+19:55:53 <Jmainguy> if that is indeed what is happening here
+19:56:20 <bcoca> all you 'guy's look alike!
+19:56:27 <Jmainguy> =)
+19:57:43 <thaumos> okay, so I say let's take this offline and discuss more.
+19:58:13 <thaumos> #action continue discussion offline
+19:58:17 <thaumos> any other quick items to address?
+19:58:25 <thaumos> if not, I'm going to endmeeting
+19:58:46 <thaumos> #endmeeting

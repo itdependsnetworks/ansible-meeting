@@ -1,0 +1,80 @@
+00:00:18 <nitzmahone> #startmeeting Windows Working Group
+00:00:18 <zodbot> Meeting started Tue Mar 28 00:00:18 2017 UTC.  The chair is nitzmahone. Information about MeetBot at http://wiki.debian.org/MeetBot.
+00:00:18 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+00:00:18 <zodbot> The meeting name has been set to 'windows_working_group'
+00:00:30 <jborean93> morning/afternoon all
+00:00:36 <nitzmahone> howdy!
+00:00:50 <nitzmahone> #chair jborean93
+00:00:50 <zodbot> Current chairs: jborean93 nitzmahone
+00:01:09 <nitzmahone> #info agenda @ https://github.com/ansible/community/issues/153
+00:01:31 <nitzmahone> While we're waiting for a quorum, quick updates:
+00:01:55 <nitzmahone> #topic 2.3.0 update
+00:02:30 <nitzmahone> 2.3.0 RC2 was cut today- sounds unlikely it'll be the last.
+00:03:04 <nitzmahone> There's one last P2 Windows issue (become broken under NTLM/Kerb) that I'm thrashing on
+00:03:24 <nitzmahone> A handful of other stuff tagged for 2.3.0 milestone that may or may not get in
+00:04:31 <nitzmahone> I think jhawkesworth and others were discussing trying to do some last-minute 2.3.0 bugfixes- they'd need to be in and reviewed before middle of next week to be sure to make it into 2.3.0 final with our current timing.
+00:04:40 <jborean93> how close are you from solving the become issue?
+00:05:27 <nitzmahone> My first hope failed, so I'm about 95% done with the code for the second. After that, it's time to start calling in favors at Microsoft for "WTF is this breaking?"
+00:07:02 <nitzmahone> I'm pretty sure it's because it's inheriting the job handle, and there's something different about the token when created by NTLM or kerb (eg, sans password) that makes the default job ACL not work. CreateProcessWithLogonW doesn't appear to support explicit handle inheritance like CreateProcess, so I need to switch it over to doing breakaway
+00:07:07 <jborean93> it will be something simple like, you didn't do this undocumented feature and ignored what the docs said :P
+00:07:20 <nitzmahone> But that means manual pipe creation, handle inheritance, and bit of a PITA, so working through that right now.
+00:08:04 <nitzmahone> Become was initially implemented on .NET Process, but we can't do breakaway there, so I have to do what I did for async + stdout/stderr capture and a couple other things.
+00:08:54 <jborean93> A bit outside my expertise it seems, I haven't really delved too much into .NET and C# as of yet
+00:09:05 <nitzmahone> I'm hoping I'm right about why it's failing (job object ACL)- I haven't been able to get at a job SACL to get positive failure audit on that.
+00:09:57 <nitzmahone> I turned on everything I know how to to catch the permission failure ("Access is denied" somewhere internal to CreateProcessWithLogonW), but no dice/.
+00:10:47 <nitzmahone> Anyway, looks like it's just us today- anything else you want to chat about WRT 2.3 or whatever?
+00:11:37 <jborean93> nothing in particular about 2.3, I know there are a few issues around win_regedit that jhawkesworth wanted to try and fix before 2.3, looks like we have until the middle of next week to try and push them through
+00:12:29 <nitzmahone> Yep- those guys are usually around during the week, so I can ping them out of band about that (so we're not waiting until Friday's WWG meeting).
+00:13:22 <jborean93> I probably want to quickly talk about my item regarding symlinks on the agenda
+00:13:39 * nitzmahone looks
+00:13:50 <jborean93> either we can go the way of file and add the functionality in there or create a new module specifically for creating and setting links
+00:13:54 <nitzmahone> Oh yeah
+00:14:04 <jborean93> I prefer the 2nd way due to the 3 different types of links Windows has
+00:14:06 <nitzmahone> I think win_file is the right place
+00:14:28 <nitzmahone> Well, shortcuts are already covered- we kicked around adding that to win_file, but agreed that it's wonky enough not to
+00:14:44 <nitzmahone> So it's just junction points and NTFS5+ softlinks, right?
+00:14:52 <jborean93> plus hard links for files
+00:15:05 <nitzmahone> Oh right
+00:15:12 <jborean93> the code I have right now to determine the paths and create the links themselves is pretty complex
+00:15:21 <jborean93> probably 500+ lines for the C# stuff only
+00:15:35 <nitzmahone> So I'd be OK with just windows-specific state entries, as IIRC the rest of te UI is the same for each (src/dest only)
+00:15:48 <nitzmahone> right?
+00:16:16 <nitzmahone> Oof- I think you PR'd some of that already, didn't you?
+00:16:36 <jborean93> PR'd to delete in win_file and for win_stat to determine the link source
+00:16:47 <jborean93> I've since found out how to determine the link type as well
+00:17:08 <nitzmahone> Might be some ways to pare that down- are you P/Invoking to a bunch of stuff, or using WMI, or what?
+00:17:44 <jborean93> P/Invoking to various methods and creating structs for handling Reparse Point information
+00:18:17 <nitzmahone> I did some related work in win_disk_image to handle junction-point mounting VHDs (instead of just system-assigned drive letters), but I kept it out of the stuff I shipped.
+00:19:24 <nitzmahone> Divination complexity aside, the end-user UI for setting one up is still just src/dest in all cases, though, right?
+00:20:28 <jborean93> yep it would be src/dest + a windows specific parameter like link_type to set what type of link unless we just use state for that
+00:21:04 <nitzmahone> Yeah, I'd tend to lean toward win_file then, again mostly for consistency w/ existing Linux stuff, since all the link jazz happens in the file module.
+00:21:44 <jborean93> ok, I might even look at moving it to a module util now you have split them up. I can use the same code in win_stat and win_find to determine the link target and type of link there
+00:21:53 <nitzmahone> Makes me think we need dynamic includes on exec wrapper module builder stuff though- no sense in shipping around tons of C# when we're not using it. :D
+00:22:06 <jborean93> I thought that was added in your exec wrapper changes?
+00:22:17 <nitzmahone> The module_util loader isn't in 2.3 yet
+00:22:47 <nitzmahone> I still might, but PluginLoader is a mess
+00:22:47 <jborean93> ah ok, will scratch that idea for now :)
+00:23:51 <nitzmahone> I didn't end up factoring anything out for 2.3, so might as well just wait for 2.4- I think it's too late to hack up the user-defined module_utils stuff. If it's isolated enough, could argue that it's a bugfix since it should've worked for Windows from the beginning, but the PluginLoader changes they made were python-specific.
+00:24:40 <nitzmahone> Regardless, since it's still just powershell.ps1, no real need for it in 2.3 unless we add the user module_utils library stuff.
+00:24:42 <jborean93> it sounds like a 2.4 thing with the 2nd RC already out, these changes won't be ready until 2.4 anyway so it doesn't hurt me
+00:24:49 <nitzmahone> +1
+00:24:57 <nitzmahone> OK, anything else on that?
+00:25:05 <jborean93> nope sounds like we have a consensus
+00:25:16 <nitzmahone> #action jborean93 to do link work in win_file for 2.4
+00:25:38 <nitzmahone> Well, if nothing else, I'll go grab dinner early then (working from the beach- wrapping up a quick spring break trip with the family this last weekend)
+00:25:53 <jborean93> only 1 more thing sorry
+00:25:55 <jborean93> should be simple
+00:25:57 <nitzmahone> np
+00:26:43 <jborean93> I'm a tiny bit confused between the win_domain and win_domain_controller modules, does win_domain controller just create the domain while win_domain_controller allows you to configure it after running win_domain?
+00:27:49 <nitzmahone> Yeah, I need to do a better job on the docs for those. win_domain will create a new domain (and by extension, a DC) in a new forest (currently, could be extended for subdomains etc later), where win_domain_controller will only create a new DC for an existing domain.
+00:28:13 <nitzmahone> (or depromote to a member server)
+00:28:26 <jborean93> ok cool, so use win_domain to create the domain and controller and win_domain_controller only if there is already a domain
+00:28:27 <nitzmahone> win_domain is basically "make sure a domain exists"
+00:28:33 <nitzmahone> right
+00:28:46 <nitzmahone> Definitely some overlap
+00:29:06 <jborean93> thanks, that's all I'll bother you with for now, have a good time at the beach
+00:29:19 <jborean93> or hope you had a good time :)
+00:29:23 <nitzmahone> NP- thanks for coming and for all you do!
+00:29:42 <nitzmahone> Yep, we were gonna head home today, but decided to extend a day, so I just worked while they played on the beach
+00:29:59 <nitzmahone> Joys of remote work. :)
+00:30:18 <nitzmahone> #endmeeting

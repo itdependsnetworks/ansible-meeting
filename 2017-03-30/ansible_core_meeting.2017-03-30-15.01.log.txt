@@ -1,0 +1,256 @@
+15:01:20 <gundalow> #startmeeting Ansible Core Meeting
+15:01:20 <zodbot> Meeting started Thu Mar 30 15:01:20 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:01:20 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:01:20 <zodbot> The meeting name has been set to 'ansible_core_meeting'
+15:01:40 <abadger1999> Óla
+15:01:44 <gundalow> #chair abadger1999 alikins bcoca jimi|ansible jtanner mattclay nitzmahone Qalthos ryansb shertel funzo
+15:01:44 <zodbot> Current chairs: Qalthos abadger1999 alikins bcoca funzo gundalow jimi|ansible jtanner mattclay nitzmahone ryansb shertel
+15:01:57 <alikins> blorp
+15:02:01 <nitzmahone> Yo
+15:02:03 <funzo> o/
+15:02:10 <jtanner> At dentist
+15:02:12 <gundalow> #info #info Agenda https://github.com/ansible/community/issues/156
+15:02:18 <gundalow> jtanner: oww, you get all the fun
+15:02:21 * mattclay waves
+15:02:46 <gundalow> funzo: You need to get your freenode nick registered then ask jimi|ansible to give you @
+15:03:54 <gundalow> bcoca: while I look through the agenda could you add an item for plugin docs, which we were talking about in #ansible-devel thanks
+15:04:15 <gundalow> #topic Versioned Docs
+15:04:27 <gundalow> #info https://github.com/ansible/community/issues/150#issuecomment-277058347
+15:04:43 <gundalow> #info Proposal AGREED, with docs team to work out the detail
+15:05:32 <gundalow> funzo: \o/
+15:05:48 <allanice001> Hey all
+15:05:58 <gundalow> tanner isn't here, so no point talking about proposal for issues
+15:06:21 <allanice001> np
+15:06:35 <gundalow> #topic ansible#16832  Ansible pre-releases are not published on testpypi.python.org
+15:06:41 <gundalow> #info https://github.com/ansible/ansible/issues/16832
+15:06:52 <gundalow> abadger1999: You do packaging stuff, right?
+15:07:37 <abadger1999> rpm packaging and I know about python packaging.... I think this is more of a release manager question though.
+15:07:42 * abadger1999 punts to jimi|ansible
+15:07:48 <gundalow> ack
+15:08:23 <abadger1999> I didn't think that testpypi was for prereleases though.
+15:08:32 <abadger1999> I thought it was for testing your uploads to pypi.
+15:08:54 <bcoca> we should have a way to allow RCs via pypi, not sure what that looks like
+15:09:05 <bcoca> ^ im +1 for whatever gets us there in sane manner
+15:09:08 <nitzmahone> abadger1999: That's my understanding as well
+15:09:23 <jimi|ansible> this is something we've kicked around a lot, it was basically on gmainwaring's/QA's plate to modify the jenkins release jobs to alternately push to pypi testing
+15:09:39 <jimi|ansible> though the debate there was also that we didn't need to do testpypi as abadger1999 said above
+15:09:40 <nitzmahone> We just have to use a prerelease tag (rcX)
+15:10:04 <jimi|ansible> i just have a fear of accidentally releasing an rc as a final because of some tag naming mistake
+15:10:19 <gundalow> #info Not sure if testpypi is for prereleases *or* testing how to upload to pypi
+15:10:52 <nitzmahone> I've thought about hacking up the release playbook or something to do that with repeated prompts...
+15:10:53 <bcoca> we can probably do both, release with rc tag, but use testpypi before pushing to pypi
+15:11:01 <bcoca> ^ to confirm everything is kosher
+15:11:16 <gundalow> #info There is a legitimate concern that RCs may end up on live pipy if they get named/tagged incorrectly
+15:11:38 <nitzmahone> Yeah, testpypi is more about "does this package work?" Because you can't reupload the same version.
+15:12:27 <gundalow> nitzmahone: Is that confirmed?
+15:12:27 <abadger1999> bcoca: yeah, I think that's the flow that python upstream encourages.
+15:12:53 <nitzmahone> gundalow: is what confirmed?
+15:12:56 <bcoca> so lets do testpypi first (to confirm packages look ok)
+15:13:01 <bcoca> then we can add RC tagging
+15:13:10 <bcoca> ^ which with testpypi, we should have minimized risk
+15:13:31 <gundalow> nitzmahone: nm, I miss read
+15:13:37 <bcoca> +1 to make it tower job with workflows so 2nd person can revise and approve push to pypi from testpypi
+15:13:47 * bcoca ducks
+15:13:59 <nitzmahone> :D
+15:15:31 <bcoca> now we just need someone with time to do it ....
+15:15:40 * bcoca not it
+15:16:14 <gundalow> Could someone that understand this a bit better than I, please add a few comments on ansible#16832?
+15:16:51 <bcoca> probably should close as that is not intended use, with nice blurb on we are looking into RC tagging
+15:17:30 <gundalow> bcoca: well vounteered
+15:17:36 <gundalow> :P
+15:17:57 <gundalow> #info ansible#16832 needs closing: as that is not intended use, with nice blurb on we are looking into RC tagging
+15:18:02 <gundalow> Shall we move onto the next item?
+15:18:18 <nitzmahone> FWIW: I've never had any issues with pypi rc tagging for pywinrm.
+15:18:34 <abadger1999> #action abadger1999 to summarize discussion for 16832
+15:18:43 <gundalow> Thanks
+15:18:58 <gundalow> #topic Docs for plugin types
+15:19:06 <abadger1999> Do we want the ticket closed as well?
+15:19:10 <gundalow> #info Now that we support docs for many more plugin types, should we require all new plugins of those types to have docs included?
+15:19:12 <nitzmahone> Yes, have some.
+15:19:21 <gundalow> abadger1999: yup (accoring to bcoca)
+15:19:25 <abadger1999> k
+15:19:27 <gundalow> nitzmahone: +1
+15:20:00 <gundalow> 1) Would be nice to enforce this for any new plugins that get created
+15:20:07 <gundalow> 2) How many plugins need documenting
+15:20:51 <gundalow> 3) Do we currently have the ability to use this info to generate HTML that ends up on docs.ansible.com - I think I've see some signs of auto generated stuff before
+15:21:26 <bcoca> ansible-doc -t <type> -l will show list of UNDOCUMENTED
+15:21:53 <bcoca> https://gist.github.com/bcoca/038038fd8647b07fed75821ed741058c
+15:22:01 <bcoca> ansible-doc -t connection -l ^
+15:22:36 <gundalow> oh, that's cool
+15:23:12 <bcoca> works for all supported types
+15:23:18 <bcoca> gundalow: i thought you would like ;-)
+15:23:31 <bcoca> [WARNING]: accelerate parsing did not produce documentation. <= you also get these
+15:23:55 <gundalow> bcoca: I do, you know I love good documentation
+15:23:56 <jimi|ansible> accelerate should be removed pretty soon anyway, if not already?
+15:24:03 <bcoca> jimi|ansible: agreed
+15:24:15 <gundalow> #info accelerate should be removed pretty soon anyway, if not already?
+15:24:16 <bcoca> jimi|ansible: just first example due to  ... alphabet
+15:24:47 <bcoca> https://gist.github.com/bcoca/f2fc5d87c7aeb38bfde9223427f5ddd5 <= more in lookups
+15:25:30 <gundalow> So with CI it would be good to stop this list from growing, given it's ansible-doc that should be fairly easy to add
+15:25:38 <nitzmahone> Hrm, I thought that got pulled early in 2.3 too...
+15:27:00 <mattclay> The easiest approach would be to add at least minimal docs for each. Then CI could require they all have docs. Otherwise we need a list of exceptions.
+15:27:22 <gundalow> mattclay: That's a good idea
+15:27:56 <abadger1999> (But harder to figure out what work needs to be done)
+15:28:21 <gundalow> point
+15:28:50 <bcoca> just require on new plugins for now, we need effort to document existing (sans those we are going to deltee)
+15:30:32 <nitzmahone> Yeah, I'd tend to agree with abadger1999- easier to list undocumented than "underdocumented".
+15:31:23 <gundalow> cache: 2
+15:31:26 <gundalow> connection: 15
+15:31:29 <gundalow> callback: 23
+15:31:32 <gundalow> lookup: 34
+15:31:34 <gundalow> Need docs
+15:31:47 <sivel> ugh, I suck at morning meetings
+15:31:52 <nitzmahone> Just as with modules/actions, there may also be internal that we want to whitelist.
+15:31:54 <gundalow> sivel: mornin
+15:32:17 <gundalow> hum,only ~6 have docs
+15:33:07 <nitzmahone> I have docs for winrm CP already, just have to convert from spreadsheet to yaml...
+15:34:54 <gundalow> grep -vf whitelist <(for TYPE in 'module' 'cache' 'connection' 'callback' 'lookup' 'strategy' ; do ansible-doc -t "${TYPE}" -l 2>1 | grep UNDOCUMENTED | cut -f 1 -d ' ' ; done)
+15:35:00 <gundalow> or something else dirty should do the trick
+15:35:30 <gundalow> + check to see if a plugin in whitelist is now documented
+15:36:41 <gundalow> hum, I don't see anything else open on the agneda
+15:36:46 <gundalow> #topic Open Floor
+15:37:09 <gundalow> oh
+15:37:16 <gundalow> #topic set_extra_var module to set extra variable from play #20849
+15:37:22 <gundalow> #info https://github.com/ansible/ansible/pull/20849
+15:37:26 <gundalow> (this may be a quick one)
+15:38:53 <gundalow> well, apart from having to read it all
+15:40:09 <nitzmahone> There have been limited circumstances in the past where this would've been really useful. Not a big fan of the name.
+15:40:43 <nitzmahone> It's consistent, but feels ... wrong.
+15:40:52 <bcoca> -1
+15:41:21 <bcoca> extra vars are a 'manual override', just set a vars in play in 'vars:' secion to get almost same precedence
+15:41:33 <agaffney> how is that different than set_fact + 'when: some_var is not defined' ?
+15:41:47 <bcoca> agaffney: slightly higher precedence
+15:41:50 <nitzmahone> agaffney not in host context
+15:42:17 <nitzmahone> Same value squashes all host values
+15:42:37 <bcoca> nitzmahone: that is how they all end up in 'host context'
+15:42:45 <nitzmahone> (including hosts not referenced by current play)
+15:42:56 <agaffney> the higher precedence doesn't matter if the whole point is to not override an --extra-var anyway, and keeping it out of the host context seems like a flimsy reason for a new feature
+15:43:21 <bcoca> ^ yep
+15:43:42 <sivel> I am a -1 on setting extra vars.  What I would like to see instead is `set_global` or allowing set_fact to set a global var
+15:43:46 <bcoca> in any case, all vars end up in host context ... so keeping it out is pretty useless
+15:44:23 <bcoca> sivel: what does 'global' mean in this context? for all hosts in play? for all plays?
+15:44:26 <sivel> effectively set a play level var
+15:44:29 <nitzmahone> But this would apply to future dynamic hosts, which setting in host context would not.
+15:44:34 <sivel> like one in `vars`
+15:44:35 <bcoca> use vars:
+15:44:39 <nitzmahone> I like the distinction sivel makes
+15:44:50 <bcoca> include_vars can do this already
+15:45:02 <bcoca> set_vars?
+15:45:12 <sivel> kinda, but it is still linked to a host, there have been many asks to set a var that is not host scoped
+15:45:18 <nitzmahone> Gawd help you with strategy: free
+15:45:28 <bcoca> ^ ouch
+15:45:48 <bcoca> use vars: keyword, if you need it for rest of tasks in play, use block
+15:46:04 <sivel> to me set_extra_vars feels like a hack to set a non-host scoped "global" var
+15:46:16 <nitzmahone> sivel: agreed
+15:46:17 <bcoca> this can already be achieved, making it a task is problematic (look at meta/static includes for examples of 'global tasks' being a problem)
+15:46:26 <abadger1999> +1 to sivel's suggestoin... don't think we should override extra_vars here.
+15:46:40 <bcoca> so seems we all agree on -1 to PR
+15:46:43 <abadger1999> but setting to a "global context" makes sense
+15:46:51 <bcoca> possibly diff implementation would be accepted
+15:47:01 <nitzmahone> So a mythical "global" would still be lower precedence than extra-vars, yeah?
+15:47:04 <bcoca> abadger1999: problem is, we dont have global context outside of extra_vars
+15:47:21 <abadger1999> bcoca: I'd rather create a new one than override extra_vars.
+15:47:30 <nitzmahone> Same
+15:47:40 <abadger1999> nitzmahone: yeah, lower precedence
+15:47:45 <bcoca> abadger1999: agreed, but i would also like not to crate more (precedence list is already ... long ...)
+15:47:48 <nitzmahone> I think there's value in having since invariant global stuff
+15:47:51 <sivel> And, we can just call them "mythical vars" :)
+15:47:58 <nitzmahone> *some
+15:48:34 <bcoca> block + vars achieves same w/o introducing even more complexity to var mangement (i know its not as clean as some woudl want)
+15:48:57 <bcoca> nor does it live across plays (extra vars and host vars do this)
+15:49:27 <bcoca> but i think we are digressing, lets vote on PR
+15:49:33 <sivel> -1
+15:49:33 <bcoca> -1 ^ for all of teh above
+15:50:02 <nitzmahone> Yep, -1 to current impl
+15:51:12 <abadger1999> -1
+15:51:54 <gundalow> sounds like a nop
+15:52:20 <gundalow> #agreed #20849 NOP (-1 from sivel bcoca abadger1999)
+15:53:10 <nitzmahone> and me (failed with "yep" prefix)
+15:53:10 <gundalow> Could someone put a summary on the ticket and close it please?
+15:53:28 <gundalow> #agreed #20849 NOP (-1 from sivel bcoca abadger1999 nitzmahone)
+15:53:42 <gundalow> nitzmahone: appologies, I only looked at the first two chars :P
+15:53:57 <gundalow> Did we agree on a better way forward?
+15:55:04 <bcoca> maybe, just dont think its priority, there are many ways around it, even if they are not 'optimal'
+15:55:12 <bcoca> at leats we agree on closing PR
+15:55:23 <gundalow> ack
+15:55:41 <gundalow> #info There may be a better way to do this, though don't believe it's a priority
+15:55:46 <gundalow> #topic Open Floor
+15:55:59 <gundalow> Are we still on track for RC3 today?
+15:56:14 <abadger1999> jimi|ansible: ^
+15:56:41 <abadger1999> I haven't any major bugs.. but I do have things I'd like to fix for rc4.
+15:57:22 <gundalow> ditto
+15:57:34 <gundalow> #topic Error reporting
+15:58:37 <gundalow> So one thing I've been thinking recently when documenting the new Persistent Connection framework that's used for Networking is it would be good to have a way to map from error messages to docs.ansible.com
+15:59:11 <gundalow> Such as error numbers, or a place to look up error messages (which may just be Google + "error message")
+15:59:14 <gundalow> thoughts?
+16:00:01 <bcoca> would required a) numbering errors, b) documenting them and solutions, c) fixed point in website to look these up (consider we area also now doing version split on docs)
+16:00:03 <gundalow> So you could go to docs.ansible.com/ansible/errorlookup?q=error id
+16:00:41 <gundalow> nod
+16:00:42 <bcoca> I prefer that error message is actually helpful and gives enough information to have user fix it
+16:01:06 <alikins> if errors raised a sufficiently unique Exception, that would be a good first step. Then at least the failure has a name.
+16:01:19 <agaffney> helpful error messages? what kind of software developer are you?
+16:01:40 <mattclay> gundalow: What kind of documentation would you want to present in docs that couldn't be included in the error message?
+16:02:31 <bcoca> alikins: i consider exceptions as bad way to communicate to users, only useful for developers
+16:02:31 <gundalow> https://github.com/gundalow/ansible/blob/network-debug-docs/docs/docsite/rst/network_debug_troubleshooting.rst#troubleshooting-network-modules
+16:02:51 <bcoca> alikins: its about the message, name matters little
+16:03:03 <gundalow> hum for example
+16:03:30 <gundalow> the items sections starting "Error"
+16:04:12 <gundalow> "invalid connection specified, expected connection=local, got ssh" is a good error message, it tells you the solution (though you many need to look where to set it, it gives you enough info to look at example playbooks)
+16:04:13 <alikins> exceptions that are only meaningful to humans via the message is a good way to prevent automation
+16:04:45 <bcoca> i.e ""Unable to open shell"" <= 1/2 useful message, "Unable to open shell, try running with ANSIBLE_LOG_PATH=/tmp/ansible.log and/or -vvv to get more information" <= helpful message
+16:04:58 <gundalow> bcoca: nod, I was thinking similar
+16:05:27 <gundalow> well "Unable to enter configuration mode" + do you need authorize: yes?
+16:05:30 <agaffney> shoving that helpful tip into every exception that's raised seems...wrong
+16:05:52 <agaffney> unless it's done at a higher level to prevent code duplication
+16:05:52 <bcoca> though i would change /tmp/ansible.log to ~/ansible.log .. jic private info is leaked
+16:06:09 <gundalow> For the cases in https://github.com/gundalow/ansible/blob/network-debug-docs/docs/docsite/rst/network_debug_troubleshooting.rst#troubleshooting-network-modules these aren't exceptions, they are via display.displa
+16:06:16 <gundalow> bcoca: ah, good spot, thanks
+16:06:22 <bcoca> agaffney: it is already for bare exceptions
+16:07:02 <bcoca> project has had long stanging rule: if user sees an exception, its a bug, they should ALWAYS get an error message that we write
+16:07:09 <agaffney> bcoca: by bare exceptions, are you talking about the "unexpected exception....run with -vvv to get full traceback" message?
+16:07:10 <gundalow> +1
+16:07:18 <bcoca> ^ IF they need traceback info, they normally have available via -vvv
+16:07:25 <bcoca> agaffney: yep
+16:07:33 <bcoca> agaffney: or even if that is not captured
+16:07:42 <bcoca> 'unexpected exception' == bug
+16:09:42 <gundalow> nod
+16:09:52 <gundalow> Cool, thanks for the suggestions I'll look at updating the messages
+16:10:35 <gundalow> oh, and if anyone has anytime for review of https://github.com/ansible/ansible/pull/22652/files that would be great
+16:12:42 <gundalow> #topic Open Floor
+16:12:51 <gundalow> Anything else?
+16:13:25 <alikins> fine grained exceptions that include relevant context (in the msg or the repr and as data attributes) is an easy way to improve app stability. Also helps remove lots of tedious (and error prone) error handling code
+16:15:39 <nitzmahone> alikins: while I don't disagree, I also hate the resultant thousands of typed exceptions that one needs to dig through when trying to decide what to raise.
+16:15:45 <bcoca> fine grained messaging does, not as sure fine grained exception objects do
+16:15:56 <nitzmahone> (having been on projects that have gone both ways)
+16:16:14 <nitzmahone> It takes a lot of discipline to manage the typed exceptions properly.
+16:16:17 <bcoca> alikins: also consider object creation si not free and this is not long runnign deamon, 300 exception objects will end up creating a real burden
+16:17:03 <bcoca> if ansible were a service, it might make more sense, but its a cli app for users, which might be techincall but are not required to be programmers
+16:17:14 <nitzmahone> In general, I don't think we've demonstrated such discipline. ;)
+16:17:21 <gundalow> :)
+16:17:51 <bcoca> nitzmahone: discwhat?
+16:17:59 <alikins> nitzmahone: I would say picking the right exception is easy if you know where you want the error handled.
+16:18:37 <nitzmahone> bcoca: prescriptive exception text is also a two-edged sword- witness the "permissions error, did you have permissions to /tmp" red herring under Windows. :)
+16:19:18 <nitzmahone> alikins: true, assuming we've not created overlapping exception types
+16:19:18 <bcoca> nitzmahone: if there were perfect error system we'ld all be using it ...
+16:19:27 <bcoca> nitzmahone: but i think this path has less issues
+16:19:32 <mattclay> Typed exceptions or error codes are more useful when providing an API. If the output is just going to end up in a log or on the console, it's probably overkill.
+16:19:45 <bcoca> ^ when your user IS a programmer
+16:20:21 <nitzmahone> bcoca: For a project of this size and ilk, I tend to agree. If API usage were more a focus, I'd probably change my mind.
+16:20:25 <mattclay> End users want helpful error messages, developers want exceptions/error codes.
+16:20:37 <mattclay> Well, developers like helpful error messages too. :)
+16:21:10 <nitzmahone> *But shouldn't be making flow of control decisions based on them.
+16:21:59 <abadger1999> A deep and wide exception hierarchy isn't generally useful for us at the moment because we aren't handling errors we throw in specific ways.
+16:22:09 <abadger1999> Our errors generally hit some sort of catchall.
+16:22:59 <abadger1999> error in a callback pugin... Okay, spit a warning and ignore it.  error that gets to the toplevel.  give the -vvv text and exit.  and so forth.
+16:23:20 <bcoca> nitzmahone: if we had 2 projects, i'dl be fine for it in api, still would seem overkill on cli side
+16:23:49 <alikins> mattclay: And if you dont use useful exceptions, then log or console is your only choice.
+16:23:53 <bcoca> abadger1999: specific errors are handled in some places, they tend to be non-fatal
+16:24:24 <bcoca> mattclay, alikins, that is why we now log tracebacks by default, only really 'show' them on -vvv
+16:24:56 <nitzmahone> tangent: pop
+16:26:32 <nitzmahone> Are we done?
+16:26:37 * gundalow puts on his chair hat
+16:26:38 <gundalow> I think so
+16:26:49 <gundalow> 5
+16:26:49 <gundalow> 4
+16:26:49 <gundalow> 3
+16:26:52 <gundalow> #endmeeting

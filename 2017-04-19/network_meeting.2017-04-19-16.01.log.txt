@@ -1,0 +1,100 @@
+16:01:02 <gundalow> #startmeeting Network Meeting
+16:01:02 <zodbot> Meeting started Wed Apr 19 16:01:02 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:01:02 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:01:02 <zodbot> The meeting name has been set to 'network_meeting'
+16:01:22 <gundalow> #chair funzo ganeshrn Qalthos trishnag
+16:01:22 <zodbot> Current chairs: Qalthos funzo ganeshrn gundalow trishnag
+16:01:26 <trishnag> Hi
+16:01:41 <gundalow> #info Agenda, feel free to add items https://github.com/ansible/community/issues/110
+16:01:59 * ganeshrn waves
+16:02:22 <gundalow> itdependsnetwork: caphrim007 Hi
+16:02:29 <caphrim007> hey
+16:03:11 <gundalow> itdependsnetwork: I approve of  kennc is now known as itdependsnetwork :)
+16:03:12 <itdependsnetwork> hi
+16:03:16 <itdependsnetwork> lol
+16:03:23 <itdependsnetwork> yea, I figured I would match it better
+16:03:28 <gundalow> +1
+16:03:38 <gundalow> So lets start with that
+16:04:04 <gundalow> #topic #23517 addr.py filters (and filters in general)
+16:04:13 <gundalow> #info https://github.com/ansible/community/issues/110#issuecomment-294902334
+16:04:29 <gundalow> #info The issue https://github.com/ansible/ansible/issues/23517
+16:04:43 <itdependsnetwork> also this PR: https://github.com/ansible/ansible/pull/23526
+16:04:51 <gundalow> #info Related PR https://github.com/ansible/ansible/pull/23526
+16:04:53 <gundalow> Thanks
+16:05:14 <gundalow> So, as I read it there seem to be a few issues
+16:05:26 <itdependsnetwork> seems to be :)
+16:05:48 <gundalow> 1) What filters exist (they could be in Ansible or standard Jinja2)
+16:06:01 <gundalow> 2) Where is/should that be documented
+16:06:04 <gundalow> 3) How do you use them
+16:06:06 <itdependsnetwork> +1
+16:06:08 <gundalow> 4) Are they tested
+16:06:22 <gundalow> what else am I missing
+16:07:13 <gundalow> #info Some (but not all?) are defined at http://docs.ansible.com/ansible/playbooks_filters.html
+16:07:18 <itdependsnetwork> perhaps more on documentation, but just what is the intention of each filter
+16:07:37 <itdependsnetwork> like what is _gw?
+16:08:24 <itdependsnetwork> other than that, if you let me know where filter tests are, I can look at helping with testing, and if I can get a +1 on my PR :)
+16:08:25 <gundalow> #info builtin filters http://jinja.pocoo.org/docs/templates/#builtin-filters
+16:09:50 <itdependsnetwork> simple note on document, perhaps a "how to" link on "and allows users to add their own custom filters"
+16:10:11 <gundalow> #info We currently only have one unit test for filters, which is test/units/plugins/filter/test_ipaddr.py
+16:10:46 <funzo> how ironic
+16:11:08 <itdependsnetwork> haha, fair enough :)
+16:11:59 <gundalow> OK, so docs
+16:12:10 <itdependsnetwork> easy enough looking at tests, can add to it for sure
+16:12:40 <gundalow> #action itdependsnetwork to add unit tests for  #23517 in test/units/plugins/filter/test_ipaddr.py
+16:12:43 <gundalow> Thanks :)
+16:13:29 <itdependsnetwork> who owns the filter to answer the original question, what are the intentions of the functions? it is just not clear to me on many
+16:13:31 <gundalow> So we currently have http://docs.ansible.com/ansible/playbooks_filters.html#ip-address-filter
+16:14:03 <gundalow> itdependsnetwork: I think the filters are (should be?) owned by Core
+16:14:27 <itdependsnetwork> so you or privateip will take a look?
+16:14:47 <gundalow> Personally I'd like to see docs with examples and unit tests that defend the documented functionality
+16:16:17 <itdependsnetwork> ok, I will add tests for one's that I understand and can revisit the other in a few weeks
+16:16:26 <gundalow> Excellent, thanks
+16:16:47 <gundalow> #info source for docs is docs/docsite/rst/playbooks_filters.rst
+16:18:52 <gundalow> itdependsnetwork: where did you see _gw?
+16:19:46 <itdependsnetwork> line 290: https://github.com/ansible/ansible/blob/02f66b93699d9249600400d7e8553198f02006c2/lib/ansible/plugins/filter/ipaddr.py
+16:20:16 <gundalow> ah
+16:20:56 <gundalow> hum, not looked in a filter before, I was looking at the lock starting line 685
+16:21:54 <gundalow> ok, so lots more to document
+16:22:35 <gundalow> itdependsnetwork: anything else on that?
+16:22:43 <itdependsnetwork> and just real odd to me that so many filters point to same query
+16:22:46 <gundalow> Once you've added unit test & docs we can get it merged
+16:22:47 <itdependsnetwork> but no more on that
+16:22:58 <itdependsnetwork> for the PR?
+16:23:03 <gundalow> yup
+16:23:05 <itdependsnetwork> ok
+16:23:07 <itdependsnetwork> thanks
+16:23:17 <gundalow> Thank you :)
+16:23:21 * gundalow looks at what's next
+16:23:50 <gundalow> #action gundalow to create backlog card for documenting + Unit tests for https://github.com/ansible/ansible/blob/devel/lib/ansible/plugins/filter/ipaddr.py#L264-L318
+16:24:15 <gundalow> #topic Core Update
+16:24:38 <gundalow> #Info Hopefully as you all know Ansible 2.3.0 has been released. Thanks for all the testing
+16:24:51 <gundalow> #Info Ansible 2.3.1 will be out in a week or so
+16:25:14 <gundalow> ganeshrn: You there?
+16:25:27 <ganeshrn> gundalow, yes
+16:25:39 <gundalow> Would you like to do a quick intro :)
+16:25:51 <ganeshrn> sure
+16:26:29 <ganeshrn> I joined Ansible team from 1st April, will mainly focus on Networking
+16:27:05 <ganeshrn> I am working from Redhat Pune office
+16:27:23 <ganeshrn> will be mainly working in IST time zone
+16:28:38 <ganeshrn> that's all i had to say :)
+16:28:46 <gundalow> Thanks :)
+16:29:03 <gundalow> trishnag: You there?
+16:29:07 <trishnag> gundalow: yup.
+16:29:58 <gundalow> Would you like to give a quick into?
+16:30:06 <trishnag> Indeed.
+16:30:11 <gundalow> :)
+16:30:42 <trishnag> Hi, I am Trishna from Pune, India. Joined the team on 17th April, will be working with the Networking team. I have been Fedora intern before. I look forward to have great time with you all :-).
+16:30:52 <trishnag> Thanks.
+16:31:12 <gundalow> Great
+16:31:16 <gundalow> #topic Open Floor
+16:31:24 <gundalow> itdependsnetwork: caphrim007 Anything else?
+16:31:32 <gundalow> Or anyone else that's lurking
+16:31:35 <caphrim007> nothing from me
+16:31:47 <itdependsnetwork> just added an issue, for tracking
+16:31:55 <itdependsnetwork> https://github.com/ansible/ansible/issues/23751
+16:32:07 <itdependsnetwork> had an offline convo with @privateip: on it
+16:32:17 <gundalow> ah, OK
+16:33:20 <gundalow> Thanks
+16:34:21 <gundalow> Cool, will close in a minute or so then
+16:34:26 <itdependsnetwork> thanks
+16:36:25 <gundalow> #endmeeting

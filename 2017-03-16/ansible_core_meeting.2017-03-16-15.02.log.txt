@@ -1,0 +1,303 @@
+15:02:15 <gundalow> #startmeeting Ansible Core Meeting
+15:02:16 <zodbot> Meeting started Thu Mar 16 15:02:15 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:02:16 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:02:16 <zodbot> The meeting name has been set to 'ansible_core_meeting'
+15:02:43 <alikins> blorp
+15:02:49 <gundalow> #chair abadger1999 alikins bcoca jtanner mattclay nitzmahone Qalthos rcarrillocruz ryansb shertel
+15:02:49 <zodbot> Current chairs: Qalthos abadger1999 alikins bcoca gundalow jtanner mattclay nitzmahone rcarrillocruz ryansb shertel
+15:02:55 <gundalow> #topic Open Floor
+15:03:03 <shertel> hello
+15:03:34 <jtanner> hi
+15:03:55 <gundalow> oh, we have a new thing
+15:04:06 <gundalow> #topic ansible/ansible#22648 <= alternative module defaults
+15:04:15 <gundalow> bcoca: think this is yours
+15:04:25 <gundalow> #info https://github.com/ansible/ansible/pull/22648
+15:04:31 <bcoca> it's agaffney's but thought we should discuss before accepting
+15:05:24 <abadger1999> Good morning
+15:05:37 <jtanner> what do we gain that yaml anchors don't provide? serious question
+15:05:48 <agaffney> I'm here...mostly
+15:06:19 <agaffney> jtanner: it works beyond a single YAML file
+15:06:45 <agaffney> and is generally less ugly to look at :)
+15:06:45 <bcoca> jtanner: cleaner than yaml anchors, also works for modules run inside action plugins
+15:07:25 <agaffney> actually, this implementation may not work for modules inside action plugins
+15:07:35 <agaffney> but that is probably a good thing
+15:08:38 <agaffney> the params are applied in task_executor, which I don't think I'd in the path when an action plugin calls a module
+15:08:43 <bcoca> it could as you are updating play context, its up to action plugin to decide
+15:09:06 <agaffney> *is in...damn on-screen keyboard
+15:09:15 <bcoca> that would be _execute_module call in actino plugins
+15:10:35 <jtanner> well, since it's so early in 2.4 lifecycle ... i don't see a reason to not try it out
+15:10:42 <jtanner> shipit
+15:11:00 <nitzmahone> +1 - this is a decent solution to something we've poked at a few different ways
+15:11:12 <nitzmahone> Can it be set from inventory as well?
+15:11:27 <jtanner> looks to be a generic vars thing
+15:11:29 <bcoca> he has inventory var there for play_context
+15:11:43 <agaffney> yes, anywhere you can set vars
+15:11:51 <nitzmahone> Perfect
+15:12:00 <bcoca> not sure i like that part though
+15:12:09 <bcoca> its not really 'connection related'
+15:12:17 <agaffney> it uses module_defaults play directive or ansible_module_defaults var
+15:12:18 <jtanner> as long as var precedence is "perfect" =)
+15:12:23 <bcoca> would expand the meaning of ansible_vars precedence
+15:12:39 <abadger1999> Do we want this in vars?
+15:12:51 <abadger1999> Or do we want to namespace it?
+15:13:05 <bcoca> still +1 to merge, this will have kinks to work out, i prefer this over the 'in ansilbe.cfg' setting which made plays/roles not shareable
+15:13:14 <agaffney> vars make it easy to apply "globally", instead of to only a single play
+15:13:16 <bcoca> abadger1999: i prefer it as keywords vs vars
+15:13:23 <abadger1999> <nod>
+15:13:34 <bcoca> agaffney: i would argue that is what config is also for, vars are 'overriding'
+15:13:38 <jtanner> "ansible_module_defaults" ... seemed like it was "namespaced" to me, but maybe i don't know what that means
+15:13:46 <bcoca> we tried to keep that as narrow scope for 'connection'
+15:13:56 <agaffney> my thought was sticking it in group_vars/all
+15:14:11 <abadger1999> Yeah but.. I'm thinking in the context of "anything can set vars"
+15:14:12 <bcoca> agaffney: for that case i would argue ansible.cfg is better
+15:14:16 <nitzmahone> agaffney: exactly
+15:14:26 <nitzmahone> Think about the problem of network module auth
+15:14:37 <nitzmahone> If we did one little thing to this down the line, it'd solve that problem too
+15:14:42 <alikins> would be interesting to be able to set a 'site' set of module/task defaults
+15:14:55 <bcoca> the 'ansible_x ' override vars are currently only for connection/auth related, which makes sense on host level, this is not something that is tied to host imo
+15:15:31 <bcoca> nitzmahone: diff issues, even if same mech, this is what i prposed with auth_plugins
+15:15:44 <bcoca> ^ but again, narrow scope, connection related
+15:16:01 <bcoca> this CAN be used for module auth
+15:16:08 <nitzmahone> bcoca: yeah, if we ever get to it- network auth is currently hokey IMO, since the connection vars refer to the bastion, not the target device
+15:16:14 <bcoca> but its much broader
+15:16:16 <agaffney> bcoca: if 'module_defaults: "{{ my_defaults }}"' in a play works, an argument could be made for dropping the var
+15:16:33 <bcoca> agaffney: it should
+15:16:34 * jtanner suspects someone is going to want an equivalent feature for task args soon ... become: True
+15:16:51 <agaffney> it's not an automatic global, but it's a decent compromise
+15:16:54 <bcoca> jtanner: we've had the reques tof the whole play be a {{myplay}}
+15:17:16 <bcoca> agaffney: agreed, so +1 if we remove ansible_module_defaults from mix
+15:17:31 <jtanner> from mix?
+15:17:33 <jtanner> what does that mean
+15:17:39 * dag missed part of the conversation :-/
+15:17:45 <bcoca> no ansible_module_defaults, just module_defaults directive
+15:18:02 <nitzmahone> So only settable at play level, then?
+15:18:02 <bcoca> er keyword ... need to get used to that
+15:18:19 <bcoca> i would say play/block/role, but current PR only does play
+15:18:37 <abadger1999> agaffney: Note -- I'd set play_context.module_default to an empty dict in __init__() if None... that way you don't have to test for None throughout the rest of the code.
+15:18:38 <nitzmahone> Well, current PR allows it anywhere
+15:18:49 <jtanner> if coming from vars, it should technically work for adhoc too
+15:18:54 <nitzmahone> (since it's var-based)
+15:19:04 <nitzmahone> jtanner: Yeah, but why?
+15:19:14 <bcoca> nitzmahone: my point is kiling var in favor of keyword
+15:19:14 <nitzmahone> Oh, you mean like inventory-set?
+15:19:15 <agaffney> abadger1999: I had that originally, and it still ended up as None for some reason
+15:19:27 <jtanner> nitzmahone: to spawn some vmware guests without chaining a bunch of stupid args?
+15:19:38 <bcoca> fieldattributes magic
+15:19:43 <abadger1999> agaffney: Hmm.. k.  bcoca Do you know FieldAttributes well enough to know why that would be?
+15:19:50 <nitzmahone> jtanner: Yeah, I initialy thought you meant passing via -e. ;)
+15:19:53 <bcoca> ^ avoid using {} or [] in field attributes as it creates a closure
+15:20:30 <bcoca> as defaults
+15:21:14 <agaffney> I'd kinda like to keep the var support for now, as it allows setting it at the block/role level without complicating the code
+15:21:45 <agaffney> you can even use it in defaults/main.yml in a role
+15:21:46 <bcoca> agaffney: my problem is that it makes 'connection variables'  ... not connection related anymore
+15:21:58 <agaffney> probably...not tested
+15:21:59 <jtanner> to make it useful (not having to retype it out for -every- play) i agree that hte var path is better
+15:22:01 <nitzmahone> If we're going to do it at all, I'd tend to agree that we should allow set-via-var. We've typically been pretty laissez-faire about stuff like that: "here's the gun, aim it carefully"
+15:22:23 <abadger1999> bcoca: If there's no easy way to set the default of a fieldattribute to a container, maybe we should enhance default... If default="A callable", then set the default = to the result of the callable.
+15:22:35 <bcoca> nitzmahone: not with these vars, we've restricted them to connection related things as they are host centric
+15:22:47 <agaffney> bcoca: I get your argument, but it's a bit flimsy compared to the utility of the var
+15:22:50 <bcoca> this is not host centric, nix the var, use a config instead
+15:22:57 <nitzmahone> abadger1999: oof, careful with that- you now have potential order dependencies when setting up an object
+15:23:10 <abadger1999> nitzmahone: order deps?
+15:23:13 <bcoca> agaffney: understood, but then we wind up with all keywords changed into vars as its not specifically connection related
+15:23:23 <bcoca> ^ we end up with 2 sets of 'keywords'
+15:23:34 <bcoca> we want to keep that restricted to 'conneciton' only
+15:23:45 <nitzmahone> abadger1999: eg, if the callable refers to something on self/the object under construction, it may or may not have been set
+15:23:58 <agaffney> bcoca: is there any way for a role to set it's own module defaults without the var?
+15:24:00 <nitzmahone> (say some other property)
+15:24:32 <bcoca> abadger1999: we might want to loop jimi-c for that, also diff discussion
+15:24:39 <abadger1999> nitzmahone: ah... I don't think that can happen with FieldAttribute... they're defined as class attributes so they wouldn't have access to an instance of the class they are attributes of.
+15:24:55 <bcoca> agaffney: not currently, but yes if you make it apply to blocks
+15:25:12 <bcoca> agaffney: also, if we add 'role config overrides' in 2.4, it will be possible also
+15:25:12 <agaffney> bcoca: if not, that's a pretty strong argument (for an exception to the connection var rule)
+15:25:16 <abadger1999> bcoca: yeah -- I was just making sure there isn't a way for agaffney to do that now so I don't have to implement that ;-)
+15:25:37 <nitzmahone> abadger1999: yeah, I guess so long as the callable doesn't get any context about the object under construction- we'd just be snarfing the *result* of a void callable...
+15:25:56 <bcoca> abadger1999: we went backnforth with that a lot, i believe it either passes None or an 'empty container' on templating
+15:26:33 <bcoca> agaffney: i would argue that once we remove the narrow scope for 1, why not for all?
+15:26:38 <agaffney> bcoca: even if applied to block, wouldn't a role need to put all tasks in blocks to use it?
+15:26:46 <bcoca> cause it is also useful for run_once
+15:26:49 <bcoca> or until
+15:27:18 <bcoca> agaffney: i would prefer a meta/module_defaults.yml for role implementation
+15:27:36 <agaffney> task default params is another thought I had, related to this change :)
+15:28:19 <bcoca> the other part of 'defaults' being in 'inventory vars' is that it hides it from the play, you cannot 'just read' play anymore
+15:28:25 <agaffney> bcoca: but that probably wouldn't allow setting them from other vars
+15:28:30 <bcoca> ^ same issue we had with args: which is why it was deprecated
+15:28:48 <nitzmahone> A couple of potential snags with var-set would be difficult debugging, and merge_hash behavior.
+15:28:51 <alikins> the ansible_module_defaults is interesting to me, mostly because it works sort of like a (metaphorical) task inventory
+15:29:12 <agaffney> I see what you're trying to do, but any non-var implementation is clunky
+15:29:40 <bcoca> agaffney: i dont disagree that the var is more 'streamlined' but that could be argued for EVERY keyword
+15:29:54 <bcoca> there is a reason this ONLY applies to connection related keywords
+15:30:22 <bcoca> as vars are host centric, that made sense, if now we are just going to use vars as keywords even when non connection related ... why have keywords?
+15:30:37 <bcoca> vars ARE more streamlined
+15:31:28 <abadger1999> Note: This would be good as a proposal... I think we all like the feature but we all have different ideas of the way it should be presented to the user.
+15:31:54 <abadger1999> a proposal would allow capturing the alternatives and putting down the pros and cons of those.
+15:31:59 <bcoca> well, code was good to show how this would work
+15:32:03 <abadger1999> <nod>
+15:32:12 <abadger1999> yeah.  Code makes it obvious how easy this could be.
+15:32:27 <bcoca> and this approach was much better than previous ones that just wanted 'ansible.cfg toggle'
+15:32:29 <agaffney> I was a bit surprised how easily it came together
+15:32:37 <jtanner> i'm stil "shipit"
+15:32:47 <agaffney> me too ;)
+15:32:50 <bcoca> he
+15:32:57 <bcoca> im just worried about the var implications
+15:33:11 * agaffney has no desire to go through the proposal process and multiple code revisions
+15:33:15 <bcoca> im fine with the keyword part, woudl even expand to block + role
+15:33:43 <agaffney> I just know that if we remove the var part, people will want to use it to set defaults *within* a role
+15:33:52 <agaffney> without jumping through hoops like using blocks around all tasks
+15:34:13 <agaffney> but then, I guess using blocks isn't *that* big of a deal
+15:34:28 <bcoca> agaffney: understood, but there are other alternatives there
+15:34:58 <bcoca> also, people might not be happy with role that 'looks like' it does one thing but a var in defaults/vars actually modifies what the tasks are doing
+15:35:07 <agaffney> and adding it explicitly to roles/blocks will complicate the implementation (I assume)
+15:35:14 <bcoca> right now you can read 'tasks/main' and mostly know what is going on
+15:35:48 <bcoca> agaffney: not really, just field attribute as you have now and then look at block (you always have one for a task)
+15:35:49 <agaffney> that's fair....the var is convenient but can hide important details
+15:35:54 <bcoca> and inheritence does rest
+15:37:17 <agaffney> so, it would just be adding a FieldAttribute() in a few more classes and then looking at a few more places in the block of code in task_executor.py that applies the default params?
+15:37:36 <alikins> instead of changing the defaults for module 'copy', kind of would like to be able to 'subclass' a module with new defaults and distinct name. so I could create a my_copy with the defaults.
+15:37:38 <bcoca> no, just look at block, as it should inherit from the 'current play and role'
+15:38:06 <agaffney> alikins: that seems a related but separate feature
+15:38:09 <bcoca> alikins: that requires programmer, vs this just requires pay author
+15:38:25 <alikins> and perhaps leave enough rope to make the 'subclassed' module re-use a name, so you could replace 'copy' with your copy+defaults
+15:38:33 <abadger1999> (tangent: agaffney, bcoca... looks like you can use FieldAttribute(default={}) in present code... FieldAttribute's __init__ currently does a deepcopy(default) in that case)
+15:39:06 <bcoca> abadger1999: probably changed after last time i looked at it, its a deep rabbit hole
+15:39:11 <abadger1999> <nod>
+15:39:28 <bcoca> abadger1999: validation does a lot of heavy lifting there
+15:39:51 <alikins> bcoca: not sure I understand the comment about requiring a programmer
+15:40:04 <bcoca> alikins: currently easy to do with custom copy in library/ or in custom path
+15:40:05 <agaffney> bcoca: so, I'd just need to add a FieldAttribute() to role/block, set to inherit, and consult the block field in task_executor.py?
+15:40:24 <bcoca> alikins: it requries a python programmer to edit/copy the copy module and change the spec in the python codde
+15:40:41 <bcoca> agaffney: pretty much, inheritance should be automatic
+15:40:47 <alikins> i'm using 'subclass' metaphorically here. I don't mean actually adding a new module
+15:41:04 <bcoca> alikins: not sure i understand your approach then
+15:41:24 <agaffney> alikins: what you're really asking for is a "wrapper" module
+15:41:35 <agaffney> different name, different default params, calls the underlying module
+15:41:45 <alikins> yup
+15:42:03 <agaffney> a defined resource in Puppet accomplishes this, but Ansible doesn't have a similar concept
+15:42:11 <agaffney> include_role is the closest we have now
+15:44:07 <bcoca> also, hard to implement when modules can be in any language, resources are constrained to a specific dsl
+15:44:34 <alikins> language shouldn't matter
+15:44:37 <bcoca> this approach is 'module language agnostic' as it just takes over the parameter sending, which i think is lots simpler
+15:45:10 <alikins> just needs to know 'my_copy' means 'use this set of default args' passed to 'copy'
+15:45:13 <bcoca> alikins: i might not be understanding what you mean by 'subclassing' then
+15:45:26 <bcoca> alikins: that is basically what this PR does
+15:45:34 <alikins> almost
+15:46:22 <bcoca> you lost me, in any case i think we are off on a tangent
+15:48:19 <agaffney> looking at the code, as far as I can tell, I'd need to add the 'module_defaults' FieldAttribute to role, block, and task, and then read the attribute from task in task_executor.py
+15:48:42 <bcoca> should not need in task, task._block.module_defaults should be accessible
+15:48:55 <agaffney> ah, so that's how you get to block...okay
+15:49:05 <agaffney> does every task have an implicit block?
+15:49:12 <bcoca> yes
+15:49:25 <jtanner> is this the only agenda item?
+15:49:35 <alikins> the pr changes the default behavior of 'copy', so now 'copy' task with a given set of args will actually mean different things. the thing named 'copy' is multiple things. I'd rather just have a new name so both names mean a specific thing.  (there is utility to being able to 'monkeypatch' 'copy' everywhere, but it could also be confusing)
+15:49:42 <agaffney> okay, so I'll rework the PR to drop the var and add the attribute at the role/block level instead
+15:49:44 <bcoca> i was going to add fact namespacing, but it got merged
+15:50:24 <bcoca> alikins: so module_defaults: copy_def: copy
+15:50:31 <bcoca> mode: rwx
+15:50:32 <bcoca> ?
+15:50:38 <bcoca> then use copy_def in play?
+15:50:51 <alikins> yeah, pretty much
+15:51:09 <agaffney> that seems clunky, due to the (now) limited scope of module_defaults
+15:51:09 <bcoca> ok, so instead of module_defaults its 'module_aliases_with_overrides
+15:51:45 <agaffney> it would *probably* make sense as an action plugin. a base "alias" action plugin could be created that can be subclassed in just a few lines of code
+15:51:59 <agaffney> can an action plugin call another action plugin?
+15:52:12 <bcoca> not really
+15:52:25 <bcoca> it probalby could ... but ...that can get complicated
+15:52:33 <gundalow> jtanner: This is the only new item on the agenda, I don't believe their are updates for anything else.
+15:52:37 <agaffney> I'd really like to NOT conflate this feature with mine
+15:52:48 <agaffney> at least, not until my stuff gets merged ;)
+15:53:02 <alikins> I could do it pretty easily with a combo of this pr and my module_namespace branch via it's alias namespace
+15:54:06 <alikins> agaffney: agreed
+15:54:06 <bcoca> at that point its just much easier to cp copy.py and update the spec
+15:54:45 <agaffney> easier from an implementation point of view, but not necessarily from a user point of view
+15:55:17 <bcoca> agaffney: not yours, the module namespaces
+15:55:19 <abadger1999> In terms of providing new defaults to a module... agaffney's approach seems better than aliasing for things like "set my amazon credentials for all ec2 modules"
+15:55:24 <agaffney> bcoca: I know
+15:55:50 <bcoca> abadger1999: agreed, this would make my auth_plugins proposal obsolete
+15:56:03 <agaffney> abadger1999: I'd never considered that use case, but yeah, it would work great for things like that
+15:56:16 <abadger1999> I agree for things like copy, aliasing may be better.
+15:56:39 <bcoca> he .. yaml aliases would still work
+15:57:59 <agaffney> unless there's any more to say about my PR, I'm going to disappear to go shower
+15:59:17 <abadger1999> no more from me (i've added comments to hte PR)
+15:59:39 <gundalow> #topic Open Floor
+15:59:40 <gundalow> ..............................
+15:59:41 <gundalow> ..............................
+15:59:47 <gundalow> Anyone got anything else?
+15:59:51 <gundalow> oh
+16:00:02 <gundalow> #inf RC1 is out, please go test it
+16:00:05 <gundalow> #info RC1 is out, please go test it
+16:00:24 <bcoca> https://github.com/ansible/ansible/pull/22520
+16:00:56 <gundalow> #topic added new 'order' directive to sort hosts in play #22520
+16:01:07 <gundalow> #info https://github.com/ansible/ansible/pull/22520
+16:01:51 <gundalow> Does that need documenting somewhere
+16:01:53 <gundalow> ?
+16:02:43 <bcoca> probably, but was not going to start those until the feature is at least nailed down
+16:03:25 <gundalow> ack
+16:03:28 <bcoca> https://github.com/ansible/ansible/pull/22580 <= same with this, which is my next
+16:03:39 <bcoca> https://github.com/ansible/ansible/pull/22477 <= and this
+16:04:29 <bcoca> https://github.com/ansible/ansible/pull/18445 <= did add docs here ... which made a premature merge
+16:05:00 <bcoca> but back on topic, any thoughts on 'order' keyword?
+16:05:41 <jtanner> shipit
+16:06:42 <bcoca> no one else? k, i'll merge in 5
+16:07:06 <bcoca> https://github.com/ansible/ansible/pull/18445  <= would be next, but got merged, still, big enough change i'm willing to revert if people thinkits bad
+16:08:19 <abadger1999> bcoca: on order... just make sure there's good docstrings for get_hosts_left()... our strategy plugin interface is sorely in need of good docs
+16:08:37 <jtanner> "his allows restricting facts in their own namespace (under ansible_facts) instead of pushing them into the main" is not descriptive enough imo
+16:08:46 <jtanner> non descript jargon
+16:09:11 <bcoca> jtanner: not sure how to phrase it otherwise
+16:09:30 <bcoca> abadger1999: will add that, probalby also to get_hosts and 'user docs'
+16:09:47 <jtanner> i guess start with what it solves?
+16:10:09 <bcoca> well, if we did facts this way, the last 4 CVEs .....
+16:10:32 <jtanner> joe user doesn't know why namespacing is desirable
+16:10:42 <bcoca> also we would avoid the 'ansible_user' problem when someone names their network interface 'user'
+16:11:20 <bcoca> "avoids varaible conflicts and can increase security"
+16:12:16 <bcoca> https://github.com/ansible/ansible/issues/16935 <= good example
+16:12:49 <bcoca> looking for ti to be 'transitional' and that its 'on by default' by 2.7/2.8
+16:15:43 <abadger1999> bcoca: we should have that plan of action recorded somewhere as well.
+16:16:04 <abadger1999> Maybe a warning is emitted when it is not enabled.
+16:16:05 <bcoca> agreed, not sure where though
+16:16:25 <bcoca> at one point, yes, that was my thought, not sure if that shoudl be 2.4 or 2.5+
+16:16:45 <abadger1999> changelog... Put it on the roadmap?  (I put python-2.6 new minimum version onthe roadmap so we would alert users)
+16:17:02 <bcoca> k, will do, agian had not expected it to be merged yet
+16:17:12 <abadger1999> yeah.  I like it though.
+16:19:12 <bcoca> "
+16:19:13 <bcoca> Added fact namespacing, from now on facts will be available under ansible_facts. namespace, they will still also be added into the main namespace directly but there is no a configuration toggle to disable this. Eventually this will be on by default. This is done to avoid collisions and possibl
+16:19:15 <bcoca> e security issues as facts come from the remote targets and they might be compromised.
+16:19:16 <bcoca> ^ changelog entry?
+16:19:30 <bcoca> i can push, we can bikeshed on that
+16:20:19 <abadger1999> s/is no a/is now a/
+16:20:26 <bcoca> he, did that
+16:20:31 <abadger1999> +1
+16:21:44 <bcoca> k, updating changelog, will also update roadmap doc, easy issue since its 'done'
+16:22:11 <bcoca> https://github.com/ansible/ansible/pull/22580 <= ansible_group_prrioirty next?
+16:30:39 <abadger1999> bcoca: set_priority() already does the int() call and try: except: pass.  Probably should not do that in both places.
+16:32:29 <bcoca> will fix
+16:32:44 <abadger1999> bcoca: was this partially implemented but didn't do anything before?
+16:32:49 <bcoca> yep
+16:33:03 <abadger1999> Okay, I understand the changes now :-)
+16:33:09 <abadger1999> Looks good to me +1
+16:33:46 <bcoca> https://github.com/ansible/ansible/pull/22477 <= my last one
+16:39:11 <jtanner> i thought that had already been merged
+16:41:45 <bcoca> jtanner: no one +1s
+16:42:27 <bcoca> ah, nvmd, i didnt see the retroactive shipit
+16:42:47 <bcoca> k, merging in 5 unless objections
+16:43:14 <abadger1999> No problems with it per se... As a general strategy... do we want to have a "complete set of tools" inside of ansible/ansible?  Or do we want to concentrate on core features and let extras be driven by external projects?
+16:43:43 <abadger1999> I consider this useful but extra is why I ask...
+16:44:28 <abadger1999> and it seems like willthames already has something that has a large overlap.
+16:45:11 <bcoca> kind of, this was based on both existing tools, the big difference is allowing dumping 'as inventory source' which i think we need to allow for inventory plugin migration
+16:45:48 <bcoca> any current external tool will be able to use inventory plugins as 'inventory scripts' by invoking this tool instead
+16:47:00 <abadger1999> Should we enhance one of the existing tools instead of writing our own thing?
+16:47:33 <gundalow> DING DING 10 minute warning (Testing Working Group starts on the hour)
+16:47:43 <bcoca> well, thsi leverages a lot more of ansible internals, also i did not want a hard dep on graphviz
+16:48:10 <bcoca> but i'm open to looking at better alternatives
+16:48:32 <bcoca> initially i wanted this mostly for 'inventory script management' .. creating symlinks to scripts and creating conf files
+16:49:19 <abadger1999> So.. these are really high level project questions... I don't have answers to them but that's why I'm throwing them out htere.
+16:49:54 <bcoca> i dont think i can answer them either, which is why i brought up here to discuss
+16:50:06 <abadger1999> I'm thinking we probably need input from more people (maybe jimi, greg and robyn?) to make a decision?
+16:50:14 <bcoca> agreed
+16:50:32 <abadger1999> Cool.  Table and invite them to comment?
+16:50:42 <bcoca> yep
+16:51:14 <abadger1999> #info inviting greg, robyn, and committers to comment on the high level questions.  Will discuss after more feedback.
+16:52:24 <abadger1999> :-)
+16:55:02 <gundalow> closing in a minute, unless their is anything else
+16:55:04 <gundalow> ...
+16:57:13 <gundalow> Thanks everyone
+16:57:15 <gundalow> #endmeeting

@@ -1,0 +1,391 @@
+19:08:05 <ryansb> #startmeeting Core Team Meeting
+19:08:05 <zodbot> Meeting started Tue Jan 10 19:08:05 2017 UTC.  The chair is ryansb. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:08:05 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:08:05 <zodbot> The meeting name has been set to 'core_team_meeting'
+19:08:19 <ryansb> #chair abadger1999 alikins mattclay gundalow jimi|ansible bcoca
+19:08:19 <zodbot> Current chairs: abadger1999 alikins bcoca gundalow jimi|ansible mattclay ryansb
+19:08:31 <abadger1999> Óla
+19:08:45 <ryansb> #agenda https://github.com/ansible/community/issues/148
+19:08:56 <ryansb> ok, maybe that's not a #.
+19:08:59 <ryansb> #link https://github.com/ansible/community/issues/148 agenda
+19:09:27 <ryansb> is podlesh here?
+19:09:36 <podlesh> yes
+19:09:40 <allanice001> ryansb, !link I think
+19:09:42 <ryansb> #topic Feature: Serialized group-by https://github.com/ansible/ansible/pull/19707
+19:09:53 <gundalow> #help
+19:10:04 <ryansb> it's # for bot commands
+19:10:07 <ryansb> at least on this bot
+19:10:16 <allanice001> ack
+19:10:34 <bcoca> i thnk that is composing too much, a group_by for host list is fine, combine with serial then if you want
+19:10:42 <bcoca> serial_group_by seems ultraspecial
+19:10:51 <podlesh> it's not the same
+19:10:54 <bcoca> i had plans for a sort: for hosts
+19:11:05 * gundalow is only half here, so may not get an instant response from me
+19:11:16 <bcoca> a grouping function seems fine, but we can probably do that via filter/lookups also
+19:12:00 <podlesh> problem is, that I want to have N servers in each batch
+19:12:09 <podlesh> I can do   serial: N
+19:12:26 <podlesh> but it just takes first N servers
+19:13:17 <podlesh> so yes, sorting host list + serial would achieve the same, under some special circumstances
+19:13:46 <bcoca> well, its what my first look at the code shows you doing, you resort the servers by the groups and then apply serial if set
+19:13:54 <podlesh> yes
+19:14:11 <podlesh> without this, I need to execute several plays
+19:14:32 <podlesh> which takes quite a long time
+19:14:39 <bcoca> 2 at least, but thinking of a sort: directive that allows you to do this (and more)
+19:15:00 <bcoca> time taken would be same as you just change the logic from playbook to hardcoded ....
+19:15:10 <podlesh> hmmm, but that would require that each cluster has exactly the same number of nodes
+19:15:29 <podlesh> (sort + serial)
+19:15:46 <ryansb> So you want to do serial, but stop on groups?
+19:15:47 <bcoca> mostly, leaving 'last batches unpaired'
+19:16:15 <bcoca> ryansb: wants to intersperes different groups in the order so each batch does 1 host from each group
+19:16:24 <podlesh> yes, that
+19:16:38 <podlesh> basically serial for each group, but all groups in parallel
+19:16:39 <bcoca> g1, g2, g3, serial3: batch one is h1_g1, h1_g2, h1_g3
+19:17:09 <bcoca> which you can do right now but you need a 'pre play' that does fancy group_by
+19:17:48 <bcoca> podlesh: not against the functionality, but i would prefere a more generic 'sort' function and no need to tie to serial directly
+19:18:15 <bcoca> currently we have sort: inventory
+19:18:41 <podlesh> yes, but there is one issue I think: what if each group have different number of members?
+19:19:02 <bcoca> podlesh: also, what if a host is in multiple groups?
+19:19:24 <podlesh> so batch one is h1_g1, h1_g2, h1_g3   and batch two is h2_g1 and h1_g3
+19:19:46 <bcoca> having diff number of members can easily be accounted for by just exauhsting them as the groups have them
+19:19:53 <bcoca> yep
+19:21:10 * MichaelBaydoun is late and lurking
+19:21:31 <podlesh> host in multiple groups is not a problem - in my implementation, there is only single key computed for each host
+19:21:47 <podlesh> it might be group, or list of groups, does not matter
+19:22:54 <bcoca> it does as a host can only be run once
+19:23:57 <bcoca> i dont see how you prevent appending the host multiple times
+19:24:02 <podlesh> yes, it will
+19:24:41 <podlesh> do you mean if there is single host multiple times in the original host list?
+19:24:50 <bcoca> yes
+19:25:06 <bcoca> i dont see where you unique them, it will runt he host mulitple times
+19:25:47 <podlesh> in that case yes, it will be added multiple times
+19:25:50 <bcoca> since you construct the list every time and avoid the all hsots
+19:26:53 <podlesh> is it possible to have one host in multiple instances with different instances of Host with different data?
+19:27:01 <bcoca> also you are evaluating the condition per host, but what if it includes hostvars? at this point you only have extra/play and host + groups
+19:27:27 <bcoca> podlesh: yes, and they are always uniqued when the play references them, that is how a host can be in multiple groups and even inventories
+19:27:44 <bcoca> conflicts get resolved by overwrrite (default, there is also merge option)
+19:28:02 <podlesh> I was under impression this is done before _get_serialized_batches
+19:28:18 <bcoca> yes and i believe your patch removes that
+19:29:24 * abadger1999 rings the 30minute bell.
+19:29:35 <podlesh> ok, that would be serious error, indeed
+19:29:40 <bcoca> and the jinja expresion is limited and confusing, i would prefer to move that to future inventory plugin (constructed groups)
+19:29:57 <bcoca> so i like the functionality, but im -1 for the current implementation
+19:30:28 <bcoca> i think this belongs broken into smaller features: a) constructed groups by jinja expression, b) user controllable host sorting
+19:31:16 <bcoca> they both can be currently worked around by creative use of play + group_by and filters
+19:33:24 <abadger1999> Is there an immediate action here to enable podlesh to move forward?
+19:33:26 <podlesh> that kind of workarounds are usually quite complicated and limited because it would require loop over play
+19:34:58 <podlesh> breaking into smaller features is ok, although I am not still exactly sure what would that sorting look like
+19:35:30 <bcoca> sort: invenotry|alpha|reverse|numeric|numeric_desc|expression
+19:35:34 <abadger1999> bcoca: could you point podlesh at which files he should look at?
+19:36:12 <bcoca> teh constrcuted groups, its an 'inventory plugin' i've been thinking of for a long time (group_by rules in inventory instead of play)
+19:36:18 <bcoca> abadger1999: if they existed ....
+19:36:45 <podlesh> yes, I can imagine sorting of host list, but still can't see how to combine that with serial
+19:36:54 <bcoca> my issue with sort: expressoin (which this functionality is trying to do) is the limited availability of vars/attributes at this point
+19:37:04 <bcoca> serial: 3
+19:37:27 <podlesh> so, basically, matrix transposition
+19:37:29 <bcoca> same way as above, you dont need to, as long as you sorted by group, set serial to group size
+19:37:50 <podlesh> not groups size, but number of groups
+19:38:01 <bcoca> yeah
+19:38:04 <podlesh> problem is, all groups would have to have the same size
+19:38:19 <podlesh> and smaller groups would have to be somehow "padded"
+19:38:45 <bcoca> not really
+19:38:55 <bcoca> serial is adjustable
+19:39:48 <abadger1999> k, we're at 40 minutes.  We should probably move on to another topic.
+19:40:11 <podlesh> ok
+19:40:13 <ryansb> Fair, further discussion can go on the issue
+19:40:24 <bcoca> yeah, this is not a simple topic to discuss, also i would like to mull more options
+19:40:28 <abadger1999> podlesh: can you ask bcoca questions about linking to serial outside the meeting?  And if you don't get enough info we can discuss more next meeting.
+19:40:47 <ryansb> Next up: jbaublitz is not around, but he talked to me about this beforehand
+19:40:49 <podlesh> maybe as comments to that pull requests?
+19:41:06 <ryansb> Yeah, I meant pull request when I said issue. Oops
+19:41:15 <ryansb> #link https://github.com/ansible/ansible/pull/19707
+19:41:30 <ryansb> Next up is https://github.com/ansible/community/issues/148#issuecomment-271029293
+19:41:42 <bcoca> https://github.com/ansible/ansible/issues/19707
+19:42:02 <ryansb> #topic Google Cloud modules google-api-python-client discussion
+19:42:55 <bcoca> taht is common issues with cloud apis, i believe aws modules sovle this by doing a retry/backoff
+19:43:13 <ryansb> Currently the GCE modules currently use libcloud, which provides for GCE and a bunch of other providers
+19:43:39 <ryansb> newer Google services & features get into the GCP python client way before they go into libcloud
+19:43:41 <bcoca> gce is mostly maintained by google staff itself, not sure i would push them to change underlying lib, they chose libcloud
+19:44:53 <ryansb> Who is "them" in this case?
+19:45:13 <bcoca> tomseomtnng and ericotherthing
+19:45:24 * bcoca has issues with names
+19:45:48 <ryansb> When they chose libcloud the google-api-python-client didn't actually exist
+19:45:51 <bcoca> they basically created most of the modules and maintain them
+19:46:24 <abadger1999> supertom and ericjohnso
+19:46:25 <ryansb> So what I want to discuss here is: 1. Is there any opposition to having modules that use google-api-python-client?
+19:46:31 <bcoca> i dont know enough of the ecosystem or penetration of the libs to decide, i think we should have the maintainers weigh in before we respond
+19:46:51 <ryansb> Fair enough, I'll get Tom&Eric's feedback before next meeting
+19:47:13 <bcoca> yeah, i dont think we should make any decisions w/o pulling them in
+19:47:47 <ryansb> Fair enough. Let's table this until they can comment
+19:48:18 <ryansb> Zhenech and docs-in-the-sdist
+19:48:33 <Zhenech> yeah *wakes up*
+19:48:38 <ryansb> #topic Including docs in Ansible's sdist
+19:48:40 <ryansb> #link https://github.com/ansible/ansible/pull/20004
+19:49:13 <Zhenech> docs and tests, actually, but this can be split if needed/wanted
+19:49:21 <abadger1999> jimi|ansible: ^
+19:49:49 <bcoca> just thought that now github tarballs ARE usable .... we might not need to change anything and just point those that want 'moar' to github
+19:49:56 <abadger1999> I'm moderately for including them.  (I've requested tests before).  Maybe jimi|ansible can say why he's been against it in the past.
+19:50:12 <jimi|ansible> why would we want to? we have ansible-doc and tests generally require a large infrastructure to run now
+19:50:13 <bcoca> abadger1999: i believe requiremetns for tests would have to be added
+19:50:19 <jimi|ansible> i am not in favor of doing that at all
+19:50:28 <abadger1999> bcoca: if the goal is to get these into the hands of the packagers then github tarballs won't achieve that.
+19:50:31 <Zhenech> docs was a request from a debian user, who said that "ansible-doc <foo>" is not sufficient while offline as it only outputs module doc
+19:50:37 <bcoca> abadger1999: how so?
+19:51:04 <jimi|ansible> ahh i see, well i could see expanding ansible-doc to include the full docs, but still no to tests
+19:51:12 <bcoca> Zhenech: i've had longstanding plan for that to cover all plugins .. but not a tutorial on how to use ansible
+19:51:34 <abadger1999> bcoca: because packagers want to work off the released tarballs.  they're more official and oftentimes tags on github are bad (projects move tags and thetagged source doesn't include things that are built as part of a release tarball)
+19:51:45 <abadger1999> jimi|ansible: tests are very useful for packagers.
+19:51:54 <Zhenech> bcoca, as a packager I prefer the tarball that was blessed by the developers as "this is our release"
+19:52:02 <Zhenech> and that is that what "make sdist" generates
+19:52:04 <bcoca> abadger1999: then we can just make sure that release tarballs/tags match, that is under our control and will be minor change
+19:52:07 <abadger1999> jimi|ansible: I've been putting tests into the Fedora and epel packages since we shipped 2.0
+19:52:28 <mattclay> abadger1999: Which tests?
+19:52:32 <abadger1999> bcoca: but distros tell people not to use github tags when tarballs are present.  Because that's the generally better rule.
+19:52:35 <bcoca> abadger1999: give 2 optoins, the lean tarball (existing one in releases.ansible.com, fat one from github)
+19:52:48 <abadger1999> mattclay: I ship the entire tests directory but only run the unittests.
+19:52:55 <jimi|ansible> bcoca: that's not easy to do with sdist
+19:53:09 <abadger1999> mattclay: With ansible-test I probably could start doing a subset of the integration tests too.
+19:53:12 <bcoca> jimi|ansible: not saying we should do via sdist
+19:53:18 <mattclay> abadger1999: I assume you're only running a subset of the unit tests, due to the lengthy requirements list for them?
+19:53:24 <alikins> +1 for including that stuff in sdist and/or release tarball
+19:53:29 <bcoca> im saying packagers CAN do it as long as we make sure releases on github match
+19:54:16 <abadger1999> fat one isn't very much fatter.
+19:54:26 <bcoca> but has diff requirements
+19:54:36 <bcoca> taht is bigger issue by far, imo
+19:54:53 <bcoca> +5mb i dont think is a big deal unless you are using sat phone
+19:54:59 <abadger1999> Zhenech's measurment was a total of 1MD more for including both tests and docs.
+19:55:01 <allanice001> bcoca, alikins, mattclay why not build a "blessed package" or "blessed rpm" from shippable ?
+19:55:02 <bcoca> having +10 new requirements is
+19:55:03 <Zhenech> optional requirements, no?
+19:55:21 <Zhenech> nobody has to build the docs and run the tests
+19:55:22 <abadger1999> bcoca: there are no more new requirements.
+19:55:30 <Zhenech> (and the docs are actually readable in rst form too)
+19:55:31 <mattclay> So there's really 3 things here: including docs, including tests, running tests as part of packaging
+19:55:33 <abadger1999> requirements are runtime requirements, not test-time requirements.
+19:55:34 <bcoca> allanice001: we dont build rpm, we build ppa + tarball (and push to pypy)
+19:55:50 <abadger1999> so our deps do *not *increase.
+19:55:54 <mattclay> Well, 4 if we count building docs
+19:55:55 <allanice001> gotcha
+19:56:34 <bcoca> abadger1999: depends on system, most packagers will require tests to run before package is accepted, now you ship makefile with tests .... now they need to deal with new reqs
+19:56:59 <ryansb> mattclay: 4MB?
+19:57:15 <bcoca> ^ but again, i think its mute point, now with unified repo, github tarballs CAN be used normally
+19:57:16 <abadger1999> bcoca: People who want to run tests will add the deps *to the package build time* if they want.
+19:57:28 <abadger1999> There's still no increase in runtime deps.
+19:57:37 <Zhenech> in debian we even have test-deps
+19:57:39 <bcoca> packaging deps
+19:57:40 <abadger1999> And packagers are free not to run the tests as well.
+19:57:43 <Zhenech> so test can run at whatever other time we want
+19:57:58 <Zhenech> (and other infra, and everything)
+19:58:12 <bcoca> -1 to change existing tarball, +1 to point them at github one
+19:58:14 <mattclay> ryansb: No, I just meant there's 4 topics here that can be decided separately.
+19:58:23 <abadger1999> bcoca: Only if you mean build-time/test-time packaging deps... those do *not* leak over into an rpm -i ansible, apt-get ansible, or pip install ansible.
+19:58:43 <abadger1999> +1 to changing existing tarball
+19:58:51 <bcoca> abadger1999: never said that, but those need to be maintained and specified or most packager workflows break
+19:59:52 <abadger1999> bcoca: not at all.  We manage to run the tests on our local systems without it and the fedora package manages to build without it.
+20:00:00 <ryansb> ah, gotcha
+20:00:03 <Zhenech> the tarball as generated by my pr will not break anything in the debian packaging (I did not try the rpms)
+20:00:24 <Zhenech> as far as the debian build infra is concerned it only sees more files
+20:00:41 <bcoca> https://github.com/ansible/ansible/archive/v2.1.4.0-0.1.rc1.tar.gz
+20:00:44 <mattclay> If we're including the tests, we should be clear that we're not running most of them when packaging.
+20:00:53 <Zhenech> the makefile is there already now, and its not used
+20:00:55 <bcoca> ^ i really dont see need dto change existing when auto function already does this
+20:01:04 <abadger1999> Zhenech: it won't break the rpms either.
+20:01:18 <Zhenech> abadger1999, thought so
+20:01:19 <bcoca> https://github.com/ansible/ansible/archive/v2.2.1.0-0.3.rc3.tar.gz
+20:01:23 <bcoca> ^ latest rc
+20:01:32 <abadger1999> bcoca: packagers won't use it.
+20:01:43 <bcoca> then that is on them
+20:01:49 <abadger1999> If there's an official tarball, packagers will use the tarball in preference to the github downloads.
+20:02:00 <abadger1999> github downloads are just too broken in general for projects.
+20:02:14 <bcoca> i'll even go so far to say ... we should stop pushing tarballs now that we have unified repo
+20:02:37 <Zhenech> you have to push them to pypi anyways?
+20:02:52 <bcoca> we can push the github one
+20:02:57 <bcoca> same with ppa
+20:03:04 <bcoca> well, we build deb, that is diff
+20:03:08 <alikins> I tend to agree to making the github tarballs the official ones and the ones used by packagers if thats workable.   (assuming some details like providing checksums and/or sigs for github release tarball)
+20:03:15 <Zhenech> that would make the github one the official one
+20:03:17 <Zhenech> thats also fine
+20:03:24 <abadger1999> bcoca: You'd have to make a mnual script if you want to push non-sdist created tarballs to pypi.
+20:03:46 <abadger1999> bcoca: but yeah, what Zhenech said is true about doing that and this issue.
+20:04:07 <abadger1999> alikins: I don't think we can provide checksums and sigs.
+20:04:07 <bcoca> not familiar with sdist so cannot speak to that
+20:04:19 <abadger1999> alikins: Because git doesn't preserve file timestamps right?
+20:04:26 <bcoca> we can, just need to add it to the github realease
+20:05:08 <bcoca> github even allows us to host our own tarballs insted of autogenerated
+20:05:19 <bcoca> ^ they didnt before, that is why we have releases
+20:05:22 <bcoca> .ansible.com
+20:05:26 <abadger1999> bcoca: do they?  They stopped doing that a few years ago... didn't know they restored it.
+20:05:30 <bcoca> https://github.com/ansible/ansible/releases/new
+20:05:38 <bcoca> they do, i tested a while back
+20:05:48 <bcoca> see 'attaching binaries'
+20:05:54 <jimi|ansible> we don't push tars to github, they generate them on their own, and it's basically just the full repo
+20:06:04 <bcoca> we dont, we could
+20:06:15 <jimi|ansible> what does that buy us over pushing them to pypi?
+20:06:23 <abadger1999> Neat.  I'll have to tr that out on some repos of my own.
+20:06:25 <jimi|ansible> we still have to do that, now we'd just have two places to push them?
+20:06:32 <bcoca> people stop using autogenerated ones?
+20:06:50 <bcoca> we already push to 2 places (releases site)
+20:07:21 <bcoca> but im also fine with NOt pushing to github, just suggesting as alternative
+20:07:26 <jimi|ansible> ok so three then :)
+20:07:49 <bcoca> it was replacment suggestion, not addition, but both/either work for me
+20:09:00 <alikins> using the github releases as official seems reasonable to me. And encourage packages to use that. If we need to gen a sdist from that for pypi convenience, that seems okay too.
+20:09:03 <bcoca> https://github.com/ansible/ansible/releases/tag/v2.2.1.0-0.3.rc3 < =release happens automatically, the issue here is us taking control over it or just keep correcting people when they download this by mistake (but now they DO have modules)
+20:09:37 <alikins> assuming github releases dont cause more pain for packages (re "Tue 15:02| <abadger1999> github downloads are just too broken in general for projects.")
+20:09:44 <alikins> packagers
+20:09:46 <bcoca> ^ i just made that 'pre release'
+20:10:00 <abadger1999> packagers will just ignore github tarball downloads if an alternative exists.
+20:10:12 <abadger1999> Since we want pip to work, pypi will always be that alternative.
+20:10:46 <bcoca> so this was not about the tarball but about pypi specifically?
+20:10:48 <abadger1999> So github tarballs will neither help nor hinder packagers... they'll simply ignore them.
+20:11:06 <bcoca> pypi is not the best dealing with 'non python files'
+20:11:31 <bcoca> dont they also automatically execute tests if present?
+20:11:31 <abadger1999> bcoca: we should not be pushing a different tarball to pypi and to releases.ansible.com... that makes people very nervous when sigs and checksums don't match.
+20:11:48 <abadger1999> bcoca: pypi?  no.  distros?  no.
+20:12:00 <bcoca> distros do, at least debian 'used to'
+20:12:06 <abadger1999> bcoca: not "automatically"
+20:12:07 <bcoca> i know gentoo also did
+20:12:17 <abadger1999> "By policy" maybe but not automatically.
+20:12:21 <Zhenech> bcoca, debian would if "python setup.py test" would work
+20:12:27 <bcoca> it was part of teh process, upload deb-src and push through automated build and testing
+20:12:36 <Zhenech> but your tests need "make tests" anyways
+20:13:12 <bcoca> that would be if anislbe was a 'python library' iirc (been a long time) but not jsut for any application
+20:13:27 <bcoca> ansible is an application, not a library
+20:14:15 <Zhenech> it uses setuptools, thats all debian cares about :)
+20:14:19 <abadger1999> bcoca: for packaging purposes, it's both.
+20:14:20 <Zhenech> (debian tooling)
+20:14:43 <abadger1999> ships a module in site-packages therefore it's a library.  ships stuff in /usr/bin/ therefor it's an application
+20:14:52 <bcoca> no, it is an app that has libraries
+20:15:00 <bcoca> ^most apps do
+20:15:02 <abadger1999> bcoca: not for packaging purpoes.
+20:15:08 <abadger1999> there's no differentiator there.
+20:15:15 <abadger1999> Only humans know the difference
+20:15:38 <bcoca> well, humans etup the machines that do the testing, so depends on teh classification and detection that happens in those proceses
+20:16:15 <bcoca> you have a specific one in mind, im' thinking about 3 ones i was fammiliar with debian/gentoo/freebsd .. they will run make tests on apps by default if makefile is present
+20:16:26 <bcoca> or tests are present in any way they can recognize
+20:17:20 <Zhenech> debian will detect which build system to use (setuptools) and then knows that for tests it has to call python setup.py test, that is a noop
+20:17:27 <Zhenech> so debian tooling will cary on
+20:17:35 <Zhenech> unless told otherwise in the packaging by the packager
+20:17:45 <bcoca> IF your package installs ansible LIKE a python lib, via pip/setuptools, yes most will treat is as python libs, not all packagers do this, some will use tarball and makefile (i know i've created packages for all3 and have done it both ways)
+20:18:48 <Zhenech> yeah
+20:18:50 <bcoca> so a lot of this depends on what many 3rd parties are doing (i dont doubt most will use pip/ptyhon tools instead of make, but i also know others wont)
+20:19:04 <Zhenech> but the currently shipped makefile has a tests target, and it will fail as the tests are not there
+20:19:30 <bcoca> do we ship the makefile in tarball?
+20:19:34 <Zhenech> yes
+20:19:45 <abadger1999> So anyhow.. Vote count so far is alikins, abadger1999 +1, bcoca, -1,   jimi-c +1 to docs, has yet to be official on tests although he was leaning against it.
+20:20:10 <bcoca> im not -1, just saying there are more options that require less effort
+20:20:13 <jimi|ansible> still -1 on tests in general
+20:20:30 <abadger1999> bcoca: There are more options... but they all require more effort
+20:20:43 <abadger1999> bcoca: this one is simply make a few changes in the MANIFEST.in and we're done.
+20:20:43 <bcoca> 0 effort on our side to point people at github tarballs
+20:20:58 <abadger1999> bcoca: 0 effort for something that won't get used.
+20:21:01 <bcoca> IF they want docs + tests
+20:21:04 <jimi|ansible> well, really i'm against different tarballs, if it's all in one and done with sdist i'm indifferent
+20:21:08 <bcoca> that is on them
+20:21:34 <Zhenech> jimi|ansible, right, different "official" tarballs is bad
+20:21:37 <abadger1999> and then if we start shipping build resources in the tarball the github tarballs will be a bad thing to show people.
+20:21:49 <jimi|ansible> different tarballs anywhere, i'd want the same on pypi, github, and releases
+20:22:00 <abadger1999> (most likely there would be shipping built docs instead of requiring people to regenerate them themselves)
+20:22:13 <bcoca> so the github are already different and automated, only way we can make them same is overriding by publishing our own to github
+20:22:24 <bcoca> ^ existing problem
+20:22:28 <jimi|ansible> github is a different matter, we don't control that
+20:22:37 <abadger1999> jimi|ansible: I'm also -1 to different tarballs.  I'd do everything with sdist.
+20:22:39 <bcoca> we do, but only by pushing our own 'on top'
+20:23:15 <abadger1999> jimi|ansible: which Zhenech's PR does: https://github.com/ansible/ansible/pull/20004/files
+20:24:13 <bcoca> https://github.com/ansible/ansible/releases/tag/v2.2.1.0-0.3.rc3 <= github release with OUR tarball and sha (sadly we cannot remove the 'source ones')
+20:24:38 <bcoca> ^ i'll remove, just wanted to show that we CAN use this if we want to
+20:28:43 <abadger1999> We're almost to 1.5 hours... what do we want to do here?
+20:29:07 <abadger1999> Lots of committers haven't voted.
+20:29:20 <Zhenech> hit merge *cough*
+20:29:22 <abadger1999> Looks like +3 -1 for docs, +2.5 -1 for tests
+20:29:47 * allanice001 adds +1 docs, -1 tests fwiw
+20:29:48 <bcoca> if we already afiling tests, i really have little to oppose, most packagers are ignoring make tests right now it seems
+20:29:56 <alikins> any distro package maintainers here?  (abadger1999?)
+20:30:04 <abadger1999> yep.
+20:30:08 <abadger1999> I'm fedora and epel.
+20:30:09 * Zhenech partially for debian
+20:30:21 <Zhenech> hlieberman is the main guy, he's not here
+20:30:22 * ryansb RHEL
+20:30:42 <abadger1999> I want tests -- I already have to use a script to download and include those as a separate tarball.
+20:31:27 <abadger1999> nirik: main guy for fedora epel.  Do you have an opinion about including tests in the tarball?
+20:31:57 <bcoca> https://github.com/ansible/ansible/releases
+20:32:38 <alikins> any official tooling building straight from git?
+20:32:55 <bcoca> ^ im actually liking this, but i will leave it up to release manager, my only objections are now mute
+20:33:49 <Zhenech> gentoo actually uses the github generated tarballs
+20:33:50 <Zhenech> odd
+20:33:52 <bcoca> gentoo package builds from pypi (looking at it now)
+20:33:56 <Zhenech> https://gitweb.gentoo.org/repo/gentoo.git/tree/app-admin/ansible/ansible-2.2.1.0_rc1.ebuild
+20:34:02 <bcoca> SRC_URI="https://pypi.python.org/packages/${BLAKE2B_HASH}/${P}.tar.gz"
+20:34:17 <Zhenech> ah, but the rc is from github
+20:34:28 <Zhenech> you don't push rcs to pypi?
+20:34:33 <bcoca> we dont push rc to pypi
+20:34:37 <Zhenech> ok, fair enough
+20:34:39 <bcoca> we didnt know we could
+20:34:50 <bcoca> weve had many issues with pypi numbering ....
+20:35:01 <Zhenech> and there is also the version 9999 one with straight from git: https://gitweb.gentoo.org/repo/gentoo.git/tree/app-admin/ansible/ansible-9999.ebuild
+20:35:10 <mattclay> I can go either way on including tests. If we do include them, I think we should be clear that we're running a subset of tests. We should also make sure that 'make tests' actually passes without having to install a lot of extra dependencies just for tests.
+20:35:16 <bcoca> ^ i posted that form 2.2.0.0 stable
+20:36:28 <abadger1999> mattclay: <nod>  That would work for me.  Although with my packager hat on, I often have to do the work of subsetting and determining which dependencies I care about and which I don't.
+20:36:49 <bcoca> mattclay: look at gentoo ebuild, i believe theyhave most deps
+20:36:55 <bcoca> line 34+
+20:37:00 <abadger1999> Which I suppsoe just means, hey, ansible is doing a better job of preparing its tets for packagers than other projects ;-)
+20:37:02 <alikins> I know lots and lots of official packaging does so to me it makes sense that building from a git checkout and a release tarball should be the same. Assuming user local installs also work from that same tarball, if pypi needs a special case I'm okay with it using a sdist tarball. But it would be even better if we could push the general tarball to pypi as well.
+20:37:14 <mattclay> abadger1999: Since you've got packaging experience, it sounds like you and I should talk separately about what we can do to make tests work better for packaging purposes.
+20:37:36 <abadger1999> mattclay: sounds good.  and Zhenech since he grabbed the bull by the horns here ;-)
+20:37:40 <bcoca> mattclay: 99% of that is specifying deps for tests
+20:38:35 <bcoca> he, funny both ebuilds have the test requirements, but only the RC ones actually get the tests
+20:40:36 <abadger1999> jimi|ansible: so... I'm thinking it looks like I could hit merge on Zhenech's PR and people would go along with it at this point.. Do you want to say something to stop me from doing that? ;-)
+20:40:54 <bcoca> his -1 on tests?
+20:41:43 <jimi|ansible> i don't think raw docs will do people much good, i'd much rather see ansible-doc capabilities expanded to include the play/inventory/etc. docs instead
+20:42:07 <bcoca> they are rst and require building, i dont see them that useful either
+20:42:09 <abadger1999> bcoca: he last said: <jimi|ansible> well, really i'm against different tarballs, if it's all in one and done with sdist i'm indifferent
+20:42:10 <jimi|ansible> but it's not something we can't fix later
+20:42:29 <abadger1999> yeah... raw docs will help the offline usage case... it's just not ideal.
+20:42:56 <bcoca> need to add plugins to ansible-doc .. do we really want 'play topics'?
+20:43:59 * bcoca removes the github prerelease to avoid confusion
+20:44:56 <abadger1999> okay
+20:45:08 <abadger1999> #action abadger1999 to merge the PR.
+20:45:09 <Zhenech> hmm, actually building the docs during packaging would also require to add the hacking folder (at least partially)
+20:45:11 <bcoca> hmm, does nto allow me to undo all ... leaving description
+20:45:27 <bcoca> ah, you want html docs, not the rst?
+20:45:31 <abadger1999> #action mattclay abadger1999 and Zhenech to talk about making the tests good for the packager use case
+20:45:43 <bcoca> that adds 40-60mins to release ....
+20:45:44 <Zhenech> bcoca, html would be stept 2 I'd say
+20:45:55 <Zhenech> rst is good enough for starters
+20:47:15 <abadger1999> #action will look at integrating the docs with ansible-doc in the future for a better offline experience
+20:47:54 <abadger1999> bcoca: It could also be built by downstreams instead of as part of the release process.... that's something we can look at later too.
+20:48:10 <abadger1999> #topic Open floor
+20:48:28 <abadger1999> Anyone have something to say in our remaining 11 minutes before the next meeting?
+20:48:32 * bcoca feels for packager that tries to shove in sphinx as build requirement ....
+20:48:40 <allanice001> yup
+20:48:44 <allanice001> 5 minutes pls
+20:48:53 <abadger1999> allanice001: Go for it
+20:49:08 <allanice001> AnsiBot (Doc Bot) is running in #ansible-devel
+20:49:11 <abadger1999> bcoca: Many fedora/rhel packages do exactly that.
+20:49:21 <Zhenech> bcoca, a lot of packages in debian has sphinx as build-dep
+20:49:23 <allanice001> Has 3 commands, !help; !search; !about
+20:49:23 <abadger1999> #topic AnsiBot (Doc Bot) is running in #ansible-devel
+20:49:25 <Zhenech> noone cried so far
+20:49:32 <Zhenech> but EOD now :)
+20:49:49 <abadger1999> #info AnsiBot has 3 commands !help !search !about
+20:49:59 <allanice001> Please use / test it, and let me know if / when you want it in #ansible
+20:50:11 <abadger1999> Cool.
+20:50:26 <allanice001> gundalow suggested we change it's name, not to get confused with ansibullbot
+20:50:28 <bcoca> packagers have always had a high tolerance for pain ... or they dont remain packagers long
+20:50:43 <bcoca> nagbot!
+20:50:47 <bcoca> nagmenot
+20:50:50 <Zhenech> my debian clock is at 10 years now, nuff said :)
+20:51:18 <allanice001> add comments / queries and criticism to https://github.com/ansible/proposals/issues/48
+20:51:20 <bcoca> i didnt even get to become official, after 2yrs helping other packagers i decided to move on .. then gentoo ....
+20:51:59 <allanice001> source is available on https://github.com/infrascloudy/AnsiBot
+20:52:14 <abadger1999> #link https://github.com/ansible/proposals/issues/48
+20:52:20 <abadger1999> #link https://github.com/infrascloudy/AnsiBot
+20:52:29 <allanice001> thats it from me
+20:52:38 <abadger1999> allanice001: Very nice work.  I saw lots of testing yesterday ;-)
+20:52:51 <allanice001> Yeah, some fine tuning
+20:53:16 <allanice001> jtanner had some suggestions whi
+20:53:22 <allanice001> Which I changed
+20:54:09 <allanice001> But all in all, is small easily managed
+20:54:09 <abadger1999> Cool.
+20:54:27 <abadger1999> #topic Open floor
+20:54:30 <abadger1999> Anyone else?
+20:54:36 <abadger1999> If not I'll close in 60s
+20:55:43 <abadger1999> #endmeeting
