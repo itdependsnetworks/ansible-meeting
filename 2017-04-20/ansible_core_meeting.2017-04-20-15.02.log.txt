@@ -1,0 +1,136 @@
+15:02:37 <gundalow> #startmeeting Ansible Core Meeting
+15:02:37 <zodbot> Meeting started Thu Apr 20 15:02:37 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:02:37 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:02:37 <zodbot> The meeting name has been set to 'ansible_core_meeting'
+15:03:10 <gundalow> #chair abadger1999 alikins bcoca funzo ganeshrn jimi|ansible nitzmahone Qalthos ryansb shertel trishnag
+15:03:10 <zodbot> Current chairs: Qalthos abadger1999 alikins bcoca funzo ganeshrn gundalow jimi|ansible nitzmahone ryansb shertel trishnag
+15:03:21 <trishnag> Hi
+15:03:30 <shertel> hello
+15:03:56 <gundalow> #info Agenda https://github.com/ansible/community/issues/159
+15:04:55 <nitzmahone> Boop
+15:06:16 <gundalow> Just been looking at the minutes from Tuesday, I don't see anything that's progressed
+15:06:19 <gundalow> so
+15:06:20 <gundalow> #topic Open Floor
+15:06:48 <gundalow> Anyone got anything?
+15:06:58 <gundalow> If not I have some questions for London Contributor Fest
+15:07:49 <kennc> I have something
+15:08:07 <nitzmahone> The last agenda item (meeting frequency)
+15:08:23 <itdependsnetwork> updated nickname :)
+15:08:24 <gundalow> itdependsnetwork: what's your topic
+15:08:28 <gundalow> +1
+15:08:34 <gundalow> one line summary so I can set the topic
+15:08:36 <gundalow> please
+15:08:51 <itdependsnetwork> What is Ansible's recommended method of distributing custom modules?
+15:09:02 <gundalow> #topic Ansible's recommended method of distributing custom modules?
+15:09:09 <itdependsnetwork> In regards to Issue #20702 and subsequent PR #20717. Just trying to get an understanding of Ansible's recommended method of distributing custom modules? The last I heard, that though this was only introduced in 2.1, it would be 5 revisions (including 2.3) until it is fixed.
+15:09:43 <gundalow> ah, this is Module namespace conflicts "setup.py" in particula
+15:09:51 <gundalow> r
+15:10:18 <itdependsnetwork> correct, so the best I know is pip is out of the question
+15:10:52 <gundalow> bcoca's comment of https://github.com/ansible/ansible/issues/20702#issuecomment-276518779 is a good summary
+15:10:55 <itdependsnetwork> Difficult to easily let users ensure requirements are met whithout it
+15:11:48 * gundalow differs to people that know Python better
+15:12:56 <gundalow> So I'll hold my hand up and say I'm not sure how/why people hit thsi
+15:13:01 <gundalow> this*
+15:13:29 <bcoca> ansible-pkgmgr
+15:13:30 <gundalow> Are people creating modules called "setup"
+15:13:38 <itdependsnetwork> I know why, and a fix is in, it's just going to be years until it is fully implemented (the best I understand it)
+15:13:50 <bcoca> gundalow: no, setup issue is cause that is what setup_tools uses for install script
+15:14:00 <gundalow> ah because https://github.com/networktocode/ntc-ansible/blob/master/setup.py exists
+15:14:14 <bcoca> https://github.com/ansible/ansible/pull/20717
+15:14:16 <gundalow> which is what pip/setuptools? use
+15:14:34 <bcoca> people do override setup (to make custom fact gathering) but it is very rare
+15:14:37 <itdependsnetwork> correct, I do not believe there is an alternate
+15:14:41 <bcoca> ^ main issue is sovled by PR above
+15:15:15 <bcoca> but still does not fix 'module/plugin' distribution as pip is insufficient
+15:15:23 <gundalow> itdependsnetwork: stupid question, can this be fixed by changing where/what ntc-ansible dumps itself so setup.py isn't under library?
+15:15:31 <itdependsnetwork> @bcoca: agreed, but I remember someone saying it would be 5 releases until it is actually fixed
+15:15:41 <bcoca> gundalow: no, cause ansiballz requires this
+15:15:54 <bcoca> itdependsnetwork: if all goes well ....
+15:16:03 <bcoca> right now 'roles' are only way to distribute plugins/modules
+15:16:13 <itdependsnetwork> but not requirements
+15:16:15 <gundalow> cd ~/src/ansible-modules
+15:16:20 <gundalow> git clone https://github.com/networktocode/ntc-ansible --recursive
+15:16:34 <bcoca> itdependsnetwork: depends on how you write the role ...
+15:16:46 <itdependsnetwork> fair enough
+15:16:58 <bcoca> ^ i think i just figured out how to do ansible-pkgmgr w/o actually writing it .....
+15:17:09 <itdependsnetwork> should not speak in superlatives
+15:17:10 <bcoca> roles as packages that execute themselves to install ...
+15:17:18 <itdependsnetwork> I was not aware of a way
+15:17:47 * bcoca is on caffine withdrawl so might be rambling right now
+15:18:21 <itdependsnetwork> talking about: https://github.com/mantiz/ansible-library-pkgmgr ?
+15:19:49 <bcoca> nope
+15:19:54 <bcoca> im not
+15:20:22 <itdependsnetwork> you mind pointing me to a link?
+15:20:23 <bcoca> ^ btw, package module alreayd does that
+15:20:38 <bcoca> itdependsnetwork: i dont have 'link to thoughts' working yet
+15:20:59 <bcoca> itdependsnetwork: ansible-pkgmgr is my 'current name' for a 'ansible plugin installer'
+15:21:07 <nitzmahone> bcocabrain://ansible/module-packager
+15:21:19 <itdependsnetwork> @nitzmahone: lol
+15:21:19 <bcoca> ^ 403
+15:21:47 <nitzmahone> 401
+15:21:54 <itdependsnetwork> ok, got it. to go back to "depends on how you write the role .."
+15:22:01 <itdependsnetwork> how can I write the role?
+15:23:00 <bcoca> role is actually an installer
+15:23:12 <bcoca> so fetch + run role, installs plugins
+15:23:39 <bcoca> ^ i think i just fixed all my issues with ansible-pkgmgr
+15:23:54 <itdependsnetwork> my issues as well?
+15:24:08 * gundalow locks bcoca in a room (with coffee) so he can write this up
+15:25:52 <bcoca> itdependsnetwork: that is beteween you and your therapist
+15:26:00 <itdependsnetwork> lol
+15:26:19 <bcoca> but yes, it should .. and much sooner than 5 releases
+15:26:30 <alikins> for that ntc-ansible case, my suggestion would be to just add /path/to/ansible-ntc-repo/library/ to ansible module path
+15:27:54 <itdependsnetwork> still have an issue there :) there is a submodule that also has setup.py in it
+15:28:42 <gundalow> rm setup.py
+15:29:36 <gundalow> back in a minute, just grabbing a drink
+15:29:45 <bcoca> make mine a scotch!
+15:31:01 <itdependsnetwork> don't want to derail further, I know how to fix the issue on an individual basis. Just not very easy to let users know.
+15:31:06 <gundalow> back
+15:31:13 <gundalow> bcoca: once you write it up
+15:31:30 <itdependsnetwork> If ansible-pkgmgr is the answer, that is fine
+15:32:00 <gundalow> #action bcoca to write up his new idea roles as plugin installers (not installing and referencing role, but fetching and running role and have role itself install plugins and deps). means ansible-pkgmgr does almost nothing (fetch role which galaxy already does) + run it leave all logic up to role
+15:32:06 <gundalow> #info rm setup.py?
+15:32:12 <itdependsnetwork> Just trying to communicate the issues seeing on my end (and a bunch of other's as I see in a issue search) and find out the recommended way
+15:32:23 <gundalow> #info for that ntc-ansible case, my suggestion would be to just add /path/to/ansible-ntc-repo/library/ to ansible module path
+15:32:31 <gundalow> itdependsnetwork: It's a good question
+15:32:36 <bcoca> itdependsnetwork: if/when i merge the gather_facts rename, that issue should go away
+15:32:57 <itdependsnetwork> but I thought someone indicated 5 releases?
+15:33:01 <itdependsnetwork> is that not the case?
+15:33:07 <gundalow> 5 releases = 2.5 years?
+15:34:00 <bcoca> itdependsnetwork: that was me thinking of when i could have a good enough package  manager created
+15:34:41 <itdependsnetwork> from Mar 9: "or anyone can you confirm that the issue of name space over "setup.*" will exist for the next 4 versions? referring to -> https://github.com/ansible/ansible/pull/20717"
+15:34:43 <agaffney> creating another package manager is rarely the answer to any problem
+15:34:52 <itdependsnetwork> "<@bcoca> probalby 5 as that is not getting merged for 2.3"
+15:35:11 <gundalow> agaffney: +1
+15:36:26 <bcoca> agaffney++10
+15:36:30 <gundalow> Anything else on this topic?
+15:36:36 <itdependsnetwork> good for me
+15:36:41 <gundalow> cool
+15:36:43 <agaffney> bcoca: invalid syntax
+15:37:09 <gundalow> #topic AnsibleFest Contributors Summit
+15:37:52 <gundalow> #info There will be an all day Contributors Summit the day before London AnsibleFest, people can attend in person or remotely for all/part
+15:38:04 <gundalow> #info If you think you can make it in person please ping me directly
+15:38:27 <gundalow> #info we will soon be asking for topics for the agenda, so have a think
+15:40:06 <gundalow> Likewise if you have any ideas feel free to let me know
+15:40:53 <gundalow> #info Previous Contributor Summit agendas & minutes can be found at https://github.com/ansible/community/blob/master/MEETINGS.md#past-in-person-meetings
+15:41:03 <gundalow> Anyone got anything to add on that?
+15:42:00 <gundalow> #topic Open Floor
+15:42:06 <gundalow> Anything else?
+15:42:23 <bcoca> meeting calendar
+15:42:45 <gundalow> #topic IRC Meetings
+15:43:03 <bcoca> seems these meetings have less and less attendance, i move we go to weekly instaead of biweekly
+15:43:04 <gundalow> #info Does this schedule work for people, do we need to change it?
+15:43:27 <bcoca> ^ with rotating 'time zone' friendly schedule
+15:43:54 <gundalow> The Tue & Thursday core meetings seem fairly close, maybe they should be pushed earlier/later in the day
+15:44:17 <gundalow> maybe some sort of (doodle) poll to see what people think
+15:44:59 <gundalow> itdependsnetwork: agaffney Are the two non-core people here, what do you think?
+15:45:29 <itdependsnetwork> I'm not on too much, but makes sense to me :)
+15:47:03 <agaffney> the schedule of the core meetings work for me, but I don't always attend. I only show up if I have something in particular to talk about or am bored and see a meeting is going on
+15:48:22 <gundalow> agaffney: So you look at the GitHub emails regarding what people add to the issue?
+15:48:52 <agaffney> nope, it's usually when it's something that I've proposed or just saw talk about in #-dev
+15:49:00 <gundalow> ACK
+15:49:44 <agaffney> today is a "I was bored and saw there was a meeting going on" day
+15:51:35 <gundalow> :)
+15:54:04 <gundalow> #info Need to create a poll and ask the community, needs more thought
+15:55:24 <gundalow> Guess we are done
+16:00:17 <gundalow> Thanks everyone!
+16:00:20 <gundalow> #endmeeting

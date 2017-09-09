@@ -1,0 +1,238 @@
+00:00:13 <nitzmahone> #startmeeting Windows Working Group
+00:00:13 <zodbot> Meeting started Tue May 23 00:00:13 2017 UTC.  The chair is nitzmahone. Information about MeetBot at http://wiki.debian.org/MeetBot.
+00:00:13 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+00:00:13 <zodbot> The meeting name has been set to 'windows_working_group'
+00:00:52 <dag1> o/
+00:00:59 <nitzmahone> Howdy!
+00:01:09 <jborean93> gretting from down under
+00:01:23 <nitzmahone> #info agenda at https://github.com/ansible/community/issues/153
+00:01:34 <nitzmahone> Hey Jordan!
+00:01:43 <jborean93> Hey Matt
+00:01:53 <jborean93> and Dag!
+00:02:07 <dag1> Hey jborean93 !
+00:02:19 <nitzmahone> #chair jborean93 dag1
+00:02:19 <zodbot> Current chairs: dag1 jborean93 nitzmahone
+00:03:12 <nitzmahone> I have to bust it right at the hour- been at Pycon here in Portland, and have an appointment I'll need to drive efficiently to. ;)
+00:03:38 <jborean93> nw
+00:04:24 <nitzmahone> #topic https://github.com/ansible/community/issues/153
+00:04:37 <nitzmahone> #topic https://github.com/ansible/community/issues/153#issuecomment-301128352
+00:05:00 <nitzmahone> Hoping to get to these if Pycon sprints slow down the next couple days
+00:05:02 <dag1> I was hoping trond was around too :-)
+00:05:21 <jborean93> I believe he said he couldn't make it
+00:05:23 <nitzmahone> The Friday meeting is probably more friendly to his schedule
+00:05:26 <jborean93> unless he is hiding around somewhere
+00:05:27 <dag1> ah, he edited it
+00:06:00 <nitzmahone> Sounds like he's coming to AF London and Contributor Summit for sure now though. Woot!
+00:06:34 <nitzmahone> #topic https://github.com/ansible/ansible/pull/22775
+00:07:04 <jborean93> I'm not sure how we want to do this one. I'm happy to do the work as I've got some use for some aspects
+00:07:24 <jborean93> I can probably keep this as is and just create a more specialised module to do the user rights and roles stuff
+00:07:32 <jborean93> similar to how win_environment and win_path are meshed together
+00:08:01 <dag1> jborean93: that's fine I guess
+00:08:22 <nitzmahone> Yeah, I have mixed feelings
+00:08:54 <jborean93> The reason why I think the rights/roles could be a separate module is that it contains a list of groups/users and having a single module to do this to me is more beneficial
+00:08:54 <nitzmahone> AFG, the generic capability is nice, but should probably be its own thing.
+00:08:59 <dag1> first question these days is, is there a DSC resource already ? :-)
+00:09:34 <nitzmahone> Dunno, but this is a useful enough thing that it'd be nice not to require v5/DSC
+00:10:02 <nitzmahone> Depends on how hacky the DSC resource is, too, though I suppose we could always contribute there instead. :)
+00:10:33 <nitzmahone> I've been having sinister thoughts on transparent resource download/exec. ;)
+00:12:13 <jborean93> I've got mixed feelings around having stuff around DSC for this, I feel with DSC you always have the option to use it if possible but having a module to fall back on is beneficial for people not using it
+00:12:21 <nitzmahone> zactly
+00:12:25 <dag1> so next topic then ?
+00:12:42 <nitzmahone> +1 to "more granular modules" from me
+00:12:51 <jborean93> cool sounds like I should keep as is and create another module specifically for user rights
+00:13:03 <nitzmahone> Code sharing becomes easier soon
+00:13:18 <nitzmahone> #topic https://github.com/ansible/proposals/issues/63
+00:14:10 <jborean93> Hopefully you've seen the proposal but what I've put up there seems doable to me and is good to have automated checks instead of manually done in a PR
+00:14:28 <jborean93> Happy to talk about the standards and what we want to do go for but the tool is pretty flexible
+00:14:37 <jborean93> and gives you the ability to create custom checks if necessary
+00:14:40 <dag1> I like it
+00:14:44 <nitzmahone> Yeah, that looks great
+00:15:03 <nitzmahone> We should roll those tests into ansible-test sanity
+00:15:05 <dag1> still not sure if I want Powershell on my Linux though :p
+00:15:27 <dag1> something to discuss with mattclay
+00:15:28 <nitzmahone> Assuming it works, using the Linux version will be a much cheaper way to test
+00:15:41 <jborean93> haha yea it's not ideal but it works
+00:15:47 <jborean93> and there are no other alternatives
+00:15:49 <nitzmahone> Yep, I'm sure he'd be all for rolling that stuff into a an ansible-test extension
+00:15:50 <dag1> nitzmahone: I know, but the Windows-aversion is still too strong there :p
+00:16:06 <dag1> jborean93: it's not criticism to the solution
+00:16:21 <jborean93> dag1: I know all too well the aversion to Windows :)
+00:16:28 <jborean93> Just something I live with daily
+00:16:40 <nitzmahone> #action nitzmahone to chat w/mattclay about ansible-test sanity using PSScriptAnalyzer
+00:17:05 <jborean93> + it gives us more options around unit testing with powershell and coverage in the future which I like
+00:17:09 <dag1> jborean93: I guess we still want to discuss the modalities in London ?
+00:17:13 <nitzmahone> It's very pluggable, so I imagine it'll be pretty trivial. Just need to test and see if both PSA and pester work under PS6Core
+00:17:31 <jborean93> PSA is meant to I can't remember what theys aid about Pester
+00:17:31 <dag1> PS6 ?
+00:17:48 <jborean93> dag1: would be good, I'm trying to get some time off for it but not sure how I will go
+00:17:59 <nitzmahone> Yeah, that's currently what they're calling the one that runs on Linux/Mac w/ .NET core
+00:18:09 <dag1> ah
+00:18:21 <nitzmahone> jborean93: oh, were you going to try and make it to London? That'd be awesome
+00:19:05 <jborean93> haha no I'm not that rich  :(I will be online with IRC or blue jeans unless I was misreading that option
+00:19:06 <nitzmahone> I assumed you'd wait for SF just cuz it's kinda closer
+00:19:13 <nitzmahone> ah gotcha
+00:19:23 <dag1> jborean93: I think there was financial aid offered
+00:19:29 <nitzmahone> Yeah, we always try to have bluejeans and IRC
+00:20:01 <jborean93> send Jordan to London fund, calling for takers :P
+00:20:02 <nitzmahone> #topic https://github.com/ansible/community/issues/153#issuecomment-302923778
+00:20:04 <dag1> not sure what amount we're talking here
+00:20:11 * nitzmahone donates a fiver
+00:20:42 * nitzmahone is a cheap bastard
+00:21:09 <jborean93> haha, every bit helps. Maybe the exchange rate is good
+00:22:57 <nitzmahone> On #23119, I'd vote for consistency with file on all the values that overlap, and self-describing  on those that don't.
+00:23:00 <jborean93> For this issue I was just hoping to get a consensus on what to use as the link option
+00:23:08 <dag1> my preference is to adapt both file and win_file to the more descriptive names
+00:23:24 <dag1> but I can live with what file does now already ;-)
+00:23:35 <jborean93> cool so link, hard and junction it is
+00:23:39 <nitzmahone> +1
+00:23:45 <dag1> but link and hard seems really weird
+00:23:48 <jborean93> unless you want something more descriptive for junction as there is no equivalent in file
+00:23:59 <nitzmahone> Anybody who needs it will understand. ;)
+00:24:11 <jborean93> the docs shoudl also state what they are for
+00:24:21 <dag1> I don't mind, I don't know what it is :p
+00:24:24 <nitzmahone> We can always alias those on state later for more descriptive names if we want (just not on the return)
+00:24:50 <nitzmahone> (for both *nix and Win)
+00:25:08 <dag1> nitzmahone: indeed
+00:25:27 <nitzmahone> #action jborean93 to do link/hard/junction values for state on win_file #23119
+00:25:31 * bcoca was tempted to add named pipe and socket states
+00:25:58 <nitzmahone> #topic https://github.com/ansible/community/issues/153#issuecomment-303134342 (#24872)
+00:26:34 * nitzmahone should add memory-mapped-file for completeness and masochism
+00:26:47 <jborean93> I haven't had a chance to have a look at the PR for DSC stuff
+00:26:58 <jborean93> I really need to look into DSC more as I've only played around with it briefly
+00:27:00 <bcoca> nitzmahone: no, for that we have device and block files
+00:27:12 <nitzmahone> :D
+00:27:38 <nitzmahone> I haven't either- hoping to get to it during the last couple days at Pycon sprints when things slow down
+00:27:53 <dag1> let's discuss win_dsc on friday with trond
+00:27:54 <nitzmahone> So punt until at least Friday or next set of meetings.
+00:27:56 <nitzmahone> WFM
+00:28:13 <nitzmahone> Super happy that the ball is rolling on that for 2.4, though!
+00:28:27 <nitzmahone> Couple of other interesting items:
+00:28:51 <dag1> we should probably make a selection from Etherpad/Issue tickets for London, jhawkesworth made a good suggestion there
+00:28:52 <nitzmahone> Worked w/ fxfitz today @ pycon on an AWSRun connection plugin that works on both Windows and Linux
+00:29:00 <nitzmahone> dag1 ++
+00:29:49 <nitzmahone> The AWSRun CP is very slow, but got it working today in devel. I had to restore a few things to the non-pipelined codepath, so that'll probably get merged in tomorrow.
+00:29:49 <jborean93> I know trond wanted to talk about adding Server 2016 or at least a box with PS5 so we can start testing these things
+00:29:57 <jborean93> I know there is another PR for a module that requires it
+00:30:04 <nitzmahone> Yeah, we actually have that, it's just commented out
+00:30:19 <nitzmahone> There were connectivity issues with the AWS 2016 AMIs last time we tried it
+00:30:29 <nitzmahone> They'd just randomly flake out, but I couldn't repro locally.
+00:30:52 <nitzmahone> We had to disable from CI until we could spend some time investigating- too many false alarms
+00:31:21 <jborean93> should we look at adding another image of 2012R2 with PS5 or focus on getting 2016 up and running instead
+00:31:24 <nitzmahone> IIRC Matt Clay also has a PS5 upgrade procedure for other OS versions for CI
+00:31:45 <nitzmahone> I'd say let's start with 2016, because we need to do nano too.
+00:31:55 <jborean93> true
+00:31:57 <nitzmahone> That'll get us plenty of PS5 testing
+00:32:13 <nitzmahone> 2008 is getting us PS4 IIRC
+00:32:21 <dag1> and PS6 on Linux, and SSH on Windows :-)
+00:33:03 <nitzmahone> fxfitz and rackspace folks are also working on an Azure version of awsrun plugin
+00:33:39 <nitzmahone> AWSRun definitely exposes a couple more things we need to clean up in the connection/shell/action abstractions
+00:33:57 <nitzmahone> #topic open floor
+00:34:10 <jborean93> so does awsrun run connections throuhg some sort of AWS console?
+00:35:13 <nitzmahone> Uses the AWS agent/AWS REST API instead of winrm- so you don't need bastions or public IPs. You can manage stuff Ansible can't see at all just via AWS instance ID
+00:35:27 <jborean93> cool
+00:35:42 <jborean93> Are we able to have a look at https://github.com/ansible/ansible/pull/23581 and jhawkesworths testing PR
+00:35:53 <jborean93> Would we be able to merge it in before the next 2.3 release
+00:36:00 <nitzmahone> Yeah- apparently they think the Azure one will be faster, as it has a native file transfer mech (AWSRun has to use S3 for both put_file and stdout/stderr fetch)
+00:37:05 <dag1> Yeah, #23581 is long overdue :-/
+00:37:07 <nitzmahone> Yeah, I'll do the final pass on #23581 and merge/cherry-pick. 2.3.1RC2 was supposed to go out today, but it looks like it hasn't yet, so I can probably sneak it in.
+00:37:13 <jborean93> Here is the testing PR https://github.com/ansible/ansible/pull/24523
+00:37:37 <nitzmahone> #action nitzmahone to review/merge/cherry-pick #23581/#24523 for 2.3.1
+00:37:38 <dag1> That's 1.5 month for something we shipped broken
+00:38:15 <nitzmahone> agreed
+00:38:36 <jborean93> I've been hearing rumblings that win_user also might be broken. I haven't tested it but I've seen a few idempotency issues and other things
+00:38:42 <dag1> we need more/better integration tests
+00:38:52 <jborean93> +1000
+00:39:04 <nitzmahone> Not surprising there- I fixed a few things with passwords and such in there, but I'm sure there are other
+00:39:06 <dag1> win_user is not idempotent IMO
+00:39:06 <dag1> https://public.etherpad-mozilla.org/p/Ansible_Windows_Community_Plan
+00:39:26 <nitzmahone> There's one idemp issue I know of
+00:39:27 <jborean93> I'm hoping to focus on the testing side and adds more tests to things like IIS and others that are missing it
+00:39:48 <dag1> Do we have numbers per module ? (Like sivel's PR numbers)
+00:40:18 <nitzmahone> as in issue/PRs per module?
+00:40:29 <dag1> yes
+00:40:49 <dag1> I know the win_iis* and win_robocopy have the most issues reported (incl. the core/extras issues)
+00:40:52 <nitzmahone> jctanner's got some little database that he scrapes things out of GH for, I think that might be one of the stats he gathers
+00:41:11 <dag1> but it would be nice to have a better picture where to put our effort in
+00:41:22 <nitzmahone> He's on the plane back to Raleigh from pycon today
+00:42:09 <nitzmahone> Agreed that IIS needs major love
+00:42:16 <jborean93> I've been looking at creating a win_git module but I should probably direct my time more around bug fixes and testing support
+00:42:51 <nitzmahone> win_git would be cool- I've had a few things where it'd be nice, but could also see it being a major time-suck
+00:43:00 <dag1> it would be nice to have more people to distribute with !
+00:43:13 <jborean93> Yea I started but was starting to get quite complex
+00:43:20 <dag1> yeah, git is quite complex :-/
+00:43:23 <jborean93> I might just start off small instead of trying to replicate git
+00:43:39 <nitzmahone> I think there might even be an open PR that does that already
+00:43:48 <dag1> yup, there was one
+00:43:50 <dag1> pretty basic
+00:43:51 <nitzmahone> Somebody was threatening to do it awhile back
+00:44:03 <dag1> threatening ;-)
+00:44:22 <dag1> I remember someone quickly replied using the git module on Windows
+00:44:36 <jborean93> haha I'll have a look at it. I believe there were differences in that PR's implementation with the git module but I'll have a look
+00:44:38 <nitzmahone> As in "install python"?
+00:45:32 <nitzmahone> aight, anything else burning for today?
+00:45:53 <dag1> it is running git as a command, so with a few tweaks, it could be made to work on Windows IMO
+00:45:54 <jborean93> nitzmahone: I've also added some more info to the PR for Kerberos CBT support. https://github.com/apple/ccs-pykerberos/pull/55 It might help you with setting up an environment to validate with existing tests with your message encryption when raising a PR
+00:46:41 <dag1> but yeah, would be requiring python (and SSH)
+00:46:56 <nitzmahone> (and assuming module_utils still works on Windows)
+00:46:59 <jborean93> I'm going to leave it for now and focus more on bug fixes and testing myself. I know 2.3 was a show stopper due to a galaxy issue and am hoping to avoid mistakes like that in the WIndows side
+00:47:06 <dag1> nitzmahone: yes :-/
+00:47:27 <dag1> I'd like to have integration tests for all modules by v2.4
+00:47:35 <nitzmahone> Wouldn't be surprised if ansiballz broke a lot of the Python-on-Windows stuff
+00:48:12 <jborean93> dag1: maybe we just need to add a basic test or 2 to get it started and build them from there
+00:48:17 <dag1> (all windows modules, that is)
+00:48:35 <dag1> jborean93: at least idempotency and check-mode
+00:48:46 <jborean93> yep
+00:48:48 <nitzmahone> I'm much less concerned about "community" modules ATM (though booya if we can get them), but I'd definitely agree for core. We also need to do some work to define the set of minimal modules we'd test for a change to module_utils or other non-module code
+00:48:57 <dag1> in itself it shouldn't be that hard, that's why I started off with looking at the "perfect" structure
+00:49:16 * dag1 doesn't even know what is core and what is community
+00:49:24 <dag1> and I doubt a lot of users know...
+00:49:38 <nitzmahone> We just have to be cognizant of the bandwidth we have for running Windows integration tests
+00:49:43 <dag1> it just gives a bad impression on Ansible in general :-/
+00:49:44 <nitzmahone> (or start disabling things)
+00:49:57 <dag1> right, speed is an issue :-(
+00:50:12 <dag1> maybe add group 4 and group 5
+00:50:15 <nitzmahone> Yeah, that argument always comes up and is one of the reasons that we're considering making community modules a separate download
+00:50:47 <dag1> I don't think that is the right approach though :-/
+00:50:57 <nitzmahone> We're waiting for a launch credit increase that should fix the timeouts again temporarily for t2 instances (we're currently using c4.larges to get around it, which is expensive)
+00:51:13 <jborean93> what is the reasoning behind groups in the testing side
+00:51:16 <dag1> I understand
+00:51:17 <jborean93> I never understood it
+00:51:22 <dag1> jborean93: parallelizing
+00:51:41 <dag1> jborean93: it would otherwise take roughly 3x as long
+00:51:42 <jborean93> dag1: thanks
+00:52:01 <nitzmahone> When we're running single-instance all-modules tests, it runs each group on a dedicated 2012R2 instnce
+00:52:14 <dag1> jborean93: but it is arbitrary, I think mattclay rebalances it from time to time based on metrics
+00:52:25 <nitzmahone> But most of the time, we're running multi-version all modules, which collapses everything into group1
+00:52:28 <jborean93> on the same host in parallel or different ones
+00:52:41 <nitzmahone> different
+00:53:09 <nitzmahone> multi-version runs the module on 2008/2008R2/2012/2012R2 in parallel with a single group
+00:53:28 <nitzmahone> Breaking that up would mean going from 4->12 Windows instances to test a PR. Ouch.
+00:53:47 <nitzmahone> More once we add 2016 and nano
+00:54:05 <nitzmahone> We may also look into dedicated or nested hypervisor kinds of things.
+00:54:21 <dag1> well, would SSH help to speed things up ?
+00:54:27 <nitzmahone> Was hoping that containers would be viable, but they're (currently) like a fifth the speed of running on the host. :(
+00:54:42 <dag1> if it would, there's a reason to look at supporting it, just for speeding up tests
+00:55:03 <nitzmahone> Not much, 2.3 + pipelining + persistence gets us within spitting distance of SSH speeds
+00:55:05 <dag1> I don't see much point in looking at SSH on Windows, but this may well be it
+00:55:24 <jborean93> SSH is still in beta with Microsoft isn't it
+00:55:26 <nitzmahone> Persistence is worth another ~10-20%
+00:55:29 <dag1> still it feels like Windows is a lot slower than Linux
+00:55:30 <nitzmahone> yep
+00:55:47 <jborean93> File copies are dreadful, especially when doing recursive stuff
+00:55:57 <dag1> is Powershell slower than python ?
+00:55:58 <nitzmahone> Yeah, the recursive stuff can be sped up a lot
+00:56:05 <bcoca> its http .. i dont expect it to be nearly as fast as ssh
+00:56:34 <nitzmahone> I have a plan that should get us ~an order of magnitude faster for recursive win_copy
+00:56:40 <dag1> so again, maybe it's worthwhile to consider, it brings some of the Unix modules closer to windows (like git)
+00:56:42 <nitzmahone> It's horribly naive
+00:56:57 * dag1 uses win_geturl to avoid win_copy :-(
+00:57:11 <jborean93> I am the same
+00:57:28 <bcoca> 1 way download is faster than trying to use http as 2 way comms
+00:58:43 <nitzmahone> Yeah, other than fixing the superfluous hashing, I don't think there's a lot more blood we can squeeze from win_copy so long as it's tunneled in WinRM. It's not even the HTTP that makes it slow, it's just all the Powershell tunneling and various transitions that it has to go through- quite a Rube Goldberg
+00:59:06 <dag1> alright, nitzmahone has to leave now :-)
+00:59:09 <nitzmahone> (I'm talking about single-file win_copy)
+00:59:09 <bcoca> http + xml + winrm + powershell hoops
+00:59:23 <nitzmahone> Yep, gotta roll- thanks all!
+00:59:23 <jborean93> all the good stuff :)
+00:59:26 <jborean93> have a good one all
+00:59:31 <nitzmahone> #endmeeting

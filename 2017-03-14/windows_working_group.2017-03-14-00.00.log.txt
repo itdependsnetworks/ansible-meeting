@@ -1,0 +1,272 @@
+00:00:08 <nitzmahone> #startmeeting Windows Working Group
+00:00:08 <zodbot> Meeting started Tue Mar 14 00:00:08 2017 UTC.  The chair is nitzmahone. Information about MeetBot at http://wiki.debian.org/MeetBot.
+00:00:08 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+00:00:08 <zodbot> The meeting name has been set to 'windows_working_group'
+00:00:34 <dag> jtanner: :-)
+00:00:36 <nitzmahone> Hello- welcome to the inaugural meeting of the Windows Working Group!
+00:00:42 <jtanner> #chair dag
+00:00:53 <nitzmahone> #chair jtanner dag
+00:00:53 <zodbot> Current chairs: dag jtanner nitzmahone
+00:01:07 <jtanner> hah, get it ... chair, ballmer
+00:01:19 <jtanner> ok, i'll stop
+00:01:19 <nitzmahone> jtanner lives in the 90s
+00:01:55 <jhawkesworth> hello
+00:01:55 <jtanner> nitzmahone: so true
+00:01:58 <nitzmahone> Agenda is at: https://github.com/ansible/community/issues/153
+00:02:06 <nitzmahone> #chair jhawkesworth
+00:02:06 <zodbot> Current chairs: dag jhawkesworth jtanner nitzmahone
+00:02:11 <nitzmahone> Howdy Jon!
+00:02:18 <jhawkesworth> hey
+00:02:27 <jborean93> Hey all
+00:02:37 <nitzmahone> Jordan!
+00:02:44 <nitzmahone> #chair jborean93
+00:02:44 <zodbot> Current chairs: dag jborean93 jhawkesworth jtanner nitzmahone
+00:03:08 <jborean93> forgive me if I'm slow, this is my first meeting on IRC so might not know the rules
+00:03:10 <dag> nitzmahone: I has some stuff listed here: https://github.com/ansible/community/issues/152 and we also moved some stuff here: https://public.etherpad-mozilla.org/p/Ansible_Windows_Community_Plan
+00:03:31 * dag sounds like borat
+00:03:36 <nitzmahone> lol
+00:04:21 <nitzmahone> Basically, there's a bot (zodbot) that records the meeting, and we can do various callouts to it with # commands to record action items and stuff
+00:04:43 <nitzmahone> #topic housekeeping
+00:04:53 <jtanner> https://wiki.debian.org/MeetBot for reference
+00:05:13 <jborean93> thanks for the info
+00:05:25 <nitzmahone> So, we're currently set to do this every other week on Monday and Friday, with alternating times on both ends of my day to hopefully better accommodate our worldly schedules. :)
+00:05:41 <nitzmahone> We'll see how that goes, and may adjust down the line
+00:05:59 <jhawkesworth> cool
+00:06:14 <nitzmahone> #topic 2.3 status
+00:06:46 <nitzmahone> 2.3 is currently in feature + module freeze, so theoretically only bugfixes will be merged from this point on
+00:07:14 <nitzmahone> I've got 2 release-blocking bugs right now in the new exec-wrapper stuff that I'm working on
+00:07:25 <nitzmahone> I *think* I know how to fix both
+00:07:42 <jhawkesworth> wishing you luck nitzmahone
+00:07:54 <nitzmahone> Beyond that, there's a bit of cleanup on the exec wrapper stuff that I'm planning to do (eg, KEEP_REMOTE_FILES is nonfunctional right now)
+00:08:09 <dag> anything related to privilege escalation ? I have some issues there
+00:08:25 <jborean93> What are your plans with KEEP_REMOTE_FILES now that we are not copying files over in a normal sense?
+00:08:36 <nitzmahone> dag: yes- "become" is busted under NTLM/Kerb
+00:08:41 <nitzmahone> "Access is denied"
+00:08:54 <nitzmahone> Works under Basic/CredSSP, haven't tested cert but assume it'll work
+00:09:31 <nitzmahone> jborean93: I had a crusty prototype that persisted the wrapper and the payload
+00:10:10 * dag is looking for a good way to find out why a task is "hanging" (never ends, no clue what's happening)
+00:10:12 <nitzmahone> But I want to filter the payload a bit so we'll never persist a become password (since normally that only appears on stdin)
+00:10:43 <dag> (same command works fine from powershell)
+00:10:44 <nitzmahone> dag: hrm, haven't run into that yet
+00:10:55 <nitzmahone> Lots of things can cause that though
+00:10:57 <dag> nitzmahone: it's always those pesky installers :-(
+00:11:03 <jborean93> dag: I've seen that before but for the life of my can't remember what it was
+00:11:05 <nitzmahone> ugh
+00:11:25 * dag needs a way to strace an existing process
+00:11:28 <jborean93> dag: I've seen some specific cmdlets cause it to happen but it was a year ago that I came across it
+00:11:37 <nitzmahone> If it involves an installer, by default I assume it's a WinRM/job issue over an Ansible issue ;)
+00:11:54 <jhawkesworth> dag: logging stuff locally is the only way I know
+00:12:10 <jborean93> #help with installers win_msi vs win_product
+00:12:51 <jhawkesworth> anything else on 2.3 before we move on?
+00:12:58 * dag also has a case where win_msi works better than win_package BTW, but we're deprecating win_msi :-/
+00:13:12 <dag> let's check my list :)
+00:13:15 <nitzmahone> I haven't pulled the trigger on deprecation yet
+00:13:54 <jhawkesworth> I'm less bothered about deprecating win_msi now as it seems to be raising less questions at the moment
+00:13:54 <nitzmahone> There are some enhancements I want to do to win_package to get feature parity/ease-of-use parity with win_msi before I kick the leg out from the stool it's sitting on. ;)
+00:13:56 <jborean93> dag: I've had the opposite with win_msi where it didn't detect a failure, I don't like win_product due to the product_id requirement. Had conflicting info regarding not setting it and using blank values
+00:14:10 * dag likes to improve the existing modules and testing before v2.3
+00:14:12 <nitzmahone> jborean93: that's a big one-
+00:14:34 <dag> jborean93: we have a fix where you can do product_id=auto
+00:14:41 <jhawkesworth> trond hindenes has done some work on making win_package more flexable
+00:14:47 <nitzmahone> Except for the "idempotent URL-hosted case" there's no reason win_package should require a product code for an msi
+00:14:50 <dag> jborean93: only works if product_id can be determined from package
+00:14:59 <jhawkesworth> needs testing.
+00:15:14 <jhawkesworth> and there's loads of broken packages out there without proper product_ids
+00:15:18 <dag> jhawkesworth: indeed, needs to test that too
+00:15:19 <nitzmahone> I'm hoping trond will be in Friday's euro-friendly-timezone meeting
+00:15:59 <dag> Is someone keeping track of this ? :-) -> test trond's win_package improvement
+00:16:29 <nitzmahone> I won't be able to get to that for awhile, so if one of you guys wants to play with it... :)
+00:16:33 <dag> action for jhawkesworth/dag
+00:16:47 <nitzmahone> We won't be shipping that for 2.3 anyway, so there's not really a rush for anyone who's not running devel ;)
+00:17:02 <dag> oh :-(
+00:17:08 <nitzmahone> #action jon/dag to test trond's win_package updates
+00:17:32 <nitzmahone> Module freeze for 2.3 was March 15
+00:17:47 <nitzmahone> Sorry, March 1
+00:17:50 <dag> right, but I thought that was for new modules
+00:18:01 <nitzmahone> and feature changes
+00:18:07 <jtanner> bugfix only
+00:18:11 <dag> damn
+00:18:12 <nitzmahone> If there's no new UI, it's iffy
+00:18:28 <jtanner> 2.4 will be here before you know it
+00:18:29 <nitzmahone> If it was guaranteed ready to go and had tests today, I'd be OK
+00:18:48 <dag> jtanner: $CUSTOMER project finishes before v2.4
+00:19:06 <nitzmahone> But RC1 could be cut as soon as Wednesday, so nervous to hack up a module that much this late in the game
+00:19:14 <dag> sure
+00:19:19 <nitzmahone> dag: /library is your friend
+00:19:20 <dag> I understand
+00:19:32 <dag> it has been my friend for a long time :)
+00:20:00 <jtanner> make sure they know how to test devel before you leave
+00:20:03 <jtanner> problem solved
+00:20:07 <nitzmahone> If we can keep some momentum on this and coordinate efforts for future releases, should make life better all around
+00:20:48 <dag> nitzmahone: will the newline-changes to win_template/template not make v2.3 either then ?
+00:21:12 <nitzmahone> They still could- that's arguably a bugfix
+00:21:17 <dag> jtanner: I was told that they do not plan to update anything after I leave :-D
+00:21:26 <jtanner> dag: wrong way to ansible
+00:21:36 <dag> jtanner: no use in convincing me !
+00:21:47 <jtanner> i know, i'm half joking
+00:22:06 <jtanner> i've worked for that co before
+00:22:12 <dag> ah :-)
+00:22:51 <dag> nitzmahone: can my open PR's (related to idempotence) be accepted before v2.3 ?
+00:23:01 <dag> I consider that bugfixes... :-P
+00:23:23 <nitzmahone> The newline sequence PR touches so much stuff that I'm not sure we'll get enough thumbs-up to get it in
+00:23:43 <nitzmahone> I guess it's mostly tests... I dunno
+00:24:21 <jhawkesworth> Damn netsplit. Catching up on my cellphone
+00:24:26 <dag> most files it touches are testing
+00:25:36 <nitzmahone> dag: which other PRs are you talking about re: idempotence?
+00:25:47 <dag> nitzmahone: I meant check-mode, not idempotency
+00:25:49 <nitzmahone> win_service / win_choco?
+00:25:53 <dag> https://github.com/ansible/ansible/pulls?q=is%3Aopen+is%3Apr+author%3Adagwieers+label%3Awindows
+00:26:09 <jhawkesworth> Templating is sort of fundamental. But the integration tests give a bit of confidence.
+00:26:26 <dag> so #22501, #22311, #21371 and #21351
+00:27:12 <dag> I think you dropped these because they did more than what was stated, so I dropped cosmetics
+00:27:14 <nitzmahone> Yeah, I'll take the check mode stuff for sure, I'll have to talk with a couple others about the template stuff
+00:27:41 <nitzmahone> (not a matter of not accepting, just "fudging" freeze)
+00:27:45 <dag> ok
+00:27:48 <nitzmahone> vs 2.4
+00:28:09 <nitzmahone> #action nitzmahone to check w/ core team on templating newline fixes for 2.3
+00:28:26 <nitzmahone> Hrm, wonder if we lost the bot in the split?
+00:29:14 <jhawkesworth> my connection is back
+00:29:19 <jtanner> erm, maybe?
+00:30:07 <nitzmahone> #halp
+00:30:22 <nitzmahone> looks like bot is still floating in ether. :(
+00:30:44 <nitzmahone> Oh well, anyway...
+00:31:31 <nitzmahone> So I'll test/merge what I can before RC1
+00:31:36 <jhawkesworth> Is there anything windows community can take off your plate for 2.3 nitmahone?
+00:32:16 <dag> more idempotency/check-mode tests of windows modules !
+00:32:24 <nitzmahone> If anybody wants to either triage new Windows-related issues/bugfixes, that'd be cool
+00:32:41 <nitzmahone> I think beyond what we already have, that's going to have to be 2.4
+00:33:57 <nitzmahone> Jordan's taken a whack at NTLM message encryption- I haven't had time to play with it, but I've got a passel of pywinrm stuff to do right after 2.3 is put to bed
+00:34:32 <jhawkesworth> agreed.  I'm trying to help out where I can but if anyone else has capacity for triage this is a good url to start: https://github.com/ansible/ansible/issues?utf8=%E2%9C%93&q=is%3Aopen%20is%3Aissue%20label%3Awindows%20-label%3Aneeds_info%20-label%3Afeature_idea%20
+00:34:45 <nitzmahone> We've got @($large_paying_customers) clamoring for kerberos message encryption, so that'll probably be my #1 post 2.3
+00:35:43 <jhawkesworth> nice.  Sounds involved though, hope you'll have time for some other stuff too during 2.4
+00:36:09 <nitzmahone> Oh yeah, I don't actually think it'll be too bad once I get into it- just hoping it doesn't require changes to pykerberos
+00:36:20 <jborean93> Kerberos encryption is a lot harder than NTLM, there is an example on the Ruby WinRM library
+00:36:22 <nitzmahone> The main bits I need are there
+00:36:26 <jborean93> Kerberos isn't my strong suite unfortunately
+00:36:55 <nitzmahone> Toughest part of all these things is coordinating changes/availability to upstream projects :)
+00:37:15 <nitzmahone> That's why life is a lot nicer when they're limited to things I have commit rights to...
+00:37:19 <jborean93> oh it is a massive pain, getting the CBT stuff into NTLM required a few handoffs
+00:37:33 <nitzmahone> Major kudos for that, though. :)
+00:37:43 <jhawkesworth> hear, hear!
+00:38:24 <nitzmahone> Any other specific PRs people want to talk about?
+00:38:48 <jborean93> Maybe around the win_service side
+00:39:08 <jborean93> dag wuestions whether we should have added the Force parameter around stopping and restarting a service when it wasn't there before
+00:39:23 <jborean93> My thoughts was if we want to stop it should stop but not sure if that is the wanted behaviour
+00:39:27 <nitzmahone> Hrm, as opposed to state: restarted?
+00:39:31 <jborean93> It has been merged in but it might be best to merge it out
+00:40:00 <dag> force could be optional
+00:40:02 <jborean93> More around the -Force parameter https://ss64.com/ps/stop-service.html
+00:40:09 <dag> I think that was my proposal
+00:40:13 <jborean93> yep
+00:40:23 <nitzmahone> Ah, gotcha
+00:40:24 <jborean93> currently it isn't optional and it just forces it
+00:41:22 <nitzmahone> Yeah, that's a tough call
+00:41:27 <jhawkesworth> I don't think I stop/start any services with dependenices ATM.
+00:41:58 <nitzmahone> I think since we don't return the list of deps, we probably shouldn't default to force
+00:42:26 <nitzmahone> Not sure I picked up on that particular change
+00:42:35 <jborean93> win_service does return the lsit of dependencies now after that PR
+00:42:47 <nitzmahone> oh yeah
+00:43:07 * nitzmahone is stale on current state of win_service code
+00:43:49 <jhawkesworth> feels like it ought to be optional.  plenty of other modules with a 'force' param that defaults to false (lowest risk of change against current released behaviour)
+00:43:55 <nitzmahone> So the only other potential issue with "default force" then IMO would be if you stopped a service that depended on HTTP
+00:44:00 * dag wanted win_service to be the reference module for Windows module development, but it has grown in complexity since :-/
+00:44:40 <nitzmahone> as you'd lose WinRM
+00:44:49 <jborean93> I feel bad because I made those changes :(
+00:45:03 <nitzmahone> Oops, wait, NM
+00:45:18 <nitzmahone> I think it needed to be done, though
+00:45:20 <dag> jborean93: was this before or after v2.2 ?
+00:45:26 <jborean93> after 2.2
+00:45:37 <jborean93> it was that PR we merged in before the freeze happened
+00:45:51 <nitzmahone> win_service still isn't too bad, and I really disliked the alternative of making each service attribute its own module
+00:46:08 <jborean93> I can raise another PR that changes the default behaviour to be False for -Force but it might take a day or 2 as it will break the tests
+00:46:13 <nitzmahone> We've had a request to add service ACLs to that (or add service capability to win_acl)
+00:46:24 <jborean93> You can do that?
+00:46:37 <jhawkesworth> new one on me too!
+00:46:45 <nitzmahone> Yeah, there's no UI for it, but service objects have control ACLs
+00:46:55 <nitzmahone> I've had to mess with them before
+00:47:11 <jborean93> interesting, sounds like I need to do some googling tonight
+00:47:14 <nitzmahone> But beyond that, I don't see the surface area of win_service growing significantly going forward
+00:47:23 <jhawkesworth> lot easier to lock the machine in a cupboard :-)
+00:47:29 <nitzmahone> :P
+00:47:48 <nitzmahone> So I was ok with the changes
+00:48:07 <dag> jborean93: IMO if it wasn't released you haven't broken anything (but I know bcoca disagrees)
+00:48:19 <dag> (releases as in an official release)
+00:48:55 <nitzmahone> jborean93: if you want to try and tweak the Force behavior to default false, I think I'd be OK with that for 2.3 as well
+00:49:49 <nitzmahone> But it'd be new UI...
+00:49:54 <jborean93> dag: haha sounds like a good way of thinking
+00:50:03 <nitzmahone> I *really* don't want to wait for 2.4 to invert that default
+00:50:22 <jborean93> I'll try and get the changes/tests happening sometime tonight or tomorrow night
+00:50:35 <nitzmahone> It only really matters on "stop" though...
+00:50:37 <bcoca> dag: i dont disagree
+00:50:38 <dag> jborean93: devel is devel, things may break or get reverted, I don't think we need to be compatible with our own breakage
+00:50:38 <jhawkesworth> new optional parameter is least evil in this case
+00:50:57 <jborean93> #action jborean93 update win_service with optional force parameter
+00:51:16 <dag> bcoca: you wanted me to add documentation clarification for stuff only introduced and reverted in less than a week IIRC :-)
+00:51:17 <nitzmahone> #action nitzmahone will face wrath of core team for breaking freeze rules
+00:51:35 <bcoca> dag:  it was unclear
+00:51:40 <jhawkesworth> we'll stand behind you in a line
+00:51:49 <jborean93> This is a bugfix for a breaking change :)
+00:51:52 <jhawkesworth> admittedly from several timezones away
+00:51:53 <bcoca> not saying devel is sacrosanct, 2 diff things
+00:52:05 <jborean93> I broke win_service default actions and it needs ot be fixed
+00:52:35 <nitzmahone> But we still need a way to stop w/ deps, so agreed that new optional arg is best solution
+00:53:10 <nitzmahone> It's arguably a corner-case, regardless, but if you happen to need it, you're screwed without it
+00:53:29 <jborean93> cool that was it for me around PR/2.3 changes
+00:53:46 * bcoca leaves out joke about already being scrwed by using windows in production
+00:53:59 <nitzmahone> jborean93: OK, just ping me on the PR when you get it and I'll hustle it in
+00:54:09 <nitzmahone> Anyone else? Going once...
+00:54:19 <jhawkesworth> no 2.3 from me
+00:54:26 <jtanner> where do new windows devs start?
+00:54:28 <jborean93> bcoa: My Mum says Windows is cool, she wouldn't lie
+00:54:46 <jtanner> lets say nitzmahone gets hit by a bus and a sev1 ticket comes in ... what doc do i start with?
+00:54:55 <dag> jborean93: You can steal stuff from here: https://github.com/ansible/ansible/pull/20539
+00:55:06 <dag> jborean93: parameter documentation and stuff :)
+00:55:18 <nitzmahone> jtanner: docs are left as an exercise for the reader
+00:55:25 <jtanner> =(
+00:55:27 <dag> although there was an issue with the provided test example
+00:55:30 <jhawkesworth> jtanner: truth be told far too much of what I know about powershell comes from flaky stackoverflow answers
+00:55:36 <nitzmahone> But srsly, that'll be a personal focus for 2.4-
+00:55:41 <jtanner> i can google primitives
+00:56:01 <jtanner> python -> winrm -> powershell workflows are what i presume i can't google
+00:56:17 <nitzmahone> I've had this major doc rewrite that's been half-done and invalidated a couple times already just for *user* docs; dev-docs are almost completely missing
+00:56:32 <nitzmahone> jtanner: not important for module dev so much
+00:56:36 <dag> jhawkesworth: You'll love this one: https://www.simple-talk.com/sysadmin/powershell/a-plethora-of-powershell-pitfalls/
+00:56:46 <jborean93> dags: idea of having a standard reference module is good
+00:56:55 <nitzmahone> jtanner: but if you want to hack on the actual Ansible exec wrapper, yeah, a lot of interactions to understand
+00:57:05 <jhawkesworth> thanks dag
+00:57:22 <jborean93> That was a major issue I had when starting was just finding out the best way of doing something
+00:57:33 <jtanner> nitzmahone: i think it's inevitable someone else on our team other than you is going to have to do it
+00:57:34 <nitzmahone> Yeah, there are plenty of turds in the pool ;)
+00:57:38 <jtanner> your plate is piled too high
+00:57:57 <dag> nitzmahone: can we get a fix in for the XMLCLI output, to me that's probably the most annoying thing in Ansible+Windows
+00:57:59 <nitzmahone> jtanner: we're working on that problem too ;)
+00:58:14 <nitzmahone> dag: yeah, that's on my 2.3-ish bugfix list
+00:58:15 <jtanner> nitzmaHA ?
+00:58:30 <dag> CLIXML
+00:58:35 <dag> nitzmahone: perfect !
+00:58:54 <nitzmahone> It may or may not make it for 2.3.0 depending on how many RCs we do, but it can go before 2.3
+00:58:58 <nitzmahone> s/2.3/2.4
+00:59:02 <dag> nitzmahone: if you can give hints how to tackle it, I don't mind looking at it
+00:59:29 <dag> nitzmahone: idem for other stuff
+00:59:37 <nitzmahone> I wrote a crusty function to filter the CLIXML in winrm.py- mainly just needs to be moved out into a shared location
+01:00:18 <jhawkesworth> ooh, when there's example of shared location, can you point it out.
+01:00:30 <nitzmahone> Also depends on if we always filter from python- if not, I'd have to implement a PS/.NET version of it too
+01:01:15 <jhawkesworth> there's various PRs knocking around for looking up SIDs which would be best off in shared a place
+01:01:21 <nitzmahone> The layered exec wrapper stuff sorta argues for a .NET version
+01:01:23 * dag assumed CLIXML handling would be part of pywinrm
+01:01:49 <nitzmahone> Except that we get it back from internal layers that are using runspaces too
+01:02:00 <dag> if it's powershell, that rules me out :-/
+01:02:29 <jborean93> nitzmahone: I need to pick your brain at some point around making changes to pywinrm and not breaking things
+01:02:42 <nitzmahone> I just merged a PR today that should make it a lot quieter w/ async/become- there was some cruft from Add-Type that made it hella noisy
+01:02:48 <jborean93> The PSRP stuff currently is working in my branch but needs some work around handling the changes made
+01:03:57 <nitzmahone> Cool.
+01:04:18 <nitzmahone> I'd probably try to implement as a subclass of Protocol or something
+01:05:06 <nitzmahone> Well, we're technically over time- any other burning stuff to discuss before we call it a day?
+01:05:43 <jhawkesworth> no, just really glad this is happening!
+01:05:52 <nitzmahone> Me too- long overdue (and totally my fault)
+01:06:34 <nitzmahone> OK, closing up in 5 . 4 . 3...
+01:06:41 <jhawkesworth> I plan to test my (upgraded) playbooks against 2.3 starting next week
+01:06:50 <nitzmahone> Noice
+01:06:52 <jhawkesworth> cheers everyone
+01:07:08 <nitzmahone> Thanks everyone! We'll see you around the mines...
+01:07:10 <nitzmahone> #endmeeting

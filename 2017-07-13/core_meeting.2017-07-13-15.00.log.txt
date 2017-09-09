@@ -1,0 +1,336 @@
+15:00:01 <thaumos> #startmeeting core meeting
+15:00:01 <zodbot> Meeting started Thu Jul 13 15:00:01 2017 UTC.  The chair is thaumos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:00:01 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:00:01 <zodbot> The meeting name has been set to 'core_meeting'
+15:00:35 <chillysurfer> hello
+15:00:40 <thaumos> #chair chillysurfer
+15:00:40 <zodbot> Current chairs: chillysurfer thaumos
+15:00:43 <thaumos> hello
+15:00:53 <ryansb> hi team
+15:01:16 * gundalow wave
+15:01:34 <gundalow> half here, ping if there is something that needs my attention
+15:02:16 * mattclay waves
+15:02:26 <thaumos> #chair ryansb gundalow
+15:02:26 <zodbot> Current chairs: chillysurfer gundalow ryansb thaumos
+15:02:32 <thaumos> #chair mattclay
+15:02:32 <zodbot> Current chairs: chillysurfer gundalow mattclay ryansb thaumos
+15:02:40 * nitzmahone blinks
+15:02:56 <thaumos> #chair nitzmahone
+15:02:56 <zodbot> Current chairs: chillysurfer gundalow mattclay nitzmahone ryansb thaumos
+15:03:29 <thaumos> #chair shertel
+15:03:29 <zodbot> Current chairs: chillysurfer gundalow mattclay nitzmahone ryansb shertel thaumos
+15:03:30 <newswangerd> o/
+15:03:34 <thaumos> #chair newswangerd
+15:03:34 <zodbot> Current chairs: chillysurfer gundalow mattclay newswangerd nitzmahone ryansb shertel thaumos
+15:03:47 <akasurde> o/
+15:03:51 <thaumos> #chair akasurde
+15:03:51 <zodbot> Current chairs: akasurde chillysurfer gundalow mattclay newswangerd nitzmahone ryansb shertel thaumos
+15:03:59 <akasurde> thaumos, Thanks
+15:04:21 * samdoran waves
+15:04:26 <thaumos> #chair samdoran
+15:04:26 <zodbot> Current chairs: akasurde chillysurfer gundalow mattclay newswangerd nitzmahone ryansb samdoran shertel thaumos
+15:06:29 <thaumos> #topic ansible/ansible#24960 and ansible/ansible#26668
+15:06:44 <thaumos> #link https://github.com/ansible/ansible/pull/24960
+15:06:53 <thaumos> #link https://github.com/ansible/ansible/pull/26668
+15:07:08 <thaumos> looks like we have two open PRs for a Kube connection plugins
+15:07:46 <thaumos> not sure we really have anyone here that is biased in either way.
+15:08:19 <thaumos> I am thinking we should connect the authours of both pr's together and see if they can combine forces in some way.
+15:09:14 <bcoca> 2nd already tried contacting 1st, but no response from him
+15:09:35 <thaumos> well, he responded one time
+15:10:19 <thaumos> #chair bcoca
+15:10:19 <zodbot> Current chairs: akasurde bcoca chillysurfer gundalow mattclay newswangerd nitzmahone ryansb samdoran shertel thaumos
+15:10:52 <bcoca> thaumos: tempted to accept both
+15:10:53 <thaumos> you raised this for today @bcoca, what are your thoughts on them?
+15:11:13 <bcoca> kubernetes and kubectl plugins
+15:11:36 <akasurde> There is some disagreement which caused another PR - https://github.com/ansible/ansible/pull/24960#issuecomment-314627332
+15:12:04 <bcoca> akasurde: that is the 2nd pr we linked above
+15:12:15 <nitzmahone> That'd certainly be the diplomatic approach...
+15:12:24 <akasurde> bcoca, yep
+15:12:27 <bcoca> let the users decide which one they want/need
+15:12:40 <bcoca> i would rename 2nd and accept both (support: community)
+15:12:42 <jtanner> i'm here, but will have to leave early
+15:13:59 <nitzmahone> Maybe try to unify arg style?
+15:14:33 <nitzmahone> (to make it easier to switch back/forth?)
+15:15:18 <thaumos> and that's what  I was inferring in getting the two to talk to eachother.
+15:17:34 <thaumos> I have doubts that the owner of the second PR will be willing to do so.
+15:18:51 <thaumos> looks like ansible-container is interested in the second PR as well.
+15:18:57 <jtanner> i'd let the ansible-container folks hash it out
+15:19:15 <jtanner> they're more experienced with k8s at this point
+15:21:21 <ryansb> heeeeeyy
+15:21:31 <thaumos> lol
+15:21:37 * bcoca sees buck passed and bounced back
+15:21:38 <abadger1999> hi
+15:21:47 <thaumos> #chair abadger1999
+15:21:47 <zodbot> Current chairs: abadger1999 akasurde bcoca chillysurfer gundalow mattclay newswangerd nitzmahone ryansb samdoran shertel thaumos
+15:22:21 <thaumos> @ryansb have these PR's been discussed?
+15:22:24 <newswangerd> just out of curiosity, do we require tests for new plugins?
+15:22:50 <bcoca> s/require/prefer/ .. but requireing a kubernetes setup for our tests ...
+15:23:52 <jtanner> bcoca: might be possible with minishift ... but still not something we've done yet
+15:26:10 <thaumos> #action thaumos to confer with ansible-container folks and get some opinions there as well.
+15:26:20 <ryansb> sounds good
+15:26:42 <thaumos> #action thaumos to revisit this topic next meeting
+15:26:54 <thaumos> any last things to add before we move on?
+15:27:57 <thaumos> #topic ansible/ansible#20717 (setup -> gather_facts renaming)
+15:28:08 <thaumos> I promised to bring this up today
+15:28:27 <thaumos> there's a bit of bikeshedding on this one.
+15:28:31 * bcoca hides in Yac shed
+15:28:47 <thaumos> Shall we do a public vote on the name proposed in the PR?
+15:31:18 * mikedlr waves.
+15:31:24 <thaumos> #chair mikedlr
+15:31:24 <zodbot> Current chairs: abadger1999 akasurde bcoca chillysurfer gundalow mattclay mikedlr newswangerd nitzmahone ryansb samdoran shertel thaumos
+15:31:27 <samdoran> Tons of bikeshedding on that one.
+15:31:52 <abadger1999> What were the choices?
+15:32:05 <bcoca> setup or gather_facts
+15:32:15 <abadger1999> no, there were others in the ticket.
+15:32:25 <abadger1999> Was facts proposed?
+15:32:31 <bcoca> samdoran: that does not even include many that were pushed outside of ticket
+15:32:37 <abadger1999> dag: ^
+15:33:06 <mattclay> It would be helpful if we had a list of the names that have been proposed.
+15:33:10 <thaumos> here are the three proposed, gather_facts, facts, get_facts.
+15:33:13 <thaumos> that's it
+15:33:52 <bcoca> last option, no change 'setup'
+15:34:19 <nitzmahone> just_the facts_maam
+15:34:29 <akasurde> gather_facts +1
+15:34:30 <abadger1999> +1 facts
+15:34:36 <mattclay> gather_facts and get_facts don't match our other facts modules which are {noun}_facts and not {verb}_facts
+15:34:51 <bcoca> it matches the keyword of same name
+15:34:52 <abadger1999> dag's points in https://github.com/ansible/ansible/pull/20717#issuecomment-277231501  make sense to me
+15:35:00 <mattclay> +1 for facts unless we come up with a {noun}_facts option to match the others
+15:35:02 <dag> here
+15:35:20 <thaumos> #chair dag
+15:35:20 <zodbot> Current chairs: abadger1999 akasurde bcoca chillysurfer dag gundalow mattclay mikedlr newswangerd nitzmahone ryansb samdoran shertel thaumos
+15:35:31 <dag> +1 facts
+15:36:19 <nitzmahone> +1 facts- it's the most retroactively consistent
+15:36:23 <dag> although get_facts is very Powershell :-)
+15:36:54 <mattclay> Does anyone like the idea of a {noun}_facts option, such as default_facts?
+15:36:57 <abadger1999> bcoca: dag's idea for the keyword is to rename the keyword to facts (with deprecated backwards compat gather_facts keyword)
+15:37:00 <samdoran> +1 facts, unless we come up with {noun}_facts
+15:37:04 <abadger1999> mattclay: that works for me too.
+15:37:10 <thaumos> system would be the noun i would choose
+15:37:14 <thaumos> but that's me
+15:37:39 <bcoca> i really dont like renaming the keyword
+15:37:45 <mattclay> I care less about the noun and more about the consistency with existing {noun}_facts modules, so that "facts" with a leading noun doesn't become the exception.
+15:38:17 <mattclay> s/with a leading/without a leading/
+15:38:18 <nitzmahone> If we rename, I'd also like to consider getting rid of the conflict with setup.ps1/setup.py.
+15:38:19 <abadger1999> mattclay: do we need separate name for the module that implements the framework and the default facts?
+15:38:54 <nitzmahone> (eg win_default_facts or whatever)- that conflict causes no end of grief for plugin loader
+15:38:55 <mattclay> nitzmahone: +1 to avoiding a name conflict
+15:39:11 <bcoca> mattclay: ansible_facts would be 'consisten't with that, but dont think it clarifies much
+15:39:32 <mattclay> bcoca: It's no worse than just "facts".
+15:39:42 <abadger1999> dag: I suppose my question about frameword vs default set of facts also goes to you
+15:39:47 <abadger1999> *framework
+15:40:02 <bcoca> that is 'current state'
+15:41:15 <mattclay> abadger1999: I'm not sure what you mean by framework vs default facts.
+15:41:15 <jimi|ansible> mattclay: i like default_facts
+15:41:24 <abadger1999> bcoca: we have only a single module that holds both the framework and the default facts.
+15:41:45 <bcoca> abadger1999: lost right now on what you mean by 'framework'
+15:42:27 <nitzmahone> default_facts is good for me also
+15:42:40 <abadger1999> so dag is proposing that hte future is a framework for loading facts.
+15:42:48 <abadger1999> and modules that implement the gathering of facts.
+15:43:03 <mattclay> nitzmahone: So default_facts and win_default_facts?
+15:43:05 <bcoca> was looking at makign that an action plugin that 'compiles' the facts module needed
+15:43:15 <nitzmahone> WFM
+15:43:52 <nitzmahone> Or just have it run them serially- slower, but trivial to implement
+15:43:57 <abadger1999> so we somehow have to tell the framework "gather the facts for junos, network, mounts"  and then the framework calls junos_facts, netword_facts, and mount_facts to gather the facts from the systems.  then the framework returns those facts.
+15:44:11 <dag> abadger1999: yes, there is a need at customers to add custom facts (plugins) that are custom
+15:44:28 <dag> abadger1999: like return facts related to application or own-design infrastructure
+15:44:31 <bcoca> abadger1999:  i had gist with action plugin that did this in rudamentary form .. but now i think we are sidetracking
+15:45:14 <abadger1999> So my question is whether we need to have default facts be a separate module from the facts framework or if they can continue to live inside of the same module name.
+15:45:17 <dag> abadger1999: my idea was to have a directory with plugins, if you add a plugin it would be taken as part of the facts gathering mechanism
+15:45:35 <bcoca> abadger1999: any framework would have to be of higher level than module itself
+15:45:56 <abadger1999> I'm thinking that we might want framework to be named facts.py and default facts to be named default_facts.py
+15:46:13 * mattclay steps away for a minute
+15:46:15 <dag> abadger1999: these plugins would be part of the default facts (so not on-demand)
+15:46:16 <nitzmahone> That makes sense
+15:46:27 <bcoca> making this whole discussion mute in that we would need to define the framework first
+15:46:46 <dag> bcoca: yes, I thank a rename would be best if we designed that first
+15:47:02 <jimi|ansible> it's moo, it's like a cows opinion, it doesn't matter
+15:47:06 <thaumos> that will take lots longer @dag
+15:47:06 <bcoca> rename was not inteded to deal with that, just the issue of clashing with setuptools
+15:47:20 <nitzmahone> jimi beat me to it
+15:47:22 <bcoca> moot
+15:47:23 <abadger1999> bcoca: well, dag raised that same point.  If you both agree that we can't do this rename until the plugin architecture is worked out then it would seem we shouldn't merge this yet....
+15:47:41 * mattclay is back
+15:47:59 <thaumos> for such an easy thing we're going to back out?
+15:48:06 <thaumos> seems really silly
+15:48:18 <abadger1999> on the other hand, if we can decide on the basic, then we could go forward with this and just make the framework conform to the naming we choose now
+15:48:31 <thaumos> everyone has  settled on default_facts.py
+15:48:40 <abadger1999> I'm +1 to facts.py
+15:48:44 <abadger1999> not default_facts.py
+15:48:52 <dag> I don't like default_facts.py
+15:48:52 <bcoca> +1 to closing the PR
+15:49:00 <thaumos> s/everyone/majority
+15:49:09 <abadger1999> Unless someone tells me that the framework is not going to happen or why default_facts.py works better with the framework.
+15:49:43 <jimi|ansible> i'm fine with facts.py too
+15:50:23 <mattclay> abadger1999: So with framework, facts.py, without framework, default_facts.py?
+15:50:28 <thaumos> I fear that if we name it facts.py, we'd have to make changes somewhere else to allow for the framework.
+15:50:45 <nitzmahone> What mattclay said
+15:51:05 <abadger1999> mattclay: If we're going to implement a framework eventually, then facts.py ; if we're not then I'm +1 to either facts.py or default_facts.py.
+15:51:07 <nitzmahone> Wait, reverse that
+15:51:43 <nitzmahone> Yeah- the eventual action should be facts, the current impl default_facts.
+15:51:46 <thaumos> if we implement a framework later, won't we have to create something that gives us default facts?  because facts.py would be a higher level function
+15:51:51 <thaumos> amiright?
+15:52:04 <mattclay> Does everyone at least agree that whatever.py should also have a matching win_whatever.py and win_whatever.ps1 for Windows?
+15:52:06 <abadger1999> nitzmahone: ah... so you see the framework existing entirely action plugin side?
+15:52:30 <abadger1999> nitzmahone: that would be the explanation I need for "default_facts.py would work better with the framework"
+15:52:37 <nitzmahone> Or call it facts now, add an action plugin later also called facts that calls default_facts by default
+15:53:22 <bcoca> at this point we are just speculating, going to close the PR and once we decide a) if we are creating this framwork and b) how it woudl look like, we can revisit
+15:53:28 <nitzmahone> So people that call facts now will transparently get the default behavior under  the framework
+15:53:31 <bcoca> otherwise we are going to be in endless bikeshed loop
+15:53:59 <nitzmahone> Yeah, I think we should do them together, otherwise we're just guessing on what that might look like
+15:54:05 <abadger1999> <nod>
+15:54:08 * mattclay nods
+15:54:45 <thaumos> okay, then let's close it
+15:54:57 <mattclay> bcoca: When the meeting is over can you link the discussion here in the PR?
+15:55:13 <thaumos> I will do it
+15:55:17 <mattclay> thaumos: Thanks
+15:55:26 <thaumos> 👍
+15:55:34 <thaumos> anything else for today
+15:56:13 <abadger1999> thaumos: yeah, have to discuss something from Tuesday
+15:56:26 <thaumos> can we do it in four mins?
+15:56:33 <abadger1999> https://github.com/ansible/ansible/pull/22567
+15:56:51 <abadger1999> yaml inventory: Support host-list (not a dictionary)
+15:56:55 <thaumos> #topic ansible/ansible#22567
+15:57:01 <thaumos> #link https://github.com/ansible/ansible/pull/22567
+15:57:01 <jtanner> /giphy oh no, not again
+15:57:05 <bcoca> -1 i want to keep spec simple
+15:57:29 <abadger1999> last week we decided that we were going to merge if bcoca was okay with it.
+15:57:33 <abadger1999> bcoca isn't okay with it.
+15:57:38 <abadger1999> we have to decide what we want
+15:57:47 <abadger1999> the ini file supports this
+15:57:55 <abadger1999> so I'm on the fence but leaning +1
+15:58:01 <bcoca> ini supports what?
+15:58:12 <bcoca> it has single format, host is always a key in section
+15:58:27 <bcoca> there is no dual format there
+15:58:35 <abadger1999> and json too apparently.
+15:59:24 * abadger1999 read dags comments wrong.  he's saying the json format supports it.
+15:59:30 <bcoca> ^ that has been an issue in the past and reason we cannot 'validtate' with dtd
+15:59:40 <bcoca> in the case of json/script
+15:59:58 <bcoca> raise AnsibleError("You defined a group '%s' with bad data for the host list:\n %s" % (group, data)) <= which is now an error
+16:00:12 <bcoca> it can ONLY be a list now
+16:01:14 <abadger1999> heh: need to update that error message.
+16:01:55 <bcoca> that aside, that was only true for a short time and we 'fixed it' .. really dont want to introduce that ambiguity again into the new format
+16:01:57 <abadger1999> <nod> if json no longer allows it, that would eliminate that argument for.
+16:02:15 <abadger1999> That's a backwards incompatible change but I suppose "inventory rewrite" is the time to do that anyway?
+16:02:28 <bcoca> abadger1999: no, that was done during 1.x versions iirc
+16:02:34 <bcoca> this is copied code
+16:02:34 <abadger1999> dag: ^  anything else?
+16:03:01 <dag> sorry
+16:03:02 <abadger1999> dag: Okay... bcoca is saying that the json format does not support lists there.
+16:03:14 <abadger1999> (in 2.x at least)
+16:03:33 <bcoca> if 'hosts' in data:
+16:03:35 <bcoca> if not isinstance(data['hosts'], list):
+16:03:36 <bcoca> raise AnsibleError("You defined a group '%s' with bad data for the host list:\n %s" % (group, data))
+16:03:56 <bcoca> ^ it supports a SINGLE way of doing it, as a list, not a dual mode
+16:03:57 <dag> so the difference between json and yaml is that the json inventory has a special section for defining vars to a host, and hosts is always a list
+16:04:25 <dag> in yaml, we made the mistake to define hosts as a dictionary IMO
+16:04:31 <bcoca> dag: yes, but that is how i defined the yaml format, if you want to create an alternate that matches the json .. fine, but it would be a diff plugin
+16:04:39 <bcoca> dag: not mistake, was on purpose
+16:05:12 <dag> well, normally there is only one place you want to define your host vars
+16:05:23 <bcoca> sadly that is not true for most
+16:05:31 <dag> it makes no sense to have them spread out over a file (possibly overriding it elsewhere)
+16:06:18 <dag> bcoca: there is only one namespace, so why would you want to allow host-vars elsewhere ?
+16:06:50 <bcoca> one namespace?
+16:07:12 <dag> hostvars
+16:07:23 <dag> the discussion is hard without showing examples
+16:07:33 <bcoca> why would we allog group_vars/ host_vars/ set_fact .. inline ini file .. etc ?
+16:08:23 <bcoca> in any case that is diff discussion and would require backwards incompatible change
+16:08:27 <dag> why would you want to set a few hostvars in group windows, and another set of hostvars in group datacenter1 (possible overriding the ones set elsewhere)
+16:08:52 <bcoca> dag: many reasons
+16:08:57 <samdoran> Not a matter of want, but people do it and need the flexibility.
+16:09:04 <bcoca> a) most hosts should have datacenter1 settings, except the windows ones
+16:09:06 <dag> bccoca: it's a support nightmare
+16:09:14 <bcoca> dag: depends, it CAN be
+16:09:14 <dag> which variable wins if defined in 2 places ?
+16:09:31 <bcoca> precednece is clear, child > parent , latter > former
+16:09:45 <bcoca> and you also have group priority
+16:09:50 <dag> well, datacenter1 settings would go into groupvars, not in hostvars
+16:09:53 <bcoca> in case latter ~> former
+16:10:09 <dag> that's groupvars, we are talking about hostvars
+16:10:25 <bcoca> hostvars will all ways have latter win
+16:10:26 <dag> again, discussing without examples is hard
+16:10:51 <dag> bcoca: the support nightmare is that you have no overview, because they are not listed together
+16:11:10 <dag> but the discussion is quite moot, it was designed like this and we cannot go back
+16:11:22 <dag> so host-lists are key-based with empty values
+16:11:24 <bcoca> you CAN create alternate format to do as you wish, with alternate plugin
+16:11:43 <dag> I don't understand
+16:11:54 <bcoca> dag: also ansible-inventory is my plan on solving 'inventory dispersal' .. which is not  jsut tye yaml pluing, ini and others + group/host_vars have that issue
+16:12:02 <bcoca> plugins/inventory/yaml2.py
+16:12:10 <abadger1999> bcoca: I didn't think our inventory host model was good enough to do what you're saying... does it in the rewrite?  (ie: [group1]\n host1 myvar=test1  \n\n  [group2]\n host1 myvar=test2 .... how do we choose whether myvar is test1 or test2?  Is it different if we use group1 vs group2 in the playbook hosts line? )
+16:12:40 * abadger1999 sees bcoca answered that as abadger1999 was typing the question.
+16:12:42 <bcoca> abadger1999: you'll only get one myvar,  hosts: does not matter
+16:12:51 <bcoca> its already collapsed
+16:13:10 <abadger1999> bcoca: right... and that's what I think dag is saying is the reason defining the vars in two places makes it a support headache.
+16:13:14 <bcoca> abadger1999: in the case of ini i believe is 'postiion in file'
+16:13:21 <dag> abadger1999: right, the ini-format has the same problem, but the json inventory does not
+16:13:43 <bcoca> abadger1999: dont disagree, but that is everywhere in ansible at this point
+16:13:54 <abadger1999> not in the json inventory?
+16:14:17 <bcoca> we dotn have a json inventory, we have a script inventory that takes json as a response
+16:14:23 <dag> but I do understand that allowing hosts to be both lists and dicts is another problem altogether if you want to test conformity
+16:14:23 <bcoca> ^ we COULD have a json inventory
+16:15:16 <bcoca> dag: and not completely true, its also hybrid in that if _meta is not added .. per host mini inventories are requested
+16:15:21 <dag> ok, so let's kill the 'hosts can be lists' thing
+16:15:21 <bcoca> _meta was an afterthought
+16:15:36 <dag> yeah, the _meta was an ugly hack
+16:15:49 <dag> I didn't say the json inventory was perfect :-)
+16:15:54 <dag> but the PR fixes a second problem
+16:15:55 <bcoca> im not against a format that works as you want, im just against making current ones even more complex
+16:16:28 <bcoca> no, the PR  does not as you are still free of using var def per host anywhere
+16:16:32 <dag> if you generate yaml with a dictionary of empty dictionaries, they are generated as value null
+16:16:38 <bcoca> it just gives you the option of making 'null hsots' 1 char longer
+16:16:52 <dag> and currently a null-value causes a traceback
+16:16:57 <bcoca> 'host entries  with null vars'
+16:17:07 <bcoca> taht is diff issue, can be easily fixed
+16:17:19 <dag> the PR fixes that too
+16:17:36 <abadger1999> dag: k.  Is just that portion of the PR separable from the rest?
+16:18:09 <bcoca> simpler fix is just and data['vars'] .. no need to check for None as we dont want to process empty one either
+16:18:21 <dag> abadger1999: I think the hosts-list is dead because of backward compatibility and the fact that bcoca wants to validate yaml inventories
+16:18:28 <abadger1999> <nod>
+16:18:36 <dag> unless you can validate with hosts being both dicts or lists
+16:18:38 <bcoca> i actually want to validate all our yaml (plays/roles/etc)
+16:18:48 <abadger1999> k  So lose the PR and bcoca will implement the simpler check for None.
+16:18:56 <abadger1999> That sound like the action?
+16:18:59 <bcoca> dag: no, i can leave undefined, but then it is not 'validatable' like vars: are
+16:19:00 <dag> bcoca: fine by me
+16:19:13 <dag> but the for will already cover empty dicts
+16:19:16 <dag> for-loop
+16:19:27 <abadger1999> (It is possible to validate depending on the validation tool used... I don't think we've settled on one yet.)
+16:19:47 <dag> bcoca: what is there to validate if it is defined as dict ?
+16:20:08 * abadger1999 can't remember the name of the validation spec he was looking at that would do it... not sure if that would be the one we'd want to standardise on either
+16:20:15 <dag> or do you mean it could be defined as an int or string instead ?
+16:20:30 <bcoca> mapping
+16:20:59 <bcoca> dag: no, but you need to validate its a dict
+16:21:07 <bcoca> if it CAN be alist ... then you cannot validate either
+16:21:21 <bcoca> then someone can set as string/int .. yes
+16:21:35 <dag> the whole point boils to this: YAML is supposed to be human-editable and convenient, and listing hosts as empty dicts is awkward
+16:21:41 <bcoca> abadger1999: i checked all existing frameworks
+16:21:57 <dag> the question is, do we want to make the YAML format easy for validators, or for humans
+16:22:54 <bcoca> i prefer both
+16:23:21 <bcoca> but humans are quirky, i found the current format easy and intelligeble, yes people can make it horrible, but that is by choice
+16:23:26 <dag> well, if you define it as dicts, it looks awkward and people can't create a list of hosts
+16:23:52 <bcoca> it also does the uniqueness upfront in the parser, avoids problems with dupe names
+16:24:27 <dag> again, that's looking at it from the code, not from the human point of view
+16:24:32 <abadger1999> bcoca: I can look it up if it would make a difference to your decision.
+16:24:34 <dag> we use YAML inventories heavily
+16:24:48 <dag> and we use groups heavily too
+16:25:49 <bcoca> dag: no reason you cannot create the format you want as a diff plugin
+16:26:03 <bcoca> that is WHY i moved to plugins in inventory
+16:26:12 <bcoca> the old yaml format was hardcoded, now you can choose
+16:26:12 <dag> bcoca: again, my concern is not just for myself
+16:26:19 <dag> I have that patch now anyway
+16:26:33 <bcoca> ^ my point, is plugin can be shipped with ansible also
+16:27:43 <dag> that does not look like a better solution
+16:27:55 <dag> shipping two yaml plugins because one does not support host-lists as lists
+16:28:56 <bcoca> shpping mulitlpe formats and allow user to choose what fits him bets
+16:28:57 <bcoca> best
+16:30:27 <dag> not compelling to me, so I won't propose that
+16:30:41 <dag> but hey, it's fine, nobody else is interested here
+16:30:49 <dag> so let's keep it as-is
+16:31:09 <dag> we'll have that PR to point people to with a valid reason
+16:31:39 <dag> bcoca: could you fix the null-values, because that's going to cause problems
+16:31:44 <bcoca> pr done
+16:31:54 <bcoca> https://github.com/ansible/ansible/pull/26765
+16:31:56 <dag> thanks !
+16:32:18 <abadger1999> Cool.
+16:32:41 <thaumos> thanks everyone for attending today.
+16:32:45 <thaumos> #endmeeting

@@ -1,0 +1,288 @@
+19:01:03 <gundalow> #startmeeting Core Team Meeting
+19:01:03 <zodbot> Meeting started Tue Dec 20 19:01:03 2016 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:01:03 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:01:03 <zodbot> The meeting name has been set to 'core_team_meeting'
+19:01:21 <gundalow> #chair allanice001 bcoca jimi|ansible jtanner mattclay nitzmahone
+19:01:21 <zodbot> Current chairs: allanice001 bcoca gundalow jimi|ansible jtanner mattclay nitzmahone
+19:01:37 <nitzmahone> yo
+19:01:39 * mattclay waves
+19:01:54 <gundalow> #info agenda https://github.com/ansible/community/issues/147
+19:02:18 <gundalow> Was dag-'s suggestion
+19:02:27 <gundalow> https://github.com/ansible/community/issues/147#issuecomment-266018259 discussed before
+19:02:32 <gundalow> [13:48] BTW can we introduce a Regression issue/PR type ?
+19:02:48 <gundalow> [13:49] this type of issue/PR could be looked at when evaluating the stable-branch(es)
+19:03:17 <gundalow> #topic Regression issue/PR type
+19:03:23 <gundalow> #info https://github.com/ansible/community/issues/147#issuecomment-266018259
+19:03:27 <gundalow> What do people think
+19:03:59 <allanice001> i guess it depends on what we call stable
+19:04:07 <bcoca> he already submitted PR and it was merged
+19:04:12 <allanice001> would that currently be 1.9 and above ?
+19:04:49 <bcoca> 2.3
+19:05:02 <bcoca> current stable is 2.2
+19:05:07 <ryansb> allanice001: stable is the last `.x` release
+19:05:17 <gundalow> bcoca: We are talking about "gundalow commented 11 days ago", not sure what PR you are talking about
+19:05:22 <ryansb> so right now 2.2 is stable, and in a few months 2.3 will be stable
+19:05:46 <bcoca> ah, displaying errors, was reading top of ticket
+19:05:49 <allanice001> ack
+19:05:59 <bcoca> -1 regression as we dont really have diff workflow
+19:06:16 <gundalow> bcoca: ah, the #issecomment markers really should highlight the selected comment
+19:06:55 <gundalow> Is the actual thing we need to answer "Should this be backported?"
+19:07:21 <bcoca> which is not for the submitter to decide
+19:07:25 <bcoca> and we have backport label
+19:07:36 * allanice001 thinks documentation should be slightly improved
+19:07:58 <allanice001> feature - implemented Vx.y
+19:08:04 <bcoca> docs state that the 'commiter', not submitter' will decide on backports
+19:08:50 <bcoca> allanice001: all feaetures should have version_added: x.y, otherwise its a doc bug, we should already be doign that
+19:09:04 <bcoca> and we dont backport features, only bugfixes
+19:09:10 <allanice001> gotcha
+19:09:26 <gundalow> nitzmahone: mattclay What do you think?
+19:09:34 * gundalow is undecided
+19:10:22 <mattclay> Unless we have a different workflow defined for an issue marked as a regression, I don't think we gain anything.
+19:10:38 <gundalow> OK, marking as a NOP
+19:11:02 <nitzmahone> Not opposed to it as a tag, but as mattclay sez, we'd need to figure out a workflow.
+19:11:12 <gundalow> #topic ansible/proposals#43 make master an alais for devel in the git repo
+19:11:25 <bcoca> not proposed as tag, proposed as 'user defined' so they can instruct us on what to backport
+19:11:33 <bcoca> ^ had full discussion with dag on that in ticket
+19:12:58 * gundalow hasn't been following this proposal
+19:13:15 <gundalow> Do we need to ask GitHub to do somethings (assuming we want this)
+19:13:26 <bcoca> did we get more info on the consequences on the git change? we discussed last meeting and tabled until someone researched the consequences for github
+19:13:41 <allanice001> we discussed it lastweek gundalow - issue was raised for github supporting it
+19:14:07 * gundalow doesn't see a link to an issue in there
+19:14:08 <bcoca> so if no one took time to research, do we table again or dismiss?
+19:14:32 <allanice001> it also needs to be defined by adoption
+19:14:48 <bcoca> gundalow: you only copyied irc conversation after i had discussion with him in ticket
+19:14:55 <allanice001> exponential amount of people are commiting code in the current format
+19:15:08 <gundalow> bcoca: I didn't copy anyting
+19:15:19 <bcoca> https://github.com/ansible/community/issues/147#issuecomment-266018259
+19:15:22 <allanice001> if a user wants a master branch, in their own fork, no one prevents them from doing it
+19:15:22 <gundalow> bcoca: Didyou mean alikins?
+19:15:33 <bcoca> ^ comment says 'gundalow'
+19:16:15 <gundalow> bcoca: We are talking about master/devel now :)
+19:16:20 <gundalow> stop confusing me :P
+19:16:29 <nitzmahone> Yeah- this one: https://github.com/ansible/proposals/issues/43#issuecomment-267355222 ?
+19:16:35 <bcoca> gundalow: you were asking about PR, that was previous topic
+19:16:51 <gundalow> ........................................
+19:16:52 <gundalow> ........................................
+19:16:52 <gundalow> ........................................
+19:16:57 <gundalow> devel v master
+19:17:20 <gundalow> What are the next steps?
+19:17:20 <bcoca> again, that we discussed last week and tabled until someone research consequences, since no one did, cannot advance
+19:17:27 <bcoca> now we can decide to table again or just dismiss
+19:17:56 <nitzmahone> I still haven't heard any real benefit beyond anecdotal "some tools..."
+19:18:23 <gundalow> cool, updatedthe proposal
+19:18:30 <gundalow> Anyone got anything else on that?
+19:18:35 <bcoca> 'some people want it', i have no objection, but we dont know consequences, since no one wants to do the research ... not worth the risk imo (until proven there is no risk)
+19:18:43 <gundalow> +1
+19:18:44 <nitzmahone> +1
+19:18:54 <bcoca> -1
+19:19:09 <gundalow> Right, NEXT
+19:19:10 <allanice001> ~
+19:19:21 <gundalow> #topic Community thoughts on adding a documentation bot to the #ansible IRC channel
+19:19:34 <allanice001> ill do some testing on it next week, if you want to table it
+19:19:42 <bcoca> +10 .. now find someone with time to code and add it
+19:19:56 <raktajino> hey folks sorry
+19:20:01 <gundalow> raktajino: Hi :)
+19:20:02 <bcoca> also need to find RH resources to run it from
+19:20:14 <gundalow> gregdek: You around?
+19:20:53 <gundalow> What do you expect would be the triggers/keywords for the new bot?
+19:20:56 <allanice001> would doccabot be a new bot alltogether, or extending existing bot?
+19:21:13 <gundalow> ie How would this work in practice?
+19:21:19 <mattclay> What exactly would this documentation bot do?
+19:21:31 <raktajino> So my thought when I proposed this was something similar to what the #nginx channel has
+19:21:42 <raktajino> not sure if anyone has spent much time there but essentially you can do something like this:
+19:21:43 <bcoca> !doc loop conditionals
+19:21:45 <raktajino> !loops | someuser
+19:21:58 <raktajino> you'd get a response like: someuser: Check out the loops documentation at [url]
+19:22:41 <gundalow> So a mapping from keywords to URLs?
+19:22:56 <bcoca> and/or search on docsite
+19:23:00 <raktajino> ++
+19:24:01 <nitzmahone> Sounds neat, but somehow I doubt we're going to get people to devote to that. :(
+19:24:09 <nitzmahone> (internall, anyway)
+19:24:13 <ryansb> It'd definitely get enough use
+19:24:32 <bcoca> me too, but again, resource constraint
+19:24:33 <nitzmahone> *cough* intern project *cough*
+19:24:40 <gundalow> Sounds like an interesting idea. I wonder if we should start by defining the mapping and see if we have enough good things to document
+19:24:46 <bcoca> nitzmahone: she only has about 3000 before that one
+19:24:51 <gundalow> If we do, we've done the first step
+19:25:01 <gundalow> If not we've identified where we are missing some docs
+19:25:04 <nitzmahone> Nah, I think we're getting a new intern this year- Sloane's on for real
+19:25:05 <ryansb> nitzmahone: no longer intern, just sayin'
+19:25:24 <bcoca> gundalow: we already have that data in online search, service we use sends us reporting
+19:25:43 <gundalow> oh, I didn't know
+19:25:45 <bcoca> task1: get new intern
+19:26:11 <bcoca> gundalow: ping docschick if you want to get access
+19:26:27 <gundalow> Should this be created as a proposal, which may end up being a spec for the intern?
+19:26:33 <nitzmahone> WFM
+19:26:38 <ryansb> +1
+19:26:44 <nitzmahone> raktajino, you interested in starting that?
+19:26:51 <allanice001> does it need to be internal ?
+19:26:54 <raktajino> Sure! Is there a template or example I can base my document from?
+19:27:09 <nitzmahone> See the issue template on ansible/proposals
+19:27:11 <gundalow> https://github.com/ansible/proposals/
+19:27:14 <raktajino> right on thanks
+19:27:17 <gundalow> (Now with README)
+19:27:20 <bcoca> allanice001: bots need to be registered with channel, dont really want to do that with code that runs in my basement
+19:27:56 <allanice001> true, but bot can be seperate github repo an external entity can contrib to
+19:28:06 <gundalow> yup
+19:28:11 <nitzmahone> No reason it shouldn't be public
+19:28:13 <gundalow> Code will be public
+19:28:58 <allanice001> if its a new bot, i have a framework i can contribute for bot
+19:29:07 <gundalow> Ace
+19:29:30 <nitzmahone> Would def be a new bot- there's pretty much zero overlap with existing ansibot
+19:29:40 <raktajino> Awesome, I'll try and get this submitted before tomorrow AM
+19:30:10 <gundalow> Excellent, thanks :)
+19:30:22 <gundalow> Anyone got anything else on that before we move onto the next item?
+19:30:25 <allanice001> yeah, but if ansibot code is available, no reason not to look at modularising / extending it
+19:30:44 <raktajino> allanice001: I'll include that as a potential option in the proposal
+19:30:49 <gundalow> ansibot = PR/Issue bot
+19:30:55 <nitzmahone> chatbot != GH bot
+19:30:56 <allanice001> can discuss seperately / after meeting
+19:31:11 <gundalow> so moving on
+19:31:21 <gundalow> #topic Discuss module file layout/category metadata: ansible/proposals#46
+19:31:30 <gundalow> #info https://github.com/ansible/proposals/issues/46
+19:31:48 <gundalow> Not sure who outside of Core has seen this
+19:31:56 <nitzmahone> So I saw gundalow's last comment, but I still think straight alpha is simplest. So long as we're under 1k files in each dir, there shouldn't be any issues.
+19:31:59 * gundalow added some facts & figures to the the end
+19:32:45 <nitzmahone> Basically we're trying to get rid of encoding metadata in file paths- we got rid of half with core/extras merge
+19:32:51 <gregdek> gundalow: yes (reading up)
+19:32:54 <nitzmahone> Now we should get rid of category stuff
+19:33:01 <nitzmahone> (move to metadata)
+19:33:01 <bcoca> i thought about it more, i think this proposal should be delayed and we should first have a proposal to reorganize docs based on metadata, then once directories are not 'significant' we can reexamine this one
+19:33:11 <gundalow> Would we have different metadata groupings to directory groupings that we have today
+19:33:38 <bcoca> or we just hijack this proposal into the doc reoorg around metadata ....
+19:33:45 <nitzmahone> Docs already work that way
+19:33:59 <nitzmahone> The category metadata that drives them is just extracted from the dirs
+19:34:34 <bcoca> ok, lets rephrase 'extract the classification metadata from internal metadata field instead of from directories'
+19:34:37 <bcoca> happy now?
+19:34:57 <nitzmahone> Problem is that this move would again invalidate open PRs
+19:35:09 <nitzmahone> So if we let them pile up again, then we'll never be able to do it.
+19:35:10 <bcoca> which is more 'fun'
+19:35:22 <bcoca> i still move to do the metdata change, dir change can wait
+19:35:23 <nitzmahone> That's like a 2 line code chage
+19:35:28 <bcoca> not really
+19:35:43 <bcoca> not hard, but its not 2 lines
+19:35:43 <mattclay> If we move the modules, then we'll need a smarter PR mover to handle the path changes.
+19:36:38 <allanice001> can you move out the docs thats not metadata?
+19:36:48 <bcoca> -1 to move modules now +1 to change classification source
+19:37:05 <bcoca> allanice001: ?!?!
+19:37:45 <gundalow> "It's very difficult to locate the code for a module today" - I disagree with that, find modules -name "foo.py", sorted. I'll accept there is sometimes debate about *where* a new module should go, which is a "How do you want this grouped in the docs"
+19:37:54 <allanice001> currently, docs built from metadata, where possible, right?
+19:38:37 <bcoca> not sure we are talking about same thing, currently we have 'metadata field' inside modules but the current 'metadata used' is the directory names themselves
+19:38:41 <nitzmahone> gundalow: decoupling that is a relatively easy first step
+19:38:44 <bcoca> which is used to build the module categories
+19:39:02 <allanice001> right, so its becomes a classification thing, as you mentioned
+19:39:09 <bcoca> gundalow: ansible-doc <module name> |head -n1 (in devel)
+19:39:09 <gundalow> nitzmahone: Sure, but I don't think it's an issue. Understanding what the real issue is key before fixing stuff
+19:39:54 <gundalow> bcoca: We can make that print out the path to the module if you want
+19:40:07 <gundalow> It feels like there are two issues
+19:40:08 <bcoca> it does already
+19:40:14 <gundalow> so not a problem then
+19:40:16 <nitzmahone> Basically that there's a lot of unnecessary bikeshedding about where a module should live, and easy navigation to it after the fact (esp via GH). It's not a super big deal though.
+19:40:26 <bcoca> function modulepath {  ansible-doc $1|head -n1|awk '{print $3}'|sed -e 's/[)(]//g' } <= its in my bashrc
+19:40:48 <nitzmahone> It was suggested that I write a proposal for it, so I did. We should definitely be getting that stuff from metadata though.
+19:40:53 <bcoca> nitzmahone: bikeshedding will not be avoided, just moved to 'entries in metadata'
+19:41:10 <bcoca> which im fine with, as we can have more than one, dont want to litter current dirs with symlinks
+19:41:14 <nitzmahone> Yeah, except that metadata allows N categories w/o symlinks. :)
+19:41:21 <bcoca> jinx
+19:41:23 <nitzmahone> mental jinx
+19:41:36 <mattclay> At least we can change metadata without having to move the modules around.
+19:41:48 <bcoca> so i propose: a) move docsbuild to use metadata, b) revisit dir structure in future release (dont want to change too much at once)
+19:41:50 <nitzmahone> Yep- sounds like we're all agreed on that part
+19:41:56 <nitzmahone> WFM
+19:42:02 <allanice001> wfm
+19:42:12 <bcoca> engage!
+19:43:27 <nitzmahone> gundalow: are you scribing results on that somewhere? I've added to my backlog
+19:43:59 * nitzmahone needs to relocate, will be back on in a bit
+19:44:10 * gundalow will add to the proposa
+19:44:11 <gundalow> l
+19:44:21 <gundalow> NEXT
+19:44:24 <gundalow> ............................
+19:44:24 <gundalow> ............................
+19:44:35 <gundalow> #topic optional static type checking and type hints in Ansible: ansible/proposals#44
+19:44:43 <gundalow> #info https://github.com/ansible/proposals/issues/44
+19:45:02 <bcoca> not sure that helps much when we mostly pass objects, lists and dicts
+19:45:05 <gundalow> mattclay: Do you know Adam's IRC name?
+19:45:11 <bcoca> but not against it
+19:45:16 <bcoca> +-0
+19:45:17 <mattclay> gundalow: I don't.
+19:45:50 <allanice001> gundalow: @xen0l
+19:45:58 <alikins> https://mypy.readthedocs.io/en/latest/getting_started.html  seems to imply py3.3+ only
+19:46:28 <mattclay> The tool requires py3.3, but the code it analyzes can be for py2.
+19:46:31 <bcoca> taht is a non starter
+19:46:41 <bcoca> ah, nvmd then
+19:46:57 <mattclay> https://mypy.readthedocs.io/en/latest/python2.html
+19:47:10 <gundalow> 1) Do we think this would help us catch issues?
+19:47:30 <gundalow> 2) What would the process/effort be in adding this type data?
+19:48:25 <mattclay> I think it will help catch issues, but the cost to add/maintain the annotations may be more than we want.
+19:48:56 <bcoca> idem, its hard for things like these to justify their cost unless it was a mandate of the language to begin with
+19:49:11 <gundalow> Is it something we can force for new libraries/functions?
+19:49:34 * gundalow is trying to work out if there is a way we can require it from this point forward
+19:50:13 <allanice001> do you want to? a partial lib update may not get everything tagged
+19:50:27 <allanice001> would that cause a failure from testing side ?
+19:51:09 <allanice001> i would suggest that the testing would rather need to improve
+19:51:32 <allanice001> so if module is 50% covered - next commit should exceed 50% coverage
+19:51:45 <allanice001> meet or exceed..
+19:52:16 <mattclay> Requiring it for modules may be too high of a barrier for contributions. Perhaps less so for non-module code.
+19:53:20 * gundalow doesn't have a handle on the cost nor the benefit yet
+19:53:25 <bcoca> -1 for modules
+19:54:00 <bcoca> modules should be kept as simple as possible, if  one has 20 classes and 50 methods ...we should reject on excessive complexity alone
+19:55:07 <abadger1999> Sorta -1 on this.... The problem is that it is a much higher barrier to entry.
+19:55:09 <allanice001> i agree with having code complexity as part of automated testing
+19:55:09 <mattclay> One of the problems with the type annotations is keeping them up-to-date. It's easy for someone who isn't using type checking tools to make changes and not realize that the annotations are now wrong.
+19:55:52 <gundalow> Have we had examples of this causing us issues?
+19:56:20 <gundalow> So with other tools/linters we've seen bugs that they would have caught
+19:57:05 <bcoca> i still see PRs go through with things pyflakes catches ... not sure how effective our use of them is
+19:58:12 <gundalow> unless we enforce at CI then we aren't getting full (any) use of the tool
+19:58:36 <allanice001> how many contributers test locally before creating PR’s ?
+19:58:40 <bcoca> this is enforcing validation, not CI
+19:58:59 <bcoca> allanice001: no way for us to know
+19:59:10 <bcoca> also, how much testing?
+19:59:23 <bcoca> make tests passes pretty easy, using ansible-test .. most dont have the infra or knowledge
+20:00:59 <gundalow> So personally I'd prefer to see us start enforcing rules incrementally from other linters/checkers on the codebase as I've seen bugs that they would have caught
+20:01:52 <mattclay> Perhaps this is something that we should revisit for a future release, after we've had time to implement more of the static analysis and linting already on our roadmap for 2.3.
+20:02:00 <gundalow> +1
+20:02:00 <abadger1999> mattclay: +1
+20:02:05 <allanice001> agree on enforcing existing rules before implementing new ones
+20:02:32 <abadger1999> I think in terms of maturity static typing will either be much more mainstream or more obviously niche in two years time.
+20:02:50 <gundalow> #agreed This is something that we should revisit for a future release, after we've had time to implement more of the static analysis and linting already on our roadmap for 2.3.
+20:02:55 <abadger1999> which will make it easier to evaluate whether it's worthwhile.
+20:03:00 <gundalow> Good point
+20:04:12 <gundalow> Cool
+20:04:14 <gundalow> ..............................
+20:04:15 <gundalow> ..............................
+20:04:15 <gundalow> ..............................
+20:04:24 <gundalow> #topic Open Floor
+20:06:11 <gundalow> Anyone got anything else
+20:06:32 <allanice001> any know if @coxley is around this year still?
+20:06:40 <allanice001> to comment on a PR
+20:06:45 <gundalow> #info No meetings week between Christmas & New years
+20:07:36 <gundalow> allanice001: https://github.com/coxley doesn't look that active
+20:07:41 <gundalow> What PR/
+20:08:00 <allanice001> https://github.com/ansible/ansible/pull/19421
+20:08:25 <gundalow> ah
+20:08:32 <gundalow> contrib/inventory/nsot.py: Make it compatible with NSoT v1.x
+20:08:41 <gundalow> That PR *looks* fairly straight forward
+20:08:49 <allanice001> yeah, this was a change in NSoT
+20:09:14 <allanice001> or at least due to a structure change in NSoT
+20:09:35 <gundalow> Is the change backward compatable?
+20:09:52 <gundalow> e.g. will nsot < v1.x servers still work?
+20:10:12 <allanice001> nope
+20:10:26 <allanice001> theres no middle ground either
+20:11:08 <allanice001> unless i create something like nsot_1.x.py
+20:11:09 <gundalow> Can you detect, maybe if the the new/old datastructure exists?
+20:11:48 <mattclay> Based on the changes in the PR, it seems like you should be able to.
+20:11:53 <allanice001> sure, will wrap them in a try statement
+20:11:59 <gundalow> Thanks
+20:12:17 <allanice001> just need to do it locally to find the correct exception
+20:12:28 <allanice001> i’ll update the pr once complete
+20:12:31 <mattclay> allanice001: Be sure to include a comment explaining why (for example, the versions expected to use each code path).
+20:12:38 <allanice001> ack
+20:12:38 <gundalow> nsot 1.0 (2016-04-27)
+20:12:57 <gundalow> So I can imagion that their may be people running on <1.0 still, and we wouldn't want to break that
+20:14:00 <allanice001> cool
+20:14:23 <gundalow> allanice001: Sweet, thanks
+20:14:26 <gundalow> ........................
+20:14:26 <gundalow> ........................
+20:14:30 <gundalow> Anything else?
+20:16:00 <gundalow> Thanks everybody :)
+20:16:04 <gundalow> #endmeeting

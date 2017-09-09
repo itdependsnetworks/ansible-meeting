@@ -1,0 +1,197 @@
+19:02:59 <abadger1999> #startmeeting Ansible Core Team Meeting
+19:02:59 <zodbot> Meeting started Tue Mar 21 19:02:59 2017 UTC.  The chair is abadger1999. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:02:59 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:02:59 <zodbot> The meeting name has been set to 'ansible_core_team_meeting'
+19:03:09 <bcoca> thanksu
+19:03:28 <bcoca> going over agenda ticket
+19:03:28 <abadger1999> #chair bcoca sivel alikins jtanner ryansb shertel mattclay nitzmahone
+19:03:28 <zodbot> Current chairs: abadger1999 alikins bcoca jtanner mattclay nitzmahone ryansb shertel sivel
+19:03:46 <abadger1999> ( #topic to change topic, #endmeeting to end the meeting)
+19:03:52 <nitzmahone> boop
+19:03:55 <shertel> hello
+19:04:03 <bcoca> skipping shipit to other plugins, just need to start adding metadata, have issue in meeting that allows this
+19:04:24 <bcoca> skipping fileglob issue, still have not done my work on it
+19:04:41 <bcoca> gundalow is out, so skippinng versioned docs
+19:05:03 <bcoca> allanice001: up for discussing new proposals?
+19:05:19 <allanice001> yeah
+19:05:30 <bcoca> did you make PR?
+19:05:47 <allanice001> will have it for review by thursday
+19:05:55 <bcoca> ok, skipping then
+19:06:13 <bcoca> do we need to discuss 'module rename lifecycle'?
+19:06:19 <bcoca> ^ ryansb, thought we mostly agreed on that one
+19:07:00 <ryansb> no, we don't
+19:07:05 <ryansb> I'll remove from agenda
+19:07:25 <bcoca> #topic module defaults
+19:07:32 <bcoca> https://github.com/ansible/ansible/pull/22648
+19:07:42 <bcoca> ^ pr that implements it, now using keywords vs vars
+19:08:22 <bcoca> i have issues that this PR brought up to front with curren inheritance, but will not hold PR for those
+19:08:25 <bcoca> +1 from  me
+19:09:02 <nitzmahone> +1 also now that vars vs keywords is solved
+19:09:43 <abadger1999> Do we need to use merge_hash?
+19:09:55 <bcoca> combine_vars might be better option
+19:10:24 <bcoca> asked james to look at it but he is PTO
+19:10:45 <nitzmahone> Hold until next week then?
+19:10:46 <bcoca> also, minor fix that can be follow up
+19:10:52 <bcoca> im ok with that
+19:11:15 <abadger1999> No objection to either decision from me.  Just wanted to make sure it was thought about.
+19:11:36 <bcoca> k, next then
+19:11:42 <bcoca> #topic autodoc plugins
+19:11:53 <bcoca> https://github.com/ansible/ansible/pull/22796
+19:12:06 <bcoca> as author i leave +1 implicit
+19:12:31 <bcoca> please note taht plugin docs are not perfect but they work as examples, PR adds mostly framework, docs need work after
+19:12:39 <nitzmahone> Lol @ pepizis
+19:13:57 <bcoca> solves the 4h discussion we have of docs vs imports we've had in pasat
+19:15:49 <bcoca> anyone against?
+19:15:52 <bcoca> comments?
+19:16:02 <sivel> One thing that comes to mind is that we have DOCUMENTATION validation in validate-modules, but it won't apply to other plugins
+19:16:08 <nitzmahone> So we want to default to module and not "show all"? (in doc cli)
+19:16:13 <sivel> We may want to extend to that at some point
+19:16:23 <bcoca> sivel: much of that will be follow up once framework is in place
+19:16:39 <bcoca> nitzmahone: yes, default is module which keps ansible-doc backwards compat
+19:17:00 <bcoca> we can do 'all' option, but i consider that enhancement on top of current
+19:17:12 <bcoca> ^ with 1k modules that is really useless for others
+19:17:14 <nitzmahone> Guess that makes sense (though I think only tests might care)
+19:17:59 <bcoca> so this is not 'complete feature' but good enough to provide value and starting point for stuff do be done on top
+19:18:03 <nitzmahone> Yeah- just thinking for test sanity "show all" would be a good thing (rather than running for each type separately)
+19:18:06 <bcoca> ^ dont really want to wait for perfect
+19:18:48 <bcoca> nitzmahone: not hard to do, just reentrant list to current 'run' code (moved to sep method, call from loop)
+19:19:29 <nitzmahone> Yeah, I have option level docs for winrm, would love to add that to codebase. +1 to overall concept, haven't done deep code review though.
+19:19:58 <bcoca> k, will take WIP off, and merge if i get ok
+19:20:06 <bcoca> next topic is related to this though
+19:20:51 <bcoca> #topic expand documentation fields
+19:20:54 <bcoca> https://github.com/ansible/proposals/issues/58
+19:21:13 <bcoca> ^ applies to modules also, but more important once 'autodoc plugins' is merged
+19:21:56 <nitzmahone> Sounds good to me, though aren't options and config usually mutex on a given plugin?
+19:22:07 <nitzmahone> Seems like options is redundant
+19:22:17 <nitzmahone> Type is +10000
+19:22:38 <nitzmahone> Sorry s/options/config
+19:22:57 <bcoca> well, they are bit diff, options are passed on task declaration, configs are defaults for options normally
+19:23:29 <sivel> I know this is a tangent, but I wish we could find a way to limit duplication of information between arg spec and DOCs.  As in, making it just 1 thing that is used for both :)
+19:23:33 <bcoca> and are set either in ansible via host vars /config file options or just env vars before calling asnible (or specific libs like boto with profiles)
+19:23:45 <bcoca> sivel: i have PR for that
+19:23:50 <nitzmahone> At least for the sample given, seems like options would suffice
+19:24:44 <bcoca> well, given sample is not showing ansible_host, etc
+19:24:49 <bcoca> nor env vars
+19:25:06 <bcoca> was incomplete docs, should be about x3 times the size
+19:27:33 <abadger1999> type seems good... make sure that the names match what's currently in our code, though..
+19:27:51 <abadger1999> ie, don't use "hash/dictionary" in the spec, use "dict" instead.
+19:28:15 <bcoca> i was thinking on allowing 'long names' and then just use dict to get short
+19:28:23 <bcoca> i.e type: string => type=str
+19:28:23 <abadger1999> like nitzmahone... trying to figure out what overlap and separation there is between config and options...
+19:28:30 <abadger1999> Probably should have a example that has both.
+19:28:43 <abadger1999> One is better than many.
+19:28:45 <bcoca> #action: add more examples
+19:29:13 <bcoca> abadger1999: agreed, but that will allow better readability, as long as we dont go crazy
+19:29:16 <abadger1999> There should be one-- and preferably only one --obvious way to do it.
+19:29:25 <abadger1999> -1 to many
+19:29:45 <bcoca> k, that is minor feature that can be added/removed, not germain to the issue
+19:30:04 <bcoca> we can implement 'strict' first and then discuss alternates/aliases at later date
+19:30:19 <abadger1999> If there's one name it's easy to say "use 'dict'".  If there's many names then you get: "I used 'map' btu it didn't work, why?"
+19:30:56 <bcoca> dict/dictionary, was not planning on anything other than 'long names' but i see how that can be abused to 'associative array'
+19:30:59 <abadger1999> dict, dictionary, map, mapping, hash, hashmap, maphashdictbbq ;-)
+19:31:44 <bcoca> linked list!
+19:31:47 <nitzmahone> Yeah, I'd say cover base types first, would prefer no aliases, as it makes anything else that might want to consume that harder.
+19:32:00 <bcoca> k
+19:32:16 <nitzmahone> Keep the "grammar" simple
+19:33:07 <bcoca> #topic freeform
+19:33:16 <bcoca> floor is open to discussion
+19:33:19 <jtanner> you mean open floor
+19:33:30 <jtanner> so it's been ~4 months since repomerge
+19:33:41 <jtanner> what are we going to do with the hundreds of old issues+prs
+19:33:43 <bcoca> close em
+19:33:58 <abadger1999> #topic old issues and PRs from modules repos
+19:33:59 <jtanner> that wasn't the definitive answer last time we talked about this
+19:34:01 <bcoca> people can still open new ones and referenced teh closed ones
+19:34:05 <abadger1999> I'd move the issues and close the PRs.
+19:34:26 <funzo> shouldn't we keep any open that are still relevant? That's a lot of potential value from testing and fixes to just close
+19:34:36 <nitzmahone> Oof, do we really want to move all those issues and have them ownerless?
+19:34:48 <abadger1999> issues we don't lose much by moving.
+19:34:49 <bcoca> funzo: that requries someone to review them, its been on my list since repomerge, never done it
+19:34:53 <jtanner> they'll be "owned" ... by ansibot =(
+19:35:07 <nitzmahone> Right, which is effectively orphaned
+19:35:11 <funzo> it really sucks to be bogged down by it, but it's a health indicator of the community that they care to test and to try to fix
+19:35:11 <abadger1999> nitzmahone: Issue "owners" don't have a whole lot more important power than people mentioned on issues.
+19:35:20 <funzo> giving up on that seems no bueno
+19:35:41 <bcoca> clsoed 1
+19:35:42 <jtanner> even people in our parent co still think those repos are active
+19:35:49 <bcoca> 251 left in core
+19:35:51 <nitzmahone> Work isn't lost by closing the PR though
+19:36:04 <jtanner> neither is work lost by closing an issue
+19:36:04 <abadger1999> funzo: For PRs, the problem is (1) no committer is looking at them (2) we can't automatically migrate them because the original PR submitter would not be able to make any requested modifications.
+19:36:11 <bcoca> nitzmahone: it might if author deleted branch
+19:36:38 <mattclay> I think the code is still there, you just can't re-open those.
+19:36:41 <bcoca> hmm, k, lets do this for next month, go over open PRs in core/extras as part of 'backlog'
+19:36:58 <bcoca> mattclay: there is strange set of conditions under which code goes aways
+19:36:58 <jtanner> with the length of roadmap, i doubt that will get done
+19:37:07 <abadger1999> jtanner: Note -- for issues, I'm not worrying about work lost.  I'm worried that we've already done a mass close once when we split the repos.  We shouldn't do that to people for a second time.
+19:37:11 <bcoca> as long as PR open its a 'branch' of our repo, but if source is deleted and we close ....
+19:37:34 <funzo> abadger1999: if (1) is always the case then one fell swoop works, but maybe it's worth going through a process of (a) comment, with a deadline to respond. (b) no response, then close.
+19:37:40 <bcoca> -1 on autoclose, as abadger1999 mentions we already got really bad rap last time
+19:38:49 <jtanner> compared to the rep we get as people continue to comment on the issues in those repos?
+19:38:57 <abadger1999> funzo: we already did (a).
+19:39:24 <bcoca> jtanner: so we should make effor to revise and close
+19:39:38 <bcoca> i think we should include as part of 'backlog review'
+19:39:47 <abadger1999> funzo: https://github.com/ansible/ansible-modules-core/pull/5812#issuecomment-266105159
+19:40:20 <funzo> ack
+19:40:31 <jtanner> again, roadmap and backlog are competitors ... i don't believe we're going to make a dent
+19:40:51 <abadger1999> jtanner: I agree with you.
+19:41:07 <funzo> abadger1999: also, that committer joins us full-time on April 1 ;)
+19:41:40 <bcoca> we are still doing backlog every day, this adds to that list, understood. the other options are abandon/close, which i dont think are acceptable
+19:41:59 <abadger1999> funzo: heh, that was just a random search :-)
+19:42:12 <jtanner> whats the difference between a closed issue and an issue that gets no comments from us?
+19:42:21 <abadger1999> For issues... migrate.
+19:43:17 <bcoca> +1 on issue migration, -1 clsoing PRs
+19:43:42 <abadger1999> bcoca: <nod>  yeah, once you explained that the code could disappear if we close....
+19:44:04 <abadger1999> For PRs, can we lock all future comments in those repo's tickets?
+19:44:48 <bcoca> lokc is there
+19:45:08 <abadger1999> Maybe have one more automated message to the tickets reiterating that anyone can use the tool to migrate but they won't be examined in ansible-module-core and then lock comments.
+19:45:43 <bcoca> ^ that is 'abandon', think we should do better, i know we dont have the resources ...
+19:46:43 <abadger1999> PRs probably need an active contributor to make them work.... easy PRs should have been merged as part of triage.
+19:47:05 <abadger1999> if no one uses the tool to migrate to the main repo, then they likely do not have an sctive contributor.
+19:47:20 <bcoca> some of these have already been fixed, many others we shoudl close if not going to accept, i expect a good 1/3 falls into tht
+19:49:06 <abadger1999> Either of those two categories don't really need us to deal with the ansible-modules-X tickets... If the contributor is nonresponsive and we don't respond (other than the "Migrate to ansible/ansible if still interested") then no one is expecting anything.
+19:50:01 <abadger1999> The category that's troubling is where the PR is something we *would* want but no one involved with the original ticket has migrated it to the ansible/ansible repo.
+19:53:41 <jtanner> that just shows our lack of maintainership on modules we "own"
+19:53:51 <bcoca> ^ agreed
+19:54:01 <abadger1999> jtanner: agreed
+19:54:10 <jtanner> no point in trying to pretend we are good maintainers of those
+19:55:04 <abadger1999> I'm not sure how any of this discussion is about good maintainership or bad maintainership, though.
+19:55:17 <bcoca> maintainership at all ....
+19:55:29 <jtanner> we can't pretend we might "want" something if we aren't acting on those "wants"
+19:55:38 <abadger1999> Its about doing work for the users where it's possible for us to do it.  And being clear that we can't do anything for the ones that we can't.
+19:55:39 <bcoca> i want a ferrari
+19:56:17 <jtanner> "do we want this" has been a problem since day 1
+19:56:36 <jtanner> module owners get to decide that now (for the most part)
+20:00:24 <abadger1999> So... what decisions do we need to make here?
+20:02:37 <jtanner> to do something with the issues/PRs or defer it again to another day
+20:03:17 <abadger1999> Proposal 1: Migrate Issues from the module repos to the ansible/ansible repo
+20:03:56 <abadger1999> Proposal 2: Add Comment to PRs that an interested party needs to use the tool to migrate them to ansible/ansible and then lock the comments on those PRs
+20:04:12 <jtanner> s/add/Re-Add
+20:04:24 <bcoca> +1 to 1
+20:04:25 <abadger1999> <nod>
+20:04:31 <bcoca> and 2
+20:04:52 <abadger1999> Yeah, it's just a more strenuous version of the previous comment.
+20:04:56 <bcoca> still think we need to be more proactive ... but i'll bring that up when i schedule backlog meeting
+20:05:43 <abadger1999> Yeah, they'll still be open so we haven't lost any data... so if we can mobilize the manpower we can still do something more proactive.
+20:06:11 <abadger1999> And if not, at least people aren't expecting anything more.
+20:06:14 <bcoca> i just closed 5 (1 wont, 3 fixed already 1 ported)
+20:06:44 <abadger1999> +1 to both 1 & 2 from me
+20:07:58 <bcoca> the only good thing about core/extras backlog ... no growth
+20:08:13 <bcoca> bad thing, more growth in ansible/asnible
+20:09:03 <abadger1999> jtanner, alikins, ryansb, sivel, nitzmahone, mattclay, shertel, any other committers want to also vote or discuss?
+20:09:06 <jtanner> if the bot wasn't closing them immediately, there would be growth
+20:09:31 <bcoca> thought we locked the repo?
+20:09:35 <bcoca> repos
+20:09:44 <nitzmahone> +1 to #2
+20:09:46 <jtanner> i abstain ... i'm anticipating a change of heart when people see a bunch of issues being dumped in ansible/ansible by the bot
+20:10:06 <jtanner> bcoca: there's no such thing as "lock" on issues/prs
+20:10:34 <jtanner> comments can be locked, but you can't disable issue/pr creation without totally turning them off
+20:10:55 <jtanner> the bot is why the volume hasn't grown
+20:11:04 <jtanner> when new ones get opened, bot auto-closes with message
+20:11:20 <abadger1999> nitzmahone: #1 as well?  (Its two proposals, one for dealing with Prs and one for dealing with issues)
+20:11:39 <alikins> +1 to #1  (the issues should live where the code lives) +1 to #2
+20:11:44 <nitzmahone> -1 to #1
+20:12:25 <mattclay> +1 to #2
+20:12:59 <ryansb> -1 for #1, +1 for #2
+20:13:34 <bcoca> ok, that is it then?
+20:13:39 <bcoca> #endmeeting

@@ -1,0 +1,230 @@
+19:00:03 <thaumos> #startmeeting Ansible Core Meeting
+19:00:03 <zodbot> Meeting started Tue May 16 19:00:03 2017 UTC.  The chair is thaumos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:00:03 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:00:03 <zodbot> The meeting name has been set to 'ansible_core_meeting'
+19:00:16 <thaumos> #chair thaumos gundalow misc branko
+19:00:16 <zodbot> Current chairs: branko gundalow misc thaumos
+19:00:23 <shertel> hello
+19:00:28 <thaumos> #chair shertel
+19:00:28 <zodbot> Current chairs: branko gundalow misc shertel thaumos
+19:01:08 <alikins> blorp
+19:01:12 <jtanner> hi
+19:01:36 <thaumos> #chair alikins jtanner
+19:01:36 <zodbot> Current chairs: alikins branko gundalow jtanner misc shertel thaumos
+19:02:01 <thaumos> #topic ansible/ansible#23015
+19:02:09 <thaumos> @bcoca, are you around?
+19:02:16 <bcoca> no
+19:02:17 <branko> Oooh, mine already :)
+19:02:37 <jtanner> you people and your shortened issue urls
+19:03:05 <branko> Should I comment on this one?
+19:03:25 <thaumos> #link https://github.com/ansible/ansible/pull/23015
+19:03:37 <thaumos> well, your's is first on the list @branko
+19:03:52 <branko> Ok
+19:03:53 <branko> So...
+19:04:04 * bcoca needs ircbot that uses #num to link to issue and show title
+19:04:15 <branko> As discussed previously, I had removed all daemon management-related functionality from module.
+19:04:28 <branko> With user expected to spawn necessary D-Bus and pass-in the address.
+19:05:06 <branko> At first, I thought this would be sufficient for me on systemd-based distros (mainly Debian), but... Turned out that the fixed bus address works only if you are already logged-in via some other means as destination (become) user.
+19:05:12 <bcoca> we discussed after that and settled with toshio that we can require the cli tool that ensures correct sessoin starting
+19:05:34 <bcoca> dbus-session-start?
+19:05:35 <branko> Should I limit it to dbus-run-session ?
+19:05:37 <jtanner> i have no opinions on this matter as i avoid things that would require dconf
+19:05:39 <bcoca> he left comment in ticket
+19:05:42 <bcoca> thatswone
+19:05:44 <branko> I.e. no support for dbus-launch?
+19:06:06 <branko> jtanner: Yeah, but unfortunately lots of Gnome/Cinnamon relies on it :/
+19:06:08 <bcoca> i forget which, the one that guarantees no session crashing
+19:06:24 <branko> dbus-run-session is the one that will shut down the daemon once the command exits.
+19:06:25 <jtanner> branko: which is why i use defaults as much as possible
+19:06:56 <branko> dbus-launch is old, "non-preferred" way that would require cleanup in Python code after running the command.
+19:07:20 <branko> dbus-run-session will exclude older distros, of course (CentOS 7/RHEL 7/Debian Jessie)
+19:07:20 <bcoca> jtanner: i avoid dconf by using kde
+19:07:51 <jtanner> i use mate
+19:08:04 <branko> Is it still acceptable that I try to locate running session if possible by traversing the process tree?
+19:08:26 <misc> branko: this sound quite fragile, what if there is more than one session, etc ?
+19:08:36 <jtanner> why would we dictate that design?
+19:08:54 <branko> Because it might affect whether the module gets accepted at all?
+19:09:19 <branko> misc: Well... Depends on the app using dconf, I believe.
+19:09:20 <misc> also, I suspect supporting latest distro would be ok
+19:09:22 <jtanner> i'm just saying that we/ansible probably don't know dconf that well
+19:09:38 <branko> jtanner: Yeah, although, this is more related to D-Bus.
+19:09:44 <jtanner> dbus too
+19:09:51 <thaumos> heh
+19:10:01 <misc> in my opinion, the dconf module would be used to configure desktop, and I suspect desktop are more likely to be up to date than some servers
+19:10:19 <misc> so it would IMHO be acceptable to leave out the older ones
+19:10:19 <branko> misc: I could also validate that if I can't extract bus address, and I detect a running daemon, to simply fail the module.
+19:10:44 <bcoca> jtanner: just helping with sane module design, not dictating
+19:10:45 <misc> branko: yup
+19:11:39 <branko> Ok, so then I'll try traversing process tree first to detect bus address, if that fails make sure that dbus-daemon is not already running, if that is not the case, just launch dconf via dbus-run-session?
+19:11:53 <branko> Of course, there's plenty of space for race condition there :P
+19:12:28 <thaumos> I'd say try implementing it and see how it goes.
+19:12:36 <thaumos> never hurts to try
+19:12:36 <jtanner> add note to docstrings
+19:12:37 <bcoca> iirc, abadger1999 mentioned that the desktop.org project guys ensured that dbus-run-session should not have issues, so using it 'always' seems fine
+19:12:51 <bcoca> only thing i caution against is using method that can crash user sessions
+19:13:03 <bcoca> ^ bad module does that
+19:13:58 <thaumos> kk, branko got a path forward?
+19:14:14 <thaumos> care to #action what you want?
+19:14:17 <branko> thaumos: Yeah, I think I'll also touch base with one guy who was heavily involved in pull request comments too.
+19:14:20 <branko> Sure
+19:14:25 <thaumos> 👍
+19:14:29 <thaumos> thank you!!!
+19:14:55 <bcoca> branko: he,  one would think that updating dconf was easy ....
+19:15:06 <jtanner> at least it's not plist?
+19:15:07 <misc> bcoca: well, the module is bad if that's not what the sysadmin want :)
+19:15:18 <misc> in the end, crashing the session might be a feature :p
+19:15:22 <branko> #action branko will update dconf module to: try locating D-Bus user session address first, if that fails make sure dbus-daemon is not running already, if that is not the case use dbus-run-session OR just run using dbus-run-session at all times
+19:15:31 <jtanner> misc that'll teach 'em to gui so much
+19:15:38 <branko> bcoca: Looked easy until people started chiming in, actually :)
+19:15:38 <jtanner> console4life
+19:15:49 <bcoca> misc: win_reboot and similar aside
+19:16:02 <bcoca> jtanner++
+19:16:05 <branko> Ok, I think that's all on my side
+19:16:11 <thaumos> for windontz it's always crash session, rebootion is the sorution
+19:16:13 <misc> win_crash_office_and_corrupt_files
+19:16:24 <thaumos> cool, thx @branko
+19:16:35 <thaumos> keep us posted in #ansible-devel if you need poking too :-)
+19:16:55 <branko> Sure, thanks for feedback once again :)
+19:16:58 <jtanner> shop it around #ansible too to see if anyone might use it
+19:17:11 <branko> That's a good point, I guess.
+19:17:26 <thaumos> not a bad idea  at all.
+19:17:32 <thaumos> and project list :-P
+19:17:38 <thaumos> get it out there!
+19:17:39 <jtanner> ... and start thinking about a test strategy
+19:17:39 <thaumos> okay
+19:17:48 <jtanner> one day we might impose integration test requirements
+19:18:03 <jtanner> or unit
+19:18:05 <thaumos> #topic Documentation questions around proper way for syntax
+19:18:06 <branko> Is there anything in place for that already?
+19:18:15 <branko> (nvm, I'll poke you around later :)
+19:18:29 <jtanner> branko: ansible-test integration .... we can tell you all the details in #ansible-devel
+19:18:40 <thaumos> I think it would be "harder" to test in shippable, but doable.
+19:18:57 <thaumos> @gundalow, do we know if @dharmabumstead is attending?
+19:19:03 <jtanner> "proper way for syntax" ... i think you accidentally a word
+19:19:08 <thaumos> @dharmabumstead, you around?
+19:19:21 <thaumos> most likely I did @jtanner
+19:19:29 <gundalow> thaumos: I've not seem him around
+19:19:35 <gundalow> What's the question?
+19:19:51 <gundalow> Is this the DOCUMENTATION =r'''?
+19:20:02 <thaumos> oh this is your comment on the issues around Is DOCUMENTATION = r''' the correct way"? If so we need to update our docs. Ditto. For RETURNS and EXAMPLES.
+19:20:07 <thaumos> yesh
+19:20:24 <dharmabumstead> Hello
+19:20:27 <gundalow> hey dharmabumstead
+19:20:30 <thaumos> I just figured he'd be interested in seeing the discussion.... yay!!!
+19:20:33 <thaumos> #chair dharmabumstead
+19:20:33 <zodbot> Current chairs: alikins branko dharmabumstead gundalow jtanner misc shertel thaumos
+19:20:33 <gundalow> :)
+19:20:48 <gundalow> So I believe this is a Python raw string issue
+19:20:48 * dharmabumstead channels my inner Kibo
+19:21:00 <thaumos> so I doubt there's actions for you dharmabumstead, but figured you'd be curious
+19:21:19 <dharmabumstead> always
+19:21:42 <gundalow> bcoca: I've seen some PRs (a few months ago they were windows that nitzmahone was looking at) where they changed from (whatever the default) string to useing r (which I believe means raw) strings
+19:21:54 <gundalow> and I've just seen the same on a loads of Dag's PRs
+19:22:11 * gundalow <- Not an expert on Python string encoding
+19:22:14 <bcoca> yes, raw means no \X management
+19:22:27 <bcoca> but b should work just as well
+19:22:33 <bcoca> or better, abadger1999?
+19:22:39 <jtanner> he's inflight
+19:22:39 <gundalow> Is that an issue in our DOCUMENTATION/EXAMPLES/RETURN blocks
+19:22:46 <bcoca> jtanner: that is no excuse!
+19:22:53 <jtanner> *shrug*
+19:22:54 <gundalow> dharmabumstead: This is for module documentation
+19:23:04 <thaumos> not everyone likes to tunnel in an airplane
+19:23:05 <bcoca> gundalow: corner cases might arise, ''' is fine''' for most
+19:23:05 <gundalow> as in the auto generated stuff
+19:23:23 * bcoca hopes he is not flying united
+19:23:26 <jtanner> the internet was shut off on most of my flight to denver
+19:23:31 <thaumos> so then does it make sense to do what's fine for most, and default to 'r' if failed?
+19:23:33 <gundalow> I think there was some double slash issue on Windows
+19:23:52 <thaumos> the issue is Windows
+19:24:07 <jtanner> is there a real issue for this?
+19:24:11 <bcoca> probably better using b for windows (i asume people writing docs in notepad)
+19:24:43 <thaumos> I am curious how nitzmahone has dealt with it in modules he's authoured
+19:25:19 <bcoca> DOCUMENTATION = r''' <= in one of his
+19:25:51 <thaumos> but was that because it was what's documented.
+19:25:54 <bcoca> in both
+19:26:15 <bcoca> thaumos:  i can read the docs, but not the minds ... yet
+19:26:25 <jtanner> eli5, what is the problem?
+19:26:27 <thaumos> So maybe worth having an offline conversation with him, and come to a consensus on what we'd like to do going forward?
+19:26:33 <bcoca> hist modules probably predate andy dev docs
+19:26:33 <thaumos> bcoca, get on it!
+19:26:57 <thaumos> finish Skynet, make our lives better
+19:26:58 <bcoca> thaumos: i would include abadger1999 as he knows the low level interactinos of string formats and possible caveats of each
+19:27:06 <thaumos> 👍
+19:27:08 <bcoca> thaumos: make the planet better, not our lives
+19:27:27 <thaumos> our lives are indirectly included there 😉
+19:27:44 <bcoca> no, direclty, termination order is very specific
+19:27:49 <gundalow> Who do i need to speak to?
+19:27:51 <thaumos> ssshhhhh
+19:27:55 <gundalow> FOCUS PEOPLE
+19:28:01 * gundalow cracks whip
+19:28:05 <thaumos> ha
+19:28:06 * bcoca is focused on totally wrong thing
+19:28:06 * jtanner calls HR
+19:28:09 <thaumos> oh I am focused.
+19:28:14 <dharmabumstead> lol
+19:28:25 <gundalow> Who do i need to speak to?
+19:28:29 <jtanner> so dharmabumstead and gundalow and abadger1999 need to talk about strings?
+19:28:30 <thaumos> abadger1999, nitzmahone, gundalow, dharmabumstead (because 😛)
+19:28:53 <bcoca> #action gunalwo to talk to nitzmahone, abadger1999 and dharmabumstead about string 'prefixing' for docs
+19:28:55 <gundalow> #action gundalow to speak to speak to  abadger1999, nitzmahone, dharmabumstead
+19:28:57 <thaumos> damn it
+19:28:58 <gundalow> woot
+19:28:59 <gundalow> next topic
+19:29:00 <thaumos> beat me to it
+19:29:01 <branko> Erm, how does unicode get treated with r'?
+19:29:05 <thaumos> #topic Open Floor
+19:29:08 <thaumos> actually damn
+19:29:09 <jtanner> branko: new topic!
+19:29:24 <gundalow> branko: Not sure, I'll report back next week!
+19:29:36 <thaumos> #topic Discuss backporting ansible/ansible#23038 to stable-2.3
+19:29:52 <thaumos> #link https://github.com/ansible/ansible/pull/23038
+19:30:16 <thaumos> So, for reasons, I wanted to see what's our thoughts on backporting this change into 2.3 for roles path
+19:30:38 <jtanner> i don't think it makes sense
+19:30:49 <jtanner> bcoca did that as an intermediate step for a larger idea
+19:31:08 <thaumos> fair
+19:31:17 <sivel> did anyone give clarity on r''' for docs?
+19:31:18 <thaumos> but, it also solved for that one issue, if you recall
+19:31:28 <thaumos> @sivel, we're discussing it more offline.
+19:31:30 <jtanner> nope, i don't recall
+19:31:33 <bcoca> sivel: no
+19:31:36 <sivel> It was first started with windows modules, due to the need for escaping
+19:31:50 <sivel> because of the nature of windows and use of \
+19:31:54 <bcoca> thaumos: er ... no, that is pretty invasive and still not 'right'
+19:32:05 <thaumos> Okay, totally fair!
+19:32:19 <sivel> so using a raw string, allows us to more easily use \ in DOCUMENTATION
+19:32:37 <jtanner> gundalow: dharmabumstead ^
+19:32:40 <thaumos> I just wanted to ask 😃.. I'll work with you and jtanner offline on next steps.
+19:32:43 <sivel> just figured I'd pitch in on that.  nitzmahone is likely to also have info, as he may have been the one who started it
+19:33:12 <bcoca> thaumos: working on making it configurable for 2.4, but not sure how much/where to apply
+19:33:13 <sivel> I struggle to get here earlier on Tuesday due to conflicting meeting, so sorry for being late on that
+19:33:21 <bcoca> sivel: np, we moved on
+19:33:23 <jtanner> thaumos: conceptually it gave us the common place where "packages" could install modules
+19:33:33 <thaumos> #action thaumos to discuss ansible/ansible#23038 offline with bcoca and jtanner
+19:33:47 <thaumos> #chair sivel
+19:33:47 <zodbot> Current chairs: alikins branko dharmabumstead gundalow jtanner misc shertel sivel thaumos
+19:33:56 <thaumos> Sivel, we require fifty lashings and your second born
+19:34:12 <sivel> good thing I won't have a 2nd born then ;)
+19:35:00 <thaumos> lol
+19:35:06 <thaumos> then you're forever indebted to us
+19:35:11 <thaumos> #topic Open Floor
+19:35:19 <thaumos> Anything more to discuss friends?
+19:35:33 <jtanner> we're at pycon, come see us
+19:35:58 <bcoca> i am at home, dont come see me
+19:36:12 <thaumos> Yeah, go poke at your friendly neighbourhood Ansible maintainers
+19:36:24 <thaumos> For those who like to see bcoca, hangouts
+19:36:50 <misc> I already have a life size poster of him in my bedroom, do I need to use hangouts ?
+19:36:56 <thaumos> If there isn't anything more to discuss, I'll shut it down at 7:40PM UTC
+19:37:07 <thaumos> not the same misc... abeit, quite odd
+19:37:15 <thaumos> s/abeit/albeit
+19:38:11 <jtanner> misc: do you sell those on etsy?
+19:38:22 <jtanner> i might get one for the durham office
+19:38:35 <gundalow> :)
+19:38:49 <ryansb> bcoca local replica ;)
+19:39:01 <gundalow> #info Draft agenda for Contributor Summit https://public.etherpad-mozilla.org/p/ansible-summit-june-2017 Please have a look and add your thoughts
+19:39:11 <thaumos> ^^^^
+19:39:26 <thaumos> looking forward to seeing some of you there!
+19:39:45 <bcoca> just use simpsons comic book guy poster, its close enough susbstitute
+19:39:51 <gundalow> #info If anyone is going to be there in person, please use the signup link in that etherpad
+19:40:08 <thaumos> Okay, folks!  Thanks for being here today!
+19:40:11 <thaumos> #endmeeting

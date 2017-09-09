@@ -1,0 +1,312 @@
+19:00:02 <thaumos> #startmeeting Public core meeting
+19:00:02 <zodbot> Meeting started Tue Jun  6 19:00:02 2017 UTC.  The chair is thaumos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:00:02 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:00:02 <zodbot> The meeting name has been set to 'public_core_meeting'
+19:00:06 <thaumos> #chair thaumos
+19:00:06 <zodbot> Current chairs: thaumos
+19:00:39 <dag> o/
+19:01:09 <jtanner> .
+19:02:33 <thaumos> #chair jtanner dag
+19:02:33 <zodbot> Current chairs: dag jtanner thaumos
+19:02:43 <abadger1999> Good day.
+19:03:15 <thaumos> #chair abadger1999
+19:03:15 <zodbot> Current chairs: abadger1999 dag jtanner thaumos
+19:03:52 * thaumos will give people a couple more minutes
+19:04:50 <thaumos> How's everyone doing today?
+19:05:26 <dag> busy :)
+19:06:25 <jhawkesworth_> hey
+19:06:34 <bcoca> i cannot find my pants
+19:06:39 <thaumos> #chair jhawkesworth_
+19:06:39 <zodbot> Current chairs: abadger1999 dag jhawkesworth_ jtanner thaumos
+19:06:43 <thaumos> #chair bcoca
+19:06:43 <zodbot> Current chairs: abadger1999 bcoca dag jhawkesworth_ jtanner thaumos
+19:07:13 <thaumos> alright let's get started.
+19:07:34 <thaumos> erasmix from GH are you around?
+19:08:02 * nitzmahone lruks
+19:08:06 * nitzmahone and lurks
+19:08:27 <thaumos> #chair nitzmahone
+19:08:27 <zodbot> Current chairs: abadger1999 bcoca dag jhawkesworth_ jtanner nitzmahone thaumos
+19:08:47 <Mutter> Hello this is erasmix from CyberArk
+19:09:24 <thaumos> thax @mutter
+19:09:30 <thaumos> s/thax/thx
+19:09:34 <thaumos> #topic discuss PR#21857
+19:09:40 <abadger1999> #info Agenda: https://github.com/ansible/community/issues/159#issuecomment-306584682
+19:10:05 <Mutter> Thanks. What do we need to do to move this forward
+19:10:17 <thaumos> #link https://github.com/ansible/ansible/pull/21857
+19:11:11 <thaumos> abadger1999 or bcoca, would you guys be able to review this PR?
+19:11:19 <thaumos> or jtanner
+19:12:06 <bcoca> Mutter: why the 2 classes .. seems weird to have lookupclass just be a run wrapper
+19:13:04 <Mutter> Do you have a recommendation?
+19:13:15 <bcoca> more curioius
+19:13:48 <bcoca> also .. the embeded k=(k=v) can be problematic
+19:13:57 <bcoca> will confuse the task key value parser
+19:14:01 <jtanner> i was gonna say that i see outstanding change requests, but then i realize they were added less than 3 minutes ago
+19:14:10 <Mutter> I'm can you please expand?
+19:14:11 <dag> :)
+19:14:50 <bcoca> action: copy src="lookup( lookup('cyberarkpassword', AppID='Application1', Query='safe=Safe1;Folder=root;Object=User1'"
+19:16:29 <jtanner> "'/opt/CARKaim/sdk/clipasswordsdk'" is that really the only place it can go?
+19:16:54 <thaumos> how about this, let's move the reviews and discussion to the PR so we can move on.  I don't think we'll get resolution from there.  Sound good?
+19:16:56 <jtanner> i've spent a lot of time with managers who like to move default install locations for "branding purposes"
+19:17:12 <bcoca> ^ had missed the hardcoded part
+19:17:15 <bcoca> yeah, that is not good
+19:17:42 <thaumos> #action bcoca abadger1999 and jtanner to review
+19:18:03 <jhawkesworth_> perhaps default to /opt/CARKaim/sdk/clipasswordsdk'but allow override via an environment variable (just an idea, not sure if others lookups get configuration via environment variables)?
+19:18:05 <thaumos> #action mutter (erasmix:GH) to respond accordingly for cyberark review
+19:18:24 <bcoca> jhawkesworth_: mostly, something i want to change/expand in 2.4 with ansible-config
+19:18:25 <bcoca> project
+19:18:29 <Mutter> Thank you
+19:18:36 <thaumos> #topic ansible/ansible#21764
+19:18:41 <thaumos> #link https://github.com/ansible/ansible/pull/21764
+19:18:53 <Mutter> Are we also discussing PR 21764?
+19:18:59 <thaumos> same for this, can we get reviewers to look at this one as well, please?
+19:19:11 <thaumos> @mutter, please be sure to stay on top of this.
+19:19:28 <thaumos> One ask I also have, if you can provide a list of at least two people, including yourself who would be maintaining these.
+19:19:34 <Mutter> I sure will. Thanks
+19:19:54 <thaumos> #action Mutter to provide a list of people from Cyberark to be maintaining.
+19:20:41 <abadger1999> thaumos: note: if we don't get a reviewer here, it will jsut be the standard way to get reviewers... wait or ask on irc devel ml until someone looks.
+19:20:48 <jtanner> i added review to 21764
+19:20:56 <thaumos> thanks jtanner
+19:21:08 <Mutter> Thank you
+19:21:09 <thaumos> agreed abadger1999
+19:21:52 <thaumos> okay, moving on for time
+19:22:22 <thaumos> #topic ansible/ansible#23862
+19:22:25 <thaumos> #link https://github.com/ansible/ansible/pull/23862
+19:22:45 <thaumos> pilou, are you here?
+19:23:29 * resmo waves
+19:23:48 <thaumos> #chair resmo
+19:23:49 <zodbot> Current chairs: abadger1999 bcoca dag jhawkesworth_ jtanner nitzmahone resmo thaumos
+19:24:19 <thaumos> okay moving on
+19:24:39 <thaumos> #topic guidance on ordered dictionaries for Windows modules. I prefer a common solution.
+19:24:51 <thaumos> #link https://github.com/ansible/ansible/issues/25265#issuecomment-306209518
+19:25:00 <thaumos> @dag take it away
+19:25:16 <jtanner> didn't the windows meeting happen last night?
+19:26:00 <abadger1999> nitzmahone: ^
+19:26:02 <thaumos> dag put this in comments today
+19:26:24 <nitzmahone> Yeah, I was in the midst of commenting on this in the WWG agenda
+19:27:35 <nitzmahone> He's right that this is potentially bigger than just a Windows thing
+19:28:09 <jtanner> oh, topic tricked me into thinking this was only win32
+19:28:11 <nitzmahone> I don't know if we currently have the capability to preserve dict order from the various places they come from
+19:28:37 <bcoca> nope
+19:28:58 <nitzmahone> I've seen hacks for YAML loaders that will preserve as ordered dict, but unless that part is solved, what we do on the module API end is moot
+19:29:05 <bcoca> actually, my python is compiled with 'hash randomization' so even the 'accidental order' is not repeated
+19:29:18 <nitzmahone> We'd have to be able to preserve that all the way through playbook parse to module gen
+19:29:26 <bcoca> yeah, we would need to overload pyyaml to use order dicts
+19:29:48 <jhawkesworth_> interesting.  I wonder how win_nssm app_parameters ever worked
+19:30:23 <nitzmahone> We may be getting it by accident
+19:30:43 <alikins> win_nssm is powershell?
+19:30:43 <bcoca> well, first ... the 'common powershell code' should be filtering out _ansible_*
+19:31:06 <bcoca> b) it probably was working long time ago before we introduced _ansible_ vars
+19:31:13 <bcoca> 2.1?
+19:31:37 <jhawkesworth_> win_nssm predates 2.1 for sure.
+19:32:54 <nitzmahone> Pretty sure we don't need to shred Ansible's guts to fix win_nssm
+19:33:45 <jhawkesworth_> agreed.  win_nssm doesn't really need to pass pa
+19:33:54 <jhawkesworth_> 10
+19:34:11 <jhawkesworth_> gargh! error cat on keyboard!
+19:34:29 <nitzmahone> rm -f cat
+19:34:53 <nitzmahone> `access denied`
+19:35:10 <nitzmahone> ECLAWS
+19:35:15 <jhawkesworth_> yes, interesting to have a common hash table structure to behave the same regardless of powershell or python , but win_nssm doesn't need a has for parameters
+19:35:35 <jhawkesworth_> :-)
+19:35:58 <jhawkesworth_> cat now on desk, keyboard on lap!
+19:35:59 <nitzmahone> Ordered dict support would be a cool thing, but I suspect there are a number of corner cases that would be painful to fix
+19:36:41 <nitzmahone> (to ensure that the order is received unmolested by the module)
+19:37:19 <nitzmahone> I'm not sure there's a lot more to talk about on that one ATM
+19:37:38 <jhawkesworth_> yeah, sounds like the best thing to do is 1/ not assume string for untyped parameters (which would get win_nssm working I think) 2/ fix win_nssm 3/ ordered dicts a separate thing later
+19:37:46 <jhawkesworth_> is ^ a plan?
+19:37:54 <nitzmahone> +1
+19:38:26 <nitzmahone> (should be easier with PS declarative argspec- can't wait for you guys to poke holes in it)
+19:38:33 <jhawkesworth_> cool.
+19:38:49 <jhawkesworth_> I think we should move on as dag and trond not about to comment further atm
+19:39:04 <thaumos> @nitzmahone could you do the honour of placing a couple of action items in your own words?
+19:39:53 <nitzmahone> #action WWG folks to look at win_nssm app_parameters issues
+19:40:08 <thaumos> heh
+19:40:14 <nitzmahone> #info ordered dicts probably aren't happening anytime soon
+19:40:17 <thaumos> 😝
+19:40:40 <thaumos> #topic The purpose of connection: local
+19:40:51 <thaumos> @dag are you still around?
+19:41:06 <dag> sorry
+19:41:10 <dag> phonecall
+19:41:21 <thaumos> no worries, shall we cover your other two items next time?
+19:41:49 <dag> yes
+19:41:53 <thaumos> Okay cool
+19:41:56 <dag> the omap thing maybe ?
+19:42:05 <thaumos> #action will revisit this next meeting
+19:42:05 <bcoca> already closed above
+19:42:19 <dag> ah ok
+19:42:22 <thaumos> #topic Open Floort
+19:43:08 <dag> ok, connection: local
+19:43:38 <bcoca> -1 to change, as stated in ticket, breaks precedence for no good reason
+19:43:47 <dag> in a hybrid environment with both ssh and winrm connection types, the `connection: local` is not realy useful
+19:43:57 <bcoca> you want it to work like local_action/delegate_to: localhost which it is not meant to do
+19:44:05 <thaumos> #topic The purpose of connection: local
+19:44:09 <bcoca> dag: wait_for: host={{ansible_host}}
+19:44:13 <bcoca> connection: local
+19:44:16 <bcoca> ^ useful
+19:44:36 <bcoca> local_action/delegate_to would change ansible_host to the localhost, which is not what you want
+19:44:38 <dag> bcoca: right, but what is the purpose of connection: local, if it's not reliable
+19:44:38 <thaumos> ec2: *
+19:44:39 <thaumos> connection: local
+19:44:42 <bcoca> connection: 'sets connection'
+19:44:49 <bcoca> does no more, no less
+19:44:57 <bcoca> local just happens to be 'one connection'
+19:45:07 <bcoca> it is not treated special
+19:45:44 <bcoca> not sure what 'not reliable' means, from ticket it just seesm to indicate you expected delegate_to: localhost behaviour, but that is an incorrect expectation
+19:46:31 <dag> bcoca: you expect that connection: local is not influence by ansible_connection
+19:46:43 <bcoca> i dont expect that
+19:47:02 <dag> I do, I expect connection: local to work on the local machine
+19:47:03 <nitzmahone> remote_user < ansible_user, etc
+19:47:03 <bcoca> you are mixing value with keyword
+19:47:09 <bcoca> ansible_connection overrides connection
+19:47:14 <bcoca> does not matter the value OF connection
+19:47:36 <dag> so connection: local may be doing WinRM on a Linux system
+19:47:39 <nitzmahone> standard precedence- there are situations where it's great,and situations where it sucks, but it is what it is
+19:47:42 <dag> that is not expected behaviour IMO
+19:47:55 <bcoca> dag: no, you expect connection: local to work like delegaet_to ... again, they are different keywords
+19:48:03 <nitzmahone> remote_user: blargh will get ignored if you set ansible_user, too- it's the same thing
+19:48:16 <dag> nitzmahone: with remote_user it does supersede ansible_user, so yes, we have a precedent
+19:48:25 <bcoca> 'connection vars' override 'connection keywords', it has always been the case
+19:48:35 <bcoca> no, remote_user does not override ansible_user
+19:48:42 <bcoca> its the other way around
+19:48:50 <bcoca> ansbile_user > remote_user
+19:49:19 <bcoca> what might confuse you is that 'ansible_ssh/winrm_user' will get ignored if connection: != winrm/ssh
+19:49:19 <nitzmahone> (like I said above) ;)
+19:49:27 <bcoca> nitzmahone: yep
+19:50:30 <dag> there is a difference, two variables vs a variable and a directive
+19:51:00 <dag> and usually directives in a local context supersede directives in the global context
+19:51:05 <dag> connection is not a variable
+19:51:10 <bcoca> conneciton is directive
+19:51:14 <bcoca> ansible_connection is variable
+19:51:32 <bcoca> connection variables SUPERCEDE connection directives/keywords the ALWAYS have
+19:51:42 <dag> become_user is a directive
+19:51:55 <bcoca> and ansible_become_user supercedes it
+19:51:55 <dag> it does supersede the ansible.cfg become_user
+19:52:01 <nitzmahone> and ansible_become_user will override it
+19:52:26 <bcoca> 'connection variable'  > keyword > cli > envvar > config
+19:52:32 <bcoca> ^ its always been that precedence
+19:52:51 <dag> well, for a heterogeneous setup that makes no sense for connection
+19:52:56 <bcoca> dont confuse become_user in config as a variable, it is not
+19:53:06 <dag> it may be that it has always be like this, connection: local becomes something to avoid then
+19:53:07 <bcoca> dag: it does
+19:53:21 <bcoca> no, not to avoid, just not usable the way you are trying to
+19:53:45 <dag> to avoid, because it could suddenly stop working as you expect
+19:53:49 <dag> that's what happened to us
+19:53:51 <bcoca> you NEED delegate_to: localhost, but insist on using connection:local ... that is not an issue with connection
+19:54:05 <bcoca> stop? its always worked this way
+19:54:10 <dag> the moment we started to do both Linux and Windows in the same playbook, connection: local was broken
+19:54:27 <bcoca> dag: no, it wasn't, you just were using it improperly
+19:54:35 <dag> bcoca: if you move from 1 connection type, to 2 connection types this problem manifests
+19:54:47 <dag> that's what I am saying, and people may not realize it
+19:54:50 <bcoca> you should not be using it for localhost delegation even with 1 connection type
+19:54:57 <dag> so again, what's the purpose of connection: local
+19:55:05 <bcoca> using the local connectio plugin
+19:55:11 <bcoca> NOT delegating to localhost, there is a difference
+19:55:12 <dag> why shouldn't everyone be using delegate_to :localhost ?
+19:55:18 * nitzmahone has never been a fan of using play directives for this reason
+19:55:22 <bcoca> one is about execution, the other is about execution + environment
+19:55:49 <nitzmahone> It's just another way to do things, but if you've set it in the inventory, the play directives are moot
+19:55:50 <bcoca> dag: in most cases, they should, there ARE cases for connection :local, but those are limted
+19:55:56 <dag> bcoca: again, when would you use `connection: local` instead of `delegate_to: localhost` ?
+19:56:01 <dag> I asked you before, there was no answer
+19:56:08 <bcoca> dag: ^ i did, for wait_for
+19:56:15 <bcoca> scrollback
+19:56:27 <dag> why for wait_for ?
+19:56:37 <nitzmahone> Let's back up: dag: what do you want to do here?
+19:56:39 <bcoca> several cases in which you want to use the 'conneciton environment of the remote' but execute local
+19:56:53 <nitzmahone> What's the goal of this discussion?
+19:57:14 <dag> nitzmahone: well, IMO connection: local has no real purpose, and can only be confusing
+19:57:17 <bcoca> wait_for: host={{ansible_host}}  port:22\n connection: local
+19:57:20 <bcoca> ^ that example
+19:57:24 <dag> either fix that, or recommend to not use it
+19:57:26 <nitzmahone> We can't remove it without removing the entire connection keyword.
+19:57:56 <bcoca> lineinfile: regex="{{ansible_host}}" ....
+19:58:12 <dag> nitzmahone: you could give a warning to warn about the usage :)
+19:58:13 <bcoca> ^ antoher in which conneciton: local is preferec over delegate_to: lcoalhost
+19:58:21 <bcoca> template/copy/etc ... many reasons
+19:58:21 <dag> bcoca: but that will fail
+19:58:22 <thaumos> @dag, you'll see us use it a lot here
+19:58:23 <thaumos> https://github.com/ansible/lightbulb/search?utf8=%E2%9C%93&q=connection%3A+local&type=
+19:58:47 <bcoca> dag: how so? if you delegate_to: localhost .. it will fail as it will be wrong ansible_host
+19:59:00 <dag> it's weird that for all the use-cases you give, those will fail if you start mixing windows/linux
+19:59:16 <abadger1999> I think dag's saying if you combine his inventory with the use-cases given, then it will fail.
+19:59:22 <bcoca> dag: it will fail in YOUR environment as you set asnbile_connection .. but you can also override that for task vars: ansible_connection :local
+19:59:23 <dag> abadger1999: yes
+19:59:39 <dag> we have to set ansible_connection, we absolutely cannot do without
+19:59:41 <bcoca> dag: its not meant to ONLY work in your environment .. there are other setups
+19:59:56 <dag> if we are staging 10 systems, 5 windows, 5 linux from a single inventory
+20:00:12 <dag> we can only indicate which ones need winrm, and which need ssh
+20:00:29 <dag> and if the target is winrm, my connection: local will fail
+20:00:52 <bcoca> because you dont want connection local, you want delegate_to: localhost
+20:01:11 <dag> bcoca: you keep repeating yourself and dismissing the case at hand
+20:01:39 <bcoca> no, i understand the case, i just dont agree that the code needs to change to your usage
+20:01:40 <dag> which is that this issue will bite other people when they start having 2 connection-types
+20:01:50 <bcoca> there are plenty of use cases this is fine
+20:01:53 <dag> bcoca: I didn't say I want to change it to my usage
+20:02:03 <dag> bcoca: I want to warn people, and give recommendations
+20:02:10 <bcoca> dag: no, not even, there are other ways to deal with multiple connectio types w/o setting ansible_connection
+20:02:18 <bcoca> dag: your PR chagnes the usage
+20:02:19 <dag> the PR is my first impementation, this topic is about the purpose of connection: local
+20:02:42 <dag> I am not making the case here to get the PR merged
+20:02:45 <dag> far from that
+20:03:05 <dag> but your example fails with my inventory
+20:03:12 <dag> if you use connection: local
+20:03:18 <dag> and that's not right
+20:03:37 <dag> and you can keep repeating *I* should use delegate_to: localhost in my case
+20:03:43 <bcoca> yes
+20:03:47 <dag> that's silly
+20:03:58 <sivel> why is that silly?
+20:03:59 <bcoca> well, that IS it's purpose
+20:04:02 <dag> users won't know when to use connection: local vs delegate_to: localhost
+20:04:14 <dag> because it works with one inventory, and fails with the ,ext
+20:04:17 <bcoca> local_Action then?
+20:04:20 <bcoca> not sure what you mean
+20:04:28 <dag> as soon as they go from Linux to Linux+Windows
+20:04:53 <abadger1999> i think dag is proposing that we document that when you reach for connection: XX you should be reaching for something else instead.
+20:05:04 <sivel> `connection: local` only changes the connection plugin in the context of the current node, it doesn't say inherit the context of localhost, that is what `delegate_to` is for
+20:05:05 <abadger1999> And possibly deprecating the connection directive as well
+20:05:08 <nitzmahone> I don't think there's a straightforward technical solution to this problem. Ansible precedence is what it is, and this is one of the cases that sucks. Let's work on the doc side of it for clarification
+20:05:17 <bcoca> ^ delegateion points at lcoal_action/delegate_to: localhost primarily
+20:05:36 <bcoca> 'cloud' guides use mostly connection: local as it is keeps the asnible_host info
+20:05:43 <bcoca> ^ which is another 'correct' usage
+20:05:47 <nitzmahone> sivel: (and only within the rules of precedence as they stand)
+20:05:48 <dag> abadger1999: yes, I question the purpose of `connection: local` in general, and think we need to clarify this
+20:05:52 <bcoca> abadger1999: no reason to deprecate it
+20:05:55 <sivel> technically speaking, overriding just `connection: local` does have it's uses
+20:05:57 <dag> because I am not the only one who is making this mistake
+20:06:06 <abadger1999> bcoca: are these correct usages though or should they be setting ansible_connection: ?
+20:06:07 <sivel> it's just people misunderstand when to use what
+20:06:13 <dag> bcoca: I did not say deprecate, where did I say deprecate
+20:06:13 <bcoca> abadger1999: they are correct
+20:06:23 <thaumos> abadger1999 said deprecate @dag
+20:06:24 <abadger1999> bcoca: can I override ansible_connection per-task instead?
+20:06:28 <bcoca> dag: abadger1999 did
+20:06:34 <sivel> abadger1999: you could, using `vars`
+20:06:34 <thaumos> okay, let's take a step back
+20:06:44 <sivel> but not something that is extensively talked about in the docs
+20:06:47 <bcoca> then lets remove all directives for vars?
+20:06:49 <abadger1999> So that seems like the correct idiom
+20:06:56 <abadger1999> and conneciton local is jsut incorrect all around
+20:07:02 <bcoca> abadger1999: it is not
+20:07:05 <thaumos> as  an action item, let's have a doc created for HOW TO use connection: local
+20:07:08 <bcoca> ^ several examples with correct usage
+20:07:12 <dag> thaumos: thanks :)
+20:07:23 <bcoca> thaumos: we already have a doc, playbook delegation
+20:07:38 <sivel> I think more specifically, it should be around using delegation instead of using `connection: local`
+20:07:43 <sivel> which bcoca mentions we have
+20:07:45 <bcoca> it is
+20:07:46 <thaumos> #action dag to take a first pass at documenting further
+20:07:52 <thaumos> fair enough
+20:07:57 <bcoca> ther eis only one part that talks about connection: local as 'antoher method'
+20:07:57 <thaumos> thanks for clarifying me
+20:07:58 <sivel> people using `connection: local` should be doing so when they know they want it
+20:08:06 <thaumos> I think it's fair to give examples.
+20:08:19 <bcoca> ^ mostly cloud/wait_for or 'local updates with remote connection ifo'
+20:08:21 <thaumos> and it's more fair to have dag bring up his ideas around it since he brought this up.
+20:08:22 <bcoca> ^ 3 cases
+20:08:34 <bcoca> 4 if you add api 5 with network
+20:08:37 <thaumos> okay, let's get them documented with use case examples.
+20:09:32 <abadger1999> I think I've become convinced that connection: XXX is wrong in all cases.
+20:09:33 <dag> the problem description why I brought this up is here: https://github.com/ansible/ansible/issues/24076
+20:09:38 <dag> (linked from the PR)
+20:10:06 <nitzmahone> abadger1999: (unless you're using the default) - I think it's an anachronism in the face of multi-transport inventories
+20:10:23 <abadger1999> the cases that bcoca brought up should be using vars: ansible_connection: local instead.
+20:10:39 <thaumos> #endmeeting

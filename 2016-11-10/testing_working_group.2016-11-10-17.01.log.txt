@@ -1,0 +1,179 @@
+17:01:17 <gundalow> #startmeeting Testing Working Group
+17:01:17 <zodbot> Meeting started Thu Nov 10 17:01:17 2016 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+17:01:17 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+17:01:17 <zodbot> The meeting name has been set to 'testing_working_group'
+17:01:24 <gundalow> #chair gundalow mattclay
+17:01:24 <zodbot> Current chairs: gundalow mattclay
+17:01:31 <gundalow> #topic Roll call
+17:01:41 <gundalow> Agenda as always is https://github.com/ansible/community/issues/114 feel free to add items
+17:01:44 <thaumos> :-)
+17:01:51 <gundalow> hey thaumos
+17:01:58 <thaumos> herro
+17:02:17 <mmaglana> hello!
+17:02:18 * gundalow waits a minute for people to grab drinks between meetings and filter in
+17:03:10 * lbalhar is frenzymadness from github
+17:03:51 * mattclay waves
+17:04:06 <gundalow> lbalhar: Glad you could make it, thanks for the offer of help with python3 stuff myself mattclay and abadger1999 are very thankful
+17:05:02 <lbalhar> gundalow, I am in contact with misc and abadger1999, but most with misc because we are in same time zone
+17:05:37 <gundalow> Ah, where in the world are you?
+17:05:39 * gundalow is UK
+17:05:43 * misc is FR
+17:06:07 * lbalhar is in Czech republic
+17:06:10 <gundalow> cool
+17:06:21 <thaumos> all the better half of the world
+17:06:35 <gundalow> #topic Python 3 compatibility
+17:06:41 <gundalow> abadger1999: you around?
+17:06:50 <misc> so I might have found some modules to fix ( just grep -r iteritems() in the git repo), and iterkeys(), and those who match have likely not be ported)
+17:07:08 <misc> after seeing https://github.com/ansible/ansible-modules-core/pull/5497
+17:07:26 <misc> most of them are in cloud/, so that's annoying to test
+17:08:13 <mmaglana> you'll get to know mock really well. :-)
+17:08:20 <lbalhar> what about creating something like roadmap from known issues and for new nice-to-have tests
+17:08:51 <misc> lbalhar: we do not have much know issue for python3, except the opened bug
+17:08:51 <gundalow> Etherpad or shared google doc may work well?
+17:08:56 <misc> the rest are unknow issue :)
+17:10:03 <lbalhar> gundalow, maybe issues are good because they can be assigned to responsible person
+17:10:43 <gundalow> true
+17:10:56 <mattclay> https://github.com/ansible/ansible/projects/1
+17:11:05 <gundalow> mattclay: you beat me to it
+17:11:08 <mattclay> That's the project for tracking Python 3 issues.
+17:11:27 <gundalow> So GitHub recently added the ability to use Projects to group issues & PRs
+17:12:16 <lbalhar> mattclay, perfect, I am just wondering if it is well-known because it is not that full as I expected :)
+17:12:51 <misc> lbalhar: yeah, most of the time, we do PR rather than opening issue then a PR :/
+17:12:53 <gundalow> py3 migration still contains known-unknowns and unknown-unknowns
+17:13:21 <misc> I am also unsure if I should open 1 ticket per module that I know wouldn't run
+17:13:49 <gundalow> good question
+17:14:01 <lbalhar> yes
+17:14:04 <lbalhar> good question
+17:14:38 <gundalow> One PR (per repo) to fix the iteritems() issues is fine. Though if you end up splitting it into a) Things I have tested b) Think I can't test, then that's fine
+17:15:04 <misc> well, fixing automatically iteritems would be doable
+17:15:13 <misc> but we still do not know if that's python3 ready
+17:15:17 <gundalow> sure
+17:15:24 <misc> I do not even know if boto is python 3 ready
+17:15:49 <lbalhar> misc, what is boto?
+17:16:02 <misc> lbalhar: the library used by all amazon ec2 module to do api call
+17:18:34 <misc> I guess I can open at least issue for the stuff that can be tested
+17:18:46 <misc> like expect, make, portage, composer
+17:18:52 <lbalhar> misc, on PIP there is info that boto is Python 3 compatible
+17:19:01 <lbalhar> PyPI
+17:19:07 <misc> lbalhar: ok so we can reasonably assume this can work
+17:20:42 <lbalhar> misc, yes, and is there any way how to run all tests on local machine? Something like using shippable locally with docker or anything else?
+17:21:43 <mattclay> lbalhar: You'll either want to run the tests using docker or a VM, at least for the destructive ones.
+17:22:38 <gundalow> (back in a minute)
+17:22:48 <mattclay> You can run the integration tests locally. See the docs here: https://github.com/ansible/ansible/tree/devel/test/integration
+17:23:59 <mattclay> Just keep in mind that not all modules have integration tests.
+17:24:09 <abadger1999> sorry, back
+17:24:38 <mattclay> Also, the tests usually don't cover everything a module does.
+17:25:51 <lbalhar> mattclay, of course, this is my second question if there is anything like test coverage output, where I can find untested modules
+17:26:19 <abadger1999> misc: For PRs, with a few simple fixes (like iteritems/using six.moves, get_exception or as exception, etc) one PR with several modules is fine.
+17:27:07 <mattclay> lbalhar: Test coverage reporting for integration tests is coming. You can determine if there are tests for a module by looking for a directory in test/integration/targets/MODULE_NAME
+17:27:28 <abadger1999> Issues I'm unsure about.  One issue per module is better for tracking but it's a lot of work.
+17:27:36 <lbalhar> mattclay, perfect, thanks
+17:27:45 * gundalow returns
+17:29:12 <gundalow> abadger1999: There was a previous suggestion to create a spreadsheet of all the modules and rank if they work with py3. Do you think that's still something valid to do?
+17:29:12 <abadger1999> lbalhar: When I talk about multiple things being in one PR... just make sure it's not too much to review at one time.  So if it's all one kind of simple change (iteritems is an example of that) then you can put a lot of modules together.  If it's several different things (or involving byte vs text string) probably better to only do one module in a PR
+17:29:22 <abadger1999> gundalow: I do.
+17:29:30 <abadger1999> gundalow: Not sure how we fill that in...
+17:29:54 <lbalhar> abadger1999, yes, you are right
+17:29:56 <abadger1999> gundalow: Maybe just rely on community to fill it in.
+17:30:10 <abadger1999> So that it's more informational for people looking to test and port.
+17:30:25 <abadger1999> rather than for users looking at what is guaranteed to work on python3.
+17:30:27 <gundalow> can use a script to list all the modules, and if their is a test directory for them. We can maybe add an "importance" column
+17:30:39 <abadger1999> Yeah.
+17:30:52 <abadger1999> And automated testing column, manual testing column.
+17:31:01 <gundalow> cool, I'll do that
+17:31:02 <abadger1999> Column to link bugs/PRs
+17:31:24 <alikins> mattclay: +1 re coverage for integration tests
+17:31:27 <abadger1999> misc: Note:  iteritems is a good change to make but iterkeys is usually unnecessary.
+17:31:27 <lbalhar> sounds good
+17:31:46 <abadger1999> just do for i in dictionary:   to get the keys out
+17:32:49 <lbalhar> yep, and if you are interested in Python 2/3 compatible code, we are working on conservative porting guide here: http://portingguide.readthedocs.io/en/latest/
+17:33:15 <lbalhar> it is still in progress, but a lot of content is already there
+17:33:19 <mattclay> lbalhar: If you're looking for another one to fix, there's also switching from dict.has_key to in.
+17:33:54 <mattclay> There's a few modules with that, and an inventory script.
+17:35:01 <gundalow> Issue to track generating a spreadsheet https://github.com/ansible/ansible/issues/18456
+17:35:19 <lbalhar> mattclay, I'll need to find good strategy to work on Ansible - first I want to do something with test (porting, creating new ones) to learn about Ansible's code and then I can port things in core
+17:35:36 <gundalow> Do we need to track things like "dict.has_key", if so where?
+17:36:10 <gundalow> maybe as another sheet in the spreadsheet?
+17:36:44 <mattclay> gundalow: +1
+17:36:48 <abadger1999> If there's a lot... otherwise, I'd probably write a code-smell test and then fix every place that was found.
+17:37:01 <lbalhar> gundalow, I think that better will be to track incopatible modules in general that incompatible code
+17:37:06 <abadger1999> or I suppose it could be good to use another sheet so that community could do that.
+17:37:11 <abadger1999> Instead of me.
+17:37:20 <mattclay> Once we have static analysis in place, checking for things like has_key should be easy.
+17:37:28 * gundalow would prefer to use computers to track things :)
+17:37:59 <mattclay> I've got a prototype extension for pylint to blacklist specific methods which are not supported on python 3 (or should otherwise not be used for various reasons). I'll be putting that in 2.3 at some point.
+17:38:43 <abadger1999> Cool.  pylint has a --py3k switch too... they may want that upstream.
+17:39:47 <gundalow> If there are stronger linters that we can enfore for new modules that would be good
+17:40:30 <alikins> the 'futurize' command will check too
+17:40:40 <alikins> and pyqver to some degree
+17:41:20 <gundalow> It would be good to raise the bar for new modules. I'd like to avoid the todo list growing at both ends (existing *and* new modules)
+17:41:35 <alikins> (my branch of pyqver is at https://github.com/alikins/pyqver but needs to get the flake8 v3 compat merged into master)
+17:42:30 <bcoca> gundalow: yet there is desire to lower the bar
+17:43:01 <gundalow> bcoca: raise the bar w.r.t. py3 compatability
+17:43:30 <gundalow> At the moment I believe we only do a compile test, which I don't believe spots issues like dict.has_key
+17:43:38 <alikins> openstack's 'hacking' does a set of py3 compat checks as well
+17:43:39 <gundalow> though please correct me if that's wrong
+17:43:56 <mattclay> gundalow: You're correct. We do a py3 compile check, but it does miss things like dict.has_key.
+17:44:03 <gundalow> cool
+17:44:15 <gundalow> bcoca: so it's that type of thing I'd like to raise the bar on
+17:44:37 <alikins> I would like to not have to hold the bar
+17:44:58 <gundalow> OK
+17:45:06 <gundalow> so what have we agreed on
+17:45:54 <gundalow> 1) gundalow will generate a spreadsheet to track module v py3 https://github.com/ansible/ansible/issues/18456 - Feel free to add any comments on what else you think should be in that
+17:48:14 <gundalow> 2) Initially (to make it easier for people to edit) lets add details of bad things to https://public.etherpad-mozilla.org/p/ansible-python3 - again, please add anything you can think of
+17:49:48 <abadger1999> <nod>
+17:51:20 <gundalow> So, for example if someone was to fix all the dict_has_key issues, how to we stop that being reintroduced
+17:51:40 <gundalow> seems like there were a few options
+17:51:50 <gundalow> a) write some bash in codesmell
+17:52:03 <gundalow> b) pyqver
+17:52:16 <gundalow> c) Add a rule to pylint
+17:52:26 <gundalow> or something else
+17:52:59 <mattclay> gundalow: If we can wait a little on that, I'll cover that as part of my planned static analysis work for 2.3.
+17:53:33 <gundalow> That sounds reasonable, avoids over complecating the issue
+17:54:04 <gundalow> if we end up fixing all the issues, then a few get reintroduced we can fix those new instances of has_key later
+17:54:12 <abadger1999> yep.  If you want some bash in the meantime, that one is probably very easy to add to code-smell temporarily.
+17:54:26 <abadger1999> has_key shouldn't have any false positives.
+17:54:34 <abadger1999> from a simple grep.
+17:54:38 <gundalow> cool
+17:54:40 <mattclay> There are so few uses of has_key that I'm not too worried about it showing up again. If it does, it's an easy fix.
+17:54:52 <gundalow> +1 to mattclay
+17:54:54 <abadger1999> mattclay: less work, wfm :-)
+17:55:06 <gundalow> How do we generate the full list of bad things?
+17:55:14 <lbalhar> +1 to mattclay
+17:56:08 <mattclay> That will be something I'll research as I'm selecting the static analysis rules to use (or write, as needed).
+17:56:27 <bcoca> git log author=bcoca|grep fix
+17:57:20 <abadger1999> heh :-)
+17:57:34 <lbalhar> mattclay, take a look at coala.io
+17:57:57 <gundalow> lbalhar: I know we went round the houses a bit there, does that help you?
+17:58:15 <lbalhar> mattclay, https://coala.io/
+17:58:42 <mattclay> lbalhar: Thanks, I'll take a look.
+17:59:11 <lbalhar> gundalow, yes, than you, the best is to learn during work and I have one task to solve in Ansible right now and next I will see what to do next
+17:59:40 <lbalhar> gundalow, maybe I'll write some tests for untested modules and then I can help with Python 3 in tests/modules
+18:00:18 <lbalhar> is always better to start with tests because with tests modifications you cannot break Ansible core functionality
+18:01:31 <gundalow> Tests would be amazing :)
+18:02:13 <gundalow> lbalhar: I'm in the UK, and mattclay is West coast. So whatever hours you happen to be online one of us should be here if you need us :)
+18:02:53 <gundalow> #topic yamllint enforces for tests
+18:02:58 <gundalow> So this topic is a follow on from the core meeting earlier
+18:03:52 <gundalow> As people that write tests, what are your thoughts if we required all yaml files under ansible/test to be yamllint complient
+18:04:19 <gundalow> misc: What do you think?
+18:05:11 <gundalow> lbalhar: As people that write tests, what are your thoughts if we required all yaml files under ansible/test to be yamllint complient?
+18:05:16 <gundalow> https://github.com/ansible/ansible/pull/15470/files
+18:07:18 <lbalhar> gundalow, I think that linting is good idea, I am working on Samba and there is nothing like this and I have to disable it in editor because otherwise I have errors on every line
+18:08:04 <gundalow> cool
+18:08:07 <lbalhar> gundalow, and also if your editor automatically fixes issues in files, you commits can contain unrelated changes in edited files
+18:08:19 <gundalow> so that's 100% agreement from the contributors present, motion carried
+18:08:26 <gundalow> #topic Open Floor
+18:09:21 <gundalow> lbalhar: Talking of linters, we have a tool valled validate-module which you may have seen if you've developed a new moduled and missed version_added or made a similar issue
+18:09:49 <gundalow> https://github.com/ansible/ansible/pull/18439/files updates that
+18:10:16 <gundalow> mattclay: I've looked at it and it seems sensible
+18:11:29 <abadger1999> jtanner has a PR that enhances validate-modules: https://github.com/ansible/ansible/pull/18439
+18:11:47 <lbalhar> gundalow, thanks, it will be handy if I'll work on modules
+18:12:21 <gundalow> lbalhar: aye, just an FYI really
+18:12:39 <abadger1999> if ya'll want to review and merge.
+18:12:48 <gundalow> abadger1999: aye, will do
+18:13:01 <gundalow> Thanks for your review comments
+18:13:26 <gundalow> Anyone got anything else?
+18:14:11 <gundalow> lbalhar: Thanks for you time, input, ideas, and offers to help with this all
+18:14:47 <lbalhar> gundalow, thanks you and all around for your help, I'll do my best
+18:15:12 <gundalow> :)
+18:15:15 <gundalow> #endmeeting

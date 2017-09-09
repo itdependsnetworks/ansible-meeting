@@ -1,0 +1,123 @@
+16:30:24 <nitzmahone> #startmeeting Windows Working Group
+16:30:24 <zodbot> Meeting started Fri May 12 16:30:24 2017 UTC.  The chair is nitzmahone. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:30:24 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:30:24 <zodbot> The meeting name has been set to 'windows_working_group'
+16:30:45 <nitzmahone> #info agenda https://github.com/ansible/community/issues/153
+16:30:49 <dag> o/
+16:31:40 <jhawkesworth> hey
+16:31:44 <nitzmahone> howdy
+16:32:28 <jhawkesworth> gargh.  train packed . local cell tower probably hammered, lots of netsplits for me
+16:33:11 <nitzmahone> #topic https://github.com/ansible/ansible/pull/23119
+16:33:17 <nitzmahone> (I keep missing this one on the agenda)
+16:34:13 <nitzmahone> I think I'm good to merge this one- wanna do one more review pass over it since it's been several weeks, but I think they're important changes
+16:34:40 <nitzmahone> Anybody else got thoughts on it? I know Jon did an early review with a couple comments which were resolved
+16:35:13 <nitzmahone> (and we'll extract the link code into a module_utils file if something else needs it later)
+16:35:28 <jhawkesworth> yeah I want the functionality, so let's have it
+16:35:30 <nitzmahone> #action nitzmahone to final review/merge https://github.com/ansible/ansible/pull/23119
+16:36:08 <jhawkesworth> great.
+16:36:31 <nitzmahone> I'll have to hassle trond again to see what the state of win_dsc PR is
+16:36:42 * dag doesn't like the strings hard_link, symbolic_link and junction_point in the interface
+16:36:43 <nitzmahone> Lots of clamor to get that into 2.4
+16:37:10 <nitzmahone> dag: wanna add a comment as such to 23119?
+16:37:20 <nitzmahone> (with suggestions, preferably ;) )
+16:37:25 <dag> sure, but that's just a matter of opinion
+16:37:36 <dag> I don't even know what a junction_point is :)
+16:37:53 <nitzmahone> NTFS filesystem graft
+16:38:10 <nitzmahone> Windows admins will
+16:38:24 <nitzmahone> Those are the proper Windows terminology, at least
+16:39:25 <jhawkesworth> IIRCjunction_point was  only way to do links on old windows (other than shortcuts, which aren't like ln type links if you ask me)
+16:39:40 <nitzmahone> #topic https://github.com/ansible/ansible/pull/23405
+16:39:59 <nitzmahone> Looks like you guys are both shipit on this one- I'll do a final pass on it as well
+16:40:07 <nitzmahone> #action nitzmahone to review/merge https://github.com/ansible/ansible/pull/23405
+16:40:29 * jhawkesworth brb when off train
+16:41:28 <nitzmahone> #topic https://github.com/ansible/ansible/pull/23162
+16:41:38 <nitzmahone> Looks like that one's waiting on me as well
+16:41:53 <nitzmahone> #action nitzmahone to final review/merge https://github.com/ansible/ansible/pull/23162
+16:42:14 <nitzmahone> #action and https://github.com/ansible/ansible/pull/23140
+16:43:23 <dag> indeed :)
+16:43:32 <nitzmahone> #action and #23559/23581
+16:44:15 <nitzmahone> #topic https://github.com/ansible/community/issues/153#issuecomment-301050873
+16:45:33 <nitzmahone> WRT no_log, I think Perzel misunderstood it- there's "control-side no_log" which masks the results, and "module-side arg-level no_log", which prevents individual arg values from being syslogged on *nix. We don't do syslog, so the latter is currently nonsensical for WIndows.
+16:46:11 <nitzmahone> We probably *should* add some kind of best-effort module event logging, but that'd probably come with declarative argspec, since IIRC that's where the Python stuff does it
+16:46:13 <jhawkesworth> ah I hadn't twigged the syslog subtlety
+16:46:35 <jhawkesworth> yeah I looked at the code, it uses argspec
+16:46:57 <nitzmahone> He filed a support issue too, so I got to explain it to our support folks as well, but I'm pretty sure his script is what's dumping the cert to stdout.
+16:47:29 <nitzmahone> Unless psexec echos the commandline (can't remember), but regardless, task-level no_log is what's necessary there.
+16:47:47 <nitzmahone> #topic Open Floor
+16:47:53 <jhawkesworth> actually.  I think the module-side arg-level no_log also supresses from -v output
+16:48:48 <jhawkesworth> maybe perzel is runnign with -v
+16:49:14 <nitzmahone> It might mask from invocation, can't remember
+16:49:31 <nitzmahone> I think that's generated control-side now though
+16:49:44 <nitzmahone> (and control-side can't parse those)
+16:49:49 <dag> I just added some new Windows modules for review/feedback
+16:49:56 <nitzmahone> I've been arguing for control-side argspec for a long time
+16:50:06 <dag> It may speed up progress
+16:50:09 <nitzmahone> Noice
+16:50:21 <jhawkesworth> would be good.
+16:51:03 <jhawkesworth> cool looking forward to dag new modules
+16:51:23 <dag> oh no, not mine !
+16:51:38 <dag> these are community contributed
+16:51:44 <jhawkesworth> oh I understand more dag reviews.
+16:52:22 <jhawkesworth> hoping to get a bit more ansible time next week.  Lots of other stuff in the way this week.
+16:52:25 <nitzmahone> dag: you're wrapping up your current Windows gig, right?
+16:53:04 <dag> nitzmahone: not completely, but everything is working
+16:53:16 <nitzmahone> That's good to know. :) Are they happy with it?
+16:53:28 <dag> I do have some stuff that would be best with modules and/or changes but not essential
+16:53:30 <dag> sure :-)
+16:53:45 <dag> We'll be demonstrating some of it at AnsibleFest SFO if all is well
+16:53:51 <nitzmahone> Noice
+16:54:13 <jhawkesworth> sounds great
+16:54:14 <dag> nothing special for you guys ;-)
+16:54:22 <dag> just putting stuff together
+16:54:24 <nitzmahone> I'm thinking about submitting a Windows Module Dev talk for SF Fest
+16:54:26 * jhawkesworth starts plotting how I could get to SF
+16:54:56 <dag> AnsibleFest London would have been nice, but we missed the CFP (didn't know if I could attend)
+16:55:19 <jhawkesworth> win module dev talk would be a good thing, if only to drag together current understanding / consensus
+16:55:20 <nitzmahone> That'd light the fire under my butt to make the module dev process suck less so I wouldn't have to dodge rotting fruit
+16:55:36 <dag> nitzmahone: that would be appreciated, we still need a lot of docs, I plan to do some of that work too
+16:55:37 <jhawkesworth> :-)
+16:56:02 <dag> although the quality of the newer modules is already high IMO
+16:56:11 <nitzmahone> Gotta get the kerberos/HTTP stuff shipped so I can get back to working on fun things
+16:56:34 <nitzmahone> Yeah, just the dev/debug process is more painful than it should be.
+16:56:44 <jhawkesworth> wishing you luck with kerb/HTTP.  I can probably do some testing when you have stuff to show
+16:56:46 <dag> indeed
+16:57:01 * nitzmahone does not miss developing in C
+16:57:15 <dag> win_dsc will be a compelling thing for Windows admins
+16:57:21 <nitzmahone> Indeed
+16:58:26 <dag> But there's still some cleanup to do for existing module (https://public.etherpad-mozilla.org/p/Ansible_Windows_Community_Plan) and a lot of bugs :-(
+16:59:17 <nitzmahone> Oh yeah, did we want to talk about "where/how to rally" on this kind of stuff? I'm not a huge fan of the etherpad, nor GH issues.
+16:59:31 <nitzmahone> dag suggested a GH wiki, which might be a decent compromise
+17:00:13 <nitzmahone> We could also host something in a separate repo where I might be able to add contributors without giving commit on ansible/ansible
+17:00:19 <dag> GH project looks easier, but GH wiki is probably the best tradeoff
+17:00:22 <jhawkesworth> worth a try.  I have used trello boards in the past but after a while they get out of control
+17:00:34 <nitzmahone> GH teams/projects might be good too, but we haven't messed with them
+17:00:50 <dag> a separate repo is suboptimal as we have to reference issues by repository, but doable
+17:01:01 <nitzmahone> I'd like to keep it inside GH if at all possible, just to minimize duplicating info
+17:01:29 <jhawkesworth> makes sense.  projects is a bit like trello boards IIRC
+17:01:30 <dag> yes
+17:02:06 <jhawkesworth> not sure if I have rights to create a project.  I'll have a go
+17:02:24 <nitzmahone> jhawkesworth: I think you do
+17:02:39 <nitzmahone> But the issue is that non-committers can't participate
+17:03:00 <jhawkesworth> ah that doesn't help
+17:03:41 <nitzmahone> So we could do a project in a separate repo (where we can add others), but I don't know how well they do cross-repo
+17:04:32 <nitzmahone> Urg: "Only organization members can view and create organization-wide project boards. If an organization-wide project board includes issues or pull requests from a repository that you don't have permission to view, the card will be redacted."
+17:04:47 <jhawkesworth> boo
+17:04:51 <dag> everybody commit-rights, I think I can agree with that :-P
+17:05:06 <dag> even better !
+17:05:21 <jhawkesworth> might not be the worst solution.
+17:05:25 <nitzmahone> We've actually discussed it, but the worry is a lot of the external vendors and stuff
+17:05:36 <jhawkesworth> of 3 of us here, only dag not a committer
+17:05:39 <nitzmahone> It doesn't take much to royally hose up a repo
+17:05:50 <dag> GH wiki is fine by me
+17:05:58 <dag> we move stuff around etc...
+17:06:15 <nitzmahone> Maybe let's try that and see how we do. I know we can open that up to modification to non-org-members
+17:06:21 <dag> just like I am doing now, at least it's one location where others can crontibute
+17:06:37 <nitzmahone> #action nitzmahone to create test GH wiki for WWG
+17:06:42 <jhawkesworth> great
+17:07:00 <nitzmahone> OK, anything else?
+17:07:14 <jhawkesworth> not from me.  gonna bail. getting rain on laptop.  have a good weekend (eventually).
+17:07:30 <jhawkesworth> cheers
+17:07:34 <nitzmahone> Thanks!
+17:07:41 <nitzmahone> Closing in 5...
+17:08:04 <nitzmahone> Thanks all!
+17:08:06 <nitzmahone> #endmeeting

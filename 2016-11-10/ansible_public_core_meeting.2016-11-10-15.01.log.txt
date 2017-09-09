@@ -1,0 +1,451 @@
+15:01:31 <gundalow> #startmeeting Ansible Public Core Meeting
+15:01:31 <zodbot> Meeting started Thu Nov 10 15:01:31 2016 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:01:31 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:01:31 <zodbot> The meeting name has been set to 'ansible_public_core_meeting'
+15:01:48 <ryansb> hiya
+15:02:03 <gundalow> #chair abadger1999 alikins bcoca jimi|ansible jtanner mattclay mordred nitzmahone ryansb
+15:02:03 <zodbot> Current chairs: abadger1999 alikins bcoca gundalow jimi|ansible jtanner mattclay mordred nitzmahone ryansb
+15:02:11 <thaumos> gm
+15:02:11 <jtanner> hello
+15:02:13 <gundalow> ryansb: You should work out how to get Ops on here
+15:02:25 <gundalow> #info Agenda https://github.com/ansible/community/issues/140
+15:02:29 <abadger1999> Greetings
+15:02:45 <ryansb> I'm already ops, just not IRC ops ;)
+15:02:52 <gundalow> #topic Detecting invalid file modes (passed to file: etc)
+15:03:41 <gundalow> Every so often users hit issues with not specifying modes correctly.
+15:04:01 <abadger1999> This would be playbook backwards incompatible I think.
+15:04:12 <gundalow> We do document this "Mode the file or directory should be. For those used to /usr/bin/chmod remember that modes are actually octal numbers (like 0644). Leaving off the leading zero will likely have unexpected results"
+15:04:23 <abadger1999> The only way we can do it is to mandate that the user give us a string instead of a number.
+15:04:38 <bcoca> theproblem is that they are NOT incorrect modes, just not the modes the user expects when not doing octal
+15:04:39 <gundalow> I was wondering if we can give a message if someone enters only three digits
+15:04:50 <gundalow> bcoca: exactly
+15:04:57 <bcoca> gundalow: not really, cause that might be what they want/need
+15:05:07 <gundalow> Is their any case where 755 is actually what they want?
+15:05:11 <skuznets> Message would be annoying if I know I only need three digits but then see the error for the rest of the lifetime of the playbook
+15:05:15 <bcoca> gundalow: yes
+15:05:19 <abadger1999> So they will have to update their playbooks to use quotation marks (and possibly jinja2 filters if they're already adding bits together)
+15:06:07 <gundalow> mkay, Sounds like this has already been thought about a fair bit, I just wanted to check
+15:06:17 <gundalow> so I guess we can move onto the next agenda item
+15:06:22 <ryansb> gundalow: I imagine there's *some* case, but probably not many
+15:06:31 <bcoca> its been a recurring theme, same people also run into trouble using chmod directly ....
+15:06:54 <abadger1999> skuznets: Note:  Three digits *probably* isn't all you'd type... You'd have to type "755".  If you just type 755, it will end up setting mode 01363
+15:06:58 <bcoca> there is a case for every possible mode combination
+15:07:04 <skuznets> Do the examples prefer the explicit string version?
+15:07:08 <skuznets> abadger1999: ack
+15:07:37 <gundalow> 755 giving mode 01363 are the cases I'm wondering if we can do something about
+15:08:26 <bcoca> promote symbolic over numeric inputs
+15:08:43 <jtanner> why is this an issue?
+15:09:26 <gundalow> jtanner: Occasionally people trip over it, I wanted to see if their was anything we could do to make it easier for people
+15:09:40 <jtanner> trip over what exactly?
+15:09:57 <abadger1999> gundalow: Only if we outlaw actual valid modes (ie: if we check if you're setting 01363 then that means you can't actually set "1363"/01363 on a file. )
+15:10:11 <gundalow> "mode: 755" actually setting the file to 01363
+15:10:14 <skuznets> jtanner: specifying '755' and not '0755' and having their input interpreted as '01363' in octal
+15:10:25 <jtanner> hrm
+15:10:35 <abadger1999> jtanner: In a playbook these are good ways to specify mode:  mode: 0755 mode: "755", mode: "0755"
+15:10:41 <bcoca> only FIX is outlawing numeric mode
+15:10:45 <skuznets> gundalow: my opinion is having all the docs prefer the symbolic method is probably the best we can do
+15:11:01 <jtanner> maybe it needs a mode_octal parameter so people can say what they mean
+15:11:09 <abadger1999> but mode: 755 does the wrong thing because that's a decimal number and so it turns into octal 01363 and that's the mode that gets set.
+15:11:30 <abadger1999> jtanner: Still doesn't work.
+15:11:40 <jtanner> why's that?
+15:11:51 <skuznets> jtanner: mode_octal: 755
+15:11:57 <bcoca> cause 755 is a valid octal
+15:11:59 <abadger1999> mode_octal: 755  <=== Do I make this work?  If so, then this won't work: mode_octal: 0755
+15:12:13 <abadger1999> and vice versa
+15:12:14 <jtanner> sigh ... 777 for everything!
+15:12:23 <gundalow> :)
+15:12:45 <gundalow> If people don't think there is anything sensible we can improve, then I'm hapy with that
+15:12:48 <bcoca> ^ i would send you to chmod mailing list to see same discussion every 4yrs ....
+15:12:51 <ryansb> bcoca: 755 is valid, but it's not what folks *meant*
+15:13:13 <bcoca> ryansb: but I meant 755, not 0755 ... so I cannot set it?
+15:13:36 <gundalow> Access: (1363/--wxrw--wt)
+15:14:16 <agaffney> doesn't 'mode: "755"' work as intended?
+15:14:22 <abadger1999> Don't need to outlaw modes that look like numbers by the way.... just need to outlaw modes that are yaml numbers (not sure about k=v parsing here....)
+15:14:22 <gundalow> ok, Not seeing any suggestions, so if people are happy we can move onto the next topic
+15:14:27 <skuznets> Always prefer symbolic in documentation, keep the warnings about prefix-0 in the doc for octal, let people get burned if they choose octal and don't do it right? Not reall an Ansible problem
+15:14:27 <abadger1999> agaffney: correct.
+15:14:31 <agaffney> my impression was that it depends on if the YAML parser interprets it as a decimal value or a string
+15:14:48 <bcoca> agaffney: or octal
+15:15:18 <abadger1999> mode: "755"  and mode: "0755"  both do what the user expects (as well as mode: 0755).  It's just mode: 755 that doesn't.
+15:15:24 <agaffney> an octal value still ends up as decimal after parsing (afaik), but a decimal value that converts to the *proper* octal value
+15:15:57 <bcoca> the problem is that people mean 0755 but type 755
+15:16:09 <abadger1999> yeah,   right now, you could also specify  mode: 493   and get the file with mode 0755
+15:16:25 <bcoca> yep
+15:16:41 <abadger1999> Yep, next topic.
+15:16:46 <gundalow> cool
+15:16:47 <gundalow> Thanks
+15:17:11 <gundalow> #topic MySQL security issue https://github.com/ansible/ansible-modules-core/pull/5388
+15:17:29 <bcoca> didnt we discuss last meeting?
+15:17:42 <bcoca> thought jmainguy had ruled on it
+15:17:51 <gundalow> bcoca: it got carried over to the next meeting
+15:17:53 <jtanner> he said it was a "feature" later
+15:18:00 <Jmainguy> thats my opinion
+15:18:04 <Jmainguy> dont think its a security issue
+15:18:27 <abadger1999> k.  If it's not a security issue we can take it off our agenda.
+15:18:40 <Jmainguy> author added more comments
+15:18:44 <Jmainguy> I will look at it again tonight
+15:18:47 <gundalow> What do we need to do to confirm that it isn't a security issue?
+15:18:51 <gundalow> Jmainguy: hey :)
+15:18:55 <Jmainguy> hey buddy
+15:19:25 <gundalow> ok, will leave it on the agenda incase Jmainguy needs any help from us
+15:19:29 <Jmainguy> sounds good
+15:19:31 <gundalow> #info ok, will leave it on the agenda incase Jmainguy needs any help from us
+15:19:46 <jtanner> we have a guy that can make security assessments, right?
+15:19:47 <gundalow> #topic How long to deprecate before removal https://github.com/ansible/community/issues/139
+15:20:02 <gundalow> oh, did I jump to soon, sorry
+15:20:04 <sdake> inco/
+15:20:09 <sdake> rather o/ :)
+15:20:17 <inc0> o7
+15:20:24 <Jmainguy> jtanner: if we do, that could be helpful
+15:20:48 <jtanner> i'll ping him on slack
+15:20:53 <gundalow> Thanks
+15:21:01 <gundalow> cool, so onto https://github.com/ansible/community/issues/139
+15:21:08 <bcoca> actually the ask is to NOT deprecate things for one more version ... which i really dont udnerstand
+15:21:39 <bcoca> or to phrase as requestor 'dont tell us it is deprecated'
+15:21:58 <skuznets> Shouldn't the warning be there to bug you to upgrade?
+15:22:04 <skuznets> Errr update**
+15:22:17 <bcoca> exactly
+15:22:40 <agaffney> was there any deprecation warning for 'sudo' in 1.9 when 'become' was introduced?
+15:22:54 <agaffney> or was the warning added in 2.0?
+15:23:05 <ryansb> I know it's in 2.0, not sure about 1.9
+15:23:17 <abadger1999> it was backported to 1.9.
+15:23:35 <agaffney> oh, was 'become' not in 1.9.0?
+15:23:37 <abadger1999> We had originally planned it for 2.0 but it got pushed into 1.9 because people needed it.
+15:23:43 <bcoca> when become was introduced it was not clear if we were deprecating sudo
+15:23:48 <abadger1999> That I'd have to look in history to find out.
+15:23:48 <agaffney> ah
+15:23:49 <bcoca> ^ still not clear to me
+15:23:56 <abadger1999> (1.9.0 vs 1.9.n)
+15:24:02 <agaffney> so not a good example :)
+15:26:08 <jtanner> Jmainguy: i emailed the guy
+15:26:28 <gundalow> Thanks
+15:28:01 <jtanner> do we have a migration guide?
+15:28:18 <abadger1999> I'm -1 to this proposal.  But would recommmend that they turn off deprecation warnings until they're ready to fix their playbooks.
+15:28:26 <jtanner> if the deprecated feature is added to one, i'm fine with deprecation on n+1
+15:28:41 <abadger1999> (bcoca: Note, not all new features go throiugh the 3-step process.  Some only go through 2-steps)
+15:30:11 <bcoca> abadger1999: we still dont deprecated until 2 versions have gone by
+15:30:26 <bcoca> abadger1999: as i note in the comments, we dont always 'flip', only when it makes sense
+15:30:31 <abadger1999> bcoca: yeah agreed... I was just trying to read the sequence then and realized that.
+15:30:42 <abadger1999> *and then
+15:30:43 <alikins> related: https://github.com/ansible/proposals/issues/32
+15:31:54 <abadger1999> tangentially related.
+15:31:59 <bcoca> alikins: that is of method, his proposal waas to NOT warn when something is deprecated
+15:32:11 <abadger1999> but not going to solve this issue.
+15:33:21 <alikins> like I said, related
+15:33:50 <bcoca> only in that both deal with deprecation
+15:35:03 <abadger1999> Anyhow... I think the user shoulod introdue the extra step themselves.  So it would look like this for them: * X has old feature.  *  X+1 has old feature and new feature, old feature warns but user turns off deprecation warnings on machines with new ansible.  * (Still X + 1) user turns on deprecation warnings on machines that have (X+1) now that they've upgraded ansible everywhere and upgrades their playbooks * (X+3) feature goes away.
+15:35:05 <gundalow> OK, so how can we progress this. Do we think this is a reall issue, can jbscare's specific problem just be solved with disable-deprecation-wanring (or whatever it's called) flag?
+15:36:03 <bcoca> he'll then forget to reenable
+15:36:27 <abadger1999> If the user takes a long time to upgrade (so that X+2 comes out as they are upgrading to X + 1), the idea is that they just enable deprecation warnings on the oldest version of ansible they have running.
+15:36:50 <bcoca> abadger1999: but that applies to ALL deprecations
+15:37:03 <bcoca> you might be in X+1 for the one annoying him but in X+2 for another 3
+15:37:07 <abadger1999> bcoca: yes.  But doesn't matter for the user's stated case.
+15:37:26 <abadger1999> bcoca: he says they deal with all  deprecations, but only after they've updated all machines to X + 1
+15:37:46 <bcoca> for THAT specific feature, other features might be in X+2
+15:37:47 <abadger1999> I can't help them if they forget to re-enable deprecation warnings.
+15:37:59 <bcoca> sorry Y+2
+15:38:07 <abadger1999> bcoca: right -- but that doesn't matter if they only enable on the oldest version of ansible they have.
+15:38:12 <bcoca> Y+2 == X+1
+15:38:24 <abadger1999> ah
+15:38:29 <bcoca> abadger1999: you are assuming all feature deprecate AT SAME TIME
+15:38:38 <abadger1999> bcoca: I think he means all, though.
+15:38:47 <abadger1999> Mmm...
+15:39:04 <abadger1999> Nope I think it's still fine.
+15:39:20 <bcoca> i dont think we need this, 3 versions is more than enough time, if you DONT warn, they'll ignore it and still ask for more time aferwards
+15:39:49 <misc> yep...
+15:39:50 <abadger1999> If he only has deprecation warnings enabled on the oldest version of ansible that he's running then that's the only place he has to fix them.
+15:40:03 <bcoca> and they are NOT FORCED to upgrade
+15:40:11 <misc> now, the question is maybe why are deprecation annoying, ie, what is causing trouble ?
+15:40:12 <thaumos> ^^
+15:40:34 <thaumos> @misc, in this case they said it was their “personal preference”
+15:40:46 <abadger1999> And since any deprecations he fixes in his playbooks in the oldest version will be forwards compatible, it takes care of his use-case.
+15:40:50 <thaumos> we have to cut the cord, because it is just infinitely going to get out of hand.
+15:40:51 <bcoca> misc: if they are not annoying people then complain when the error happens (this just happend a bunch iwth 2.2 cause they had disabled warnings)
+15:41:37 <misc> thaumos: that sound like a weakly expressed preference
+15:42:01 <thaumos> personally I am fine with X+2 being the max. meaning we cut the cord in two releases.
+15:42:14 <bcoca> its 3 actually
+15:42:38 <bcoca> 2 releases have deprecation warnings, 3rd removes
+15:42:41 <thaumos> right
+15:42:47 <thaumos> we’re saying the same thing
+15:44:01 <bcoca> people are always going to complain that either we are too noisy and warning about deprecations or that we removed it too soon w/o enough warning, I think we are currently in the happy middle
+15:44:15 <bcoca> I do not think the user proposes anything that will improve the process
+15:44:29 <gundalow> +1 to bcoca's above to statements
+15:44:38 <jtanner> +1
+15:44:40 <abadger1999> +1
+15:44:44 <bcoca> as 'not warning' and pushing deprecation even one more release is not going to help anyone
+15:44:57 <thaumos> ^^ agreed
+15:45:43 <bcoca> ^  the only thing it would help,is having something to point at for THIS user when next feature changes and he complains again, cause since we did not warn .. he did not realize it was deprecated
+15:46:04 <abadger1999> I can post to the issue since I can tell them about using deprecation_warnings to  do this.
+15:46:09 <gundalow> Once thing we've mentioned before is doing the removal earlier in the release cycle, e.g. delete stuff in devel just after we've released the previous version. In 2.2. we did some of the removals fairly late during 2.2's development (I think it was around code-complete time)
+15:46:10 <bcoca> i am petty enough to do that, but not enough to put everyone else thorugh that work/process
+15:46:39 <bcoca> gundalow: +1 to that, deal with deprecations as early as possible, (all major changes imho)
+15:46:44 <thaumos> Starting in 2.3, if something is new, we should have a dep warning right away, then in 2.5 that dep feature/module is gone.
+15:46:44 <gundalow> Would one page that lists all the deprecations on help
+15:46:58 <thaumos> ^ never hurts to document
+15:46:59 <gundalow> taking the notes from the v2.0 porting guide as a start
+15:47:06 <abadger1999> Yes.
+15:47:11 <bcoca> gundalow: that is normally the changelog
+15:47:30 <bcoca> ^ part of alkins proposal is to make generating that page easier
+15:47:33 <gundalow> I think a dedicated page may be better, you can go into the detail of what and why
+15:47:42 <mattclay> I think we still have some deprecations due for removal in 2.2 that were deferred until 2.3 which haven't been done yet.
+15:47:43 <bcoca> 1 thing i would propose is to ALWAYS add version to the deprecation warning
+15:47:49 <bcoca> ^ we currently don't
+15:48:01 <bcoca> mattclay: 3 or 4 iirc
+15:48:08 <abadger1999> yeah -- we use changelog right now but that's not ideal... it isn't easy to tell when something will be removed there.
+15:48:33 <bcoca> the display.deprecation funciotn takes an OPTIONAL version, i vote we make it mandatory
+15:48:35 <abadger1999> You have to look through each release until you get to X-3
+15:48:42 <gundalow> +1 to mandatory
+15:49:03 <thaumos> +1 to mandatory
+15:49:45 <misc> +1
+15:50:00 <alikins> we spent a lot of time sorting out deprecations at the end of 2.2. that was the primary motivator for the deprecation proposal I mentioned
+15:50:16 <abadger1999> AIwise... There's both version and removed  We should actually be able to do removed based on version.
+15:50:18 <misc> or do we need a deprecation for the deprecation of the optional parameter as well ?
+15:50:29 <abadger1999> *API-wise
+15:51:24 <bcoca> https://gist.github.com/anonymous/94be8ff8d7b6cede891f4f07f566bd20
+15:51:42 <bcoca> ^ i can make deprecated mandate versions in 10s, then just need to update that list for those that dont have version
+15:52:47 <bcoca> misc:  module deprecation shoudl follow same rules, but we dont currently have a system to add those warnigns (other than `warnings`), i'll add 'deprecated' to the results to allow for this
+15:52:53 <alikins> gundalow: https://github.com/ansible/proposals/issues/32  has a --list-deprecations (at least as much as that particular version knows about)
+15:52:56 <bcoca> but rules are same, at least 2 versions warning
+15:54:33 <thaumos> do we agree that the version dep is made is 1 of those versions?
+15:55:32 <inc0> so I'll chime in from OpenStack perspective - we have specific section in all our changelogs about deprecations this release
+15:55:55 <inc0> people who cares about that stuff reads changelogs, or at least should read them
+15:57:15 <inc0> that, email to mailing list and a warning when someone runs deprecated code usually is enough
+15:57:15 <thaumos> that’s one place to have them for sure, but not everyone reads changelog.  which is why we have the warnings at runtime.
+15:57:35 <inc0> yes, warnings at runtime are a must
+15:57:40 <inc0> no argument there
+15:57:41 <bcoca> also diff audience, we have a much broader spec of people, sadly many of them dont read any docs
+15:57:46 <thaumos> exactly, but this whole discussion is around one user suggesting that we wait one more release because dep warnings are too noisy for them
+15:57:48 <abadger1999> I do not like the implementation of 32 and would vote against it.
+15:58:25 <bcoca> so a) make version mandataory, b) update all existing deprecations to have version, c) script deprecation notices for changelog <= i have a and b done already
+15:59:01 <thaumos> Should we grandfather in some deps, or just cut the cord?
+15:59:04 <abadger1999> bcoca: Sounds good.  what do you think about making removed automatic?
+15:59:13 <bcoca> not that easy
+15:59:16 <thaumos> I only ask because have we not been explicit enough
+15:59:23 <thaumos> I know, just playing devils advocate
+15:59:24 <gundalow> We need to review deprecation notices in modules as well
+15:59:51 <thaumos> ^ that does need to exist, because we’ll never get people to stop using dep’d modules.
+15:59:51 <alikins> thaumos: https://github.com/ansible/ansible/compare/devel...alikins:deprecation?expand=1 assumes a Deprecation wont exist until the version it's introduce in so it doesn't include it currently. It could easily enough.
+16:00:05 <bcoca> d) create module deprecation facility ( i'll do this also and make it work as current 'warnings')
+16:00:45 <thaumos> I suggest include the version it’s intro’d.  No sense in waiting N+1 more.  That’s too long for us to maintain.
+16:01:33 <thaumos> strategy wise, we want to move quickly enough without pulling out the rug too abruptly.
+16:01:42 <bcoca> abadger1999: if we write the deprecations in such a way that they can act as short circuits ... then it might be possible to automate, but that is very hard in many cases
+16:01:44 <jtanner> what is the real problem here? People don't want warnings or they want warnings for a longer period of time?
+16:01:54 <thaumos> @jtanner, combo of both.
+16:02:08 <bcoca> jtanner: the request is 'deprecate but dont warn for an extra version'
+16:02:19 <bcoca> which i find useless
+16:02:39 <bcoca> but we have made action items of other issues we had with deprecation
+16:02:42 <thaumos> this person wants no notice of dep for two versions, but then noise after the next then kill switch after the next version.
+16:02:56 <jtanner> that sounds overly complicated
+16:02:58 <thaumos> Yep
+16:03:00 <thaumos> exactly.
+16:03:13 <bcoca> a) always have version removed, b) update existing in code to reflect this, c) automate generating deprecation list,d) add facility for module option deprecation
+16:03:18 <jtanner> and something probably informed by some more "enterprises" product which we are not.
+16:03:18 <abadger1999> bcoca: The current deprecation implementatoin raises an Error once removed is in place.
+16:03:26 <jtanner> "enterprises"
+16:03:42 <jtanner> damnit ... safari auto correct
+16:03:52 <bcoca> abadger1999: i know, but remove=true is manual ... also not always able to short circuit (but fine to use it that way when we can)
+16:04:28 <bcoca> i would say that we can 'remove removed' and just have current version >= version == error
+16:04:39 <bcoca> ^ if you want to automate even just having us need to go fix the code
+16:04:53 <abadger1999> bcoca: +1
+16:05:00 <bcoca> on it then
+16:05:31 <abadger1999> Okay, I think we're done with this one.
+16:05:56 <abadger1999> If we're going to end meeting soon, we should go to Open Floor.
+16:06:10 <abadger1999> If we're going half an hour more we can do another item from the agenda
+16:06:26 <bcoca> ansible-config can wait
+16:06:45 <gundalow> #topic Fix YAML source and lint it
+16:06:52 <gundalow> https://github.com/ansible/ansible/pull/15470
+16:06:55 <gundalow> mattclay: you around
+16:07:09 <mattclay> Yep
+16:07:14 * gundalow timeboxes this discussion to 10 minutes :)
+16:08:09 <gundalow> We already have yamllint (with some rules disabled), do we want to formalise that more?
+16:08:10 <jtanner> holy crap that's a lot of files
+16:08:13 <gundalow> thoughts
+16:08:24 <jtanner> and a merge conflict that will never get resolved because of it
+16:08:50 <bcoca> msot of those are style changes with trailing spaces, which yaml really doesnt care about
+16:08:57 <bcoca> nor do we
+16:09:20 <bcoca> i asked him to resubmit with only the acutal errors 'duplicate keys', though a couple are actually tests
+16:09:24 <thaumos> some people are ocd though ;-)
+16:09:40 <bcoca> some people love their 'style script enforcement'
+16:09:49 <jtanner> i think it would be good to have lint'ing in place for that stuff
+16:10:06 <thaumos> pepe8
+16:10:15 <gundalow> +1 to stricter linting.
+16:10:18 <bcoca> i think that ends putting off many contributors
+16:10:25 <bcoca> thaumos: we have a subset of pep8 already
+16:10:37 <thaumos> sorry bad attempt at wow reference joke
+16:10:48 <bcoca> ah ... pepe ....
+16:10:52 <thaumos> ;-)
+16:10:52 <jtanner> not allowing trailing whitespace isn't so bad imo
+16:10:54 <bcoca> ^ need python disguse for him
+16:11:22 <thaumos> it isn’t a bad thing
+16:11:24 <bcoca> jtanner: not disagreeing, but reformating all existing to do it is not worth it imho
+16:11:39 <jtanner> it can be scripted
+16:11:44 <mattclay> That's the real question. The submitter is willing to fix their PR if we're willing to merge.
+16:11:45 <jtanner> like i did for isinstance
+16:11:52 <abadger1999> We don't have many Prs against yml (compared to against python)
+16:12:02 <abadger1999> So I think I'm +1 to this.
+16:12:06 <gundalow> +1
+16:12:08 <bcoca> the issue is that it obscures attribution also in some cases (very few) it is actually required
+16:12:26 <jtanner> we had that argument not too long ago, iirc
+16:13:03 <mattclay> bcoca: I believe git blame -w helps with attribution in this case.
+16:13:12 <bcoca> i think we've already used up more time discussing it than any possible benifit derived
+16:13:28 <bcoca> mattclay: except with python AND yaml, spaces are significant ....
+16:13:37 <bcoca> so -w is many times counterproductive
+16:13:43 <bcoca> ^ leading spaces
+16:14:32 <bcoca> if we were using java, i'm fine with -w ... (not fine with java though) but since we are using python and yaml ... -w is bad
+16:15:28 <gundalow> 2 minutes left :)
+16:15:58 <abadger1999> attribution in git blame isn't going to matter for most of these.
+16:16:11 <gundalow> One of the reasons I'd like to get this stuff enforces it I believe in the long term it will save us time
+16:16:49 <abadger1999> They're blank lines, after name:  or after our schema:  (for isntance task: )
+16:17:02 * gundalow doesn't care that much about the history for tests
+16:17:17 <bcoca> i care a lot about history for debugging
+16:17:41 <bcoca> im not sure how this is a time saver when it is not significant
+16:17:41 <gundalow> Sure, for code, but not for tests
+16:17:46 <abadger1999> Even places where it is after code that does something it isn't necessarily going to hurt git blame... the test is multiple lines nad the change only affets one line
+16:18:04 <gundalow> The amount of time we spend talking about it
+16:18:05 <mattclay> In this case, nearly all of the changes are in integration tests.
+16:18:06 <bcoca> gundalow: like we dont debug tests?
+16:18:27 <abadger1999> so you see right away that there's one change in the mix that doesn't agree with the others.
+16:19:08 <gundalow> bcoca: The changes to a single yaml test are fairly few and far between so if I have to skip over one commit isn't a problem for me
+16:19:23 <mattclay> I don't like messing with git blame, but I think for this set of changes, the advantages of being able to enforce more yamllint rules outweigh the downside of making blame a bit more difficult for (mostly) integration tests.
+16:19:26 <gundalow> [16:07]  * gundalow timeboxes this discussion to 10 minutes :)
+16:19:47 <inc0> any chances for a bit of a floor today?:)
+16:19:48 <bcoca> i dont see it saving any time for anyone, but clearly adding time
+16:20:10 <gundalow> bcoca: Do you have any issues with us tidying up and enforcing yaml only under ansible/test?
+16:20:15 <gundalow> inc0: sure
+16:20:18 <jtanner> let's give inc0 some time
+16:20:24 <gundalow> #topic Open Floor
+16:20:25 <inc0> thank you
+16:20:27 <bcoca> i get the OCD pang to make it neater, i just dispute it saves us anything
+16:20:27 <gundalow> inc0: all yours
+16:20:45 <bcoca> and it demonstrably costs more
+16:20:50 <inc0> so quick recap of what my interests are - I'm from Kolla community and we use ansible to deploy docker
+16:20:51 <bcoca> even if small
+16:20:57 <inc0> and openstack with it
+16:21:12 <alikins> it eliminates having this conversation again and again
+16:21:32 <inc0> openstacks are snowflakes and we want people to heavily customize their deployment
+16:21:45 <inc0> usually that means to add/change one or two tasks out of 100s
+16:21:59 <inc0> and we would like to allow to do this without touching ansible playbook code
+16:22:14 <inc0> so I wrote this PoC: https://review.openstack.org/#/c/395851/
+16:22:38 <inc0> it's a strategy plugin which will allow injection of custom tasks/files in between regular ones
+16:23:07 <inc0> community wants that feature, I think you guys could use it too - sych very well with galaxy
+16:23:14 * gundalow -> afk. Can someone please chair the remaining part, and #endmeeting once it's done. Thanks
+16:23:28 <inc0> issue is, Kolla is Apache, this will have to be GPL so we can't host this code
+16:23:31 <bcoca> why not use - include : {{dynamicvar|default('nooop.yml') }} ?
+16:23:47 <inc0> bcoca, between every task in our playbooks?:)
+16:23:58 <inc0> that would work but also be horribly messy
+16:24:04 <bcoca> ah, every task ... ouch
+16:24:10 <bcoca> thought you meant per play/role
+16:24:22 <inc0> nah, people often need to jump mid-play
+16:24:25 <bcoca> also yo might want to extend to include_before?
+16:24:30 <inc0> to change single container definition for exmaple
+16:24:37 <jtanner> have an example usage?
+16:24:39 <inc0> yeah, and include_instead
+16:24:44 <inc0> it's in commit message
+16:24:48 <inc0> this is just a PoC
+16:24:52 <inc0> to make it work
+16:25:12 <bcoca> how do you pass 'include data' ? which task is affected and what is substitute task?
+16:25:12 <inc0> so we could have something to discuss about
+16:25:19 <jtanner> so your main concern is the licensing ?
+16:25:35 <inc0> well licensing is why we can't just host it inside Kolla
+16:25:41 <bcoca> jtanner: has to submit to our repo due to license
+16:25:51 <inc0> but also it's generic enough so you might like it too
+16:26:17 <jtanner> so you want a pre-check before submitting the PR ?
+16:26:27 <bcoca> inc0: it really goes against writing plays/roles in a good way (parameerized)
+16:26:33 <inc0> I'd like to know if you're even interested
+16:26:48 <inc0> well, how would you parametrize every possible idea people can have?
+16:27:09 <bcoca> we dont, that is why palys are simple to rewrite
+16:27:09 <inc0> it's scale issue, the more plays we add to our repo the more code we need to support
+16:27:25 <bcoca> its like creating a C program that can do anything ... just need to feed it code on input
+16:27:38 <inc0> but if you rewrite opensource play, you end up in rebasing hell
+16:27:56 <abadger1999> jimi|ansible: ^ If you're here, this code might be of interest to you as well
+16:28:20 <inc0> but let's not talk about religion here please, I know that many people would love to have something like this
+16:28:37 <inc0> especially in complex-deployment opensource playbooks
+16:28:38 <jtanner> i would also want to get input from people outside our team, which is where PRs and proposals come in
+16:28:51 <jtanner> and mailing list
+16:28:53 <abadger1999> #topic Strategy that can inject a set task after every task in a playbook
+16:28:53 <bcoca> inc0: basically you are just passing a 'substitute patch' in an override variable .... its very meta
+16:29:33 <inc0> bcoca, yeah, we created this feature in our dockerfiles
+16:29:39 <inc0> and our community loved it totally
+16:29:45 <inc0> this is next step for us
+16:30:20 <inc0> having pristine clear opensource code and your own customizations on the side opens lots of possibilities for people like technology vendors
+16:30:23 <bcoca> inc0: i dont see how you match tasks
+16:30:36 <inc0> now only with name
+16:30:38 <bcoca> but basically this is play runtime patching
+16:30:41 <inc0> not ideal, but again, PoC
+16:31:00 <inc0> that's exactly true
+16:31:06 <bcoca> inc0: i dont see another way ... and  names are not unique
+16:31:16 <inc0> unless you make them unique
+16:31:24 <inc0> which is within control of playbook author
+16:31:36 <bcoca> inc0: then you cannot use other people's roles if they generically  name things ...
+16:31:43 <alikins> do we have a per task handler? (that would run after each task)
+16:31:56 <bcoca> its also withing playbook author being able to just write the play they want
+16:32:20 <inc0> bcoca, agree, but again, this is solvable problem at the long run
+16:32:23 <bcoca> alikins: results processing and handler queue notification are only things that run
+16:32:43 <inc0> if people indeed would like to have this feature
+16:33:03 <bcoca> inc0: i just see it as giving a bundle of rope to people and then throwing them off a plane
+16:33:32 <inc0> well, we would have a feature and this is just a poc
+16:33:47 <bcoca> i would almost advise using patch files and running ansible on the output
+16:33:54 <inc0> maybe there is better way, like specyfing "path" like role->task
+16:34:17 <inc0> that would be horrible if you want to keep opensource code up to date
+16:34:20 <bcoca> inc0: tasks can be dynamically created or included from any source, sometimes you dont have roles
+16:34:26 <inc0> which is what it's really about
+16:35:24 <inc0> imagine situation - people doing git pull every day from opensource code, while keeping their customizations
+16:35:28 <inc0> this is safer way to do it
+16:35:39 <alikins> difficulty of reusing someone elses playbooks (and roles even to a lesser extent) is a complaint I hear a lot.  Not sure how to improve that since it is somewhat counter to original intentions but assumptions and intentions can change...
+16:36:39 <inc0> openstack will be one of firsts cases for it
+16:36:41 <bcoca> also, any 'local patch' needs to revise against the upstream anyways, what if the task you are overriding changed names? does something different?
+16:36:46 <inc0> I expect kubernetes deployment to be the next
+16:37:00 <inc0> or << put a hype driven complex system here >>
+16:37:15 <bcoca> ^ im not rejecting the plugin .. but this has HUGE warning signs for me as a shaftway to the 9th circle of hell
+16:37:22 <inc0> bcoca, I'm saying safer, not 100% safe today
+16:37:42 <inc0> we can try to find better identifier of task
+16:37:53 <jtanner> inc0: feel free to submit a PR and we can have a longer conversation there
+16:38:01 <bcoca> safety is not my concern here, its debugging issues, which this brings in a whole stack of insanity to
+16:38:27 <inc0> agree, but again, I'd start with big warning sign
+16:38:35 <inc0> and go from there
+16:38:55 <abadger1999> yeah.  PR and we can keep this on the agenda.
+16:39:00 <inc0> this is work of 2 days and lots of caffeine, I'm sure that if we put our collective brains to the issue we can make it easier to handle
+16:39:18 <inc0> I'll submit a PR then:)
+16:39:20 <bcoca> i would actually prefer this being 'play files' vs actual vars
+16:39:27 <bcoca> meta/patch.yml
+16:39:36 <bcoca> which can automatically be picked up by the plugin
+16:39:42 <abadger1999> Need to get jimi|ansible to weigh in too but he's taking care of his kids today.
+16:39:56 <inc0> PoC-quality for now until we'll get consensus how we want to implement it (if at all)
+16:39:56 <bcoca> cause making it vars will conflate play structure with var structure .... confusing as hell
+16:40:25 <inc0> no argument there, I don't know ansible internals enough to make it clean and proper
+16:40:47 <bcoca> inc0: i have no doubt many users will jump at this, but i suspect great percantage of them would also love double barrelled gun with one barrel pointing back
+16:40:59 <inc0> :D
+16:41:21 <inc0> welcome to hype-driven datacenter tech;)
+16:41:39 * bcoca wants people to get off his lawn
+16:41:56 <inc0> ok, I'll publish PR and we can discuss there
+16:42:09 <inc0> I'll also sit in #ansible-devel for ad-hoc stuff
+16:42:19 <inc0> thank you!
+16:42:32 <abadger1999> inc0: Your welcome :-)
+16:42:37 <abadger1999> #topic Open floor
+16:42:48 <abadger1999> Anyone else with something else to bring up?
+16:42:57 <mattclay> One quick question. Does anyone have objections to backporting the debian pbuilder change (https://github.com/ansible/ansible/pull/18165) to stable-2.2?
+16:43:15 <agaffney> there are lots of bare variables references in the docs examples, which don't work anymore in 2.2
+16:44:17 <abadger1999> If mattclayIt introduces the need to package as root?
+16:44:57 <agaffney> such as https://docs.ansible.com/ansible/ec2_vol_module.html#examples <-- "# Playbook example combined with instance launch" example
+16:46:13 <abadger1999> mattclay: Ah.. I see that it's replaced with local_deb...
+16:47:06 <abadger1999> mattclay: Seems backwards incompat but it's build stuff and you can get the old behaviour if you want.  I don't have an objection but make sure it gets an entry i nthe changelog.
+16:47:27 <mattclay> abadger1999: Will do.
+16:47:33 <abadger1999> mattclay: So that people who just want to do it as they were before can update to using local_deb.
+16:47:45 <abadger1999> mattclay, dharmabumstead^ See agaffney's issue.
+16:48:35 <abadger1999> Is this something we can find automativally?  Do we want to fix that case-by-case?
+16:49:16 <bcoca> agaffney:  i thought i fixed all of them, but seems i only did docsite/, not the modules ....
+16:49:36 <agaffney> bcoca: I find a few under docsite/, as well
+16:49:42 <agaffney> *found
+16:50:02 <bcoca> agaffney: please doc_request or PR if you can, i'll go looking for them once i finish with deprcation stuff
+16:50:15 <agaffney> there's some in tests/ as well, but those may be intentional
+16:53:00 <agaffney> I can do a PR for the obvious ones in the various repos
+16:53:17 <gundalow> agaffney: That would be ace, thanks
+16:53:50 <abadger1999> Cool.
+16:53:59 <gundalow> 6 minutes of Open Floor left if anyone has anything else
+16:54:03 <bcoca> i did go through tests also, just left in those that were testing the deprecation/error ... but both docsite and test might have diverged since then and i might have missed some
+16:54:12 <abadger1999> Alright.  Any other issues?
+16:54:17 <gundalow> Testing Working Group starts on the hour
+16:56:29 <gundalow> Any more for anymore
+16:56:31 <gundalow> ..................?
+16:57:38 <abadger1999> Looks good.  time to close this meeting.
+16:57:45 <gundalow> #endmeeting

@@ -1,0 +1,471 @@
+15:05:52 <jimi|ansible> #startmeeting Ansible Core Public Meeting
+15:05:52 <zodbot> Meeting started Thu Jul  7 15:05:52 2016 UTC.  The chair is jimi|ansible. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:05:52 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:05:52 <zodbot> The meeting name has been set to 'ansible_core_public_meeting'
+15:05:53 <jimi|ansible> #topic agenda: https://github.com/ansible/community/issues/111
+15:05:53 <jimi|ansible> ummm...
+15:05:54 <jimi|ansible> zodbot?
+15:05:54 <jimi|ansible> ^ gregdek, do we need to kick zodbot?
+15:06:06 <jimi|ansible> nm, just my wifi acting up...
+15:06:24 <gregdek> Looks like we need to kick your wifi. ;)
+15:06:33 * ttom says hi
+15:06:41 <jimi|ansible> wifi = basement, office = 3rd floor attic... need to relocate wifi
+15:06:55 <willthames> or install a repeater (or two)
+15:07:02 <jtanner> wires for the win
+15:07:15 * bcoca stares at cat6 in his bathroom
+15:07:29 <jimi|ansible> new house was built in '93... got a quote from an electrician for pulling ethernet and it was $$$$$
+15:07:46 <bcoca> mine was built in 1890
+15:07:59 <jimi|ansible> so yeah, best i'll probably be able to do is get it on the 1st floor and hope that's good enough
+15:08:11 <jimi|ansible> bcoca: yeah but you've gutted yours at least once :)
+15:08:17 <bcoca> x3 ... yes
+15:08:18 <Qalthos> and here I just finished artfully taping ethernet to the walls
+15:08:38 <jtanner> jimi|ansible: http://www.homedepot.com/b/Tools-Hardware-Power-Tool-Accessories-Drill-Bits/N-5yc1vZc248
+15:08:38 <jimi|ansible> anyway, meeting!
+15:08:55 <jimi|ansible> jtanner: thanks... </sarcasm>
+15:09:02 <willthames> jimi|ansible, my first PR meshes well with your comment on #111
+15:09:04 <jtanner> always here to help =)
+15:09:05 <dag-> bcoca: I win, 1855 !
+15:09:25 <willthames> if we can get #3025 into RC2, that would be useful
+15:09:26 <jimi|ansible> willthames: /me looks
+15:09:32 * gundalow waves
+15:09:34 <bcoca> willthames: its already there
+15:09:41 <gundalow> q
+15:09:41 <willthames> cool, let's move on :)
+15:09:51 <bcoca> toshio cp into stable-2.1 which is what rc2 is cut from
+15:10:07 <jimi|ansible> bcoca: that was cp'd, ok
+15:10:14 <jimi|ansible> willthames: just verify and let me know if that's not the case
+15:10:17 <willthames> bcoca, sounds good, I didn't know that was the source of RC2
+15:10:18 <bcoca> fyi, cp == cherry picked
+15:10:24 <willthames> but I will check
+15:10:25 <jimi|ansible> nm, he said in a comment he did it
+15:10:29 <bcoca> stable-x is ALWAYS the source of next RC
+15:10:35 <willthames> it's definitely in stable-2.1
+15:10:40 <jimi|ansible> k, then we're good
+15:10:45 <willthames> it's like the next commit after the RC1
+15:10:53 <willthames> ok, https://github.com/ansible/ansible/pull/12904
+15:11:06 <willthames> I have been waiting on this one forever
+15:11:18 <willthames> and in the absence of any other known roles/galaxy work, I would like it in
+15:11:23 <bcoca> looks good ingeneral, some bikeshedding on new property, its more full_name than version as you add name to it
+15:11:35 <bcoca> is there a force option?
+15:11:38 <jimi|ansible> chouse gave it a +1, so i'm fine with merging it
+15:12:29 <bcoca> ^ changes default behaviour if roles are installed, we should at least add a toggle to let users decide if this is what they want
+15:12:59 <tima> sorry i'm late.
+15:13:10 <tima> lots of things to do.
+15:13:15 <willthames> bcoca, not sure, line 404 looks like it still respects force
+15:13:26 <willthames> I say not sure as it's been months since I last looked
+15:13:34 <tima> is this the autoinstall roles proposal?
+15:14:01 <willthames> tima, no, that's next
+15:14:19 <bcoca> no, this is 'install if diff version'
+15:14:24 <willthames> bcoca, you're right, it will update roles even if they exist, with force off
+15:14:34 <tima> ok. thanks. just catching up here.
+15:14:35 <bcoca> also ... you can downgrade ...
+15:14:58 <willthames> this is supposed to be 'don't bother doing anything if the role already exists, only do stuff for changes' - i.e. install idempotency
+15:15:13 <bcoca> not sure this is behaviour we want as is, might want an upgrade option and a force even if downgrade
+15:15:47 <bcoca> does not make install idempotent, just adds version diff to it
+15:15:52 <willthames> this PR is 8 months old
+15:15:54 <bcoca> many other steps to make it idempotent
+15:16:04 <willthames> you have had plenty of opportunity for feedback
+15:16:12 <bcoca> i have 1yr old prs in my queue
+15:16:14 <ttom> sounds lke this can be merged into one - install if doesn't exist, upgrade if newer. downgrade if force. then it's like idempotent modules
+15:16:24 <willthames> it makes install not spend a whole heap of effort doing stuff if nothing needs doing
+15:17:53 <willthames> if anyone wishes to provide actionable feedback on the PR, I can likely accommodate that, I just want it to move forward
+15:18:22 <willthames> although I like jimi|ansible's suggestion best
+15:18:55 <jimi|ansible> willthames: i disagree about force, https://github.com/ansible/ansible/pull/12904/files#diff-0fb1ac8e85c5f8b604a2bcbbe16a50c8R405 is in the 'not force' code block, so it will remove the old role if not forcing and the role versions don't match
+15:19:11 * jimi|ansible grrrs at wifi again
+15:19:45 <Shrews> jimi|ansible: you need to shake your fist at it, too
+15:19:53 <bcoca> jimi|ansible: pointed that out in the PR
+15:20:24 <willthames> bcoca - what? where?
+15:20:25 <jimi|ansible> ahh i hadn't refreshed
+15:20:43 <willthames> ah, ok, me neither
+15:20:44 <bcoca> willthames: been comenting on ticket during the meeting
+15:20:48 <bcoca> as you asked
+15:20:54 <jimi|ansible> the check on force should be moved down into that if block, and it should be an if/elif/else
+15:21:15 <bcoca> i think we can do this: if its an upgrade, go ahead and replace w/o force, if it is a downgrade, require force
+15:21:40 <willthames> thanks bcoca
+15:21:54 <willthames> makes sense
+15:22:01 <bcoca> sadly its a package manager ... should work mostly like one
+15:22:03 <jimi|ansible> if if role.install_info['version'] != role.version and force (remove role); elif role.install_info['version'] == role.version (continue)
+15:22:25 <bcoca> jimi|ansible: we might want to treat upgrade/downgrade differently
+15:22:33 <jimi|ansible> and else (print a message about the role existing and needing --force)
+15:22:51 <bcoca> ^ i would do that in case you cannot determine version up/down (shas?)
+15:22:51 <jimi|ansible> bcoca: possibly
+15:23:17 <jimi|ansible> that could be another if/elif block under the portion where the versions don't match
+15:23:18 <willthames> can we rename -f --upgrade?
+15:23:36 <willthames> I believe pip will downgrade with --upgrade
+15:23:51 <willthames> when I say rename I mean alias
+15:23:51 <bcoca> yes, one of the many things pip does wrong
+15:23:52 <jimi|ansible> willthames: -f can be to overwrite too, for instance when someone is installing a role from a branch rather than a tag or sha
+15:24:12 <bcoca> so no, -f != upgrade
+15:24:27 <bcoca> it shoudl be there for when we don't do actions by defaut (downgrade, no version, etc)
+15:24:30 <willthames> -f is almost necessary for almost every install operation
+15:24:32 <jimi|ansible> but in either case, since we're installing into the same dir --force does the same, so i don't think we need to do any special handling for downgrading
+15:24:35 <willthames> it's pretty much meaningless anyway
+15:24:50 <jimi|ansible> willthames: perhaps --allow-downgrade?
+15:24:54 <bcoca> jimi|ansible: well, eventually we wnat to move way from that
+15:25:04 <bcoca> s/way/away/
+15:25:26 <bcoca> part of the plan is allowing multiple versions and ref role by version/min version
+15:25:50 <jimi|ansible> yes, i have been considering allowing a subdir under the main role dir
+15:26:07 <bcoca> jimi|ansible: subdir?
+15:26:08 <jimi|ansible> ie. role_name/1.x.y/{tasks,meta,etc...}
+15:26:20 <bcoca> ah, no, i was going for parallel and symlinks
+15:26:23 <chouse> eeewww
+15:26:26 <bcoca> kind of like debian and gentoo do slots
+15:26:29 <jimi|ansible> so your role spec would be - {role: role_name, version: 1.x.y}
+15:26:50 <willthames> hey, you know if you guys actually wrote this stuff up, I wouldn't need to revisit proposals#7
+15:26:58 <bcoca> /role_name-version and link to role_name for 'latest or user selected'
+15:27:06 <jimi|ansible> willthames: i've been considering it for about 10 minutes :)
+15:27:09 <bcoca> willthames: its on my list
+15:27:09 <willthames> jimi|ansible, I really want to keep versions out of playbooks
+15:27:17 <willthames> it's been on your list for months
+15:27:20 <bcoca> willthames: and we've discussed this before
+15:27:24 <bcoca> willthames: looong list
+15:27:24 <jimi|ansible> willthames: you do, but i've been asked about this several times before
+15:27:49 <jimi|ansible> some users really want more specific control over what versions of roles they use in playbooks
+15:27:50 <bcoca> willthames: i brougt this up during london dev meeting
+15:27:56 <jimi|ansible> and they want them all available from one role path
+15:28:05 <willthames> yeah, and proposals#7 is long after london dev meeting
+15:28:11 <willthames> jimi|ansible, yeah, that's weird
+15:28:24 <jimi|ansible> i agree, it's not how i'd do things at all
+15:28:25 <willthames> all of our roles are relative to playbook_dir
+15:28:28 <tima> jimi|ansible: no they require them. it's more than want.
+15:28:53 <willthames> I really don't get how diamond dependencies resolve in that scenario
+15:29:02 <bcoca> willthames: as we discussed before, its other workflows in which many teams collaborate and reuse roles but not all on same page/version
+15:29:08 <jimi|ansible> which you could do today, you'd just have to do - {role: role_name/1.x.y } in your playbook
+15:29:13 <willthames> we have a team standard that role dependencies are banned because of that
+15:29:13 <bcoca> no diamons, more like fans
+15:29:18 <jimi|ansible> and you could install them via ansible-galaxy the same way
+15:29:40 <bcoca> jimi|ansible: yes, but we want something more built in
+15:29:53 <willthames> jimi|ansible, that's fine until one of the roles you use depends on a different version of that same role in it's meta/main.yml
+15:29:57 <jimi|ansible> ^ which is why i started considering allowing it as a more built-in mechanism via subdirs
+15:29:58 <bcoca> not a big departure of that, if we use symlinks and version names
+15:30:28 <bcoca> subdirs will be hard as a 'role would include roles inside'
+15:30:29 <willthames> bcoca, except how many canonical forms are there - commit id, tag, branch name etc
+15:30:57 <bcoca> willthames: also discussed with you before, we need to narrow it down to 1 or 2 forms before we can get there
+15:31:05 <bcoca> ^ i believe i state that in the proposal
+15:31:10 <jimi|ansible> bcoca: nah not really, if none of the special dir names are found, see if the role_dir has dirs in it and use LooseVersion to find the "newest" one (and allow for a symlink named 'latest')
+15:31:30 <jimi|ansible> it'd be a pretty trivial change i think
+15:31:36 <bcoca> jimi|ansible: breaks down when you consider sha can be used as version, we need a way for user to specify cannonic al
+15:31:40 <willthames> this just feels like brexit. very loose on details
+15:31:58 <willthames> there is very little concrete in the proposals
+15:32:07 <bcoca> willthames: it is, have not had time to write it up
+15:32:14 <jimi|ansible> willthames: just spitballing ideas
+15:32:18 <willthames> right, so it's not in a proposal
+15:32:29 <bcoca> well, that is a diff one that he just came up with
+15:32:37 <tima> jimi|ansible: how would multiple versioned be maintain by the user in that scenario?
+15:32:40 <bcoca> the problem is clear, we need multiple role versions to coexist
+15:32:59 <jimi|ansible> tima: how do you mean multiple versioned?
+15:33:37 <jimi|ansible> for installation, ansible-galaxy would have an option to allow the installation into the subdir based on the provided version (and to modify the 'latest' symlink)
+15:33:38 <tima> jimi|ansible: yes. i'm trying to imagine the users
+15:34:02 <tima> piling up many versions of a role and how they'd manage/maintain those
+15:34:09 <bcoca> jimi|ansible: sounds like almsot same as i was thinking, except i keep roles in parallel dirs
+15:34:12 <jimi|ansible> or it would pick it up automatically based on the same criteria i mentioned above
+15:34:22 <bcoca> as keepign them parallel is backwards compatible
+15:34:25 <willthames> and also how you'd resolve which of two versions you'd use in a conflict
+15:34:41 <jimi|ansible> ie. if it found role_path/role_name existed, it'd check to see if there were the versioned subdirs
+15:34:42 * resmo doesn't have a use case for multiple role versions...
+15:35:12 <bcoca> resmo: 2 teams using same role, team2 modifies role, playbooks of team1 break with modified role, still want older version
+15:35:15 <jimi|ansible> willthames: if no version is specified, ansible would have to figure out the latest based on the use of LooseVersion on the dir names
+15:35:40 <bcoca> jimi|ansible: when versions are 'sha'?
+15:35:43 <jimi|ansible> in that case i'd probably also print a warning saying "hey, no version specified and we found multiple, so using the latest (1.x.y)"
+15:36:05 <willthames> jimi|ansible, I'm talking about two specified versions. Say a playbook depends on v1.1 of a role, but also depends on a role that depends on v1.2 of the same role, but they have inconsistent defaults/main.yml vars
+15:36:24 <tima> resmo: dev team is working on an upgrade app that changes the tasks/role. whatever they do also has to go thru QA/CI testing before being moved into prod.
+15:36:26 <bcoca> we should look at them as 'diff roles'
+15:36:28 <resmo> bcoca: I life in an ideal world where the teams can discuss this out :) or make 2 repos  :)
+15:36:36 <jimi|ansible> willthames: in that case i'd tell the user "don't do that"
+15:36:49 <bcoca> resmo: you have not worked in 'enteprise' level companies i assume .....
+15:36:53 <jimi|ansible> as we don't name space vars for roles, that'd bit them in the ass very quickly
+15:36:59 <bcoca> communication can be frowned upon
+15:36:59 <jimi|ansible> s/bit/bite/
+15:37:02 <willthames> jimi|ansible, if we could just say 'don't do that' we could save a lot of effort on this discussion ;)
+15:37:15 <tima> jimi|ansible: +1
+15:37:17 <jimi|ansible> i say it all the time
+15:37:26 <bcoca> jimi|ansible: that is why version or 'full name' has to be considered
+15:37:27 <resmo> bcoca: :) sure I am but I am the ansible guy who can say who things have to go :)
+15:37:31 <tima> roles aren't objects.
+15:37:41 <bcoca> tima: letsnotgothere
+15:38:07 <bcoca> jimi|ansible: we can do w/o namespacing by just taking each instance's version into consideration
+15:38:21 <tima> bcoca: oh we have java developers here? ;)
+15:38:23 <bcoca> and handle defaults like we do now even when same role is called sevearl times
+15:38:32 <jimi|ansible> in fact i'd probably write it to throw an error if two different versions of a role were attempted to be used
+15:38:34 <bcoca> tima: youarekilling me
+15:38:46 <bcoca> jimi|ansible: that is one solution
+15:39:15 <willthames> jimi|ansible, you mean like https://github.com/ansible/ansible/pull/12904/files#diff-0fb1ac8e85c5f8b604a2bcbbe16a50c8R440
+15:39:16 <bcoca> and probalby the first one we implement, at one point we might want to allow the multiple versions to execute as 'diff roles'
+15:39:25 * jtanner hides evidence of java dev
+15:39:31 <tima> jimi|ansible: sounds about right.
+15:39:33 <jimi|ansible> imagine if as a python developer you tried to use two different versions of a package... that'd be dogs and cats, living together, mass hysteria!
+15:39:56 <bcoca> jimi|ansible: import  os as notos
+15:39:58 <jtanner> would require sys.path hackery ...
+15:40:01 <bcoca> import os.old as os
+15:40:08 <jimi|ansible> willthames: yes that's for install, but for runtime
+15:40:13 <jtanner> which leads me to think multi-role versions should just be handled with multi role dirs
+15:40:14 <tima> yeah i was just thining that -- what does other package managers do like pip/python?
+15:40:29 <resmo> jtanner: +1
+15:40:40 <bcoca> tima: as jimi|ansible says, its not just hte package manager, its the system running
+15:40:45 <willthames> I feel like we're bikeshedding the fact that multiple versions of roles are going to be a thing, and yet there are no concrete proposals and my PR seems to be blocked on this
+15:41:07 <willthames> if jtanner just means that each playbook should have its own roles, I'm all for it
+15:41:13 <jimi|ansible> willthames: getting back to your PR then, as noted there is an issue with force which needs to be corrected
+15:41:13 <bcoca> some package managers allow mulitple version of libraries for example, but then use symlinks topoint at 'official one' then packages that use the specific versiosn can still work, those that dont specify use the symlink
+15:41:25 <willthames> jimi|ansible, concur
+15:41:34 <willthames> happy to correct now I have concrete feedback
+15:41:54 <willthames> I don't think I'll bother with the next meeting topic
+15:42:04 <willthames> I think we've already gone down that rabbithole this morning
+15:42:11 <bcoca> well, discussion affect proposal more tahn this specific PR, i'm fine with teh PR for now (adjusted for comments), will need to change in future once we get the versions done
+15:42:11 <jtanner> willthames: was just thinking that if playbook A has different role version requirements than playbook B, A and B should use different role paths via ansible.cfg or whatever means
+15:42:42 <willthames> jtanner, or just install the roles in the directory next to the playbook, which is what we do
+15:42:50 <jtanner> yeah, "whaever means"
+15:43:19 <jimi|ansible> jtanner: but what about multiple plays within the same playbook using different role versions? with my idea that'd work fine without having to use different role paths
+15:43:30 <willthames> apparently our use of roles files was unusual for tower, 88 roles files in a repo is abnormal? (probably would be more given current standards)
+15:43:47 <willthames> jimi|ansible, that's your "don't do that" scenario
+15:43:52 <bcoca> willthames: i would say your use is sane .. but sane is not 'normal'
+15:43:58 <jtanner> role paths are plural now (iirc), so you have to compensate for that too if you want to allow different versions
+15:44:05 <willthames> covered in line 440 of my PR
+15:44:06 <jimi|ansible> willthames: not true, different plays would conceivably be fine for that
+15:44:12 <jimi|ansible> roles are tracked per play, not per playbook
+15:44:19 <bcoca> jtanner: they always 'were' but not all code reflected that
+15:44:46 <jimi|ansible> so if play1 wants to use apache v1.0.0 and play2 wants to use apachev1.1.0 i don't have a problem with that
+15:44:48 <willthames> jimi|ansible, I see what you're saying, I'm just not convinced that people are asking for play-specific roles versions
+15:44:57 <willthames> crazy land :D
+15:45:09 <jimi|ansible> that is a corner case, but in theory it should be fine
+15:45:15 <willthames> honestly, I think that is madness
+15:45:21 <bcoca> i dont disagree its crazy ... but it has been a gripe, specially from enteprise 'class' users
+15:45:25 <jtanner> madness!?
+15:45:32 <jtanner> <insert 300 joke>
+15:45:44 <jimi|ansible> hah
+15:45:54 <jimi|ansible> ...i shall be writing code in the shade.
+15:45:59 <tima> bcoca: it is a gripe of the enterprise customers though i haven't seen it at the play level.
+15:46:28 <tima> its the dev->qa->prod scenario for a project (collection of related playbooks)
+15:46:28 <bcoca> tima: probalby cause it is not possible right now, the second we install mutiple role versions side by side ... it will happen
+15:46:32 <willthames> I think I'm enterprise class enough that that seems a "don't do that" use case
+15:46:40 <jtanner> so what does multi-version have to do with willthames's current PR?
+15:46:46 <resmo> willthames: +1
+15:46:59 <tima> bcoca: i see what you mean that's why i'm not found of introducing versions side-by-side.
+15:47:02 <bcoca> jtanner: a little bit, has more to do with his proposal
+15:47:03 <jimi|ansible> jtanner: we just went down a rabbit hole, mostly my fault, we're past the PR now
+15:47:15 <willthames> it's ok, we're into the next topic
+15:47:23 <willthames> I would like concrete objections to the proposal
+15:47:27 <jtanner> which is?
+15:47:28 * resmo is out for a beer
+15:47:30 <jimi|ansible> so on to gundalow
+15:47:32 <willthames> that was supposed to be the action from last time
+15:47:41 <bcoca> i think we posted those to the proposal, we just disagree on the objectives
+15:47:41 <jimi|ansible> https://github.com/ansible/community/issues/111#issuecomment-231090464
+15:47:51 <gundalow> jimi|ansible: yo
+15:48:03 <willthames> bcoca, no, I disagree
+15:48:06 <tima> we're still talking about #111?
+15:48:13 <willthames> tima, onto https://github.com/ansible/proposals/issues/7
+15:48:18 <bcoca> willthames: exactly, you and i disagree == we disagree
+15:48:22 <willthames> but we've discussed it for ages last time
+15:48:26 <tima> ok. that wasn't clear.
+15:48:39 <tima> yeah -- what's changed in the proposal?
+15:48:43 <willthames> and the actions from last time were that bcoca would come up with some concrete proposals for an alternative
+15:48:55 <willthames> tima, nothing has changed - there has been zero feedback
+15:49:01 <bcoca> ^ as i posted above, on my list
+15:49:05 <tima> as i recall we voiced many concerns and objections.
+15:49:08 <jimi|ansible> #info https://github.com/ansible/ansible/pull/16491/files
+15:49:14 <willthames> tima, I responded to them in full
+15:49:49 <jimi|ansible> gundalow: how does skipping asserts help? i'd imagine that might cause problems of its own
+15:49:49 <tima> not satisfactorily.
+15:50:12 <jimi|ansible> since later tasks quite often depend on previous ones succeeding, which is validated by asserting them
+15:50:16 <bcoca> jimi|ansible: its for QA plays
+15:50:22 <tima> i understand your proposal works for you and your way of doing things but it won't fly for many others.
+15:50:33 <gundalow> jimi|ansible: Not my PRs, just had people ask to give then a bit of a push
+15:50:39 <bcoca> i think debugs would work jsut as well
+15:50:39 <ttom> jimi|ansible: it's not skipping. it's making sure you continue with the play so at the end you get a full report instead of having it stop at the first failed assert
+15:50:45 <jtanner> i
+15:50:54 <willthames> tima, then I'd appreciate further comment
+15:51:16 <jimi|ansible> ttom: i'm not opposed to this per se, but really the better way to handle this is via blocks with a rescue
+15:51:18 <jtanner> 've said it before, but i think skipping complete roles on fail is more useful for our integration test scheme
+15:51:21 <ttom> it's for plays like under test/integration/roles where you have each task followed by an assert task that verifies it
+15:51:48 <gundalow> #topic ansible/ansible#16491
+15:51:52 <gundalow> bah, ENOPOWERS
+15:51:54 <jtanner> many of those tasks in the roles are pre-reqs for later tasks
+15:51:56 <tima> wait. we're having two different discussion at the same time?
+15:52:11 <jimi|ansible> tima: no, i said we were moving on, you all just kept discussing the old topic :)
+15:52:11 <bcoca> tima: rest of us moved on
+15:52:21 * gundalow point to the stale #topic
+15:52:29 <jimi|ansible> which is fine, it's irc, i'm used to 3-4 conversations going on at once...
+15:52:34 * jtanner backs away
+15:52:48 <tima> i thought we were on #111 and moved to proposal #7. sorry. switching gears.
+15:52:52 <jimi|ansible> gundalow: i wasn't changing the topic as it's the main agenda, but i can if we want
+15:52:57 <ttom> that will require writing the play in a specific way. I wanted a way to run existing "test" plays and having them run to the end. like running nosetests - you get a report, then you go fix the failed ones
+15:52:58 <willthames> tima, all I want is some actionable response to proposal #7
+15:52:58 <jimi|ansible> #111 is the agenda
+15:53:02 <willthames> and we can move on
+15:53:16 <gundalow> jimi|ansible: Can you please update #topic
+15:53:17 <mattclay> jtanner: It's not for use with our integration tests, but for playbooks written specifically to take advantage of it.
+15:53:19 <tima> bah.
+15:53:26 <jimi|ansible> #topic https://github.com/ansible/ansible/pull/16491
+15:53:29 <gundalow> Thanks :)
+15:53:46 <jtanner> mattclay: i was offtopic, sorry
+15:53:57 <jimi|ansible> #chair bcoca gundalow jtanner tima Shrews nitzmahone ryansb Qalthos newtMcKerr
+15:53:57 <zodbot> Current chairs: Qalthos Shrews bcoca gundalow jimi|ansible jtanner newtMcKerr nitzmahone ryansb tima
+15:54:00 <jtanner> i understand the pr though
+15:54:33 <bcoca> ^ almost tempted to say "make test role in glaxy that has both as plugins" and then can be included in plays as needed
+15:54:40 <bcoca> not sure its something we want to ship by default
+15:54:42 <jimi|ansible> ttom: ok as i said, i'm not opposed to it, but using it that way might cause other testing problems and overall it's better done via blocks
+15:54:47 <jimi|ansible> anyone else have an opinion?
+15:54:50 <ttom> use case - you're developing a module. you want to have as many tests as needed to make sure it's not breaking when ansible changes (the new module won't break ansible, but ansible will break the module). you run it by using a specific MAKE_TARGET for test/integration/Makefile using test/utils/run_tests.sh
+15:55:09 <ttom> It's a strategy and a callback - nobody is going to use it by accident.
+15:55:28 <jimi|ansible> right, which is why i'm fine with it :)
+15:56:14 <tima> i'm still trying to take it in.
+15:56:15 <willthames> if it's a callback plugin though, does it need to be included?
+15:56:32 <jimi|ansible> willthames: it's what allows the summary of asserts to be shown at the end
+15:56:42 <jimi|ansible> otherwise it's not super helpful just to pass asserts always
+15:56:51 <willthames> ansible.cfg allows you to point at your own callback plugins though
+15:57:10 <ttom> the strategy makes sure asserts get 'ignore_errors=true' and the callback keeps track of assert tasks and provides a report at the end
+15:57:15 <bcoca> well, using that logic, we would not ship any
+15:57:21 <willthames> bcoca, true
+15:57:28 <willthames> and it's not like it's enabled by default
+15:57:30 <bcoca> ^ tempted ...
+15:57:39 <jimi|ansible> right, i'm assuming we'd merge this because it's something we'd look to use in our integration tests
+15:57:54 <jimi|ansible> which would have to be cleaned up so that future actions don't depend on things being asserted
+15:58:02 <bcoca> we already merged the junit callback ...
+15:58:17 <mattclay> I'm not so sure we'd use it for our tests.
+15:58:28 <tima> what if i'm testing a play with a different strategy type? like free?
+15:58:29 <mattclay> We'd have to re-write our tests to work with it, for starters.
+15:58:31 <bcoca> im fine either way, this can go to galaxy or we can ship it, either way user has to explicitly use it
+15:58:43 <willthames> I have an irc callback plugin (based on the slack plugin)
+15:58:45 <jimi|ansible> mattclay: why not? i already want to rewrite them to use blocks as I mentioned
+15:59:11 <jimi|ansible> that way we could have all tests run regardless of errors
+15:59:16 <bcoca> im suprised we did not ship an irc callback ...
+15:59:25 <mattclay> jimi|ansible: I've gone back and forth on whether we want all the integration tests to run to completion or not.
+15:59:44 <mattclay> It would be nice to get a full picture of the test results, but it's a waste of CI resources too.
+15:59:54 <jimi|ansible> i do, it makes it easier to spot problems in multiple areas in one shot
+16:00:58 <ttom> I'm fine either way. a while back I asked how to tackle the issue with failed asserts stopping the play and not running the next tests. you suggested it might be done with a callback plugin and a strategy. if there's a better / easier way - I'd switch to it. I thought this solution can be applied to any plays already written in this manner (and there are, as mine are based on others that are there)
+16:01:57 <nitzmahone> mattclay and I were talking about the strategy thing awhile back (IIRC I proposed the name "apathy")
+16:02:13 <bcoca> +10 on name bikeshedd
+16:02:21 <ttom> anyway, it can be altered to stop executing additional tests if a specific assert fails. assert doesn't complain if you add additional args - you can add "halt:true" and the strategy can make sure it halts
+16:02:25 <jimi|ansible> ttom: another option might be to set ignore_errors at the Play level (or at the block level, if you want it more fine grained)
+16:02:29 <jimi|ansible> and then still use your callback
+16:03:04 <bcoca> many ways to do it
+16:03:06 <jimi|ansible> ttom: that highlights another problem area... module params are not validated at the action level
+16:03:17 <tima> jimi|ansible: +1
+16:03:20 <nitzmahone> But requiring a nonstandard exec strategy for integration tests also seems .. wrong
+16:03:25 <jimi|ansible> not a big deal, just something which should probably be done to prevent typos from confusing users
+16:03:59 <ttom> but you don't want ignore_errors for other tasks - the play usually does three types of tasks - 1. a setup task that prepares the state to be tested (can't have ignore errors), the test task and an assert task.
+16:04:31 <jimi|ansible> ttom: right, so you could put your asserts in a block and put the ignore_errors on the Block
+16:04:33 <bcoca> you can override the play setting at task level ... also blocks!
+16:04:46 <bcoca> jimi|ansible: stopreadingmymind
+16:04:49 <jimi|ansible> heh
+16:05:19 <mattclay> If we do end up using something like this for our integration tests, it should be optional. Having the ability to stop on the first failed test is good for conserving CI resources.
+16:05:32 <jimi|ansible> mattclay: strategy is settable per play
+16:05:37 <jimi|ansible> so it'd be easy to mix in
+16:05:39 <tima> nitzmahone: right. that becomes problematic in large ci/cd shops if you need to modify the play to test it then modify it back.
+16:06:10 <bcoca> strategy: "{{runme|default('linear')}}"
+16:06:32 <bcoca> -e 'runme=apathy'
+16:06:34 <tima> bcoca: opens the door to a production runtime error.
+16:06:42 <jimi|ansible> ttom: so i think there may be general interest in the callback, but not the strategy. Anyone else agree/disagree?
+16:06:52 <tima> agree
+16:06:59 <bcoca> tima: like that was not a 'jupiter sized hole' already
+16:07:12 <mattclay> jimi|ansible: I was just meaning run all tests and stop on first failure (as we do now), or optionally run all tests to completion. No need to configure it differently for different plays.
+16:07:24 <jimi|ansible> tima: it will simply tell you the strategy was not found and stop
+16:07:27 <jimi|ansible> it's handled nicely
+16:07:34 <ttom> OK. So I'll work on writing the playsin a way that doesn't require a strategy and edit the callback to match. it will also mean that once a play is written like that, you can't turn the behavior off by changing the strategy.
+16:07:54 <tima> bcoca: except now you've pointed a telescope at it for the audit and compliance team.
+16:08:08 <jimi|ansible> mattclay: right, this is why i want to wrap all our tests in blocks, so they can run to completion but at the end check to see if things failed and exit appropriately
+16:08:30 <bcoca> tima: no worries, they probably think its a condiment dispenser
+16:08:30 <jimi|ansible> i think the additional resources is a non-argument, because it's no more intensive (and is in fact less intensive) than a test that passes with no errors
+16:08:32 <tima> jimi|ansible: understood. i meant that someone could easily run test under production or free when its supposed to be (was tested as) linear.
+16:09:50 <jimi|ansible> tima: yes, but we can't stop all users from tripping over their own feet
+16:09:57 <mattclay> jimi|ansible: For run to completion, are you thinking a single test role, or an entire playbook like destructive?
+16:10:11 <jimi|ansible> mattclay: per role
+16:10:31 <jimi|ansible> until bcoca's role-revamp thing works, it'd be the only way
+16:11:17 <mattclay> So test roles would run to completion, but we'd stop after the first role which had any failures?
+16:11:40 <tima> jimi|ansible: agreed. i'm just not for saying that tying their shoes is optional. ;)
+16:12:04 <jimi|ansible> no, the top level playbook running it would run all and at the end (in tasks or post_tasks) check for flags set by rescue blocks and do a `- fail:` as needed
+16:12:17 <jimi|ansible> since we're breaking the tests out per group now, that'd be fine
+16:12:47 <bcoca> https://github.com/ansible/ansible/pull/16630
+16:12:50 <bcoca> ^ MT
+16:13:13 <jimi|ansible> bcoca: k, we're still running through gundalow's stuff
+16:13:34 <willthames> so it's gone 2am for me now - I have no strong opinions on the other agenda items, but 14332 lgtm
+16:13:34 <jimi|ansible> there were some additional dag- things he had in there after this testing stuff from ttom
+16:13:57 <jimi|ansible> willthames: k thanks!
+16:13:59 <ttom> to sum 16941 - i'll remove the strategy, and focus on the callback?
+16:14:10 <jimi|ansible> ttom: yeah i think so
+16:14:14 <bcoca> jimi|ansible: MT <= miss tell ... means you should ignore
+16:14:24 <ttom> is the testing working group meeting anytime soon?
+16:14:34 <jimi|ansible> ahh, i had no idea what the mt was supposed to mean
+16:14:51 <bcoca> sorry .. old BBS lingo ...
+16:15:05 <gundalow> willthames: Thanks for your timne
+16:15:10 <jimi|ansible> ttom: since we've got an actual QA team for core now, might be worth setting that up?
+16:15:18 <willthames> thanks gundalow
+16:15:32 <tima> bcoca: I thought MT meant Movable Type -- I was having PTSD flashbacks here. ;)
+16:15:32 <gundalow> Not sure how long dag- will be around for either...
+16:15:34 <bcoca> willthames: will try to get the galaxy/role proposals out soon, sorry i've been lagging on that
+16:15:35 <willthames> thanks jimi|ansible , and thanks everyone else
+16:15:41 <dag-> I'd like to return home
+16:15:51 <willthames> bcoca, that would be great
+16:16:00 * ttom thanks everybody for their input
+16:16:09 <jimi|ansible> dag-: that's fine, if you want we can discuss them later when you're back around?
+16:16:13 <jimi|ansible> (in #ansible-devel)
+16:16:17 <tima> thanks everyone.
+16:16:25 <jimi|ansible> and we can just run over them and leave comments now
+16:16:30 <bcoca> move rest of items for next meeting?
+16:16:41 <dag-> jimi|ansible: fine by me, I think all of them have been discussed before, I just need to know what the plan is
+16:17:09 <jimi|ansible> dag-: k i'll check them out and if there's anything we need to discuss i'll move them to the agenda for next tuesday
+16:17:20 <dag-> you're too kind :-)
+16:17:22 <jimi|ansible> Shrews: how about yours? the one was merged into devel and stable-2.1 i believe?
+16:17:22 <gundalow> jimi|ansible: Sounds like a plan
+16:17:28 <Shrews> hi!
+16:17:32 <jimi|ansible> 16458
+16:17:34 <Shrews> tl;dr, both 4051 and 16458 came as a result of trying find weird, abnormal terminations of the async process in our zuul work.
+16:17:34 <gundalow> dag-: Thanks also for your time, enjoy the rest of your day
+16:17:47 <Shrews> We tried 4051 first, but that was no help. 16458 worked for us (and is merged as of yesterday).
+16:17:50 <gundalow> *cough~ #topic
+16:17:57 <Shrews> 4051 still seems like a good idea, but I don't have a good story for it. Would like opinions on if we should merge that or not.
+16:18:02 <jimi|ansible> when we have a topic i'll change it :)
+16:18:23 <jimi|ansible> #topic https://github.com/ansible/community/issues/111#issuecomment-231105475
+16:18:36 <bcoca> w+1 on 4051
+16:19:11 <jimi|ansible> Shrews: probably a good idea, but we have a bunch of stuff in basic.py to account for problems with os.rename() don't we?
+16:19:47 <jimi|ansible> # Optimistically try a rename, solves some corner cases and can avoid useless work, throws exception if not atomic.
+16:20:09 * dag- off, thanks all !
+16:20:15 <Shrews> yeah. couldn't use atomic_move() because we can't import that
+16:20:49 <Shrews> bcoca suggested to just use os.rename() there
+16:21:00 <jimi|ansible> Shrews: even with the new ziploader stuff? We can't break atomic_move out and use it individually?
+16:21:26 <Shrews> jimi|ansible: it wasn't that easy to extract (i forget exact reasons atm)
+16:22:18 <jimi|ansible> yeah it's got some tendrils in other bits of AnsibleModule (fail_json, cleanup, selinux stuff)
+16:22:37 <Shrews> yeah, that was it
+16:22:48 <jimi|ansible> in that case, i'd say just try/except and catch the possible IOError/OSError and fallback to using what it's doing today
+16:23:46 <jimi|ansible> ie. open the tmp_job_path file, read it, then write it to job_path
+16:23:54 <alikins> atomic_move pokes at some of the self.selinux stuff that is a little weird, think I have a partial patch to change that.... looking
+16:24:13 <jimi|ansible> could be i'm being overly paranoid here too, atomic_move has to do a bunch of other stuff based on the fact that it might be switching between users/perms
+16:24:22 <Shrews> jimi|ansible: ack. can add the code for that
+16:25:22 <jimi|ansible> from the docs: "The operation may fail on some Unix flavors if src and dst are on different filesystems."
+16:25:50 <Shrews> jimi|ansible: well, that can't happen in this case
+16:26:03 <jimi|ansible> right, at least i hope not :)
+16:26:16 <Shrews> just "orig file" + ".tmp" extension
+16:26:20 <jimi|ansible> so like i said, probably being overly paranoid because atomic_move has to account for so many corner cases
+16:26:23 <jimi|ansible> so i'm fine with it as-is
+16:27:17 <jimi|ansible> i think i see a simple way to break atomic_move out though
+16:27:17 <Shrews> great
+16:27:40 <jimi|ansible> i'll save that for another day though
+16:27:42 <bcoca> jimi|ansible: this is inside our own temp dir, does not have to deal with diff partitions/selinux context, etc
+16:27:59 <jimi|ansible> bcoca: yep i've acknowledged my paranoia already :)
+16:28:04 <bcoca> so atomic_move is overkill, os.rename should be just fine
+16:28:05 <jimi|ansible> (twice)
+16:28:14 <bcoca> sorry ... backlog did not scrolldown right away
+16:28:16 <jimi|ansible> heh
+16:28:27 <bcoca> but good to have paranoia
+16:28:28 <Shrews> ok, that's all i had then
+16:28:37 <bcoca> specially when filesystems are invovled
+16:28:56 <jimi|ansible> merged
+16:29:26 <Shrews> jimi|ansible: 2.1 pick would be good too
+16:30:04 <Shrews> but, not particularly necessary for our case
+16:31:25 <jimi|ansible> and cherry-picked
+16:31:33 <Shrews> \o/  gracias
+16:31:36 <jimi|ansible> was already working on it
+16:31:38 <jimi|ansible> :)
+16:32:09 <bcoca> it does make async more robust
+16:32:16 <bcoca> still, tons of race conditions ....
+16:33:29 <jimi|ansible> and submodule refs updated for both
+16:33:42 <jimi|ansible> ok, any other agenda items (in this way past time meeting...)
+16:33:47 <jimi|ansible> #topic anything else
+16:33:57 <Shrews> jimi|ansible: will those make it into this 2.1 release coming up? or the next one?
+16:34:01 <jimi|ansible> yes
+16:34:04 <jimi|ansible> 2.1.1
+16:34:11 <Shrews> thx
+16:34:20 <jimi|ansible> of rc2 will be cut after lunch
+16:34:29 <jimi|ansible> * of which
+16:35:18 <jimi|ansible> ok, hearing none...
+16:35:20 <jimi|ansible> #endmeeting

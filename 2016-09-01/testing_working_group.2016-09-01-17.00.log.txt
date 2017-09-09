@@ -1,0 +1,195 @@
+17:00:14 <gundalow> #startmeeting Testing Working Group
+17:00:14 <zodbot> Meeting started Thu Sep  1 17:00:14 2016 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+17:00:14 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+17:00:14 <zodbot> The meeting name has been set to 'testing_working_group'
+17:00:15 <gundalow> #chair gundalow mattclay
+17:00:15 <zodbot> Current chairs: gundalow mattclay
+17:00:18 <linuxdynasty> here'
+17:00:23 <gundalow> #topic Roll call
+17:00:24 <gundalow> Who is here?
+17:00:27 <gundalow> linuxdynasty: :)
+17:00:30 <linuxdynasty> :)]
+17:00:33 <sivel> pong
+17:00:43 <MichaelBaydoun> present
+17:01:34 <gundalow> ergh, got a bit of lag today
+17:01:58 <gundalow> #info Agenda as always https://github.com/ansible/community/issues/114
+17:02:02 * mattclay waves
+17:02:04 * shertel waves
+17:02:07 <Shrews> partially here. likely to leave soonish
+17:02:13 <gundalow> Shrews: sure :)
+17:02:22 <gundalow> We got any fresh blood in here today?
+17:02:37 * MichaelBaydoun is fresh blood in the testing group
+17:02:54 <misc> gundalow: your thirst for blood will never stop ?
+17:02:54 <gundalow> MichaelBaydoun: Hey :)
+17:03:02 <gundalow> misc: MOAR
+17:03:14 <gundalow> Testing is a shared joy
+17:03:20 <MichaelBaydoun> long time Ansible user, minor contributor, interested in helping the testing situation and leveraging what I learn here internally.
+17:03:26 * caphrim007 here too
+17:03:27 <MichaelBaydoun> Hey gundalow
+17:03:30 <gundalow> MichaelBaydoun: excellent
+17:03:31 <linuxdynasty> gundalow: yesterday I was chatting with David Barroso
+17:03:35 <linuxdynasty> he did a talk at SF
+17:03:40 <pabelanger> o/
+17:03:44 <Jmainguy> I am hear to watch
+17:03:47 <linuxdynasty> and he submitted a PR a callback plugin
+17:03:55 <Jmainguy> I wrote some unit tests, so thats testing right? =)
+17:03:56 <linuxdynasty> and I asked him to write tests, but he made an excellent point
+17:04:02 <linuxdynasty> there is no good examples of testing callback plugins
+17:04:06 <gundalow> Jmainguy: indeed it is
+17:04:32 <linuxdynasty> Which should have a good example test for every type of plugin/module we support
+17:05:03 <gundalow> linuxdynasty: Good point. I'll add that to https://public.etherpad-mozilla.org/p/ansible-testing-working-group
+17:05:08 <resmo> hi
+17:05:39 * skg_net waves hello
+17:06:19 <gundalow> pabelanger: You new, what's your interest in all of this?
+17:06:23 <gundalow> also welcome :)
+17:06:43 <pabelanger> New to testing working group too. Coming from openstack-infra, working at Red Hat, we have some ansible bits running and interested in seeing what testing strategies / improvements are coming down the pipeline
+17:07:01 <Shrews> gundalow: pabelanger closely with zuul-ish things
+17:07:25 <Shrews> works* closely
+17:07:28 <Shrews> words are hard
+17:07:42 <gundalow> ace, thanks for joining in
+17:07:49 <gundalow> Anyone else new I've missed?
+17:07:55 <jeblair> hi, sorry i'm late
+17:08:04 <jeblair> i am also a zuul-ish person
+17:08:12 <gundalow> jeblair: Not an issue, thanks for joining in
+17:08:35 <gundalow> must be close to having more Zuulish people in the Ansible channels than Ansible Core people :)
+17:09:02 <jeblair> hopefully there will be more overlap in that venn diagram in the future :)
+17:09:15 <gundalow> #topic Module Documentation
+17:09:19 <gundalow> jeblair: I hope so :)
+17:10:10 <gundalow> So, as a recap, One of the areas as a group we decided needs improving is the developer documentation. As have already been mentioned (call back plugins) we need to improve the examples we have
+17:10:50 <gundalow> linuxdynasty has kindly put forward his https://github.com/ansible/ansible-modules-extras/blob/devel/cloud/amazon/kinesis_stream.py as an example of a good module
+17:11:54 <gundalow> the aim being to redo http://docs.ansible.com/ansible/developing_modules.html with improved examples
+17:12:31 <gundalow> So to do that it be good if as a group we can get kinesis_stream.py into the best state it can be
+17:12:58 <linuxdynasty> With an emphasis on breaking out of main and write functions/methods that are well documented and testable :D
+17:13:01 <gundalow> then once we are happy we can reference that in developing_modules.html
+17:13:06 <gundalow> yes!
+17:14:09 <gundalow> off the top of my head there are two ways we can attack this
+17:14:22 <gundalow> 1) raise PRs/bugs on kinesis_stream.py
+17:14:46 <gundalow> 2) Make notes under "How to develop a module
+17:15:15 <gundalow> " on https://public.etherpad-mozilla.org/p/ansible-testing-working-group of what we believe is important, and may be missing from developing_modules.html
+17:15:22 <gundalow> What do people think?
+17:15:33 <linuxdynasty> Either works for me. Though .... I think 1 should happen and than once everyone is happy with it, than move to 2 (thinking out loud)
+17:15:51 <gundalow> linuxdynasty: sure, sounds reasonable
+17:16:00 <linuxdynasty> not sure what others feel though
+17:16:15 <shertel> I like it
+17:16:23 <gundalow> Though I'm happy for people to use https://public.etherpad-mozilla.org/p/ansible-testing-working-group as a scratchpad/dumping ground for ideas/thoughts/suggestions as they think of stuff
+17:16:57 <gundalow> Please pick a colo(u)r and putyour name in the right hand side of https://public.etherpad-mozilla.org/p/ansible-testing-working-group
+17:18:34 <caphrim007> question. do/can the docblocks in the kinesis_stream module be picked up by doc generator tools to spit them out in a formatted way? like sphinx-ish?
+17:19:12 <gundalow> I don't believe we have any doxygen/python code doc stuff
+17:19:36 <gundalow> hum, doxygen is the C++/Java one, not sure what the python version is
+17:20:16 <gundalow> caphrim007: really interesting question
+17:20:22 <gundalow> docschick: You around?
+17:20:33 <Shrews> sphinx
+17:20:44 <Shrews> though those docstrings are not in sphinx format
+17:21:11 <linuxdynasty> I can update it to be in Sphinx format if that is what we agree on
+17:21:30 <caphrim007> correct me if i'm wrong, the docs in many existing python libs are like that?
+17:21:45 <gundalow> caphrim007: are which format?
+17:21:47 <linuxdynasty> I think you are correct
+17:21:52 <linuxdynasty> Sphinx
+17:22:14 <linuxdynasty> I have been using this style for years now http://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html
+17:23:32 <Shrews> i don't think the format of the docstrings matters unless you plan to generate docs from them, which doesn't seem too useful IMO. just as long as they are legible to people wanting to contribute patches
+17:24:15 <gundalow> caphrim007: What your thought having HTML docs generated from this?
+17:24:24 <gundalow> caphrim007: What your thought having HTML docs generated from the source code documentaion
+17:24:32 <caphrim007> i can see Shrews point, and have no issue with the napoleon thing that linuxdynasty currently has
+17:25:34 <gundalow> OK
+17:25:38 <pabelanger> sphinx is nice, but would require a migration path
+17:25:51 * gundalow notes the time, lets park this for fiture discussion
+17:25:56 * gundalow adds to etherpad
+17:26:33 <gundalow> So, how do you want to do this, review https://github.com/ansible/ansible-modules-extras/blob/devel/cloud/amazon/kinesis_stream.py now, or in our own time and report back?
+17:27:56 <linuxdynasty> I think on our own time (im actually about to jump in another meeting, so you can discuss)
+17:28:05 <gundalow> cool
+17:28:32 <gundalow> I've added a section to the end of https://public.etherpad-mozilla.org/p/ansible-testing-working-group
+17:28:38 <gundalow> so people can add comments there
+17:29:35 <Shrews> so, you mention you'd like to see the example module functions as testable. are there current tests of that module? b/c the module itself looks fine to me. i don't know what to critique unless it just cant be tested
+17:30:14 <Shrews> it's well documented, has check mode, seems to follow dev guidelines
+17:31:59 * gundalow looks around the room
+17:32:05 <gundalow> anyone else got any thoughts?
+17:34:01 <shertel> looks good to me, but I'm still in the process of learning to discern the good from the bad...
+17:34:17 <Shrews> meh. i say throw some tests on it, document how to run them, and there's your example
+17:34:23 <Shrews> :)
+17:34:28 <gundalow> +1
+17:35:00 <mattclay> +1
+17:35:13 <gundalow> Cool, thanks all
+17:36:15 <gundalow> I need to chat with some other Ansible^WRed Hat staff regarding developing_modules.html there may be some work already going on. So I may push updating that till after 2.2
+17:36:56 <gundalow> Though if anyone has any thoughts on developing_modules.html feel free to add them onto https://public.etherpad-mozilla.org/p/ansible-testing-working-group under "Documentation: Improve docs.ansible.com/ansible/developing_modules.html"
+17:37:01 <gundalow> #topic Python 3
+17:37:20 <gundalow> So someone offered to help with python3 work
+17:38:51 <gundalow> skg_net: You around?
+17:39:15 <skg_net> just started to setup the test environment..
+17:39:26 <gundalow> ace :)
+17:39:39 <gundalow> Are the docs on how to do that clear enough
+17:39:46 <misc> python3 on the controller side, or on the modules side ?
+17:39:51 * gundalow is a big fan of documentation incase people didn't notice
+17:39:55 <skg_net> nope :(
+17:40:01 <skg_net> I couldn't find any
+17:40:10 <gundalow> so room for improvement then
+17:40:15 <gundalow> abadger1999: You around?
+17:40:34 <misc> for the controller, you have to edit bin/ansible to be env python3, and then you can run the test
+17:40:34 <gundalow> https://docs.ansible.com/ansible/developing_modules_python3.html
+17:40:38 <skg_net> I just ran the integration and unittest on the latest devel
+17:40:44 <gundalow> is the only page I'm aware of
+17:40:59 <misc> for the module, you have to use '-e ansible_python_interpreter=/usr/bin:python3'
+17:41:04 <skg_net> Thx, I went thru that
+17:41:27 <skg_net> misc:Thx
+17:41:29 <mattclay> You can also run the integration tests with python3 using our docker images.
+17:41:40 <misc> oh, nice
+17:41:43 <mattclay> We have a ubuntu1604py3 image which only has python3 installed.
+17:41:45 <gundalow> skg_net: What info is missing?
+17:41:59 <misc> mattclay: which python version is this ?
+17:41:59 <mattclay> That's what we use on Shippable. The scripts have a built-in blacklist of things that don't yet pass on python3.
+17:42:02 <gundalow> hum, well I guess the stuff mattclay said isn't in there
+17:42:09 <skg_net> but I got some failures..
+17:42:23 <mattclay> Python 3.5.2 I believe.
+17:42:27 <skg_net> I need analyze them
+17:42:58 <skg_net> The info is scattered around..
+17:43:07 <mattclay> skg_net: Take a look at shippable.yml to see how we run the python3 tests.
+17:43:31 <mattclay> https://github.com/ansible/ansible/blob/devel/shippable.yml#L46
+17:43:39 <skg_net> I used the readme in the test/integration..which tells how to execute the test
+17:44:07 <skg_net> and used this page http://docs.ansible.com/ansible/developing_test_pr.html
+17:44:12 <skg_net> to setup the test env
+17:44:59 <mattclay> skg_net: Those docs are all out of date since we switched to Shippable, but much of them is still valid. Just not the newest way of doing things.
+17:45:41 <mattclay> I'll be updating the docs for the 2.2 release, probably next week, once we've hit code freeze.
+17:45:43 <skg_net> and setting it up for python3...just learnt now :)
+17:46:02 <skg_net> mattclay: Thx will look into it..
+17:46:32 <skg_net> I will be starting with test_apache2_module
+17:46:55 <abadger1999> gundalow: yep, what's up?
+17:47:12 <gundalow> abadger1999: Is there any py3 docs apart from https://docs.ansible.com/ansible/developing_modules_python3.html
+17:47:49 <abadger1999> gundalow: there isn't any doc beyond that -- and you may have noticed, I started putting controller-side python3 notes there as well as module-side.
+17:48:28 <abadger1999> Some point need to fix the organization but it seemed better to just get it out there than worry about that for now.
+17:48:58 <gundalow> abadger1999: sure. Just wanted to make sure there wasn't some other page that I/ skg_net were not aware of
+17:49:04 <abadger1999> If someone wants to put the testing notes in there, that would be great.
+17:49:51 <linuxdynasty> kinesis_streams.py  has tests with it all ready @gundalow  @Shrews @shertel
+17:50:16 <linuxdynasty> https://github.com/ansible/ansible-modules-extras/blob/devel/test/unit/cloud/amazon/test_kinesis_stream.py
+17:50:20 <shertel> awesome!
+17:50:44 <skg_net> is just the ansible env between py2 and py3 and running the integration test sufficient?
+17:52:06 <gundalow> 8 minutes left
+17:52:27 <gundalow> Is there anythine else anyone wanted to talk about, otherwise we will continue with py3?
+17:52:35 <mattclay> skg_net: You really should run the integration tests using docker, since that's how we run the on Shippable. Also, unless you're using a VM, you probably don't want to be running the destructive tests.
+17:55:07 <gundalow> skg_net: Could you throw notes into https://public.etherpad-mozilla.org/p/ansible-testing-working-group then we can look at improving the docs
+17:55:09 <skg_net> mattclay: Thx, will use docker then
+17:55:19 <skg_net> sure will do
+17:55:24 <gundalow> Thank you very much :)
+17:55:28 <gundalow> #topic Open Floor
+17:55:29 <skg_net> is there a link for docker..
+17:55:31 <gundalow> Anymore for anymore
+17:55:37 <gundalow> mattclay: ^
+17:56:13 <mattclay> skg_net: The script you want to run is test/utils/shippable/integration.sh
+17:56:23 <mattclay> You can see the env vars to use in shippable.yml
+17:56:35 <skg_net> mattclay:Thx
+17:58:01 <mattclay> You'll need docker installed on a Linux host. Using Docker Engine on OS X won't work well.
+17:58:34 <skg_net> got it
+17:58:38 <misc> (and likely enough space on the disk, because docker)
+17:58:57 <mattclay> If you do use OS X, you can run a Linux VM and install docker there.
+18:00:49 <skg_net> I use linux mint VM now, I will install docker on it
+18:01:16 <gundalow> linuxdynasty: Please use Sphinx, have a look at connection/__init__.py
+18:02:23 <skg_net> need leave now for another meeting..thanks all for your support
+18:02:37 <gundalow> skg_net: Thanks :)
+18:06:47 <linuxdynasty> So weare going to the Sphinx route?
+18:07:27 <mattclay> linuxdynasty: Still some internal discussion on that. We'll get back to you.
+18:08:36 <abadger1999> Oh, is kinesis_stream the module we're going to nitpick for best practices?
+18:08:46 <gundalow> abadger1999: indeed :)
+18:09:16 <abadger1999> Nice.
+18:09:22 * abadger1999 puts it on his list to look at
+18:13:35 <gundalow> abadger1999: Thanks :)
+18:13:46 <gundalow> Anyone else?
+18:18:28 <mattclay> I'll be looking at it too.
+18:23:12 <gundalow> #endmeeting

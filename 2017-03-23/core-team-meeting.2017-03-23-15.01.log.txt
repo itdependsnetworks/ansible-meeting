@@ -1,0 +1,418 @@
+15:01:08 <jtanner> #startmeeting core-team-meeting
+15:01:08 <zodbot> Meeting started Thu Mar 23 15:01:08 2017 UTC.  The chair is jtanner. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:01:08 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:01:08 <zodbot> The meeting name has been set to 'core-team-meeting'
+15:01:17 <jtanner> #chair jtanner bcoca
+15:01:17 <zodbot> Current chairs: bcoca jtanner
+15:01:28 <jtanner> #chair abadger1999
+15:01:28 <zodbot> Current chairs: abadger1999 bcoca jtanner
+15:01:32 <nitzmahone> yo
+15:01:36 <jtanner> #chair nitzmahone
+15:01:36 <zodbot> Current chairs: abadger1999 bcoca jtanner nitzmahone
+15:01:58 <jtanner> now i need to find the agenda ...
+15:02:02 <abadger1999> Óla
+15:02:14 <bcoca> https://github.com/ansible/community/issues/156
+15:02:37 <bcoca> jtanner: any updates on shipit workflow?
+15:02:51 <rcarrillocruz> o/
+15:02:57 <jtanner> #chair rcarrillocruz
+15:02:57 <zodbot> Current chairs: abadger1999 bcoca jtanner nitzmahone rcarrillocruz
+15:03:03 <shertel> hi
+15:03:04 <jtanner> #topic shipit workflow
+15:03:10 <jtanner> #chair shertel
+15:03:10 <zodbot> Current chairs: abadger1999 bcoca jtanner nitzmahone rcarrillocruz shertel
+15:03:16 <jtanner> bcoca: in what context?
+15:03:24 <bcoca> https://github.com/ansible/community/issues/156#issuecomment-283631658
+15:03:46 <jtanner> does everything have meta now?
+15:03:47 <bcoca> was waiting for 'metadata rework' whatever that means, and that is done, seems like bot woudl be next?
+15:04:28 <jtanner> #info plugin metadata is done
+15:04:43 <jtanner> #action jtanner to evaluate and write bot workflow for non-module shipits
+15:05:33 <jtanner> #info https://github.com/ansible/ansibullbot/issues/437
+15:06:14 <jtanner> bcoca: what has meta in it?
+15:06:32 <bcoca> nothing that i know of, not sure what that comment means
+15:06:56 <bcoca> not sure how to insert 'metadata' in ini/yaml files
+15:07:12 <bcoca> ^ i personally think we are better off tracking this with maintainers in external file
+15:07:49 <jtanner> why was it dependent on "metadata rework" then?
+15:08:19 <bcoca> ^ just said, idk
+15:08:58 <jtanner> i don't know
+15:09:14 <jtanner> it's too early to talk/argue about metadata though, so i want to move to next topic
+15:09:40 <bcoca> k
+15:09:50 <bcoca> skiping a few due to missing/no updates
+15:10:12 <jtanner> i can't read this agenda ticket
+15:10:13 <bcoca> https://github.com/ansible/community/issues/156#issuecomment-283632351
+15:10:19 <bcoca> #topic proposing proposals
+15:10:38 <bcoca> allanice001?
+15:10:53 <bcoca> ^ everyone read  https://github.com/ansible/proposals/pull/59 ?
+15:11:23 <jtanner> i've read it
+15:12:04 <abadger1999> s/committee/team/
+15:12:13 <abadger1999> We don't operate by consensus
+15:12:18 <bcoca> we try
+15:12:55 <abadger1999> But maybe "we attempt to operate by consensus of its members; falling back on a vote of the members if a bottleneck is reached"?
+15:12:55 <bcoca> things might end up beind 'decided' by core ansible team or james, but we rarely use that, its mostly tie breaker
+15:12:56 <jtanner> i think it's trying to deliver the false promise that a long defined process is somehow going to get PRs merged faster
+15:13:12 <abadger1999> s/bottleneck/impasse/
+15:13:43 <bcoca> i dont disagree, i was going for something that put onus on submitter to push thorugh  (mirrors more what actually happens now)
+15:13:50 <abadger1999> I don't think we're going to have acceptance tests and multiple implementations.
+15:14:01 <bcoca> that made me chuckle
+15:14:02 <abadger1999> Proposals is really more about getting the specification/design done
+15:14:08 <jtanner> community demand should be a major factor in taking a new feature
+15:14:18 <bcoca> jtanner++
+15:15:20 <mattclay> We aren't likely to see many proposals with formal spec language either.
+15:15:26 <jtanner> #chair mattclay
+15:15:26 <zodbot> Current chairs: abadger1999 bcoca jtanner mattclay nitzmahone rcarrillocruz shertel
+15:15:29 <bcoca> also, its not only for new features, 1/2 proposals are for redesigning existing
+15:15:45 <jtanner> s/feature/refactor
+15:16:39 <bcoca> ok, so post feedback on PR and lets discuss again next meeting if/when ammendmants are done
+15:17:41 <abadger1999> Needs to have information about how the champion pushes the proposal through these stages (ie: put it on the meeting agenda, anounce to the mailing list, etc)
+15:18:42 <bcoca> agreed, but since author is also not here, moving on, post feedback on ticket, lets pick up next meeting
+15:18:52 <bcoca> #topic facts/info module standards
+15:19:01 <bcoca> #info related proposal https://github.com/ansible/proposals/issues/56
+15:19:08 <bcoca> ^ anything new on this topic?
+15:19:50 <bcoca> seems we are stuck with several directions, going for _info/other suffix  and/or 'autoload' magic seem biggest issues
+15:20:55 <bcoca> no comments, so skipping
+15:21:05 <bcoca> # module defaults
+15:21:15 <bcoca> #topic module defaults
+15:21:19 <bcoca> #INFO https://github.com/ansible/ansible/pull/22648
+15:21:32 <bcoca> ^ seems its at a good spot, any objections at thsi point?
+15:21:53 <mattclay> Needs to pass tests.
+15:22:15 <bcoca> mattclay: that is PR side, mostly dealing with concept itself here
+15:22:40 <bcoca> approval here never means PR can be merged w/o passing normal requirements
+15:23:40 <bcoca> ok, so closing that as community issue and letting PR run its corse
+15:24:03 <bcoca> #topic expand documenation fields
+15:24:09 <bcoca> #info https://github.com/ansible/proposals/issues/58
+15:24:20 <bcoca> ^ made some changes based on feedback from last time, thoughts?
+15:24:37 <abadger1999> bcoca: just the question about combine hash (for module defaults)
+15:25:04 <bcoca> abadger1999: is that on the concept or is that better expressed as part of PR review?
+15:25:06 <abadger1999> bcoca: don't close the issue yet... otherwise we'll likely forget that we're supposed to be reviewing the PR.
+15:25:34 <bcoca> abadger1999: i doubt it, big enough feature and author is not the quiet type
+15:27:42 <abadger1999> I guess that's pointing back at us needing a way to track PRs from the community to make sure they don't fall off the radar.
+15:27:46 <jtanner> if we don't have validation on the types, i don't see why this is necessary
+15:28:08 <jtanner> are we going to allow module args to assert "list of strings" for example?
+15:28:19 <bcoca> jtanner: we can, that is part of subspec
+15:28:23 <bcoca> ^ related but diff PR
+15:29:00 <bcoca> also, loose example, does not need to be exactly as i printed, so this is good point of discussion
+15:29:05 <jtanner> makes me feel like we're turning into java
+15:29:06 <bcoca> we can force 'exact types'
+15:29:18 <abadger1999> bcoca: Did we decide that hte module defaults should use combine_vars?
+15:29:22 <bcoca> jtanner: docs are there to inform user what he can input
+15:29:49 <bcoca> abadger1999: not that i know of, but i dont think that is for this meeting, but discussion on PR, its implementation detail
+15:30:02 <abadger1999> bcoca: combine_vars is design.
+15:30:27 <abadger1999> It could use it or it could not use it... doesn't change the code much but changes how users interact with it.
+15:31:58 <bcoca> abadger1999: not sure it makes much sense that users can override merge for overwrite ... the latter just disables the functionality with unrelated config setting
+15:32:34 <bcoca> in your view, for module_defaults to work, hash_behaviour = merge must be configured?
+15:32:48 <bcoca> instead of = replace, which is the default?
+15:32:49 <abadger1999> bcoca: #undo
+15:32:53 <abadger1999> #undo
+15:32:53 <zodbot> Removing item from minutes: INFO by bcoca at 15:24:09 : https://github.com/ansible/proposals/issues/58
+15:32:59 <abadger1999> bcoca#undo
+15:33:04 <bcoca> #undo
+15:33:04 <zodbot> Removing item from minutes: <MeetBot.items.Topic object at 0x15327a50>
+15:33:05 <abadger1999> #undo
+15:33:05 <zodbot> Removing item from minutes: INFO by bcoca at 15:21:19 : https://github.com/ansible/ansible/pull/22648
+15:33:15 <abadger1999> #info https://github.com/ansible/ansible/pull/22648
+15:33:24 <abadger1999> bcoca: I don't know.
+15:33:53 <abadger1999> bcoca: I'm throwing it out there because I don't know what the right thing is in this case but think that we should make a conscious decision about it.
+15:33:54 <bcoca> i dont think it should
+15:34:41 <bcoca> the feature is clearly to 'merge defaults', having hard override is 'disabling defaults' ... seems like the hash_behaviour should NOT control this feature as they are pretty much unrelated
+15:34:55 <abadger1999> bcoca: ah.... I mean when we have defaults defined in multiple places.
+15:34:58 <bcoca> same way with do with tags/conditional inheritance, they are always merges
+15:35:47 <bcoca> abadger1999: keyword merge/override is something we do differently depending on keywords (tags vs name, for example)
+15:36:23 <bcoca> ^ i would not make it subject to hash_behaviour, i'm fine with switching between merge and replace, but im not sure which one makes more sense
+15:37:47 <abadger1999> bcoca: okay.  How do users get rid of a default (say in inventory I defined a default for yum enablrepo; in a specific play I want to get rid of that default)
+15:38:08 <bcoca> default=omit
+15:38:51 <bcoca> agaffney: ^ your input?
+15:39:27 <abadger1999> Is that a sentinel value?
+15:39:53 <bcoca> whateverfield={{omit}} <= would merge/override parent def, then on templating be removed
+15:40:15 <abadger1999> Okay.
+15:40:37 <bcoca> ah, think agaffney is traveling today, so we can reschedule for next week to finish this
+15:40:53 <abadger1999> So We're thinking, use merge_hash() (not combine_vars) always.  Document that whateverfield: "{{ omit }}" can be used to remove a default value
+15:40:56 <bcoca> abadger1999: add to PR so he is aware of the usability
+15:41:18 <abadger1999> If that's correc, I'll add that to the PR
+15:41:18 <alikins> I kind of like the idea  in action (ie, it seems useful) but I'm a little hesitant of possibly introducing another inheritance mechanism
+15:41:41 <bcoca> alikins: it follows existing ones
+15:42:24 <bcoca> abadger1999: just dont think combine_vars is way to go as it changes depending on diff setting, merge vs replace is the 'usability discussion' on how this should be inherited
+15:42:32 <alikins> _get_module_defaults() looks like new code to me
+15:42:51 <bcoca> ^ i think merge is right way, even if we end up doing replace, it should not be implemented via combine vars
+15:43:08 <abadger1999> <nod>  Yeah, I'm fine with that.. just want to make sure we're in agreement about what we want it to look like before I tell agaffney what we want.
+15:43:10 <bcoca> alikins: it mirrors what we do already for others
+15:43:32 <bcoca> abadger1999:  dont think we need agreement for that, to explore the use cases in ticket
+15:43:48 <bcoca> if we phrase as question vs mandate
+15:45:03 <bcoca> alikins: in diff discussions, i think we can better streamline how inheritence works to make it more automatic vs forcing explicit like we do here, but htat is outside scope of the ticket and something i was planning on brining up once jimi-c is back
+15:46:42 <bcoca> abadger1999: i think we all agree on basic feature now, details like how this should be inhertied can be hashed out outside this meeting, otherwise I think we can take up the time by going too in depth to these topics which can be handled in the ticet/review
+15:47:28 <bcoca> if we are all ok with the basic functionality, i would move on and deal with this topic on the PR review from now on
+15:49:42 <bcoca> ok, so moving on, back to documentation expansion
+15:50:00 <bcoca> #topic expand documenation fields
+15:50:02 <abadger1999> We can move on but the problem with only using hte PR for review is that we don't all look at the PR.
+15:50:06 <bcoca> ^ i  updated proposal with subspec ref
+15:50:22 <jtanner> #chair alikins
+15:50:22 <zodbot> Current chairs: abadger1999 alikins bcoca jtanner mattclay nitzmahone rcarrillocruz shertel
+15:50:31 <abadger1999> so if there's other things of design improtance, it should come back to the meeting then.
+15:50:51 <abadger1999> #info https://github.com/ansible/proposals/issues/58
+15:51:21 <bcoca> abadger1999: ok, but we should set a threshold or just discuss adhoc, this meeting gets overloaded easily and I would like to keep stuff at higher level
+15:51:31 <bcoca> ^ on open floor lets discuss scope of this meeting
+15:52:04 <bcoca> abadger1999: also even if merged, does not mean we keep the feature or it cannot change while in devel
+15:53:02 <nitzmahone> Expanded doc options are much clearer now... +1
+15:53:31 <nitzmahone> (putting config/env under options makes a lot more sense to me now)
+15:53:31 <bcoca> i can see us still modifying them, but i think it now captures most of the utility
+15:54:04 <nitzmahone> Thanks for clarifications, bcoca!
+15:54:09 <bcoca> nitzmahone: yeah, for those that 'dont have options' i just used _<stuff> to denote 'internal name', must make sure we document that somethwere
+15:54:59 <bcoca> we've been 'kindof' using it, but never offiically stated that it is so in docs, though most people seem to infer correctly (i've still seen people do shell: _raw="" ) though
+15:55:24 <nitzmahone> Yeah, and "_free_form"...
+15:55:39 <bcoca> ^ he, same
+15:56:00 <abadger1999> bcoca: When multiple names are given, should all but one be deprecated?
+15:56:02 <bcoca> not cause i think someone will read, but we can have something to point at
+15:56:16 <bcoca> abadger1999: no, in case of ec2, for example they are all still valid
+15:56:26 <nitzmahone> (sigh)
+15:56:29 <abadger1999> bcoca: what's the ec2 case?
+15:56:33 <bcoca> i HOPE that internally we do follow that rules
+15:56:34 <alikins> doc fields pr looks good to me. I'd go for maybe 'type_description' or 'arg_description' vs 'type' though
+15:56:48 <bcoca> " AWS access key. If not set then the value of the AWS_ACCESS_KEY_ID, AWS_ACCESS_KEY or EC2_ACCESS_KEY environment"
+15:57:03 <abadger1999> k
+15:57:19 <abadger1999> I think we should say something about precedence then...
+15:57:28 <abadger1999> Is there a free-form field?  it could go in there.
+15:57:37 <bcoca> abadger1999: i looked at existing stuff, its not everywhere, but happens enough that we need to cover, specially with cloud modules
+15:57:39 <nitzmahone> Yeah, it's weird like that for the libcloud-based stuff too IIRC
+15:57:46 <abadger1999> I don't need a formal field, just want it to be documented
+15:58:02 <bcoca> abadger1999: i thought about 'priority' : <int>
+15:58:34 <bcoca> but ssh is maybe bad example, was thinking that ansible_host == all connection plugins, might require diff docs
+15:58:52 <bcoca> then document only specific in ssh, but i left it there as example
+15:59:22 <abadger1999> (note: precedence of config/env_vars/hostvars should be covered in our general doc, I jsut want a place to put precedence of multiple env_vars, or multiple config values.
+15:59:27 <bcoca> ^ still unsure if we should just repeat in every plugin or document the 'base' on one side and teh specifics in each plugin
+15:59:52 <bcoca> abadger1999: understood, yes, that was what prioirty was for ( i did put it in last night, but thought it was too confusing so i removed)
+16:00:14 <abadger1999> bcoca: something like extends_documentation.... ie: one file but rendered on multiple pages.
+16:00:24 <bcoca> ^ we also have 'multple config settings'  case in 2.3 (just removed in 2.4)
+16:00:43 <abadger1999> Yeah, priority: <int> could definitely be confusing.
+16:01:03 <bcoca> abadger1999: we already have fragments (it works, tested), but i was thinking of 'connection base page' then list plugins, base having common vars
+16:01:21 <abadger1999> to people who don't understand that config/env vars/hostvars are already prioritized.
+16:01:56 <bcoca> abadger1999: i even thought that implicit 'top less priority, bottom more' in the listing would be enough ... but again, can confuse people
+16:02:13 <abadger1999> bcoca: I'd keep it all on the specific pages... people are most often going to hit the page for the plugin they're looking for, not a hierarchical set of pages.
+16:02:26 <bcoca> good point
+16:02:45 <bcoca> so fragments might need 'better merging' so as not to duplicate too much data
+16:03:06 <abadger1999> yeah.  Or we be better about organizing nad splitting the fragments.
+16:03:50 <bcoca> so it seems we all mostly agree on adding fields, mostly its a question of details now?
+16:04:17 <bcoca> ^ please add those thoughts to ticket and we can carry on detailed discussion there, revisit here once we've gotten to something a bit more flushed out
+16:05:04 <abadger1999> Instead of "    lookup: etcd"  I'd do: "type: lookup\nname: etcd"
+16:05:36 <bcoca> abadger1999: followed the current 'module: ' pattern
+16:05:42 <bcoca> ^ would need to change it there also
+16:06:06 <abadger1999> bcoca: probably should with the current way being deprecated backward compat for now
+16:06:30 <bcoca> i'll see what i can do, that might get tricky
+16:06:52 <abadger1999> since modules was the only thing using the module documentation format, it's going to have a few things that are not right for multiple plugin type.
+16:06:59 <bcoca> as the format is same in 'both ways' internally, just the 'location' of the docs is different 'varaibles vs 1st docstring'
+16:07:05 <alikins> I don't think we need to solve finding a general way to indicate precendence of env vars just for docs, so I wouldn't worry about that atm
+16:07:34 <bcoca> alikins: not just env vars, config settings also (we only had 1 and i removed it, but i expect more in future)
+16:07:42 <bcoca> and of course host_vars ...
+16:07:56 <bcoca> which we have MANY cases of
+16:08:21 <abadger1999> I'd change the algo to be Look for 'type: XXX" and "name: YYY" if both do not exist, look for "module: name" and fill in type/name with values from there.
+16:08:51 <bcoca> i'm going to move on, as these are smaller details we can deal with in the ticket and revisit it for approval next meeting
+16:08:52 <abadger1999> *fill in missing value
+16:08:55 <abadger1999> <nod>
+16:09:35 <bcoca> #topic core/extras ticket migration
+16:09:46 <bcoca> https://github.com/ansible/community/issues/156#issuecomment-288205452 <- from last week, @jctanner brought up
+16:10:56 <bcoca> jtanner: any updates?
+16:11:06 <nitzmahone> Did we only end up with my -1 on #1? I thought jctanner was also -1.
+16:11:24 <bcoca> i counted you as +1 ....
+16:11:40 <bcoca> would mean it was tie?
+16:11:44 <nitzmahone> I was +1 on #2
+16:11:54 <jtanner> asking me if there are any updates, implies to me that i'm on the hook for figuring it out
+16:12:09 <bcoca> thought all 4 of us were +1 on 1 and 2, except jtanner which was -1 on 1
+16:12:11 <mattclay> I didn't vote last time, but I'm leaning towards -1 on #1 currently.
+16:12:12 <abadger1999> jctanner abstained.
+16:12:18 <abadger1999> nitzmahone was -1
+16:12:22 <jtanner> so i've gone off and done some of my own work to look for duplicates and make sure what should be migrated has been done so properly
+16:12:30 <bcoca> jtanner: no, sorry, assumed you were doing this via bot
+16:12:49 <jtanner> the bot has hooks to begin the process
+16:12:55 <jtanner> but it's waiting to be told what the process is
+16:13:55 <bcoca> well, #2 seems clear, #1 i though had majority, but it seems i was wrong
+16:14:20 <bcoca> nitzmahone, abadger1999, jtanner any position change on #1 since last meeting?
+16:14:43 <bcoca> ^ anyone else want to weigh in?
+16:14:51 <bcoca> @here
+16:15:37 <sivel> Are those proposals mutually exclusive?
+16:15:43 <sivel> Seems as though they are not
+16:15:43 <nitzmahone> No
+16:15:47 <bcoca> no
+16:15:56 <bcoca> issues vs prs
+16:16:01 <jtanner> i will have to patch the bot to "pretend" the original submitter is the owner of the issue, if the bot is doing the migration
+16:16:03 <bcoca> #1 deasl with issues (not prs)
+16:16:06 <jtanner> it's doable, but still a headache
+16:16:08 <sivel> Ok, I suppose the fact that they were listed like that made them seem as though someone intended them to be exclusive
+16:16:11 <bcoca> #2 deals with PRs and not issues
+16:16:25 <jtanner> and the bot will need to give the original submitter a bunch of commands to be able to edit their own issue ... more headache
+16:16:32 <bcoca> sivel: if you can list them so that is not inferred, go ahead
+16:16:45 <nitzmahone> I missed that distinction the first time around too. :)
+16:16:47 <sivel> just getting clarification.
+16:16:52 <abadger1999> bcoca: I've updated thvote i nthe comment with the actual counts (and names).
+16:17:04 <sivel> I am +1 on #2
+16:17:10 <alikins> (for modules that consult env vars, it may be useful to be able to indicate that in the arg spec, possibly including precedence. That could eliminate alot of boilerplate (some_arg_value = module.params.get('some_arg_name', None); if not some_arg_value: some_arg_value = os.environ('SOME_ARG_NAME') etc)
+16:17:29 <jtanner> alikins: we've moved on
+16:17:32 <bcoca> abadger1999:  i did not remember that many votiing .. thankx
+16:17:33 <sivel> I feel like I am -1 on #1, but could probably be convinced to change
+16:17:58 <bcoca> alikins: we built that in already for network modules, iirc
+16:18:30 <jtanner> #chair sivel
+16:18:30 <zodbot> Current chairs: abadger1999 alikins bcoca jtanner mattclay nitzmahone rcarrillocruz shertel sivel
+16:18:47 <bcoca> ok, so #1 has slight majority ... do we want to wait for jimi-c to tie break?
+16:19:01 <bcoca> or fully tie ....
+16:19:03 <abadger1999> jtanner: note, it does not need to give them more commands.  for issues... what is important that the owner can do that a commenter cannot?
+16:19:23 <bcoca> abadger1999: closing
+16:19:42 <sivel> bcoca: I think with my vote we are tied
+16:19:52 <jtanner> abadger1999: set ansible version, change title, etc
+16:19:54 <bcoca> changing updateing title/original post ,  but that matters less
+16:19:55 <abadger1999> bcoca: usually if something is very close, I try to get more people to weigh in so that it becomes more clear that it wasn't decided this way just because only certain people were present.
+16:20:10 <abadger1999> jtanner: I don't think ansible version and change title are too important.
+16:20:15 <sivel> bcoca: do you want me to add my vote to the comment?
+16:20:17 <bcoca> sivel: added yoru vote
+16:20:19 <abadger1999> nice to have but far from essential.
+16:20:22 <sivel> k
+16:20:31 <abadger1999> closing is very nice as it offloads work for us.
+16:21:19 <nitzmahone> Content is not lost, and can theoretically be migrated at any time
+16:21:22 <bcoca> ok, so it seems we have tie on #1, #2 all agree, any new arguments for/against #1?
+16:21:38 <nitzmahone> But keeps a bunch of ownerless issues out of the repo
+16:21:55 <mattclay> Did my -1 vote for #1 get counted?
+16:22:20 <bcoca> now it is, total -1
+16:23:07 <bcoca> so alternates to #1 were : a) let them rot or b) include them in weekly backlog
+16:23:10 <jtanner> what is the perception of what will happen to the issues once they are migrated?
+16:23:22 <bcoca> jtanner: they become part of weekly backlog
+16:23:36 <sivel> if we let them rot, that is effectively closing them.  No one will look at them
+16:23:36 <abadger1999> (a) is a bad thing.  (b) is also a bad thing.
+16:23:37 <bcoca> ^ well daily, but we do every 2 weeks personally
+16:23:47 <abadger1999> (c) close them
+16:23:49 <sivel> I say, follow something similar to #2 for issues
+16:23:57 <bcoca> abadger1999: waiting for 'good thing' .. c) is also bad
+16:23:58 <jtanner> community supported modules are part of the backlog for us?
+16:24:06 <bcoca> ^ thought most had agreed that c) was not option
+16:24:19 <bcoca> jtanner: no, but some might be
+16:24:31 <jtanner> ok, some ... and what about all the others?
+16:24:35 <mattclay> They should be reviewed as part of a backlog review, or closed. However, I don't see why they can't be reviewed where they are.
+16:24:36 <jtanner> what happens with those issues?
+16:24:36 <bcoca> not all tickets are for  community  (well extras mostly is)
+16:24:49 <sivel> Why should we treat them differenty?  Update all issues saying if they aren't migrated, they'll be closed
+16:24:50 <bcoca> jtanner: same as what happens to current community tickets in ansible/ansible
+16:24:51 <abadger1999> (a) is bad because people think they are being looked at but htey aren't (b) is bad because, a salikins said, issues should live with the code.  (c) is bad because we've already done this to people once.
+16:25:33 <abadger1999> if (d) is off the table now (move issues to ansible/ansible) then I'm a reluctant advocate for (c).
+16:25:43 <sivel> I am +1 for c
+16:25:48 <abadger1999> it's the least bad choice remaining.
+16:25:58 <sivel> but not just blindly close, update them asking people to move them again, then close
+16:26:11 <sivel> they should also validate whether they are still issues
+16:26:29 <jtanner> and most of them are probably never going to do that
+16:26:36 <sivel> that is too much work for us to take on, put the onus on the requester
+16:26:41 <sivel> that is a good thing then :)
+16:26:46 <jtanner> the ones that have and care about it, have mostly migrated all their issues
+16:26:52 <sivel> if they don't they are closed, and we have less issues
+16:26:53 <mattclay> Regardless of which repo they're in, someone needs to review them. Moving them when they haven't been reviewed seems like wasted effort.
+16:27:18 <sivel> agreed
+16:27:27 <sivel> but we don't have the time to do it ourselves
+16:27:29 <abadger1999> mattclay: it's inconvenient to have them in another repo... harder for us to spot duplicates by searching, not as easy to associate issues with commits and PRs, etc.
+16:27:34 <bcoca> i closed 5 last meeting in quick review, i propose to make next month 'backlog review' to go on core/extras and close as many as we can
+16:27:38 <jtanner> mattclay: that's why i'm asking what people believe is going to happen to all those issues after i spend a week or two getting them migrated
+16:28:11 <bcoca> jtanner: i dont think a week of your time is worth it for migration
+16:28:28 <bcoca> ^ thought we already had automated process
+16:28:28 <jtanner> auto-migration is going to require supervision
+16:28:36 <jtanner> it will take a week or more to get it right
+16:28:46 <bcoca> hmm, -1 then
+16:29:02 <sivel> are we collecting votes for this?
+16:29:03 <bcoca> actually ... 0
+16:29:13 <bcoca> i dont konw which option sucks less
+16:29:18 <mattclay> I would be less opposed to review then migrate vs. migrate then review.
+16:29:23 <jtanner> there's rate limits to deal with, bad issue bodies to deal with, new code to write for the bot to "pretend" original submitter is still the submitter, etc
+16:29:29 <abadger1999> sivel: not yet...someone needs to make a proposal (instead of the three mutually exclusive ones that we have now)
+16:29:39 <sivel> abadger1999: ok
+16:29:49 <sivel> I liked your a, b, c, d :)
+16:29:56 <sivel> well, c personally
+16:30:00 <abadger1999> sivel: go ahead and propose, though.. I think we're tapped out on discussion.
+16:30:27 <bcoca> updated ticket to reflect subject better
+16:30:57 <sivel> a) Leave them as they are, maybe looking at them
+16:31:10 <sivel> b) Add time to every meeting to go through some of them
+16:31:22 <sivel> c) update them asking people to migrate them, closing after a period
+16:31:29 <bcoca> sivel: b) which meeting?
+16:31:30 <sivel> d) Just migrate them and deal with it later
+16:32:08 <sivel> bcoca: which ever, this one?  Create a new meeting?  That gives us a defined time for a bunch of people to look at them
+16:32:15 <bcoca> sivel: migration would 'auto include them' into our current workflow of ansible/asnible, which implies backlog review and others
+16:32:30 <mattclay> Perhaps we shouldn't treat all issues in core/extras equally. For example, there are 237 feature ideas in core. Do we really want to keep any of those issues?
+16:32:48 <abadger1999> d +1; c +1 (ok with period being 0 too... we've already commented once)  [preference is still d but c is ok]
+16:32:50 <bcoca> sivel: added option
+16:33:08 <bcoca> mattclay: mostly, even if we don't implement, someone else might
+16:33:11 <sivel> I am +1 for c
+16:33:14 <jtanner> mattclay: that's a larger question ... why do we keep any feature_requests open?
+16:33:22 <bcoca> feature ideas are not something we should close unless we really are against them
+16:33:51 <bcoca> jtanner: they are 'wishlists' and shoudl not count agianst us as 'bug tickets'
+16:33:53 <abadger1999> (-1 a -1 b)
+16:33:55 <nitzmahone> +1 for c
+16:34:07 <jtanner> ideally, we would be sourcing those for our roadmap ... but we completely ignore them for the most part
+16:34:42 <bcoca> jtanner: as a group, yes, i routinely go over them to see if we already imlemented or can now easily do so
+16:34:49 <sivel> honestly in a project as large as ansible, feature requests are largely useless
+16:34:51 <mattclay> bcoca: How often do feature request tickets actually get acted on? It's a nice idea in theory, but if it isn't actually getting us anything, it's not useful to keep them around.
+16:34:55 <bcoca> ^ closed 3 last week (2 were mine ...)
+16:35:00 <jtanner> sivel: i agree
+16:35:01 <mattclay> +1 for c
+16:35:11 <abadger1999> jtanner, sivel: +1
+16:35:21 <sivel> so far we have +4 for c
+16:35:48 <sivel> again, I think they should be handled the same was as the PRs
+16:36:33 <abadger1999> which is the same way we handled repo split :-(
+16:36:44 <sivel> not exactly
+16:36:52 <sivel> we just closed immediately
+16:37:00 <sivel> and didn't offer advice on moving them
+16:37:33 <bcoca> mattclay: the other reason, i keep closing dupes for same feature
+16:37:34 <sivel> I'd guess the majority of issues, were submitted by someone who doesn't care any more
+16:37:52 <jtanner> drive bys
+16:38:01 <sivel> but if we give them a 2nd notification, we can help determine that
+16:38:03 <abadger1999> or frustrated
+16:38:36 <abadger1999> migrated once from ansible/ansible to ansible-modules-core... refuses to migrate a second time back to ansible/ansible
+16:38:38 <sivel> no doubt many people get frustrated, but that is regardless of a repo merge
+16:38:51 <bcoca> it doesnt help
+16:38:58 <sivel> if they are issue sthat old, we largely don't care about them either
+16:39:06 <sivel> as evidenced by their age
+16:39:07 <jtanner> many of them thought the issue tracker was a technical support queue
+16:39:56 <bcoca> those we close fast in triage, fine with closgin those if there are any in the core/extras, but that requires 'looking'
+16:40:01 <abadger1999> sivel: not true really... jctanner's dupe finding brought some old bugs onto my radar yesterday... I put up PRs to fix two of them.
+16:40:08 <mattclay> It's really about who is responsible for expending effort on these old issues. Is it the original submitter or us? Although it's an inconvenience to the original submitter, having them migrate the issues scales better than having us do it.
+16:40:23 <sivel> mattclay: ++
+16:40:28 <abadger1999> mattclay: --
+16:40:32 <sivel> :)
+16:40:42 <jtanner> mattclay: in the case of community modules, it extends to "who is going to do somethign with it?"
+16:40:56 <bcoca> mattclay: no question on efficient, the problem is we already take too long to deal with stuff and have mass closed on one migration
+16:41:00 <bcoca> ^ feelings involved
+16:41:03 <abadger1999> mattclay: Expending effort is in reviewing the issues.  Migrating is a relatively small amount of effort.
+16:41:06 <mattclay> abadger1999: I do understand your point of this being a repeat of what we did with the repo split.
+16:41:43 <abadger1999> Anyhow... we have +1:4 and noone against.... shall we call closing the agreed solution?
+16:41:58 <bcoca> at this point i'm goign to stop discussion, prposals and some votes are in ticket, think we need jimi-c at least if not community guys also to decide how to go forward
+16:42:15 <mattclay> abadger1999: So then it's a comparison of review effort in place vs review effort in ansible/ansible + migration effort?
+16:42:24 <bcoca> abadger1999: there is one -1
+16:42:44 <sivel> bcoca: is -1 on everything ;)
+16:42:51 <bcoca> mattclay: that is one of the options
+16:42:54 <bcoca> sivel: im not
+16:43:11 <bcoca> 2 options im  not -1 on
+16:43:31 <abadger1999> bcoca: who's -1 to (c)?
+16:43:48 <bcoca> https://github.com/ansible/community/issues/156#issuecomment-288205452
+16:43:49 <sivel> bcoca is
+16:43:54 <bcoca> lost track on what is what
+16:43:59 <bcoca> ^ votes there as they were made
+16:44:25 <jtanner> all of them have already been notified
+16:44:36 <jtanner> the proposal should clarify re-notifiy
+16:44:48 <bcoca> "close after automated notice to migrate"
+16:45:01 <bcoca> ^ shoudl i add "notices"
+16:45:05 <jtanner> which means i can close now ... because they're already notified
+16:45:21 <abadger1999> ah, I thought you were -1'ing Proposal 1 from last meeting after jtanner's explanation of the work he thought that involved.
+16:45:21 <jtanner> last discussion implied they should be notified again
+16:45:41 <bcoca> added 'new' there, jtanner does that disambiguate enough
+16:45:42 <sivel> yes, we are saying they should be notified 1 more time after now
+16:45:43 <bcoca> ?
+16:45:43 <abadger1999> bcoca: You also didn't count me ;-)
+16:45:54 <bcoca> abadger1999: on which?
+16:46:11 <abadger1999> close after automated notice to migrate
+16:46:11 <sivel> bcoca: close after notify
+16:46:16 <abadger1999> I +1'd that
+16:47:21 <bcoca> missed you did several in one line
+16:47:22 <abadger1999> bcoca: Apparently, you're confusing me with jtanner.. I elieve he abstained again.
+16:47:26 <mattclay> I'm +1 for notify one more time. I'd also re-word the notification to make it more clear action is required.
+16:47:54 <mattclay> The previous notification only really mentioned action required in the last sentence.
+16:48:40 <jtanner> wordsmithing isn't going to prompt additional action from an unresponsive person
+16:48:41 <bcoca> stil think we need more input, you can all update ticket with your votes, i think we have a clear preference, but would want james and community mgrs to also weigh in
+16:49:00 <abadger1999> jtanner: +1 to any period between notificatoin and close as long as we post another notification.
+16:49:03 <mattclay> jtanner: No, it won't, but it might help with people who skimmed the notification and only read the first part.
+16:49:03 <bcoca> going to close the tocic for now, revisit next meeting, opening nfloor
+16:49:09 <bcoca> #topic open floor
+16:51:45 <abadger1999> gregdek, rbergeron: https://github.com/ansible/community/issues/156#issuecomment-288205452 <=== input requested on plan of action for issues in module repos (currently, close issues with a notification has garnered the most support).  jimi-c won't be back until next week so you have a few days to mull it over
+16:52:47 <abadger1999> Nothing from me this week
+16:53:08 <sivel> nothing from me for this meeting
+16:54:18 <sivel> testing meeting starts in 6 minutes
+16:54:45 <bcoca> abadger1999: didnt you want to discuss scope of what gets discussed here vs in PRs?
+16:55:21 <jtanner> we don't have time for that
+16:55:45 <bcoca> #endmeeting

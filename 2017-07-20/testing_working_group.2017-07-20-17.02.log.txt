@@ -1,0 +1,64 @@
+17:02:33 <mattclay> #startmeeting Testing Working Group
+17:02:33 <zodbot> Meeting started Thu Jul 20 17:02:33 2017 UTC.  The chair is mattclay. Information about MeetBot at http://wiki.debian.org/MeetBot.
+17:02:33 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+17:02:33 <zodbot> The meeting name has been set to 'testing_working_group'
+17:02:49 <newswangerd> hey
+17:02:55 <mattclay> #chair newswangerd
+17:02:55 <zodbot> Current chairs: mattclay newswangerd
+17:02:56 * Pilou waves
+17:03:01 <mattclay> #chair Pilou
+17:03:01 <zodbot> Current chairs: Pilou mattclay newswangerd
+17:03:18 <mattclay> gundalow is on PTO today, so he won't be joining us.
+17:05:04 <mattclay> No significant updates for today.
+17:05:32 <mattclay> #topic Failure of copy module tests - https://github.com/ansible/community/issues/114#issuecomment-315572677
+17:05:45 <mattclay> Pilou: This one's yours.
+17:05:48 <Pilou> mattclay: a rebase is required :-/
+17:06:16 <mattclay> Yeah, I just noticed that.
+17:06:25 <mattclay> Is there anything you'd like to discuss about the PR today?
+17:07:02 <Pilou> no
+17:07:18 <mattclay> OK, I just saw you had added to the agenda, so I wanted to make sure.
+17:07:24 <mattclay> #topic Open Floor
+17:07:41 <mattclay> It looks like this might be a very short meeting. Does anyone have anything they'd like to discuss that isn't on the agenda?
+17:08:04 <Pilou> I made some PR related to "broken import"
+17:08:26 <mattclay> Link?
+17:08:49 <Pilou> https://public.etherpad-mozilla.org/p/ansible-fixing-broken-import
+17:09:23 <mattclay> Oh nice.
+17:09:27 * mattclay reads
+17:11:17 <mattclay> Pilou: Have you been able to test all of the affected modules? I know we don't have integration tests for all of them.
+17:11:55 <Pilou> nope
+17:12:09 <mattclay> Not that I expect these kinds of fixes to break things since they're relatively simple.
+17:12:20 <mattclay> Then again, sometimes it's the simple changes that surprise you. :)
+17:13:12 <mattclay> Some of them have more than just import changes: https://github.com/ansible/ansible/pull/27088/files
+17:14:28 <mattclay> Unless other changes are required, the import fixes should be the only changes in the PR (whether it's a single module or multiple modules being fixed). That will simplify the review process and also reduce the risk of breakage if we're making changes where we can't test them.
+17:14:52 <mattclay> Fixes unrelated to the imports are fine, but those should be in a separate PR.
+17:15:16 <mattclay> That will also help get the import fixes merged faster.
+17:16:28 <mattclay> If it's a module you're able to test though, noting that in the PR will help. We'll have more confidence that it's OK to merge if we know more complex changes have been tested.
+17:16:29 <Pilou> is there a special review process for the "fix broken import" PR ?
+17:17:28 <mattclay> As a general rule, simple PRs are easier to review and faster to merge. This is especially true when we don't have tests for the modules being changed.
+17:18:37 <mattclay> So when we clean up code issues like PEP 8, imports, etc. we want the cleanup to be the only thing in the PR so we can review and merge faster, with more confidence.
+17:18:59 <mattclay> Adding functional changes in the same PR just means it's much more likely to sit in the queue longer.
+17:20:47 <mattclay> To put it another way, breaking up changes into smaller pieces for PRs can result in things getting merged faster, when one set of changes is simple to review and one set of changes is more complex. If it's two PRs we can usually merge the simple changes quickly.
+17:21:39 <mattclay> If simple and complex changes that are not related (except by being on the same file) are in one PR, then it can only be merged together.
+17:21:43 <Pilou> I split the PR into 2 commits, removing get_exception isn't a functional changes
+17:21:55 <akasurde> o/
+17:21:58 <Pilou> i expected the maintainers to review these changes, will these be reviewed by the core team ?
+17:22:19 <mattclay> Splitting commits is good. It makes it easier to review.
+17:22:58 <mattclay> The core team often reviews sweeping fixes across the code base (like a single type of PEP 8 fix, import fix, etc.) and merges them. However, if there are other changes in the PR other than the targeted fix, you may need to wait for the maintainers to review and merge.
+17:23:43 <mattclay> That is why sometimes you'll see a single PR fix one type of issue across many files. Those types of PRs often change only a few lines in the same way across many files.
+17:23:50 <bcoca> not a fan at all of 'sweeping changes' cause its easy to miss the 'exception that actually needs the original code cause of reason'
+17:24:26 <Pilou> in order to merge these PR faster, now ansibot allows automerge when the only other update is deletions in test/sanity/*/*.txt (https://github.com/ansible/ansibullbot/pull/659).
+17:24:32 <mattclay> bcoca: What do you mean by "original code cause of reason"?
+17:24:54 <bcoca> code you are changing systematically, which normally is not an issue, but there are corner cases in which it was needed or it breaks
+17:25:43 <bcoca> say you have a funky `from ansible import *` which looks like  a 'real import' and you decide for 'code standards' that you should have NO * imports .... (doesnt apply anymore, but it has bitten people in past)
+17:26:59 <bcoca> the PEP8 changes alone introduced quite a few bugs, mostly people creating typos when splitting/joining lines or reformatting
+17:27:10 <bcoca> ^ hard to catch specially if typo passes pyflakes
+17:29:02 <Pilou> mattclay: it seems #26684 could be merged, what do you think ?
+17:31:46 <mattclay> I see it was updated after my last feedback, but I haven't had time to review. It was rebased, so there isn't just one additional commit to look at.
+17:34:42 <mattclay> I have it on my list to review again.
+17:34:54 <mattclay> Is there anything else?
+17:35:06 <Pilou> ok. About broken import pull-request, using an etherpad for the progression is ok or the wiki should be used ?
+17:35:24 <Pilou> I used an etherpad because it's world writable
+17:36:44 <mattclay> I think the etherpad is probably fine for now. If it doesn't work, we can always do something different later.
+17:41:08 <mattclay> Anything else?
+17:42:30 <Pilou> nope
+17:42:53 <mattclay> #endmeeting

@@ -1,0 +1,213 @@
+17:04:05 <gundalow> #startmeeting Testing Working Group
+17:04:06 <zodbot> Meeting started Thu Aug 31 17:04:05 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+17:04:06 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+17:04:06 <zodbot> The meeting name has been set to 'testing_working_group'
+17:04:18 <gundalow> #chair mattclay jtanner sivel Pilou
+17:04:18 <zodbot> Current chairs: Pilou gundalow jtanner mattclay sivel
+17:04:26 <gundalow> #info Agenda https://github.com/ansible/community/issues/114
+17:04:31 <gundalow> #topic What should qualify as a destructive test?
+17:04:33 <sivel> Generally speaking, a "destructive" test to me, is any thing that makes a change to my system, outside of creating and manipulating temporary files in a temp working dir
+17:04:40 <gundalow> #info https://github.com/ansible/ansible/blob/devel/docs/docsite/rst/dev_guide/testing_integration.rst#destructive-tests
+17:04:49 <gundalow> #info Though we may want to change this based on  https://github.com/ansible/ansible/blob/devel/docs/docsite/rst/dev_guide/testing_integration.rst#destructive-tests
+17:04:57 <mattclay> sivel: That is basically what we have defined currently in documentation.
+17:05:20 <gundalow> Is installing a package a destructive action?
+17:05:27 <Pilou> by the way, what is a "trivial package" ?
+17:05:29 <jtanner> destructive == don't run this on your primary laptop
+17:05:40 <sivel> yes, as it could be updating a package to a version I don't want
+17:05:53 <sivel> and if the tests remove it later, it could be removing a package I need installed
+17:05:57 <mattclay> sivel: Is there a difference between installing vs upgrading?
+17:06:09 <jtanner> an os package can be very destructive
+17:06:27 <sivel> mattclay: many package managers don't make that distinction, if you tell it to install, it will often upgrade an already installed package
+17:06:30 <bcoca> specially something like java.rpm
+17:06:34 <sivel> depending on if we specify 'state: latest'
+17:06:46 <sivel> or it could conflict with an already installed package
+17:07:03 <mattclay> sivel: Yeah, latest would definitely qualify as destructive. I was wondering if `state: present` should as well.
+17:07:04 <sivel> as bcoca mentions, openjdk vs javajdk
+17:07:16 <sivel> mattclay: yes, it could, in the example I jsut gave
+17:07:26 <gundalow> upgrading may also upgrade dependecies
+17:07:28 <jtanner> present implies install
+17:08:17 <sivel> effectively, I think *any* change it makes to a system, other than manipulating files in a temporary directory, are "destructive"
+17:08:17 <mattclay> That makes this easy then. We should keep the existing documented definition of destructive and update our existing tests to add the alias where it's currently missing.
+17:08:44 <alikins> anything package related that can 'writes' is probably destructive, include 'state:present'
+17:08:45 <sivel> if it changes the system, it's destructive
+17:09:02 <Pilou> should not "trivial" be removed from the current definition ?
+17:09:22 <gundalow> "trivial" = doesn't mean anything
+17:09:33 <mattclay> Pilou: Yeah, we should remove "trivial"
+17:10:05 * gundalow thinks any usage of package manager = distructive
+17:10:40 <mattclay> We can probably automate a test for that to require the `destructive` alias on tests which use package managers.
+17:10:42 <sivel> Honestly, I might add more to that:  These tests may make changes to your system, such as installing or removing packages, creating users, or deleting important files...
+17:11:20 <sivel> Like tests for the timezone module I would consider destructive
+17:11:24 <sivel> tests for the hostname module
+17:11:41 <mattclay> Although we could probably extend that to a list of modules which, if used in a test, would require it to be marked destructive.
+17:11:43 <sivel> sysctl...
+17:11:52 <sivel> but you all get the point
+17:12:32 <gundalow> any target that has "needs/root" and is doing more that changing permissions on a file is destructive
+17:12:57 <sivel> also depends on changing perms to what file
+17:13:06 <sivel> a file in my /etc/ dir, probably destructive
+17:13:06 <gundalow> sivel: Good point :)
+17:13:08 <jtanner> chmod 777 /etc/shadow
+17:13:18 <mattclay> I wouldn't call changing permissions on files private to the test destructive.
+17:13:31 <sivel> so basically anything that happens outside of a sandbox like in a tempdir, is destructive
+17:13:37 <bcoca> well, /etc/shadow is not 'private to the test'
+17:13:38 * mattclay nods
+17:13:54 <bcoca> sivel: any 'changes' outside sandbox
+17:14:06 <bcoca> plenty of stuff 'can happen' outside w/o being destructive
+17:14:28 <sivel> like what? just curious
+17:14:43 <jtanner> are there some current tests that we're trying to reclassify? aka, what brought this topic up?
+17:14:44 <bcoca> mostly checks/reads
+17:14:58 <bcoca> jtanner: some 'non destructive' tests were installing packages
+17:15:14 <sivel> ok, sorry, I wasn't as clear in that last statement, in a previous I mentioned:
+17:15:16 <sivel> I think *any* change it makes to a system, other than manipulating files in a temporary directory, are "destructive"
+17:15:22 <sivel> I used manipulation
+17:15:28 <mattclay> jtanner: It was brought up by someone who pointed out that the unarchive test was destructive because it installed packages.
+17:15:38 <sivel> so referring to change and manipulation
+17:16:24 <jtanner> the question i have is how do i make that designation now? when i create tests for a module, i don't add that target to the destructive/non playbooks
+17:16:28 <mattclay> So any changes made outside files/directories belonging soley to the test should qualify for being marked destructive?
+17:16:33 <jtanner> they're just auto-run when the module file changes
+17:16:43 <bcoca> mattclay:  +1 to that definition
+17:16:47 <sivel> mattclay: +1
+17:16:52 * abadger2k not sure he likes that
+17:16:56 <jtanner> is there something that should go into the alias file?
+17:17:07 <sivel> abadger2k: what are your concerns?
+17:17:11 <abadger2k> Lots of tests make sure packages are installed
+17:17:11 <mattclay> jtanner: We mark destructive tests with the `destructive` alias.
+17:17:22 <sivel> abadger2k: yes, and they should be considered destructive
+17:17:29 <abadger2k> (at dentist, could drop off at any time)
+17:17:30 <mattclay> abadger2k: That is why I brought this up. We're going to end up with a lot more of our tests being marked destructive.
+17:17:36 <jtanner> ok, that's my mistake then for some of the recent tests i wrote ... i failed to add that alias when i was also installing packages
+17:17:40 <sivel> as it could ensure a package is isntalled, that could impact how my system operates
+17:17:53 <abadger2k> Suvel: but in many cases those packages might already be installed
+17:17:59 <bcoca> check_mode: true on pkg tasks
+17:18:09 <bcoca> ^ you can ensure package is installed and skip otherwise
+17:18:09 <abadger2k> Maybe we should have a third category?
+17:18:09 <sivel> it's possible, but we shouldn't make that assumption
+17:18:34 <sivel> I mean I *never* run tests outside of docker, as I am pretty sure most are destructive, that don't say they are
+17:18:52 <sivel> I don't want any manipulation of my system when running non-destructive tests
+17:19:00 <sivel> They could have side effects that we aren't aware of
+17:19:07 <jtanner> i use docker/vagrant as well
+17:19:20 * abadger2k Back in the chair
+17:19:31 <sivel> someone decides to have a test install networkmanager for purposes of testing the network manager module
+17:19:41 <sivel> that is just an install, but can have adverse affects on a system
+17:19:49 <jtanner> you don't like networkmangler?
+17:19:53 <sivel> and in some places, users may already have that installed
+17:19:56 <sivel> lol
+17:20:31 <jtanner> i'm +1 on any tests that call a package module to be marked destructive
+17:20:32 <mattclay> As much as I don't like having to mark a lot more of our existing tests destructive, I think it's the right thing to do from a safety perspective.
+17:20:33 <sivel> it makes it too difficult to currate, if we allow it sometimes and not others
+17:21:03 <sivel> we should play it safe, and mark them as destructive, based on the definition mattclay gave
+17:21:21 <gundalow> Should needs/root imply destructive
+17:21:21 <sivel> it's too hard to know what outcome can happen
+17:21:32 <mattclay> I can update the docs to be more clear, add missing aliases, and see about adding a sanity test to catch some obvious cases where a test should be marked destructive and isn't.
+17:21:34 <gundalow> and we should swap to needing an opt in "non-destructive"
+17:21:46 <jtanner> that would make sense to me
+17:21:58 <mattclay> gundalow: You want to make destructive the default?
+17:22:15 <sivel> honestly assuming destructive, is safer :)
+17:22:26 <mattclay> I'm fine with that.
+17:22:28 <sivel> it's how I handle it now
+17:22:34 <gundalow> mattclay: throwing it out as a suggestion
+17:22:41 <bcoca> gundalow: not just 'root' as you can need root to read /dev or gather certain facts
+17:22:53 <sivel> I just assume they are all destructive already
+17:23:30 <gundalow> bcoca: sure, say if we ended up with a dmidecode module (that needs root to read /dev) that would get "needs/root" + "non-destructive"
+17:23:31 <mattclay> If we're going to make that change, I think I'd like to do it separately though.
+17:24:08 <alikins> would be interesting to see results of a 'strace -f -e open /path/to/the-test-runner'
+17:24:35 <jtanner> + -e execve
+17:25:29 <jtanner> probably going to loose the important stuff inside the connection plugin though
+17:27:16 <mattclay> Other than abadger2k, are there any objections to using "any changes made outside files/directories belonging only to the test should qualify for being marked destructive"?
+17:28:18 <jtanner> nope
+17:28:29 <bcoca> what is abadger2k's reason?
+17:29:08 <Pilou> "created by the test" instead of "belonging" ?
+17:29:21 <bcoca> ^ i would quallify outside of test/ or tmp dirs ... you might want to reuse resouces
+17:29:22 <mattclay> bcoca: I think he's busy at the dentist, so didn't have time to explain his concerns.
+17:30:19 <jtanner> "Lots of tests make sure packages are installed"
+17:30:40 <jtanner> i think he's saying that checkmode package tests are technically non-destructive
+17:30:49 <bcoca> ^ agreed
+17:30:56 <bcoca> but in checkmode .. they are not modifying ...
+17:30:59 <bcoca> so covered
+17:31:48 <bcoca> might need to fix a few tests to 'skip rest' when that requirement is not met
+17:32:24 <mattclay> bcoca: This is specifically for integration tests, so if requirements aren't present, we'll want to install them, thus making the tests destructive.
+17:33:05 <bcoca> mattclay: that depends on how the test is run, we could have it both ways
+17:33:32 <bcoca> check_mode: not destructive
+17:33:48 <bcoca> ^ so if invoked via 'non destrcutive' make it chekc mode and skip
+17:33:57 <bcoca> if invoked as destructive ... install and continue
+17:34:08 <mattclay> That would require extensive modifications to the existing tests.
+17:34:36 <sivel> as well as changes to ansible-test
+17:34:42 <mattclay> That too.
+17:35:25 <bcoca> not saying we do for tomorrow, but its only way i see of having the cake and eating it
+17:35:35 <mattclay> Considering we don't even have it working the way we want when there's only one way to run the tests, I think it's premature to try to support running them two different ways.
+17:35:52 <bcoca> well, currently they are all 'destructive'
+17:36:00 <bcoca> those that install packages
+17:36:33 <bcoca> so we can mark them that way .. then transition to making them 'depend' on a) running in destructive/non and b) package is installed or not
+17:37:15 <bcoca> which i agree, requires changes, but then would enable them to run on systems that already have the requirements w/o having to be destructive
+17:37:20 <mattclay> I'm not sure there's enough benefit to supporting that mode of operation vs the cost of implementing it.
+17:37:41 <mattclay> It's much easier to run the tests in a container or VM.
+17:37:56 <bcoca> i see my personal benefit (i would start running integrations normally) ... but i'm probably the minority in this case
+17:38:21 <mattclay> Instead I'd like to make it easier to use other containers or a VM, such as options for --lxd, --vagrant, etc.
+17:38:26 <bcoca> xcept when the container bombs ... as our tests do on gentoo/docker (not just me, there is ONE other guy experiencing it)
+17:38:49 <bcoca> mattclay: I would also prefer that
+17:39:04 <mattclay> bcoca: What's your environment of choice for that?
+17:39:10 <bcoca> lxc
+17:39:18 <bcoca> i also use virtualbox
+17:39:44 <mattclay> bcoca: Thanks. Added to my list.
+17:39:52 <sivel> mattclay: I'd be interested in helping make some VM images.  I've actually been working on making vmware esxi images based on the chef bento packer files
+17:40:12 <sivel> the chef bento packer files have been a good starting point
+17:40:31 <sivel> they actually have vagrant build functionality in them
+17:40:35 <mattclay> sivel: Before we do that we should finish moving the remaining test requirements into the tests.
+17:40:49 <sivel> no that is fine, and I'm not starting, but just letting you know
+17:40:55 <mattclay> sivel: That way customized VM/container images are mostly optimizations.
+17:41:11 <jtanner> i use geerlingguy's and the official vagrant boxes from the vendors. shouldn' need to make our own except to precache installs
+17:41:34 <mattclay> jtanner: Exactly. Thats why I've been moving the requirements into the tests.
+17:42:05 <sivel> I don't touch vagrant at all, so having flexible alternatives is a + :)
+17:42:24 <jtanner> staying out of the business of building VMs is always wise
+17:42:31 <mattclay> OK, so back to the original topic. Is there any more to discuss on the description for what's destructive, or should I go with what we've discussed so far?
+17:42:44 <sivel> I'm good with what we have discussed
+17:42:53 <mattclay> If so, I'll update the docs and add the missing `destructive` aliases.
+17:43:03 <jtanner> changes outside the test dir == destructive. shipit
+17:43:34 <gundalow> +1
+17:43:51 <abadger2k> I'd rather have a third category
+17:44:02 <mattclay> abadger2k: What would you put in this other category?
+17:44:16 <bcoca> outside test and tmp
+17:44:32 <bcoca> semi destructive?
+17:44:40 <abadger2k> Yeah
+17:46:57 <mattclay> abadger2k: Should we save the rest of this discussion for the next meeting so you're available to discuss?
+17:47:27 <mattclay> abadger2k: Or is your other category something we could add later?
+17:48:36 <abadger2k> Mattclay go ahead with what you need to do... I'm obviously incapacitated enough that I can't be a good participant
+17:49:07 <mattclay> #action mattclay to clarify in docs what qualifies as a destructive test
+17:49:27 <mattclay> #action mattclay to add `destructive` alias to tests as needed
+17:50:12 <mattclay> How about making tests destructive by default? What do people think about that?
+17:50:19 <gundalow> +1
+17:50:27 <bcoca> +1
+17:50:28 <sivel> +1
+17:50:33 <Pilou> +1
+17:50:36 <bcoca> easier and safer to mark 'non destructive'
+17:51:45 <mattclay> #action mattclay to update ansible-test and tests to make destructive the default
+17:53:19 <mattclay> Any other ideas or feedback on the handling of destructive tests?
+17:54:26 <alikins> wouldn't hurt if there were some documentation about how they are destructive, if known...
+17:54:44 <bcoca> well, that will be the default now
+17:54:46 <sivel> aren't playbooks supposed to be documentation? ;)
+17:54:56 <gundalow> sivel: exactly :)
+17:54:57 <sivel> "executable documentation"
+17:55:46 <jtanner> i have said as much to some people, and they gave me a dirty look
+17:56:18 <agaffney> "the playbook has comments. what more do you want?"
+17:56:27 <jtanner> "pictures"
+17:56:45 <agaffney> ASCII diagrams!
+17:57:01 <jtanner> "video"
+17:57:07 <mattclay> #topic Open Floor
+17:57:28 <Pilou> Should not "test pull request" be added to "Issue Type" list in default GitHub pull request description ?
+17:57:28 <mattclay> We're almost to the end of our scheduled time. Anything else before we end the meeting?
+17:57:47 <jtanner> Pilou: if it does, i need to update the bot
+17:58:11 <gundalow> Pilou: For PRs we can inspect the files changed. Any change to `./test/` will add the `testing_pull_request` label
+17:58:20 <jtanner> bugfixes can include new tests, so i haven't pushed to make it either/or
+17:58:23 <mattclay> jtanner: Would having that issue type be of any help to the bot?
+17:58:34 <Pilou> jtanner: i saw this in bot source code
+17:59:08 <Pilou> https://github.com/ansible/ansibullbot/blob/master/ansibullbot/utils/extractors.py#L276
+18:01:38 <jtanner> yeah, it'll extract it properly but i'm not sure it will set the label correctly
+18:01:48 <Pilou> k
+18:02:04 <jtanner> if test pr is a real type that we want to promote/use, then yes it should be in the list of issue types in the template
+18:03:03 <jtanner> my understanding was that PRs with tests should just be labeled "tests" to identify tests were included, but not override feature/bugfix as the top level type
+18:03:24 <gundalow> What's the problem we are trying to solve?
+18:03:45 <jtanner> - Should not "test pull request" be added to "Issue Type" list in default GitHub pull request description ?
+18:04:02 <gundalow> That's not a problem
+18:04:20 <gundalow> We already have test_pull_requests
+18:05:41 <alikins> fiddling around strace'ing some intg tests, 'subversion' might should be destructive . It sets up ~/.subversion if it doesn't exist and doesn't remove it. Unsure if it will modify
+18:10:32 <mattclay> Anything else?
+18:11:10 <mattclay> #endmeeting

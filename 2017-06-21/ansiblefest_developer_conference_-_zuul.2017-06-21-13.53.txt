@@ -1,0 +1,153 @@
+=========================================================
+#ansible-meeting: AnsibleFest Developer Conference - Zuul
+=========================================================
+
+
+Meeting started by jimi|ansible at 13:53:44 UTC. The full logs are
+available at
+https://meetbot.fedoraproject.org/ansible-meeting/2017-06-21/ansiblefest_developer_conference_-_zuul.2017-06-21-13.53.log.html
+.
+
+
+
+Meeting summary
+---------------
+* Zuul deep dive  (jimi|ansible, 13:55:24)
+  * LINK:
+    https://public.etherpad-mozilla.org/p/ansible-summit-june-2017-Zuul
+    (jeblair, 13:56:16)
+  * zuul components - scheduler / nodepool / executors / nodes
+    (jimi|ansible, 13:56:33)
+  * content is normally run on nodes, not executors  (jimi|ansible,
+    13:56:59)
+  * jobs can run in two modes: trusted and untrusted  (jimi|ansible,
+    13:57:36)
+  * there's a github app to add the zuul integration  (jimi|ansible,
+    14:00:46)
+  * lots of things can trigger zuul jobs - commits, comments, etc
+    (jimi|ansible, 14:02:06)
+  * jobs definitions are stored in the repo, and can be run via any
+    instance of zuul  (jimi|ansible, 14:03:17)
+  * design philosophy is that you should be able to configure so that
+    only the system merges, not people.  (abadger1999, 14:04:53)
+  * a combination of human approval and tests passing result in changes
+    merging.  (jlk, 14:05:19)
+  * ACTION: McKerr to get Jessy and jtanner to speak to each other
+    (gundalow, 14:09:40)
+  * migration proposal: Step 1: have openstack zuul trigger some tests
+    off of ansible/ansible commits.  (abadger1999, 14:12:32)
+  * migration proposal Step 1: Jobs would be defined in ansible/ansible
+    repo  (abadger1999, 14:13:07)
+  * migration proposal: Step 1.5: ansible-container  can use bonnieCI
+    (zuul v3 running for ibm) instead of travis.  (abadger1999,
+    14:15:05)
+  * migration proposal: Step 2: Operations: Who runs zuul instance?
+    Where, zuul control? Where, zuul build resources?  When: timeline
+    for migration?  (abadger1999, 14:16:00)
+  * migration proposal: Step 2: existing repos for shared jobs
+    (abadger1999, 14:16:27)
+  * migration proposal: Step 2: existing repos for shared jobs which can
+    help us get started  (abadger1999, 14:16:41)
+  * design philosophy is that you should be able to configure so that
+    only the system merges, not people.  (abadger1999, 14:17:30)
+  * migration proposal: Step 1: have openstack zuul trigger some tests
+    off of ansible/ansible commits.  (abadger1999, 14:17:37)
+  * migration proposal Step 1: Jobs would be defined in ansible/ansible
+    repo  (abadger1999, 14:17:43)
+  * migration proposal: Step 1.5: ansible-container  can use bonnieCI
+    (zuul v3 running for ibm) instead of travis.  (abadger1999,
+    14:17:49)
+  * migration proposal: Step 2: Operations: Who runs zuul instance?
+    Where, zuul control? Where, zuul build resources?  When: timeline
+    for migration?  (abadger1999, 14:18:00)
+  * migration proposal: Step 2: existing repos for shared jobs which can
+    help us get started  (abadger1999, 14:18:04)
+  * Who?  Ansible ir RH Software Factory team or partner with IBM (use
+    Bonnie CI)?  (abadger1999, 14:18:36)
+  * dirty hacks (1): log streaming for command/shell tasks
+    (abadger1999, 14:31:05)
+  * monty explaining that they have to fork a saemon process to stream
+    command output  (abadger1999, 14:34:15)
+  * monty explaining tha the command module has been forked to stream
+    data to zuul_console (the daemon process)  (abadger1999, 14:34:59)
+  * monty explaining that controller side, there's a zuul-stream
+    callback plugin that intercepts stdout from the command and spawns
+    streaming client thread, logs lines.  (abadger1999, 14:36:21)
+  * explaining that the logs can then be streamed to a clientvia a
+    finger protocol.  (abadger1999, 14:36:57)
+  * LINK:
+    http://git.openstack.org/cgit/openstack-infra/zuul/tree/zuul/ansible/library/command.py?h=feature/zuulv3
+    (jeblair, 14:42:03)
+  * log streaming brainstorming: For streaming, implement update_json
+    (abadger1999, 14:44:47)
+  * log streaming brainstorming: For the forking of command module, add
+    a parameter to allow run_command to use a single pip for stdout and
+    stderr  (abadger1999, 14:45:32)
+  * log streaming brainstorming: Perhaps can implement streaming by
+    modifying what's done with async instead of implementing
+    update_json.  (abadger1999, 14:46:09)
+  * Ansible restricted environment  (abadger1999, 14:47:00)
+  * zuul uses "bubblewrap" which is a user-space lightweight container
+    without needing to have root to create them.  (abadger1999,
+    14:47:54)
+  * LINK: https://github.com/projectatomic/bubblewrap   (jeblair,
+    14:47:54)
+  * LINK: https://github.com/projectatomic/bubblewrap   (abadger1999,
+    14:48:09)
+  * Look in
+    http://git.openstack.org/cgit/openstack-infra/zuul/tree/zuul/ansible?h=feature/zuulv3
+    for some of the hacks that are being used.  (jeblair, 14:52:08)
+  * PLEASE think of novel ways to break out of an Ansible environment,
+    so that we can evaluate them against zuul protections.  (jlk,
+    15:05:01)
+  * LINK:
+    http://git.openstack.org/cgit/openstack-infra/zuul/tree/zuul/ansible/action/unarchive.py?h=feature/zuulv3
+    (pabelanger, 15:08:49)
+
+Meeting ended at 15:27:35 UTC.
+
+
+
+
+Action Items
+------------
+* McKerr to get Jessy and jtanner to speak to each other
+
+
+
+
+Action Items, by person
+-----------------------
+* jtanner
+  * McKerr to get Jessy and jtanner to speak to each other
+* **UNASSIGNED**
+  * (none)
+
+
+
+
+People Present (lines said)
+---------------------------
+* jlk (51)
+* abadger1999 (45)
+* misc (32)
+* jimi|ansible (32)
+* jtanner (32)
+* bcoca (19)
+* jeblair (15)
+* gundalow (11)
+* zodbot (11)
+* pabelanger (5)
+* Shrews (3)
+* shertel (2)
+* P-NuT (1)
+* mordred (0)
+* samdoran (0)
+* thaumos (0)
+
+
+
+
+Generated by `MeetBot`_ 0.1.4
+
+.. _`MeetBot`: http://wiki.debian.org/MeetBot

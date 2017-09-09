@@ -1,0 +1,229 @@
+16:03:54 <privateip> #startmeeting Networking Working Group
+16:03:55 <zodbot> Meeting started Wed May 25 16:03:54 2016 UTC.  The chair is privateip. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:03:55 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:03:55 <zodbot> The meeting name has been set to 'networking_working_group'
+16:04:04 <privateip> #chair gundalow
+16:04:04 <zodbot> Current chairs: gundalow privateip
+16:04:14 <privateip> whos all here?
+16:04:19 <mhite> Me.
+16:04:21 * gundalow waves
+16:04:28 <gundalow> agenda, as always
+16:04:33 <gundalow> agenda, as always https://github.com/ansible/community/issues/101
+16:04:36 * kei is here!
+16:05:14 * kei will grab a coffee and get back to here in a bit :)
+16:05:17 <privateip> lets start with the existing news
+16:05:23 <privateip> https://groups.google.com/forum/?hl=en#!topic/ansible-announce/01eDrvcXdY0
+16:05:27 <privateip> 2.1 Final is out!!
+16:05:31 <gundalow> If anyone would like to discuss anything please add it to https://github.com/ansible/community/issues/101
+16:05:52 <kei> yay!
+16:05:58 <kei> congrats everyone!
+16:06:26 <gundalow> #info 2.1 has been released. Now supports Cisco, HPE, Juniper, Arista Networks, Cumulus Networks
+16:06:30 <privateip> networking support is officially official :)
+16:07:06 <privateip> lets start with an update on facts from last week
+16:07:18 <kei> networking will be "officially" hot at next ansible fest! :)
+16:07:26 <privateip> lol
+16:07:43 <privateip> #topic network facts
+16:07:54 <privateip> last week i mentioned unifying the facts modules across implementations
+16:08:07 <privateip> i built a quick prototype for everyone to see
+16:08:12 <privateip> https://gist.github.com/privateip/562aa722b7306f25f6d414cab38e8eae
+16:08:29 <privateip> looking for feedback
+16:08:39 <gundalow> #info unifying the facts modules across implementations https://gist.github.com/privateip/562aa722b7306f25f6d414cab38e8eae
+16:08:40 * kei is now loading...
+16:08:48 <privateip> the idea will be to replicate that across each supported platform
+16:09:21 <privateip> focus on base system facts ... (ie no bgp, ospf, counters, etc) .. that will come later
+16:09:46 <privateip> please provide any comments in the issue for todays meeting
+16:10:04 <bcoca> privateip: been thinking about 'stackable connection plugins', i might have a way to make it work, which should solve your auth issues
+16:10:15 <kei> sure, but it's still loading...
+16:10:24 * privateip is all ears (or eyes as it were)
+16:10:38 <kei> here you go!
+16:10:53 <bcoca> need new class of connectino plugins, minimal deps, being able to take 'predigested' play_context and shell settings
+16:11:02 <gundalow> #chair bcoca
+16:11:02 <zodbot> Current chairs: bcoca gundalow privateip
+16:11:23 <bcoca> ^ still working out kinks, but i think it would be possible to create them in such a way that ziploader imports them for the 'execution script' and then uses them
+16:11:44 <bcoca> either use current connection plugins with a specific flag or create 'proxy plugins' with these requirements
+16:11:53 <mhite> RE: the unified facts. I am curious as to why they are namespaced with ansible_net ?
+16:12:09 <privateip> actually was thinking about the same ... since we added env_fallback we might be able to do the same with env vars
+16:12:11 <mhite> As opposed to the existing naming (ansible_)
+16:12:46 <privateip> mhite: i wanted to have a common set that was the same across all implementations and still allow specific OSs the ability to do ansible_f5_<whatever> for instance
+16:13:16 * kei is also curious, it's not ansible_*, instead of ansible_net_*
+16:13:28 <mhite> yes, what kei ^ said
+16:14:30 <privateip> bcoca: https://gist.github.com/privateip/bceb22eb0006d13040216e40faa591ff
+16:14:58 <privateip> i wanted to differentiate from standard facts
+16:15:03 <privateip> ansible_hostname for instance
+16:15:14 <privateip> ansible_hostname vs ansible_net_hostname
+16:15:22 <privateip> i didn't want to override system facts
+16:15:30 <privateip> so introspection can be used with delegate_to
+16:15:35 <privateip> for instance
+16:15:41 <privateip> but im open to suggestions here
+16:16:00 <kei> privateip: can you elaborate a bit on introspection and delegate_to?
+16:16:16 <mhite> privateip: Since Ansible doesn't run on-box for most network devices, and someone might collect facts on the localhost making the connection?
+16:16:24 <privateip> right
+16:16:28 <mhite> Ok.
+16:17:03 <privateip> kei just be able to access the facts from the delegate_to host and not hammer them with network device facts
+16:17:40 <bcoca> privateip: kind of like that, but allowing for hostvars 'ansible_<conntype>_user/host/port/etc'
+16:18:31 <kei> privateip: bcoca: i see...
+16:18:36 <privateip> yep that makes sense
+16:18:49 <privateip> qalthos: can you work with bcoca to hammer this out?
+16:19:07 <bcoca> i'll try to get proposal draft this weekend
+16:19:11 <Qalthos> sure
+16:19:40 <kei> privateip: i'm just curious if this doesn't confuse Dev/NetOps
+16:19:45 <Waqas> @privateip, would it possible to add some use cases/tutorials? Would be great for new comers.
+16:19:47 * kei is still new to Ansible... :)
+16:20:35 <privateip> Waqas: im doing a monthly webinar series on that vary topic :)
+16:20:38 <privateip> details here: https://www.ansible.com/webinar-series-network
+16:20:57 <kei> privateip: oh, you do!?
+16:21:05 <privateip> the webinar is focused on individuals that are absolutely new to Ansible
+16:21:07 <gundalow> #action Qalthos and bcoca to do a proposal for naming
+16:21:33 <Waqas> I very much appreciate that, however wouldn't it be great to include some realworld use cases part of the documentation, as we build Ansible?
+16:21:38 <kei> privateip: is that the same one you did last month, i believe?
+16:21:48 <privateip> kei: yes
+16:22:03 <privateip> Waqas: its a great idea... are you volunteering to help? :)
+16:22:08 <kei> privateip: with new addition, too, or more of as is?
+16:22:21 <Waqas> I am new to ansible myself, hence the IDEA :)
+16:22:22 <privateip> kei: more of as is
+16:22:25 <caphrim007> @mhite did we ever get any resolution for that merge that went into an f5/ directory instead of network/f5? I cant find the PR
+16:22:29 <Waqas> I can think of some use cases though
+16:22:43 <privateip> can you update the meeting issue with your thoughts?
+16:22:52 <mhite> caphrim007: Let me dig up the PR.
+16:23:21 <mhite> https://github.com/ansible/ansible-modules-extras/pull/555
+16:23:44 <privateip> ok any other thoughts on facts?
+16:23:45 <mhite> https://github.com/ansible/ansible-modules-extras/tree/devel/f5
+16:23:47 <Waqas> like, End to End VRF Provisioning
+16:23:50 <gundalow> privateip: Where would you like use cases attached to, the meeting agenda, or is there an issue/PR for this already?
+16:23:51 <mhite> It's still in the wrong directory.
+16:23:59 <privateip> hmmm good question
+16:24:03 <privateip> suggestion?
+16:24:14 * privateip thinks issue
+16:24:21 <gundalow> aye, it will be longer than a meeting
+16:24:26 <Waqas> privateip: will try to add my thoughts into meeting issue.
+16:24:34 <privateip> thanks Waqas
+16:24:50 <caphrim007> @mhite ok, added it to the agenda
+16:24:58 <caphrim007> @privateip ^^
+16:25:01 <gundalow> #action privateip to raise issue for network facts and copy feedback from https://github.com/ansible/community/issues/101
+16:25:22 <privateip> #topic f5
+16:25:37 <privateip> mhite aphrim007 you have the floor
+16:25:50 <caphrim007> we had a question about this PR
+16:25:51 <caphrim007> https://github.com/ansible/ansible-modules-extras/pull/555
+16:25:54 <christx2> hello
+16:25:58 <gundalow> christx2: Hi :)
+16:26:06 <caphrim007> comments at the bottom that @alikins made
+16:26:30 <gundalow> #info https://github.com/ansible/ansible-modules-extras/pull/555 added code into f5 rather than network/f5
+16:26:41 <caphrim007> in the commit he mentioned, the module is in the wrong directory?
+16:26:50 <caphrim007> https://github.com/ansible/ansible-modules-extras/commit/677a2dd66d5e1788eacc5d849ce6e1cc7d799833
+16:26:51 <gundalow> hum, confused
+16:27:01 <gundalow> https://github.com/ansible/ansible-modules-extras/pull/555/files shows it in network/f5
+16:27:26 <caphrim007> maybe it was fixed then?
+16:27:37 <caphrim007> there was never a followup mentioning if it were or not
+16:27:42 <caphrim007> just curious
+16:27:52 <gundalow> ah, it's still wrong
+16:27:57 <privateip> still wrong
+16:28:10 <gundalow> #info https://github.com/ansible/ansible-modules-extras/tree/devel/f5 shows ansible-modules-extras/f5 still exists
+16:28:53 * privateip still trying to digest the why
+16:29:33 <gundalow> I think it's safe to just move bigip_gtm_virtual_server.py and delete the old directory
+16:29:33 <privateip> caphrim007: mhite: does the module look good to you?
+16:29:40 <privateip> yeah i think the same
+16:30:08 <privateip> i can take the action to move it
+16:30:34 <mhite> privateip: wasn't able to review myself since I do not have access to GTM, but I believe caphrim007 did
+16:31:16 <privateip> i will resubmit as PR
+16:31:25 <privateip> caphrim007 please +1 if you are good with it
+16:31:28 <privateip> and i will merge it
+16:31:58 <mhite> I am thoroughly confused how it ended up where it did. The PR says 'network/f5/bigip_gtm_virtual_server.py' yet it appeared in f5/bigip_gtm_virtual_server.py when it got merged.
+16:32:10 <gundalow> #action caphrim007 to review bigip_gtm_virtual_server.py
+16:32:12 <privateip> yeah im not sure either
+16:32:19 <privateip> but we can get it cleaned up
+16:32:30 <gundalow> #action privateip to move bigip_gtm_virtual_server.py (and delete old directory and __init__.py)
+16:32:45 <privateip> anything else for f5?
+16:32:58 <mhite> Nothing from me.
+16:33:23 <privateip> #topic template updates for 2.2
+16:33:27 <mhite> caphrim007 has a test harness available that can now get triggered if you submit a PR to the F5 repo
+16:33:35 <mhite> Not sure if he wanted to mention that
+16:33:52 <privateip> kei this is for you
+16:33:58 <privateip> going to add the content argument
+16:34:03 <kei> privateip: oh, for me?
+16:34:10 <kei> :)
+16:34:17 <privateip> want to make sure its still relevent
+16:34:30 <kei> what do you mean by content argument?
+16:34:55 <privateip> https://github.com/ansible/ansible-modules-core/issues/3340
+16:35:04 <caphrim007> @mhite that's kinda sorta available. i'm still fumbling with it, but it's getting there
+16:35:22 <kei> oh, i see... ;)
+16:35:57 <kei> to have this argument, across the board?
+16:36:01 <gundalow> #info ops_template.py: content argument to take the yaml/json variable https://github.com/ansible/ansible-modules-core/issues/3340
+16:36:11 <privateip> yes
+16:36:16 <kei> for all the *template.py module?
+16:36:24 <kei> even template:?
+16:36:32 <privateip> template already has
+16:36:39 <kei> oh, awesome!
+16:36:49 <privateip> hence why i ask if you still needed
+16:37:02 <christx2> just update my meeting notes for consideration, have to board a plane from denmark to london
+16:37:18 <kei> i think it's cool to have this argument
+16:37:19 <privateip> christx2: ok safe travels
+16:37:24 <kei> for quick testing, especially.
+16:37:28 <kei> :)
+16:37:49 <privateip> ok thanks
+16:37:58 <kei> and I can write lots of test for that :)
+16:38:13 <privateip> lol .. i dont' doubt it :)
+16:38:31 <gundalow> Hi
+16:38:45 <gundalow> Can we swap to christx2's issue as he's only got two mins
+16:38:54 <kei> sure!
+16:39:01 <privateip> #topic nuage submission
+16:39:08 <gundalow> #info https://github.com/ansible/ansible-modules-extras/pull/2268
+16:39:20 <privateip> we just need some code to review and approve
+16:39:23 <privateip> for PR
+16:39:31 <christx2> and it will take only two min - basically for the nuage submission, we have a distributed team, and would kindly request the initial creation of the directory creation to load the code
+16:39:40 <christx2> so i can point the guys sitting across europe to do it
+16:39:51 <christx2> so i have this chicken or the egg issue basically
+16:40:00 <privateip> why?
+16:40:04 <privateip> just include init with your first PR
+16:40:07 <christx2> different licenses in play that we are fixing
+16:40:09 <christx2> ah ok
+16:40:10 <christx2> sure
+16:40:26 <christx2> okay, so as part of the PR in this case will add the entire tree
+16:40:37 <privateip> one PR per module please
+16:40:46 <christx2> its a set
+16:40:50 <privateip> otherwise it gets to unwieldy to manage
+16:41:07 <christx2> 39 modules
+16:41:07 <privateip> please do one per PR
+16:41:09 <christx2> got it
+16:41:10 <privateip> thats okay
+16:41:12 <privateip> we will work through it
+16:41:13 <christx2> need to go, thanks!
+16:41:16 <alikins> caphrim007: re f5.. er, looking
+16:41:26 <christx2> understood, issue sorted  - next topic ;0
+16:41:30 <christx2> thanks p
+16:42:14 <caphrim007> @privateip i think i gave it a shipit, but it was just in the wrong dir
+16:42:16 <gundalow> #action christx2 will ensure that the firt Pr in netvirt adds the __init__.py. He will also ensure that every module goes in it's own PR
+16:42:36 <gundalow> caphrim007: hum, aye, should it be in networ/netvirt/nuage?
+16:42:40 <gundalow> -typos
+16:42:59 <privateip> you were right the first time gundalow
+16:43:02 <caphrim007> it should be in network/f5/...
+16:43:12 <caphrim007> per @perzizzle's original pr
+16:43:12 <kei> gundalow: i thought that's what we agreed last week, i guess...
+16:43:17 <gundalow> erm
+16:43:21 <caphrim007> network/f5/bigip_gtm_virtual_server.py
+16:43:24 <privateip> netvirt/nuage
+16:43:37 <gundalow> I was talking about nuage
+16:43:56 <gundalow> why extras/netvirt/nuage, rather than network/netvirt/nuage?
+16:44:08 <gundalow> why extras/netvirt/nuage, rather than extras/network/netvirt/nuage?
+16:44:11 <privateip> we agreed last week to separate physical network from virtual overlay
+16:44:16 <gundalow> ah, OK
+16:44:56 <gundalow> so the first PR should also add a extras/netvirt/README.md to explain the difference as well?
+16:45:14 <privateip> no the readme is specific to nuage (or it should be)
+16:45:37 <privateip> it not we need to correct it :)
+16:45:50 <privateip> i haven't even looked through the PR in depth as there is no code
+16:46:32 <privateip> all make sense?
+16:46:59 <gundalow> yup
+16:47:30 <gundalow> I've added a comment to  https://github.com/ansible/ansible-modules-extras/pull/2268
+16:47:34 <gundalow> next!
+16:47:37 <privateip> ok i believe thats everything for this week ... any final parting comments?
+16:48:03 <gundalow> I cut off the previous topic, was everything covered
+16:48:04 <gundalow> ?
+16:48:26 * kei was good. :)
+16:48:27 <gundalow> #topic Open floor
+16:49:19 <gundalow> anything else?
+16:49:34 <alikins> caphrim007:  I screwed that up.  I did a format-patch/am cycle to avoid some rebase messiness and must of applied it a dir too high
+16:49:52 * kei is good for this week, with the official 2.1 release! :)
+16:49:53 <caphrim007> @alikins alrighty
+16:49:58 <gundalow> alikins: ah, OK. Easily done. Thanks for letting us know :)
+16:50:11 <gundalow> privateip: anything else>
+16:50:13 <privateip> ok thanks as always everyone ... Happy Ansible 2.1 with network support .... see you next week
+16:50:22 <gundalow> #endmeeting

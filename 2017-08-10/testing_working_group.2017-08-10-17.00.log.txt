@@ -1,0 +1,45 @@
+17:00:16 <mattclay> #startmeeting Testing Working Group
+17:00:16 <zodbot> Meeting started Thu Aug 10 17:00:16 2017 UTC.  The chair is mattclay. Information about MeetBot at http://wiki.debian.org/MeetBot.
+17:00:16 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+17:00:16 <zodbot> The meeting name has been set to 'testing_working_group'
+17:00:47 * mattclay waits for people to show up
+17:00:52 <caphrim007> o/
+17:00:58 <mattclay> #chair caphrim007
+17:00:58 <zodbot> Current chairs: caphrim007 mattclay
+17:02:16 <Pilou> o/
+17:02:20 <mattclay> #chair Pilou
+17:02:20 <zodbot> Current chairs: Pilou caphrim007 mattclay
+17:02:42 <mattclay> I'll give a quick update on CI before we get started. Also, gundalow is on PTO this week, so he won't be attending.
+17:03:22 <mattclay> Shippable has been having performance issues this week. There have been two main issues: 1) CI jobs have been getting stuck and timing out after 1 hour and 2) CI jobs have been slow to start processing from the queue
+17:03:53 <mattclay> #info Shippable support thinks they have resolved the timeouts we were seeing this week.
+17:04:09 <mattclay> #info Shippable support is still working on improving the situation with jobs starting slowly.
+17:04:50 <mattclay> #topic Testing macOS 10.12 in CI (https://github.com/ansible/community/issues/114#issuecomment-320581597)
+17:05:13 <mattclay> spredzy: ^ This topic is yours. Are you around?
+17:07:37 <mattclay> I can give some details on our current macOS testing in CI. We can discuss further if spredzy shows up later.
+17:08:35 <mattclay> We're currently testing macOS 10.11 in CI.
+17:08:47 <mattclay> With our current CI resources, we can only test one version of macOS in CI.
+17:09:08 <mattclay> So we'll either need to switch from 10.11 to 10.12 or allocate more resources for macOS testing.
+17:10:01 <mattclay> Any questions or thoughts before we move on?
+17:10:12 <caphrim007> nope
+17:11:02 <mattclay> #topic Open Floor
+17:11:24 <mattclay> That's it for the agenda. Does anyone have something they'd like to discuss?
+17:11:47 <caphrim007> mattclay: ganeshrn i think has a fix for that bug i was seeing the other day
+17:11:50 <caphrim007> https://github.com/ansible/ansible/pull/27994
+17:12:20 <mattclay> Excellent. That's good to hear.
+17:12:41 <caphrim007> also, mattclay, is there any feedback on the future of internal tests reporting to external sources
+17:12:50 <caphrim007> i think somebody was saying zuul for that?
+17:13:25 <mattclay> We should have more options for things like that once we're able to start using Zuul.
+17:13:50 <caphrim007> right, is there any progress or things to say about that right now?
+17:14:23 <mattclay> I don't have any updates there. You might be able to get some additional details in the #zuul channel.
+17:14:28 <caphrim007> k
+17:16:35 <mattclay> Anything else?
+17:16:48 <Pilou> I have added some unit tests for rhn_register (merged), rhn_channel (PR open #26841) and circonus_annotation (PR open #26831). I plan to add integration tests to alternatives module.
+17:18:00 <mattclay> Very nice. It's good to see more tests being added. Hopefully we can keep improving our code coverage results.
+17:18:38 <Pilou> Some PR related to "broken import" are still open, for example: #26839 :-/
+17:19:18 <Pilou> that's all :)
+17:19:50 <mattclay> Yeah, PRs which we can't test in CI are likely to be merged slower than those we can, since there are fewer people able to test the changes and it usually takes longer to do so.
+17:21:03 <mattclay> Speaking of testing things in CI, I did forget one thing in my update.
+17:21:15 <mattclay> We're working on enabling testing of Azure modules in CI.
+17:21:50 <mattclay> I'm hoping we'll have something working by next week, but we're still working out a few issues.
+17:22:56 <mattclay> That's it from me. If nobody has anything else, I'll end the meeting in ~1 minute.
+17:24:36 <mattclay> #endmeeting

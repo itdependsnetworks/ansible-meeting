@@ -1,0 +1,220 @@
+17:00:03 <gundalow> #startmeeting Testing Working Group
+17:00:03 <zodbot> Meeting started Thu Aug 25 17:00:03 2016 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+17:00:03 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+17:00:03 <zodbot> The meeting name has been set to 'testing_working_group'
+17:00:12 <gundalow> #chair gundalow mattclay
+17:00:12 <zodbot> Current chairs: gundalow mattclay
+17:00:19 <ryansb> hi folks
+17:00:32 <gundalow> #topic Roll call
+17:00:33 <gundalow> Who is here?
+17:00:33 <gundalow> Who is new this week?
+17:00:40 <gundalow> hey ryansb
+17:00:41 <ryansb> ryansb is here
+17:00:46 <gundalow> :)
+17:00:53 <Reaper> Hi
+17:01:00 <gundalow> hey Reaper
+17:01:02 <shertel> Hi gundalow
+17:01:03 <Reaper> I'm new to this forum
+17:01:06 * mattclay waves
+17:01:16 <gundalow> Reaper: Care to introduce yourself?
+17:01:57 <Reaper> I'm a network test engineer.
+17:02:07 <Reaper> New to the open source community
+17:02:11 <gundalow> e.g. How/where you use and what your interest in testing is
+17:02:57 <Reaper> We use python as an automation tool to evaluate the modules
+17:03:40 <Reaper> Interested to do more python coding and participate in the open source community
+17:03:53 <Reaper> Used ansible to write simple playbooks
+17:04:10 <Reaper> just to execute very basic testcases
+17:04:16 <Reaper> interested to explore more
+17:04:52 <gundalow> who else is new/lurking
+17:04:59 <gundalow> linuxdynasty: you around?
+17:05:02 <sivel> I am lurking
+17:05:15 <gundalow> skg_net: sivel hey :)
+17:05:48 <gundalow> #topic Update on internal work
+17:05:49 <bruno_cgl> first time to open community,from networking testing background
+17:06:01 <gundalow> bruno_cgl: Welcome
+17:06:31 <skg_net> gundalow Hi
+17:06:51 <gundalow> So quick update on what I've been working on
+17:08:37 <gundalow> I'm working on playbooks to build up test VMs for the different network appliances (ansible.com/network). Ansible 2.2 will have a large network module refactor in, so this will help test that
+17:09:03 <gundalow> We will also be adding in pep8(ish) checks for these modules once the feature work is done
+17:09:41 <linuxdynasty> yeah
+17:09:47 <linuxdynasty> im around
+17:10:17 <gundalow> mattclay: would you like to give an update
+17:11:20 <mattclay> This week I've enabled integration tests for OS X and Python 3 on Shippable.
+17:11:52 <mattclay> abadger1999 has been making great progress with Python 3 compatibility, and the tests on Shippable will help prevent regressions.
+17:12:32 <gundalow> \o/
+17:12:41 <mattclay> Not so recent additions included enabling integration tests on Shippable for FreeBSD and Windows.
+17:14:27 <mattclay> There are still some integration tests for Python 3, FreeBSD and OS X that are disabled, as they're not currently passing.
+17:14:43 <mattclay> We'll be working on fixing those over the next few weeks.
+17:14:58 <mattclay> Any contributions to help in that area are definitely appreciated.
+17:15:02 <gundalow> Which I guess brings us nicely onto asking for help
+17:15:41 * gundalow finds the links
+17:15:55 <gundalow> For Python3
+17:16:00 <gundalow> https://github.com/ansible/ansible/blob/devel/test/utils/shippable/python3-test-tag-blacklist.txt
+17:16:03 <gundalow> https://github.com/ansible/ansible/blob/devel/test/utils/shippable/python3-test-target-blacklist.txt
+17:16:45 <gundalow> and for freebsd. & osx
+17:16:50 <gundalow> https://github.com/ansible/ansible/blob/devel/test/utils/shippable/remote-integration.sh#L17
+17:16:57 <gundalow> https://github.com/ansible/ansible/blob/devel/test/utils/shippable/remote-integration.sh#L145
+17:17:31 <gundalow> We'd *Really* welcome help on getting those lists reduced
+17:17:50 <gundalow> I'm sure there are some modules you use regularly in there and care about
+17:18:04 <gundalow> :)
+17:18:20 * gundalow looks round at the tumbleweed
+17:19:52 <sivel> we need a topic?
+17:20:05 <gundalow> sivel: ?
+17:20:20 <sivel> I have something to talk about, just making sure we are ready to move on
+17:20:30 <gundalow> sure
+17:20:35 <sivel> ansible-testing
+17:20:57 <sivel> I received the go ahead from our IP legal team, that I can move that repo
+17:21:04 <gundalow> #topic ansible-testing
+17:21:19 <sivel> so assuming that we are still interested, I just need to work with someone to move it to the ansible org
+17:21:20 <gundalow> #info < sivel> I received the go ahead from our IP legal team, that I can move that repo
+17:21:56 <sivel> which would require someone with admin access to the ansible org
+17:22:33 <gundalow> So would this move to github.com/ansible/ansible-testing /
+17:22:50 <sivel> yes, assuming that everyone is still ok with that
+17:23:15 <abadger1999> +1
+17:23:17 <gundalow> sure, or /ansible-validate-modules
+17:23:20 <sivel> it had been discussed a while ago, but I hadn't gotten the legal go ahead until just before my vacation, so I didn't try to do anything about it then
+17:23:38 <sivel> I had invisioned this going farther than just modules, which is why it had a more generic name
+17:23:39 <gundalow> Sure, thanks for progressing with it. We all know legal stuff can take a while
+17:23:52 <gundalow> an, OK
+17:23:59 <sivel> I figured we could write other tests for other parts of ansible, and so on
+17:24:32 <sivel> so, assuming you guys tell me who to work with, we can work on migrating it to the ansible org
+17:24:43 <gundalow> sure, leave that with me
+17:25:36 <gundalow> #action gundalow to work out 1) Do we still want to move sivel/ansible-testing/ (we should) 2) Are we happy with the name 3) Who has github rights 4) Update links
+17:25:53 <sivel> and if needed, I can provide my super awesome confirmation that I am allowed to do this, which is like a 1 line email :)
+17:26:02 <sivel> but I doubt it is needed
+17:26:28 <sivel> "The Rackspace Intellectual Property Committee has approved this request under the terms you identified below"
+17:26:30 <sivel> ;)
+17:26:35 <sivel> haha
+17:26:40 <gundalow> haha
+17:26:54 <gundalow> excellent
+17:27:22 <jhawkesworth> would be cool to have this 'inside' ansible
+17:27:22 <gundalow> #topic AnsibleFest & Contributors Summit
+17:27:30 <jhawkesworth> (hello btw)
+17:27:40 <skg_net> can you point me to a PR which already migrated some test for Python 3
+17:27:43 <gundalow> hey jhawkesworth. I think we wil
+17:27:57 <gundalow> mattclay: You got a link for skg_net
+17:28:32 * mattclay finds a PR
+17:28:47 <gundalow> So we will be having our 3rd Contributors Summit - https://www.ansible.com/blog/ansible-contributor-summit-brooklyn-2016
+17:28:58 <gundalow> There are agenda and details on the above blog post
+17:29:11 <gundalow> This is a great way to help shape ansible
+17:29:25 <gundalow> You can attend in person, or online
+17:29:43 <mattclay> https://github.com/ansible/ansible-modules-core/pull/4526
+17:29:44 <gundalow> If you attend in person you get a massive 50% off your AnsibleFest ticket
+17:30:08 <mattclay> That's a PR for actual module fixes for Python 3.
+17:30:13 <gundalow> skg_net: example of py3 fixes https://github.com/ansible/ansible-modules-core/pull/4526
+17:30:30 <skg_net> Thanks @mattclay @gundalow
+17:30:40 <sivel> I cannot attend in person, but I will likely be able to contribute "online"
+17:31:05 <gundalow> skg_net: It would be worth you pinging mattclay and abadger1999 before you work on something incase they are actively working on the same module
+17:31:06 <mattclay> skg_net: Here's an example of a PR to enable tests once the modules have been fixed: https://github.com/ansible/ansible/pull/17212
+17:31:09 <gundalow> skg_net: great
+17:31:35 <jhawkesworth> yeah most likely I'll be on line too
+17:31:44 <skg_net> sure will work with them
+17:31:55 <sivel> my wife happens to be out of town during ansiblefest, so no travelling for me
+17:32:22 <jhawkesworth> no travel budget for me!
+17:32:39 <gundalow> jhawkesworth: Where areyou based?
+17:32:45 <skg_net> +1 @jhawkesworth
+17:32:47 <abadger1999> skg_net: Most changes will be to code.  Run the test manually, see what breaks, fix the module code, then submit the PR for the fixed code.
+17:33:06 <jhawkesworth> worcestershire, UK
+17:33:09 <abadger1999> sv--: and say that we can enable the test once the code is merged.
+17:33:16 <abadger1999> skg_net: ^
+17:33:28 <gundalow> jhawkesworth: See you in London next year then :)
+17:34:11 <gundalow> skg_net: Any modules that jump out at you from that list?
+17:34:14 <jhawkesworth> that's my plan.  Hope I can do a windows workshop or something like if theres enough interest.
+17:34:23 <skg_net> ok got it
+17:34:38 <gundalow> great
+17:35:33 <skg_net> gundalow: will get back to you and others tomorrow
+17:35:46 <gundalow> skg_net: Thank you :)
+17:36:00 <caphrim007> did i miss the majority of the testing group meeting?
+17:36:07 <gundalow> caphrim007: hop, still ongoing
+17:36:11 <caphrim007> k
+17:36:18 <gundalow> caphrim007: You can see the IRC logs at the end
+17:36:22 <caphrim007> k
+17:36:25 <gundalow> #topic Improving Documentation
+17:36:42 <gundalow> From the voting (and general feedback) https://public.etherpad-mozilla.org/p/ansible-testing-working-group
+17:36:54 <gundalow> One of the really good suggestions was
+17:37:17 <gundalow> having a decent example of a well written module
+17:37:47 <gundalow> So, What are examples, and what are the characterists of a good module
+17:38:14 <gundalow> Anyone got any examples of a well written module (it can be your own :P)
+17:38:18 <jhawkesworth> did anyone suggest raiding jimic's AF london presentation for the module he wrote to control Hue lights?
+17:38:58 <jhawkesworth> his talk was on writing modules so ought to be model
+17:39:01 <gundalow> jhawkesworth: nop, I'll make a note
+17:39:15 <jhawkesworth> but perhaps a bit 'niche' in purpose
+17:39:33 <jhawkesworth> also hard to try out without (expensive in UK) hardware
+17:39:33 <gundalow> couple of examples wouldn't hurt
+17:39:56 <caphrim007> can we codify all of the module checklist in sivil's ansible checker?
+17:40:03 <caphrim007> or some tool
+17:40:10 <gundalow> caphrim007: YES
+17:40:14 <gundalow> well, more of it
+17:40:27 <jhawkesworth> gotta drop - next time!
+17:40:57 <caphrim007> can a second ask be that not all the checks be inline in the code, but pluggable so that devs in other orgs can add tests without having to change existing code?
+17:40:59 <gundalow> on https://public.etherpad-mozilla.org/p/ansible-testing-working-group (from last weeks meeting) I've said we should split out the checklist and move out the stuff that's checked by ansible-validate-module
+17:41:33 <abadger1999> should be unittestable -- separate the code that has sideeffects (like anything using module.*) from the code that is purely algorithmic.
+17:41:34 <caphrim007> for lack of a better example, consider https://github.com/willthames/ansible-lint/tree/master/lib/ansiblelint/rules
+17:41:52 <caphrim007> i can add more rules if i have something specific i want to check in house
+17:41:54 <gundalow> I was about to suggest that
+17:42:26 <abadger1999> be aware of common parameter names.
+17:42:42 <abadger1999> Make proper use of parameter types (path, json, bool)
+17:43:12 <abadger1999> Do more than just wrap a command line tool.
+17:43:40 <gundalow> abadger1999: If we can check more with CI it's fewer things that humans need to check/miss :)
+17:44:20 <abadger1999> Work on python3 and (until March/April of next year) on python2.4
+17:45:59 <gundalow> linuxdynasty: How would you feel about us using one of your modules as an example
+17:46:43 <gundalow> linuxdynasty: and do you have thick enough skin to deal with us ripping it to shreads to make it bullet proof/solid documentation :P
+17:46:53 <linuxdynasty> np
+17:46:59 <linuxdynasty> yes i do
+17:47:04 <gundalow> excellent
+17:47:06 <linuxdynasty> i bite back :P hehe jk
+17:47:15 <gundalow> haha
+17:47:54 <gundalow> #action linuxdynasty to pick a module to use as an example of a perfect module. Group then to review and ensure that it is
+17:48:06 <abadger1999> Smaller is better :-)
+17:48:22 <abadger1999> as no matter the module, we're going to find tons of stuff to change.
+17:48:29 <linuxdynasty> I document like a mad man in my functions/methods :(
+17:48:43 <linuxdynasty> so I will look for a smallish one :p
+17:48:44 <gundalow> linuxdynasty: pick one and ping me
+17:48:48 <linuxdynasty> kk
+17:48:57 <gundalow> doesn't have to be today
+17:49:12 <abadger1999> linuxdynasty: no problem -- documentation doesn't count in what I was thinking of.
+17:49:16 <abadger1999> Mostly about the code.
+17:49:23 <linuxdynasty> kk
+17:49:34 <abadger1999> (although fewer parameters is also god ;-)
+17:49:43 <linuxdynasty> I think function/method documentation should also be  part of the examples
+17:49:49 <abadger1999> <nod>
+17:49:56 <linuxdynasty> to motivate module developers to do the same
+17:49:57 <gundalow> +1
+17:50:00 <abadger1999> Do you sphinx markup?
+17:50:01 <gundalow> +1000
+17:50:11 <abadger1999> That's what everything in core and module_utils will eventually use.
+17:50:20 <gundalow> 10 minutes left
+17:50:30 <linuxdynasty> I use this for the past 6 years
+17:50:30 <linuxdynasty> http://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html
+17:50:34 <abadger1999> Excellent.
+17:50:42 <linuxdynasty> all of python docs looks like the above
+17:51:38 <abadger1999> The section style is an extension to  sphinx?
+17:51:39 <gundalow> Cool. So if we can pick a module, and and get most way through a re-review by next week I'd be really happy with that
+17:51:55 <linuxdynasty> cool, I will get you something in the next couple of hours
+17:53:11 <gundalow> excellent
+17:53:15 <abadger1999> ah, I suppose that's what the package that documentation is for is.
+17:53:28 <gundalow> linuxdynasty: did you have some mock code you would like reviewing?
+17:53:48 <linuxdynasty> nope got to modify it as per jimi's suggestion
+17:53:53 <gundalow> cool
+17:53:53 <linuxdynasty> I will ping once it is ready
+17:53:55 <linuxdynasty> ty for checking though
+17:53:57 <gundalow> nod
+17:54:04 <gundalow> #topic openfloor
+17:54:13 <gundalow> mattclay: abadger1999 anything else?
+17:54:20 <gundalow> or anyone else?
+17:54:24 <mattclay> Nothing from me.
+17:55:11 <abadger1999> linuxdynasty: You'll want to talk to people (Not sure if it's a core team decision or doc team decision or just consensus) about whether to use that extension or stick with standard sphinx markup.
+17:55:12 <gundalow> cool. I think we can use the example module as a way forward with improving docs.ansible.com/ansible/developing_modules.html
+17:55:39 <linuxdynasty> kk
+17:56:19 <abadger1999> docschick and dharmabumstead are docs team.  You know who all the core team members are :-)
+17:56:37 <linuxdynasty> yep yep
+17:56:42 <abadger1999> Cool.
+17:56:56 <abadger1999> Nothing else from me.
+17:57:13 <gundalow> cool
+17:57:42 <gundalow> caphrim007: shertel bruno_cgl Reaper anything else?
+17:57:52 <shertel> Nothing from me
+17:58:09 <gundalow> cool
+17:58:14 <gundalow> Thank you all for your time
+17:58:15 <caphrim007> nope
+17:58:30 <gundalow> If you think of anything else feel free to add it to https://github.com/ansible/community/issues/114
+17:58:34 <gundalow> #endmeeting

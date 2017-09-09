@@ -1,0 +1,69 @@
+16:00:43 <gundalow> #startmeeting Network Meeting
+16:00:43 <zodbot> Meeting started Wed Sep 14 16:00:43 2016 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:00:43 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:00:43 <zodbot> The meeting name has been set to 'network_meeting'
+16:00:59 <gundalow> #chair Qalthos
+16:01:00 <zodbot> Current chairs: Qalthos gundalow
+16:01:31 <gundalow> Agenda as always is https://github.com/ansible/community/issues/110
+16:01:55 <gundalow> Who's here today?
+16:03:37 * skg-net waves hey
+16:04:30 <gundalow> hi :)
+16:04:45 <gundalow> No Peter (@privateip) today
+16:05:18 <gundalow> So, does anyone have anything for the agenda today?
+16:05:32 <skg-net> Dell modules
+16:06:15 <gundalow> #topic Dell Modules
+16:06:19 <gundalow> skg-net: the floor is yours
+16:07:07 <skg-net> Except the facts module all of the other ones are in PR
+16:07:24 <skg-net> Can we close on those?
+16:08:56 <skg-net> Since we have combined with EMC, we are now called Dell EMC Networking
+16:09:08 <gundalow> caphrim007: hi :)
+16:09:16 <caphrim007> heyo
+16:09:42 <gundalow> skg-net: OK. That's one of the reasons we avoid vendor names in the directory/file names :)
+16:10:32 <skg-net> There is a request to change the module names to dellosX instead of dnosX
+16:12:18 <gundalow> skg-net: lets get everything merged in, then we can rename if needed
+16:12:49 <skg-net> I would do that once we commit the fact module
+16:13:20 <gundalow> I see three open PRs  https://github.com/ansible/ansible-modules-core/pulls/skg-net
+16:14:36 <gundalow> I'll review those after this meeting
+16:14:50 <skg-net> Thanks
+16:15:01 <gundalow> ah, and https://github.com/ansible/ansible/pulls/skg-net
+16:17:49 <skg-net> Finally I will update the copyright!!
+16:18:01 <gundalow> what needs changing there?
+16:18:06 <skg-net> I would like to close these by Friday
+16:18:19 <skg-net> Need your support on this
+16:19:21 <gundalow> sure, I've just messaged someone else regarding the plugins/action/dnos* PRs
+16:20:23 <skg-net> pardon me for the slow response using the phone to chat
+16:20:43 <gundalow> sure :)
+16:20:48 <skg-net> We have sent Peter the os9 VM
+16:21:06 <gundalow> ah, excellent
+16:21:47 <skg-net> For OS10 we needed a beta agreement, since its not released yet
+16:21:53 <gundalow> Thanks for your PRs for https://github.com/ansible/test-network-modules/ I've merged all of those
+16:21:59 <gundalow> Sure
+16:22:35 <skg-net> We have send the info to Peter, will copy you as well
+16:22:42 <gundalow> Thanks :)
+16:23:14 <skg-net> for OS6 we don't have VM
+16:25:21 <skg-net> We should be able to submit bug fix after Sep 16th Correct??
+16:25:48 <gundalow> yup
+16:26:09 <skg-net> Thanks, that's it from me
+16:26:16 <gundalow> Thanks :)
+16:26:42 <caphrim007> gundalow: which branch to we branch from for bugfix PRs after 2.2 is released? devel still? or devel + something else?
+16:26:49 <gundalow> #topic Fixes domains method not defined https://github.com/ansible/ansible-modules-extras/pull/2907
+16:27:50 <gundalow> caphrim007: I *believe* the PR still gets raised against `devel`, though with the `backport` label
+16:28:15 <gundalow> Which I guess brings us nicely onto https://github.com/ansible/ansible-modules-extras/pull/2907
+16:28:24 <gundalow> (bugfix) ansible/ansible-modules-extras#2907 does this need to branch off of a different upstream branch?
+16:28:31 <caphrim007> guess i'll just make all my code bug free so that i dont have to worry about that ;-)
+16:28:34 <gundalow> caphrim007: Do you believe that needs to go into 2.1
+16:28:40 <gundalow> caphrim007: If you could that would be great :P
+16:28:49 <caphrim007> gundalow: no that's a PR for 2.2
+16:29:09 <caphrim007> i think that module was a 2.2 module to begin with, so it's just a bugfix for it
+16:29:11 <gundalow> cool, so as we haven't branched for 2.2 yet devel will become 2.2
+16:29:46 <gundalow> version_added: "2.2", so no need to backport as it didn't exist in 2.1
+16:29:59 <caphrim007> also, after 2.2 is out, is the next version we put in version_added going to be 2.3? something else?
+16:31:27 <gundalow> after 2.2 is "branched" from devel any new modules that go into devel will be marked version_added: "2.3"
+16:31:35 <caphrim007> gotcha
+16:32:50 <gundalow> :)
+16:33:01 <gundalow> Always good to clarify this stuff
+16:33:04 <gundalow> #topic Open Floor
+16:38:54 <gundalow> Anyone got anything else?
+16:39:15 <gundalow> So work continues internally updating tests and fixing issues
+16:41:12 <gundalow> cool, so if there is nothing else I'll end now
+16:41:15 <gundalow> #endmeeting

@@ -1,0 +1,139 @@
+19:02:40 <abadger1999> #startmeeting  Ansible Core Meeting
+19:02:40 <zodbot> Meeting started Tue Feb 21 19:02:40 2017 UTC.  The chair is abadger1999. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:02:40 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:02:40 <zodbot> The meeting name has been set to 'ansible_core_meeting'
+19:03:29 <abadger1999> #chair alikins jtanner bcoca jimi|ansible shertel thaumos
+19:03:29 <zodbot> Current chairs: abadger1999 alikins bcoca jimi|ansible jtanner shertel thaumos
+19:04:02 <abadger1999> #chair  mattclay nitzmahone Qalthos rcarrillocruz ryansb
+19:04:02 <zodbot> Current chairs: Qalthos abadger1999 alikins bcoca jimi|ansible jtanner mattclay nitzmahone rcarrillocruz ryansb shertel thaumos
+19:04:08 <nitzmahone> yo
+19:04:20 <shertel> hi
+19:04:30 <abadger1999> #info Agenda, feel free to add things, esp if their any proposals you'd like to discuss tohttps://github.com/ansible/community/issues/150
+19:05:21 * mattclay waves
+19:06:37 <abadger1999> No new agenda items this week.
+19:06:47 <abadger1999> Does someone have somethign they'd like to discuss?
+19:07:01 * abadger1999 is looking through the old entries for anything that needs followup
+19:08:09 * jtanner wonders if privateip wants to talk about his yaml docstring generator magic thing
+19:08:20 <jtanner> but he's not in this channel, so ...
+19:08:24 * abadger1999 goes looking for privateip in other channels
+19:08:54 <jtanner> No such channel/nick on freenode (chat.freenode.net:6697), try again.
+19:09:02 <nitzmahone> Overall guidance on reformatting code that is *not* covered by pep8 (eg, Powershell).
+19:09:15 <abadger1999> #topic Overall guidance on reformatting code that is *not* covered by pep8 (eg, Powershell).
+19:09:21 <abadger1999> nitzmahone: Take it away :-)
+19:09:21 <nitzmahone> We don't have a way to enforce style, so I'd tend to say "don't reformat code you're not touching for other reasons"
+19:09:34 <nitzmahone> (no pep8 equiv for powershell today)
+19:09:55 <abadger1999> <nod> Are there certain pieces of style that are good/bad?
+19:10:01 <nitzmahone> If we did, I'd be OK using it and saying "you need to do what it says", but without that, I'd tend to preserve attribution over style.
+19:10:19 <abadger1999> yep, agreed.
+19:10:23 <nitzmahone> PS is very "wild west" compared to other languages, since it's mostly used for scripting.
+19:10:46 <nitzmahone> I don't want to get into that really right now, other than just seeking generaly agreement that my approach to that is sound.
+19:11:13 <nitzmahone> (as I'm going to push back on some recent PRs that contain a lot of reformatting around 1-2 line code changes)
+19:11:30 <abadger1999> Sounds right.  Do you want discussion/agreement on a style to be via a proposal?
+19:11:42 <nitzmahone> Perhaps at some point
+19:11:48 <daBONDi> Hi :-)
+19:11:50 <nitzmahone> That'd be Windows Working Group material
+19:11:54 <abadger1999> <nod>
+19:12:22 <nitzmahone> But mainly just seeing if others would tend to agree that in the absence of agreed-upon style, attribution should be preserved over reformatting attempts.
+19:13:26 <ryansb> Yeah, that's mostly what we do in non-PS-land
+19:13:41 <mattclay> nitzmahone: +1
+19:14:11 <abadger1999> #info nitzmahone proposing that committers should currently strive not to rewrite code to conform to any personal style (preserves attribution in git blame), just try to work with what's already there.  Windows Working Group may make a proposal for set style guidelines in the future.
+19:14:42 <abadger1999> +1
+19:14:51 <bcoca> +1
+19:14:54 <abadger1999> #undo
+19:14:54 <zodbot> Removing item from minutes: INFO by abadger1999 at 19:14:11 : nitzmahone proposing that committers should currently strive not to rewrite code to conform to any personal style (preserves attribution in git blame), just try to work with what's already there.  Windows Working Group may make a proposal for set style guidelines in the future.
+19:15:07 <abadger1999> #info nitzmahone proposing that committers should currently strive not to rewrite powershell code to conform to any personal style (preserves attribution in git blame), just try to work with what's already there.  Windows Working Group may make a proposal for set style guidelines in the future.
+19:15:16 <gundalow> jtanner: abadger1999 privateip is in another meeting
+19:15:19 <nitzmahone> OK, cool- sounds like I'm not completely off-base there. Thanks for the input- next!
+19:15:28 <jtanner> cosmetic refactoring should be a no-no except in cases we've defined via CI test(s)
+19:15:42 <abadger1999> nitzmahone: Do you want to take an action item to add that to the qindows module checklist?
+19:15:45 <bcoca> just for the record, not really new rule, project has always valued attribution over code styles
+19:15:55 <bcoca> ^ only really unmaintainble code was justified in restyling
+19:16:10 * bcoca does not comment on powershell having any maintainable form
+19:16:21 <nitzmahone> jtanner: that's exactly what I'm going for- if we choose to enforce style via an automated tool at some point, fine, but I'd rather not be manually enforcing style in the meantime (spending precious PR review time on content), as well as preserving attribution wherever reasonable.
+19:16:31 <abadger1999> bcoca: we're slowly seeing a shift in that... so it's good to reaffirm it for poershell with rationale.
+19:16:57 <nitzmahone> abadger1999: sure
+19:17:04 <jtanner> nitzmahone: that was my long winded +1
+19:17:11 <abadger1999> I'm okay with style guides that are not automated... but they should definitely be written.
+19:17:59 <bcoca> i have nothing against  coding styles, except everyone trying to impose their own
+19:18:56 <nitzmahone> I definitely have my personal style preferences, but I'm not going to impose them on the entire codebase without some buy-in from the majority of the community (and ideally a tool to enforce rather than whoever's reviewing PRs)
+19:19:08 <abadger1999> #info +1: 4, 0:0, -1:0 for nitzmahone's proposal about powershell style-only changes.
+19:19:49 <abadger1999> #action nitzmah9one to write up decision on powershell coding style for the windows moduile checklist.
+19:19:55 <nitzmahone> OK, 'nuff of that, what's next?
+19:20:03 <abadger1999> #topic open floor
+19:20:13 <bcoca> best power puff girl
+19:20:47 <abadger1999> #topic etc_hosts module
+19:20:52 <abadger1999> just bookkeeping here
+19:21:15 <bcoca> still -1
+19:21:22 <abadger1999> #action abadger will close PR with results ofthe vote that was taken on 09-Feb
+19:21:48 <abadger1999> #topic Wildcards inside of fileglob lookup: https://github.com/ansible/ansible/pull/19297
+19:21:56 <jtanner> again, -1 from me because i don't want to deal with all the bug reports about the -many- random edgecases for how people "believe" their /etc/hosts schema should look
+19:22:08 <abadger1999> bcoca: The last followup we have is that you were going to review this.
+19:22:10 <jtanner> oops, too slow
+19:22:36 <bcoca> fileglob? is this the dwim one? its on my list ... not there yet
+19:22:55 <abadger1999> (<nod>  regarding the last topic, we just didn't assign an action for anyone to write the rejection to the PR so it's still open... needed to finish it off)
+19:23:29 <bcoca> i actually have probably better fix
+19:23:43 <bcoca> just iterate over possible paths on lookup, use dwim unchanged
+19:23:57 <abadger1999> k
+19:24:20 <abadger1999> You could post that strategy to the PR and see if the contributor would like to attack it from that angle instead.
+19:24:24 <abadger1999> ?
+19:24:53 <abadger1999> bcoca: ^
+19:25:14 * abadger1999 will assign action if that seems like the right way
+19:26:43 <abadger1999> bcoca must have gotten pulled into something else.
+19:26:53 <abadger1999> #topic https://github.com/ansible/community/issues/150#issuecomment-277024953 win_file: fix error when creating an existing dir
+19:27:26 <abadger1999> nitzmahone: This is the last PR that we promised to put into the priority for review due to the repomerge history rewrite.
+19:27:44 <abadger1999> nitzmahone: Are you able to push it up0 in your priority to review?
+19:28:15 <nitzmahone> Yeah, I'd planned to hit those this week (had to get past feature freeze)
+19:28:39 <abadger1999> Cool.
+19:28:41 <nitzmahone> Probably Thursday
+19:29:21 <abadger1999> #action nitzmahone to review  ansible/ansible#19070  (win_file fix) this week (probably Thursaday)
+19:30:50 <abadger1999> #topic Extra metadata for non-module files
+19:31:07 <abadger1999> Need bcoca for most of this but I see there's a question of what to do with config files.
+19:31:18 <abadger1999> I think this was about dynamic inventory config files?
+19:31:50 <abadger1999> My suggestion would be to name those configs after the dynamic inventory scripts they are for.  And then use the metadata for the dyn inventory script.
+19:32:54 <ryansb> They already are after the inventory they match, so just assuming they share metadata with an equivalent `.py` should be sufficient
+19:33:04 <abadger1999> Cool.
+19:33:04 * ryansb checks that there are no outliers
+19:33:38 <abadger1999> #info abadger proposes that config files for dyn inventory use the same metadata as the dyn inventory script.
+19:34:23 <ryansb> hrm, looks like a couple use .yml instead of INI
+19:35:02 <abadger1999> I don't think that's a problem.
+19:35:16 <bcoca> alos, not all match nor do we ship example of all of em
+19:35:21 <bcoca> but really onlyl worried about ones we ship
+19:35:26 <abadger1999> any base name finds its metadata in the associated .py file
+19:36:03 <abadger1999> should work as a rule that covers any config file
+19:36:08 <ryansb> abadger1999: note: there's one that doesn't match: consul.ini and consul_io.py
+19:36:29 <abadger1999> <nod>  We should rename that in the repo... continue to find the old name for backwards compat.
+19:36:31 <ryansb> #info there's one inventory script/config pair that doesn't match: consul.ini and consul_io.py
+19:36:42 <ryansb> rename the ini, you mean?
+19:36:47 <ryansb> or the .py?
+19:37:19 <abadger1999> Config file.  We can search for old and new config files from code.
+19:37:29 <ryansb> ok
+19:37:49 <abadger1999> we don't have a place to search for an older script name
+19:37:56 <ryansb> #action ryansb rename consul.ini in repo, and search for both consul.ini and consul_io.ini in consul_io dynamic inventory
+19:38:11 <abadger1999> Cool.  Thanks for taking that.
+19:38:21 <bcoca> i believe consul.ini was already taken by consul lib
+19:38:37 <ryansb> consul.ini is what it's called today
+19:38:45 <ryansb> the inventory is consul_io.py
+19:39:03 <ryansb> so I'd be renaming consul.ini -> consul_io.ini and changing the code to search for both
+19:39:40 <abadger1999> bcoca: are there more cases than dyn inventory that we need to make sure we cover?
+19:40:09 <bcoca> they'll appear in issues if we missed any
+19:43:10 <abadger1999> versioned docs needs followup but gundalow is in another meeting so we'll hit it next time.
+19:43:40 <abadger1999> allanice is not here today so we'll skip the proposal-proposal item as well
+19:44:30 <abadger1999> #topic WIndows Working Group https://github.com/ansible/community/issues/150#issuecomment-280354753
+19:44:47 <abadger1999> nitzmahone: Any update/plugs for the group to tell us here?
+19:45:29 <nitzmahone> We agreed to do weekly, on alternating Monday afternoons / Friday mornings (Pacific time) so that I can always(ish) attend.
+19:45:59 <nitzmahone> I just need to schedule and update the various calendars/standing agendas
+19:46:22 <mattclay> nitzmahone: I'll help with the calendar updates.
+19:46:32 <nitzmahone> mattclay: thanks
+19:46:45 <abadger1999> #info Windows Working group will meet Monday afternoon and Friday morning US Pacific time.
+19:47:01 <nitzmahone> (alternating weeks, not 2x week)
+19:47:02 <nitzmahone> ;)
+19:47:09 <abadger1999> #undo
+19:47:09 <zodbot> Removing item from minutes: INFO by abadger1999 at 19:46:45 : Windows Working group will meet Monday afternoon and Friday morning US Pacific time.
+19:47:32 <abadger1999> #info Windows Working group will meet Monday afternoon and Friday morning US Pacific time (alternating weeks for the meeting times).
+19:47:54 <abadger1999> #action mattclay and nitzmahone to add time and dates to the public calendars
+19:47:57 <abadger1999> Thanks!
+19:48:12 <abadger1999> #topic Open Floor
+19:48:20 <abadger1999> Anyone else have something to discuss?
+19:49:35 <ryansb> not I
+19:49:54 <abadger1999> Okay, I'll close in 60s unless someone speaks up then ;-)
+19:51:47 <abadger1999> #endmeeting

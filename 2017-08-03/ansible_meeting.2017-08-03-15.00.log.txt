@@ -1,0 +1,255 @@
+15:00:01 <thaumos> #startmeeting ansible meeting
+15:00:01 <zodbot> Meeting started Thu Aug  3 15:00:01 2017 UTC.  The chair is thaumos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:00:01 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:00:01 <zodbot> The meeting name has been set to 'ansible_meeting'
+15:00:18 * chillysurfer waves
+15:00:23 <thaumos> #chair chillysurfer
+15:00:23 <zodbot> Current chairs: chillysurfer thaumos
+15:00:37 <thaumos> gm, @chillysurfer
+15:00:45 <chillysurfer> hey, thaumos !!
+15:01:11 <alikins> blorp
+15:01:16 <thaumos> #chair alikins
+15:01:16 <zodbot> Current chairs: alikins chillysurfer thaumos
+15:01:46 * samdoran present
+15:02:07 * shertel waves
+15:02:16 <thaumos> #chair samdoran shertel
+15:02:16 <zodbot> Current chairs: alikins chillysurfer samdoran shertel thaumos
+15:04:46 <ryansb> \o
+15:06:39 <thaumos> #chair ryansb
+15:06:39 <zodbot> Current chairs: alikins chillysurfer ryansb samdoran shertel thaumos
+15:06:56 <thaumos> is marc-sensenich present?
+15:07:17 <thaumos> not sure if irc nick is different than GH nick
+15:09:29 <thaumos> guess not
+15:09:32 <thaumos> #topic Open Topic
+15:09:48 <thaumos> anyone have anything to talk about that's present?
+15:10:01 <bcoca> ^ you had another entry in ticket
+15:10:18 <thaumos> did it get ninja'd in?
+15:10:19 <bcoca> https://github.com/ansible/community/issues/220#issuecomment-319466723
+15:10:32 <bcoca> probably, but it was you who added it
+15:10:35 * resmo waves
+15:10:39 <thaumos> ah, dag's?
+15:10:40 * bcoca waves back
+15:10:50 <thaumos> I don't think he's here.
+15:10:58 <thaumos> #chair resmo
+15:10:58 <zodbot> Current chairs: alikins chillysurfer resmo ryansb samdoran shertel thaumos
+15:13:15 <bcoca> jic, -1 to 'facts' as we made rule that any new 'ansible' vars are ansible_ prefixed
+15:13:31 <bcoca> as to 2nd part +1 .. but i had to remove patch that did this as it broke backwards compat
+15:13:39 <bcoca> as facts are 'reentrant'
+15:15:44 * thaumos is thinking how to phrase a response
+15:16:42 <samdoran> I'm also -1 to shortening to 'facts'. While more wordy, it's safer to be explicit: 'These are Ansible facts'.
+15:17:10 <samdoran> Would be nice to not need the ansible_ in the key name but keep it in the dictionary name.
+15:17:21 <bcoca> im fine with the .ansible_ being removed, but that has problems
+15:17:25 <bcoca> ^ i did try to do
+15:17:41 <samdoran> That will be pretty tricky.
+15:17:45 <thaumos> so for the first part, I think the intent is, "Why the hell label it as Ansible.  We know the facts come from it."
+15:17:45 <thaumos> When really, the intended question is, "Should we have a layer for system related facts?"
+15:17:45 <thaumos> i.e. facts.system.os_distribution
+15:17:51 <samdoran> Cloud break backwards compatibility a good bit.
+15:18:28 <samdoran> How would facts from facter show up in this new structure?
+15:18:38 <samdoran> Or other places we can get facts?
+15:18:38 <bcoca> well, ansible_facts is new, the problem is the 'non namespaced copy'
+15:19:17 <bcoca> afaik ansible_facts.facter.<X>
+15:19:28 <bcoca> other places .. depends ...
+15:19:41 <samdoran> Ok
+15:19:46 <bcoca> its up to provider to name under ansible_facts.
+15:20:05 <bcoca> currently they 'polute' main namespace, i added ansible_facts as a way to avoid that (and secure facts)
+15:20:30 <samdoran> I was wondering if they would get put in their own dict, say facter_facts.X.
+15:20:48 <samdoran> Which would make ansible_facts more meaningful. But that may have other implications.
+15:21:49 * abadger1999 would probably do ansible_facts['facter'] or similar
+15:22:02 <bcoca> ^ already happens now
+15:22:10 <alikins> they could, or they could get a custom namespace... ansible_facts_facter_<facter name>
+15:22:13 <bcoca> or facter.<x> when 'not namespacing'
+15:22:51 <bcoca> alikins: no, the whole point of namespacing was avoid 'top level vars'
+15:23:46 <bcoca> which we want to deprecate and remove, making 'namespaced facts' the way to go forward
+15:24:01 <samdoran> ansible_facts['facter'] seems reasonable. Keeps things from polluting the top level namespace.
+15:24:09 <thaumos> #chair abadger1999
+15:24:09 <zodbot> Current chairs: abadger1999 alikins chillysurfer resmo ryansb samdoran shertel thaumos
+15:24:39 <samdoran> Then we just need to figure out how to cleanly remove ansible_ prefix from the keys to get ansible_facts.os_distribution, etc.
+15:24:49 <samdoran> But I think that's a sane way to do it.
+15:25:02 <bcoca> ^ i had to remove that code ... cannot really do until we break 'reentrance' of facts
+15:25:13 <samdoran> Understood
+15:25:19 <bcoca> otherwise it breaks compatibility with current usage
+15:26:04 <bcoca> for short term we might just need to bite bullet and 'always copy'  .... to the already huge copies we do in vars manager
+15:26:20 <bcoca> if we wan the 's/ansilbe_//' names
+15:26:44 <bcoca> other optoin is intercepting hostvars ['ansbile_facts'].get
+15:26:58 <bcoca> not sure which is slower/more painful
+15:27:23 <samdoran> Was just wondering about performance implications of that.
+15:28:02 <samdoran> Won't know until we test, I suppose.
+15:28:08 <alikins> samdoran: should just be a matter of adding a method to collector to add the subdict based on namespace instead of the prefix
+15:28:45 <samdoran> So intercepting and translating would be better than copying.
+15:29:07 <alikins> I had some code for that but removed for YAGNI
+15:29:07 <samdoran> And we could put it into the warn/deprecate schedule.
+15:31:11 <alikins> (for setup.py and friends that is, other modules that explicitly add 'ansible_' keys need workarounds...)
+15:33:23 <thaumos> ok so, actions then
+15:34:01 <thaumos> are we going to do any investimigating?  is this something to consider for release after 2.4?
+15:35:22 <jtanner> i'm here
+15:35:34 <thaumos> #chair jtanner
+15:35:34 <zodbot> Current chairs: abadger1999 alikins chillysurfer jtanner resmo ryansb samdoran shertel thaumos
+15:36:04 <alikins> thaumos: what problem were we trying to solve re facts?
+15:36:21 <bcoca> less typing
+15:37:22 <thaumos> there were two proposals
+15:37:22 <thaumos> 1. change ansible_facts to facts
+15:37:22 <thaumos> 2. remove ansible_ from fact names... ie ansible_os_distribution to os_distribution
+15:37:31 <thaumos> we have been discussing 2 primarily
+15:37:47 <bcoca> -1 on 1, +1 on 2, but needs to take into account backwards compat
+15:38:19 <bcoca> as i said above, i tried #2, but it broke stuff
+15:38:24 <bcoca> had to revert
+15:38:45 <thaumos> so back to my question, is this something we want anyone to revisit for the release after 2.4?
+15:38:55 <thaumos> doesn't have to be you bcoca
+15:38:57 <bcoca> probably before
+15:38:58 <jtanner> if it's just about length of var name, i don't see a point in changing
+15:39:03 <thaumos> really?!
+15:39:10 <bcoca> once released we need to be backwards compatible for ansilbe_facts.ansible_*
+15:39:19 <thaumos> sorry, really to bcoca, not you jctanner
+15:39:22 <jtanner> i say leave it alone
+15:39:22 <bcoca> rigtht now we only need ansible_* compatiblity (non namepspaced)
+15:39:51 <jtanner> just saying -1 on #2 from me
+15:40:03 <bcoca> i like typing less, but if no solution for 2.4  .. we might 'never' solve it
+15:40:23 <thaumos> personally, I think we have ansible too many times in there
+15:40:46 <bcoca> i agree, but not adamant about it
+15:40:58 <thaumos> also, it's simpler for the end user to not have to deal with, "OH CRAP, I forgot for this var/fact I need ansible_ in my playbook"
+15:41:55 <jtanner> i've never been able to rember the names, regardless of prefix ... i do ansible -m setup | fgrep foobar
+15:42:04 <bcoca> well, the namespacing was added for that, but this is not same as prefix issue
+15:42:31 <bcoca> jtanner if you see ansible_user and ansible_devices in play, its unsure which one requires fact gathering
+15:42:40 <bcoca> while any 'ansible_facts.var' make it very clear
+15:43:29 <alikins> I kind of want some sort of fact synthesizer plugin, that could generate facts based on existing facts (maybe other vars etc). Goal is to be able to make a facts based on combo of other facts. But also populating into a less flat hierarchy  (facts['os']['distribution'] etc) would be an option as well
+15:43:38 <jtanner> bcoca: that makes sense to me
+15:43:48 <bcoca> alikins: already have that in inventory
+15:43:53 <bcoca> alikins: just need 'cached facts'
+15:44:14 <bcoca> actually, not even, you can define that vars: and if fact is available on templating time .. done
+15:44:25 <jtanner> why is set_fact+jinja not sufficient for that?
+15:44:29 <bcoca> vars: myfact: "{{ ansible_devices[0] }}
+15:44:52 <bcoca> jtanner: that too, but requires fact gathered when 'set_fact' is called, vs vars: or include_vars which requires the fact when 'varaible is used'
+15:45:04 <bcoca> so 'feature done'
+15:45:11 <alikins> because trying to program complicated logic in jinja is... not fun?
+15:45:11 <jtanner> k
+15:45:32 <jtanner> complicated  logic in a playbook is an antipattern anyway
+15:45:36 <bcoca> alikins: what would you use then? since its only really expression language we expose to users?
+15:45:42 <jtanner> we have plugins for that
+15:45:52 <bcoca> ^also, what he said
+15:46:08 <alikins> 'some sort of fact synthesizer plugin'
+15:46:15 <bcoca> vars_plugin
+15:46:26 <alikins> vars_plugin happens too early
+15:46:29 <bcoca> what would you use as 'synth definitions'?
+15:46:30 <jtanner> alikins: what would the pseudo inputs be?
+15:46:34 <bcoca> alikins: no it does not
+15:46:59 <bcoca> alikins: look at 2.4, it happens in vars_manager, NOT in inventory
+15:47:10 <alikins> bcoca: python code like other plugins
+15:47:19 <bcoca> i would not expose that to users
+15:47:29 <bcoca> how would user define the 'synth'?
+15:47:41 <alikins> write plugin code
+15:47:57 <bcoca> er ... they can do that now
+15:48:01 <bcoca> even as a module
+15:48:13 <bcoca> compose_facts: existing_Facts=ansible_facts
+15:48:40 <bcoca> in 2.4 a vars_plugin can do so also, so 'feature done'?
+15:48:44 <alikins> not without adding it to the playbook
+15:49:02 <bcoca> not sure what you are asking for
+15:49:19 <jtanner> a new type of var plugin that happens later?
+15:49:56 <bcoca> not sure how 'much later' they can happen other than 'composing vars for tasks'
+15:50:03 <abadger1999> bcoca: +1 on would be nice to remove the extra ansible before 2.4.
+15:50:18 <thaumos> okay, getting us back on topic
+15:50:28 <thaumos> do we have time to do it before freeze?
+15:50:44 <alikins> jtanner: yeah, more or less
+15:50:52 <chillysurfer> when is the freeze going to happen?
+15:51:01 <abadger1999> or alternatively is it important enough to slip freeze/make an exception for it?
+15:51:04 <chillysurfer> (sorry if that's on community repo)
+15:51:09 <abadger1999> (and as input to those... who is doing it?)
+15:51:09 <bcoca> i dont, but if someone else has time
+15:51:14 <abadger1999> chillysurfer: the 15th I believe.
+15:51:21 <chillysurfer> abadger1999: awesome thanks
+15:51:33 <abadger1999> chillysurfer: that's engine + core module feature freeze.
+15:51:37 <bcoca> if the 'fix' is not too complicated, willing to let it in
+15:51:42 <alikins> bcoca: post task vars_plugin, more or less
+15:51:54 <chillysurfer> abadger1999: ah ok good
+15:52:07 <bcoca> alikins: post task ? then ... make a task?
+15:52:15 <bcoca> not sure how that helps the 'current task'
+15:52:16 <jtanner> alikins: i see nothing wrong with that idea, but i'm ignorant about vars_plugins too
+15:52:41 <thaumos> and curated as well
+15:52:43 <abadger1999> Core and Curated Module Freeze: 15 August 2017
+15:52:47 <thaumos> thx
+15:52:48 <abadger1999> Community Module Freeze: 29 August 2017
+15:52:51 <abadger1999> Target Release: Mid-September 2017
+15:53:02 <bcoca> https://github.com/ansible/ansible/blob/devel/lib/ansible/vars/manager.py#L251 <= where 'vars plugins' run
+15:53:17 <chillysurfer> abadger1999, thaumos thanks!
+15:53:33 <abadger1999> (thank thaumos for both... he wrote email I copied and pasted from too ;-)
+15:54:20 <jtanner> alikins: would that solve a current issue or is it a "nice to have"?
+15:54:23 <abadger1999> bcoca, alikins: Could we figure out whether we're removing the extra ansible_* first?  We need to decide whether that must go into 2.4.
+15:54:33 <abadger1999> I lean towards yes, it must.
+15:54:37 <bcoca> if we are going to remove, it should be before 2.4 ships
+15:54:46 <abadger1999> But I also don't have time to work on it before freeze on the 15th.
+15:54:48 <bcoca> +1 to do it, but not mandating it, would b enice
+15:54:58 <bcoca> i dont have time,  and its not a trivial issue
+15:55:12 <abadger1999> I think the UI wart is significant... so I'm +1 on making sure we remove before 2.4
+15:55:19 <abadger1999> right.
+15:55:22 <bcoca> @dag will welcom PR that does it and not break backwards compat
+15:55:46 <jtanner> hello akasurde
+15:56:05 <akasurde> jtanner, hi
+15:56:18 <jtanner> #chair akasurde
+15:56:18 <zodbot> Current chairs: abadger1999 akasurde alikins chillysurfer jtanner resmo ryansb samdoran shertel thaumos
+15:56:19 <abadger1999> I think it's important enough to either slip the freeze date or put it in as an exception.
+15:56:58 <abadger1999> But that doesn't help if we still don't have someone who can do the work after the 15th.
+15:57:07 <alikins> strong -1 on trying to change the ansible facts var names for 2.4
+15:57:22 <abadger1999> alikins: explain why.
+15:57:37 <bcoca> alikins: not changing the 'current names' only the ones under the namespace
+15:57:59 <bcoca> so ansible_devices .. still works, ansible_facts.devices vs ansilbe_facts.ansible_devices is the current request
+15:58:59 <alikins> compatibility mainly. dont see any point to it
+15:59:28 <alikins> post 2.4, sure...
+15:59:35 <bcoca> as i said, we need 'backwards compatible' solutions, as to the point, less redundant ansible_
+15:59:53 <abadger1999> alikins: the whole reason it must be changed before 2.4 is because of compatibility
+15:59:55 <bcoca> no, post 2.4 it becomes a backwards compat issue, that is why it shoudl happen pre
+16:00:29 <thaumos> Okay, so it sounds like we need to do this before 2.4.
+16:00:30 <abadger1999> again, we're talking about the names inside of the namespace (the namespace copy is added in 2.4)
+16:00:46 <bcoca> in 2.3 you ONLY have ansible_devices
+16:01:01 <alikins> hmm, for just the new namespaced facts... I can see that
+16:01:03 <bcoca> in 2.4 we introduced namespace (ansible_facts.ansible_devices) to avoid 'top level var conflicts'
+16:01:14 <bcoca> dag only wants to change the 'new namespaced names'
+16:01:40 <bcoca> in future ansible_devices will be removed and we'll only have namespaced names ... but that is long ways off
+16:02:07 <thaumos> So let's take it up with jason
+16:02:43 <abadger1999> thaumos: works for me.
+16:02:46 <jtanner> jimi?
+16:02:51 <thaumos> mckerr
+16:02:55 <thaumos> and jimi too
+16:02:59 <jtanner> start with jimi
+16:03:00 <thaumos> just jason
+16:03:10 <abadger1999> #action core team to discuss how to fit renaming namespaced facts into the 2.4 release
+16:03:16 <thaumos> well, I think we need to let mckerr have a heads up too just in case we need to shift
+16:03:16 <abadger1999> #undo
+16:03:16 <zodbot> Removing item from minutes: ACTION by abadger1999 at 16:03:10 : core team to discuss how to fit renaming namespaced facts into the 2.4 release
+16:03:27 <abadger1999> #action core team to discuss with jmckerr how to fit renaming namespaced facts into the 2.4 release
+16:03:43 <thaumos> #action core team to discuss with jimi|ansible as well
+16:03:58 * jimi|ansible perks head up
+16:04:47 <alikins> I might go the nest step and sub namespace the new facts namespace with version or schema info.... facts['2.4']['os_distribution'] with varmanager resolving facts['os_distribution'] -> facts['2.4']['os_distribution'] based on config or playcontext
+16:05:20 <jimi|ansible> -1 on versioning
+16:05:21 <bcoca> alikins: as long as we keep ansible_os_distribution till 2.8 ....
+16:05:40 <jimi|ansible> also, you could never do facts.2.4.os_distribution then
+16:05:54 <bcoca> yeah, that kind of defeats it
+16:06:11 <thaumos> I would not want to do that
+16:06:13 <alikins> the whole discussion is 'we need to decide now forever because we dont have versioning of facts "protocol"'
+16:06:28 <thaumos> I don't want to get stuck with something for four releases because we decided to version or keep a leading ansible_
+16:07:42 <jimi|ansible> i would be fine with dropping the leading ansible_ in the namespaced area, it should be pretty trivial to allow both and remove the ansible_ reference later
+16:08:52 <thaumos> cool, @jimi|ansible
+16:09:04 <thaumos> so from here, we just need to figure out if this will shift release at all
+16:09:16 <thaumos> freeze exception or otherwise.
+16:09:39 <bcoca> jimi|ansible: not trivial as facts get 'saved back' and update the 'cache' even when its just in memory one
+16:09:53 <bcoca> ^ i ran into that in my last attempt
+16:10:02 <bcoca> need to see if we can avoid that, just have nto had the time
+16:10:08 <bcoca> or just copy them ...
+16:10:21 <bcoca> did not see a good solution w/o boosting ram usage or taking too long in access
+16:10:41 <bcoca> that is why i 'retracted' my PR that did this
+16:11:42 <jimi|ansible> bcoca: there are probably ways around that using weakref or something else, or building a mapping of variable names when setup is run, but yeah
+16:12:01 <bcoca> yep, again, was more time issue than not wanting the feature
+16:14:35 <bcoca> im even fine with 'shelving' namespaced facts until we have time to do this right and waiting for 2.5 to bring back
+16:15:21 <thaumos> meaning back everything related to fact changes out?
+16:15:58 <bcoca> yep, then we dont have x2 backward compatiblity issues
+16:16:12 <bcoca> its a 'long term fix' in any case
+16:16:46 <abadger1999> thaumos: related to the namespaced copy at least.... I think the other facts refactorings can stay in.
+16:17:09 <bcoca> yes, i did not mean all 'facts' fixes, just the namespace feature
+16:17:20 <thaumos> ok, how about this
+16:17:21 <bcoca> which is pretty small part of code
+16:17:33 <thaumos> let's present all of the above to mckerr and go from there.
+16:17:42 <abadger1999> thaumos: +1
+16:23:12 <thaumos> ok
+16:23:13 <thaumos> sorry
+16:23:27 <thaumos> going to close the meeting now. we have next steps
+16:23:31 <thaumos> thanks everyone
+16:23:33 <thaumos> #endmeeting

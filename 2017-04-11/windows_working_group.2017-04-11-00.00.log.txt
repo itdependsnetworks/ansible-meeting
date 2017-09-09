@@ -1,0 +1,214 @@
+00:00:05 <nitzmahone> #startmeeting Windows Working Group
+00:00:05 <zodbot> Meeting started Tue Apr 11 00:00:05 2017 UTC.  The chair is nitzmahone. Information about MeetBot at http://wiki.debian.org/MeetBot.
+00:00:05 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+00:00:05 <zodbot> The meeting name has been set to 'windows_working_group'
+00:00:14 <dag> o/
+00:00:24 <nitzmahone> Howdy!
+00:00:43 <jborean93> Morning/Evening all
+00:01:02 <nitzmahone> #info agenda at https://github.com/ansible/community/issues/153
+00:01:38 <nitzmahone> #chair dag jborean93
+00:01:38 <zodbot> Current chairs: dag jborean93 nitzmahone
+00:03:04 <nitzmahone> Shall we get started?
+00:03:17 <dag> yes, 2AM here now thanks to DST :-/
+00:03:48 <nitzmahone> Y'know, that's why I do the Monday/Friday ones- to make it so one or the other works in your TZ. :)
+00:03:59 <dag> :-)
+00:04:08 <jborean93> dag is just super keen :)
+00:04:17 <nitzmahone> #topic 2.3 Status
+00:04:18 <dag> I mist last episodes...
+00:04:20 <nitzmahone> We
+00:04:41 <nitzmahone> We're at RC6 for 2.3, *hoping* it's the last one before release (and for once, the RC churn is *not* my fault ;) )
+00:05:17 <dag> hehe
+00:05:20 <nitzmahone> Unless anything's majorly on fire, I believe we're cutting 2.3.0 final this week.
+00:05:40 <jborean93> sounds good, I know I have some work for my next iteration to add support for 2.3 in our roles
+00:05:58 <nitzmahone> (cleaning up deprecated syntax stuff?)
+00:06:24 <jborean93> yep and using new modules and features like the symlink deletion now working in win_file and all the win_service stuff
+00:06:46 <nitzmahone> #topic https://github.com/ansible/community/issues/153#issuecomment-291019646
+00:07:26 <nitzmahone> I have mixed feelings about this one- I'm loathe to impose formatting standards that can't be enforced programmatically (ala pep8).
+00:07:43 <nitzmahone> The existing codebase is kinda all over the place (which I agree is frustrating)
+00:08:32 <nitzmahone> Microsoft's static analyzer for PS is coming along, but I haven't played with it lately. I don't think it has much in the way of syntax enforcement at the moment.
+00:08:49 <jborean93> I agree having something that will enforce the formatting is ideal but it doesn't look like that is possible with PS yet
+00:08:58 <nitzmahone> There were a couple of OSS projects that sorta did formatting, but not pep8-style warnings.
+00:09:40 <nitzmahone> ... I really don't want to spend my limited review time being "style police"- would rather focus on the copious backlog and writing new features. :)
+00:10:25 <nitzmahone> That said, I'm also not opposed to setting down some *limited* big-picture style guidelines that can be enforced by the community at-large if enough folks want to do it.
+00:11:20 <jborean93> I personally think we should have some sort of standard which can be limited for now
+00:11:23 <nitzmahone> Basically, if I see anything egregious that's against what we've laid down, I might hold a PR for fixes, but it'd mostly be up to self-enforcement (slash "people with too much time on their hands" ;) ) to enforce.
+00:12:32 <jborean93> Maybe we should have a look at PSScriptAnalyzer to see what it offers
+00:12:45 <dag> From time to time I hint to my preferred format if someone is not being consistent ;-)
+00:12:50 <nitzmahone> Last I checked, the syntax enforcement was very limited in that tool
+00:13:18 <nitzmahone> Does anyone want to take a stab at a minimal strawman formatting doc?
+00:13:38 <nitzmahone> Then we can discuss on a PR and/or here later
+00:13:45 <dag> I trust jborean93's choices :)
+00:14:17 <jborean93> thanks dag, I thought you would want to do this. I'll try and take a stab and see what comes out
+00:14:22 <jborean93> :)
+00:14:35 <dag> jborean93: no time :-/
+00:14:37 <nitzmahone> IMO, brevity is key if we want it enforced by humans. Pick your battles- what are the most egregious things
+00:14:47 <jborean93> braces :)
+00:14:55 <jborean93> I get confused with the C# style :)
+00:14:56 <dag> I have my OCD under control these days
+00:14:58 <dag> :)
+00:15:30 <nitzmahone> #action jborean93 to create strawman PS formatting guidelines
+00:16:06 <nitzmahone> jborean93: when you've got something, feel free to just PR it into the docsite dir (plaintext is fine initially if you don't feel like doing RST)
+00:16:29 <jborean93> no worries
+00:16:31 <nitzmahone> We can discuss and markup there, then either do the RST stuff or turn it over to one of our docs folks once everything is settled
+00:16:51 <nitzmahone> Anything else on that?
+00:17:32 <jborean93> I'm at peace
+00:17:38 <nitzmahone> #topic https://github.com/ansible/community/issues/153#issuecomment-293093639
+00:17:47 <nitzmahone> "supported" is a loaded word around here. ;)
+00:18:06 <dag> Sure, but what is WSL other than Linux ?
+00:18:11 <jborean93> I've been using WSL for all my dev work and it works a treat
+00:18:44 <nitzmahone> Yeah, I've used it a bit too with no issues. It "works" under cygwin too, but will fall down pretty hard at scale.
+00:19:19 <nitzmahone> We have to thread the needle with "this might work for dev purposes, YMMV, FFS, don't do it in production" or something.
+00:19:41 <nitzmahone> The problems are likely around the network stack and filesystem virtualization.
+00:19:45 <jborean93> Yep, even microsoft says WSL shouldn't be used in production and is for dev purposes
+00:20:09 <dag> We indeed do not have to specifically state it is supported, but we could indicate it is known to work but may have specific issues.
+00:20:18 <nitzmahone> There aren't any special instructions beyond how you'd do it under Ubuntu 16.04, since that's all the supplied WSL image is.
+00:20:41 <dag> And how to set up WSL is already documented elsewhere (so we link) and the installation is identical to other Linux
+00:21:03 <nitzmahone> So I'd be OK documenting that it works under Win10/WSL "for dev/test purposes only", *not supported*.
+00:21:39 <dag> ok
+00:21:52 <dag> I can adapt my WIP documentation
+00:21:58 <nitzmahone> Saying that it's "supported" has all sorts of implications, especially if/when we start selling core support outside Tower subs.
+00:22:08 <dag> obviously
+00:22:19 <nitzmahone> So we want to avoid that word and its synonyms. :)
+00:23:09 <dag> The goal should be that people try it out, but also can report specific issues with it
+00:23:26 <dag> and we get more Windows admins by lowering the bar
+00:23:38 <nitzmahone> There shouldn't be any (at least that are correctable)
+00:23:46 <nitzmahone> *by us
+00:24:00 <dag> (the current wording is more to scare of anyone trespassing...)
+00:24:05 <jborean93> definitely, I've gotten some Windows people converted to Ansible by installing Cygwin locally. Definitely lowered the bar for them to try it out
+00:24:07 <bcoca> M$ does not support the subsystem .. not sure we can mark 'supported' on top fo that
+00:24:37 <dag> bcoca: good point, maybe we should specifically mention Microsoft not supporting it
+00:24:44 <nitzmahone> bcoca: That's why we're avoiding that word and putting plenty of caution tape around it, but no sense in making people come to the ML/IRC over and over to get the same answer.
+00:24:57 <bcoca> ^ we can have guides for cyginw/wsl jsut make sure that this is  WELL marked as unsupported
+00:25:09 <nitzmahone> yep
+00:25:12 <bcoca> +1
+00:26:59 <nitzmahone> #action dag to propose Win10/WSL installation verbiage that avoids "supported" and includes lots of caution tape
+00:27:22 <nitzmahone> We can deal with cygwin later - I haven't tried that since 2.0.x
+00:27:41 <nitzmahone> #topic https://github.com/ansible/community/issues/153#issuecomment-293095963
+00:27:43 <dag> I think WSL is the easier approach
+00:27:56 <nitzmahone> dag: agreed
+00:28:15 <nitzmahone> "in the box" is pretty compelling (well, except for the Ubuntu image, but still)
+00:28:32 <nitzmahone> CIDR prefix or netmask?
+00:28:45 <nitzmahone> Honestly, this seems like a good case for "do both"
+00:29:27 <dag> from the vmware_guest discussions, ultimately it was decided to do only one thing, and not complicate matters
+00:29:31 <nitzmahone> Once I have the module_utils loader plugged in for 2.4, "network utils" would be a good classification of stuff that could convert between CIDR/netmask as necessary
+00:29:54 <dag> for usability, being liberal to what we accept seems best
+00:30:00 <nitzmahone> Problem is, if we do that, we have to have the ability to convert, because not everything does netmask
+00:30:18 <nitzmahone> A lot of newer cloud stuff is CIDR only
+00:30:34 * dag prefers CIDR too
+00:30:55 <nitzmahone> I've got a lot of plane travel coming up in the next few weeks
+00:31:10 <nitzmahone> That's easy stuff to hack on a plane w/o internet connectivity
+00:31:21 <dag> I don't mind to make that the default (e.g. for Windows modules)
+00:31:39 <dag> the other related question is, parameter naming
+00:31:47 <dag> we could do much better in that regard :-P
+00:31:52 <nitzmahone> I'd vote for "CIDR unless there's a compelling reason to do otherwise"
+00:32:18 <nitzmahone> Arg naming in general, or on the win_route PR specifically?
+00:32:19 <bcoca> fyi, cygwin will have more issues than wsl as the forking/memory management is distinctly diff
+00:32:24 <nitzmahone> ayup
+00:32:27 <dag> maybe this is something we could do project-wide as well (add to the dev guidelines)
+00:32:43 <bcoca> +1  for getting IP 'handling' normalized
+00:32:53 <dag> nitzmahone: in this case network-related, but the comment was in general
+00:32:54 <jborean93> CIDR just sounds like common sense to me
+00:33:12 <nitzmahone> bcoca: I'm guessing you'd vote for CIDR too? Or do you prefer the "take everything and convert as necessary" approach?
+00:33:25 <dag> ip, ipaddress, destination_ip, destination_ipaddress, or simply destip
+00:34:01 <bcoca> nitzmahone: depends, but we should normalize the interface, either take verything everywhere or cidr or etc, but not 1/2 done in some, only cidr in others, etc
+00:34:05 <nitzmahone> I think we've been trying to cut down on abbreviations (eg, "ansible_password" instead of "ansible_ssh_pass")
+00:34:37 <dag> in this case destination_ip is a bit awkward too, because usually it is a network address
+00:35:37 <nitzmahone> The tricky bit with netmask is that some modules have more than one thing that take it IIRC, so it'd be "subnet" + "subnet_netmask" or something like that. On the Azure modules, I specifically named them subnet_cidr etc so it's clear without docs what we want.
+00:36:58 <dag> nitzmahone: I am not so concerned unclarity without docs, because people know it's "subnet_cidr" by looking at the documentation
+00:37:13 <dag> nitzmahone: and the module will complain and explain if the format is incorrect
+00:37:55 <dag> (especially if we can make CIDR the default format project-wide)
+00:38:01 * nitzmahone is used to designing APIs for consumption by things with Intellisense
+00:38:11 <dag> :-)
+00:38:24 * nitzmahone rarely reads docs when working in that env
+00:39:38 <nitzmahone> How about this: anything new needs to support CIDR, netmask is bonus.
+00:40:01 <bcoca> we can make an 'type=ip' field
+00:40:11 <nitzmahone> Yeah, that'd be good too.
+00:40:15 <bcoca> ^ my only issue there is .. should it always be a 'list of ips'?
+00:40:39 <dag> hmm, why a list of ips ?
+00:40:58 <nitzmahone> I still haven't played with subspec, but we probably need some better way of handling "list of X" in declarative argspec than we have today
+00:41:18 <nitzmahone> Would subspec handle that cleanly?
+00:41:22 <bcoca> pretty  much
+00:41:24 <nitzmahone> (if a little verbosely)
+00:41:39 <dag> aha, that's already possibly in python now ?
+00:41:50 <nitzmahone> bcoca's subspec stuff got merged for 2.4
+00:41:51 <bcoca> its in devel
+00:42:00 <bcoca> ^ needs testing/usage
+00:42:26 <nitzmahone> I'm going to convert the azure stuff over to use it (eg, azure_rm_virtualmachine/securitygroup)
+00:43:05 <nitzmahone> Have some lingering stuff that I'd like to get done for 2.3.1 though (persist/ANSIBLE_KEEP_REMOTE_FILES/debug support is the biggest)
+00:43:30 <nitzmahone> So no, I don't think type=ip should assume a list
+00:43:51 <nitzmahone> And we probably need more than just ip, like "subnet"
+00:44:12 <dag> right, for win_route it could be both
+00:44:15 <nitzmahone> and "netmask", if we're doing that (eg, validator does the bit math to limit to valid subnets)
+00:44:30 <nitzmahone> rather than the nasty list hack that's in the win_route PR right now
+00:44:33 <dag> so I would prefer parameter "subnet" over "destination_ip"
+00:45:01 * nitzmahone has only glanced at the win_route PR, if that's what you're talking about
+00:45:19 <dag> hmm man route calls it target or destination
+00:45:45 <nitzmahone> Yeah, agreed that name could be something better
+00:48:01 <nitzmahone> I like trying to standardize IP handling, less convinced on trying to standardize names across the platform like that (at least not without undertaking an extensive review of the modules that currently do it)
+00:48:29 <nitzmahone> Provide tools to make IP handling easier, then convert existing modules as necessary to use those tools.
+00:49:08 <nitzmahone> s/tools/module_utils
+00:49:59 <nitzmahone> jborean93: did you already do this? https://github.com/ansible/community/issues/153#issuecomment-286400853
+00:50:37 <nitzmahone> It's all a blur- can't remember if I merged something with that already or not
+00:51:26 <dag> https://github.com/ansible/ansible/pull/23119
+00:51:30 <jborean93> yep the PR was raised https://github.com/ansible/ansible/pull/23119
+00:51:39 <jborean93> Was awaiting feedback and merge if nothing needed to change
+00:51:50 <dag> We have about 10 new PRs during the past 14 days
+00:51:55 <jborean93> Was quite a big change as well during the Tests
+00:52:10 <nitzmahone> OK cool, I've added myself as a reviewer
+00:52:12 <dag> (since last meeting actually)
+00:52:27 <nitzmahone> Will zap that agenda item and look it over
+00:52:51 <jborean93> There are quite a few older issues we should try and close off if not valid or fix them as well
+00:53:33 <dag> jborean93: yeah, the issues are expanding a lot faster...
+00:53:47 <nitzmahone> Yeah, I keep planning to do a "lock myself in a room and start at the oldest" pass, but keep getting sidetracked/roped into other thing
+00:53:59 <nitzmahone> There's a lot of noise and bogus stuff back there
+00:54:05 <nitzmahone> (same on pywinrm, actually)
+00:54:20 <jborean93> yea pywinrm is building up a lot (my fault there as well)
+00:54:41 <jborean93> Maybe we should do a block on all PRs in Ansible when 2.3 is finished and focus on the Issues
+00:55:05 <jborean93> I've been meaning to get to the NTLM encryption changes but the Kerberos CBT side has taken a lot of my time
+00:55:08 <nitzmahone> I need to be more ruthless on the "stop asking usage questions in issues" stuff, but pywinrm doesn't have a forum that I can point people at (and I'd say 90% of the users are Ansible folks anyway)
+00:56:28 <jborean93> A lot are also older issues that just were never closed
+00:56:35 <jborean93> like Domain credential support and the like
+00:56:40 <nitzmahone> <tangent_pop>Do we want to take any action on the network standardization for now? Or just use that as a direction for the win_route stuff (and future things)
+00:57:28 <nitzmahone> I think we're kinda blocked on module_utils until I get that plugged into devel. I'm doing kerberos encryption stuff first, because $customers will be grouchy if that's not in by 2.4.
+00:58:26 <nitzmahone> Hoping that will be done this week, but I'm spending a little extra time trying to get xplat debugging with VS/gdb working (since that will require new stuff in pykerb)
+00:59:08 <nitzmahone> PS- jborean93: did you see my note about the pykerb vs Apple kerberos thing? I think the pykerberos fork is mostly dead.
+00:59:47 <nitzmahone> That project got forked off because Apple had been ignoring stuff on theirs for a long time, then they came back from the dead and pykerberos kinda seems to have died.
+00:59:55 <jborean93> nitzmahone: Yes I did, was wondering if I should just create a PR in the Apple one instead and jsut get requests-kerberos to change across
+01:00:10 <jborean93> It's just like NTLM all over again :(
+01:00:14 <nitzmahone> That's kinda where I was leaning as well. :(
+01:00:33 <nitzmahone> I know the requests maintainers though, so that shouldn't be a big deal
+01:00:56 <nitzmahone> (and requests-kerberos auth stuff, same guys)
+01:01:13 <jborean93> yep will raise a PR onto the Apple one and hopefully get some feedback there
+01:01:17 <nitzmahone> We should see what else is busted before doing that though
+01:01:26 <jborean93> Honestly no idea if I've broken and design changes with my changes but we will see
+01:01:31 <nitzmahone> (eg, locally switch back to "kerberos")
+01:01:49 <dag> nitzmahone: I will report back to win_route maintainer
+01:02:02 <nitzmahone> If there are other blockers to switching back to Apple kerberos, I want to know that early and get those corrected first
+01:02:03 <dag> nitzmahone: and will propose something for core meeting
+01:02:29 <nitzmahone> dag: sounds good- I think we have a decent direction overall, but not sure we want to take on more code requirements in general right now
+01:03:22 <jborean93> I'll try it out using apple kerberos with the various python versions but unfortunately I probably won't catch them all
+01:03:54 <nitzmahone> jborean93: I'm less worried about that, more so that things like collection-type ccache lookup works (it didn't, at one point)
+01:05:07 <nitzmahone> Also, there's some IOV stuff that's been merged into the fork that isn't in the Apple stuff- I was initially hoping that'd be usable for the message encryption, but alas, it's not. I'll have to do my own simple wrap/unwrap methods for that and expose them via requests-kerb to pywinrm.
+01:05:38 <nitzmahone> I'm honestly not sure what that stuff in the fork is for- I haven't spent the time to track it down yet
+01:05:52 <jborean93> I thought it was Python 3 compatibility changes
+01:06:05 <nitzmahone> Hrm, I thought Apple had done that
+01:06:07 <jborean93> I remember reading somewhere that the original apple kerberos didn't have that
+01:06:14 <nitzmahone> I think they've since done it
+01:06:22 <jborean93> ok
+01:06:32 <nitzmahone> We have other py3 issues that need love anyway (both pywinrm and the winrm CP)
+01:06:46 <nitzmahone> I had it all working at one point, but it's been broken again
+01:06:54 <jborean93> I'm hoping the PSRP stuff fixes the WinRM Python 3 issues
+01:06:58 <nitzmahone> noice
+01:07:04 <nitzmahone> #topic open floor
+01:07:07 <jborean93> The tests all seem to pass on that version but who knows
+01:07:35 <nitzmahone> We're a little over time, and I've got dinner guests coming soon- anything else pressing?
+01:08:32 <nitzmahone> #action nitzmahone to update agenda with notes from today
+01:08:32 <jborean93> nope, have fun entertaining
+01:08:38 <jborean93> always good to chat to you all
+01:08:41 <nitzmahone> Closing up in 5
+01:08:45 <nitzmahone> 4
+01:08:48 <nitzmahone> 3
+01:08:51 <nitzmahone> 2
+01:08:54 <nitzmahone> 1
+01:09:01 <nitzmahone> Thanks all!
+01:09:04 <nitzmahone> #endmeeting

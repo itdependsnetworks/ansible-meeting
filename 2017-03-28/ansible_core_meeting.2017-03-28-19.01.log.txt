@@ -1,0 +1,345 @@
+19:01:06 <gundalow> #startmeeting Ansible Core Meeting
+19:01:06 <zodbot> Meeting started Tue Mar 28 19:01:06 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:01:06 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:01:06 <zodbot> The meeting name has been set to 'ansible_core_meeting'
+19:01:24 <nitzmahone> boop
+19:01:30 <gundalow> #chair abadger1999 alikins bcoca jimi|ansible jtanner mattclay nitzmahone Qalthos ryansb shertel
+19:01:30 <zodbot> Current chairs: Qalthos abadger1999 alikins bcoca gundalow jimi|ansible jtanner mattclay nitzmahone ryansb shertel
+19:01:44 <shertel> hi
+19:01:53 <gundalow> #info Agenda https://github.com/ansible/community/issues/156
+19:01:54 <jtanner> yo yo yo
+19:01:58 <gundalow> #topic Core Update
+19:02:05 <sivel> howdy
+19:02:07 <abadger1999> Greetings
+19:02:16 <gundalow> #Ansible 2.3 RC2 has been released, PLEASE TEST IT :)
+19:02:20 <gundalow> #info Ansible 2.3 RC2 has been released, PLEASE TEST IT :)
+19:02:46 <gundalow> #info https://groups.google.com/forum/#!topic/ansible-devel/cmYsumCc4kA
+19:02:53 <gundalow> When is the next RC?
+19:04:03 <abadger1999> jimi|ansible: ^
+19:04:47 <gundalow> right, what's on the agenda for today
+19:05:51 * mattclay waves
+19:05:54 <gundalow> jtanner: Did you get answer to: jtanner to evaluate and write bot workflow for non-module shipits. need more info on what 'rework is done' means
+19:06:18 <jtanner> no
+19:06:31 <gundalow> #topic Discuss extending the module "shipit" workflow to non-modules
+19:06:43 <gundalow> #info https://github.com/ansible/community/issues/156#issuecomment-283631658
+19:06:52 <gundalow> #info https://github.com/ansible/ansibullbot/issues/437
+19:07:10 <gundalow> ryansb: Was this one of yours?
+19:07:14 <gundalow> or was it all bcoca ?
+19:08:26 <jimi|ansible> gundalow: i believe the next RC will be Thursday
+19:08:33 <gundalow> jimi|ansible: Thanks
+19:10:05 <gundalow> hum, bcoca seems to be offline
+19:10:31 <abadger1999> #info 2.3RC3 will probably be Thurrsday
+19:10:52 <ryansb> gundalow: the consul.ini/consul_io.ini has been resolved
+19:10:55 <ryansb> struck out on agenda
+19:11:06 <abadger1999> Rework I think just referreed to getting hte revised metadata 1.0 spec done and copid to the modules.
+19:11:06 <bcoca> gundalow: just merged 'autodoc plugins' should enable metadata .. but in 2.4
+19:11:32 <gundalow> ryansb: thanks
+19:11:33 <bcoca> abadger1999: no, was mostly about classifying plugins/inventory scripts to allow same 'offloading'
+19:13:22 <gundalow> jtanner: maybe you and bcoca could get together later to extact the needed information
+19:13:33 <bcoca> gundalow: information must be set first
+19:13:40 <jtanner> gundalow: yeah, let's move on ... metadata is a touchy subject
+19:13:42 <bcoca> extracting should happen easily afterwards
+19:14:05 <gundalow> It's 8pm. I have zero energy for metadata :)
+19:14:09 <funzo> haha
+19:14:17 * gundalow looks down the agenda
+19:14:32 * bcoca adds 5 metadata related items to agenda
+19:14:48 <gundalow> bcoca: https://github.com/ansible/ansible/pull/19297 is still with you, is that something for 2.3?
+19:14:57 <gundalow> #topic Versioned Docs
+19:15:01 <gundalow> #info PRGRESS
+19:15:03 <gundalow> meh
+19:15:21 <bcoca> i forgot, been in inventory plugin land ...
+19:15:28 <bcoca> should finish up soon and get time to review that
+19:15:33 <gundalow> #info https://github.com/ansible/proposals/issues/60 Versioned Docs Proposal
+19:16:00 <gundalow> docschick: Thanks for your comments :)
+19:16:58 <gundalow> Could people please take a look at https://github.com/ansible/proposals/issues/60 and +1/-1
+19:17:32 <sivel> irregardless of implementation or the proposal +1
+19:17:38 <sivel> I trust that people will make it work
+19:17:44 <gundalow> sivel: :)
+19:19:32 * gundalow counts 6 +1's
+19:19:41 <gundalow> so I'll give it the approved label
+19:19:42 <abadger1999> open questoin here:
+19:19:50 <abadger1999> What are we doing about "archiving"?
+19:20:19 <gundalow> 2.1 and onwards will always be live
+19:20:26 <gundalow> well, maybe till we hit 3.
+19:20:46 <abadger1999> It seems like we're mostly -1 to tarballs but there's a questoin of whether we want to keep the live html or not.
+19:21:08 <bcoca> yeah, tarballs make no sense to me, might as well link to github tarball of repo
+19:21:10 <nitzmahone> I don't see a reason not to keep the HTML live for old versions with the "unmaintained" header
+19:21:12 <gundalow> I don't think that alters anything for the moment
+19:21:19 <bcoca> ^ not sure why i got attribution, never been fan of it
+19:21:58 <abadger1999> Proposal: Keep the live html with a header/footer that it is unmaintained
+19:22:07 <nitzmahone> +1
+19:22:08 <abadger1999> +1
+19:22:09 <gundalow> +1
+19:22:15 <jtanner> live html is useful to point at in issues when people try to use modules that aren't released yet
+19:22:23 <jtanner> tarballs do me no good
+19:22:26 <bcoca> ^ make search ignore 'old versions'
+19:22:47 <nitzmahone> I don't think we need to make any guarantees about how long the archived stuff will live, but I don't currently see any reason to actively cull it if they're versioned in the URL.
+19:22:57 <gundalow> Yup, boschick has given details of how we can do that
+19:23:08 <jtanner> will RCs be kept too?
+19:23:14 <abadger1999> yeah, docschick commented on how to do that here: https://github.com/ansible/proposals/issues/60#issuecomment-289781530
+19:23:14 <nitzmahone> bcoca: either that or segment search so that it still works *inside* an old version
+19:23:16 <bcoca> nitzmahone: my point was to remove as to not have to maintain old docs nor present 'inaccurate docs'
+19:23:31 <gundalow> Current proposal doesn't say anything about RCs
+19:23:38 <nitzmahone> -1 to keeping RC docs
+19:23:43 <mattclay> -1 to RCs
+19:23:43 <gundalow> which I read as they will not be published
+19:23:50 <bcoca> RCs are 'devel about to be x.y'
+19:23:54 <bcoca> no need for RC specific docs
+19:24:06 <abadger1999> jtanner: My understanding was that it would be lateest release of 2.x  (ie: there'd be docs.ansible.com/ansible/2.3/ docs.ansible.com/ansible/2.4/, etc
+19:24:21 <gundalow> and docs.ansible.com/ansible/devel/
+19:24:25 <jtanner> that's fine
+19:24:27 <abadger1999> so no "keeping" of rcs or other micro versions
+19:24:28 <nitzmahone> Yeah, I don't think we need more granularity than "last build of 2.x"
+19:24:31 <jtanner> was just wondering
+19:24:35 <gundalow> docs.ansible.com/ansible/latest/ would (today) point to docs.ansible.com/ansible/2.2/
+19:24:56 <gundalow> jtanner: It was a sensible question
+19:25:00 <bcoca> and /devel point to /2.3?
+19:25:01 <nitzmahone> Might want to bikeshed on "latest" (as "2.2.3" will be "latest" but not "newest")
+19:25:16 <jtanner> stable/preview/devel
+19:25:27 <nitzmahone> +1 to "stable"
+19:25:29 <bcoca> nitzmahone: presumably docs dont change in minor as they are bugfix
+19:25:32 <mattclay> Are we going to keep each minor version, or just major versions?
+19:25:38 <bcoca> -1 preview
+19:25:38 <nitzmahone> bcoca: maybe, maybe not
+19:25:44 <bcoca> +1 deve/stable
+19:25:49 <jtanner> minors tend to have a lot of change
+19:25:51 <gundalow> We are only doing X.Y, not X.Y.Z
+19:25:54 <jtanner> esp modules
+19:26:02 <sivel> bikeshed brings about an important point, do remember this is an extremely easy topic to debate.  At some point I'd just like to see it in action, we can always improve as we go
+19:26:07 <bcoca> should not change docs, as those changes are bufixes
+19:26:08 <jtanner> oh ... minor.minor
+19:26:16 <gundalow> sivel: :P
+19:26:20 <gundalow> OK, so to summarise
+19:26:35 <gundalow> 1) Only X.Y
+19:26:42 <gundalow> 2) No RCs, only stable and devel
+19:27:00 <jtanner> shipit
+19:27:01 <gundalow> 3) /devel/ and /stable/ are the two special lables
+19:27:08 <gundalow> woot
+19:27:33 <nitzmahone> 4) Static HTML + "unmaintained" banner for unmaintained versions
+19:27:57 <mattclay> Will stable redirect to the latest stable version, or will it be an alias?
+19:28:00 <abadger1999> +1, (1-4) looks like what I see us agreeing on.
+19:28:13 <bcoca> 5) external search engine to ignore outside of /stable or /devel
+19:28:23 <nitzmahone> +1 for stable as redirect (think stale Google?)
+19:28:32 <bcoca> nitzmahone: symlink is 'nicer'
+19:28:44 <bcoca> or server side rewrite
+19:28:55 <nitzmahone> Agreed, but potential for caching/stale search issues higher w/ symlink IMO
+19:29:02 <nitzmahone> (or server-side)
+19:29:02 <bcoca> ^ 'webserver configuration equivalent of symlink'
+19:29:17 <bcoca> nitzmahone: updates will be faster actually
+19:29:19 <nitzmahone> regardless, looks like separate "deep" URL
+19:29:23 <bcoca> since you change content, but not url
+19:29:41 <nitzmahone> With redir, nothing will be indexed under "/stable"
+19:29:43 <bcoca> url changes tend to update search cache slower (they expect they might vary more)
+19:29:52 <mattclay> Downside is there's two permanent URLs for the same content.
+19:29:55 <gundalow> so when someone types in docs/stable/latest/ what should happen?
+19:30:00 <nitzmahone> 404
+19:30:02 <bcoca> nitzmahone: you WANT people to go to /stable
+19:30:04 <gundalow> 302 to ansiloh
+19:30:13 <bcoca> if search is redirecte, people will go to /version.x/
+19:30:14 <gundalow> so when someone types in docs/ansible/latest/ what should happen?
+19:30:25 <bcoca> gundalow: currently, serve 2.2 docs
+19:30:32 <bcoca> after 2.3, serve 2.3 docs
+19:30:51 <gundalow> without redirect to docs/ansible/2.2/?
+19:31:07 * abadger1999 doesn't feel qualified to debate merits of redirect vs symlink.
+19:31:24 <nitzmahone> I don't think we want content being indexed under stable
+19:31:24 <gundalow> nod
+19:31:26 <gundalow> lets move on
+19:31:28 <abadger1999> happy to let docschick/dharmabumstead decide which is better.
+19:31:39 <jtanner> yeah, let the docs people figure it out
+19:31:41 <nitzmahone> abadger1999: nice punt ;)
+19:31:48 <abadger1999> :-)
+19:31:58 <nitzmahone> buck: passed
+19:32:00 <jtanner> they're better  equipped to bikeshed wordsmithing
+19:32:15 <gundalow> what's next, CHANGELOG.md -> RST?
+19:32:28 <ryansb> whoa whoa whoa
+19:32:32 <bcoca> probably marketing people care more about the redirect/link
+19:32:35 <nitzmahone> Won't that prevent GH from rendering it?
+19:32:43 <ryansb> No, GH renders .rst
+19:32:44 <bcoca> gundalow: that was 'done'
+19:32:46 <gundalow> GH can render RST
+19:32:50 <sivel> most of our docs are rst already
+19:32:56 <ryansb> GH users tend to not be good at writing RST though ;)
+19:33:02 <bcoca> GH it renders md better than rst, but can handle both (mosthly)
+19:33:12 <sivel> we had made a non-documented decision quite some time ago to use rst
+19:33:12 <gundalow> GH users tend to not be good at writting
+19:33:24 <bcoca> GH users ....
+19:33:28 <gundalow> sivel: The irony of which isn't lost on us
+19:33:34 <gundalow> ok, Next
+19:33:35 <sivel> gundalow: :)
+19:33:42 <ryansb> gundalow: lol
+19:34:01 <gundalow> bcoca: Anything left on "How should paths work"?
+19:34:06 <gundalow> https://github.com/ansible/ansible/pull/22546
+19:34:07 <dharmabumstead> Missed it.
+19:34:08 <nitzmahone> So we'll make that change in devel for 2.4?
+19:34:16 <bcoca> gundalow: probably going into 2.4
+19:34:27 <gundalow> #topic RST
+19:34:44 <gundalow> #agreed RST is the format that's agreed on
+19:35:03 <nitzmahone> (to be enforced 2.4+)?
+19:35:10 <gundalow> #agreed now that stable-2.3 has been branched we can update devel to use rst for CHANGELOG etc
+19:35:28 <bcoca> got4it
+19:35:33 <gundalow> nitzmahone: blanket fail on any .md being added?
+19:35:39 <nitzmahone> wfm
+19:35:54 <nitzmahone> At least under /docs and top-level
+19:36:18 <nitzmahone> Probably don't want to do repowide in case a test or vendor package includes one
+19:36:18 <bcoca> there are a few README.md in modules tree (mostly for cloud/tech specific info)
+19:36:41 <bcoca> nitzmahone: i would make it repowide, also i would add those to website during build proces
+19:36:43 <bcoca> s
+19:36:49 <gundalow> #agreed MD is EVIL needs blocking. Review all MD, review https://ansible.sivel.net/pr/byfile.html for any PRs in flight that change MD
+19:37:17 <gundalow> #agreed add some CI to block is a .md file is aded
+19:37:22 <nitzmahone> Yeah, that's cool- if we come up with some legit reason for one to exist later we can always whitelist.
+19:37:34 <gundalow> #info if we come up with some legit reason for one to exist later we can always whitelist.
+19:37:38 <bcoca> 62 .md files currently in repo
+19:37:51 <bcoca> ^ 1/2 of them under test/
+19:37:53 <gundalow> #info code-smell can be used to do this
+19:37:57 <gundalow> cool
+19:38:10 <bcoca> ticket_stubs are big chunk, we can change/remove those
+19:38:28 <gundalow> hum, maybe they would stay
+19:38:36 <gundalow> anyway, lets move on
+19:38:43 <bcoca> ^ not priority imo, we can do 'as needed', no hurry
+19:38:54 <gundalow> bcoca: Anythign else on expand doc fields?
+19:38:57 <bcoca> lets just make sure no new .md files
+19:39:16 <bcoca> gundalow: needs approval mostly, autodoc plugins PR should be able to 'use' right away
+19:39:28 <gundalow> Shall we do that now?
+19:39:36 <bcoca> ^ im thinking we really need dtd of our fields
+19:39:37 <gundalow> We have a decent number of people here
+19:39:38 <sivel> I have a pretty good gfl markdown to rst converter, which roughly uses the github API to go to HTML, and then HTML to RST
+19:40:26 <jtanner> that sounds ... horrible
+19:40:35 <jtanner> but whatever works
+19:40:37 <abadger1999> if we need to schema-fy our docs fields, we should lean on sivel's work with volutpuous.
+19:40:52 <gundalow> #topic expand doc fields
+19:40:55 <bcoca> enlighten me?
+19:40:59 <gundalow> #info https://github.com/ansible/proposals/issues/58
+19:41:08 <jtanner> voluptuous is not something you can google during work
+19:41:14 <sivel> lol
+19:41:20 <sivel> "python voluptuous"
+19:41:26 <sivel> or just be brave
+19:41:27 <jtanner> maybe worse
+19:41:36 <bcoca> jtanner: ssssh ... going through the first site still
+19:41:50 * nitzmahone spits drink
+19:42:06 <gundalow> #info https://github.com/ansible/ansible/blob/devel/test/sanity/validate-modules/schema.py
+19:42:35 <bcoca> so +1 on current additions, follow up to make 'schema' we can validate
+19:42:35 <jtanner> i think i've seen this before
+19:43:08 <gundalow> ^ is what I used to find and fix up DOCUMENTATION
+19:43:18 <abadger1999> bcoca: yes, +1 to proposal
+19:43:19 <bcoca> gundalow: suboption and option schemas are the same
+19:43:29 <dharmabumstead> +1
+19:43:36 <bcoca> also .. subspec, not suboptions is the keyword iirc
+19:44:38 <gundalow> bcoca: You can only go one deep, rather than infinate, so so created two schemas. There is a fixme at the end of the file to look into this more
+19:44:49 <bcoca> gundalow: no, you can go deep several times
+19:45:16 <gundalow> well, not if you want the HTML rendered
+19:45:18 <bcoca> ^ we have set no limit, there is practical python recurssion limit .. but i think sanity should give out MUCH sooner
+19:45:31 <gundalow> also only a few modules currently use suboptions
+19:45:45 <bcoca> gundalow: no such limit in ansible-doc, which will reflect actual usage
+19:45:58 <bcoca> gundalow: none should as they were just enabled
+19:46:10 <bcoca> and the key is subspec, not suboption
+19:46:16 <gundalow> since when?
+19:46:20 <nitzmahone> We have no subspecs defined, but there are modules that use them
+19:46:22 <bcoca> since i added the feature
+19:46:26 <gundalow> https://github.com/ansible/ansible/pull/22353/files#diff-2b9fb4f33282b91405036e352004be12 is where this was implmented
+19:46:53 <gundalow> every module is complient with that schema,so I'm not sure what the confusing is
+19:46:54 <bcoca> gundalow: ok, diff things, you included docs for a feature that did not exist yet
+19:46:56 <nitzmahone> subspec is the argspec validation side of that
+19:47:04 <nitzmahone> We probably should've used the same keyword though. :)
+19:47:06 <bcoca> im talking about new feature that actually allows for validated subspec
+19:47:21 <bcoca> ^ i was unaware of suboptions (since it was never official)
+19:48:04 <gundalow> OK. so for DOCUMENTATION whatI've done is official as 1) It's documented developing_modules_documenting.rst, 2) It's validated 3) Everything matches
+19:48:06 <bcoca> gundalow: when you asked be about the html, pretty sure i was using 'subspec'
+19:48:35 <nitzmahone> suboptions was what RETURN used, so I think he just added that to DOCUMENTATION options as well
+19:48:59 <gundalow> That suboptions was decided on as that's what it is, a sub item under `options:`
+19:49:04 <bcoca> understood, but i ketp them separate
+19:49:12 <nitzmahone> "suboptions" was also brought to you by bcoca ;)
+19:49:20 <bcoca> that was for RETURN, not spec
+19:49:23 <gundalow> extra big arse fries
+19:49:51 <nitzmahone> gundalow++ for idiocracy reference
+19:49:54 <gundalow> \o/
+19:50:05 <gundalow> anyways
+19:50:22 <nitzmahone> We should probably unify the keywords- don't really care which way
+19:50:34 <bcoca> nitzmahone: it was prediction, they exist now
+19:51:19 <gundalow> currently using suboptions and contains
+19:51:23 <nitzmahone> top-level of argspec is unnamed, so changing "subspec" to "suboptions" to match existing docs seems like a faster change than the other way around
+19:51:38 <bcoca> tru
+19:52:07 <gundalow> their are only a few <10 modules that have suboptions, so that's also an easy change, though you will need to update docs and validate-modules
+19:52:20 * gundalow has zero cares on what it's called
+19:52:38 <bcoca> idem, jsut want to avoid refering to same thing diff ways
+19:52:38 <nitzmahone> But top level is "options" in docs, so "options" + "subspec" seems weird
+19:52:39 <gundalow> All I care is that docs & validation get improved
+19:52:49 <bcoca> nitzmahone: its actually 'spec'
+19:53:17 <dharmabumstead> gundalow++
+19:53:18 <nitzmahone> Well, the AnsibleModule arg is "argument_spec", right?
+19:53:27 <bcoca> gundalow: that is why im making everything generate docs from plugins
+19:53:34 <gundalow> bcoca: +100000000
+19:53:35 <nitzmahone> Yeah, I don't have strong feelings on which really, but we should unify them
+19:53:59 <gundalow> #action bcoca to pick a name and update whatever needs updating
+19:54:06 <bcoca> options
+19:54:09 <gundalow> +1
+19:54:11 <bcoca> ^ just to make us all change
+19:54:13 <gundalow> right, what's next
+19:54:59 <sivel> not to change topics and go back, but I just made a comment on the agenda about the md->rst that we have certain files that can't be converted
+19:55:19 <gundalow> sivel: Ping me a list and I'll updatethe issue later
+19:55:23 <sivel> ticket_stubs and ticket templates
+19:55:25 <bcoca> #info bcoca updated code to use 'options'
+19:56:27 <gundalow> sivel: ACK
+19:56:29 <gundalow> thanks
+19:56:30 <bcoca> ^ we actually need to update module dev to let devs know they can use 'options'
+19:56:59 <gundalow> Is there an example of the new argspec stuff?
+19:57:17 <gundalow> I've only seen the framework so far
+19:57:17 <bcoca> gundalow: also, test validation should not fail, as ansible-doc and docs should be 'correct' on having more than 2 levels
+19:57:28 <nitzmahone> gundalow: Not yet- I'm going to do azure_rm_securitygroup next week
+19:57:34 <bcoca> ^ will soon
+19:57:41 <bcoca> we have many modules that will 'benefit' from it
+19:58:38 <gundalow> bcoca: I *think* you can do https://github.com/alecthomas/voluptuous/issues/128  for recursive scheme, I didn't test it as it wasn't needd for any of the current modules. I'm not sure who to get 2+ levels working in hacking/templates/rst.j2
+19:59:27 <bcoca> gundalow: shoudl not be too hard .. utnil we hit browser limits for embeded tables .... might be worth switching to divs
+19:59:53 <bcoca> ^ it used to be  4 on firefox, was about 64 on ie .. dont ask why i know that ....
+20:00:21 <nitzmahone> I suspect practical rendering issues will pop up before any of those. ;)
+20:00:46 <bcoca> nitzmahone: i suspect developer will shoot out office waaay before they define 4+ levels of options specs
+20:00:48 <jtanner> IE users are also likely to be frontpage "devs" ... table inception
+20:00:49 <nitzmahone> "Why is the horizontal scrollbar for this module 1 px wide?"
+20:00:51 <gundalow> http://docs.ansible.com/ansible/eos_banner_module.html is an example of 1
+20:01:06 <gundalow> oh 2, depending if you don't count from zero
+20:01:23 <bcoca> gundalow: i was actually thinking 'css popup'
+20:01:40 <nitzmahone> Or 3 for large values of 1
+20:02:06 <nitzmahone> "or 4 if you count him twice"
+20:02:16 <bcoca> or had enought to drink
+20:02:20 <bcoca> #info letsmoveon
+20:02:30 <gundalow> #topic Open Floor
+20:03:01 <bcoca> do we implement group_vars/host_vars as vars plugins? or eliminate vars_plugins and fold them into inventory plguins?
+20:03:02 <gundalow> sivel: Thanks for the comments on RST
+20:03:06 <sivel> np
+20:03:19 <gundalow> #topic do we implement group_vars/host_vars as vars plugins? or eliminate vars_plugins and fold them into inventory plugins
+20:05:11 <gundalow> ?????????????
+20:05:54 <gundalow> What's the pros & cons?
+20:06:28 <jtanner> sounds like an ansible 3.x change to me.
+20:06:29 <gundalow> Whatever we do we need to ensure we have solid tests so we don't cause regressions for users
+20:08:21 * nitzmahone tends to agree w/ jtanner
+20:08:45 <bcoca> currently reformating inventory into plugins
+20:08:51 <bcoca> https://github.com/ansible/ansible/pull/23001
+20:08:53 <abadger1999> I'd love to eliminate vars_plugns (we don't have any that we ship) but I don't know if we can.
+20:09:02 <bcoca> ^ one thing we do 'badly' is group/host_vars and vars_plugins
+20:09:13 <abadger1999> I've never seen a working vars_plugin so I don't even know what it's supposed to do really.
+20:09:30 <bcoca> abadger1999: seems like people do use them, to do 'non standard vars lookups'
+20:09:38 <nitzmahone> abadger1999: what if we shut it off by default in 2.4 (ala soft deprecation) and have a config option to reenable?
+20:09:48 <bcoca> i was thinking of eitehr eliminating them or making group/host_vars become plugins
+20:09:57 <nitzmahone> Just to try and drive users (if any) out of the woodwork
+20:10:10 <abadger1999> I've no idea, the only thing I know is that someone from the community contributed the code and apparently has vars plugins that do something.
+20:10:25 <bcoca> nitzmahone: users dont care as much about vars plugins as being able to do their var resolution, migrating to inventory plugins is one way
+20:10:25 <nitzmahone> Basically have the deprecation warning be "we don't think anyone's using this- if you are, please comment on PR #X"
+20:10:43 <bcoca> ^ people have commented in proposals about it
+20:10:45 <nitzmahone> Then plan to kill/replace in 3
+20:10:53 <mattclay> If we do find someone using them, getting a working example we can test would be nice.
+20:10:58 <bcoca> i have talked to 'vars plugins users' most of it is not 'shareable'
+20:11:22 <bcoca> nitzmahone: the problem, its shoehorning them into inventory revamp, inventory is much nicer/simpler w/o them
+20:11:31 <nitzmahone> aha
+20:11:37 <bcoca> also they've been 'brokenish' since 2.0 as they dont support vault anymore
+20:12:05 <sivel> we have several groups at work that use them, but for an internal CMDB to grab vars out of
+20:12:06 <bcoca> nor can they access everything they  need, i know most vars_plugins users are stuck in 1.9 cause of that
+20:12:17 <nitzmahone> I guess worst case is build it without them and try to figure out an escape hatch if the pitchfork-wielding masses descend post-release. :)
+20:12:39 <sivel> I believe that bluebox also uses vars plugins
+20:12:50 <bcoca> the other part ... keeping them, but pushing group/hsot vars to them, opens up being able to change var resolution behaviour easily by users
+20:13:09 <bcoca> sivel: yep, i believe they are one of the ones that discussed this with me before, as you did
+20:15:09 <bcoca> at this point i'm implemnting inventory w/o vars_plugins or group vars, but leaving path to add either in or just fold them into inventory plugin
+20:16:22 <bcoca> even if we keep vars_plugins they wont be 'compatible' with previous (fixing vault issues)
+20:20:18 <bcoca> sivel: since you are only one close to using .. thoughts?
+20:20:29 <bcoca> ^ im really not sure how to proceed, all 3 avenues work for me
+20:29:01 <bcoca> ok, i'll figure it out ...
+20:32:53 <gundalow> Thank's y'all
+20:32:55 <gundalow> #endmeeting

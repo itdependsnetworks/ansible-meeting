@@ -1,0 +1,174 @@
+18:00:04 <gregdek> #startmeeting new-modules-review
+18:00:04 <zodbot> Meeting started Wed Jul  6 18:00:04 2016 UTC.  The chair is gregdek. Information about MeetBot at http://wiki.debian.org/MeetBot.
+18:00:04 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+18:00:04 <zodbot> The meeting name has been set to 'new-modules-review'
+18:00:11 <gregdek> Hi all! Let's talk New Modules!
+18:00:18 <gregdek> #chair gundalow
+18:00:18 <zodbot> Current chairs: gregdek gundalow
+18:00:24 <gregdek> #topic Roll Call
+18:00:35 <gregdek> Give folks a couple mins to assemble
+18:00:48 <spredzy> hello
+18:02:04 <ryansb> good afternoon, ansibulls
+18:02:14 <alikins> blorp
+18:03:29 <gregdek> Agenda, as always: https://github.com/ansible/community/issues/92
+18:03:54 <MichaelBaydoun> afternoon
+18:04:04 <gregdek> We'll go from bottom up.
+18:04:26 <gregdek> #topic ansible/ansible-modules-extras#2326
+18:04:39 <gregdek> https://github.com/ansible/ansible-modules-extras/pull/2326
+18:04:57 <spredzy> The module was already discussed some month ago
+18:05:11 <spredzy> I've addressed bcoca comment about the public key generation
+18:05:19 <jimi|ansible> yeah, needs_revision and no update has been given
+18:05:39 <MichaelBaydoun> needs revision label should be removed, I think
+18:05:39 <jimi|ansible> do we kill it in that case? 2 weeks, what's the cutoff nowadays?
+18:05:51 <gregdek> jimi|ansible -- spredzy is the actual submitter.
+18:06:03 <jimi|ansible> oh wait, nm, there was an update
+18:06:08 * jimi|ansible goes to corner and feels shame
+18:06:17 <jimi|ansible> sorry spredzy :)
+18:06:23 <spredzy> jimi|ansible: no trouble :)
+18:06:33 <gregdek> LOL
+18:06:39 <jimi|ansible> so yeah, needs_info needs to come off at the very least
+18:06:53 <spredzy> To give a better context a following module will come https://github.com/ansible/ansible-modules-extras/pull/2341
+18:07:01 <gregdek> So looks like mscherer gives it a +1.
+18:07:04 <MichaelBaydoun> just needs a second shipit I believe
+18:07:06 <jimi|ansible> ^ spredzy: definitely leave a comment cc'ing people after that, makes it easier to see
+18:07:14 <spredzy> Not ready for review as I am expection a final go on the openssl_privatekey to reshape it as recommended
+18:07:25 <spredzy> s/expection/expecting
+18:07:28 <gregdek> And mgedmin too, as he gave a *lot* of feedback that was addressed.
+18:07:55 <gregdek> I would consider mgedmin's "LGTM" to constitute a second shipit.
+18:08:12 <gregdek> So, to me, looks like this has two shipits, and all outstanding issues addressed.
+18:08:13 <spredzy> jimi|ansible: will do next time
+18:08:22 <gregdek> Any reason not to put this into "shipit" for final review?
+18:08:48 <ryansb> gregdek: you mean #2341?
+18:09:01 <gregdek> LOL WTF
+18:09:07 <spredzy> ryansb: #2326
+18:09:11 <gregdek> Oh no. No, I mean 2326.
+18:09:13 <gregdek> SO CONFUSED
+18:09:17 <MichaelBaydoun> lol
+18:09:18 <gregdek> Yes, 2326.
+18:09:31 <ryansb> sorry, was looking at the most recently posted link
+18:09:44 <spredzy> ryansb: my fault, it was just to give a broader context on why #2326
+18:09:45 <gregdek> no worries, I am easily confused
+18:10:08 <MichaelBaydoun> I agree 2326 looks shipable
+18:10:48 <alikins> minor nit... maybe a 'crypto/' subdir instead of 'network/' ?
+18:11:00 <alikins> not sure how fixed those subdirs are however
+18:11:18 <gregdek> something we could change with a subsequent PR if it matters perhaps?
+18:12:15 <alikins> shrug
+18:12:25 * gundalow waves
+18:12:30 <alikins> more or less 0 chance of a renaming pr getting merged
+18:13:04 <jimi|ansible> alikins: that's not true, can always `git mv` after merging a pr
+18:13:45 <gregdek> OK, I've tagged it with shipit. Thanks spredzy for your patience. :)
+18:14:02 <gregdek> Moving on! Looks like ryansb just added one:
+18:14:08 <spredzy> gregdek: My pleasure. Happy to see it moving along
+18:14:44 <gregdek> #topic #topic ansible/ansible#16606
+18:14:46 <gregdek> Hmm.
+18:14:55 <gregdek> https://github.com/ansible/ansible/pull/16606
+18:15:10 <gregdek> Don't usually do ansible/ansible stuff here, but happy to discuss.
+18:15:24 <gregdek> ryansb?
+18:15:35 <ryansb> oh, figured it counted under "modules" since it's for dynamic inventory
+18:16:18 <ryansb> dyninv seems like a bit of an orphan as far as meetings go. This is a rebase of aioue's PR that has been updated to work with boto3
+18:16:51 <gregdek> Yeah. I mean, no objections to discussing here, esp. since jimi|ansible is here
+18:17:00 <gregdek> jimi|ansible: thoughts on 16606?
+18:18:43 * jimi|ansible looks
+18:20:21 <gregdek> Anyone else with any comments on 16606? Seems like kind of a biggie...
+18:21:36 <jimi|ansible> this isn't really a new module, should this be discussed at our regular meeting tomorrow instead?
+18:21:39 * gundalow is in another meeting, ping me if there is anything that you want me to look at
+18:21:48 <gregdek> jimi|ansible: I'm ok with that.
+18:21:59 * gregdek removes it from this agenda.
+18:22:02 <jimi|ansible> also seems like this should be default to false? https://github.com/ansible/ansible/pull/16606/files#diff-182f1f477bc306c0e6ce9d34ed243f90R86
+18:22:05 <jimi|ansible> ^ ryansb
+18:22:19 <gregdek> Next up:
+18:22:23 <jimi|ansible> unless the previous behavior included the rds clusters too
+18:22:30 <gregdek> #topic ansible/ansible-modules-extras#1687
+18:22:38 <gregdek> https://github.com/ansible/ansible-modules-extras/pull/1687
+18:22:55 <ryansb> jimi|ansible: oooh, good catch. Will fix that up & bring it up tomorrow
+18:22:59 <gregdek> So ryansb -- looks like you've got some concerns with the structure of 1687? Just leave this as in-review?
+18:23:04 <gregdek> Er, needs_revision?
+18:23:42 <ryansb> Yeah, needs_revision. I have some concerns about the usability of it for the average case
+18:23:52 <gregdek> ok. will mark accordingly.
+18:24:02 <ryansb> jimi|ansible: I had that in my local config as True and it looks like I committed it as the default.
+18:24:11 <ryansb> thanks gregdek
+18:24:21 <gregdek> Next up:
+18:24:35 <gregdek> #topic ansible/ansible-modules-extras#1882
+18:24:41 <gregdek> https://github.com/ansible/ansible-modules-extras/pull/1882
+18:25:23 * gregdek looks it up and down.
+18:25:28 <gregdek> Looks like it's got one shipit.
+18:26:11 <gregdek> Ah, but it conflicts with 1687?
+18:26:45 <gregdek> And each have one shipit.
+18:26:49 <gregdek> Sigh. :)
+18:27:00 <gregdek> OK, wonder team: how do we choose?
+18:27:17 <MichaelBaydoun> ask the authors to decide?
+18:27:28 <ryansb> Oooh, I somehow missed that one
+18:27:47 <gregdek> That's the sensible solution, unless we can tell that one is clearly superior / more Ansible-like / something.
+18:28:38 <ryansb> I agree with https://github.com/ansible/ansible-modules-extras/pull/1882#issuecomment-218938426 that "if_exist_do_not_create" is a confusing parameter
+18:30:34 <gregdek> 1882 comes with tests.
+18:30:47 <gregdek> I feel like, all things being equal, that's something we should reward.
+18:32:08 <ryansb> Truth - that may be a good way to decide between similar modules. The one with tests is preferable
+18:32:19 <gregdek> OK, so here's what I propose.
+18:33:29 <gregdek> Post in 1687 and say "hey, thanks for effort, apologies we didn't remark on the duplication sooner, but 1882 has tests, any reason not to rally around 1882?"
+18:33:40 <gregdek> Any objection to my doing that?
+18:34:57 <ryansb> ++
+18:36:32 <gregdek> OK. On my list.
+18:36:49 <gregdek> #action gregdek will work to deconflict 1882 and 1687
+18:36:54 <gregdek> Next up:
+18:37:14 <gregdek> #topic ansible/ansible-modules-extras#1862
+18:37:21 <gregdek> https://github.com/ansible/ansible-modules-extras/pull/1862
+18:38:13 <gregdek> Looks like still in needs_revision. Pretty clear. I pinged.
+18:38:54 <gregdek> Next:
+18:39:13 <gregdek> #topic ansible/ansible-modules-extras#2209
+18:39:22 <gregdek> https://github.com/ansible/ansible-modules-extras/pull/2209
+18:39:31 <gregdek> Oh, merged.
+18:39:34 <gregdek> Never mind then!
+18:40:49 * gregdek is now going through open issues quickly...
+18:41:52 <tima> While there is a break in the action: https://github.com/ansible/ansible-modules-extras/pull/2442
+18:42:24 <gregdek> Ah, thanks tima -- have you looked at this one yourself?
+18:42:27 <tima> This vendor submitted this a while back as one PR, then after much comment opened a new one.
+18:42:36 <gregdek> Happy to add it to next week's agenda so we have time to look at it...
+18:42:37 <tima> I just started. Warren pointed it out to me.
+18:42:40 <gregdek> OK.
+18:42:48 <gregdek> Might want to link the old PR in a comment to this one.
+18:42:57 <tima> I was monitoring the previous PR.
+18:43:06 <tima> Yeah I'll go back and find that.
+18:43:32 <tima> I think it still needs more work though and was hoping to get additional feedback than myself on it.
+18:43:36 <tima> Hence my mention here. ;)
+18:44:10 <gregdek> tima: right, understood. It's on the agenda for next week also.
+18:44:33 <tima> In my quick scan I noticed they are implementing their own url/uri handing code than what's in module_utils.
+18:44:42 <tima> cool. thanks @gregdek.
+18:44:44 <gregdek> So all the other modules on the agenda are either merged or in a clear action state.
+18:44:59 <gregdek> tima: yeah, that's bad. Make sure to reference the guidelines. :)
+18:45:25 <tima> oh i will gregdek. :D
+18:46:18 <gregdek> OK!
+18:46:22 <gregdek> #topic Open Floor
+18:46:24 <gregdek> Anything else?
+18:46:50 <gregdek> #action gregdek will review 10 oldest/most commented and add to next week's agenda where appropriate
+18:48:45 <dag-> https://github.com/ansible/ansible-modules-extras/pull/2271
+18:48:54 <dag-> Not sure when this can be merged
+18:49:12 * gregdek looks
+18:50:51 * dag- made an improved version of this module, that also checks if the system is up/down using arping, but that requires root privileges
+18:50:53 <gregdek> OK, so worth pinging bcoca here, since he's made the lion's share of the comments.
+18:51:17 <gregdek> dag- and wondering whether you should submit the new one?
+18:53:32 <dag-> gregdek: the second one knows if there is a change, however since it requires root-access _and_ scapy
+18:53:59 <dag-> this one does not have any dependencies, and is cleaner :)
+18:54:05 <gregdek> Yes, that makes sense.
+18:54:10 <gregdek> For more general use.
+18:55:19 <dag-> (it also requires the IP address of the system to test, whereas now only the MAC address is needed)
+18:55:30 <dag-> doing both in a single module is a recipe for confusion :-/
+18:56:12 <gregdek> Yes.
+18:56:22 <gregdek> OK, so I'll ping bcoca and we'll get this version on next week's agenda.
+18:56:50 <dag-> ok, then I have a more urgent request
+18:56:53 <dag-> which is this: https://github.com/ansible/ansible-modules-core/pull/3767
+18:57:06 <dag-> A lot of new issues are being opened all because of a single regression
+18:58:49 <dag-> https://github.com/ansible/ansible-modules-core/issues?utf8=%E2%9C%93&q=is%3Aissue%20is%3Aopen%20unarchive
+18:58:52 <gregdek> Well, not a new module, so not part of the scope here, but should be in the agenda for tomorrow's core meeting
+18:58:57 <dag-> ah, sorry
+18:59:01 <gregdek> No worries.
+18:59:19 <gregdek> Add it here:
+18:59:20 <gregdek> https://github.com/ansible/community/issues/109
+19:00:45 <rbergeron> heyyyy.
+19:00:49 <gregdek> And it's 3pm!
+19:00:50 <gregdek> So!
+19:00:51 <rbergeron> it's meeting time.
+19:00:53 <gregdek> #topic endmeeting
+19:00:57 <gregdek> #topic startmeeting
+19:01:01 <gregdek> GAH
+19:01:04 <gregdek> #topic endmeeting
+19:01:11 <gregdek> #endmeeting

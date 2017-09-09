@@ -1,0 +1,160 @@
+17:59:46 <rbergeron> #startmeeting new modules meeting
+17:59:46 <zodbot> Meeting started Wed May 25 17:59:46 2016 UTC.  The chair is rbergeron. Information about MeetBot at http://wiki.debian.org/MeetBot.
+17:59:46 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+17:59:46 <zodbot> The meeting name has been set to 'new_modules_meeting'
+17:59:58 * rbergeron will go and find the things -- beep if you're here :)
+18:00:28 * gundalow waves
+18:00:38 * MichaelBaydoun lurking
+18:00:45 <gundalow> rbergeron: https://github.com/ansible/community/issues/92
+18:00:57 <rbergeron> gundalow: merci
+18:01:03 <gundalow> no problem :)
+18:01:04 * gregdek lurks
+18:01:21 <alikins> beep boop [filter sweep] blop
+18:02:49 <rbergeron> wheee
+18:02:52 <rbergeron> gregdek, the lurker
+18:02:56 <rbergeron> okay!
+18:03:07 <rbergeron> #topic agenda -- https://github.com/ansible/community/issues/92
+18:03:28 <rbergeron> welcome to the new modules meeting, we'll be modulating the modules in a modular fashion today.
+18:03:32 <rbergeron> looks like... first up we have...
+18:04:02 * rbergeron isn't quite sure, but we'll just do this one anyway.
+18:04:18 <rbergeron> #topic https://github.com/ansible/ansible-modules-extras/pull/1690 - mssql_db
+18:05:13 <rbergeron> so -- looks like this has already had shipits,
+18:05:26 <rbergeron> and just got bumped down in the queue because it needed to have the version updated
+18:05:32 <rbergeron> thoughts? anyone? :)
+18:05:40 <gregdek> This is the one we were arguing about iirc.
+18:05:50 <gregdek> That it provides users with too big a gun to shoot off all their toes.
+18:05:56 <gregdek> And we agreed to defer.
+18:06:22 <rbergeron> i thought maybe so, but ... i don't see any of the arguing in this PR?
+18:06:36 <gundalow> was there another recent mysql PR?
+18:06:38 <gregdek> But now we're committing to split out extras in 2.2, and one of the reasons is to allow us to push more "risky" content so we're not directly associated.
+18:06:48 <gundalow> I don't think I've looked at 1690 before
+18:06:53 <gregdek> No, I think this was the one, and I think all the arguing happened in IRC because we didn't want to say "no".
+18:06:57 <gregdek> But maybe I am thinking of another one. :)
+18:07:23 <gundalow> so ready to merge?
+18:07:24 <gregdek> I vote we shipit and see what happens ;)
+18:07:24 <rbergeron> there was also, https://github.com/ansible/ansible-modules-extras/pull/189
+18:07:44 <gregdek> Right, which was closed in favor of 1690
+18:07:49 <gregdek> shipit, I sez
+18:07:54 * gregdek afk a bir
+18:08:09 <rbergeron> but they were competing a bit, so that one got closed in favor of this one.
+18:08:24 <abadger1999> mysql_query I think was the one we argued about.
+18:08:34 <rbergeron> gundalow: i think it's ready, if you want to give a thumbs up then i'll label it for shipping
+18:08:43 * rbergeron should change her nick to ups_lady or something
+18:08:55 <rbergeron> abadger1999: yeah, that may be it
+18:09:15 <gundalow> rbergeron: on 1690, will do
+18:09:31 <rbergeron> gundalow: i meant in irc though :)
+18:09:34 <gundalow> oh
+18:09:38 <gundalow> SHIPIT
+18:09:38 <gundalow> +1
+18:09:40 <rbergeron> i think it's had the requisite shipits and all that in the PR
+18:09:50 <rbergeron> #agreed 1690 -- ready to be shipped, yo
+18:09:51 <gundalow> given it another one for good measure
+18:11:42 <rbergeron> okay!
+18:12:08 <jtanner|t420> the previous arguments over mysql were for a mysql_query module
+18:12:21 <rbergeron> #topic https://github.com/ansible/ansible-modules-extras/pull/1942 -- HONEYBADGER YES
+18:12:27 <rbergeron> #link https://github.com/ansible/ansible-modules-extras/pull/1942
+18:12:31 <rbergeron> I know nothing about honeybadger.
+18:12:35 <rbergeron> except it has an awesome name.
+18:13:18 <rbergeron> and that it's failing travis
+18:13:42 <rbergeron> because version #.
+18:13:52 <rbergeron> but aside from that: anyone, thoughts?
+18:14:10 * gundalow looks
+18:14:30 <jtanner|t420> it seems a bit trivial
+18:14:42 <rbergeron> he seems to be one of the main honeybadger project folks, so I have to assume that he has checked this pretty thoroughly
+18:14:59 <rbergeron> he == the author
+18:15:11 <jtanner|t420> this really doesn't seem to add more value than just using get_url
+18:15:33 <gundalow> We have other notify type things
+18:16:04 <gundalow> such as https://github.com/ansible/ansible-modules-extras/tree/devel/notification
+18:16:15 <gundalow> lot of which are just get_url
+18:16:22 <gundalow> (I believe)
+18:16:26 <jtanner|t420> i suppose that's true
+18:16:33 <rbergeron> ...and it's probably more obvious to honeybadger users than knowing to use get_url, but ... i have no clue, as we know :)
+18:16:55 <gundalow> rbergeron: You make a good point
+18:17:05 <gundalow> (the first part)
+18:17:16 <gundalow> I can give it a quick review then get it merged
+18:17:16 <rbergeron> so: other thoughts?
+18:17:39 <MichaelBaydoun> +1 gundalow
+18:17:41 <jtanner|t420> version added would be 2.2
+18:17:49 <rbergeron> make the kind human happy after 2 years?
+18:17:50 <gundalow> jtanner|t420: ah, good spot
+18:17:54 <rbergeron> jtanner|t420: yeah, that needs fixing
+18:17:56 <jtanner|t420> but i think we aren't holding things up for trivial stuff like that
+18:17:58 <jtanner|t420> in core
+18:18:03 <rbergeron> that's why travis is yelling
+18:18:11 <gregdek> Nah, if version is the only thing breaking, shipit
+18:18:12 <gundalow> What are we doing about version added, the person doing the merge fixes that/
+18:18:25 <gundalow> rather than bouncing it back to creator
+18:18:39 <gregdek> Person merging is usually fixing if that's the only problem.
+18:18:54 <rbergeron> i think that's the case here.
+18:19:03 <gregdek> (Can travis warn instead of fail? Probably not)
+18:19:14 <gundalow> nop
+18:19:24 <gundalow> OK. I'll review it after this meeting
+18:19:30 <gundalow> next?
+18:19:33 <gregdek> afk again
+18:19:44 <rbergeron> gundalow: review it and leave a note saying it's ready to ship, or?
+18:20:15 <gundalow> rbergeron: will do
+18:20:26 <gundalow> can you chair me?
+18:20:38 <rbergeron> #chair gundalow
+18:20:38 <zodbot> Current chairs: gundalow rbergeron
+18:20:40 <rbergeron> sorry
+18:20:56 <rbergeron> action yo self on it :)
+18:20:58 <gundalow> #action gundalow to review 1942
+18:21:05 <gundalow> :)
+18:21:07 <gundalow> next!
+18:21:09 <gundalow> :)
+18:22:36 <rbergeron> #topic https://github.com/ansible/ansible-modules-extras/pull/1434 -- aws vpc peering
+18:23:21 <MichaelBaydoun> has plenty of shipits
+18:23:36 <MichaelBaydoun> is bot working correctly?
+18:23:59 <rbergeron> yeah.
+18:24:12 <rbergeron> the bot just starts recounting the shipits after it gets an update.
+18:24:27 <rbergeron> which, mostly good, because who knows, but sucks in cases like this.
+18:24:58 <rbergeron> anyway: i think this seems to have enough shipits and is meeting the various requirements of multiple people and the author seems to be fairly responsive. I think it's ready to ship -- anyone else feel otherwise?
+18:25:06 <MichaelBaydoun> shipit
+18:25:16 <MichaelBaydoun> seriouslyshipit?
+18:25:19 <MichaelBaydoun> new keyword
+18:25:27 <rbergeron> #agreed shipit on 1434 -- has enough shipits and meets all the things
+18:25:45 <abadger1999> gundalow: homeybadger also needs python3 syntax update -- If you decide it's otherwise a shipit, let me know and I'll fix that when I merge, though (since the guy has been working on the module for 2 years)
+18:26:05 <jtanner|t420> i've never peer'ed vpcs, so this one is outside my realm of expertise
+18:27:33 <rbergeron> gundalow: do you know offhand (or anyone else) if these other modules in the agenda list are ... ones we missed getting to in past weeks, or if they're just ... drama-filled?
+18:28:11 <gundalow> rbergeron: some were carried over from the previous meeting ("rolled over"), I'm not sure where gregdek got the others from
+18:28:25 <rbergeron> ahhh, yea they were all resolved except the F5 one.
+18:28:32 <rbergeron> which looks like you'er waiting for some eyeballs on, it seems
+18:28:49 <rbergeron> #topic open floor or taking suggestions on modules we could knock out
+18:28:56 <gundalow> rbergeron: aye
+18:28:58 <rbergeron> gundalow: https://github.com/ansible/ansible-modules-extras/pull/1765 <-- that one
+18:29:08 <gundalow> Anyone reviewed any other modules recently
+18:29:21 <gregdek> We should probably put the standing "sort descending by number of comments" into 92
+18:29:35 <gregdek> That's as good a starting place as any
+18:29:52 <gundalow> + newest?
+18:29:53 <gundalow> ?
+18:30:06 <gregdek> Newest is bad because most of them don't have comments.
+18:30:22 <gregdek> I don't know if there's a search that can be "minimum comments plus minimum age" or something
+18:30:30 <gundalow> sorry, I meant newest PR
+18:30:33 <MichaelBaydoun> at least one shipit?
+18:30:39 <gundalow> MichaelBaydoun: YES
+18:30:43 <MichaelBaydoun> stop starting and start finishing
+18:30:50 <gundalow> +100000000000000000000000
+18:32:55 <rbergeron> okay, so:
+18:32:57 <rbergeron> oyyyyy
+18:33:05 <rbergeron> trying to find shipit is so terrible
+18:33:09 <gundalow> aye
+18:33:16 <rbergeron> shipit but exclude if greg said shipit in a comment
+18:33:17 <rbergeron> lol
+18:33:43 <gundalow> I think it requires the meets_guidelines & works_for_me labels
+18:33:54 <gundalow> so not gona be doable today
+18:34:08 <MichaelBaydoun> how does the bot currently distinquish the "needs two shipits" message from a real shipit?
+18:34:24 <MichaelBaydoun> but yes, topic for another time
+18:34:27 <gundalow> MichaelBaydoun: I believe it looks at who added the comment
+18:34:39 <gundalow> similarly for ready_for_review
+18:36:07 <rbergeron> aye.
+18:36:42 <rbergeron> well, filtering through this just hunting for things is unfun :) anyone have any modules they'd like to suggest? otherwise... i may just call an end to meeting in a few here
+18:38:18 <rbergeron> gundalow: still peeking at the rhev one as well? https://github.com/ansible/ansible-modules-extras/pull/2202
+18:39:52 <gundalow> rbergeron: Would be good if someone else could take a look at that
+18:40:12 <gundalow> I'll try and make time for it
+18:40:18 <gundalow> I'm away abit over the next week
+18:41:43 <rbergeron> gundalow: ack -- gotcha
+18:42:07 <rbergeron> okay, if nobody else has anything -- i'm closing this in like a minute fo reals
+18:42:46 <gundalow> nod
+18:43:01 <MichaelBaydoun> closeit <--- new keyword
+18:43:43 * gregdek is good with that.
+18:45:48 <rbergeron> #endmeeting

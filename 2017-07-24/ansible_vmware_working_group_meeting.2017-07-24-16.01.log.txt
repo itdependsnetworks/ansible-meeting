@@ -1,0 +1,263 @@
+16:01:24 <akasurde> #startmeeting Ansible VMware Working Group Meeting
+16:01:24 <zodbot> Meeting started Mon Jul 24 16:01:24 2017 UTC.  The chair is akasurde. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:01:24 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:01:24 <zodbot> The meeting name has been set to 'ansible_vmware_working_group_meeting'
+16:02:11 <akasurde> #chair akasurde
+16:02:11 <zodbot> Current chairs: akasurde
+16:04:04 <akasurde> #chair DMarby
+16:04:05 <zodbot> Current chairs: DMarby akasurde
+16:04:27 <akasurde> #chair tomscanlan
+16:04:27 <zodbot> Current chairs: DMarby akasurde tomscanlan
+16:04:33 <akasurde> #chair warthog9
+16:04:33 <zodbot> Current chairs: DMarby akasurde tomscanlan warthog9
+16:04:39 <akasurde> #chair jtanner
+16:04:39 <zodbot> Current chairs: DMarby akasurde jtanner tomscanlan warthog9
+16:04:46 <jtanner> hello
+16:04:58 <akasurde> hello everyone
+16:05:02 <DMarby> Hi!
+16:05:06 <nafpliot-ibm> hi
+16:05:15 <tomscanlan> hello
+16:05:16 <warthog9> morning or $appropriate_time_based_greeting
+16:05:16 <akasurde> #chair nafpliot-ibm
+16:05:16 <zodbot> Current chairs: DMarby akasurde jtanner nafpliot-ibm tomscanlan warthog9
+16:05:18 <pdellaert> hi
+16:05:23 <nafpliot-ibm> hi
+16:05:27 <akasurde> #chair pdellaert
+16:05:27 <zodbot> Current chairs: DMarby akasurde jtanner nafpliot-ibm pdellaert tomscanlan warthog9
+16:05:33 <akasurde> Welcome everyone, this is first ever IRC meeting of VMware Working group. Thanks to @jtanner and @dag for taking initiative and arranging this WG meeting.
+16:06:10 <akasurde> Basic motivation behind this meeting is to discuss Roadmap, new development, Testing and future of Ansible and its VMware modules.
+16:07:04 <akasurde> #info https://github.com/ansible/community/issues/206
+16:07:19 <jtanner> is dag here?
+16:07:24 <akasurde> All agenda items is listed here
+16:07:34 <akasurde> jtanner, dag is on vacation
+16:07:44 <jtanner> weak, he's not allowed to go on vacation
+16:07:53 <akasurde> :)
+16:08:18 <pdellaert> :)
+16:08:35 <akasurde> Let us start some discussion, I would like to ask everyone how can we take this forward ?
+16:08:54 <jtanner> define "this"
+16:09:08 <jtanner> the working group?
+16:09:32 <akasurde> Both Working group and Ansible VMware development
+16:09:59 <pdellaert> The working group: Have a clear roadmap and list of tasks
+16:10:21 * gundalow waves
+16:10:26 <akasurde> #link https://github.com/ansible/community/wiki/VMware
+16:10:27 <pdellaert> i guess that will help a lot for people who want to contribute
+16:10:34 <akasurde> #chair gundalow
+16:10:34 <zodbot> Current chairs: DMarby akasurde gundalow jtanner nafpliot-ibm pdellaert tomscanlan warthog9
+16:10:37 <jtanner> roadmap is nice, but requires people to commit time ... can't always ask that of volunteers
+16:11:34 <DMarby> I'm not so sure about a roadmap, but I think a good start would be to clean up the existing issues, and map out what goals/tasks we want to achieve and in what preferred order.
+16:11:51 <jtanner> i agree with that
+16:11:55 <DMarby> That alone should help for people who want to contribute, without setting dates on it in a roadmap.
+16:12:34 <pdellaert> jtanner: i would say that if someone commits to work on something on the roadmap, it becomes their project. Even from volunteers, it is ok to ask a commitment, with the caveat that if they feel they can't deliver, they say so at some poiint and that is accepted and someone picks up
+16:12:35 <akasurde> agree
+16:12:41 <jtanner> for bugs/features that the maintainers desire, the needs_contributor bot command is the appropriate way to mark those
+16:13:11 <pdellaert> ok, maybe 'roadmap' was to strong a word, i wasn't asking for hard dates :)
+16:13:27 <jtanner> pdellaert: that's cool ... maybe a "prioritized list of goals" is more apt
+16:13:45 <pdellaert> yes, indeed, that's a better title
+16:13:56 <nafpliot-ibm> if by roadmap we are talking about setting few achievable goals, I like that approach better =)
+16:14:06 <tomscanlan> I haven't contributed to ansible, but am working with vmware.  I'd like some small pieces I can contribute to.  a priority list would help me
+16:14:24 <DMarby> On that note, I think it might be a good idea to document development of existing/new modules so that people can pick it up more easily. In terms of what should be placed in the common utils, where documentation for vsphere/vcenter api:s can be found when applicable, and such.
+16:14:38 <bcoca> tomscanlan: priority lists are subjective, its normally 'what affects me the most'
+16:14:45 <akasurde> #chair bcoca
+16:14:45 <zodbot> Current chairs: DMarby akasurde bcoca gundalow jtanner nafpliot-ibm pdellaert tomscanlan warthog9
+16:15:07 <akasurde> DMarby, you can start here - https://github.com/ansible/community/wiki/VMware
+16:15:31 <jtanner> tomscanlan: you should start with https://github.com/ansible/ansible/pull/26921 to break yourself into the github + bot + shippable workflow for the overall project
+16:15:41 <DMarby> akasurde: Yeah, I've read the wiki, it's a good start for sure, but might be good to put down a goal to further expand it.
+16:15:53 <bcoca> its always a good idea to make note to others if you start on any work, prevents duplicate efforts
+16:15:55 <akasurde> we are trying to consolidate things like VMware documentation required for ansible development.
+16:16:08 <tomscanlan> thankss jtanner
+16:16:10 <akasurde> #action akasurde expand goal in VMware wiki for goals
+16:16:22 <jtanner> ok, so it sounds like onboarding new devs is one goal
+16:16:44 <akasurde> bcoca, yes. thats a good point but I don't know how can we prevent that ?
+16:17:07 <jtanner> start a PR early, ping the appropriate people
+16:17:22 <jtanner> announce in vmware irc room, etc
+16:17:23 <pdellaert> and add the name to the task in the wiki
+16:17:40 <akasurde> jtanner, can we use assigning github issue to yourself  ?
+16:17:49 <bcoca> use [WIP] header to let people know 'im workign on it, but bot and reviewers can ignore for now'
+16:18:04 <jtanner> akasurde: assignees can only be users in the ansible github org
+16:18:17 <bcoca> github is pretty limited from that perspective
+16:18:23 <akasurde> jtanner, Ok
+16:18:37 <warthog9> could just encourage people to add something to the wiki to solve the assignment issue
+16:18:40 <DMarby> Wouldn't commenting on the issue be enough? And if no issue exist for what you're doing, create a new one explaining what it is, to denote that you are doing so?
+16:18:50 <DMarby> That way all work is tracked in issues.
+16:18:53 <akasurde> jtanner, bcoca Can we have a page inside WG wiki about "work in progress"
+16:18:58 <DMarby> Which can then be referenced in PRs.
+16:18:59 <pdellaert> It's also part of the onboarding of devs, having some documentation on what people have to do if they want to work on an issue/task: Mention it on the issue, add your name to the wiki on the task, open a PR with WIP and a clear mention of what you will be handling
+16:19:09 <bcoca> DMarby: for start .. but we have comments on 'i'll work on this' on issues that then have not seen progress in 8months since the comment
+16:19:10 <jtanner> akasurde: you are the master of that wiki page, afaik
+16:19:24 <DMarby> bcoca: Hm, yeah, that's true.
+16:19:26 <bcoca> so 'grain of salt' on comments, PRs are much more visible and 'non vaporware'
+16:19:30 <jtanner> dag created the first wiki pages and it hasn't been something really handled by the core team to date
+16:19:47 <akasurde> #action akasurde Add a tracker page for work in progress
+16:20:45 <jtanner> one topic/goal that should probably be prioritized is wiki/docs on how the vcsim tests work
+16:21:28 <DMarby> That's be great.
+16:21:31 <akasurde> jtanner, I am currently working on it, will update once it is done.
+16:21:35 <jtanner> noice
+16:21:44 <DMarby> . I'd be more than willing to spend some time on automating setup/running of those tests if needed
+16:21:50 <akasurde> #action akasurde Add sample testcase for VMware module in wiki
+16:22:12 <jtanner> DMarby: framework is already there, just need people to add more tests for the modules
+16:22:19 <DMarby> jtanner: Great :)
+16:22:47 <akasurde> jtanner, that brings to a question, what about features which are not supported by govcsim ?
+16:23:05 <pdellaert> another goal i'd like to suggest is making modules more uniform, i've been looking at the different vmware_guest modules, and there are different ways of getting/finding VMs and it's hard to determine the best way
+16:23:21 <jtanner> akasurde: dunno ... i'm hoping that more people will bring golang experience to help extend vcsim
+16:23:31 <jtanner> the maintainer seems very responsive to issues/PRs
+16:23:47 <jtanner> pdellaert: akasurde has an active PR for that
+16:23:59 <pdellaert> ok, great :)
+16:24:02 <jtanner> get_vm becomes a module util
+16:24:56 <jtanner> i'm waiting on a second reviewer before i press merge on it
+16:25:48 <akasurde> pdellaert, https://github.com/ansible/ansible/pull/27188 - get vm by various methods provided by VMware
+16:26:19 <DMarby> jtanner: In the agenda you mentioned the deprecation of vsphere_guest, did you want to discuss how to move forward with that?
+16:26:26 <pdellaert> akasurde: yeah, found it, looks great, thanks
+16:26:33 <akasurde> jtanner, dav1x has added shipit
+16:26:37 <akasurde> pdellaert, thanks
+16:26:52 <jtanner> DMarby: would like the group to determine which features vmware_guest is missing that prevent deprecation of vsphere_guest
+16:27:14 <jtanner> for example, does vmware_guest need to support creating a new vm from ISO?
+16:27:20 <akasurde> I can see vmware_guest lacks CDROM support
+16:27:34 <DMarby> I'd argue it should, since it's a valid usecase
+16:27:47 <jtanner> should be a prioritized new feature then
+16:27:56 <jtanner> as just one example
+16:28:04 <akasurde> #action akasurde Create a page for vsphere_guest deprecation
+16:28:44 <jtanner> as soon as we're feature complete, we can close ALL issues and PRs for vsphere_guest
+16:30:01 <DMarby> Righto. How do you suggest we go about finding the disparity in functionality so that we can figure out what tasks remain to become feature complete?
+16:30:20 <jtanner> reading through open tickets should give a good idea
+16:30:31 <jtanner> and maybe closed
+16:30:41 <jtanner> in ansible + ansible-modules-core|extras
+16:30:45 <akasurde> I think people who are using vsphere_guest and vmware_guest can tell this best
+16:31:13 <DMarby> Right, do we have any such users in the work group? I'm using vmware_guest, but I'm not using vsphere_guest, heh.
+16:31:35 <jtanner> yep, i don't use vmware in my day to day, so i have no clue what people "need" to do beyond simple clone actions
+16:31:54 <akasurde> same here
+16:32:17 <DMarby> I can attempt to compile a list of things that are missing until the next meeting I guess, I run an esxi/vcenter cluster for my homelab, so I have a test environment at least
+16:32:25 <akasurde> I generally get sense of use cases from issues opened and closed
+16:32:35 <jtanner> dav1x and derricrago are probably the only 2 real "users" that i've met
+16:32:57 <akasurde> #action DMarby list of missing things in vmware_guest and vsphere_guest in wiki page
+16:33:03 <akasurde> DMarby, thanks
+16:33:39 <pdellaert> DMarby: from how i've been using vmware_guest and vsphere_guest, the biggest missing item is cdrom functionality
+16:34:01 <DMarby> Alright
+16:35:05 <pdellaert> in general, i also miss OVA/OVF deployment, but that's not in vsphere_guest either (i use the shell module and execute ovftools)
+16:35:23 <jtanner> i think dericcrago figured that code out
+16:35:26 <DMarby> pdellaert: Heh, that's what I resorted to for deploying vyos ova's and VCSA as well :p
+16:35:27 <jtanner> with pyvmomi
+16:35:39 <akasurde> pdellaert, Can you share link for playbook for ovftools ?
+16:36:11 <pdellaert> akasurde: i can give you a few examples, the repo is an internal one, but i can copy an example to a gist, just a sec
+16:36:15 <DMarby> akasurde: https://github.com/DMarby/infrastructure/blob/master/ansible/vyos/roles/vyos_ova/tasks/main.yml Here's one using govc to import an OVA
+16:36:52 <akasurde> DMarby, thanks
+16:37:04 <dericcrago> yeah, I wrote an ova deployment module (it's currently specific to deploying the RH CloudForms ova though)
+16:37:18 <akasurde> DMarby, pdellaert This is real world usecase
+16:37:33 <DMarby> Another thing from the agenda: Currently there's a lot of modules that doesn't implement "update" functionality, only add/remove, for example the portgroup/vswitch modules.
+16:37:45 <pdellaert> akasurde: https://gist.github.com/pdellaert/cc5284d09861a93c1f726eb9a97208c4
+16:37:46 <akasurde> #chair dericcrago
+16:37:47 <zodbot> Current chairs: DMarby akasurde bcoca dericcrago gundalow jtanner nafpliot-ibm pdellaert tomscanlan warthog9
+16:38:20 <DMarby> I believe it would be good to make a list of all the modules which are currently missing the update functionality, and tasks for attempting to fix that.
+16:38:23 <jtanner> DMarby: yes, because it is more complicated to do that
+16:38:35 <pdellaert> dericcrago: that would be one of the bigger additions in my opinion :)
+16:38:43 <DMarby> And possibly, to not accept new modules without it, moving forward
+16:38:48 <jtanner> many of our modules are slightly better version of the pyvmomi examples
+16:38:55 <DMarby> For example, there is currently no way to modify the management portgroup
+16:38:58 <DMarby> As you can't add/remove it
+16:39:08 <DMarby> Or you'll lose network access to do so :p
+16:40:01 <DMarby> jtanner: That's fair enough, but I think it's something that's fairly important to resolve
+16:40:27 <akasurde> Agree, there vswitch and dvswitch modules which doesn't support update
+16:40:34 <jtanner> i have no problem with people figuring it out and contributing
+16:40:42 <jtanner> i just don't have the time or expertise to do it myself
+16:41:36 <DMarby> Righto. Maybe for a start just having a list in the wiki of modules that's missing update functionality would be useful to keep track of it?
+16:41:59 <akasurde> #action akasurde add page for missing update functionality
+16:42:03 <DMarby> I attempted to do it with one of the portgroup modules, but I need to brush up on my pyvmomi documentation first, heh
+16:42:39 <jtanner> need a table in the wiki with each module on a row and columns being ... has tests, vcsim support, supports update, etc
+16:42:39 <akasurde> DMarby, Cool
+16:42:48 <DMarby> That sounds great.
+16:43:01 <pdellaert> jtanner: <nod>, great proposal
+16:43:23 <akasurde> I will add it :)
+16:44:23 <pdellaert> willing to help out with documenting some of it, i'm just careful, as my availability is unpredictable :s
+16:44:57 <akasurde> pdellaert, you are always welcome
+16:45:02 <pdellaert> add a field with 'active maintainer', perhaps? The module contains authors, but not necesarily an active maintainer or main contact per module
+16:45:11 <jtanner> be mindful that all maintainers disappear sometimes and move on to bigger/better things
+16:45:25 <jtanner> so there will be dead spots on development
+16:45:40 <akasurde> currently, there are very few people who are looking after modules
+16:46:01 <jtanner> which is why everyone is so appreciative of your time akasurde =)
+16:46:26 <pdellaert> akasurde++
+16:46:35 <akasurde> jtanner, I love this stuff, trying to help everyone
+16:46:42 <akasurde> pdellaert, thanks
+16:47:31 <DMarby> To go back to a topic we mentioned earlier, there's quite a lot of vmware issues/pr's right now, how do we want to approach cleaning out/closing/merging them?
+16:48:05 <jtanner> FIFO
+16:48:21 <pdellaert> and as with all open source, voluntary projects: people will come and go. That's why having a good list of tasks/priorities for people wanting to help, will give more direction (i've encountered a couple of people stating 'i want to do something, but no clue where to start' on other projects)
+16:49:01 <pdellaert> and i agree FIFO (even as i just opened the latest vmware PR ;))
+16:49:23 <pdellaert> but we should also have a rule for stale/dead issues/PRs
+16:49:46 <jtanner> if you open a PR, go look for issues it might fix or other PRs it deprecates and note those in the ticket
+16:50:14 <jtanner> for some of the issues, the resolution might be to simply add a new testcase
+16:50:25 <jtanner> and verify
+16:50:36 <akasurde> we can discuss PRs in meeting or irc, if you need a urgent merge
+16:51:27 <pdellaert> akasurde: in my case, certainly not urgent, just nice-to-have (and i need to fix your feedback first, which requires the getvm refactor you mentioned)
+16:51:35 <jtanner> 27188 merged
+16:51:46 <pdellaert> other PRs have been listed by dag
+16:52:01 <jtanner> bit of backstory ...
+16:52:49 <jtanner> writing vmware_guest was a PITA, mainly because of vcenter setup. After writing the module, it was very difficult to troubleshoot and accept PRs on because of vcenter setup
+16:52:57 <akasurde> jtanner, thanks for merge
+16:53:00 <jtanner> with vcsim and tests, i'm VERY likely to accept PRs
+16:53:13 <jtanner> as of ~1 month ago
+16:53:39 <DMarby> jtanner: Heh, I can understand that, my automated vcsa deploys takes 2.5 hours to run alone
+16:53:41 <jtanner> so much of what dag wrote before that was bitrotting because no tests could be done
+16:54:23 <jtanner> vcsim takes milliseconds to spin up =)
+16:54:34 <DMarby> That's a lot better, lol.
+16:55:04 <akasurde> DMarby, govcsim is still in development phase
+16:55:07 <DMarby> I'm unfamiliar with how things are usually done btw, so forgive me for that, but what is the policy of fixes being done to released versions (and well, another minor/patch version being released)? To give an example, there was a recent issue breaking using templates with vmware_guests for a lot of usecases, on which a PR has now been merged, but it's not out in 2.3
+16:55:10 <pdellaert> jtanner: yeah, i feel that pain... i've had the same experience with developing a module for Nuage (needs an API endpoint, i just build a new API simulator so i did not have to bring up the whole platform every time ;))
+16:55:12 <DMarby> Err, backported to 2.3
+16:56:03 <jtanner> DMarby: backports will be easier once we get vcsim in 2.4
+16:56:23 <jtanner> i can't confidently cherry pick a commit backwards until then
+16:56:35 <DMarby> Makes sense
+16:57:05 <akasurde> jtanner, VMware modules are community supported so are we supporting backports ?
+16:57:23 <jtanner> akasurde: anyone can send a cherry picked PR to the stable branches
+16:57:32 <jtanner> it's a matter of core team deciding to merge though
+16:57:56 <akasurde> jtanner, is it ? I thought core team do it :)
+16:58:16 <jtanner> nope, people outside core team send them too
+16:58:32 * akasurde sending more backport patches
+16:58:36 <akasurde> hehehe
+16:58:42 <jtanner> doesn't mean they'll get accepted =P
+16:58:46 <pdellaert> ;)
+16:58:57 <jtanner> bugfixes only, hopefully critical, and hopefully tested
+16:59:20 <akasurde> I know people who would like to contribute, so I can point them this PRs and tell them to test and backport
+17:00:19 <akasurde> anything else we would like to discuss today ?
+17:01:01 <pdellaert> Anything we need to discuss on PRs mentioned by dag?
+17:01:53 <akasurde> I am OK with https://github.com/ansible/ansible/pull/25144 need second shipit
+17:02:04 <jtanner> those probably need triage as many are most likely broken by recent commits
+17:02:27 <akasurde> yes, like this one https://github.com/ansible/ansible/pull/25140
+17:02:29 <pdellaert> And about the last comment of dag: Do we want to list anything that needs to be done before 2.4?
+17:02:42 <pdellaert> (as a must)
+17:02:57 <akasurde> Integration tests are must
+17:03:08 <jtanner> 25140 mreged
+17:03:51 <pdellaert> jtanner: you mean 25144 (just making sure the logs represent the correct number)
+17:03:57 <akasurde> jtanner, you mean 25144
+17:04:02 <jtanner> 25144
+17:04:07 <akasurde> Cool
+17:04:10 <jtanner> i don't type so good
+17:05:30 <akasurde> Wanna discuss new modules ?
+17:06:04 <akasurde> #topic discuss New module status - https://github.com/ansible/community/issues/206#issuecomment-316254774
+17:06:36 <jtanner> i would priortize the ones with tests first
+17:07:29 <DMarby> I would say that the functionality of vmware_add_nic should be in vmware_guest instead
+17:07:33 <akasurde> same here, atleast we can say it is working
+17:07:45 <DMarby> Agreed on prioritizing the ones with tests.
+17:08:27 <akasurde> We can have exception if vcsim is not supporting that feature
+17:09:06 <akasurde> for example, https://github.com/ansible/ansible/pull/21070 https://github.com/ansible/ansible/pull/25143 needs maintenance mode which is not support in vcsim
+17:09:49 <akasurde> either we can have commented testcases or live without testcase
+17:10:10 <akasurde> what do prefer from above two ?
+17:10:41 <pdellaert> i'd say commented test cases
+17:10:58 <pdellaert> it shows the intent of having integration testing, but just missing capabilities
+17:11:35 <pdellaert> which indicates people have been thinking about it
+17:12:33 * jtanner has to go get some food (haven't eaten today)
+17:13:04 <akasurde> jtanner, Ok
+17:13:36 <akasurde> pdellaert, good idea, I will add a note in wiki about this
+17:14:15 <pdellaert> jtanner: enjoy (not sure if you're in EST, if so: lunch)
+17:14:55 <akasurde> anything else we would like to discuss ?
+17:15:04 <akasurde> #topics open floor
+17:15:15 <akasurde> #topic open floor
+17:16:41 * akasurde will wait for 5 min more before closing meeting
+17:17:07 <pdellaert> I'm good, thanks for the help/support/effort
+17:17:29 <akasurde> pdellaert, Thanks
+17:17:33 <dericcrago> yes - thank you
+17:18:08 <akasurde> Thanks everyone for joining in and for your valuable time and efforts
+17:18:13 <pdellaert> dericcrago: that ova/ovf deploy module, is that something you plan on releasing?
+17:18:35 <pdellaert> think it would be a very useful addition :)
+17:18:54 <dericcrago> potentially, I could use some direction on tests
+17:19:16 <pdellaert> dericcrago: let's take this to #ansible-vmware
+17:19:39 <dericcrago> sure
+17:20:03 <akasurde> I am ending this meeting, see you all on next monday
+17:20:05 <akasurde> #endmeeting

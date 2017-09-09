@@ -1,0 +1,81 @@
+16:01:15 <gundalow> #startmeeting Network Meeting
+16:01:15 <zodbot> Meeting started Wed May  3 16:01:15 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:01:15 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:01:15 <zodbot> The meeting name has been set to 'network_meeting'
+16:01:26 <trishnag> o/
+16:01:46 <gundalow> #chair ganeshrn Qalthos trishnag
+16:01:46 <zodbot> Current chairs: Qalthos ganeshrn gundalow trishnag
+16:02:12 * gundalow waits a few minutes for others to join
+16:03:28 <gundalow> St8less: Hi :)
+16:04:49 <St8less> Hello!
+16:06:26 <itdependsnetwork> hi
+16:06:53 <gundalow> #topic Update from Core
+16:07:01 <gundalow> #info Modules have now been split into network & net_tools http://docs.ansible.com/ansible/list_of_network_modules.html http://docs.ansible.com/ansible/list_of_net_tools_modules.html
+16:07:46 <gundalow> #info This is to make it easier to track issues and PRs that are relevant for this group vs others. `label: network` vs `label: net_tools`
+16:07:54 <gundalow> #info 2.3.1 RC1 should be released next week
+16:09:01 <gundalow> #topic Open Floor
+16:09:06 <gundalow> Over to you
+16:09:41 <gundalow> itdependsnetwork: https://github.com/ansible/ansible/pull/23526#pullrequestreview-34014575
+16:09:51 <gundalow> hum
+16:10:01 <gundalow> #topic ipaddr
+16:10:03 <gundalow> #info https://github.com/ansible/ansible/pull/23526#pullrequestreview-34014575
+16:10:08 <itdependsnetwork> wanted to ask is there is namespace issues with filter plugins? I see that the new filter was called network.py and wanted to make sure there is no namespace issues
+16:11:18 <itdependsnetwork> in regards to 23526, I will add kwargs, but seems odd choice to me. It is broken now, so expectation should no one is expecting that
+16:11:20 <gundalow> #info txtfsm & config filters https://github.com/ansible/ansible/pull/24216
+16:12:04 <gundalow> itdependsnetwork: If you think it's so broken that no one will be using it then I guess your PR as it stands is OJ
+16:12:08 <gundalow> OK*
+16:12:32 <itdependsnetwork> I believe it is, but need to convince you :)
+16:12:49 <gundalow> haha, aye
+16:13:07 <gundalow> Not sure how we progress on that, what do you think?
+16:13:15 <itdependsnetwork> to me an extra value to say follow standard is the wrong approach
+16:14:49 <gundalow> nod
+16:15:18 <gundalow> OK, let me poke people on the team and see if we can agree
+16:15:25 <itdependsnetwork> you can update PR, and if you say it is so, it is so, but that is my take
+16:15:35 <itdependsnetwork> much appreciated for 24216, was hoping to feedback from Jason
+16:15:38 <itdependsnetwork> 's comment
+16:16:50 <itdependsnetwork> also, for 24216, why would this need to wait until 2.4? I understand it is a new feature to an extent, but only those referring to it could have an issue
+16:17:02 <gundalow> ah, privateip's been busy today, I'll make sure he sees it
+16:17:52 <gundalow> St8less: Not sure if https://github.com/ansible/ansible/pull/24216 may be of interest to you
+16:19:44 <gundalow> Anything else on filters?
+16:19:51 <gundalow> Thanks for the PR so far :)
+16:19:56 <gundalow> and the review comments
+16:20:07 <itdependsnetwork> just a confirmation no way it get's in until 2.4?
+16:20:26 <gundalow> Features don't get backported, bug do
+16:20:36 <itdependsnetwork> ok, then that's it
+16:20:45 <gundalow> #topic Open Floor
+16:21:41 <itdependsnetwork> ohh wait, is there a namespace issue in filter plugins?
+16:21:52 <gundalow> lol, sorry, missed that
+16:22:06 <gundalow> Qalthos: You around?
+16:22:13 * gundalow isn't sure on the answer to that
+16:23:36 <gundalow> itdependsnetwork: Could you add a comment on 24216 asking
+16:23:43 <itdependsnetwork> k
+16:23:47 <gundalow> Thanks
+16:27:05 <gundalow> skg-net: Hi :)
+16:27:22 * skg-net waves
+16:27:22 <gundalow> skg-net: FYI 2.3.1 RC1 should be out next week. Do you have anything else for 2.3?
+16:28:09 <skg-net> We have some changes for our new release for OS10..
+16:28:17 <itdependsnetwork> actually, co-worker got response there is no maintainer for asa_config
+16:28:30 <itdependsnetwork> what does that mean for the module going further?
+16:29:05 <gundalow> skg-net: When do you expect to have PRs for those?
+16:30:35 <gundalow> itdependsnetwork: Looking for a maintainer. The Networking Team at Ansible will keep an eye on it, though most likely not do anything with issues or PR. It was previously community maintained
+16:30:49 <skg-net> I am still working out the logistics..
+16:30:54 <gundalow> Do you use a lot of the asa_* modules
+16:31:02 <gundalow> skg-net: Cool, keep me in the loop
+16:31:03 <skg-net> will get back to you today..
+16:31:35 <itdependsnetwork> just config and command
+16:31:50 <gundalow> FYI I'm on holiday Friday & Monday, so possibly slight delay in getting back to people
+16:32:03 <itdependsnetwork> and what determines what network modules are core or community?
+16:32:27 <gundalow> https://github.com/ansible/ansibullbot/blob/master/MAINTAINERS.txt
+16:32:27 <itdependsnetwork> I believe most of the functionality is generic now
+16:32:43 <gundalow> Is the defination
+16:33:07 <itdependsnetwork> ohh good, you are the maintainer then :)
+16:33:38 <gundalow> bah, what fool put my name there
+16:33:43 <itdependsnetwork> haha
+16:33:46 <gundalow> oh, it was me so I get pinged on them :(
+16:34:52 <itdependsnetwork> so was that note sent in error then?
+16:34:54 <gundalow> Can have one or more maintainers, having someone that's familiar with the platform and do a high level "If you do X instead of Y it should work" is half of it
+16:35:52 <gundalow> itdependsnetwork: We can follow up on this next week if you'd like
+16:35:58 <gundalow> I've got to head off now
+16:36:05 <itdependsnetwork> bye, thanks
+16:36:19 <gundalow> Thanks everyone for your time today :)
+16:36:21 <gundalow> #endmeeting

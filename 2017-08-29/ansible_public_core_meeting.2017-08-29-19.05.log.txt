@@ -1,0 +1,259 @@
+19:05:12 <bcoca> #startmeeting ansible public core meeting
+19:05:12 <zodbot> Meeting started Tue Aug 29 19:05:12 2017 UTC.  The chair is bcoca. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:05:12 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:05:12 <zodbot> The meeting name has been set to 'ansible_public_core_meeting'
+19:06:23 <dag1> o/
+19:06:36 <dag1> #chair rohitkum jtanner bcoca abadger1999
+19:06:55 <rohitkum> Hello everyone
+19:06:56 <dag1> #seat abadger1999 actually
+19:07:32 <abadger1999> bcoca: If you chair some other people, they can help with administrivia (chairing others, #info, #action, etc)
+19:08:30 <bcoca> abadger1999: want to run with it .. helping someone right now
+19:09:23 <abadger1999> #chair
+19:09:44 <abadger1999> bcoca: chair me and i'll chair some other people who can run it.
+19:10:23 <bcoca> #chair rohitkum jtanner bcoca abadger1999
+19:10:23 <zodbot> Current chairs: abadger1999 bcoca jtanner rohitkum
+19:10:33 <jtanner> #chair dag
+19:10:33 <zodbot> Current chairs: abadger1999 bcoca dag jtanner rohitkum
+19:10:35 <abadger1999> #chair dag1
+19:10:35 <zodbot> Current chairs: abadger1999 bcoca dag dag1 jtanner rohitkum
+19:10:39 <bcoca> i thought that was automatic .. then i realize dag did it
+19:10:56 <jtanner> #chair rohitkum
+19:10:56 <zodbot> Current chairs: abadger1999 bcoca dag dag1 jtanner rohitkum
+19:10:58 * dag1 learned something new
+19:11:47 <abadger1999> Agenda is here: https://github.com/ansible/community/issues/220
+19:12:19 <abadger1999> jtanner: Are you able to run the meeting?  my group will be up for boarding in ~ 15 minutes
+19:13:47 <jtanner> checking
+19:13:56 <bcoca> ok .. seems like we are going to lack quorum , anyone have anything 'urgent' to discuss?
+19:13:59 <jtanner> i have hard stop at 4
+19:14:23 <abadger1999> #topic A common practice I have seen in modules is that the input parameters are put in the result output dictionary
+19:14:34 <bcoca> dag, most issues still left are yours, fine with waiting till thursday? today seems to be bad day
+19:14:40 <abadger1999> bcoca and I agree that this is wrong.
+19:14:42 <rohitkum> Yeah, this is about introducing a new module for placement groups in AWS
+19:15:07 <bcoca> abadger1999: that is 'invocation'  , which was 'feature' we added in 2.2?
+19:15:13 <abadger1999> dag1: would you be willing to write it up?
+19:15:27 <bcoca> abadger1999: its only there on -vvv
+19:15:31 <bcoca> for debugging purposes
+19:15:51 <abadger1999> bcoca: I think dag is talking about modules which explicitly place the params into the json return value.
+19:16:04 <dag1> ok
+19:16:08 <abadger1999> (something that sdoran and I saw in an older module yesterday)
+19:16:23 <abadger1999> Cool
+19:16:25 <bcoca> ah, then i agree, but that is a bug specific to those modules
+19:16:45 <dag1> yes, it seems to be very prevalent in the Windows space
+19:16:46 <abadger1999> Yep
+19:16:52 <bcoca> and stupid since it is redundant to 'invocation' feature
+19:17:02 <bcoca> dag1: that explains why i have not seen it
+19:17:14 <abadger1999> #action dag to PR a guideline to say "do not place params into the module's return value"
+19:17:17 <dag1> indeed, one argument in favor was that if you template values, the templated value could easily be reused
+19:17:19 <abadger1999> #topic From time to time new parameters are proposed with the unit as part of the parameter name,
+19:17:25 <bcoca> it seems dumb to have to do this, but yes, lets add 'developer guildeline'
+19:17:26 <dag1> abadger1999: Perfect
+19:17:46 <abadger1999> dag1: what's desired here?  standardize on secs vs seconds?
+19:18:03 <bcoca> ^ i would argue to not make unit part of optoin name
+19:18:10 <bcoca> time: not time_secs or time_seconds
+19:18:18 <bcoca> have description clearly state unit
+19:18:25 <dag1> abadger1999: Python modules do not do this (or haven't seen it really)
+19:18:32 <dag1> abadger1999: in the Windows world this seems to be preferred
+19:18:42 <bcoca> nitzmahone ^
+19:19:17 <dag1> so during review I always remark this, but it would be nice if this was also a guideline
+19:19:43 <abadger1999> https://github.com/ansible/ansible/issues/20160#issuecomment-272053518
+19:19:49 <jtanner> sorry, why don't we want inputs in the return json?
+19:19:59 <abadger1999> So it looks like nitzmahone and bcoca are on opposite sides of this.
+19:20:36 <dag1> if I follow the same reasoning, it could be useful to know if a parameter is a string or a list
+19:20:55 <nitzmahone> (or always support both :D )
+19:21:02 <dag1> nitzmahone: :-)
+19:21:17 <dag1> but here the discussion is largely what the default name would be
+19:21:23 <dag1> because we can indeed create aliases
+19:21:28 <abadger1999> jtanner: the inputs are already handled via a different facility.
+19:21:31 <abadger1999> (invocation)
+19:21:35 <jtanner> k
+19:21:47 <jtanner> i guess we're talking about having a duplication in the return json?
+19:22:02 <abadger1999> jtanner: yep (that was the previous topic)
+19:22:05 <jtanner> k
+19:22:08 <jtanner> ignore me then
+19:22:22 <sivel> I just got here too
+19:22:24 <bcoca> i just prefer time: vs time_secs + time_mins
+19:22:27 <jtanner> #chair sivel
+19:22:27 <zodbot> Current chairs: abadger1999 bcoca dag dag1 jtanner rohitkum sivel
+19:22:45 <abadger1999> I'm mildly with bcoca but I'm okay either way.
+19:22:50 <sivel> Is there additional background on this topic?
+19:22:55 <dag1> I bring it up here, because today a Windows module that is using _seconds is being proposed
+19:22:56 <sivel> other than what the topic states?
+19:22:56 <nitzmahone> unit-free things like that don't make the playbook as readable IMO
+19:22:57 <abadger1999> (ie: standardize on one)
+19:23:20 <nitzmahone> On things like PS it doesn't matter because we have a `TimeSpan` type that can be anything you want.
+19:23:36 <sivel> I mean, things like Golang have a standard here, where they do like 3h15m which is parsable.  python itself generally asks for either straight up seconds, or has kwargs for each unit
+19:23:36 <nitzmahone> But here it's just an arbitrary number.
+19:24:13 <sivel> but generally I'd like to see just `seconds`
+19:24:14 <nitzmahone> Unless we want to define a 'timespan' module_args type like what Sivel's saying
+19:24:16 <nitzmahone> I'd be all for that
+19:24:17 <sivel> `time` is misleading
+19:24:22 <dag1> so the reboot and win_reboot, while having the same options, Windows adds _secs
+19:24:42 <bcoca> descriptions normally have the 'unit'
+19:25:12 <nitzmahone> I've personally been nailed by that one though- where I wrote a playbook and it took minutes instead of seconds, etc.
+19:25:18 <bcoca> on the python side most modules with 'unit based options' dont have it in name .. I dont think this should be a windows only standard
+19:25:21 <nitzmahone> "why isn't this timing out?!"
+19:26:07 <sivel> my opinion, is that if we are expressing an amount of time, it should be seconds, unless otherwise noted, but I don't think we should add a _secs postfix
+19:26:12 <nitzmahone> I'd be happy to put that on my 2.5 list (parseable generic timespan type) if people like that idea.
+19:26:32 <sivel> yeah, or we do like a golang like time spec
+19:26:36 <sivel> time duration*
+19:26:39 <bcoca> im fine with having type=time
+19:26:49 <bcoca> but we probaly will end up with type=datetime
+19:26:59 <dag1> I like where this is going
+19:27:05 <nitzmahone> A datetime != timespan though
+19:27:08 <sivel> https://golang.org/pkg/time/#ParseDuration
+19:27:18 <bcoca> datetime vs duration
+19:27:18 <nitzmahone> Yeah- I'd be all for that
+19:27:31 <dag1> 26 minutes into the meeting, can we decide ?
+19:27:35 <bcoca> type=duration  and type=datetime
+19:27:39 <nitzmahone> +1
+19:27:47 <bcoca> and dag will write it
+19:27:50 <sivel> I say for now, it should just be generic, and accept seconds, and not have a postfix
+19:27:50 <bcoca> +1
+19:27:51 <dag1> haha
+19:27:53 <abadger1999> +1 for a standard.  Don't care which standard we adopt.  I'm boarding now.
+19:28:07 <bcoca> +1 to no postfix
+19:28:09 <nitzmahone> If duration is the direction we're moving in, I'd agree with sivel on that
+19:28:11 <jtanner> bye abadger1999
+19:28:11 <abadger1999> #chair nitzmahone
+19:28:11 <zodbot> Current chairs: abadger1999 bcoca dag dag1 jtanner nitzmahone rohitkum sivel
+19:28:17 <dag1> +1 to no postfix (keep aliases around)
+19:28:29 <dag1> +1 to implement duration/datetime
+19:28:30 <nitzmahone> (and unitsless durations == seconds)
+19:28:45 <nitzmahone> for future backcompat
+19:28:46 <sivel> sounds like an agreement
+19:28:50 <nitzmahone> yup
+19:29:15 <bcoca> #agreed no 'unit' postfix on options
+19:29:22 <nitzmahone> OK, so we'll keep the ones that have it now as aliases, but docs will standardize on unitsless and we'll be set up for duration in the future.
+19:29:31 <bcoca> #action implement duration and datetime types for argspec
+19:30:00 <nitzmahone> #action add duration/datetime argtypes to 2.5 roadmap
+19:30:03 <bcoca> #action migrate existing 'unit suffixed' options to aliases and make 'unitless' the main focus
+19:30:40 <dag1> I had another new topic: required_by functionality
+19:30:57 <bcoca> is that similar to required_with/required_if?
+19:31:29 <bcoca> #topic required_by
+19:31:37 <dag1> https://github.com/ansible/ansible/pull/28662
+19:31:54 <dag1> so required_if allows you to add dependencies if a parameter has a specific value
+19:32:11 <dag1> but what we need is: 'if parameter X is defined, then we need parameter Y too'
+19:32:37 <sivel> hrm, I don't like adding more of these, that are so...inflexible.  It would be nice if we had a more generic way to express this
+19:32:50 <dag1> required_together has a commutative property, so if one is defined, the other is required too
+19:33:21 <dag1> sivel: agreed
+19:33:39 <jtanner> i have no idea what a more "generic" thing would look like
+19:34:12 <sivel> I feel like required_if is potentially the solution, but it needs to be more flexible
+19:34:24 <sivel> instead of just evaluating a value, maybe accepting a callable
+19:34:40 <sivel> not sure, I just don't kike the idea off all these roughly similar required_ args
+19:34:46 <sivel> s/kike/like/
+19:34:57 <sivel> damn, so many typos in that last...
+19:35:00 <dag1> now, as a side-note, this functionality is completely missing from the documentation
+19:35:39 <dag1> it's true that they all appear similar, and they all accept a different datastructure
+19:35:51 <dag1> I always have to look up how it worked on someone's blog :)
+19:35:55 <sivel> It just feels like required_if could maybe be more generic, and having some predefined evaluations and accepting callables could be useful
+19:36:34 <dag1> not sure if callables will make it easier, we would still have a shared set of callables
+19:37:21 <sivel> I guess where I was getting at is it could be like, paramB is required when paramA is between 1 and 5
+19:37:30 <sivel> no way to express that in the arg spec currently
+19:37:36 <bcoca> we already have callable at type level .. not pretty
+19:37:48 <bcoca> maybe we are asking too much of argspec?
+19:38:02 <bcoca> some conditions are just easier to have each module write the actual python
+19:38:02 <sivel> I see the need, although I don't like it
+19:38:23 <nitzmahone> Good escape hatch for custom stuff, but yeah, at some point I'm not sure if passing callables for oneoffs is easier than just writing imperative validation after the declarative has dnoe all it can
+19:38:25 <sivel> the need is to have standard errors for argument constraints
+19:38:51 <sivel> but bcoca raises a good point, at some point I think we are asking too much from the argspec, and this almost feels like we've hit that
+19:38:53 <nitzmahone> But if you're doing imperative checks there, how will you standardize it anyway?
+19:39:13 <bcoca> you standard becomes  a programing langauge
+19:39:19 <nitzmahone> "<callable x" doesn't like the cut of "fooarg"'s jib
+19:39:47 <dag1> I think we can get away with: [ "parameter", "condition", ("set", "of", "parameters") ], where the condition is n evaluation
+19:39:52 <sivel> I'm not sure we have an answer, but I don't think I like the current implementation
+19:40:09 <nitzmahone> At some point there we're just reimplementing jinja
+19:40:11 <dag1> but it will make mutual_exclusive and required_one_of very hard
+19:40:20 <sivel> but I'm now leaning towards, I think it;s best to not add, and just handle it in the specific module outside of argument spec
+19:40:26 <nitzmahone> +1
+19:40:29 <bcoca> +1
+19:40:45 <dag1> sivel: I disagree, the python code would be a lot harder than the statements we now have
+19:41:17 <sivel> sounds like we are +1 for adding, and -3 for not adding
+19:41:18 <bcoca> dag1: unlike using modules in a play .. the guy using these functions is already programming in python
+19:42:11 <dag1> bcoca: true, but if everyone has to implement mutually_exclusive, it's not going to be easier to maintain (or understand) how parameters work together
+19:42:39 <dag1> we introduced this for a purpose
+19:42:39 <sivel> How many modules need a required_by right now?
+19:42:46 <dag1> and required_by has the same purpose
+19:43:01 <dag1> sivel: it didn't exist, so I don't know
+19:43:05 <sivel> I tend to look at things from an 80/20 rule.  Do the 80% need this, or do some amount of the rest?
+19:43:12 <sivel> I think this is a less than 20% need
+19:43:23 <dag1> well, that's true for all of the options
+19:43:33 <dag1> most modules don't have parameter dependencies
+19:43:37 <bcoca> sivel: i know of a copule that just implemented same rule in cod 'if state == present: ... if xyz is none: fail_json
+19:43:43 <mikedlr> sivel; it's quite a common thing in the AWS modules;  e.g. rds_instance has a very different set of parameters for aurora vs other databases.
+19:43:59 <sivel> bcoca: yeah, I have done that exact thing
+19:44:09 <mikedlr> we end up writing our own parameter validation functions.
+19:44:17 <bcoca> which is fine
+19:44:48 * dag1 still thinks this is a lot easier and more consistent, than asking people to write it  themselves (with custom error messages)
+19:45:03 <bcoca> dag1: i would say that of whoel modules
+19:45:14 <dag1> fact is that none of this is documented, so most module developers don't know it exists
+19:45:25 <mikedlr> which, to be honest, seems to me to be the right thing.  I'd do it as a functional thing - pass a validator to the module - but we can do it pythonic by having a function we call.
+19:45:27 <bcoca> that is bigger issue imo
+19:45:56 <jtanner> #chair mikedlr
+19:45:56 <zodbot> Current chairs: abadger1999 bcoca dag dag1 jtanner mikedlr nitzmahone rohitkum sivel
+19:46:25 <dag1> so everyone who is in favor of not adding required_by, are they also in favor of getting rid of required_if, required_together, mutually_exclusive and required_one_of ?
+19:46:30 <mikedlr> at present the problem is that when you do your own parameter validation you don't end up with the standard error messages in the standard way like when ansible module does the validation
+19:46:54 <jtanner> dag1: i'm +1 until we have "generic"
+19:48:00 <dag1> translate the example in https://github.com/ansible/ansible/pull/28662 into python
+19:48:20 <dag1> that's just silly in my opinion
+19:48:45 <sivel> but right now only 1 module is asking for it
+19:48:47 <bcoca> ^ read above, i just did
+19:48:50 <dag1> it's time better spend on other stuff, and it's error-prone if these would be if-then-else cases
+19:48:58 <dag1> bcoca: not for the xml module you didn't
+19:49:07 <bcoca> no, for 'every' module
+19:49:29 <dag1> bcoca: this functionality is useful not if you have a single dependency, but if you have complex dependencies
+19:49:44 <sivel> We have a rule at work, repeat yourself 3 times, if you need to repeat yourself a 4th time, then it's time to abstract the code
+19:50:26 <nitzmahone> Would agree that it feels like premature generalization
+19:50:27 <dag1> sivel: so I find 3 modules that need it, and I'll come back
+19:50:34 <dag1> fine by me
+19:50:40 <sivel> now I know you are just trying to subvert the rule
+19:50:53 <bcoca> that is why rules are made
+19:50:59 <dag1> do I need to find 20% ? :-)
+19:51:08 <sivel> in any case, I am still -1
+19:51:16 <dag1> because none of the other functionality ever had 20% of modules using it
+19:51:51 <sivel> even at max count, I see maybe +3 and confirmed -3, which still isn't grounds for approval
+19:52:06 <bcoca> sivel: my count is 3 against, 1 in favor
+19:52:23 <sivel> jtanner: said he was +1, and mikedlr seemed to indicate a +1 kinda
+19:52:25 <bcoca> jtanner: not sure which direction your vote was in
+19:52:40 * dag1 thinks this is silly, it's 7 lines of code, that saves me maybe 50 lines of code
+19:52:41 <jtanner> i think i'm +1 for 2.4, but prob -1 for 2.4
+19:52:48 <jtanner> err, +1 for 2.5
+19:52:54 <dag1> and could be reused by plenty of others
+19:53:03 <sivel> 50 lines of code? You couldn't add the same 7 to your module?
+19:53:07 <bcoca> jtanner: what for 2.5 the generic method or dag's required_by
+19:53:26 <dag1> sivel: sure I could add it to my module, but it wouldn't be integrated in the argument_spec
+19:53:34 <jtanner> if generic is happening in 2.5, then generic. If not, required_by in 2.5
+19:53:45 * mikedlr secretly feeds dag1 an example..
+19:54:02 <jtanner> i presume dag is asking to get it into 2.4 though
+19:54:19 <bcoca> ok, so it seems there i not enough support to add now, going to table this and revisit in future (probably by 2.5)
+19:54:27 <bcoca> #action tabled till 2.5
+19:54:28 <dag1> jtanner: I need it for the xml module, which is new in v2.4, but it's been merged without it
+19:54:46 <bcoca> #topic open floor
+19:54:56 <dag1> well, we still have the undecided sleep module
+19:54:57 <bcoca> closing in 5
+19:55:01 <dag1> haha :)
+19:55:06 <bcoca> thought we did sleep last time
+19:55:19 <dag1> inconclusive by lack of votes
+19:55:22 <bcoca> still -1 on my side
+19:55:24 <mikedlr> lambda_policy went in with some bunch of other lambda related changes.
+19:55:41 <mikedlr> everybody with AWS accounts start creating serverless systems fast please.
+19:56:04 * bcoca still does not understand 'serverless servers'
+19:56:30 <mikedlr> cloud means "you agree we can lie to you about where the servers are"
+19:56:33 <jtanner> translation: the credit bill goes to someone else
+19:56:40 <bcoca> so they work like imaginary numbers
+19:56:48 <mikedlr> serverless means "you agree we can lie to you about how many and how they work"
+19:57:17 <bcoca> mikedlr: sooo ... 'cloud'
+19:57:28 <mikedlr> in real life it may reduce your AWS bill by 90% or so for a low usage system
+19:57:30 <mikedlr> or more
+19:57:30 <nitzmahone> cloud == "other people's computers"
+19:57:57 <mikedlr> nitzmahone: not even that is guaranteed.  If we could run it on your computer without telling you we would be even happier
+19:57:57 <nitzmahone> serverless needs an analogue
+19:58:18 <bcoca> mikedlr: so ... 'cloud'
+19:58:25 <nitzmahone> serverless == 'botnet'
+19:58:42 <mikedlr> yes.  "other people;s botnets"
+19:58:44 <bcoca> 'your' computer is normally somebody else's"
+19:58:49 <nitzmahone> pwned
+19:59:11 <jtanner> s/botnet/miner
+19:59:34 <mikedlr> once you accept that all home computers are likely owned, if by nobody else, by intel/NSA/ etc then you see that "other people's botnets" have no real security differences.
+19:59:44 <bcoca> serverless == soviet cloud ... the server uses you!
+20:00:18 * jtanner goes to next meeting
+20:00:25 <bcoca> #endmeeting

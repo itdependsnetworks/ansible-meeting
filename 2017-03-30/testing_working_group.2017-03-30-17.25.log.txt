@@ -1,0 +1,282 @@
+17:25:11 <gundalow> #startmeeting Testing Working Group
+17:25:11 <zodbot> Meeting started Thu Mar 30 17:25:11 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+17:25:11 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+17:25:11 <zodbot> The meeting name has been set to 'testing_working_group'
+17:25:20 <gundalow> #chair mattclay
+17:25:20 <zodbot> Current chairs: gundalow mattclay
+17:25:24 * mattclay waves
+17:25:30 <gundalow> hey :)
+17:25:37 <gundalow> bjornar_: You got anything
+17:25:59 <bjornar_> What happened with testing procedures wrt the 2.2.2.0 release?
+17:26:18 <gundalow> #topic Testing Procedures
+17:26:22 <gundalow> In what regard?
+17:26:50 <bjornar_> What testing procedures are run before a ansible release?
+17:27:02 <gundalow> ah, OK
+17:27:16 <mattclay> Tests are run on PRs and after each commit, rather than prior to a release.
+17:27:49 <bjornar_> So there is no extended testing before a stable release? We are basically the testers?
+17:28:23 <bcoca> bjornar_: tests run when we cut release also
+17:28:24 <gundalow> RC are also tested by the Ansible Tower Team
+17:28:59 <mattclay> Sorry, I didn't release you were referring to manual testing. I was thinking purely of the automated tests.
+17:29:07 <mattclay> s/release/realize/
+17:29:34 <bjornar_> I am for example thinking about the 2.2.1.0 release, where expansion of vars[] var changed entirely.
+17:29:54 <bjornar_> Also, the 2.2.2.0 release had issues with executing the simplest playbook (no groups)
+17:30:34 <bjornar_> We would like to contribute tests for these and perhaps other issues, but need to know how the process is supposed to work.
+17:30:43 <bcoca> bjornar_: we dont test 'all behaviours possible'
+17:30:43 <mattclay> Do you have links to specific issues so we can look at the details?
+17:30:56 <bcoca> first case was CVE and passed tests, just did not have test for your use case
+17:30:57 <gundalow> Thanks for your offer to help
+17:31:00 <bjornar_> At the moment, it feels like we need to both write playbooks/roles and tests for same
+17:31:09 <funzo> bjornar_: that would be fantastic if you could help coverage with automated tests
+17:31:12 <bcoca> 2nd release also passed tests, we did not have inventories in tests that had the 'ungrouped' problem
+17:31:33 <funzo> as far as procedure is concerned, the tests or submitted as PRs like anything else, on a continuous basis
+17:32:35 <bjornar_> I am for example talking about this issue from 2.2.0.0 -> 2.2.1.0 (https://github.com/ansible/ansible/issues/22913)
+17:32:37 <bcoca> had test case for 2nd in devel but did not 'backport the tests' to 2.2
+17:33:37 <abadger1999> bjornar_: tests live in the test/ subdirectory of the repo.  The units and integration subdirectories are where you'd likely be concentrating on adding more.
+17:33:42 <bcoca> bjornar_: understood, but that was security bugfix that happend to clobber a 'feature' that we were not aware of, that will happen when you use it in ways we dont expect
+17:34:20 <bjornar_> bcoca, I find it also hard to find documentation about how vars[] is supposed to work
+17:34:22 <bcoca> ^ recursive templating, being that 'feature'
+17:35:10 <bcoca> bjornar_: because 'vars' is internal and was not meant for users, hostvars and 'bar' were
+17:35:40 <bcoca> that some people figured out 'vars' works, fine, but i've warned plenty of times to not rely on that when i encountered it
+17:36:04 <bcoca> ^ again, we cannot test usage of 'features' we did not document nor expect
+17:36:37 <bjornar_> bcoca, some times you need to use vars.. and anyway this was a behavior change. I am now wondering: what should the functionality be?
+17:37:07 <bcoca> bjornar_: that is better question, i would argue you dont really need to use vars, but that is other issue
+17:37:31 <bjornar_> bcoca, when in a loop and so on, the only place a var is available unfortunately is vars
+17:38:15 <bcoca> https://gist.github.com/bcoca/ddae02808f5cb778351bf2dfeb0b76f2 <= same play as bug, working!
+17:38:30 <bcoca> bjornar_: show me example, as i've never encountered that
+17:38:43 <bcoca> bjornar_: actually belay that, tangent on testing
+17:38:54 <bcoca> diff topic, bring up in core meeting or create proposal
+17:39:01 <bjornar_> yeah, sure
+17:39:14 <bcoca> dont want to hijack this, testing group has plenty on plate
+17:39:52 <bjornar_> But its related to testing, how can I write and contribute tests that are vital to our quite complex suite of roles/playbooks if we really dont know how it is supposed to work, just that it does ;)
+17:40:07 <gundalow> bjornar_: It sounded like you may have some spare cycles to help us extend our testing, which would be great. What are were you interested in
+17:40:32 <bjornar_> bcoca, seems they ended the meeting before it started, so I dont think its that much, unfortunately
+17:40:51 <bjornar_> gundalow, My only interest is keeping my own playbooks safe to play, really..
+17:40:51 <gundalow> bjornar_: The meeting is running again now
+17:40:56 * gundalow points to the topic
+17:41:11 <gundalow> It was killed I was I was sat in this room talking to myself for 15 minutes
+17:41:16 <bjornar_> And if that means we need to contribute tests, so be it.
+17:41:39 <gundalow> OK
+17:42:02 <bcoca> bjornar_: tests are one thing, unsupported functionality is another
+17:42:03 <gundalow> If you look at test/integration/targets you will see various integration tests
+17:42:10 <gundalow> Yup,
+17:42:16 <gundalow> docs & tests need to lign up
+17:42:20 <gundalow> lighn up*
+17:42:22 <gundalow> ffs
+17:42:23 <bcoca> line
+17:42:26 <gundalow> thanks
+17:42:34 <mattclay> The easiest way to add integration tests is to create test roles in `test/integration/targets` as gundalow mentioned.
+17:42:34 <bcoca> gundalow: been there, do that every 10s, for once ... ITS NOME!!?!?!
+17:43:00 <mattclay> Or add to existing roles if appropriate.
+17:43:23 <bcoca> but please, dont add tests for functionality that we dont support https://xkcd.com/1172/
+17:43:47 <bjornar_> bcoca, thats the big question, then .. support..
+17:43:50 <mattclay> For example, if you're testing a specific module, you'll want to look for an existing `test/integration/targets/MODULE`.
+17:44:58 <bcoca> bjornar_: this was a bug fix, it changed 'unwanted' behaviour, you were just relying on it, that will always happen
+17:45:16 <bcoca> ^ the issue is identify wanted/unwanted and then support what is left
+17:45:30 <bjornar_> bcoca, I would say one could write tests for anything more-or-less as long as it does not fail at the time of writing the test, if it fails at a later time, its a behavior change, documented or not, and should be dealt with either by announcing change and deleting the test or by modifying behavior. Atleast you would know
+17:46:11 <bjornar_> One must not forget that the stability of ansible is vital to many datacenters these days
+17:46:18 <bcoca> i would argue, that decision shoudl be made when accepting the test 'is this behaviour we want'
+17:46:30 <bcoca> otherwise you have most people 'obeying the test' even if it is unwanted behaviour
+17:47:06 <gundalow> and we protect against that by the fact that the module maintainers usually review tests
+17:47:07 <bcoca> if i test that ansible deletes /dev when run as root, should that test be accepted just cause it works?
+17:47:14 <bjornar_> bcoca, yeah -- perhaps, I dont know, if you change behavior of something that I mean not only I use (vars[]), then that should qualify for a changelog entry and a warning
+17:47:19 <bcoca> gundalow: in this case its core
+17:47:32 <gundalow> aye, was about to say, for core features that's a bit harder
+17:47:49 <bjornar_> bcoca, because all my mysql-servers. rabbitmq-servers and so on ended up without an ip and with the string "{{ some_variable_that_used_to_expand }}"
+17:47:52 <bcoca> bjornar_: we do that for supported functionality, you just happend to use a hack, we cannot guarantee all of these work the same as we are not aware of them
+17:48:46 <bjornar_> bcoca, I'll send you the playbook that shows what I do privately, its basically some hacks around lacking func atm, yes, but I mean, its not ugly.
+17:49:01 <bcoca> bjornar_: i cannot be responsible for you freezing cause i fixed the 'keyboard overheating' problem
+17:49:12 <bjornar_> bcoca, cut the crap
+17:49:50 <bcoca> its not crap, behaviour WILL change with every patch, we can only be responsible of the behaviour we support, not with unknown hacks X and Y are using
+17:50:36 <bjornar_> so if you say you dont support vars[] you should not expose it
+17:50:43 <bcoca> its not reasonable for us to know in advance all possible permutations of hacks others are engaged in to properly document changes on behaviour we dont know about
+17:50:59 <bjornar_> bcoca, thats where the tests and this meeting comes in
+17:51:22 <bcoca> goes back to my point, if it 'works' does not mean it 'should work'
+17:51:44 <bcoca> so accepting the tests blindly is also not an option, we need to decide IF we want it to keep working that way
+17:51:46 <bjornar_> bcoca, does it really matter if I use a functionality that is exposed "correctly" according to the developers mind, or does it matter that the behavior of the exposed func does not change?
+17:52:31 <bjornar_> bcoca, Yeah, sure -- I agree to some extent. But still, ...behavior change
+17:52:31 <bcoca> if i change a screwdriver grip to deal with sweaty hands, but you complain it doesnt work like a hammer anymore, what do you want me to do?
+17:52:40 <jtanner> i think every case will be unique and there's no point in arguing the general case
+17:52:45 <bjornar_> bcoca, again, cut the crap
+17:53:29 <bjornar_> either you need to unexpose vars and say its not supported, or you need to keep its behavior unchanged, thats my pov
+17:53:34 <gundalow> ok
+17:53:39 <gundalow> so how can we move this on
+17:53:47 <bjornar_> again, you need to remember that stability of ansible over time is the prime target
+17:53:49 <jtanner> dunno what "this" is
+17:54:20 <gundalow> 1) Ansible may be exposing things that people should use, we should maybe look at better naming, such as "_"
+17:54:21 <sivel> At this point, I would claim that this has exceeded the purpose of the ansible-testing meeting, and we should move on and propose a specific discussion for the core meeting
+17:54:30 <gundalow> Yup
+17:54:39 <bjornar_> the vars[] issue is just an example here, so dont get to hung up in it.
+17:54:39 * gundalow invokes chair powers
+17:55:01 <gundalow> So there are a few issues here
+17:55:11 <jtanner> bjornar_: do you have a PR or a proposal open? I can't make a whole lot of sense of what just transpired
+17:55:27 <gundalow> 1) Why is "{{vars}}" accessable if it isn't meant to be used
+17:55:34 <sivel> jtanner: https://github.com/ansible/ansible/issues/22913
+17:55:36 <sivel> iirc
+17:55:44 <jtanner> thanks sivel
+17:56:35 <bjornar_> 2) what can we write tests for, current behavor or the behavior that the devs have inside their head
+17:57:11 <bjornar_> - I vote current behavior, as long as its exposed without plugins
+17:57:46 <gundalow> Answer 2: Tests get created and as part of the review process they get reviewed by the relevant people (so module maintainers, or developers that work on that area of the code)
+17:57:54 <gundalow> During the process of creating the test you may find
+17:57:59 <gundalow> b) Bugs in teh code
+17:58:07 <gundalow> a) Bugs in teh documentation
+17:58:22 <sivel> Before we can decide how to test the behavior, we ahve to determine what the correct behavior is.  In this specific case, we need to determine that, and that is likely to be done in the core dev meeting
+17:58:29 <jtanner> bjornar_: i think tests are always welcome, as long as they assert desired functionality (like bcoca was metioning). I this case, it seems like the "desired functionality" is the current debate, which isn't really within scope of testing meeting.
+17:58:33 <bjornar_> gundalow, but not beeing allowed to write tests on current behavior would imply unknown behavior?
+17:58:43 <jtanner> sivel jinx
+17:58:48 <gundalow> And it's fine to fix (a) and (b) in the same PR that adds test, and get them reviewed as a block
+17:59:38 <bjornar_> jtanner, I think it is in scope of current behavior vs some undocumented but someone might know what they tought when they programmed-it-behavior
+17:59:43 <gundalow> Personally I write tests based on current behaviour. If I spot something that doesn't look right I look at the code and/or speak to someone else
+18:00:11 <sivel> bjornar_: yes, I believe at the moment, all we can say is that it is unknown behavior. But this is not the correct meeting to come to a decission on what the correct behavior is
+18:00:12 <bjornar_> This is perhaps the political discussion of this
+18:00:37 <sivel> a bug is reported, and no decision has been made around what the correct behavior is at this time
+18:00:57 <jtanner> bjornar_: yeah, there's nothing wrong with that statement
+18:01:20 <sivel> once we have come to that decision, we can discuss adding tests to effectively document and ensure the behavior
+18:01:21 <gundalow> when important bugs are fixed we try to add in tests to defend that logic
+18:01:23 <bjornar_> sivel, its not about that single issue, its the general idea of it
+18:01:53 <sivel> I have not seen an a discussion topic proposed that is unlinked from that issue
+18:02:05 <sivel> can you clarify exactly what the discussion topic should be?
+18:02:09 <abadger1999> bjornar_: in general you write a test and the person who knows that area of the code reviews and decides whether to merge it.
+18:02:18 <gundalow> yup
+18:02:34 <abadger1999> bjornar_: that's the general proceedure... no need to ask permission in general.
+18:02:48 <gundalow> What's the Python thing
+18:02:56 <gundalow> best to do, then ask for forgiveness
+18:03:20 <gundalow> Ok, that's the hour
+18:03:26 <gundalow> and I have one other topic on the agenda
+18:03:58 <sivel> ask for forgiveness, not for permission?
+18:04:11 <gundalow> sivel: That's the one
+18:05:31 <gundalow> ok, as I don't think this topic is progressing I'm moving onto the next item
+18:05:36 <sivel> sounds like time to move on to that next topic?
+18:05:42 <gundalow> .............................
+18:06:08 <gundalow> #topic How to deal with PRs that fail CI *after* merge (but passed PR CI)
+18:06:16 <gundalow> #info https://github.com/ansible/community/issues/114#issuecomment-289768234
+18:06:26 <gundalow> Consider the case:
+18:06:26 <gundalow> PR created
+18:06:27 <gundalow> Reviews/updates
+18:06:27 <gundalow> Still passes CI
+18:06:27 <gundalow> Time Passes
+18:06:29 <gundalow> CI is made stricter (e.g. pep8 or validate-modules)
+18:06:31 <gundalow> PR merged (as it's green)
+18:06:34 <gundalow> Merge now fails updated tests
+18:06:36 <gundalow> ..
+18:06:39 <gundalow> Seen that a few times
+18:06:41 <gundalow> mattclay: ^
+18:06:43 <mattclay> The short answer is to fix them quickly. There isn't anything we can do with GH to prevent this from happening.
+18:06:59 <gundalow> #info The short answer is to fix them quickly. There isn't anything we can do with GH to prevent this from happening
+18:07:23 <mattclay> We can reduce the chances of it occurring by periodically re-running CI if it's "too old", but that only reduces the problem. It won't eliminate it.
+18:07:37 <bcoca> yeah, thsi problem is endemic on how GH works
+18:07:53 <bcoca> we can narrow (and mattclay has) the window, but not eliminate it
+18:08:36 <mattclay> I have on my list to look at automating re-running of CI for PRs which meet some criteria for CI status being too old. It's not very high on my list though.
+18:09:11 <gundalow> Apparently their are 829 PRs with status:success
+18:09:34 <gundalow> hum, which includes some Travis ones
+18:09:36 <jtanner> and a lot of those probably have merge conflicts =)
+18:09:40 <mattclay> Every time we add a new test, there's a chance it can cause new failures on any open PR. We have too many PRs to just run CI again every time tests change.
+18:10:06 <mattclay> Yeah, if they have merge conflicts, we can't re-run CI.
+18:10:23 <gundalow> take away needs_rebase and it's 615
+18:10:43 <mattclay> If they're pre-Shippable we can't re-run CI either.
+18:10:57 <jtanner> needs_rebase should cover those
+18:11:07 <gundalow> Though, rerunning CI, people looking at it, and no one having the time to get it through the PR process isn't going to be any good
+18:12:07 <gundalow> Stil seeing PRs from Nov 2014 without needs_rebase
+18:12:24 <gundalow> oh, they've been updated
+18:12:47 <jtanner> some people do care
+18:12:54 <gundalow> ah, it's good all travis seem to have need_rabse
+18:12:56 <gundalow> jtanner: I know
+18:13:10 <jtanner> if you find any that have travis but not needs_rebase, that's a bot bug
+18:13:15 <mattclay> We could have the bot label "stale CI" issues with a `stale_ci` label which would block auto-merge. Humans could use that as a cue to re-run CI before manually merging PRs too.
+18:13:49 <jtanner> the only problem with that is how many times it'll get a re-run before someone actually decides to merge it
+18:13:56 <jtanner> like that 2014 one ...
+18:13:58 <bcoca> i would argue that we should rerun ci before merging if PR is older than a week
+18:14:04 <bcoca> ^ just in general
+18:14:05 <gundalow> Given how few automerges their currently are I'd be tempted to get the bot to rerun CI before mergeing
+18:14:08 <gundalow> bcoca: +1
+18:14:31 <jtanner> is the re-run sufficient if they don't also rebase?
+18:14:37 <bcoca> +1 to bot rerunning before merge, i would also put time period
+18:14:38 <mattclay> jtanner: That's why it should just be a label, rather than actually running CI. Re-running CI would require contributor intervention (new commits) or be done manually prior to merging (ie: there's already intent to merge, pending CI passing again).
+18:14:40 <jtanner> to bring in current test
+18:15:21 <bcoca> ^ applies to devel of course, as we rarely port tests back to older branches
+18:15:32 <mattclay> It's not obvious on GH how old CI is, so having a bot applied label after a set time (bcoca suggests a week), would make it easier to make that determination.
+18:15:58 <bcoca> mattclay: its date of last commit
+18:16:08 <bcoca> ^ well, normally, unless someone reran manually
+18:16:15 <jtanner> yes, manual is the norm
+18:16:20 <mattclay> jtanner: Shippable rebases when running CI, so rebase is only needed for pre-Shippable PRs and merge conflict PRs.
+18:16:29 <jtanner> if it's a problem, the bot can paste in the ci_status data
+18:16:34 <bcoca> jtanner: shouldnt be, sans OSX acting up
+18:17:27 <jtanner> i don't normally shy away from bot work ... but i'd like to see this one thought out more before i start writing it
+18:17:39 <mattclay> gundalow: Are you thinking that the bot should trigger CI on stale PRs before it auto merges?
+18:18:26 <gundalow> mattclay: It was an idea off the top of my head, I hadn't worked the idea through in my mind yet
+18:19:41 <gundalow> jtanner: nod, I wouldn't want you to end up implementing something that doesn't make sense
+18:20:51 <gundalow> If the main take away from this discussion is: "Rerun CI on any PR that's older that than a week before hitting merge" , then I think that's a good step forwards
+18:20:56 <gundalow> oh + "Pay attendion
+18:21:08 <gundalow> + "Pay attention to #shippable"
+18:21:11 <mattclay> gundalow: +1
+18:21:48 <mattclay> s/PR that's older than a week/PR with last commit older than a week/
+18:21:54 <gundalow> ah, yes
+18:22:11 <mattclay> Which is a quick way to approximate when CI last ran.
+18:22:19 <jtanner> write up feature request for bot please
+18:22:39 <jtanner> the bot will know last ci run
+18:22:52 <jtanner> and last commit date
+18:23:39 <gundalow> #action gundalow to email Core and tell them to check date of last commit before merging, if > 1w, rerun CI. Add to triage
+18:24:10 <mattclay> I think we should see how well that manual process works before having the bot help out.
+18:24:17 <gundalow> Sure
+18:24:33 <gundalow> #agreed rerun CI if last commit is over a week
+18:25:00 <gundalow> I'm happy with that
+18:25:00 <jtanner> the length of triage responsibilities is already so long that i don't think you are going to see much change
+18:25:09 <jtanner> and more people than just the core team can merge PRs
+18:25:28 <gundalow> hum
+18:25:28 <mattclay> It shouldn't really be a triage thing, since it needs to be done when merging, not triaging.
+18:25:33 <gundalow> true
+18:25:41 <gundalow> #action gundalow ignore triage comment
+18:25:52 <jtanner> gundalow ignores gundalow
+18:26:25 <gundalow> jtanner: plan
+18:26:28 <jtanner> adding a statle_ci label is fairly easy
+18:26:36 <mattclay> One way to make it more automated would be to use bot commands like "merge". The bot could re-run CI if stale, and then merge for you.
+18:26:36 <jtanner> stale_ci
+18:26:44 <mattclay> Then you could "fire and forget" on a merge.
+18:27:01 <mattclay> Instead of re-running CI and coming back to the PR later to make sure it passed before merging.
+18:27:05 <jtanner> mattclay: that is true ... it should probably be integrated with "shipit" though
+18:27:13 <mattclay> jtanner: Yeah.
+18:27:21 <gundalow> stab over IP if CI fails on the merge?
+18:27:37 <jtanner> wut?
+18:28:55 <gundalow> lol
+18:29:13 <gundalow> If you tell the bot to merge and the merge causes CI to fail it should notify you
+18:29:15 <nitzmahone> Sounds like the next hot April 1 RFC that turns into a real product.
+18:29:19 <gundalow> though I think that's future work
+18:29:32 <jtanner> after merge, the PR is closed ... bot will no longer look at it
+18:29:46 <gundalow> oh
+18:29:52 <bcoca> SoIP
+18:29:53 <mattclay> jtanner: Is there any reason why we couldn't (or shouldn't) support using "shipit" for any PR?
+18:29:53 <jtanner> not right now at least
+18:30:13 <jtanner> mattclay: i dont understand the question
+18:30:17 <bcoca> SAAS: Stabbing as a Service
+18:30:35 <gundalow> I believe currently shipit only workson modules, as we know ownership
+18:30:56 <bcoca> will expand to plugins once we add ownership/classification
+18:30:58 <jtanner> that is true ...
+18:31:02 <bcoca> s/will/can/
+18:31:04 <mattclay> jtanner: Could the "shipit" bot command be used to merge non-module/plugin PRs?
+18:31:16 <jtanner> i could be, but it's not currently
+18:32:04 <mattclay> So if the bot supported "shipit" for all PRs (not just modules/plugins), that would be a start. Then it could auto re-run CI if it's stale before it does a merge. Those two together would help alleviate the problem.
+18:33:50 <mattclay> With that you can "shipit" on a PR and forget about it, unless CI fails. In that case the bot will comment on the CI failures.
+18:34:04 <mattclay> So you don't have to come back and check on the PR later unless there was a problem.
+18:35:01 <jtanner> write it up
+18:35:14 <jtanner> it'll still require "education" for our team
+18:35:36 <mattclay> Any votes from folks on that appoach?
+18:35:42 <jtanner> +1
+18:36:49 <gundalow> +1 though some people say they already get too much GH email, so may need to look at Slack poking or somesuch, though that's a future feature
+18:37:30 <jtanner> take their merge access away?
+18:37:38 <jtanner> >=)
+18:38:22 <mattclay> Well, that's +3, -0 (counting me)
+18:38:37 <gundalow> bcoca: thoughts?
+18:42:16 <mattclay> I can write this up. I think it's two separate bot features: 1) re-run stale CI before auto-merge and 2) extend "shipit" to support all PRs
+18:42:25 <mattclay> We'd want to have #1 before #2
+18:42:34 <gundalow> Yup, splitting it into two bits would be good
+18:42:42 <gundalow> I think more thought needs to go into (2)
+18:42:45 <jtanner> it'll be a stale_ci label first
+18:43:02 <jtanner> identify first, act second
+18:43:04 <gundalow> I thinkthe cost vs beneffit is better on 1
+18:43:20 <mattclay> OK, so 3 features: 1) label stale-ci, 2) gate auto-merge on stale_ci, 3) extend "shipit" to all PRs
+18:44:33 <mattclay> #action mattclay to submit bot feature requests for 1) labeling stale_ci, 2) gating auto-merge on stale_ci, 3) extending "shipit" to all PRs
+18:46:06 <mattclay> As gundalow suggests, we'll need to work out some details on how we want #3 to work. Perhaps at the next TWG.
+18:46:33 <gundalow> nod
+18:46:44 <gundalow> Thanks for taking offering to write that up mattclay
+18:47:34 <gundalow> #info We'll need to work out some details on how we want extend "shipit" to support all PRs. Perhaps at the next TWG.
+18:47:54 <gundalow> Anyone got anything else?
+18:53:58 <gundalow> #endmeeting

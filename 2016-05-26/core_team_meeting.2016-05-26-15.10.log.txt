@@ -1,0 +1,277 @@
+15:10:55 <bcoca> #startmeeting Core Team Meeting
+15:10:55 <zodbot> Meeting started Thu May 26 15:10:55 2016 UTC.  The chair is bcoca. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:10:55 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:10:55 <zodbot> The meeting name has been set to 'core_team_meeting'
+15:11:46 <jtanner|t420> hello
+15:12:00 <nitzmahone> Yo
+15:12:03 <bcoca> sorry for late start, i forgot this is a bit early for the west coast guys and one of them ussually manages this
+15:12:07 <bcoca> ^ one of those devils
+15:12:21 <jtanner|t420> abadger1999, nitzmahone gregdek rbergeron meeting time
+15:12:23 <bcoca> #agenda https://github.com/ansible/community/issues/107
+15:12:26 <newtMcKerr> here
+15:12:36 <jtanner|t420> #chair newtMcKerr
+15:12:42 <jtanner|t420> #chair nitzmahone
+15:12:49 <jtanner|t420> #chair bcoca jtanner|t420
+15:13:14 <jtanner|t420> is this thing on?
+15:13:20 <bcoca> first item https://github.com/ansible/ansible/pull/13145, lxc connection, we dropped ball on this, should have come up for 2.1, need someone to do final review and merge
+15:13:25 * Qalthos 👋
+15:14:06 * abadger1999 here
+15:14:22 <jtanner|t420> #chair Qalthos abadger1999
+15:14:24 <Qalthos> jtanner|t420: you have to be chaired before you can chair
+15:14:28 <jtanner|t420> ah
+15:14:31 <bcoca> #action add agenda item for subsequent meeting for 'refreshing' attention on old PRs
+15:14:37 <jtanner|t420> chair me yo
+15:14:48 <bcoca> #chair jtanner|t420 abadger1999 Qalthos
+15:14:48 <zodbot> Current chairs: Qalthos abadger1999 bcoca jtanner|t420
+15:14:57 <Mic92> who get a chair?
+15:14:57 <bcoca> ^ action ?
+15:14:59 <jtanner|t420> #chair newtMcKerr nitzmahone
+15:14:59 <zodbot> Current chairs: Qalthos abadger1999 bcoca jtanner|t420 newtMcKerr nitzmahone
+15:15:06 <newtMcKerr> chair me could mean different things
+15:15:07 <jtanner|t420> #chair Mic92
+15:15:07 <zodbot> Current chairs: Mic92 Qalthos abadger1999 bcoca jtanner|t420 newtMcKerr nitzmahone
+15:15:17 <bcoca> #sofa bcoca
+15:15:20 <newtMcKerr> especially if someone from MS is around
+15:15:25 <jtanner|t420> Mic92, anyone present+active
+15:16:41 <bcoca> ^ last i looked, code looked good, just need some extensive testing
+15:17:09 <Mic92> integration tests?
+15:17:26 <bcoca> those help, but are not a requirement
+15:17:40 <bcoca> we might want to create them to test this
+15:18:05 <abadger1999> I think it has a security hole
+15:18:13 <bcoca> we recently ramped up our 'testing resources' so this might be something to look at
+15:18:35 <abadger1999> fetch_file and put_file have the same security problem we fixed for chroot/jail/zone
+15:18:47 <bcoca> ^ def need to fix that
+15:18:53 <bcoca> the temp race condition?
+15:19:02 <Mic92> can you point to that?
+15:19:12 <abadger1999> bcoca: No -- symlink attack
+15:19:37 <abadger1999> yeah -- let me either try and find the commits that fixed the other plugins
+15:19:56 <jtanner|t420> github.com is unresponsive for me all of a sudden
+15:19:58 <bcoca> once that is done, anyone want to test/create tests?
+15:20:04 <bcoca> s/want/has time to/?
+15:20:44 <jtanner|t420> ah, my internet is flaking out ... i may drop for a bit
+15:20:56 <bcoca> or since this early in 2.2 cycle we just merge and let users poke it?
+15:22:16 <Mic92> the code of the plugin has been part of an independent project and has beed received some feedback from community
+15:22:23 <bcoca> *crickets* ...
+15:22:24 <Mic92> https://github.com/Mic92/ansible-lxc
+15:22:41 <bcoca> ok, once abadger1999's security concerns are addressed, i'll queue in for testing it myself
+15:22:47 <abadger1999> Mic92: If you have a checkout... checkout the stable-1.9 branch and then do
+15:23:05 <abadger1999> git log -p lib/ansible/runner/conneciton_plugins/jail.py
+15:23:13 <sivel> I do have a quick question about the lxc connection plugin.  We did just merge an lxd plugin, and it does use the lxc cli, is there any overlap or compatibility there?
+15:23:35 <abadger1999> commit: a431098fc5b6a8c619675b9cdf73c1c83232ee23   onwards have to do with the security bug and tweaks thereof.
+15:23:39 <bcoca> we merged lxd?
+15:23:48 <sivel> lxd was merged a while ago
+15:23:57 <bcoca> missed that
+15:24:06 <sivel> https://github.com/ansible/ansible/blob/devel/lib/ansible/plugins/connection/lxd.py
+15:24:11 <sivel> Apr 15 or so
+15:24:29 <abadger1999> mattclay: ^
+15:24:31 <bcoca> iirc reqs were diff, lxd required lxd running
+15:24:41 <sivel> So I am wondering if that plugin, since it utilizes lxc, can support lxc
+15:24:47 <bcoca> while lxc does not
+15:24:56 <bcoca> though both manage lxc instances
+15:25:07 <mattclay> bcoca is right, the lxc cli client requires lxd
+15:25:09 <bcoca> ^im fine with having both as long as the reqs are diff
+15:25:55 <bcoca> mattclay: not sure that is true, i use lxc commandl line utils w/o lxd
+15:26:07 <jtanner|t420> #chair sivel mattclay
+15:26:08 <zodbot> Current chairs: Mic92 Qalthos abadger1999 bcoca jtanner|t420 mattclay newtMcKerr nitzmahone sivel
+15:26:30 <mattclay> bcoca: which one(s)?
+15:26:33 <bcoca> and this module uses lxc python lib
+15:26:38 <sivel> and if there is enough similarity, should there really be 2?  Can we make 1 do both?
+15:26:53 <bcoca> lxc-create/stop/start and destroy mostly
+15:27:00 <mattclay> bcoca: There's "lxc" (for lxd) and then there's the various lxc-* tools
+15:27:12 <bcoca> oh, so diff utils
+15:27:20 <Mic92> how does the lxd one interact with lxc?
+15:27:21 <bcoca> in any case,t his plugin does not use either directly
+15:28:07 <abadger1999> Hmmm... if the infrastructure is the same, I think I agree with sivel that we should just have one.
+15:28:39 <bcoca> afaik the lxd one requries everything the lxc one does but the reverse is not true
+15:28:43 <abadger1999> If there's difference i nthe infrastructure (one needds a daemon running and the other does not, for instance), then two plugins seems okay.
+15:29:31 <mattclay> The current lxd plugin uses the "lxc" cli tool, which requires an lxd daemon. The same is not true for using lxc directly.
+15:30:01 <sivel> so weird :)
+15:30:02 <abadger1999> mattclay: did lxd ship with 2.1?
+15:30:10 <mattclay> abadger1999: Yes
+15:30:14 <Mic92> If it uses the cli it is probably slower because of extra processes
+15:30:15 <abadger1999> :-(
+15:30:28 <abadger1999> Maybe we want to get the lxc plugin in and deprecate the lxd plugin?
+15:30:43 <bcoca> i think that might have been why i missed lxc plugin, confused with lxd initially
+15:30:46 <mattclay> abadger1999: They're two different systems, we want both.
+15:30:49 <nitzmahone> I know the lxc cli builds on liblxc, but not sure if you lose anything talking to lxd stuff without the daemon (lookup etc)
+15:30:57 <abadger1999> <mattclay> The current lxd plugin uses the "lxc" cli tool, which requires an lxd daemon. The same is not true for using lxc directly.
+15:30:58 <bcoca> abadger1999: i see both as useful, lxd should work 'remotely'
+15:31:03 <mattclay> For example, lxd allows controlling remote containers.
+15:31:18 <abadger1999> mattclay: Could you make those two statements jive in my head?
+15:31:28 <abadger1999> ah, okay.
+15:31:44 <sivel> apparently you use lxc to control lxd, but you don't use lxc to control lxc ? ;)
+15:31:59 <bcoca> so +1 for lxc once security issues are addressed
+15:32:09 <mattclay> sivel: You use lxc-* to control lxc.
+15:32:19 <bcoca> sivel: lxc-commands vs lxc command line client
+15:32:22 <sivel> yeah, just not "lxc" no trailing utility name :)
+15:32:29 <mattclay> Yeah, it's confusing.
+15:32:33 <bcoca> ^ its nice they kept same name to keep maximum confusion factor
+15:32:35 <Mic92> sivel: lxd came after lxc, they created an additional daemon to have a complement to the docker cli
+15:32:44 <mattclay> Doesn't help that lxd builds on top of lxc containers.
+15:32:53 <bcoca> lxc == system (but also cli for lxd, which is optional deamon)
+15:33:33 <mattclay> So for anyone using lxd, having the lxd plugin is good. For anyone using only lxc, having an lxc plugin would be good.
+15:33:41 <bcoca> ok, think we are all on same page and agree that 2 plugins are worth having when each has diff applications for diff contexts
+15:33:47 <abadger1999> <nod>
+15:34:02 * bcoca needs lxc mobious strip tshirt
+15:34:10 <abadger1999> bcoca, Mic92: Can we keep this on the meeting agenda to make sure it doesn't fall through the cracks for 2.2?
+15:34:35 <bcoca> abadger1999: agreed, add for next meeting 're review plugin after symlink security issue is addressed'
+15:34:44 <abadger1999> Cool.
+15:34:47 <bcoca> Mic92: you think next week is fine for that?
+15:35:08 <bcoca> and again, i appologize for dropping this, thsi should have all happened pre 2.1
+15:35:28 <Mic92> bcoca: I will have some time on the weekend to fix that, but I have not found corresponding fix in the jails plugin so far
+15:35:47 <abadger1999> Mic92: I'm going to portland for pycon tonight (and then in portland until the 8th of June)  but you can feel free to ping me on irc -- I try to keep up with the backlog in #ansible-devel even when I'm ravelling
+15:35:47 <bcoca> abadger1999: can you take post meeting with Mic92 and point him in right direction?
+15:35:58 <abadger1999> yep
+15:36:03 <bcoca> ^ consider that a yes
+15:36:26 <Mic92> ok
+15:36:29 <abadger1999> Mic92: If you're around today, I'll walk you through what we're doing in the plugins right now.
+15:37:46 <bcoca> can we consider that done for now? next item?
+15:37:55 <bcoca> https://github.com/ansible/ansible/issues/16008
+15:38:06 <abadger1999> yeah -- Mic92 just join #ansible-devel and we can talk this through there.
+15:38:07 <bcoca> ^ jtanner|t420 foudn this while investigating other bug
+15:38:08 <jtanner|t420> #action abadger1999 to help Mic92 fix security vulnerabilities in lxc connection plugin after meeting
+15:38:35 <bcoca> # action abadger1999 set item for future meeting to rediscuss lxc connection plugin
+15:38:54 <bcoca> #action, learn how action works
+15:38:57 <bcoca> ??
+15:39:05 <jtanner|t420> #wefail
+15:39:12 <bcoca> abadger1999: halp?
+15:40:22 <bcoca> #action abadger1999 set item for future meeting to rediscuss lxc connection plugin
+15:40:24 <Pricey> try tha tlast one again, but with a space immediately following '#action'
+15:40:36 <bcoca> ^ broke down and read instructions, action does not give feedback in channel
+15:41:25 <bcoca> #topic https://github.com/ansible/ansible/issues/16008 should we allow non string options or only for set_facts ?
+15:42:02 <abadger1999> bcoca: #action is silent
+15:42:02 <bcoca> i'm torn here, i don't think modules should allow for 123=stuff options, but set_facts might need it here for yaml parity
+15:42:13 <jtanner|t420> i'm indifferent, but will fix if told to
+15:42:38 <Pricey> How will you reference those facts later on? I get the hostvars[foo][23], but just accessing 23?
+15:42:39 <abadger1999> I've never liked keys not being strings.
+15:42:57 <bcoca> i dont either, but its a yaml 'feature'
+15:42:57 <jtanner|t420> part of me thinks set_fact should allow the same things vars files allow ... but i've never really made use of non-string var names
+15:43:19 <bcoca> ^ seeing no one has reported thsi problem, i don't think anyone has
+15:43:30 <sivel> Technically speaking dict keys can be effectively anything including int, but I don't think you can use {{ 23 }}, you would have to use hostvars or vars
+15:44:01 <sivel> {{ 23 }} woudl just print the int 23 in jinja2
+15:44:01 <bcoca> sivel: agreed, not very practical but currently 'possible' if defined in yaml var
+15:44:16 <bcoca> {{vars[23]}} should work
+15:44:38 <bcoca> we COULD decide to warn/error if keys are not strings on import?
+15:44:52 <jtanner|t420> for all cases?
+15:45:11 <bcoca> woudl requrie modifying yaml import
+15:45:16 <jtanner|t420> files, play vars, role vars, and set_fact?
+15:45:30 <bcoca> include_vars and host/group vars
+15:45:33 <bcoca> and yaml inventory
+15:45:34 <sivel> also set_fact with k=v would probably make that a string
+15:45:41 <bcoca> sivel: it does
+15:45:42 <sivel> so just the yaml version of set_fact
+15:46:24 <bcoca> what is catching the error right now is 'mod_args' parsing, which is options in general
+15:46:37 <bcoca> i see a few options:
+15:46:57 <bcoca> 1) catch teh error gracefully and disallow all options from being anything other than strings
+15:47:11 <bcoca> 2) same as 1 but exception for set_fact for 'vars parity'
+15:47:31 <bcoca> 3) modify all vars imports to ensure this and make existing 'int' keys an error or at least deprecation warning
+15:47:41 <jtanner|t420> 4) cast the key to string?
+15:48:03 <bcoca> yes ...was typing a longer version of that
+15:48:25 <bcoca> so i'm for 1 or 4, i can see 2 as an option
+15:48:41 <bcoca> really dislike 3 as its very invasive
+15:48:51 <bcoca> though i understand why people would want it
+15:49:12 <bcoca> 4) for jsut set_fact
+15:49:13 <jtanner|t420> 4 would technically require fixing the args parsing the same as executor was, and then altering logic of set_fact
+15:50:00 <bcoca> votes? opinions? no one except tanner and i care?
+15:50:49 <alikins> parse_kv is using to_unicode(non_string='passthrough'), and mod_args uses that in various places, but there is a ### FIXME: args should already be a unicode string
+15:50:50 <bcoca> jtanner|t420: which solution do you favor?
+15:51:19 <bcoca> alikins: so 5) always cast to string no matter what the action is?
+15:51:25 <jtanner|t420> 4 ... but i would need to go look at what other assumptions may or may not be made about the type for var names
+15:51:26 <sivel> I vote for just allowing integers
+15:51:50 <bcoca> sivel: so 2)
+15:52:03 <jtanner|t420> i suppose i do prefer 2
+15:52:18 <jtanner|t420> or whatever sivel just said
+15:52:22 <sivel> :)
+15:52:29 <bcoca> sivel: or 6) allow all module options to be ints?
+15:52:44 <jtanner|t420> 6 6 6 !
+15:52:47 <alikins> bcoca: I would tend to enforce keys are always strings  if possible
+15:52:53 <sivel> #2 didn't sound like "just allow integers"
+15:53:07 <bcoca> sivel: its allow ints for set_facts
+15:53:09 <sivel> I think I am more for "fix that exception to just allow integers"
+15:53:20 <jtanner|t420> alikins, concern there is users not being certain how to address the string/int in their templates
+15:53:23 <bcoca> so i'm with alikins
+15:53:26 <sivel> and not go down the rabbit hole
+15:53:43 <alikins> jtanner|t420: yeah, depends on if say {{ 21 }} dwim
+15:54:13 <alikins> sivel:	{{ 23 }} woudl just print the int 23 in jinja2    hmm
+15:54:26 <sivel> I say, let people shoot themselves in the foot, using {{ vars[23] }} will work fine
+15:54:33 <jtanner|t420> "i set 21, so ... hostvars[inventory_hostname][23] or hostvars[inventory_hostname]['23'] ?"
+15:54:40 <jtanner|t420> s/21/23
+15:54:47 <bcoca> no matter what we do that will still be a question
+15:54:54 <sivel> damn, I set 21, how did 23 show up? ;)
+15:54:59 <jtanner|t420> heh
+15:55:06 <bcoca> sivel: taxes
+15:55:06 <jtanner|t420> that would be a severe bug
+15:55:10 <sivel> haha
+15:55:33 <sivel> so I am still for just let the user set what they want, and let them deal with accessing it
+15:55:48 <sivel> although there is the question of did someone really want an int?
+15:55:54 <sivel> but I don't think we can answer that
+15:56:03 <sivel> we can either let them do it, or force them into strings
+15:56:09 <bcoca> i doubt it, that is why changing all keys to strings seems 'saner' to me
+15:56:12 <sivel> I say, just let them do it
+15:56:14 <jtanner|t420> if i did answer it, i'd probably be wrong in at least 3 different cases
+15:56:17 <abadger1999> I think I'm 1 or 4
+15:56:39 <sivel> but in the end, I doubt I'd do it
+15:56:43 <bcoca> 4) cast all keys to string?
+15:56:44 <sivel> so whatevs :)
+15:57:03 <bcoca> i think we have majority there now, i'm goin for 4 also
+15:57:19 <abadger1999> yeah, 4 is making more sense than 1 to me too
+15:57:29 <bcoca> #agreed fix by autocasting all keys to strings
+15:57:37 <jtanner|t420> very well
+15:57:47 <Pricey> *all* keys?
+15:57:55 <bcoca> keys, not values, yes
+15:58:04 <bcoca> this[key]
+15:58:06 <jtanner|t420> i'll note it in the issue so i don't forget
+15:58:14 <bcoca> jtanner|t420: thanks
+15:58:26 <bcoca> we are out of time, i'll push rest of topics for next meeting
+15:58:43 <Pricey> bcoca: what about this[key][key2] ?
+15:58:44 <bcoca> #action bcoca carry over rest of topics to next meeting
+15:58:49 <alikins> what all types can keys in a playbook potentially be? ints? floats?  bools? none?
+15:58:54 <bcoca> Pricey: both keys should be strings
+15:58:55 <abadger1999> bcoca: note we said meetings would be 1.5 hours
+15:59:10 <Pricey> bcoca: eek
+15:59:13 <bcoca> abadger1999: missed that meeting? ...
+15:59:24 <bcoca> Pricey: you do realize 2nd value is still dict
+15:59:42 <bcoca> Pricey: though this change will not enforce key2 being one
+15:59:51 <bcoca> just key, as it matches top level module options
+16:00:06 <bcoca> i really fail to see use case for 'non string dict keys'
+16:00:11 <Pricey> bcoca: sorry yes that was the distinction i was trying to make, whether it'd just be top level keys. 'all' sounded scary :)
+16:00:14 <abadger1999> alikins: I'd have to recheck but I think yaml allows things that don't make sense in python like keys can be lists and dicts... not sure how pyyaml handles that.
+16:00:20 <sivel> I don't tend to use this in ansible, but do in other python code, but I do sometimes use True/False/None as dict keys
+16:00:28 <bcoca> Pricey: all mod_args keys
+16:00:35 <Pricey> bcoca: gotcha, thanks for the clarificaotin.
+16:00:57 <sivel> just worried we might be artificially limiting something we don't really need to do
+16:01:00 <bcoca> sivel: if you have a module options True=something or False=something ... i'm rejecting that module
+16:01:34 <bcoca> ^ iknow its not in guidelines ... but we also dont specify 'thou shalt not kill'
+16:01:37 <sivel> well, not necessarily a module, and I'd probably set it via vars or vars file, and would use some statement, to select a value based on that
+16:01:47 <bcoca> sivel: this is specifically for mod_args keys
+16:02:00 <sivel> yeah, just saying someone might try to do it with set_fact
+16:02:13 <bcoca> and i'm fine with that not working for set_fact
+16:02:14 <sivel> but anywho, again, just making statements
+16:02:28 <sivel> making sure we see all the angles
+16:03:15 <bcoca> sivel: agreed, that is why i brougt it up for meeting, i did not want to rule w/o considering possible uses that i could nto think of
+16:03:50 <bcoca> since set_fact: k=v already coerces into strings ... i think there is good case for this being done for yaml syntax also
+16:03:59 <bcoca> keep module internal parity over set_fact vars parity
+16:04:40 <bcoca> ok, lunch here, had not calculated for 1.5h meetins (also not reflected in calendar)
+16:05:03 <bcoca> Define a framework for getting detailed action feedback from modules (see azure/docker 'actions') <= next topic, i dont think 30mins is enough either
+16:06:43 <jtanner|t420> chouse, you around?
+16:10:21 <abadger1999> #info abadger1999 has looked closer at the lxc connectin plugin and does not think it suffers from the symlink vulnerability.  Go ahead and test and merge!
+16:12:19 <abadger1999> Okay -- if both bcoca and chouse are not here I guess we can't talk about hte docker/azure and facts tickets.
+16:12:25 <abadger1999> #topic Open Floor
+16:12:41 <abadger1999> Anyone have something to say/a PR or issue they want to draw attention to?
+16:13:29 <abadger1999> #topic PyCon
+16:13:46 <abadger1999> This is just an FYI -- a number of us will be going to Pycon.
+16:14:04 <abadger1999> We have a booth and everything :-)
+16:14:17 <abadger1999> feel free to stop in and say hi if you're there.
+16:14:31 <abadger1999> i'll be arriving tomorrow and staying throughout the sprints.
+16:14:53 <abadger1999> Sprints are open to anyone, even if you didn't register for pycon.
+16:15:21 <mattclay> abadger1999: I'm planning on being there for the sprints.
+16:15:39 <abadger1999> So if you're in the portland area and want to come harass me to review and merge something, or want to help develop ansible, please come on down :-)
+16:15:49 <abadger1999> mattclay, and nitzmahone will be there for Sprints as well.
+16:16:07 <abadger1999> #topic Open Floor
+16:16:19 <abadger1999> Anything else?
+16:16:25 <jtanner|t420> not from me
+16:16:28 <abadger1999> If not I'll close the meeting in 60s
+16:16:39 <jhawkesworth> just a congrats for 2.1 from me
+16:16:47 <nitzmahone> woot
+16:17:16 <abadger1999> jhawkesworth: thanks :-)
+16:17:48 <abadger1999> #endmeeting

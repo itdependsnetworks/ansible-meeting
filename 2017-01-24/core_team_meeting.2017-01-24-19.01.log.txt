@@ -1,0 +1,372 @@
+19:01:18 <gundalow> #startmeeting Core Team Meeting
+19:01:18 <zodbot> Meeting started Tue Jan 24 19:01:18 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:01:18 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:01:18 <zodbot> The meeting name has been set to 'core_team_meeting'
+19:01:23 <gundalow> Hello everyone
+19:01:26 <nitzmahone> meep
+19:01:31 * nitzmahone lurks
+19:01:49 <gundalow> #chair abadger1999 alexander_s_ bcoca jimi|ansible jtanner mattclay nitzmahone Qalthos rcarrillocruz ryansb
+19:01:49 <zodbot> Current chairs: Qalthos abadger1999 alexander_s_ bcoca gundalow jimi|ansible jtanner mattclay nitzmahone rcarrillocruz ryansb
+19:02:19 <jtanner> i'm knee deep in bot fixing
+19:02:21 <jtanner> but can lurk
+19:02:25 <gundalow> ACK
+19:02:59 <sivel> hey, look, this is happening, and I am mostly here ;)
+19:03:07 <gundalow> hey sivel
+19:03:11 <bcoca> dammit .. i told you we should have rescheduled!!!
+19:03:15 <sivel> haha
+19:03:21 * bcoca waves
+19:03:23 * rcarrillocruz lurking from phone, kid's bath time shortly
+19:03:27 <alikins> bloop
+19:03:45 <gundalow> #topic Adding etc_hosts module #19283
+19:03:52 <gundalow> https://github.com/ansible/ansible/pull/19283
+19:04:22 <sivel> That module fails current review per my comment
+19:04:30 <sivel> at a minimum
+19:04:32 <bcoca> -1, this can be done by existing modules easily ... but  not sure if it is worth oposing once modules are wild west ...
+19:05:03 <sivel> I really don't want modules to be wild west
+19:05:18 <gundalow> What's this doing that lineinfile doesn't do?
+19:05:20 <jtanner> if changes have been requested but not yet accepted or dismissed, we shouldn't bring it up here
+19:05:28 <bcoca> sivel: idem .. but i lost that one
+19:05:50 <bcoca> agreed, lets skip, its still in review
+19:06:12 <gundalow> ACK
+19:06:28 <gundalow> #topic fileglob: make fileglob work with globbed path components again (Fixes: #17136) #19297
+19:06:32 <gundalow> https://github.com/ansible/ansible/pull/19297
+19:06:35 <moldy> hi
+19:06:40 <gundalow> moldy: Hi
+19:07:03 <moldy> sorry, i'm unfamiliar with the process. is this the part when i'm allowed to make crazy suggestions? :)
+19:07:12 <sivel> moldy: not yet
+19:07:14 <sivel> at the end
+19:07:23 <moldy> sivel: ah, thanks
+19:07:25 <jtanner> topic will be "open floor"
+19:07:34 <bcoca> skip that one, needs review and very careful one .. .dwim is ... complex ...
+19:07:37 <gundalow> moldy: Shortly, if you'd like to add a comment on https://github.com/ansible/community/issues/148
+19:07:52 <sivel> bcoca: off topic: I feel like I am always defending ansibles honor, and wild west modules will make that job even more...fun?
+19:08:06 <bcoca> sivel: my feelings exactly
+19:08:09 <gundalow> bcoca: Could you please add some words around what they need to be watch out for
+19:08:19 <bcoca> gundalow: everything!
+19:08:28 <gundalow> :P
+19:08:45 <bcoca> dwim is how we find things for include/lookups/role loading/vars loading/etc ...
+19:08:51 <bcoca> action plugins ...
+19:09:04 <gundalow> ah, OK
+19:09:10 <sivel> btw, that PR may also help with https://github.com/ansible/ansible/issues/18549
+19:09:30 <sivel> I didn't look super closely, but it does touch code that impacts 18549
+19:09:52 <sivel> I'll comment on 18549 to link them
+19:09:53 <gundalow> abadger1999: You added https://github.com/ansible/ansible/pull/19297 to the agenda, was their something specific you wanted to discuss?
+19:10:00 <gundalow> sivel: thanks
+19:10:22 <rupran> bcoca: author of the PR here, what it basically does is factor out a part of path_dwim_relative_stack (leaving the functionality untouched) to use it in with_fileglob
+19:10:55 <bcoca> rupran: all lookups should use same function, once you start diverting them they become unpredictable
+19:10:57 <luto> Sponsor of the PR here :) I'm the guy who wrote it on your meeting agenda. Thanks for handling it!
+19:11:51 <bcoca> its a bit premature to meet on it since it has not been reviewed, happy to add ot my list ...long list ....
+19:12:21 <bcoca> but just on consistency with lookups, not happy to duplicate and modify functionality
+19:12:50 <luto> well, it was submitted in December and fixes a known, confirmed bug in multiple Ansible-Versions.
+19:13:45 <agaffney> just because it fixes a bug doesn't mean it's the *right* way to fix the bug
+19:14:04 <luto> ofc not! but we'd like some comment on it, so we're able to do it the right way.
+19:14:35 <rupran> okay, the main thing about it is that we currently bypass find_file_in_search_path, right?
+19:14:39 <bcoca> probably cause only 2 people actually know the dwim code and it scares everyone else away
+19:15:04 <bcoca> rupran: dont know, just gae it a 10s glance, needs in depth review
+19:15:11 <rupran> bcoca: sure
+19:15:35 <sivel> next up?
+19:16:12 <gundalow> #topic No error for non-existent handlers when notify is used with include #20440
+19:16:18 <gundalow> bcoca: This is one for you I think
+19:16:33 <gundalow> "Decide which are valid directives on include (for execution or inheritance) and what to do when we decide they are not. This issue deals with one case, but i think we should deal with it in general ansible/ansible#20440"
+19:17:02 <bcoca> gundalow: need quorum here, this is a big one, probably defere to next meeting and have people think abou tit
+19:17:38 <gundalow> Do people have enough context to ponder it for a few days?
+19:18:31 <gundalow> dharmabumstead: You around?
+19:18:48 <dharmabumstead> Yes.
+19:18:52 <gundalow> Ace :)
+19:19:03 <bcoca> ^ jimi|ansible
+19:19:15 <gundalow> #topic Versioned docs
+19:19:18 * abadger1999 gets back to this channel freom other discussions
+19:19:26 <gundalow> https://github.com/ansible/community/issues/148#issuecomment-274906303
+19:19:47 <gundalow> dharmabumstead: I believe this has been mentioned before, though I'm not aware of what the conclusions where
+19:19:54 <gundalow> moldy: Thanks for adding this topic
+19:20:14 <sivel> yeah, I know we have had a number of discussions, although not sure they were really documented in a proposal or anything
+19:20:20 <gundalow> So there are two parts to this
+19:20:24 <gundalow> 1) Version docs
+19:20:28 <gundalow> 2) Maybe use readthedocs
+19:21:24 <dharmabumstead> We talked about the idea of archiving docs.
+19:21:41 <moldy> so far, the main objection i heard was that the switch would require significant work
+19:22:04 <moldy> maybe some people would volunteer to move this forward. i'd be in.
+19:22:36 <gundalow> moldy: Thanks
+19:22:37 <sivel> I'm not so sure it is really a super complex thing, out of actually implementing the process that performs the building and deployment
+19:22:53 <sivel> docs are already versioned technically, via their tag/branch
+19:23:05 <moldy> django has recently decided to stop hosting docs for unsupported django versions on their own website, to reduce maintenance overhead. you can still access docs for unsupported django versions on RTD, just not on djangoproject.com.
+19:23:07 <sivel> they just need built, and deployed, with a way to select the version you are wanting to read
+19:23:16 <dharmabumstead> IMO it'll be a tough thing to pull off without having the docs in their own repo.
+19:23:41 <gundalow> dharmabumstead: Oh, what's the potential issues you see?
+19:23:41 <jtanner> why?
+19:23:58 <sivel> I had it working for a long time, but kept running into broken docs, so I removed it
+19:24:20 <sivel> but I basically just checked out the tag, built docs, copied them into place, and iterate with all versions needed
+19:24:49 <dharmabumstead> How many versions back do we need to go?
+19:24:52 <moldy> fwiw, django has the docs in the same repo as the main code
+19:24:59 <gundalow> dharmabumstead: devel, 2.2, 2.1
+19:24:59 <dharmabumstead> Ok
+19:25:02 <bcoca> iirc from last meeting 1) we would like to have /devel and the main be latest stable
+19:25:06 * jimi|ansible scrolls up
+19:25:20 <sivel> we had initially said 1.9 too, but we just left that behind due to the recent security fixes
+19:25:40 <bcoca> 2) need to update headers/footers/sidebar to handle the dual sites
+19:25:53 <bcoca> sivel: was proposed, not agreed to
+19:26:04 <sivel> fair enough, but moot now
+19:26:06 <bcoca> we all agreed at least 2, more was in dispute
+19:26:22 <jimi|ansible> well we said 1.9 because we were currently on 2.0
+19:26:24 <bcoca> not even 2.1 was in original
+19:26:32 <jimi|ansible> so current + (current - 1)
+19:26:36 <jimi|ansible> that was the original
+19:26:36 <sivel> current, last and next
+19:26:38 <bcoca> ^ that was agrement
+19:26:40 <abadger1999> sivel: +1 to your previous deployment technique being most of what's needed.
+19:26:51 <jimi|ansible> oh yes and devel of course
+19:26:53 <bcoca> current + current -1 , the -2 was in consideration
+19:27:10 <bcoca> current == devel in ^
+19:27:12 <jimi|ansible> well consideration was to keep the old versions after moving forward a version
+19:27:17 <gundalow> https://public.etherpad-mozilla.org/p/ansible-versioned_docs
+19:27:27 <sivel> yeah, no sense in deleting them really, we can just stop building at some point
+19:27:29 <gundalow> We can throw stuff in that and I'll write up a formal proposal tomorrow
+19:27:35 <bcoca> yes, we were considering, im just distinguishing between we 'all agreed' which was devel + stable
+19:27:38 <jimi|ansible> i did not see any reason not to, just link them from an "archived docs" page with a big "THESE ARE NO LONGER BEING UPDATED" note at top
+19:27:58 <dharmabumstead> That was the gist last time, IIRC
+19:28:06 <abadger1999> dharmabumstead: note that a separate repo won't solve asnything here... people are most concerned about versioned module docs which *would* be a huge effort to separate into a separate repo (and would get us right back into the two PRs to make a change to a module problem).
+19:28:07 <jimi|ansible> ok, so i think we're all in agreement on the basics
+19:28:18 <bcoca> we had an action on researching teh changes to header/footer/etc
+19:28:28 <bcoca> ^ dharmabumstead i believe that was on you
+19:28:29 <sivel> at minimum, current release and devel, only updates go to devel
+19:28:40 <sivel> maybe do previous release
+19:28:47 <bcoca> sivel: depends on updates, corrections we wgreed to at least go to stable
+19:28:48 <dharmabumstead> Yep. I wasn't the thinking  of the module docs in their own repo. That's a separate issue. Forget I brought it up. :)
+19:28:53 <bcoca> ^ that is where we left it
+19:29:06 <sivel> bcoca: yes, my mistake, my fingers moved faster than my brain there
+19:29:12 <bcoca> dharmabumstead: problem there, majority of docs are INSIDE modules
+19:29:28 <dharmabumstead> See last statement.
+19:29:29 <bcoca> dharmabumstead: and we just got rid of the dual repo commits issue
+19:29:33 <jimi|ansible> sivel: we'd most likely build the docs for the cur, cur-1 and devel so any updates that would go there would be builtin
+19:29:43 <jimi|ansible> just depends on how much docs we want to back port
+19:29:44 <sivel> jimi|ansible: yeah, I am happy with that
+19:29:46 <sivel> +1
+19:29:50 <moldy> i'm very unfamiliar with the ansible codebase, so excuse the stupid question: do you use sphinx?
+19:29:57 <jimi|ansible> moldy: we do
+19:29:57 <sivel> moldy: yes
+19:29:58 <dharmabumstead> Yes
+19:29:58 <bcoca> moldy: yes
+19:30:04 <moldy> alright :)
+19:30:21 <jimi|ansible> sphinx plus a lot of duct tape and bubble gum anyway :)
+19:30:22 <bcoca> moldy: not trivial to port to readthedocs, people have already looked at that
+19:30:49 <sivel> the duct tape and bubble gum, largely for rendering things like docs from modules
+19:30:57 <abadger1999> moldy: yeah -- module docs are yaml that's translated into sphinx compatible rst. then everything is run through sphinx.
+19:31:30 <moldy> bcoca, abadger1999: i see. i'd be willing to help with the effort to reduce the friction. it sounds doable.
+19:31:31 <bcoca> some are generated from python scripts
+19:31:34 <jimi|ansible> that is one are of the code base that after 3.5 years i still have not touched...
+19:31:40 <dharmabumstead> So the header footer th by seems like the most straightforward way to delineate version without jumping through too many hoops.
+19:31:46 <bcoca> jimi|ansible: luckyyou
+19:31:58 <dharmabumstead> Yes, that's on me.
+19:32:08 <moldy> it sounds like reducing the duct tape and going with more "standard" practices would also ease maintainership in the long run
+19:32:36 <gundalow> #action dharmabumstead to report back on header/footer work needed to support versioned docs
+19:32:39 <bcoca> moldy: that would require writing docs in a diff way and rewriting what we have already
+19:32:49 <jimi|ansible> well module docs are a thing on their own, so yeah what bcoca said
+19:32:49 <dharmabumstead> Yep.
+19:32:56 <abadger1999> moldy: the problem would be porting the existing module docs over to sphinx.   I don't think that will happen so I don't think there's a lot of duct tape that can be removed.
+19:32:57 <bcoca> ^ they are MOST of the docs
+19:33:18 <dharmabumstead> By volume. Not by weight. :)
+19:33:22 <abadger1999> (We did just get rid of some in the last two weeks, though... we had our own front-end to sphinx which alikins replaced with calling sphinx-build dirctly)
+19:33:22 <jimi|ansible> and the good thing about having the YAML layer is it makes contributing to the docs when updating modules quite easy for those who do not know sphinx
+19:33:36 <bcoca> dharmabumstead: i would argue that also, they are the most consulted
+19:33:53 <bcoca> we CAN talk about separating guides from docs
+19:34:12 <dharmabumstead> I believe you.
+19:34:45 <bcoca> 99% of teh time someone complains about doc versions is because they saw a module online that is not in their version of ansible
+19:34:46 <abadger1999> moldy: I could see us adding more duct tape actually... to make better rst from the yaml... but that's a different problem than getting the docs versioned.
+19:35:01 <sivel> bcoca: or argument for a module
+19:35:03 <dharmabumstead> Let's stick to the versioning discussion for now to keep things simple.
+19:35:13 <bcoca> sivel: yes, that is the 0.9%
+19:35:18 <jimi|ansible> yes one topic at a time :)
+19:35:33 <sivel> moldy: yeah, I think the consensus is, the duct tape is necessary :)
+19:35:39 <moldy> :)
+19:35:58 <jimi|ansible> abadger1999: (i still want to rip the params stuff out of the YAML and have it based on the arg spec in AnsibleModule...)
+19:36:09 <bcoca> has been for a long time, the problem has always been 'getting someone to do it'
+19:36:17 <sivel> jimi|ansible: ++
+19:36:17 <jimi|ansible> i've hated having it duplicated for a long time
+19:36:20 <dharmabumstead> Do we keep track of the Ansible version number in the general build anywhere? As an env variable?
+19:36:33 <bcoca> jimi|ansible: we then need description and notes in argspec
+19:36:42 <abadger1999> jimi|ansible: <nod>  That's a feature for a release when you don't have any security bugs to fix ;-)
+19:36:44 <jimi|ansible> yes we would
+19:36:54 <jimi|ansible> ;_;
+19:37:04 <gundalow> jimi|ansible: Remember we have some modules that pull some args from module_utils and the specifics from the module itself
+19:37:08 <jtanner> dharmabumstead: https://github.com/ansible/ansible/blob/devel/VERSION
+19:37:18 <bcoca> jimi|ansible: not too hard to do, .. dont look forward to rewriting 900 modules though
+19:37:26 <abadger1999> What about where we're deploying?  Are we going to stick to our servers or do we want to let someone explore readthedocs?
+19:37:35 <bcoca> gundalow: would work like fragments do now
+19:37:38 <sivel> gundalow: I have code in ansible-testing, that can stitch it all together, although that does some crazy duct taping ;)
+19:37:51 <bcoca> abadger1999: i doubt we can decide that ourselves
+19:38:08 <gundalow> sivel: I saw, didn't realise it followed into other modules
+19:38:13 <jimi|ansible> gundalow: i don't want to continue derailing, but yeah what sivel said - you'd just have to instantiate the AnsibleModule from the code and access things directly
+19:38:14 <sivel> I'm more of a -1 on readthedocs
+19:38:20 <jimi|ansible> it'd have everything that was added in piece-meal
+19:38:25 <gundalow> jimi|ansible: ACK
+19:38:26 <jimi|ansible> -1 to readthedocs
+19:38:43 <gundalow> I don't know what readthdocs gives us over out current stuff, so -1
+19:38:48 <jimi|ansible> (even if we did steal/borrow their css)
+19:38:49 <bcoca> its trendy
+19:38:58 <bcoca> jimi|ansible: they stole from sphinx
+19:39:08 <bcoca> er .. they contributed sphinx
+19:39:09 <dharmabumstead> No thanks on readthedocs, please
+19:39:10 <jtanner> kinda like saying github is no different from cgit =P
+19:39:15 <jimi|ansible> oh did they? never knew that
+19:39:22 <moldy> i may be wrong, but for my (super-trivial) projects, RTD gives me versioned docs
+19:39:23 <sivel> jimi|ansible: off topic: https://github.com/ansible/ansible/blob/devel/test/sanity/validate-modules/module_args.py
+19:39:31 <bcoca> jimi|ansible: i forget which one came first, but they do contribute now
+19:39:38 <sivel> jimi|ansible: that is the code I have for getting the full arg spec by instanting AnsibleModule
+19:39:55 <moldy> plus a UI that many people already know (they know where to find the version selector), at least if they are python people
+19:40:07 <moldy> also, python community good-will ;)
+19:40:19 <jimi|ansible> sivel: could probably make that a bit easier by just looking at the module dict maybe and using isinstance?
+19:40:35 <jimi|ansible> just spitballing, kind of a pain to have to maintain the list of subclasses
+19:40:58 <sivel> jimi|ansible: yeah, it could probably be improved on.  I'll just blame the network modules for being different ;)
+19:41:02 <bcoca> you could read from import
+19:41:02 <moldy> for the record. RTD is also open source, so you can self-host and fork it
+19:41:04 <gundalow> sivel: :D
+19:41:14 * jimi|ansible glares at privateip...
+19:41:16 <bcoca> moldy: basically what we do now?
+19:41:17 <sivel> haha
+19:41:18 <jimi|ansible> who is not here... damnit
+19:41:27 * gundalow hides from jimi|ansible and sivel
+19:41:28 <sivel> just ban him again
+19:41:31 <jimi|ansible> lol
+19:41:35 <gundalow> anyway
+19:41:36 <sivel> ok...
+19:41:39 <jimi|ansible> yep
+19:41:42 <sivel> yeah, moving on, I think we have action
+19:41:42 <gundalow> apart from header/footer what needs to be done?
+19:41:42 <jtanner> gundalow is his emissary
+19:41:47 <jimi|ansible> agreed
+19:41:58 <jimi|ansible> i don't think there are any major points we all disagree on?
+19:42:04 <moldy> bcoca: from my (admittedly limited) perspective, it looks like you have a problem: versioned docs, which is solved by an elegant and proven solution: rtd
+19:42:06 <bcoca> gundalow: same as we said in last meeting, change the push script and create links
+19:42:17 <bcoca> moldy: i dispute elegant
+19:42:24 <jimi|ansible> we'll probably have to do some apache rewrite rules again though
+19:42:38 <bcoca> jimi|ansible: no, if stable has same pages as expected
+19:42:40 <gundalow> #agreed Although readthedocs is nice we don't see the benefit vs cost, so we are sticking with out current setup
+19:42:46 <bcoca> new /devel
+19:42:52 <moldy> bcoca: you're probably right. i never looked at their source code :) but it works for a lot of projects
+19:42:53 <bcoca> leave main pages as is (for stable)
+19:43:00 <jimi|ansible> we currently have a rewrite rule to redirect anything from /$1 to /ansible/$1 due to the addition of tower docs
+19:43:06 <jimi|ansible> bcoca: i guess it'll depend on the pathing
+19:43:22 <jimi|ansible> i'd assumed we'd do something like /ansible/${VERSION}/$1
+19:43:33 <bcoca> jimi|ansible: if we add /devel /2.2 but keep /ansible/ <stable> we should not need rewrite
+19:43:45 <gundalow> jimi|ansible: bcoca Can you please throw stuff in https://public.etherpad-mozilla.org/p/ansible-versioned_docs so we track it
+19:43:48 <jimi|ansible> might seem a bit confusing?
+19:43:58 <bcoca> /ansible/ <= stable /ansible/devel/ , /ansible/2.2/
+19:44:38 <bcoca> didnt we update  a doc already last time???
+19:45:04 <gundalow> bcoca: I have zero memory of this being discussed (in recent times)
+19:45:37 <jimi|ansible> which part, the pathing or all of the versioned docs stuff?
+19:45:46 <sivel> I feel like we should have documented our last discussion, and based on that I feel like we did, but I cannot find it
+19:45:47 <bcoca> i've discussed it soo many times i have no clue when it was last
+19:45:56 <alikins> sivel: re AnsibleModule and arg spec, https://github.com/ansible/ansible/compare/devel...alikins:ansible_module_introspect adds some support for including the full arg spec in the module return value
+19:46:04 <bcoca> sivel: exactly ....
+19:46:05 <gundalow> https://github.com/ansible/community/issues/132#issuecomment-257952280
+19:46:08 <sivel> alikins: yes, I do remember seeing that ++
+19:46:10 <gundalow> Is the only thing I see recorded
+19:46:32 <gundalow> > Default documentation will be the latest stable release, with devel version being available but labeled.
+19:46:44 <gundalow> 2nd Nov 2016
+19:47:06 <gundalow> Hence me setting up an etherpad so we can all add stuff, then I'll turn it into a proposal tomorrow
+19:47:23 <sivel> ++
+19:47:41 * gundalow is trying to avoid having to repeat meetings by recording stuff
+19:48:58 <gundalow> So if /ansible/ defaults to latest stable- branch does that mean we need to backport more docs changes, from now on. I'm thinking in particular RST user & dev guides
+19:49:14 <jtanner> plz  no
+19:49:24 <dharmabumstead> Pls no
+19:49:28 <gundalow> Granted we are fairly close to cutting stable-2.3, so that may only apply from this point forward
+19:49:29 <sivel> I feel like our last discussion was not to backport docs
+19:49:31 <bcoca> jimi|ansible: the symlink was my 'easier' to archive path as we can jsut change it, but rewrite rule works also
+19:49:38 <abadger1999> we ahve to backport more... but not necessarily for thew guides
+19:49:49 <abadger1999> Because right now we backport 0 docs fixes
+19:50:48 <jimi|ansible> bcoca the problem with either a symlink or rewrite rule is that'll be higher up in the same path
+19:50:55 <jimi|ansible> ie. /ansible vs. /ansible/some_version
+19:50:59 <dharmabumstead> We don't have the bandwidth to spend on backporting. We also discussed this last time.
+19:51:00 <bcoca> jimi|ansible: depends on how we write it
+19:51:06 <bcoca> jimi|ansible: again, either works
+19:51:07 <abadger1999> * "this is so totally broken and commonly used that we need to backport a fix for it" <=== I don't see this being invoked but once every few years...  * Module doc fixes. <=== we should do this a bit more frequently with versioned docs
+19:51:38 <bcoca> backporting is why we all agreed on devel, stable, even possibly -1, but beyond that it was too much
+19:51:53 <jimi|ansible> bcoca i thought we were in agreement about an archived docs page?
+19:52:02 <bcoca> not afaik
+19:52:10 <bcoca> it was proposed, but we ended meeting
+19:52:13 <abadger1999> right, archived no longer receives backports at all... I think that was the distinction.
+19:52:24 <gundalow> Do we expect most readers of documentation to only look at $latest-stable docs?
+19:52:32 <abadger1999> gundalow: yes.
+19:52:36 <bcoca> if we are not going to update it, we should remove it, archived old versions just promote use of them
+19:53:03 <moldy> i'd argue against that
+19:53:03 <sivel> gundalow: "discuss publishing versioned documentation" was discussed on 2016-11-08
+19:53:11 <abadger1999> many projects do archived old docs.  (for instance postgres and mysql).
+19:53:15 <sivel> might be worth reading back through that discussion :)
+19:53:23 <gundalow> sivel: thanks
+19:53:31 <jimi|ansible> moldy: as would i, i don't think there's a downside to keeping them
+19:53:32 <moldy> if people need to update from an unsupported version to a supported one, the unsupported docs are often crucial
+19:53:50 <bcoca> abadger1999: i dont think they should, specially mysql, the sooner peopel move away form older versions the better
+19:54:26 <bcoca> moldy: the migration docs are normally in the newer version
+19:54:30 <moldy> in principle, I'd go so far as to privately archive the docs i used to setup something. but nobody does that.
+19:54:33 <dharmabumstead> We archived docs at my last gig. We made it apparent that they were there for archival purposes only, with links to the current version.
+19:54:48 <dharmabumstead> No one was going to mistake those for current docs.
+19:54:52 <abadger1999> <nod>
+19:54:55 <bcoca> not my fear
+19:55:19 <moldy> i'd regard that as similiar to build pipeline determinism: pip all your stuff to exact versions. you don't want stuff to change after the fact.
+19:55:26 <moldy> *pin
+19:55:30 <dharmabumstead> Oh. You said "archived old versions just promote the use of them"
+19:55:45 <bcoca> yes, not confusion, but usage
+19:56:04 <moldy> hide them from google so people don't find them by accident
+19:56:17 <dharmabumstead> Tarball
+19:56:24 <bcoca> rm -rf /
+19:56:37 <bcoca> if people really  need the old docs, git
+19:56:53 <moldy> if you remove your docs from the universe, people will hate you when they end up having to update a neglected project
+19:57:18 <bcoca> old docs are by definition neglected, better to remove
+19:57:37 <moldy> but i want the neglected docs that apply to the neglected project
+19:57:47 <gundalow> What about only building module docs from older releases?
+19:57:49 <dharmabumstead> I disagree. No harm in archiving them and marking them clearly as such.
+19:58:02 <bcoca> moldy: not project, version, in which case you already ahve them, no need for me to host htem for you
+19:58:07 <moldy> i don't want some other set of docs that do not apply to the code that i am trying to understand
+19:58:30 <gundalow> moldy: cd ansible ; make webdocs # wait ~ 10 minutes
+19:58:38 <moldy> bcoca: the problem, in practice, is that what doesn't exist on the web doesn't exist. IME.
+19:58:39 <bcoca> precisely, since old docs are unmaintained they'll continue to have errors and mistakes
+19:58:42 <abadger1999> gundalow: that would work for me... might require more work to setup, though, as the current build scripts aren';t constructed along those lines.
+19:58:57 <bcoca> moldy: i wish, but i count that at least it will be harder to find
+19:59:16 <jimi|ansible> bcoca people aren't sticking to old versions because docs are available
+19:59:22 <bcoca> moldy: what you are seeing as a problem i see as the feature
+19:59:25 <jimi|ansible> removing them certainly isn't going to force their hand
+19:59:54 <bcoca> jimi|ansible: no, it will add little to that, its more the continuation of bad practices i'm wary of
+19:59:55 <dharmabumstead> @gundalow: +1
+20:00:19 <bcoca> with_items: barevariable
+20:00:22 <bcoca> ^ for example
+20:00:41 <abadger1999> If we continue to keep documentation about old releases in the docs then I wouldn't see as much value in having archives.  But we don't... we're currently losing information about when module params are added which makes it harder for people to always and only use the current docs.
+20:00:42 <bcoca> IF they are using an older version, i prefer they see the new 'normal'
+20:00:49 <moldy> reality is that, if ansible is successfuly, people will soon end up being paid to port stuff from ansible 1.9 to 4.x or whatever. and believe me, they will *love* you for hosting 1.9 docs in 5 years ;)
+20:00:52 <bcoca> with_items :{{nonbare}} which will still work in the older
+20:01:21 <bcoca> abadger1999: afaik we keep when options were added, its in the docs
+20:01:21 <sivel> ansible IS successful
+20:01:30 <gundalow> sivel: we are only on v2
+20:01:32 <bcoca> abadger1999: we should NOT remove that info
+20:01:54 <abadger1999> bcoca: Weren't you saying that the docs build does that?
+20:02:08 <moldy> sivel: right, it is. sorry. i successful for even longer, on the scale of decades even :)
+20:02:14 <moldy> *i meant
+20:02:17 <bcoca> for display for anything after 1.4, but the data is still there
+20:02:18 <sivel> ;)
+20:02:21 <bcoca> er before 1.4
+20:02:30 <bcoca> we should not be loosing the data
+20:02:42 <abadger1999> # don't show version added information if it's too old to be called out
+20:02:42 <abadger1999> if too_old(added):
+20:02:42 <abadger1999> del doc['version_added']
+20:02:56 <gundalow> So I wonder if docs/docsite/rst/* should be written to be backwards compatable, we we often do (e.g. Note in v1.9 you did x, in v2.0 you must do Y)
+20:02:58 <abadger1999> Anyhow.. +1 for archiving
+20:03:15 <bcoca> gundalow: that has been rule until now
+20:03:26 <gundalow> Do that means we don't need to publish muiltiple version of docs/docsite/rst/*
+20:03:28 <bcoca> ^ having archive would allow that to change
+20:03:30 <abadger1999> I think the arguments have been laid out and we probably won't convince each other.
+20:03:53 <gundalow> And only need to host multiple versions of modules
+20:03:59 <gundalow> And only need to host multiple versions of module docs
+20:04:05 <bcoca> gundalow: that is the current state, i think we all agreed to have /devel + stable, now we have /devel + stable + -x supported  + -x unsupported
+20:04:34 <gundalow> For the all docs (not just module?)
+20:04:49 <bcoca> abadger1999: im fine with display the version data down to 0.1, which is why i have not updated the 'old threshold' and its still 1.4
+20:05:00 <bcoca> we can easily remove/toggle it to whatever you think is right
+20:06:51 * gundalow needs to ditch
+20:09:30 <dharmabumstead> Just put a version path in the doc URLs and be done.
+20:09:55 * dharmabumstead needs to ditch as well
+20:13:18 <abadger1999> #action people to add thoughts, problems to resolve, decisions to vote on to https://public.etherpad-mozilla.org/p/ansible-versioned_docs
+20:13:29 <abadger1999> #action gundalow to write etherpad into a versioned docs proposal tomorrow
+20:13:37 <abadger1999> #topic Open Floor
+20:13:41 <abadger1999> Anything else?
+20:13:49 <sivel> whew ;)
+20:16:42 <abadger1999> Okay, I'll close in 60s then
+20:16:47 <abadger1999> :-)
+20:20:09 <abadger1999> #endmeeting

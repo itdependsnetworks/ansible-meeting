@@ -1,0 +1,307 @@
+15:00:13 <gundalow> #startmeeting Ansible Core Meeting
+15:00:13 <zodbot> Meeting started Thu Feb 16 15:00:13 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:00:13 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:00:13 <zodbot> The meeting name has been set to 'ansible_core_meeting'
+15:00:30 <ryansb> hey team
+15:00:56 <gundalow> #chair allanice001 allanice001 jimi|ansible jtanner mattclay nitzmahone Qalthos rcarrillocruz ryansb shertel
+15:00:56 <zodbot> Current chairs: Qalthos allanice001 gundalow jimi|ansible jtanner mattclay nitzmahone rcarrillocruz ryansb shertel
+15:01:05 <gundalow> #chair funzo
+15:01:05 <zodbot> Current chairs: Qalthos allanice001 funzo gundalow jimi|ansible jtanner mattclay nitzmahone rcarrillocruz ryansb shertel
+15:01:07 <jtanner> morning
+15:01:11 * allanice001 waves
+15:01:14 <rcarrillocruz> o/
+15:01:21 <gundalow> funzo = calfonso
+15:01:28 <funzo> o/
+15:01:34 <shertel> hello
+15:02:02 <gundalow> #info Agenda, feel free to add things, esp if their any proposals you'd like to discuss tohttps://github.com/ansible/community/issues/150
+15:02:42 <gundalow> hum, I assume abadger1999 is asleep
+15:03:09 <gundalow> Agenda is fairly light, Any proposals people want to discuss?
+15:03:21 <allanice001> The proposal process ?
+15:03:29 <ryansb> supermeta
+15:03:51 <gundalow> #topic Proposal Workflow
+15:03:57 <gundalow> #chair allanice001
+15:03:57 <zodbot> Current chairs: Qalthos allanice001 funzo gundalow jimi|ansible jtanner mattclay nitzmahone rcarrillocruz ryansb shertel
+15:04:03 <allanice001> Thanks gundalow
+15:04:17 * nitzmahone lurks
+15:04:24 <gundalow> So you can #info as you wish
+15:04:28 <allanice001> So I've started refactoring the issue file
+15:04:31 <gundalow> #chair jimi_|ansible
+15:04:31 <zodbot> Current chairs: Qalthos allanice001 funzo gundalow jimi_|ansible jimi|ansible jtanner mattclay nitzmahone rcarrillocruz ryansb shertel
+15:04:35 <allanice001> #info https://github.com/allanice001/proposals/issues/3
+15:05:04 <allanice001> Is the latest cut, if you would comment, I will appreciate your feedback
+15:05:43 <allanice001> I'll try getting a draft of the process review up ny #next-meeting
+15:06:12 <jtanner> do those checkboxes actually work?
+15:06:15 <allanice001> yes
+15:07:22 <allanice001> The checkboxes work, but a change in the checkbox isn't tracked
+15:08:16 <gundalow> Maybe change them to text "Raised in Core meeting 14th Feb 2017" "Agreed (13/15) in Core meeting 16th Feb 2017"
+15:08:16 <allanice001> So, I would still suggest using comments as normal, but it can give us an indication of at what point in the workflow a proposal is
+15:08:30 <allanice001> Those would be comments / edits
+15:08:44 <allanice001> Because the dates are dynamic
+15:08:48 <gundalow> Might work well as edits to the main body (rather than a comment)
+15:09:32 <allanice001> I'm exploring radio buttons too, will see if I can get it working
+15:10:00 <allanice001> So status would be one of list
+15:10:09 <allanice001> Not multiple in list
+15:10:42 <gundalow> I personally like this style for reporting status. It's easy to update and read (IMHO) https://github.com/ansible/community/issues/150#issuecomment-277025899
+15:10:51 <gundalow> Anyway, cool progress thanks :)
+15:11:43 <gundalow> Anyone else got any feedback/thoughts?
+15:12:27 <allanice001> Question - you prefer my style, or abadgers ?
+15:12:28 <alikins> whats a good example of a (preferably non-committer) proposal to emulate?
+15:12:36 <alikins> ie, what worked
+15:13:10 * gundalow looks
+15:13:48 <allanice001> alikins, I don't think anything currently "works well"
+15:14:18 <allanice001> Is there a roadmap for it, vs community buy in / request
+15:14:20 <gundalow> allanice001: Not sure if you've seen https://github.com/ansible/proposals/issues/5
+15:14:49 <gundalow> Things that have been implemented https://github.com/ansible/proposals/issues/30
+15:15:28 <gundalow> Agreed and WIP: https://github.com/ansible/proposals/issues/48
+15:15:35 <gundalow> https://github.com/ansible/proposals/issues/10
+15:16:00 <allanice001> #48 is live
+15:16:22 <allanice001> We just keeping the proposal open for community feedback
+15:16:33 <gundalow> ah, true
+15:16:37 <allanice001> But I've hardly seen any usage of the bot
+15:16:44 <gundalow> :(
+15:16:49 <gundalow> hum
+15:17:01 <gundalow> Anything else or should we move onto the next topic?
+15:17:05 <allanice001> Again, do we take that into consideration?
+15:17:16 <gundalow> How do you mean?
+15:17:32 <allanice001> Proposal -> implementation -> adoption
+15:17:50 <allanice001> We can keep the meeting moving, and circle back if time left
+15:17:57 <allanice001> I don't want to hog the meeting
+15:18:11 <gundalow> As long as their is productive discussion I'm happy
+15:18:14 <gundalow> ok, next
+15:18:25 <gundalow> ...................................
+15:18:53 <gundalow> #topic Facts modules not using ansible_fact argument to exit_json #19910
+15:18:57 <gundalow> one from ryansb
+15:19:04 <gundalow> #link https://github.com/ansible/ansible/pull/19910#issuecomment-278496104
+15:20:29 <allanice001> ryansb, you here?
+15:21:11 <ryansb> yup
+15:21:17 <nitzmahone> The new azure facts modules are offenders in this area- IIRC in that case it was done purposely. Returning everything as facts automatically pollutes the global namespace and means you're carrying everything and forever that module returns.
+15:21:43 <gundalow> #info The new azure facts modules are offenders in this area- IIRC in that case it was done purposely. Returning everything as facts automatically pollutes the global namespace and means you're carrying everything and forever that module returns.
+15:21:45 <ryansb> So the question is whether we want to recommend returning as facts for new facts modules
+15:22:21 <nitzmahone> I'm not personally a fan of sticking everything in ansible facts- one more level of indirection for "register" access, and the aforementioned pollution...
+15:22:35 <allanice001> +1 to new
+15:22:42 <ryansb> new what?
+15:22:45 <allanice001> But add a provider tag too
+15:22:59 <allanice001> new fact module
+15:23:37 <allanice001> $fact[aws][ec2_vpc] perhaps ?
+15:24:03 <nitzmahone> We're talking about arbitrary modules that get state of some resource but do/don't push their output into global facts namespace.
+15:24:27 <allanice001> yeah
+15:24:31 <nitzmahone> (as they happen to be named _facts)
+15:24:37 <allanice001> Dont pollute global
+15:24:51 <nitzmahone> Instead of _status or whatever.
+15:24:56 <allanice001> But do vendor keyed
+15:25:19 <nitzmahone> I don't understand that
+15:25:27 <allanice001> Because was, google, azure, and every open stack provider has "security_groups"
+15:25:56 <allanice001> How would you discern security group fact 1 from fact 2
+15:26:03 <allanice001> As an example
+15:26:25 <allanice001> And autocorrect is screwing around again..
+15:26:27 <nitzmahone> Don't put them in a global namespace at all. :)
+15:27:15 <alikins> maybe a new task keyword (register_facts) to indicate 'take any module_facts and add them to global facts', off by default but easy to flip on?  (perhaps auto-namespacing to module name specific name space?)
+15:28:45 <ryansb> if we don't automatically put it in facts, users could just use `set_fact`
+15:28:52 <nitzmahone> How is that any less work than using register (esp if you're talking about adding a namespace level of indirection)?
+15:29:00 <ryansb> ^that
+15:30:29 <ryansb> So it sounds like the best option would be to let people register them, rather than nest in
+15:30:36 <nitzmahone> I'm just not a fan of automatically forcing everyone to haul around the result of any module that doesn't change stuff for the rest of the run. No easy way to zap that.
+15:31:17 <ryansb> because as an author, I'd rather do `register: my_vpc` or whatever than have to `aws.vpc.my_vpc` the rest of the playbook
+15:31:21 <nitzmahone> ryansb: that was my contention with the new azure facts mods, which is why house changed them not to nest under ansible facts.
+15:32:31 <ryansb> That makes sense. Do we want to document that as the standard for all the facts modules (in developing_modules or similar)?
+15:32:49 <nitzmahone> Because really, you'd kinda want to do both if you did- doesn't make sense w/ register to require someone to  prepend ansible_facts to every access. :(
+15:32:52 <alikins> would it be useful to add the setup.py fact related module args to the default set? so any module that returns facts could take/use filter,gather_subset etc?
+15:33:01 <allanice001> How would it be enforced for existing modules?
+15:33:39 <nitzmahone> alikins not following
+15:34:19 <ryansb> Well, that's a good question. For existing modules that do use ansible_facts, we probably have to leave that but could add a non-fact return that would be easy to use with register
+15:34:40 <ryansb> so we don't break playbooks, but still give new playbooks one consistent way to use _facts modules
+15:34:58 <dag> We have discussed facts plugin a few times as part of issues/PRs and I think it is part of the solution
+15:35:03 <nitzmahone> So now registered stuff uses TWICE as much memory... ;)
+15:35:29 <allanice001> nitzmahone, at least its not XML ....
+15:35:32 <dag> The idea is that users can add facts-plugins to a directory to include them as part of standard facts gathering, but also a way to call individual facts plugins on a need-basis
+15:35:54 <alikins> setup.py module has args for filter, gather_subset, gather_timeout.  If those are added to AnsibleModule, they could potentially be used to let all modules use them. To potentially cut down on large sets of facts returned by random modules. And gives modules an option for 'normal/all/none/ludicrous_amount_of_facts' behaviors
+15:36:03 <dag> which would get rid of most of the facts-modules, which is getting out of hand IMO
+15:36:04 <jhawkesworth> WARN when modules do perhaps and then deprecate in a couple of releases?  Eventually then there's '1 way to do it'?
+15:36:26 <allanice001> How about introduci
+15:36:35 <allanice001> Introducing fact-cache
+15:36:38 <allanice001> ?
+15:36:59 <nitzmahone> dag: I think the biggest issue there would be getting args to them- even setup needs an ever growing list that we have to smuggle in somehow.
+15:37:09 <allanice001> Same idea as fact-plugins library, but a cached copy
+15:37:14 <dag> nitzmahone: no, most of the plugins would not be enabled
+15:37:28 <nitzmahone> Wow, we're bouncing all over the place here
+15:37:34 <dag> nitzmahone: and there would be another mechanism for enabling specific facts plugins on a need-basis
+15:38:23 <dag> (like when you want to register them instead of putting them in the global namespace)
+15:38:34 <nitzmahone> dag: just saying, to be useful, there needs to be a way to get args to auto-run facts modules. Automatic setup is becoming less useful all the time without args.
+15:38:56 <dag> nitzmahone: sure
+15:39:23 <alikins> a facts_plugin task keyword could let ansiballz select the plugins to include
+15:39:28 <dag> but setup could become smaller by default in my proposal
+15:39:43 <nitzmahone> I'm all for a way to add to the auto run setup (have discussed at length a couple times), but args to setup needs to be part of that imo.
+15:39:43 <dag> alikins: yes, that is the idea
+15:39:54 <nitzmahone> Dag: Agreed
+15:40:17 <dag> Shall I make a proposal of the way I see it ?
+15:40:39 <dag> (I don't have all the pieces put together yet though)
+15:41:07 <nitzmahone> Dag: Sure, a strawman is always easier to lob arrows at than complete ether... ;)
+15:41:12 <ryansb> That'd be a good start
+15:41:14 <dag> :-)
+15:41:17 <thaumos> yes please, also, we have an item for facts refreshing on the roadmap for 2.4.  I'd like to know how this discussion is a part of that.
+15:41:25 <gundalow> #action dag to write a proposal
+15:41:29 <gundalow> Thank you
+15:41:34 <ryansb> In the nearest term, I think it would be acceptable to have facts modules coming in that don't register to ansible_facts
+15:41:39 <ryansb> does that sound reasonable?
+15:41:44 <nitzmahone> +1
+15:41:49 <allanice001> +1
+15:41:51 <dag> and setup is going to be renamed to "gather_facts" (which I hope we can rename to just "facts" instead)
+15:42:27 <dag> ryansb: in the near term we don't have to do anything, until we fix it ;-)
+15:42:33 <nitzmahone> (Fine, but we'd need to keep the setup alias around)
+15:42:40 <dag> obviously
+15:43:11 <ryansb> Excellent. So we've got an action, I think we can move to the next topic
+15:43:29 <gundalow> cool, thanks
+15:43:32 <gundalow> ....................................................
+15:44:00 <nitzmahone> If it's fact caching, I'm going back to bed (< 4h sleep last night birthing Windows exec wrapper)
+15:44:19 <gundalow> nitzmahone: Wouldyou like to talk about windows group?
+15:44:25 <gundalow> #topic Windows Working Group
+15:44:31 <dag> haha, keep hem awake !
+15:44:44 <gundalow> #info https://github.com/ansible/community/issues/152
+15:44:52 <gundalow> jhawkesworth: You around
+15:45:04 <jhawkesworth> yes, for once.
+15:45:14 * gundalow doesn't know trondhindenes or jborens93's IRC
+15:45:20 <gundalow> jhawkesworth: Hello :)
+15:45:21 <nitzmahone> Sure. Seem to have a rough consensus from most involved that US West Coast morning is an ok time
+15:45:22 * alikins ponders a new facts namespace that follow python module/package naming, so facts['system.hardware.processor.cores'] means include fact plugin at lib/ansible/facts/system/hardware/processor/cores.py
+15:45:41 <jhawkesworth> hello.  Sorry to keep you up nitzmahone!
+15:46:00 <nitzmahone> Looks like I'd be running it for the foreseeable future, so selfish on that while trying to accommodate most community folks
+15:46:09 <jhawkesworth> jborean likely asleep
+15:46:17 <gundalow> jhawkesworth: ah, OK
+15:46:22 <nitzmahone> Yep, that ones a bummer
+15:46:24 <bcoca> https://github.com/ansible/ansible/pull/18445
+15:46:42 <bcoca> ^ alikins
+15:46:47 <nitzmahone> But he doesn't really overlap with European working hours at all iirv
+15:47:20 <gundalow> So with good use of #info, #action and minutes generally I think you will manage
+15:47:39 <gundalow> You can always do one meeting a (say) month at a different time
+15:47:56 <dag> jhawkesworth: we could switch between WC morning and WC evening on a weekly basis ?
+15:49:03 <nitzmahone> I'm not opposed to that, but others have griped about switching times in the past
+15:49:14 <gundalow> I'd suggest just giving it ago and see what works
+15:49:25 <jhawkesworth> sure.  I'll have to be 'best endeavors' at the moment anyway, but two possible times to hit makes 1 more likely
+15:49:33 <nitzmahone> (and I'm not going more than once a week to start)
+15:49:38 <dag> sure, there's a long list with things we could do (and a lot of things have happened recently)
+15:49:56 <gundalow> Once a week is enough, gives people time to progress stuff
+15:50:08 <allanice001> WC morning on Monday, WC eve on Friday ??
+15:50:28 <jhawkesworth> gundalow: +1
+15:50:33 <allanice001> Even if it's only 30 minutes or so
+15:50:36 <dag> WC eve on friday means the weekend in some parts of the world :)
+15:50:54 <allanice001> Just an idea to accommodate the TZ issues
+15:50:57 <nitzmahone> And basically no working time before WC morning Monday
+15:51:19 <jhawkesworth> ansible is about getting your weekends back :-)
+15:51:21 <allanice001> WC eve Monday, WC morning Friday then ...
+15:51:30 <dag> jhawkesworth: :)
+15:51:42 <nitzmahone> Not doing twice a week
+15:51:56 <dag> every other week
+15:52:10 <jhawkesworth> nitzmahone: agreed not enough of us to sustain I think
+15:52:16 <nitzmahone> Ah, yeah, I guess that'd be ok.
+15:52:19 <dag> but I think if we could do a few weekly meetings, the need to have more weekly meetings will disappear
+15:52:45 <jhawkesworth> dag: I think that's true.  lots to talk about which will tail off as stuff gets agreed/done
+15:52:55 <dag> I am quite positive that once we have a process and guidance, we can get through bugs/PRs and get to cleanup stuff
+15:53:02 <nitzmahone> Just makes the schedule harder. Maybe we say odd weeks Friday morn, even Monday Eve
+15:53:16 <dag> fine for me
+15:53:36 <jhawkesworth> fine me too.  do we want to start now (during bugfixing) or wait til 2.3 shipped?
+15:53:46 * bcoca wonders why people need to schedule visits to the Water Closet
+15:53:53 <dag> bcoca :)
+15:54:01 <allanice001> Also, as a suggest, announce your next meeting in your agenda
+15:54:02 <jhawkesworth> (I'm thinking of what you are juggling at the moment nitzmahone )
+15:54:10 <allanice001> Or #info it in your meeting
+15:54:19 <nitzmahone> Is 0830 Pacific workable for you western Europeans? I have to walk my kid to school (could drive her on meeting days I guess)
+15:54:51 <bcoca> just let that creepy guy that hangs out by the park take them
+15:55:08 <nitzmahone> If people are willing to work on stuff and not just complain at me for not doing their pet projects, I'm ok starting now. ;)
+15:55:13 * dag doesn't deal well with timezones
+15:55:23 * bcoca lives in BCS time
+15:55:27 <allanice001> Thats 16:30 UTC
+15:55:27 <nitzmahone> (I worry about that)
+15:55:33 * jhawkesworth trying to find that tz convertor gundalow linked to the other day
+15:55:38 <dag> hmm, 5:30 AM
+15:56:05 <dag> hmm PM ?
+15:56:07 <gundalow> https://www.timeanddate.com/worldclock/meetingtime.html?day=14&month=2&year=2017&p1=47&p2=202&p3=16&iv=0
+15:56:15 <dag> that's perfect !
+15:56:21 <nitzmahone> I can manage 0800 every other week, just have to drive the kid instead of walking
+15:57:01 <jtanner> you walk, kid takes meeting from phone
+15:57:11 <jtanner> problem solved
+15:57:22 <dag> nitzmahone: 9AM or 10AM works for me as well
+15:57:24 <dag> jtanner :)
+15:58:09 <nitzmahone> Meeting would be focused on Disney princesses and monsters a lot
+15:58:24 <gundalow> You picked a time yet?
+15:58:30 <allanice001> Ansible-fact-pixar  ??
+15:58:58 <nitzmahone> 0800 PT is fine, again, sorry bout stupid DST...
+15:59:42 <nitzmahone> 0800 PT Monday odd weeks, 1700 PT even Fridays?
+15:59:42 <jhawkesworth> at the moment I am often travelling after 8:40 PST - 0800 would be better for me although still during $dayjob
+16:00:09 <allanice001> 08:00 PST == 16:00 UTC
+16:00:44 <nitzmahone> Except DST, right? My head explodes on timezones and stupid acts of Congress
+16:00:45 <allanice001> 17:00 PST == 01:00 UTC
+16:00:49 <dag> jhawkesworth: 9AM PST or 10AM PST is also possible if the aim is leisure hours
+16:01:16 <allanice001> Your new best friend - http://worldtimebuddy.com/
+16:01:33 <nitzmahone> That would be fine with me as well- I'd like to do whatever will encourage the most participation from you guys. :)
+16:02:06 <dag> 10AM would be better than 9AM, put kids to bed
+16:02:07 <jhawkesworth> train -> eat with kids -> put kids to bed usually eats 16:40 -> 20:00 UTC for me
+16:02:17 <allanice001> Also, keep in mind that PST has another variation even 6 months, called PDT
+16:02:22 <nitzmahone> If later is better, works for me, but earlier than 0800 is harder (getting kid out the door)
+16:02:35 <gundalow> Guys, you can change it in the future
+16:02:42 <dag> yup, next item
+16:02:54 <dag> wait_for_connection ? :)
+16:03:07 <gundalow> #action nitzmahone to find a dice and pick a meeting time
+16:03:11 <nitzmahone> I'll try to review in the next few days, but love it
+16:03:31 <jhawkesworth> yeah I want wait_for_connection too
+16:03:33 <gundalow> #info Steps needed to setup a meeting https://github.com/ansible/community/issues/152#issuecomment-280371152
+16:03:36 <gundalow> OK
+16:03:39 <gundalow> .........................
+16:03:40 <gundalow> .........................
+16:03:40 <gundalow> .........................
+16:03:42 <nitzmahone> (wait_for_connection)
+16:03:58 <gundalow> #topic wait_for_connection ansible/ansible#20011
+16:04:07 <gundalow> #info https://github.com/ansible/ansible/pull/20011
+16:04:58 <dag> the module is based partly on win_reboot, to ensure that Ansible recovers from a system that is not responding
+16:05:22 <dag> I need it because we build new systems and we want to wait until the transport works correctly
+16:05:40 <dag> for SSH that's less of an issue than it is on Windows (and possibly other transports)
+16:06:18 <dag> the current implementation (much like win_reboot) does 2 tests, one is a transport test (making a connection) and a ping test (running ping/win_ping remotely)
+16:06:37 <dag> so each transport can implement it's own transport test (but it is not required, if there's none)
+16:07:05 <dag> it just gives you a better idea when the transport is working, and when running modules starts to work
+16:07:22 <dag> currently I implemented transport tests for ssh, paramiko_ssh, winrm and accelerate
+16:08:16 <dag> (kids just got back home)
+16:09:46 <dag> so what would we want to change in the mechanism
+16:10:11 <jhawkesworth> its a nice idea and looks better than trying to hack something with wait_for: etc.  Just a little shy of +1 as it touches the connection plugins
+16:10:50 <dag> jhawkesworth: at first it didn't touch connection plugins, but I think it's much better if the transport-test is part of the connection plugin
+16:11:22 <dag> and if this is accepted (in one form or another) I plan to modify win_reboot to use the same test
+16:11:43 <dag> so that in the future it works identically with SSH+Powershell out-of-the-box
+16:12:17 <jhawkesworth> nice.
+16:12:36 <allanice001> i like the idea.
+16:12:55 <allanice001> Is there any way to do a remote-callback ?
+16:13:17 <jhawkesworth> I guess some tests would give a bit of confidence, although I haven't dug into the test framework enough to know if it would be able to support testing wait_for_connection
+16:13:19 <allanice001> So remote calls ansible-master when transport is avai
+16:13:22 <allanice001> lable
+16:14:09 <dag> now win_reboot is remotely running whoami.exe
+16:14:44 <dag> jhawkesworth: we could do this, but I assume mattclay wants to see individual tests
+16:15:21 <gundalow> Not sure on the background, though we need the tests to be in a directory that matches the name of the module so we run the correct tests
+16:15:34 <gundalow> You can put symlinks in if they are common tests
+16:19:14 <jhawkesworth> dag: worth asking mattclay - I think any kind of integration test that exercises it would be worth doing, just to prove it out for each connection type.
+16:19:20 * jhawkesworth afk
+16:19:54 <gundalow> #action dag / jhawkesworth to adk mattclay about integration tests
+16:20:03 * gundalow isn't sure what else of the above needs recording
+16:21:17 <gundalow> Will close in a few minutes
+16:22:21 * jhawkesworth back
+16:22:37 <jhawkesworth> can I ask if 2.3 is closed for features now?
+16:23:18 <gundalow> #topic Open Floor
+16:23:25 <allanice001> to my knowledge - core is in code freeze, modules will freeze in two weeks
+16:23:28 <gundalow> jhawkesworth: Module freeze is in 2 weeks
+16:24:07 <jhawkesworth> thanks gundalow - still time for me to review dag's many windows PRs.
+16:24:17 <gundalow> Yup :)
+16:24:37 <gundalow> Anything else
+16:24:39 <jhawkesworth> could really do with 1 more windows module reviewer.
+16:24:53 <gundalow> jhawkesworth: Something to discuss in your first Windows meeting :)
+16:24:54 <jhawkesworth> (please check down the back of sofas/ under carpets for one :-)
+16:24:56 <nitzmahone> Core freeze is slushy right now, held up on me.
+16:25:10 <nitzmahone> Should be announced officially tomorrow atm.
+16:25:34 <nitzmahone> I'll be reviewing all once exec is merged
+16:25:40 <jhawkesworth> can see nitzmahone is working on good good stuff, want to keep you free for that
+16:26:28 <nitzmahone> Jordan might be up for it too, he's been watching stuff (he also just submitted ntlm encryption to pywinrm, woot)
+16:26:51 <jhawkesworth> oh nice.  2.3 will be full of windows goodness!
+16:27:03 <nitzmahone> Yeeeeah
+16:28:43 * allanice001 gotta run to a meeting
+16:28:48 <jhawkesworth> anyway.... gotta go and buy back my car from the shop.
+16:28:58 <allanice001> Thnx all, see you next time
+16:29:05 * jhawkesworth waves
+16:29:35 <gundalow> cool
+16:29:45 <gundalow> Anyone got anything else?
+16:30:02 <gundalow> dag: jhawkesworth Testing Working Group is in 30 minutes, if you want to chat more about stuff then
+16:30:09 <gundalow> #endmeeting

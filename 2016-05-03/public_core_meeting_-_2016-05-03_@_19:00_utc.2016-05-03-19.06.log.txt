@@ -1,0 +1,283 @@
+19:06:38 <nitzmahone> #startmeeting Public Core Meeting - 2016-05-03 @ 19:00 UTC
+19:06:38 <zodbot> Meeting started Tue May  3 19:06:38 2016 UTC.  The chair is nitzmahone. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:06:38 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:06:38 <zodbot> The meeting name has been set to 'public_core_meeting_-_2016-05-03_@_19:00_utc'
+19:07:14 <nitzmahone> #topic discuss https://github.com/ansible/ansible/pull/15134
+19:07:34 <kei> this is a jinja2 search path issue
+19:07:44 <kei> in my specific use case is with the role
+19:07:50 <kei> but i believe it's a generic issue
+19:08:01 <kei> that if you have 'include' statement in your j2 template
+19:08:13 <kei> and that's not on the current path
+19:08:19 <kei> it can't find that file
+19:08:55 <kei> here is the sample template file
+19:09:03 <abadger1999> bcoca: any update on thta ^
+19:09:13 <kei> github.com/keinohguchi/ops-switch-role/templates/main.j2
+19:09:38 <kei> which include some *.j2 files from role's templates path
+19:09:49 <kei> as ops-switch-role/templates/ops_bridge.j2
+19:12:09 <abadger1999> bcoca: Maybe we should apply this fix for now and then revert later when it's fixed more generically?
+19:12:38 <kei> abadger1999: i don't mind that approach. :)
+19:12:53 <kei> i just want to have my role up and running
+19:12:55 <kei> that's all. :)
+19:13:04 <abadger1999> Figured, that would be good for your use case ;-)
+19:13:27 <kei> and since it's net_template.py
+19:13:38 <kei> all the networking module people have this feature up and running
+19:14:08 <kei> hope i'm not the only one who loves j2's include statement. :)
+19:14:44 <abadger1999> Okay, bcoca must be busy with something else... I'll pose that as an option in the issue and we can get back to it if bcoca is able to join later in the meeting.
+19:15:08 <kei> abadger1999: sounds good!
+19:15:13 <nitzmahone> #chair alikins abadger1999
+19:15:13 <zodbot> Current chairs: abadger1999 alikins nitzmahone
+19:16:46 <abadger1999> Alright -- is there another PR that people here want to discuss?
+19:16:53 <abadger1999> If not, we can move on to #80
+19:17:37 <abadger1999> #topic SLA for shipit https://github.com/ansible/community/issues/80
+19:18:06 <abadger1999> gregdek, rbergeron, bcoca, jimi|ansible: any of you around to talk about the SLA for shipit?
+19:18:27 <gundalow> not seen gregdek today
+19:18:32 <abadger1999> I agree we need something like it.
+19:18:54 <rbergeron> I am here, but not sure gregdek is, and i think we need more than... just robyn
+19:19:00 <abadger1999> k
+19:19:19 <abadger1999> rbergeron: I don't recall whether shipit is just for extras?  Or is it core and extras now?
+19:19:34 <gundalow> by shipit, do we mean 2xship its
+19:19:58 <rbergeron> gundalow: i believe it is the "once it gets the shipit label"
+19:20:09 <gundalow> rbergeron: hey :)
+19:20:14 <rbergeron> by whatever means that is (2x, or whatever in the future)
+19:20:29 <gundalow> cool, so that's "the whatever the Bot believes is the correct number", sounds good
+19:20:48 <rbergeron> then XYZ should happen in that time frame: either merged, or since it gets eyeballs from the core team, gets put back into needs_revision
+19:20:53 <rbergeron> just not... sitting around waiting forever
+19:21:22 <rbergeron> but: abadger1999 - to your question -- the core / extras question is a good one.
+19:21:37 <gundalow> So does this break down to
+19:21:45 <gundalow> 1) How well are we doing at meeting that target
+19:21:49 <rbergeron> and i think (a) without other folks saying "yes i feel like 2 weeks is a good time frame" (i mean -- i am happy to commit people to whatever, but it's pointless if that's not feasible)
+19:21:52 <gundalow> 2) How can we hit that target
+19:22:03 <gundalow> 3) is 2 weeks sensible
+19:22:25 <jtanner> slas without metrics are difficult.
+19:22:27 <rbergeron> (b) without having a bit more clarity on core / extras -- ... maybe hanging on and having a bit more discussion in the issue woudl be useful to clarify things
+19:22:31 <gundalow> where (2) means do we need to repeatably poke people
+19:22:32 <gregdek> Lurking
+19:22:38 <gundalow> jtanner: aye, that's my view
+19:22:45 <rbergeron> hey lurker
+19:23:04 <rbergeron> jtanner: yeah, and i know mr. mckerr has been poking at getting better metrics on things
+19:23:13 <abadger1999> I don't pretend to speak for the rest of the core team but I'd be very happy with 1 week in extras.  core we can do 2 weeks, see if it's working and then move to 1 week if that seems sane.
+19:23:38 <gundalow> +1 for make a decision, get on withit, adjust if needed
+19:23:45 <rbergeron> but i also feel like if we don't just ... pick something, we might wait forever -- i would rather strive for something and then fine tune once we have the metrics also fine-tuned
+19:23:50 <jtanner> i think the sla is going to have to flexible until we know if we're hitting it at the aggregate or not
+19:24:08 <rbergeron> because right now the metrics he's started poking at are like "average over the course of the whole frickin repository" and ... that's hard to start making a dent in
+19:24:11 <jtanner> start with 1-2 weeks, measure, re-eval, repeat
+19:24:21 <rbergeron> jtanner: yep
+19:24:22 <jtanner> per repo / topic
+19:24:30 <gregdek> 2 wks is fine by me.
+19:24:31 <gundalow> topic?
+19:24:54 <jtanner> i can't gaurantee a 2 week sla on cloud modules if i don't have cloud credentials to work with ... for example
+19:25:18 <gregdek> Shipit is most critical because it represents maintainers work.
+19:25:18 <abadger1999> jtanner: I think the idea is... if it doesn't get eyeballs in 2 weeks, then it gets merged.
+19:25:22 <gundalow> ah, OK. wasn't sure what "topic" meant in this context. Sounds sensible
+19:25:37 <jtanner> abadger1999: so auto-merge?
+19:25:41 <jtanner> in core and extras?
+19:25:49 <gregdek> Core and extras can have different standards.
+19:26:07 <gregdek> And should ultimately.
+19:26:25 * rbergeron nods
+19:26:27 * gundalow 's inner QA starts screaming
+19:26:27 <abadger1999> jtanner: yeah, definitely for extras ... core I'd lean towards it but I can see how we'd want to trial that some other ways first.
+19:26:36 <gregdek> But in either case, we don't want to leave shipits waiting.
+19:27:00 <abadger1999> gundalow: note -- shipit is suppsoed to mean that it has seen QA -- just not by someone capable of merging it on their own.
+19:27:04 <gundalow> auto-merging extras after 2 weeks sounds sensible
+19:27:12 <alikins> re shipit... why doesn't 'shipit' mean 'merge it now' ?
+19:27:25 <gundalow> alikins: good point well made :)
+19:27:26 <gregdek> It once did in extras.
+19:27:32 <gregdek> And may again.
+19:28:00 <gundalow> abadger1999: who can give shipits on modules-core?
+19:28:04 <gregdek> But it's been good to have the extra eyes.
+19:28:31 <gregdek> The module maintainer gives shipit in both.
+19:29:03 <gregdek> But what shipit means? It's ok if that's slightly different between core and extras.
+19:29:12 <gundalow> OK
+19:29:54 * gregdek afk again.
+19:31:07 <abadger1999> Alright -- so what do we want to do from here?
+19:31:08 <gundalow> hum, so different process for new modules, as they don't have a module maintainer ansibullbot/MAINTAINERS-$repo.txt, or does that drop back to the Core Team?
+19:56:36 <nitzmahone> this puts a clock on that: "core team has 2 weeks from when (authorized person) says shipit to merge, block, or it gets automerged:
+19:56:37 <rbergeron> alikins: ideally, anyway :) hopefully it is just okay by community folks but for whoever takes a look at it before actually merging it... sometimes there are lingering "ooh, maybe this wasn't a good idea" when they take a quick eyeball
+19:56:46 <abadger1999> (1) +1
+19:56:47 <abadger1999> (2) I'd be okay with too but  ithink that's part of a more ambitious change to how we perceive extras.
+19:56:47 <rbergeron> I guess my big wish here would mostly be that if it gets -1 by a core team person, that we either make it clear that after the contributor makes the requested changes, that anyone can either give it a +1 again for shipit, or that that core person comes back and looks at it
+19:56:47 <rbergeron> because sometimes it turns into the cookie licking effect
+19:56:48 <rbergeron> "ohhh, a  core team person blocked it, so we're all just gonna step aside now"
+19:56:48 <jtanner|t420> is shipit limited to any certain types of PRs?
+19:56:48 <rbergeron> and i don't want that to ... slow it down in getting back to shipit again
+19:56:48 <jtanner|t420> feature/bugfix/docs/etc ?
+19:56:49 <nitzmahone> LOL @ "cookie licking"
+19:56:49 <rbergeron> http://communitymgt.wikia.com/wiki/Cookie_Licking
+19:56:50 <abadger1999> jtanner: no.  It is limited to certain repos and  ithink we're not discussing new modules right now (those would have both new_module and shipit labels)
+19:56:53 <rbergeron> jtanner|t420: i don't think so. and at this point we don't really have a way to differentiate between feature and bugfix, it's just either code or docs (at least via the bot)
+19:56:53 <rbergeron> or "new module" which we can tell because it's a pr for something that doesn't exist yet
+19:56:53 <nitzmahone> rbergeron: agreed, we've had a number of PRs stall for that exact reason
+19:56:53 <jtanner|t420> i'm just pondering if the 2 week automerge is going to work if someone needs to make a fast bugfix on a recently broken module
+19:56:54 <jtanner|t420> or even a revert
+19:56:54 <abadger1999> jtanner: the hope there would be that we review it instead of relying on the automerge.
+19:56:55 <gundalow> If it's urgent wouldn't someone from core be aware and actively following it?
+19:56:55 <nitzmahone> exactly- the automerge is the sword of damocles, not the happy path
+19:56:55 <jtanner|t420> not in extras
+19:56:55 <rbergeron> nitzmahone: yeah, i've seen lots of people just say "well, waiting to see what $coreteamperson says since they had misgivings" and unless they come back, everyone just kind of ... waits for that
+19:56:56 <abadger1999> If we find it's a problem, we'd have to think of something else... automerge in less time, better escalation path, more community committers, etc.
+19:56:56 <nitzmahone> "better review it or it's going in anyway"
+19:57:01 <rbergeron> i think most folks if they have something urgent and they're even remotely involved in the community know that sending a mail or popping into irc to say "things are on fire, yo" can accellerate stuff when needed
+19:58:31 <rbergeron> or we can have them add some sort of "on_fire_yo" keyword to ring the PLZHURRY alarm :)
+19:58:57 <rbergeron> but i think unless that becomes frequent it's probably not a case to worry about right this second
+19:59:03 <nitzmahone> -1 to that. :P (URGENT flag on email, anyone?)
+19:59:15 <rbergeron> yeah. it's full of abuse potential
+19:59:19 <rbergeron> everything is urgent to someone
+19:59:27 <jtanner|t420> sev1 hipchat module bugs
+19:59:35 <nitzmahone> "I'm going to get fired if you don't merge this PR"
+20:00:01 <gundalow> and that's the hour
+20:00:46 <nitzmahone> So do we have consensus on 2wk automerge in extras? More details to work out, but as a direction to move in?
+20:01:01 <nitzmahone> (2 weeks from authorized shipit)
+20:01:08 <rbergeron> yes, i think so :)
+20:01:17 <gundalow> for patches to existing modules
+20:01:29 <nitzmahone> Yes, not for new modules
+20:02:56 <abadger1999> yeah -- At least among the people here.  bcoca and jimi|ansible aren't here and their input is missing but we can gather that out of band I think - Record the votes in the issue, if they do object this week, we can revisit the topic next meeting.
+20:03:27 <abadger1999> alikins: You haven't weighed in on whether you think (1) is good... care to cast a vote?
+20:04:25 <abadger1999> rbergeron: If there's more that we should talk about, (core as well as extras, new modules, other proposals...) update the bug for either friday or next tuesday's meeting sound like a plan?
+20:04:35 <alikins> 1 is ok, as long as it end sup being unambiguous
+20:04:58 * ryansb makes bug
+20:05:10 <abadger1999> oh ryansb, you didn't vote either.
+20:05:27 <sivel> I didn't either
+20:06:00 <ryansb> I don't feel like I've been around long enough to have an informed opinion. Abstention :)
+20:06:05 <abadger1999> k
+20:06:22 <abadger1999> Man you guys have to speak up earlier so I know you're active ;-)
+20:06:23 <sivel> I feel like I want to push -extras into a completely separate installable package
+20:06:37 <jtanner|t420> sivel, you aren't alone
+20:06:42 <sivel> I wasn't, I somehow lost connection
+20:07:06 <jtanner|t420> i'd like non-core modules to be galaxy installed personally
+20:07:25 <sivel> I plan on playing with some stuff to shuffle -extras around, and allow them to have their own action_plugins, etc...
+20:07:33 <abadger1999> #chair sivel ryansb rbergeron gundalow jtanner
+20:07:33 <zodbot> Current chairs: abadger1999 alikins gundalow jtanner nitzmahone rbergeron ryansb sivel
+20:07:59 <sivel> and introducing some code to allow finding the -extras via setuptools registered entry point
+20:08:06 <sivel> or something similar
+20:08:11 <nitzmahone> netsplit whee
+20:08:13 <sivel> but anyway...
+20:08:25 <sivel> don't want to diverge too far from the topic
+20:08:29 <abadger1999> <nod>
+20:08:59 <nitzmahone> sivel: +1 from me, but you'll find much resistance on that path (I've talked about that one a lot internally)
+20:09:21 <sivel> I don't necessarily have an opinion, and -extras are getting better due to linting and such, I just want to make sure quality doesn't drop
+20:09:44 <gundalow> right, I'm heading offline now
+20:09:57 <sivel> nitzmahone: we are apparently a democracy now, without a BDFL, so we vote and see who has more +1s ;)
+20:10:16 <abadger1999> heh.
+20:10:36 <sivel> honestly, I wish we had a BDFL. :(
+20:10:41 <abadger1999> I think that's probably not the real governance structure... maybe more like a democracy seeking a BDFL ;-)
+20:10:47 <nitzmahone> sivel: are you volunteering?
+20:10:48 <jtanner|t420> i'll be a Big Dumb Foss Lover
+20:10:57 <nitzmahone> lol
+20:10:59 <jtanner|t420> if that's what you meant
+20:11:25 <sivel> I submit my name for BDFL ;)  You may all proceed to vote
+20:11:42 * nitzmahone looks for PayPal payment in inbox
+20:11:46 <sivel> haha
+20:11:48 * nitzmahone sees none
+20:12:05 <jtanner|t420> you do realize that when there's a BDFL, the only person who can say "shipt" is the BDFL
+20:12:34 <nitzmahone> or at least the BDFL has an "f-it" trump card (trump tag?)
+20:12:37 <abadger1999> jtanner|t420: BDFL's delegate.
+20:12:43 <jtanner|t420> not all of them
+20:12:49 <sivel> denied unless proven approved
+20:13:31 <abadger1999> jtanner|t420: perhaps, but I think we find that BDFL's who don't delegate transmute from (B)enevolent to (B)urntout.
+20:13:48 <abadger1999> Okay, I think we've beaten this topic for this meeting.
+20:14:02 <sivel> </horse>
+20:14:16 * jtanner|t420 kicks it 3 more times
+20:14:29 <ryansb> so, next week: dictator elections ;)
+20:14:31 <jtanner|t420> okay, done
+20:14:58 <alikins> ryansb: nah, that's already been decided. next week we just find out who it is ;->
+20:15:12 <abadger1999> #action abadger1999 to record the votes  on the SLA in the ticket... give bcoca and jimi a chance to weigh in before next meeting.  rbergeron and gregdek can ask for more decisions/discussion if need be to move things along.
+20:15:26 <abadger1999> #topic Open Floor
+20:15:39 <abadger1999> hyperized: I think you had a PR you wanted to get final review?
+20:15:50 <hyperized> Yes I did: https://github.com/ansible/ansible-modules-core/pull/3320
+20:16:12 <abadger1999> #topic Added restart functionality to ec2.py  https://github.com/ansible/ansible-modules-core/pull/3320
+20:17:23 <abadger1999> ryansb: You had been reviewing this, is it good to go now or do you need to do some more in-depth checking now?
+20:17:47 <ryansb> Code looks good, but tbh I haven't tested it locally
+20:18:05 <ryansb> once I do that, I'm good with it
+20:19:24 <abadger1999> Cool.
+20:19:33 <hyperized> well, thanks :)
+20:19:55 <abadger1999> #topic Open Floor
+20:21:14 <abadger1999> Anything else?
+20:21:42 <abadger1999> We do have some proposals on the table.
+20:22:01 <ryansb> well, aside from absurdly-marketed CVE of the week https://imagetragick.com/ , nope
+20:22:54 <hyperized> well if I may, I brought up the topic the other day about notation style in the documentation
+20:22:59 <abadger1999> Okay
+20:23:07 <abadger1999> hyperized: Go!
+20:23:13 <abadger1999> #chair hyperized
+20:23:13 <zodbot> Current chairs: abadger1999 alikins gundalow hyperized jtanner nitzmahone rbergeron ryansb sivel
+20:23:14 <bcoca> hmm, missed this
+20:23:22 <bcoca> +1 on autoclose after 2 weeks
+20:23:38 <jtanner|t420> bcoca, automerge
+20:23:46 <bcoca> i stand by my statement
+20:23:54 <jtanner|t420> heh, okay, just making sure
+20:23:59 <jtanner|t420> hyperized, details?
+20:24:21 <hyperized> I noticed there's a vague mix of in-line notation and 'normal' notation in the documentation, the only section where it makes sense to mention the existance of this notation in my opinion is in the section explaining CLI commands
+20:24:44 <hyperized> I would urge to keep one style, consistent across the documentation
+20:24:55 <jtanner|t420> ansible.com/docs in general or just the module docs?
+20:25:02 <bcoca> hyperized: i think both can be used as they are both used in ansible
+20:25:03 <hyperized> on the site in general
+20:25:08 <bcoca> neither is going away
+20:25:27 <hyperized> Im not saying one should go away, I'm saying the documentation could be more consistent and clear about it
+20:26:08 <bcoca> we should mention there are 2 ways, yes, but i would not normalize on one
+20:26:21 <hyperized> the inline notation creates room for incorrect escaping (imo)
+20:26:30 <bcoca> both do
+20:26:35 <hyperized> heh
+20:26:37 <bcoca> with diff quirks
+20:26:42 <hyperized> fair enough
+20:26:50 <bcoca> also typecasting
+20:26:54 <bcoca> booleans are not exactly same
+20:26:55 <bcoca> etc
+20:28:16 <abadger1999> I almost would normalize on yaml syntax ("if in doubt, use yaml") we can fix quoting issues in yaml a lot easier than we can with k=v.
+20:28:40 <hyperized> ^ that summarizes what I mean
+20:29:13 <bcoca> but k=v is more concise normally, better suited to minimize 'vertical scrolling'
+20:29:50 <abadger1999> more concise yes, but not more clear and not something I think we really want people to do in their playbooks.
+20:29:52 <hyperized> to be fair, when I open them in an editor and especially with large sets of variables, I much prefer yaml style, its easier to identify faults
+20:30:17 <abadger1999> If a command is ften used at the cli, I can see giving k=v examples.
+20:30:23 <ryansb> I think for teaching folks, we should prefer YAML even more
+20:30:31 <hyperized> for the command module it makes a lot of sense
+20:30:41 <ryansb> honestly when I started with ansible I didn't know about anything but k=v for months
+20:30:50 <abadger1999> but if it's used from a playbook, I'd rather we show people the yaml syntax than have them get used to the k=v syntax and then start doing multiline strings to keep things k=v
+20:31:24 <bcoca> that is why i think we should have page explaining both
+20:31:37 <bcoca> also showing the 'multiline k=v and why you should use YAML instead'
+20:31:43 <bcoca> < | < =explain those
+20:32:17 <ryansb> Sounds fair to me, but I think for examples we should err on the side of using YAML
+20:32:35 <ryansb> and only do k=v when there's a particular reason (like ad hoc CLI use)
+20:32:45 <abadger1999> Sure, a page to show how to use k=v is fine... but I think we should default to yaml in the module docs (only use k=v if it's something that is going to be used often from adhoc)
+20:32:52 <abadger1999> ryansb: +1
+20:32:55 <jtanner|t420> in context of task argument examples?
+20:34:37 <hyperized> we actually encourage our devs to use module: > (\n) var='something' when the k=v style has to be used
+20:34:58 <hyperized> to keep in style with the yaml syntax
+20:35:30 <jtanner|t420> i get tired of templated vars with k=v screwing up my syntax highlighting in vim, so i use yaml syntax for most things
+20:35:38 <nitzmahone> abadger1999: +1 - I always trained users on both, but when people asked my opinion, I'd say KV is almost always more readable
+20:35:39 <abadger1999> jtanner|t420: yes.
+20:35:45 <jtanner|t420> other than that, i don't really care
+20:35:54 <nitzmahone> Sorry YAML is more readable
+20:36:04 <hyperized> yaml linters are a serious argument to use yaml syntax too, its easier to check for mistakes.
+20:36:08 <ryansb> hold up: readable isn't an objective measure here
+20:36:13 <jtanner|t420> i did find that i couldn't persist quoted strings with spaces in test-module ... so i use @args.yml there too
+20:36:25 <ryansb> but linter availability and syntax checking is definitely a pro
+20:36:54 <nitzmahone> Plus the "sneaky spaces break templated values" in KV thing (eg, "debug: msg={{ blar | default('hi mom')}}" == "hi")
+20:37:19 <jtanner|t420> ban all spaces!
+20:37:25 <nitzmahone> ryansb: fair enough; how about "scales better with more values"
+20:37:31 <hyperized> again, im not advocating k=v vs yaml, just to keep the documentation (starting point for newbs) a clear one thats easy to learn and harder to make mistakes on.
+20:39:29 <hyperized> which I think Ansible is all about :)
+20:39:51 <jtanner|t420> i don't think i'm qualified to pick one or the other
+20:40:28 <bcoca> diff people find each way 'easier', i would not judge to force YAML in all docs just cause many prefer k=v
+20:40:40 * bcoca does not like vim vs emacs debates
+20:40:52 <jtanner|t420> it's the same problem in bash examples with $(foo) versus `foo`
+20:41:05 <jtanner|t420> both work, but one is cleaner is certain contexts
+20:41:22 * dharmabumstead mutters "nano ftw!" and ducks
+20:41:28 <abadger1999> hyperized: okay, I htink we need a proposal and then we can approve or reject it.  Maybe a proposal for module guidelines that says we should usually use yaml syntax and then we can talk about it at next week's meeting.
+20:41:46 <hyperized> abadger1999: in the shape of an issue on github?
+20:41:51 <abadger1999> yeah...
+20:41:55 <hyperized> can do
+20:41:58 <jtanner|t420> ansible/proposals
+20:42:33 <hyperized> I'll take some time tomorrow to write it up, thanks for considering!
+20:43:02 <abadger1999> hyperized: https://github.com/ansible/proposals/issues/new   should have a helpful template when you go to create it.
+20:43:27 <hyperized> yeah I'll find some good examples we found during development
+20:43:35 <hyperized> thanks
+20:43:43 <abadger1999> no problem.
+20:43:48 <bcoca> jtanner|t420: but also ` ` is 'more portable'
+20:43:51 <abadger1999> Okay, we're at the end of time.
+20:43:56 <bcoca> and $() has the advantage of 'stacking'
+20:44:06 <abadger1999> If no one has anything else we can close in 60s
+20:44:17 <jtanner|t420> bcoca, not going to argue it ... each has it's merits
+20:44:43 * bcoca broke shell compatiblity by using $() in base shell plugin
+20:45:06 * jtanner|t420 revokes bcoca's bofh card
+20:45:43 <misc> bcoca: ` is also a way to confuse people who didn't knew that ` and ' are different key on the keyboard :p
+20:45:53 <misc> (aka, a good way to mess with new interns)
+20:46:35 <abadger1999> #endmeeting

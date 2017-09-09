@@ -1,0 +1,66 @@
+18:08:05 <abadger1999> #startmeeting New Modules
+18:08:05 <zodbot> Meeting started Wed Aug 17 18:08:05 2016 UTC.  The chair is abadger1999. Information about MeetBot at http://wiki.debian.org/MeetBot.
+18:08:05 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+18:08:05 <zodbot> The meeting name has been set to 'new_modules'
+18:08:11 <abadger1999> #chair ryansb
+18:08:11 <zodbot> Current chairs: abadger1999 ryansb
+18:08:15 <abadger1999> #topic Roll Call
+18:08:17 <abadger1999> Who's here?
+18:08:39 <Qalthos> hihi
+18:08:49 <ryansb> hello
+18:09:03 * shertel waves
+18:09:12 <abadger1999> #chair Qalthos shertel
+18:09:12 <zodbot> Current chairs: Qalthos abadger1999 ryansb shertel
+18:09:35 <abadger1999> Anyone know how the standing agenda is organized? https://github.com/ansible/community/issues/92  This is my first time running this meeting.
+18:10:02 <MichaelBaydoun> most recent on bottom, typically work bottom to top
+18:10:07 * mattclay waves
+18:10:09 <abadger1999> Thanks
+18:10:13 <abadger1999> #chair MichaelBaydoun mattclay
+18:10:13 <zodbot> Current chairs: MichaelBaydoun Qalthos abadger1999 mattclay ryansb shertel
+18:10:36 <abadger1999> #topic Adding jenkins_plugin module  https://github.com/ansible/ansible-modules-extras/pull/1730
+18:13:25 <MichaelBaydoun> has 1 worksforme/shipit
+18:14:37 <MichaelBaydoun> maybe ping sivel seeking a second one?  He was a commenter that requested changes
+18:15:29 <sivel> I have no feedback, I was just relaying ansible-testing comments
+18:15:56 <abadger1999> <nod>
+18:16:08 <abadger1999> I wonder why it isn't using atomic_move()
+18:16:13 <bcoca> probably doesnt know
+18:16:19 <bcoca> ^ need to document
+18:19:12 <abadger1999> Looks like he agreed to make state=latest but the code doesn't reflect that.
+18:20:40 <abadger1999> I think file_mode will be wrong too.
+18:21:50 <MichaelBaydoun> he made version=latest instead of state=latest
+18:22:15 <abadger1999> if file_mode: 0644 in playbook then module will get json argument { file_mode: 420 } which will get turned into a string: params['file_mode'] = '420' which will then get converted into an int in the module's code: file_mode=272
+18:26:12 <abadger1999> bcoca: Since he appears to be downloading the plugin to a temp file, he just needs os.rename(downloaded_file, plugin_file_path) correct?
+18:27:20 <abadger1999> Or maybe not... I suppose if permissions aren't specified...
+18:34:36 <bcoca> abadger1999: no, as that might not always work
+18:34:47 <abadger1999> Okay -- Here's what I'm going to add as the blockers:
+18:34:55 <abadger1999> * We saw that the comments here say that latest has been moved to state but that doesn't seem to be reflected in the code.
+18:35:16 <abadger1999> * Looks like you maybe should be using module.atomic_move() to move the downloaded plugin file into place so that getting interrupted in the middle of writing the file doesn't leave a partially written plugin file.
+18:36:04 <abadger1999> * The file_mode parameter is buggy.  [explanation of why it's buggy and that modules like copy use type="raw" and module.set_mode_if_different() to change file mode.
+18:36:56 <abadger1999> I'll also mention two (optional) style things: Do the import of ansible.module_utils things after the import of stdlib modules (and put them all together)
+18:37:30 <abadger1999> * Usually we don't use double underscore for private... We use single underscore since python generally works on the principal of consenting adults.
+18:37:40 <abadger1999> Any other blockers or style notes for this module?
+18:41:33 <mattclay> The module caches data in the temp dir across module runs. That seems a bit unusual for a module.
+18:42:36 <abadger1999> bcoca: ^
+18:42:42 <abadger1999> mattclay: yeah, that is unusual.
+18:44:34 <abadger1999> mattclay: Want to write a question about that to the ticket?
+18:45:07 <mattclay> abadger1999: Sure.
+18:45:37 <abadger1999> Cool.
+18:45:56 <abadger1999> #topic Added modules to manage Atomic Host Platform (host and image)  https://github.com/ansible/ansible-modules-extras/pull/1902
+18:46:10 <tima> been waiting for that one to come up.
+18:46:14 <abadger1999> this is the other new module on the standing agenda
+18:47:07 <linuxdynasty> abadger1999: or bcoca have you guys made a decision on the retry/backoff PR? Just checking
+18:47:15 <tima> i didn't write that one. our friends in the atomic host and openshift projects are really keen to see this one get merged in.
+19:01:19 <abadger1999> Okay -- I've reviewed.  they're pretty short modules.
+19:02:51 <abadger1999> A couple bugs and some questions  (pyhthon2.4 compat -- document if this module doesn't have that, and asking for clarification of bcoca's question about state parameter in atomic_hosts)
+19:03:22 <abadger1999> tima: ^ If you're already keeping track of that PR, feel free to ping me when it's updated/submitter gives us new information.
+19:03:37 <tima> yeah, not sure why it's python 2.6 only.
+19:03:45 <tima> ok. thanks @abadger1999.
+19:04:24 <abadger1999> Alright, I think that's the time for this meeting.
+19:04:32 <abadger1999> #topic Open floor
+19:04:45 <abadger1999> Is anyone here that has something that they are burning to bring up?
+19:05:00 <abadger1999> If not I'll close in 60 seconds
+19:05:23 <ryansb> responded to feedback on
+19:05:25 <ryansb> https://github.com/ansible/ansible-modules-extras/pull/2558
+19:05:39 <ryansb> so if folks who reviewed last time could take a second look that'd be awesome
+19:06:35 <abadger1999> #info https://github.com/ansible/ansible-modules-extras/pull/2558 from last week is ready for a re-review
+19:07:01 <abadger1999> #endmeeting

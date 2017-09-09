@@ -1,0 +1,99 @@
+17:00:40 <gundalow> #startmeeting Testing Working Group
+17:00:40 <zodbot> Meeting started Thu Mar  2 17:00:40 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+17:00:40 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+17:00:40 <zodbot> The meeting name has been set to 'testing_working_group'
+17:00:44 <gundalow> #chair mattclay
+17:00:44 <zodbot> Current chairs: gundalow mattclay
+17:01:13 <gundalow> #info Agenda https://github.com/ansible/community/issues/114
+17:01:34 * mattclay waves
+17:01:49 <gundalow> #Info Windows now has it's own meeting https://github.com/ansible/community/issues/153
+17:01:52 <gundalow> #topic Open Floor
+17:03:39 <mattclay> There are a few comments from alikins buried in the agenda that we haven't discussed yet.
+17:03:52 <mattclay> #topic https://github.com/ansible/community/issues/114#issuecomment-282064232
+17:04:02 <gundalow> Ah, thanks
+17:04:20 <mattclay> alikins's request was this: I'd like to see 'ansible-test sanity' run all test and then report all failures instead of exiting on first failure.
+17:04:38 <gundalow> Oh, that could be useful
+17:04:45 <mattclay> I've nearly finished the first part of an overhaul of the `ansible-test sanity` implementation which addresses this request.
+17:05:02 <gundalow> Ace :)
+17:05:12 <alikins> excellent.
+17:05:27 <mattclay> I need to few a few things and then should be able to merge today.
+17:05:40 <mattclay> s/need to few/need to fix a few/
+17:06:06 <mattclay> #topic https://github.com/ansible/community/issues/114#issuecomment-282065287
+17:06:36 <mattclay> From alikins's comment: I have a branch that adds a '--lint' option to 'ansible-test sanity' that just displays pep8 results in a format closer to standard pep8.
+17:07:07 <mattclay> As part of my aforementioned overhaul of `ansible-test sanity` I've also implemented a `--lint` option to address this.
+17:07:25 <alikins> +1
+17:07:35 <mattclay> It's only a first step, as there's more to do to make it work across all of the sanity checks. I'll continue to improve upon it after I merge the first set of changes today.
+17:08:52 <mattclay> The upcoming changes also work towards fixing another issue that alikins brought up that we discussed before: I'd like to see ansible-test ignore files not in git by default.
+17:09:10 <alikins> yeah, some of the stuff that doesn't necessarily map well to 'some_file.py:37:21: there is an error on this line'  formats could be interesting to deal with
+17:09:16 <mattclay> That won't be fixed in this next change, but the changes being made will support addressing this issue as well.
+17:09:22 <gundalow> cool :)
+17:09:46 <mattclay> alikins: Yeah, I have a fallback approach for that which basically reports a lint message saying: Hey, go look here for the full details of this error.
+17:10:07 <mattclay> But I'll be converting most of our existing code-smell tests to lint-friendly ones so we get better file/line/column details in them.
+17:10:55 <mattclay> #topic Open Floor
+17:11:25 <sivel> validate-modules has a bug in new module detection https://github.com/ansible/ansible/pull/22187#issuecomment-283709686
+17:11:43 <sivel> I don't have any immediate thoughts on how to fix module renames
+17:11:46 <sivel> it doesn't happen often
+17:13:04 <mattclay> #topic validate-modules has a bug in new module detection https://github.com/ansible/ansible/pull/22187#issuecomment-283709686
+17:13:09 <mattclay> #chair sivel
+17:13:09 <zodbot> Current chairs: gundalow mattclay sivel
+17:13:17 <mattclay> #chair alikins
+17:13:17 <zodbot> Current chairs: alikins gundalow mattclay sivel
+17:13:23 <alikins> mattclay: yeah, sometimes you can fudge a little bit  (ie, claim an error line 0 for something not tied to a line). ie, 'test/integration/targets/new_target/aliases:0:0 This file doesnt exist at all' if useful. But it doesnt have to be perfect.
+17:14:22 <sivel> mattclay: if any ideas come to you for module renames, let me know. Since there is some change detection that happens in ansible-test, it might be able to happen there
+17:15:11 <sivel> but I'm not sure it is something that needs an urgent fix
+17:15:18 <mattclay> Hmm.. I'll have to think about that one a bit. It doesn't help things that renames aren't tracked in git, but instead figured out during diff.
+17:15:48 <mattclay> It's a fairly rare occurrence though, so I'm inclined to say we may not address it right away since the fix is probably not easy.
+17:15:58 <sivel> yeah, that is my thought
+17:16:35 <mattclay> With the upcoming `ansible-test` changes it should be easier to deal with, since the other tests will still run. You'll be able to see that's the only error and just ignore it.
+17:16:36 <alikins> +1
+17:17:11 <mattclay> The bot won't know to ignore it, so a human will still need to merge (even after we have auto merge).
+17:17:51 <sivel> And I think that makes sense anyway
+17:18:00 <sivel> not sure we just want to auto merge module renames :)
+17:18:32 <alikins> yeah, I have no problem with a rename always causing a failure
+17:18:37 <mattclay> Well, technically it's a move in this case, not a rename.
+17:18:44 <alikins> at least until we go on a module renaming bender
+17:18:50 <sivel> auto merge still "scares" me, but I don't know the full details on what will trigger that.  But with some recent modules, it seems that the author, just asks some buddies to come comment "shipit"
+17:18:50 <mattclay> We shouldn't be renaming unless we're adding aliases.
+17:19:07 <mattclay> Which the validator can handle now.
+17:19:38 <mattclay> All the more reason to have lots of good CI to catch stuff. The bot won't auto merge if CI isn't happy.
+17:20:01 * gundalow is still poking network modules, so ping if for attention :)
+17:20:02 <mattclay> OK, I think we're good on this one for now.
+17:20:06 <mattclay> #topic Open Floor
+17:20:12 <alikins> does CI have a way to know if a PR is a automerge candidate ?
+17:20:14 <gundalow> sivel: Thanks for your ansible-validator fixes :)
+17:20:29 <jtanner> alikins: not at the moment
+17:20:42 <mattclay> alikins: Why would that be useful?
+17:20:47 <jtanner> i think we need to expose a bot facts endpoint to make that work
+17:21:38 <alikins> potentially to have stricter CI for something that could be automerged.
+17:21:43 <mattclay> Speaking of exposing facts, I'll have some bot friendly test result data coming out of sanity tests on Shippable for you soon, jtanner.
+17:22:36 <mattclay> alikins: That should only be necessary if we have something that's normally too expensive (time or money) wise to run full CI on when we'd really like to as part of the PR.
+17:22:58 <mattclay> I think the existing change detection already handles that part pretty well.
+17:25:10 <mattclay> We still need to roll over the agenda items for this meeting to a new issue on GH.
+17:25:29 <alikins> mattclay: I'm thinking of 'stricter' mostly in terms of additional sanity checks like 'check-that-this-doesnt-muck-with-non-module-code'
+17:27:27 <mattclay> I'm having a hard time thinking of a test that we'd want to skip for non-automerge PRs that isn't already covered by change detection.
+17:27:57 <mattclay> It's something we can address in the future if it comes up.
+17:29:11 <alikins> adding deps to setup.py for ex, should always fail a automerge PR, but may be okay for a regular PR
+17:29:22 <jtanner> automerge is a fact based on shippable's results and other factors ...
+17:29:51 <jtanner> and we haven't planned to automerge anything that doesn't have "community" supported metadata
+17:31:30 <mattclay> Which is why I think we'll be hard pressed to come up with a scenario where CI needs to know if the PR is an auto-merge candidate (assuming CI were to pass).
+17:32:23 <mattclay> I think in pretty much any case we can figure out what CI needs to be enforced by the content of the PR.
+17:33:32 <mattclay> Which is good, because the bot won't have a chance to label a PR before Shippable runs in many cases.
+17:33:44 <mattclay> Or re-label, in the case of additional changes being pushed.
+17:35:18 <jtanner> automerge depends on needs_revision
+17:35:34 <jtanner> needs_revision depends on maintainer comments, reviews and shippable results
+17:35:41 <jtanner> so ...
+17:35:54 <jtanner> can't determine "automerge" till shippable is done
+17:36:40 <sivel> yeah, but I don't think CI should fail, if it isn't auto-mergable allowed.  That should be determined by an external process
+17:37:13 <jtanner> i think we're saying the same thing
+17:37:41 <mattclay> CI runs based on contents of PR and feeds results to bot. CI won't consult bot or PR labels to make decisions.
+17:38:00 <mattclay> Well, technically, the bot pulls results from GH/Shippable.
+17:39:18 <alikins> ah, so I would consider that as counting as 'yes' for ' does CI have a way to know if a PR is a automerge candidate ?'
+17:39:55 <jtanner> i think your terms might be confusing us
+17:40:11 <jtanner> are you trying to say "community supported" instead of "automerge" ?
+17:46:15 <alikins> shrug, I'm not worried about it, was just curious
+17:46:47 <mattclay> OK, is there anything else to discuss then?
+17:48:28 <mattclay> Ending the meeting in 1m if there are no additional comments.
+17:49:19 <gundalow> Nothing else from me
+17:49:27 <gundalow> mattclay: Thanks for running it today
+17:49:35 <gundalow> And the core meeting
+17:49:51 <mattclay> #endmeeting

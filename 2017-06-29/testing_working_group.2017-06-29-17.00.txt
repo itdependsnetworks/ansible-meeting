@@ -1,0 +1,194 @@
+=======================================
+#ansible-meeting: Testing Working Group
+=======================================
+
+
+Meeting started by gundalow at 17:00:07 UTC. The full logs are available
+at
+https://meetbot.fedoraproject.org/ansible-meeting/2017-06-29/testing_working_group.2017-06-29-17.00.log.html
+.
+
+
+
+Meeting summary
+---------------
+* LINK: Agenda https://github.com/ansible/community/issues/114
+  (gundalow, 17:02:03)
+* lxml  (gundalow, 17:05:01)
+  * LINK:
+    https://github.com/ansible/community/issues/114#issuecomment-311114266
+    (gundalow, 17:05:11)
+  * From Dag: For the new xml module, we need lxml provisioned. For the
+    docker images, this is already the case, but for the VMs (FreeBSD,
+    MacOSX) lxml is still missing.  (gundalow, 17:05:25)
+  * ACTION: mattclay to look into lxml  (gundalow, 17:06:06)
+
+* win_url integration tests (httptester for Windows)  (gundalow,
+  17:06:30)
+  * LINK:
+    https://github.com/ansible/community/issues/114#issuecomment-311111626
+    (gundalow, 17:06:47)
+  * From Dag: For testing the win_uri module (and eventually the uri
+    module as well) we would like to look at using httptester. This was
+    deemed the preferred way during some discussion (don't have a
+    reference at hand).  (gundalow, 17:07:04)
+  * From Dag: For Windows that would mean that the VMs need to be able
+    to connect the the httptester docker network. As a result, we will
+    leave the idea to set up our own http listener process (#153
+    (comment)).  (gundalow, 17:07:15)
+  * We'd like to be able to tunnel requests from the remote Windows
+    instance back to the system running the tests, but this is more
+    difficult on Windows since we're not connection via ssh  (gundalow,
+    17:09:30)
+  * Idealy we want this to work when running ansible-test manually, not
+    just on Shippable.  (gundalow, 17:09:52)
+  * ACTION: mattclay to investigate this, he's got some ideas
+    (gundalow, 17:10:47)
+
+* Cleaning up test/  (gundalow, 17:11:01)
+  * Clearing out test_win_group*.yml and some of the Makefile targets
+    (gundalow, 17:11:26)
+  * PR has been raised: https://github.com/ansible/ansible/pull/26255
+    (gundalow, 17:11:42)
+  * Waiting to check we will not break Ansible Tower testing  (gundalow,
+    17:11:59)
+  * Clearing out these files will make it a lot clearer for people
+    creating tests  (gundalow, 17:12:44)
+
+* Unit Test and mocking  (gundalow, 17:13:06)
+  * We've been seeing an increasing number of unit test PRs wanting to
+    add more test requirements.  (mattclay, 17:14:02)
+  * Instead of adding more requirements for unit testing, we've been
+    suggesting that unit tests mock their dependencies instead.
+    (mattclay, 17:14:32)
+  * Example https://github.com/ansible/ansible/pull/24895  (gundalow,
+    17:14:39)
+  * This reduces test requirements and focuses testing on modules, not
+    their dependencies.  (mattclay, 17:15:28)
+  * 2nd example https://github.com/ansible/ansible/pull/26026
+    (gundalow, 17:15:41)
+  * ACTION: caphrim007 to experiment with using mocking some of the F5
+    unit tests and report back  (gundalow, 17:19:10)
+  * ACTION: pdellaert to add pragmatic testing for Nuage  (gundalow,
+    17:31:14)
+
+* Reducing the dependencies in test/runner/requirements/integration.txt
+  (gundalow, 17:34:09)
+  * The list of "requirements" is ever growing. We plan on trimming that
+    down to only what's needed to run ansible-test  (gundalow, 17:35:40)
+  * For integration tests we are considering 1) requirements in
+    test/integration/targets/*/requirements.txt  (gundalow, 17:36:55)
+  * 2) or Just install them in during the playbooks. If they
+    dependencies are needed by multiple roles then use a presetup_foo
+    and set that in meta/main.yml dependencies  (gundalow, 17:37:44)
+  * ACTION: agreed we will remove the integration dependencies and add
+    them into the playbooks instead (in pretest_foo if needed by multple
+    roles)  (gundalow, 17:43:13)
+  * ACTION: , correction setup_foo  (gundalow, 17:45:13)
+  * ACTION: also lets remove the empty setup_tests (from memory) that
+    doesn't do anything  (gundalow, 17:45:41)
+
+* Testing Working Group Structure  (gundalow, 17:45:53)
+  * First of all, massive thank you to everyone that attended in person
+    or online for the Contributors Summit as part of London Ansible Fest
+    (gundalow, 17:46:27)
+  * There was a lot of discussion about how to make it easier to Working
+    Groups to document and self organise  (gundalow, 17:47:42)
+  * https://github.com/ansible/community/ has been restructured there
+    are now directories per working griup  (gundalow, 17:48:10)
+  * group-windows is the best example  (gundalow, 17:48:23)
+  * Also we have wiki's now https://github.com/ansible/community/wiki
+    again Windows is best example  (gundalow, 17:48:44)
+  * based on how k8s do stuff  (gundalow, 17:48:54)
+  * we how have more IRC channels #ansible-aws #ansible-vmware
+    #ansible-windows  (gundalow, 17:49:39)
+  * LINK:
+    https://github.com/ansible/community/wiki/Windows%3A-progress-tracker
+    (gundalow, 17:51:05)
+  * LINK:
+    https://github.com/ansible/community/wiki/Windows%3A-community-plan
+    (gundalow, 17:51:12)
+  * ACTION: We will continue to use #ansible-devel as 1) Most of what we
+    talk about relates to everyone 2) increase visibility  (gundalow,
+    18:16:40)
+  * AGREED: We will continue to use #ansible-devel as 1) Most of what we
+    talk about relates to everyone 2) increase visibility  (gundalow,
+    18:17:08)
+  * ACTION: gundalow to add people to contact/collaborate on README.md
+    (gundalow, 18:22:49)
+  * ACTION: gundalow to look at old TWG etherpad and pull relevant info
+    in  (gundalow, 18:23:14)
+  * LINK:
+    https://github.com/ansible/community/wiki/Testing:-progress-tracker
+    created  (gundalow, 18:29:43)
+
+Meeting ended at 19:03:18 UTC.
+
+
+
+
+Action Items
+------------
+* mattclay to look into lxml
+* mattclay to investigate this, he's got some ideas
+* caphrim007 to experiment with using mocking some of the F5 unit tests
+  and report back
+* pdellaert to add pragmatic testing for Nuage
+* agreed we will remove the integration dependencies and add them into
+  the playbooks instead (in pretest_foo if needed by multple roles)
+* , correction setup_foo
+* also lets remove the empty setup_tests (from memory) that doesn't do
+  anything
+* We will continue to use #ansible-devel as 1) Most of what we talk
+  about relates to everyone 2) increase visibility
+* gundalow to add people to contact/collaborate on README.md
+* gundalow to look at old TWG etherpad and pull relevant info in
+
+
+
+
+Action Items, by person
+-----------------------
+* caphrim007
+  * caphrim007 to experiment with using mocking some of the F5 unit
+    tests and report back
+* gundalow
+  * gundalow to add people to contact/collaborate on README.md
+  * gundalow to look at old TWG etherpad and pull relevant info in
+* mattclay
+  * mattclay to look into lxml
+  * mattclay to investigate this, he's got some ideas
+* pdellaert
+  * pdellaert to add pragmatic testing for Nuage
+* **UNASSIGNED**
+  * agreed we will remove the integration dependencies and add them into
+    the playbooks instead (in pretest_foo if needed by multple roles)
+  * , correction setup_foo
+  * also lets remove the empty setup_tests (from memory) that doesn't do
+    anything
+  * We will continue to use #ansible-devel as 1) Most of what we talk
+    about relates to everyone 2) increase visibility
+
+
+
+
+People Present (lines said)
+---------------------------
+* gundalow (173)
+* dag (51)
+* mattclay (29)
+* shaps (28)
+* pdellaert (20)
+* caphrim007 (17)
+* zodbot (10)
+* Pilou (10)
+* branko (4)
+* nitzmahone (3)
+* mikedlr (3)
+
+
+
+
+Generated by `MeetBot`_ 0.1.4
+
+.. _`MeetBot`: http://wiki.debian.org/MeetBot

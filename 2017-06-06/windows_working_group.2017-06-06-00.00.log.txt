@@ -1,0 +1,231 @@
+00:00:49 <nitzmahone> #startmeeting Windows Working Group
+00:00:49 <zodbot> Meeting started Tue Jun  6 00:00:49 2017 UTC.  The chair is nitzmahone. Information about MeetBot at http://wiki.debian.org/MeetBot.
+00:00:49 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+00:00:49 <zodbot> The meeting name has been set to 'windows_working_group'
+00:00:54 <jborean93> Hey all
+00:00:59 <nitzmahone> hey hey
+00:02:35 <nitzmahone> We'll see if anyone else stayed up late
+00:03:50 <nitzmahone> I've been playing with one of my other ideas for avoiding the pykerberos/ccs-pykerberos mess (convert requests-kerberos to use python-gssapi) this afternoon. Some of the docs appear a bit suspect (it's beta after all)
+00:04:41 <nitzmahone> But doing that and vendoring requests-kerberos means we shouldn't have to worry about maintenance for any projects we can't ship. :)
+00:05:37 <nitzmahone> Welp, since it's appearing kinda quiet today, anything you want to go over from the
+00:05:39 <jborean93> I had a quick look over that briefly, wouldn't you have the same issue with swapping over to another library you don't have control over?
+00:05:41 <nitzmahone> #agenda https://github.com/ansible/community/issues/153
+00:06:08 <nitzmahone> Yeah, except that they expose the iov stuff in their low-level API, so I can write the winrm encryption in Python instead of C
+00:06:33 <jborean93> I haven't added it to the agenda but I've got some testing PR's out in the open for review to add some integration tests
+00:06:49 <jborean93> Currently working on adding tests for the core modules that don't have them like win_acl* and stuff like that
+00:07:09 <nitzmahone> Yeah, that's awesome sauce.
+00:07:20 <jborean93> I think I'm making good progress on the ccs-pykerberos/winkerberos route where I've got a PR raised with some changes requested
+00:07:32 <nitzmahone> Now we just have to work with Matt on how to improve the CI perf for all these tests. :)
+00:07:36 <jborean93> I'm hoping to get that through but if we swap to python-gssapi I'll have a look at that
+00:07:38 <jborean93> yep
+00:07:44 <jborean93> I heard he is away currently
+00:08:02 <nitzmahone> OK- I'm debating whether or not to even raise a PR with the winrm encryption stuff (and/or where).
+00:08:03 <jborean93> I've got to talk with him around the PSScriptAnalyzer and how to get that integrated
+00:08:09 <nitzmahone> pykerb dude seems totally AWOL ATM
+00:08:48 <jborean93> I've got some traction on the Apple fork https://github.com/apple/ccs-pykerberos/pull/55
+00:08:59 <jborean93> And it sounded like requests-kerberos wanted to swap back over at some point
+00:09:14 <nitzmahone> Yeah- I'm imagining two paths for PSSA/pester: first is the "easy" one to get PSSA running in one of the Shippable containers
+00:09:58 <nitzmahone> Second (harder) is to get it running remotely on Windows targets and capturing outputs so we can do things like unittest native code w/ PInvoke and/or COM stuff that probably won't work on Linux
+00:10:06 <nitzmahone> I bet we can get really far with just #1
+00:10:41 <jborean93> yep that's was the potential plan in my mind, get the script analysis up and running
+00:10:43 <nitzmahone> Yeah, in all my testing, ccs-pykerberos worked flawlessly with requests-kerberos,
+00:10:47 <jborean93> Then look at potentially using it for unit tests
+00:11:37 <nitzmahone> I've also been playing with C# declarative argspec stuff (first thing on my 2.4 roadmap)
+00:12:23 <nitzmahone> Only thing I'm slightly worried about is the perf hit if module_utils always requires Add-Type w/ C# code. I need to do some benchmarking. I'd really rather not write that in PS, but can if necessary.
+00:12:45 <jborean93> potentially you can have a flag that only adds it if the function is called
+00:12:50 <nitzmahone> Bonus about doing C# is that we now have a module API for .NET binary modules "for free"
+00:13:18 <nitzmahone> Well, declarative argspec will (ideally) be used by every module we ship- I'm planning to convert many/most as part of the validation processs
+00:13:27 <nitzmahone> (esp for modules w/ integration tests ;) )
+00:13:40 <jborean93> cool
+00:13:46 <jborean93> How did you awsrunner go?
+00:14:12 <nitzmahone> I have one outstanding architectural flaw to work around that's currently preventing merge
+00:14:33 <nitzmahone> It goes back to the "busted abstraction for determining shell plugin" stuff
+00:15:24 <nitzmahone> The only test that's failing right now with it is that the script action on Windows won't handle the environment keyword (as it's back to not running under the wrapper).
+00:15:42 <jborean93> Are you planning on this being set as experimental for 2.4 or full support
+00:16:00 <nitzmahone> Ideally, we'd add a couple of smart checks that would send the wrapper with the script embedded (or alongside) if you're using "advanced" features and just do "classic" if you're not.
+00:16:14 <nitzmahone> Which, the declarative argspec?
+00:16:25 <nitzmahone> Or the AWSRun plugin?
+00:16:35 <jborean93> AWSRun plugin, shell fixes
+00:17:01 <nitzmahone> The plugin would definitely be "community", but the issues I'm hitting are not limited to that plugin
+00:17:07 <nitzmahone> (ie, broken under WinRM too)
+00:17:33 <nitzmahone> It's not a matter of "hard to fix", it's a matter of "hard to fix without stupid `if winrm ...` crap all over the place.
+00:17:48 <jborean93> hard to fix properly
+00:17:51 <nitzmahone> Right
+00:18:23 <nitzmahone> The core abstractions and delineation of responsibilities around connection/shell/action aren't robust enough to handle what we need
+00:18:38 <dag> owh, did I miss something ?
+00:18:41 <jborean93> The only other thing would be https://github.com/ansible/ansible/pull/23119, hoping to get this merged in sometime soon so we can get some testing in devel
+00:18:45 <nitzmahone> A couple of new "signals" are needed.
+00:18:59 <jborean93> Hey dag
+00:19:03 <nitzmahone> Sup dag
+00:19:40 <nitzmahone> Ugh, yeah, I'm so behind on reviews- I think I promised to review that one a few weeks back
+00:20:37 * nitzmahone puts it on "first thing Tuesday AM" list
+00:20:54 <jborean93> cool thanks
+00:21:07 <jborean93> I think dag had a few points for the agenda as well
+00:21:19 <jborean93> unless his internet is causing some grief
+00:21:49 <dag> no no :)
+00:22:01 <dag> I was just waiting for the meeting, working on win_uri and lost track of time
+00:22:16 <dag> I have been rewriting win_uri to be much more like uri (feature-wise)
+00:22:26 <nitzmahone> Yeah, I was going to mention that win_uri probably isn't the best module for "sample" since idempotence is sketchy
+00:22:27 <dag> and would like to discuss making it the reference module
+00:22:37 <dag> but we can improve it
+00:22:44 <dag> just like uri
+00:22:46 <jborean93> I agree it also can't really showcase diff support with that as well
+00:22:49 <dag> (I didn't do that part)
+00:22:55 <jborean93> of course that's always a good thing though :)
+00:23:06 <nitzmahone> Right, but regardless, you won't have a clear source to check, so idempotence and check mode won't be representative of what a typical module would do
+00:23:09 <dag> jborean93: not necessarily true though :)
+00:23:44 <nitzmahone> I'm not saying there's not a ton of improvement to be had, just that there's enough "inherently weird" stuff about that module that it's probably not the best place to point n00bz
+00:24:05 <jborean93> if anything win_owner seemed to fix it more
+00:24:40 <dag> jborean93: I don't see diff-support in win_owner to be really useful
+00:24:48 <nitzmahone> Yeah, I'd think one of the file-ish or system-state-ish modules might be a better starting point as a reference
+00:24:55 <nitzmahone> (in general)
+00:25:16 <dag> ok, I'll let someone else pick then :)
+00:25:26 <nitzmahone> Something with a fairly clear pattern of "check for desired state, enforce if missing and not check mode" kind of thing.
+00:25:39 <jborean93> win_user might be a good candidate
+00:25:42 <nitzmahone> (and ideally one that has a useful diff mode as well)
+00:25:50 <jborean93> might be a bit too complex though
+00:26:02 <dag> most of them are too complex IMO
+00:26:03 <nitzmahone> Yeah, probably only if we abstracted the nasty WMI jazz
+00:26:32 <nitzmahone> Maybe something like win_iis_website
+00:26:45 <nitzmahone> That one's all cmdlet based IIRC
+00:27:02 <nitzmahone> (though I think I had some ideas for it that'd have to break out of that)
+00:27:18 <dag> well, what about the win_iss* modules, jhawkesworth wasn't favorable about those
+00:27:54 <nitzmahone> The website module isn't bad, IIRC it's the virdir/webapp modules that are a mess (the dynamic values and awful list/dict handling)
+00:28:19 <nitzmahone> We could clean some of that up, but again, inherent complexity in the underlying resource
+00:28:41 <jborean93> it would need cleaning up but it contains a lot of the types to use as examples
+00:29:03 <nitzmahone> win_dns_client is relatively simple- I wrote that one in an hour at the airport
+00:30:17 <nitzmahone> win_path is also relatively simple (ignoring the regex-y nasty), but could also easily have diff-mode bolted on
+00:30:38 <nitzmahone> win_shortcut, sorta the same
+00:32:09 <nitzmahone> win_chocolatey *could* be simple, but I want to take a lawnmower to the current impl
+00:32:37 <nitzmahone> I dunno, anybody like any of those?
+00:32:39 <dag> I'd rather had something not needing functions or ComObject
+00:33:07 <jborean93> no functions?
+00:33:08 <nitzmahone> ComObject's not horrible (at least in the win_shortcut case).
+00:33:10 <dag> but does show the various parameter types and options
+00:33:41 <dag> yeah, but you have to know about certain things to understand it IMO
+00:34:04 <nitzmahone> I'd say win_disk_image, but I have a big wad of unmerged stuff for that that will make it a lot more complex than it currently is (mount discovery, drive letter/path assignment, etc)
+00:34:10 <dag> that's why I thought win_uri was good, everybody understands what it does, and how it works
+00:34:40 <nitzmahone> Right, it's just not representative of what a typical module does (so the common patterns of sample state/evaluate/alter state aren't really there in the usual ways)
+00:35:06 <dag> jborean93: in the sense that you first have to figure out what's going on, I'd rather show a very simple example that doesn't need to much hand)holding for the task to achieve
+00:35:20 <nitzmahone> If we assume the n00b isn't familiar with writing modules to manage desired state in the general sense
+00:35:21 <dag> yeah, for win_uri I understand
+00:35:29 <dag> that was not the case I was making ;-)
+00:35:32 <jborean93> What about win_environment, doesn't have bool types but is pretty simple
+00:35:56 <dag> true
+00:35:57 <nitzmahone> I could get behind that- also easy to bolt on diff mode
+00:36:09 <jborean93> you would have to keep the .net stuff to handle expand strings though
+00:36:19 <jborean93> looks like dag has already done the diff mode stuff
+00:36:25 <jborean93> already halfway there
+00:36:29 <nitzmahone> oh noice
+00:36:36 * nitzmahone hadn't looked at it in awhile
+00:37:00 <nitzmahone> Yeah, I think that's about as simple as they come.
+00:37:29 <dag> maybe the diff-mode could be done prettier
+00:37:33 <dag> I don't know
+00:37:39 <nitzmahone> (though experimentation with that module could potentially leave the target host unmanageable, but ... don't do that ;) )
+00:37:46 <dag> hehe
+00:38:05 <dag> ok, I like win_environment
+00:38:06 <nitzmahone> +1 to win_environment as goal reference module
+00:38:20 <dag> so we have to annotate it, and make the docs top-notch
+00:38:32 <nitzmahone> #info we'll use win_environment as the reference module (after some cleanup/documentation additions)
+00:38:33 <dag> only str types
+00:38:35 <jborean93> yep but shouldn't be too hard, are you wanting to action that?
+00:38:42 <jborean93> that's the only downside
+00:38:44 <dag> no path, no bool
+00:39:08 <dag> but we could take a second module that has more functionality
+00:39:14 <nitzmahone> We can also have more than one, but let's use this as a "super simple complete module"
+00:39:25 <nitzmahone> Heh, mental jinx
+00:39:26 <dag> to show the different other types
+00:39:27 <jborean93> use win_uri for that :)
+00:39:37 <jborean93> or a stat module
+00:39:37 <nitzmahone> Sure- I'm all for that.
+00:39:39 <dag> nitzmahone: :)
+00:39:47 <dag> ok, I'll update the comment
+00:39:57 <dag> now, next question on my list, what about dict-type
+00:40:04 <dag> I need it for win_uri and win_nssm
+00:40:10 <jborean93> I prefer dict than psobject
+00:40:14 <nitzmahone> #action @dagwieers to propose "reference module" quality updates to win_environment
+00:40:14 <jborean93> keeps things more like Python
+00:40:29 <nitzmahone> Definitely- I can't think of a reason to marshal anything in as psobject
+00:40:52 <nitzmahone> If somebody wants to convert stuff inside their module, they can knock themselves out
+00:41:02 <dag> trondhindenes commented on this: https://github.com/ansible/ansible/issues/25265#issuecomment-306269909
+00:41:30 <dag> ok, I was thinking the same thing, but then again, I don't know powershell (or Windows devs) very well
+00:42:16 <dag> so the dict-type would still need to understand key-value pairs in a single string, I guess (for legacy mode)
+00:42:24 <nitzmahone> Yeah, we've pretty much standardized on PS dicts everywhere else, so I'm pretty sure we can patch up whatever's going on there.
+00:42:47 <jborean93> for the ones already using dicts, maybe we should deprecate that parameter in favour of a dict only one
+00:43:05 <nitzmahone> KV parsing at the playbook level is handled there, so I don't think that's an issue for is
+00:43:08 <nitzmahone> *us
+00:43:15 <nitzmahone> +1 to that
+00:43:52 <nitzmahone> Or leave the argname the same and implement legacy list/KV parsing with deprecation warnings (ala type='raw')
+00:43:58 <dag> Maybe come back to this on friday, if trondhindenes would attend
+00:44:15 <nitzmahone> Yeah, sounds good- wanna make an agenda entry to discuss Friday?
+00:44:20 <dag> nitzmahone: Yes, that's something I was considering as well
+00:44:41 <nitzmahone> We'll definitely need type=raw anyway.
+00:44:58 <nitzmahone> But use it for some of those polymorphic types instead of changing the module UI
+00:45:03 <dag> isn't no type, type raw ?
+00:45:19 <nitzmahone> It just means "whatever came in from the JSON"
+00:45:23 <nitzmahone> (no conversion)
+00:45:25 <dag> we pretty much don't do anything if there's no type (ans we cannot change that anyhow :-))
+00:45:36 <nitzmahone> slash coercion
+00:45:42 <dag> does python have type=raw ?
+00:45:46 <nitzmahone> yes
+00:45:51 <dag> ok, perfect
+00:45:52 <nitzmahone> It used to be the default until 2.2 IIRC
+00:46:00 <dag> then we need it too :p
+00:46:04 <nitzmahone> Now modules have to opt-in for that, otherwise IIRC it's type=string
+00:46:27 <dag> I wouldn't go that far, maybe a warning if a module doesn't specify a type
+00:46:35 <dag> I prefer strict typing over a default
+00:46:41 <nitzmahone> Yeah, I'm already doing that in the PS declarative argspec stuff
+00:46:59 <dag> right, when will that be available ?
+00:47:13 <dag> because all we're doing is overcoming the wait :p
+00:47:38 <nitzmahone> Depends on how much flogging I have to do for 2.3.2 and kerb message encryption, but hoping to have at least PRd for London if not merged to devel.
+00:47:49 <dag> oh !
+00:47:57 <nitzmahone> Also have to polish up my talk for London so I don't embarrass myself. :)
+00:48:06 <dag> let's move on, what about: https://github.com/ansible/community/issues/153#issuecomment-305660525
+00:48:22 <nitzmahone> (I have hard cutoff at the hour to drive to  rehearsal)
+00:48:43 <nitzmahone> Adding us as "namespace maintainers" works for me
+00:48:47 <jborean93> what are the benefits of doing this, I thought all maintainers in Windows are already there
+00:48:53 <jborean93> or does it give more rights somehow?
+00:49:07 <nitzmahone> (though I make no promises on increased bugfix velocity in community modules ;) )
+00:49:38 <nitzmahone> It's just kinda default bot notification list for modules that are ownerless in that namespace
+00:49:51 <jborean93> ok, I'm find with that then
+00:50:05 <dag> nitzmahone: we will be notified for windows-related modules
+00:50:11 <dag> sorru, jborean93
+00:50:15 <nitzmahone> Oh, speaking of that, jborean93 starts at Red Hat on this team in 3 weeks. :D
+00:50:16 <dag> but also, our shipits will count
+00:50:31 <dag> Whoaw, that's great news !
+00:50:33 <dag> well done :)
+00:50:41 <dag> both Red Hat and jborean93
+00:50:46 <nitzmahone> We're stoked
+00:50:58 <jborean93> dag: thanks, I'm pretty excited myself
+00:51:17 <nitzmahone> Jason says you're gonna be working out of Brisbane office some?
+00:51:25 <dag> jborean93: be prepared to be hammered by requests from me ;-)
+00:52:13 * jborean93 is prepared for all requests
+00:52:35 <dag> jborean93: I'll add you to the PR then too, and nitzmahone can approve :p
+00:52:43 <jborean93> nitzmahone: yep I'll be working from the office usually but will probably work from home some days as well
+00:52:57 <dag> PS I noticed that the win_iis* are unmaintained as well
+00:53:04 <nitzmahone> Good excuse to put on pants and have some degree of personal hygiene. ;)
+00:53:12 <jborean93> haha yep, I need some excuse
+00:53:22 <jborean93> I'm happy to take on the IIS stuff as well
+00:53:32 <jborean93> Been meaning to get some tests up and running and become more familiar with it
+00:53:36 <nitzmahone> There really are some on the team that have to go put on pants when we have video meeting (since he didn't once and stood up)
+00:53:53 <jborean93> haha
+00:54:08 <bcoca> you called?
+00:54:15 <nitzmahone> Heh, wondered if you were lurking
+00:54:38 <dag> :)
+00:54:40 <dag> https://github.com/ansible/ansibullbot/pull/560/files
+00:54:45 <nitzmahone> I wasn't going to throw you under the bus, but since you climbed under there voluntarily... ;)
+00:55:00 <dag> BTW we can reduce the MAINTAINERS.txt file if we dropped the extension for the windows modules
+00:55:14 <jborean93> I probably won't get to looking at them until the end of the month though
+00:55:29 <bcoca> dag: or allow globing
+00:55:47 <nitzmahone> boo, I don't have commit on the bot repo anymore
+00:56:00 <dag> bcoca: and a different parent to satrt from !
+00:56:15 <bcoca> we need to migrate that file
+00:56:48 <nitzmahone> dag: WRT docs stuff, I think that'd be a great breakout topic for contributor summit unless we talk about it sooner. I don't think any of the docs folks will be there, but theoretically we can write content and they'll clean it up for us
+00:57:01 <nitzmahone> bcoca: agreed- should live in our repo, not bot's!
+00:57:36 <bcoca> nitzmahone: or it's true home .. in our hearts!
+00:57:42 <dag> nitzmahone: yeah, that's fine
+00:58:13 * jborean93 will be back after fighting the Skynet uprising starting from ansibot
+00:58:16 <nitzmahone> OK, 2 minutes left, any other burning (and short) topics?
+00:58:26 <jborean93> I'm all good
+00:59:04 <nitzmahone> OK, have a great $time_in_your_region, see y'all around!
+00:59:20 <nitzmahone> #endmeeting

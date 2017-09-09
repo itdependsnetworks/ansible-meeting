@@ -1,0 +1,236 @@
+17:00:17 <gundalow> #startmeeting Testing Working Group
+17:00:17 <zodbot> Meeting started Thu Feb 23 17:00:17 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+17:00:17 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+17:00:17 <zodbot> The meeting name has been set to 'testing_working_group'
+17:00:22 <gundalow> #chair gundalow mattclay
+17:00:22 <zodbot> Current chairs: gundalow mattclay
+17:00:27 <gundalow> #topic Open Floor
+17:00:32 * mattclay waves
+17:00:35 <gundalow> Agenda as always is https://github.com/ansible/community/issues/114
+17:00:57 <gundalow> #info Ansible Core 2.1.5RC1 and 2.2.2RC1 are available for testing https://groups.google.com/forum/#!topic/ansible-devel/VnHIVtzuyzs
+17:00:59 * allanice001 waves again
+17:01:17 <gundalow> allanice001: hey :)
+17:01:50 <gundalow> Nothing else on the agenda today, we are all busy working on Ansible 2.3
+17:02:44 <dag> When is Ansible 2.3 due ?
+17:02:59 * bcoca pushes date a week
+17:03:17 <allanice001> modules freeze in ~ a week I beleive
+17:03:26 <allanice001> Core is frozen now
+17:04:18 <allanice001> My guesstimate would be April
+17:06:47 <ryansb> I thought we were targeting RC's right after module freeze, is that not the case?
+17:07:34 <allanice001> I understood a minimum of 2 weeks for module freeze, but I may be wrong
+17:08:27 <allanice001> (With RC's at end of Module freeze)
+17:10:01 <dag> I expect the issue/PR backlog has not shrunk this cycle :-/
+17:10:36 <dag> not sure what we can do to engage the community more/better
+17:11:03 <bcoca> clone module
+17:12:07 <allanice001> I'm working in our org to get more peeps involved at community level
+17:13:31 <allanice001> but, is there a way we can open up merges to certain community members ?
+17:14:01 <allanice001> Core is not growing at a rapid enough speed to cope with all issues & PR's
+17:14:14 <allanice001> In my opinion that is
+17:14:30 <mattclay> With the bot handling shipit, I don't think the issue is merge privileges.
+17:14:44 <mattclay> It doesn't take much effort to find PRs marked shipit and merge them.
+17:14:54 <mattclay> It's getting the PRs to shipit that seems to be the issue.
+17:15:09 <bcoca> the problem is most PRs wait for core to review them
+17:15:25 <allanice001> Are the shippable issues still with us?
+17:15:46 <bcoca> for most, core should only be doing final check
+17:16:00 <mattclay> Shippable has improved, and more fixes are coming this weekend. I've been staying on top of re-running CI as issues pop up.
+17:16:11 <allanice001> +1 bcoca
+17:17:06 <gundalow> It's reviews
+17:17:40 <gundalow> That's why we are putting in more CI tests to reduce the amount of human time needed to review
+17:17:44 <bcoca> tests will never remove the need for reviews
+17:17:46 <gundalow> (well one of the reasons)
+17:17:55 <gundalow> I didn't say that
+17:17:57 <bcoca> they might reduce the time (most time they catch stuff i dont)
+17:18:04 <gundalow> exactly
+17:18:07 <bcoca> gundalow: i saw, i blame irc lag
+17:18:12 <gundalow> :)
+17:18:49 <allanice001> have you guys looked at the way openstack handles it?
+17:19:02 <bcoca> but they are good 'litmus' for us to review something or not, if it doesn't pass tests ... tend to skip unless author pinged me about test failure being unrelated
+17:19:13 <allanice001> They use gerrit, and certain community members can +1 a reveiw
+17:19:30 <bcoca> allanice001: our is very similar, gerrit asside
+17:19:46 <bcoca> gerrit really does not add ' more members that can review'
+17:19:48 <allanice001> Which equate to a shirt in our world
+17:19:55 <bcoca> shipt == +1
+17:20:02 <allanice001> shipit
+17:20:07 <allanice001> yuup
+17:20:12 <bcoca> idk, i liked your first spelling more
+17:20:19 <allanice001> :D
+17:20:31 <allanice001> autocorrect
+17:20:34 <bcoca> another issue is that not all reviewers are equal, many dont even check that module passes guidelines
+17:21:06 <bcoca> and even fewer worry about interface, normalization, code reuse, etc
+17:21:49 <ericsysmin> If only every single module required CI
+17:22:36 <allanice001> ericsysmin, something to consider enforcing, perhaps
+17:22:45 <allanice001> No testy == no mergy
+17:22:58 <gundalow> That would be a good way to stop new modules coming in
+17:23:11 <mattclay> I've seen plenty of shipits on PRs which fail tests for valid reasons
+17:23:35 <mattclay> So for some in the community, shipit is being used for "I want this" instead of "it's good to merge"
+17:24:03 <ericsysmin> allanice001: that's what is being pushed for supported module guidlines according to what we've been told by thaumos
+17:24:10 <allanice001> Agreed mattclay
+17:24:24 <bcoca> who tests the tests?
+17:24:36 <bcoca> cause i can make a crappy module and even crappier tests it passes
+17:24:44 <ericsysmin> hahahahahahah!!!!! true
+17:24:45 <mattclay> Requiring tests is nice, but then there's the question of how much testing is required and how to measure it. Then there's the issue of what to do when those tests can't be run on CI.
+17:24:56 <allanice001> raise the bar
+17:25:04 <bcoca> mattclay: which goes back to my statement 'not all reviewers are equal'
+17:25:12 * mattclay nods
+17:25:13 <allanice001> Minimum requirement could be set to 50% coverage
+17:25:16 <ericsysmin> you mean like these, which are syntax checks basically. https://travis-ci.org/avinetworks/ansible-role-avicontroller/jobs/204001908/config
+17:25:37 <bcoca> alikins: coverage? i have modules that only have main ... no objectes/methods/functions
+17:25:54 <bcoca> ^ allanice001
+17:25:57 <allanice001> And if bar is already higher (say module has 70% coverage) that needs to be met at a minimum
+17:25:57 <ericsysmin> A lot of modules need special requirements for CI to work, of which some people don't have Jenkins, etc, setup for
+17:26:18 <bcoca> i submit a cisco module for a model that is 200k to buy ... gl with tests
+17:26:27 <ericsysmin> yep
+17:26:43 <mattclay> Requiring code coverage would require unit tests for modules which can't run integration tests in CI. We don't have many modules with unit tests, and even fewer with good ones.
+17:26:48 <ericsysmin> hence why i wish other vendors would take ownership
+17:27:23 <allanice001> bcoca, I get your point
+17:27:38 <allanice001> But how many companies are using Cisco day to day?
+17:27:51 <allanice001> lots and lots
+17:28:11 <allanice001> And a lot of those have that 200K module
+17:28:14 <mikedlr> getting the mocking working much better for the unit tests would be really helpful.   mostly recipes that actually work.
+17:29:14 <mikedlr> for AWS it's impractical to run the tests against the real system - I have functional tests that mach my environment and develop using those,
+17:29:33 <gundalow> So in the case of networking modules, for the 6 important modules we run integration tests locally, and are slowly getting them running in AWS
+17:29:36 <ryansb> mikedlr: I'm working on making placebo test harnesses for the AWS modules
+17:29:42 <mikedlr> but I wouldn't run anything that was doing changes even against our dev environment.
+17:29:44 <bcoca> mikedlr: until you run into 'bad mocking'
+17:29:46 <ryansb> so that should help significantly with your mocking sadnesses
+17:29:54 <gundalow> Though a number of our partners do have integration tests that they run locally against their switches/royters
+17:29:57 <gundalow> routers*
+17:30:16 <bcoca> ^ but we have to 'trust' them, same with many other modules, there is no 'one solution fits all'
+17:30:19 <ryansb> mikedlr: https://github.com/ansible/ansible/pull/21253
+17:30:24 <bcoca> ^ everyone would be using it!!!
+17:30:31 <mikedlr> ryansb: that would be interesting, but I think you need manual mocks, placebo and moto  in different places.
+17:31:07 <mikedlr> I don't really know if I have a practical easy way to get the recordings that placebo wants, but it's easy to understand what AWS API spec I am using
+17:31:32 <ryansb> Do you have an AWS account where you can run your integration test playbook?
+17:31:59 <ryansb> if so, you can use a placebo test in that env to record that environment, then save that recording to turn them into unit tests
+17:32:15 <ryansb> it's pretty nifty (though you're right, not a solution for every case)
+17:32:23 <mikedlr> sort of;  I have three available;  production (obviously not :-) / development / sort of spare.
+17:33:23 <mikedlr> so the solution may be good, but then my experience with full recordings is they become brittle when the interface spec changes so I'd edit the anyway
+17:33:30 <allanice001> A lot of was api is refactored for open stack, I beleive
+17:33:50 <allanice001> especially the ec2 side
+17:34:09 <ryansb> The AWS API is quite stable, so recordings fit pretty well
+17:34:19 <mikedlr> but think about boto vs boto3  - the recording would change lots, but the function would be the same.
+17:34:22 <allanice001> Could we use a small open stack env somewhere?
+17:34:25 <bcoca> it is now, used to not be
+17:34:30 <ryansb> oh, placebo doesn't do boto at all
+17:34:33 <bcoca> used to make docker look like slow moving
+17:34:33 <ryansb> boto3 only
+17:34:59 <bcoca> but that solves aws (which is really big chunk of use base) but not all APIs
+17:35:11 <bcoca> and not for old modules
+17:35:23 <ryansb> We're slowly rewriting the old modules to boto3
+17:35:28 <mikedlr> moto would probably be right in that case - it mocks the actual endpoints at the socket level.
+17:35:29 <bcoca> i know
+17:35:30 <ryansb> so it will eventually solve old modules as well
+17:35:48 <bcoca> just pointing out that this is a process and that each group of modules needs to be handled in slightly diff way
+17:35:54 <bcoca> no overarching solution (i wish)
+17:36:15 <ryansb> haha, if there was an overarching solution for testing, we'd already have it implemented
+17:37:09 <bcoca> everyone would
+17:37:12 <mikedlr> I have a bad feeling that all three ways (and more?) should really be used.. ;-)
+17:37:20 <bcoca> but even that does nto fix the review issue
+17:37:38 <allanice001> no, it doesnt
+17:37:48 <bcoca> mikedlr: and time dedicted to testing means < time for review and new features, hard to find right balance
+17:37:53 <allanice001> So, how do we get more trusted eyes as reviewers?
+17:38:01 <bcoca> no testing == more bugs, less review time, less features
+17:38:12 <bcoca> sweet spot varies per project/community
+17:38:32 <bcoca> allanice001: eternal question, normally you have people from community step up
+17:38:35 <gundalow> * What makes a good review
+17:38:42 <bcoca> we've had some very good ones, but not a lot of em
+17:38:44 <mikedlr> very easy examples of how to set up tests will mean less reviews because more things will fail in testing and arrive at better quality.
+17:38:54 <bcoca> gundalow: that alone is loaded question
+17:39:01 <gundalow> bcoca: yup
+17:39:23 <gundalow> I'm about to run off to eat after 4324 hours of meetings, so I don't have any brain power for that now
+17:39:33 <gundalow> though I think that's something we should put some thought into
+17:39:36 * gundalow -> not here
+17:39:44 <bcoca> for example, i'm a lot more meticulous about interface than the code, the first is very hard to ammend once in use, the latter is normally easy
+17:40:58 <thaumos> wait but @gundalow you forgot our meeting
+17:41:10 * thaumos kids
+17:41:39 <allanice001> mattclay can chair I think
+17:41:44 * mattclay nods
+17:41:52 <ryansb> mikedlr: I agree, that's one of the things I'm going to add to the docs for AWS modules is a simple skeleton for placebo-based tests once I've written a few
+17:42:26 <ryansb> because IMO placebo is the best effort-to-accurate-tests ratio
+17:43:50 <allanice001> Extend the placebo skeletons to this - https://github.com/privateip/ansible-spec ?
+17:45:54 <mikedlr> ryansb: would be very useful especially if it carefully set up the test runner to, as closely as possible, match shippable.
+17:46:33 <sivel> damn, I am sucking at making these meetings today
+17:46:44 <sivel> too much day job going on
+17:46:47 <mattclay> mikedlr: What do you mean by having the test runner match Shippable?
+17:48:21 <ryansb> There wouldn't be a test runner, it's just pytest & a custom placebo fixture
+17:48:32 <mikedlr> I mean that working out what the shippable environment currently is - modules installed / python version etc , correct args to pytest and
+17:48:52 <mikedlr> making it as easy as possible to have a very similar environment locally to that failures can be reproduced.
+17:49:16 <mattclay> mikedlr: Have you looked at test/runner/ansible-test yet?
+17:49:32 <ryansb> That's not really a part of placebo, tbh, but I can see where you're coming from
+17:49:36 <mattclay> That's our test runner for running tests locally and on Shippable.
+17:49:38 <mikedlr> yes;  I ran tests with that ; I understand it as a wrapper around pytest.
+17:50:13 <mikedlr> maybe I missed it, but I'm not sure if shippable gives you an easy way to see the environment a test failed in.
+17:50:39 <mattclay> What environment information are you looking for?
+17:51:08 <allanice001> it should work similarly to travis - you can dive into a failure
+17:51:11 <mikedlr> no - doesnit'
+17:51:29 <mattclay> Doesn't what?
+17:51:31 <mikedlr> you have the test failure page and it shows you the function that failed, but it doesn't say which test run it's in .
+17:51:46 <mattclay> mikedlr: Have you looked at the Shippable console logs?
+17:51:53 <mikedlr> so you have to look back at the test list and scroll carefully back to the top of the console log
+17:52:15 <mikedlr> e.g. this  https://app.shippable.com/runs/58aca6c685f0850f0040caac/2/tests
+17:52:26 <mattclay> The test tab has most of the details on the tests (except python version).
+17:52:58 <mikedlr> could say "failure whilst running 'pytest pthon-version=2.6 tests=units' ....
+17:53:19 <mattclay> That output comes directly from pytest at the moment.
+17:54:46 <mattclay> I don't know if pytest supports adding additional info to the junit output. If it doesn't, we'd need to modify the output to include additional details.
+17:55:37 * allanice001 gotta go in 5 minutes
+17:56:02 <mattclay> mikedlr: Is it just the python version that you're missing from the tests tab on Shippable?
+17:56:43 <mikedlr> that's the thing I noticed though I think maybe library versions (especially test?) would be important.  I made the nasty discovery that
+17:57:43 <mikedlr> assert_called_once() exists as a new function that can fail in the newest version of unittest.mock but will always pass (as a mocked function) on older versions..  version info _might_ have helped there.
+17:58:31 <sivel> if you run the tests with the --tox argument, it will install the deps for you
+17:58:37 <sivel> or with --docker
+17:59:27 <mattclay> Right now the best place to get that information is the console log. Getting it into the junit output for showing on the tests tab would only work for failures.
+18:02:01 * gundalow returns
+18:04:08 <mikedlr> I'll have a look more and maybe make a more coherent comment  ... possibly to a proposal.
+18:04:51 <mikedlr> starting writing tests from low knowledge of ansible internals is not easy
+18:07:30 <allanice001> mikedlr, which is why I suggested adding it to https://github.com/privateip/ansible-spec perhaps
+18:07:51 <mikedlr> +1
+18:08:18 <gundalow> The next thing on my documentation list is argspec
+18:08:36 <allanice001> #info <mikedlr> starting writing tests from low knowledge of ansible internals is not easy
+18:08:45 <allanice001> #info <allanice001> mikedlr, which is why I suggested adding it to https://github.com/privateip/ansible-spec perhaps
+18:08:58 <gundalow> #chair allanice001
+18:08:58 <zodbot> Current chairs: allanice001 gundalow mattclay
+18:09:10 * gundalow can't remember if only chairs can #info
+18:09:14 <mikedlr> allanice001: but also put a reference into https://docs.ansible.com/ansible/dev_guide/developing_modules.html
+18:09:21 <mikedlr> for ansible-spec.
+18:09:38 <allanice001> And again ...
+18:09:40 <allanice001> #info <mikedlr> starting writing tests from low knowledge of ansible internals is not easy
+18:09:48 <allanice001> #info <allanice001> mikedlr, which is why I suggested adding it to https://github.com/privateip/ansible-spec perhaps
+18:09:57 <gundalow> allanice001: don't you have training now?
+18:10:26 <allanice001> Bungalow, ears work separately to eyes
+18:10:28 <allanice001> :P
+18:10:35 <allanice001> Plus theres a recording
+18:10:40 <gundalow> ACK
+18:10:46 <allanice001> #info https://docs.ansible.com/ansible/dev_guide/developing_modules.html
+18:11:35 <gundalow> #info gundalow is working on rewriting most of https://docs.ansible.com/ansible/dev_guide/developing_modules.html and it's subpages, so please speak to him before you make any changes - to avoid waisted effort
+18:12:01 <allanice001> thats really starting to shape up nicely
+18:12:14 <allanice001> gundalow, ^
+18:12:18 <gundalow> Thanks :)
+18:12:45 <allanice001> mikedlr, sivel , mattclay - should we #info the placebo test ideas ?
+18:13:44 <sivel> gundalow: I just submitted a PR that is in alignment with the dev modules (again) :)
+18:14:23 <gundalow> sivel: Oh, did my docs change it from your previous code, appologies, that wasn't deliberate
+18:14:35 <sivel> No, I submitted a new check to validate-modules
+18:14:38 <sivel> https://github.com/ansible/ansible/pull/21863
+18:14:56 <sivel> that goes along with the rewrite and whatnot
+18:15:19 <sivel> I'm keeping you busy, by extending the checks :)
+18:15:31 <gundalow> sivel: Checks FTW
+18:16:43 <mikedlr> allanice001: ryansb should answer that.
+18:17:15 <mikedlr> I can't comment till I manage to experiment with it properly.
+18:20:10 <allanice001> Would it be worth adding a --dryrun tag to the aws modules ?
+18:20:14 <ryansb> allanice001: not really, I'm still working on them, so don't need external comment
+18:20:36 <ryansb> allanice001: how would that be different from check mode?
+18:20:37 <allanice001> I forgot that it exists, and works like their version of expect
+18:22:05 <allanice001> it's in AWS api stack, so wouldn't actually create / destroy resource
+18:24:51 <ryansb> I'm not sure how useful that is, since other API calls in the module would fail when describing the resource they dryrun-created
+18:25:39 <allanice001> Was thinking of using it to build a dynamic placebo
+18:27:00 <ryansb> I would not recommend that strategy
+18:27:43 <allanice001> Was a thought, that mutated its way to my keyboard
+18:27:51 <allanice001> Didn't say its a good one :D
+18:27:54 <ryansb> placebo should just be in tests, so we shouldn't modify modules to make them recordable on their own, because then there'd be no test harness around them
+18:33:09 <allanice001> ok.
+18:33:23 <gundalow> Anything else?
+18:33:25 <allanice001> Anything else, or should we wrap up ?
+18:33:34 * gundalow hifives allanice001
+18:33:43 * allanice001 hifives back
+18:34:13 <bcoca> meaning of life
+18:34:53 <allanice001> Bcoca, in ansible terms, it's an eternal playbook
+18:35:19 <gundalow> #endmeeting

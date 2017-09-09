@@ -1,0 +1,199 @@
+17:00:42 <gundalow> #startmeeting Testing Working Group
+17:00:42 <zodbot> Meeting started Thu Aug 18 17:00:42 2016 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+17:00:42 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+17:00:42 <zodbot> The meeting name has been set to 'testing_working_group'
+17:00:49 <gundalow> #chair gundalow mattclay
+17:00:49 <zodbot> Current chairs: gundalow mattclay
+17:00:54 <rcarrillocruz> o/
+17:00:55 <gundalow> #topic Roll call
+17:00:56 <gundalow> Who is here?
+17:01:01 <rcarrillocruz> helo helo
+17:01:01 * gundalow looks around
+17:02:00 <gundalow> rcarrillocruz: shertel hey :)
+17:02:13 <shertel> hello :)
+17:02:41 <gundalow> #topic Agenda https://github.com/ansible/community/issues/114#issuecomment-239769027
+17:02:44 <linuxdynasty> hello
+17:02:49 * mattclay waves
+17:03:03 <gundalow> #info Agenda for todays meeting is https://github.com/ansible/community/issues/114#issuecomment-239769027
+17:03:27 <gundalow> #topic Introductions
+17:04:03 <gundalow> So I've met a number of you here in #ansible-devel/meeting before and people that were at SanFran or the Contributors summit
+17:04:25 <linuxdynasty> yep yep
+17:04:26 <gundalow> Thanks for taking the time to join our first Testing Working Group meeting. Something we've all been lucking forward to for a while
+17:04:35 <gundalow> linuxdynasty: hey :)
+17:04:51 <linuxdynasty> sup :)
+17:04:53 <gundalow> I'd like to introduce mattclay
+17:05:09 <gundalow> mattclay: Would you please introduce yourself :)
+17:05:45 <mattclay> Hello everyone. I'm glad to see there's some interest from the community in improving our testing.
+17:06:02 <linuxdynasty> OH YEAAA. TESTING TESTING!!!
+17:06:43 <mattclay> If you haven't noticed from the 2.2 roadmap already, we have an increased focus on testing for this release cycle.
+17:07:08 <mattclay> I've been focusing on improving testing, mostly in areas around our CI setup.
+17:07:44 <gundalow> We will go through the above in a little more detail later, mattclay's been doing lots of good stuff there
+17:07:46 <mattclay> The most noticeable example, if you've been submitting or looking at PRs, is our move from Travis to Shippable.
+17:07:53 <rcarrillocruz> yup
+17:08:40 <gundalow> mattclay: cool, thanks
+17:09:23 <gundalow> Who from the community side would like to introduce themselves?
+17:09:44 * gundalow looks at shertel linuxdynasty rcarrillocruz
+17:09:54 <rcarrillocruz> i can
+17:09:55 <shertel> <is core>
+17:10:02 <rcarrillocruz> so, i work in openstack
+17:10:10 <rcarrillocruz> i'm a member of the openstack infra team
+17:10:20 <rcarrillocruz> so I do quite a bit of CI and automation stuff
+17:10:42 <rcarrillocruz> we use Zuul, and I heard there are plans to use Zuul and Ansible owning and infra
+17:10:47 <gundalow> yes!
+17:11:00 <rcarrillocruz> so i can help with that or whatever towards that goal
+17:11:13 <rcarrillocruz> :-)
+17:11:23 <gundalow> I believe the Zuul development team have some work they need to do first then we have lots of fun to look forward to
+17:11:29 <rcarrillocruz> yep
+17:11:52 <linuxdynasty> I work at Anki
+17:12:04 <supertom> Intro: Hey folks, I'm with Google, and looking to not only increase the coverage in our own modules, but possibly offer support and resources elsewhere.
+17:12:19 <gundalow> #info For people that don't know Zuul is part of the CI framework that OpenStack use - http://inaugust.com/talks/zuulv3.html#/  & https://specs.openstack.org/openstack-infra/infra-specs/specs/zuulv3.html
+17:12:20 <linuxdynasty> I'm in charge of all the things automation and infrastructure at Anki
+17:12:44 <linuxdynasty> I am a active AWS module developer, since we are an AWS shop
+17:13:35 <shertel> I'm an intern with the Ansible core team. I'm a college student and still more or less a noob- still learning about everything.
+17:13:37 <gundalow> excellent
+17:13:45 <shertel> I wrote some smoke testing for the galaxy cli.
+17:13:50 <linuxdynasty> supertom: you were at the developer conference correct?
+17:14:06 <supertom> in SF?  Yes.
+17:14:12 <linuxdynasty> ahh yeah I remember you :)
+17:14:43 <linuxdynasty> Nice to meet you shertel
+17:14:52 <shertel> Likewise!
+17:14:54 <gundalow> Shameless plug, Do remember to sign up for AnsibleFest in Brooklyn on 11th October https://www.ansible.com/ansiblefest
+17:15:15 <gundalow> Great, I was hoping some people would have met each other before
+17:15:16 <supertom> uh-oh....
+17:15:20 <linuxdynasty> I did, I want to speak again but this time longer than 25 minutes on building reusable roles
+17:15:39 <linuxdynasty> but even if accepted not sure if company will sponsor
+17:15:42 <linuxdynasty> but we  will see ;)
+17:15:55 <gundalow> :)
+17:16:17 <mattclay> I should have mentioned earlier, I'm on the Ansible core team as well.
+17:16:23 <gundalow> oh, me too :)
+17:16:31 <mattclay> 3 months now
+17:16:44 <mattclay> :)
+17:16:58 <gundalow> So I've been a contributer for quite a while, however I offically joined Ansible ~5 weeks ago
+17:17:08 <rcarrillocruz> erm, yeah, forgot to mention that i'm one of the maintainers of the openstack modules
+17:17:18 <rcarrillocruz> so happy to improve testing and stuff in that area
+17:17:45 <gundalow> So, so that's good to see some maintainers, developers and vendors represented here
+17:17:51 <gundalow> so I guess that's introductions done
+17:18:11 <gundalow> #topic Purpose
+17:18:20 <linuxdynasty> so 1st things 1st we all should be providing tests with all of our PR's
+17:18:22 <linuxdynasty> all agree ;)
+17:18:30 <gundalow> +10000000000000
+17:18:53 <mattclay> linuxdynasty: That will be so much easier once we have everything in one repo.
+17:19:07 <gundalow> So, for this to work best we (Ansible/Red Hat) are looking at how we can help you do great things
+17:19:36 <gundalow> And as you'd expect, enabling and making it a lot easier to do testing is one of the best ways we can do that
+17:20:16 <gundalow> As mattclay pointed out we currently have code split across three different GitRepos (ansible/{ansible,ansible-modules-core,ansible-modules-extras}
+17:21:03 <gundalow> which is a pain, so all three of those will be merged into one repo which means Ansible, module_utils, modules and all tests will live in the same code base
+17:21:32 <gundalow> Which means when you raise a PR to extend/change/create something you will get relevant tests run against it
+17:21:37 <supertom> Tests, meaning, what specifically?  Integration and/or unit tests?
+17:21:46 <gundalow> supertom: ALL :)
+17:22:28 <gundalow> Static analysis (pep8/pylint/ansible-validate-modules) unit, and integration/functional
+17:22:29 <supertom> OK, so, I'm not familiar with how to submit the unit tests, specifically?  Any runners required, certain directory locations, etc?
+17:22:45 <supertom> Is there info on that?
+17:23:01 <mattclay> Running the tests for PRs isn't too bad now. The problem is it takes multiple PRs to submit code changes and tests since they currently reside in different repos.
+17:23:10 <abadger1999> unittests we use nose but patches have been accepted to make py.test work too.
+17:23:21 <mattclay> Once the repos are merged, you can include code changes and updated/new tests in a single PR.
+17:23:34 <abadger1999> The unittests mostly hinge on unittest.TestCase.
+17:23:57 <abadger1999> directory is in the main ansible/ansible repo test/units/
+17:24:37 <mattclay> Same for integration tests, but they are in test/integration/
+17:24:48 <abadger1999> unittesting many modules is not very easy -- but refactoring of individual modules can help (i've just refactored core/files/stat.py so that it should be easier to unittest it)
+17:24:53 <supertom> OK, thanks @abadger1999, @mattclay
+17:24:55 <rcarrillocruz> what are the patterns for integration testing
+17:25:02 <mattclay> The integration tests are usually written using Ansible playbooks.
+17:25:03 <rcarrillocruz> i mean, let's say amacon ec2 for create a server
+17:25:12 <linuxdynasty> once we show the community some good examples of modules that do not write everything in main
+17:25:16 <rcarrillocruz> how you test things against a test cloud that the create server works?
+17:25:18 <linuxdynasty> more modules will be unit testable ;)
+17:25:28 <abadger1999> linuxdynasty: <nod>  +1
+17:26:08 <linuxdynasty> rcarrillocruz: I have een hard coding the mock testing :(
+17:26:23 <linuxdynasty> which I hate but I am going to look into using placebo or moto for aws
+17:26:30 <linuxdynasty> here is an example of what I am doing today
+17:26:31 <linuxdynasty> https://github.com/linuxdynasty/ansible-modules-extras/blob/de8af54c76386b05204ce7072a971f6066232b47/test/unit/cloud/amazon/test_ec2_vpc_nat_gateway.py
+17:26:32 <rcarrillocruz> i see, so mocking...
+17:26:38 <mattclay> rcarrillocruz: Currently we don't run integration tests during CI if they require external services which aren't free, although a developer can run them locally.
+17:26:54 <rcarrillocruz> gotcha, thanks
+17:27:14 <mattclay> That is something I'll be looking at in the future though.
+17:27:18 <rcarrillocruz> i wondered if tehre was some sort of a eucalyptus stuff run in the CI to run tests against a 'real' cloud for example
+17:27:19 <linuxdynasty> You can see in this module where I write the mock
+17:27:19 <linuxdynasty> https://github.com/linuxdynasty/ansible-modules-extras/blob/de8af54c76386b05204ce7072a971f6066232b47/cloud/amazon/ec2_vpc_nat_gateway.py
+17:27:24 <rcarrillocruz> ++
+17:29:18 <linuxdynasty> mattclay: or gundalow if we can put some examples of well written modules in the docs section, I think that would be a great 1st step into introducing the community into testing
+17:29:28 <gundalow> linuxdynasty: Already made a note :)
+17:29:41 <linuxdynasty> from our last convo in san fran :P
+17:30:15 <gundalow> Thank you for the suggestion. I think we can improve a lot of stuff by working on decent documentation and realistic examples
+17:30:35 <gundalow> So I've defined the purpose of this group ad
+17:30:39 <gundalow> as*
+17:30:45 <gundalow> Publicise the testing roadmap and correlate feedback from the community
+17:30:50 <gundalow> Fast track community PRs that are aligned with the Testing Strategy
+17:30:56 <gundalow> Fast track functional (new modules, bug fixes) PRs that have tests
+17:31:00 <gundalow> Make it easier to add/extend tests
+17:31:05 <gundalow> Be the centralised place for feedback for all things testing related
+17:31:08 <gundalow> and--
+17:31:14 <gundalow> ffs, not adn
+17:31:21 <gundalow> *cough*
+17:32:05 <gundalow> So, do people think the above is OK for an initial stab at the purpose of this group?
+17:32:12 <rcarrillocruz> sounds sensible to me
+17:32:19 <shertel> +1
+17:32:33 <gundalow> Obviously it will grow and evolve over time as we learn more
+17:33:04 <gundalow> cool
+17:33:22 <linuxdynasty> rcarrillocruz: and supertom does the openstack and google gce have ratelimiting errors like AWS in place?
+17:33:35 <gundalow> Feedback on any of this welcome at anytime, we're here to help you
+17:34:02 <supertom> @linuxdynasty: yes
+17:34:09 <gundalow> #topic What's planned for 2.2 https://github.com/ansible/ansible/blob/devel/docsite/rst/roadmap/ROADMAP_2_2.rst
+17:34:23 <linuxdynasty> I wrote this PR https://github.com/ansible/ansible/pull/17039 which has a base class called CloudRetry with a use case for AWSRetry based on a simple backoff algorithm that will work when an exception like LimitExceeded is encountered or eventual consistency
+17:34:34 <rcarrillocruz> not to my knowledge
+17:34:59 <linuxdynasty> so my question is could any of you implement CloudRetry for the provider you are working for, if you have those use cases in place
+17:35:40 <linuxdynasty> we can take that off subject
+17:35:48 <Shrews> ohai!  /me late to the party
+17:36:17 <gundalow> Shrews: Hello (John Barker (the Brit), we were chatting about Zuul in SanFran
+17:36:27 <Shrews> gundalow: yup, i remember  :)
+17:36:30 <gundalow> linuxdynasty: We can return to that and the end if that's OK?
+17:36:48 <linuxdynasty> ofcourse
+17:36:49 <gundalow> On https://github.com/ansible/ansible/blob/devel/docsite/rst/roadmap/ROADMAP_2_2.rst if you go down towards the end and look at the section "Infrastructure Buildout and Changes (Matt Clay)" you can see what mattclay has been working on and what has been *Done* already
+17:38:06 <gundalow> mattclay has already talked about some parts on that. If you've not seen ROADMAP_2_2.rst it's a good place to see what we are planning. Its in the public so you guys can give feedback (in #ansible-devel or #ansible-meeting)
+17:39:50 <gundalow> Obviously we are towards the tail end of 2.2. The 2.3 ROADMAP will get announced on the Google Mailing list when we have one
+17:40:20 <gundalow> #topic Poll
+17:41:13 <gundalow> So, as we have a decent representation of contributors and partners here it would be good to get some feedback on what *you* think should be the focus
+17:41:32 <gundalow> I'm sure there are lots of smaller things that we can do that will make it a lot easier
+17:41:50 <gundalow> for example the documentation update that linuxdynasty suggested
+17:42:05 <rcarrillocruz> best practices would be good
+17:42:14 <rcarrillocruz> tooling to use for tests
+17:42:29 <rcarrillocruz> patterns for integration testing (i got from mattclay ansible playbooks) etc
+17:42:41 <gundalow> so I'm going to hand over to https://public.etherpad-mozilla.org/p/ansible-testing-working-group
+17:42:56 <linuxdynasty> Accepted 3rd party modules for mock testing (Until Ansible gets an environment for each provider )
+17:43:13 <linuxdynasty> AWS, GCE, CloudStack, Azure, etc..
+17:43:14 <gundalow> so if people can spend a couple of minutes adding stuff on onto there we can then go through and flesh out
+17:43:34 <gundalow> So I'll give you 5 minutes to all add stuff onto https://public.etherpad-mozilla.org/p/ansible-testing-working-group
+17:43:44 <gundalow> :)
+17:47:06 <gundalow> There are more people that rcarrillocruz and Allen here :)
+17:48:39 <gundalow> Anyone else got anything, if not we can go through
+17:49:11 <gundalow> So if people can please add (+1/-1) next to items you think are a priority. If you think something shouldn't be done (rather than is a lower priority) please add "-1"
+17:49:18 <gundalow> on https://public.etherpad-mozilla.org/p/ansible-testing-working-group
+17:51:48 <supertom> I actually need to run, but I'm +1 on it in general from what I see.
+17:52:20 <gundalow> supertom: Thank you for your time, please subscribe to https://github.com/ansible/community/issues/114 to be kept in the loop.
+17:52:43 <supertom> done, thanks everyone!
+17:53:17 <gundalow> Cool. So it's good to see that people are now happier with the speed of tests (2*-1)
+17:53:37 <alikins> (late introduction due to pdb induced tunnel vision...) I'm Adrian LIkins from Red Hat on the ansible core team. I like tests because I break things.
+17:53:52 <gundalow> alikins: :)
+17:54:36 <gundalow> Shrews: You've asked a good question about pep8. We define pep8ish as pep8 -r  --ignore=E501,E221,W291,W391,E302,E251,E203,W293,E231,E303,E201,E225,E261,E241,E402
+17:55:28 <Shrews> So is that run on the code now? Or is that proposed?
+17:55:47 <gundalow> What I'd like to do, and what I plan to do for ansible-modules-core/network/ (because I own that) is to get the vendor directories under that to be "pep8ish" compliant. This is even more important for the Network Modules (ansible.com/network) as we don't currently have any CI tests
+17:56:17 <gundalow> So initially it would be black/whitelist of directories to check.
+17:56:37 <gundalow> We do something similar with checking for Python3 compatability
+17:56:49 <gundalow> Shrews: proposed
+17:56:56 <bcoca> gundalow: iirc the pep8sh tests should already be there
+17:57:13 <Shrews> yeah, b/c you can't just turn that on for everything. doing it piecemeal sounds right
+17:57:40 <gundalow> bcoca: I've not seen them, they might be there, but not enabled at the moment?
+17:57:53 <bcoca> well, most existing modules are excluded, they probably only affect new submissions
+17:58:01 <gundalow> ah, yes
+17:58:04 <bcoca> @mattclay ^ or am i totally wrong?
+17:58:47 <mattclay> We have our pep8ish tests, but I don't think we're running them on CI.
+17:59:10 <Shrews> they must be *very* permissive rules b/c i don't recall ever having seen a pep8 failure for new modules
+17:59:26 <gundalow> So Ansile staff have another meeting now
+17:59:35 <bcoca> ah, my bad, thought the whole point of adding them was to run them in CI
+18:00:30 <gundalow> So we will look at improving that
+18:01:03 <gundalow> So one last thing that would help, if people could add a few lines to the end of https://public.etherpad-mozilla.org/p/ansible-testing-working-group detailing what they are happy to help with
+18:01:12 <gundalow> That will make sure we keep the right people in the loop
+18:02:15 <gundalow> And any items for discussion to https://github.com/ansible/community/issues/114
+18:02:27 <gundalow> Thank you all for your time today
+18:02:39 <Shrews> thx gundalow
+18:02:53 <linuxdynasty> thank you all
+18:02:53 <gundalow> #endmeeting

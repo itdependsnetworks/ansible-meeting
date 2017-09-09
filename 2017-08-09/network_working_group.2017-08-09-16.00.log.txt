@@ -1,0 +1,82 @@
+16:00:49 <Qalthos> #startmeeting Network working group
+16:00:49 <zodbot> Meeting started Wed Aug  9 16:00:49 2017 UTC.  The chair is Qalthos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:00:49 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:00:49 <zodbot> The meeting name has been set to 'network_working_group'
+16:02:01 <newswangerd> hey
+16:02:06 <Qalthos> #chair ganeshrn gundalow trishnag akasurde kedar-vk
+16:02:06 <zodbot> Current chairs: Qalthos akasurde ganeshrn gundalow kedar-vk trishnag
+16:02:14 <Qalthos> #chair newswangerd
+16:02:14 <zodbot> Current chairs: Qalthos akasurde ganeshrn gundalow kedar-vk newswangerd trishnag
+16:03:20 <Qalthos> I don't see much on the agenda, so
+16:03:28 <Qalthos> #topic Open Floor
+16:04:35 <Qalthos> anyone have anything they want some attention on here?
+16:04:44 <rahushen> Moi
+16:05:14 <rahushen> but I can wait for the nxos section
+16:05:26 <Qalthos> #topic NX-OS
+16:05:39 <Qalthos> rahushen: (:
+16:05:54 <rahushen> alrighty then
+16:05:57 <rahushen> #26924
+16:06:04 <rahushen> PR has been open a while
+16:06:34 <Qalthos> I see you made some updates, let me look
+16:07:13 <Qalthos> That looks like what I asked for, if tests pass, it'll merge today
+16:07:22 <rahushen> awesome!
+16:07:36 <Qalthos> rahushen: Thank you so much for your patience
+16:07:47 <rahushen> #27935
+16:07:51 <rahushen> this is a new one
+16:08:44 <rahushen> fixes 2 issues
+16:08:46 <Qalthos> If it had tests, I'd have already merged it, but without it I was waiting to have a better look at it
+16:08:57 <Qalthos> should be next up
+16:09:19 <rahushen> Ah ... we have tests, probably not merged in yet
+16:09:47 <Qalthos> If you can commit the tests to that PR, that would be immensely helpful
+16:10:13 <Qalthos> If not, I can muddle through it myself
+16:10:19 <rahushen> Yes, I'll add that right after this meeting
+16:10:24 <Qalthos> anything else?
+16:10:41 <rahushen> Issue #26024
+16:10:48 <rahushen> this was closed
+16:11:03 <rahushen> however I do see an issue with some releases
+16:11:19 <rahushen> should be re-opened
+16:12:08 <Qalthos> Ah, it was closed from your PR, so I was hoping it was finally done
+16:13:24 <rahushen> It's close
+16:14:31 <Qalthos> rahushen: https://github.com/ansible/ansible/pull/27329 should fix it, I think
+16:15:18 <Qalthos> (I would have merged it after your issue closed, but Shippable is not playing nice)
+16:16:06 <rahushen> I'll try it out and update the issue if it indeed fixes it ... I remember trying this PR, not sure if anything has changed recently
+16:16:50 <Qalthos> I think that PR always worked, it just didn't fix all of the rest of the issues you ended up fixing
+16:17:48 <rahushen> it works for the latest releases of nxos, but the older releases which still need to be supported have a difference way of nvgening event history for size small
+16:20:02 <Qalthos> Details on the PR and I'll see what can be done about it.
+16:20:53 <rahushen> sounds good
+16:22:53 <Qalthos> Anything else?
+16:23:27 <rahushen> yeah 2 general discussion items
+16:24:21 <rahushen> I see some items that we've marked P1 with a release milestone of 2.5
+16:24:42 <rahushen> It should be 2.4
+16:26:41 <Qalthos> Complete failures we're trying to keep in 2.4
+16:27:25 <rahushen> is that failures with traceback and/or errors ?
+16:28:00 <Qalthos> modules mike had previously indicated are lower priority have been sent to 2.5, though I will review to make sure there aren't any that can be pushed forward
+16:28:56 <rahushen> that'll be helpful
+16:29:17 <Pilou> Could you take a look at #25054 ? This pull-request will allow to use 'ce' doc fragment in cloud_engine modules.
+16:31:50 <Qalthos> Pilou: looks like gundalow was looking for a CI pass, so that should be fine
+16:31:59 <Qalthos> rahushen: you had one more thing?
+16:32:37 <rahushen> Yeah ... just wanted to follow up from Monday's meeting regarding N9Kv adoption for testing
+16:33:16 <Qalthos> At the moment, I think you know more about that than I do
+16:33:36 <rahushen> The image links have been provided, Peter alluded to us having a working session to get this up and running, but I haven't heard back
+16:37:48 <Qalthos> I weill look into getting that particular ball rolling
+16:38:13 <rahushen> ok
+16:38:20 <rahushen> that's all I had
+16:38:56 * skg-net waves
+16:39:33 <skg-net> I have just now created a pull request as discussed last week.. to move openswitch to libreswitch
+16:39:38 <skg-net> https://github.com/ansible/ansible/pull/27971
+16:39:46 <skg-net> please have a look at it..
+16:40:31 <skg-net> I haven't renamed the modules since...* the new openswitch have a different short form opx * all the existing tests/playbooks needs to change. * libreswitch community haven't got back on the naming convention.
+16:42:04 <Qalthos> #topic Open Floor
+16:43:14 <Qalthos> So after this, the module names are going to change at some point?
+16:45:05 <skg-net> yes..if the libreswitch team comes up..I can rename the modules and the tests cases..
+16:45:08 <Qalthos> Looks good
+16:46:20 <skg-net> libreswitch team seemed active couple months before..now..I dont see any activity.
+16:47:18 <skg-net> if it continues like that..we can deprecate the modules..as gundalow suggested earlier..
+16:49:46 <Qalthos> Righto
+16:49:56 <Qalthos> Anyone else?
+16:50:34 <skg-net> we are planning to submit the new openswitch modules around october..
+16:50:40 <skg-net> thats all I had for today..
+16:51:22 <Qalthos> skg-net: Thanks
+16:53:53 <Qalthos> Anyone else? We've got 7 minutes left
+17:00:07 <Qalthos> Alright, thanks everyone for your time
+17:00:38 <Qalthos> #endmeeting

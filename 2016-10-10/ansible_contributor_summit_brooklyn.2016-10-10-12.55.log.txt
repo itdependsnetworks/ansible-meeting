@@ -1,0 +1,305 @@
+12:55:56 <gregdek> #startmeeting Ansible Contributor Summit Brooklyn
+12:55:57 <zodbot> Meeting started Mon Oct 10 12:55:56 2016 UTC.  The chair is gregdek. Information about MeetBot at http://wiki.debian.org/MeetBot.
+12:55:57 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+12:55:57 <zodbot> The meeting name has been set to 'ansible_contributor_summit_brooklyn'
+12:56:02 <gundalow> \o/
+12:56:08 <gregdek> Etherpad: https://public.etherpad-mozilla.org/p/ansible-summit-october-2016
+12:57:06 <gregdek> The calendar is... um... quite advisory. :)
+12:58:59 <pabelanger> o/
+12:59:03 <gundalow> #chair?
+12:59:16 <gregdek> So we're going to get started a little late as we have breakfast in the next room. Will check in at :15 past.
+12:59:16 <gundalow> rcarrillocruz: pabelanger hi :)
+12:59:19 <gregdek> Hi pabelanger!
+12:59:32 <rcarrillocruz> heya
+12:59:43 <rcarrillocruz> sad i couldn't make it onsite :(
+12:59:48 <rcarrillocruz> at least i'm here :-)
+12:59:55 <gundalow> rcarrillocruz: ditto
+13:00:25 <pabelanger> rcarrillocruz: you are missed
+13:00:34 <rcarrillocruz> awww
+13:01:53 <jhawkesworth> hey.  sorry no voice today. sitting in otherwise silent office!
+13:02:16 <gundalow> jhawkesworth: Ah, OK. Glad you can join :)
+13:02:52 <jhawkesworth> audio currently sounds like what I imagine martian would sound like.  same for anyone else?
+13:04:34 <gundalow> hah, yes. It's always a bit strange when no one is active
+13:08:15 <jhawkesworth> cool. gonna top up caffiene before kick off.
+13:09:51 <rcarrillocruz> good idea, me too
+13:10:09 * rcarrillocruz goes backstairs for a coffee capsule
+13:10:43 * gregdek waves
+13:11:22 <gregdek> Well, looks like we've scheduled our breakfast to overlap with our first stretch of time. Thus, I'll round people up and we'll kick off with a soft start at :30 and I'll adjust the agenda accordingly.
+13:16:02 <gundalow> skg-net: Hi :)
+13:16:18 <gundalow> skg-net: We are starting in ~ 14 minutes
+13:18:15 <skg-net> me: waves
+13:19:12 <skg-net> gundalow: will joining in person
+13:21:55 <gundalow> skg-net: ah. Forgot you were onsite
+13:21:58 <gundalow> dag-: Hey :)
+13:32:11 <jhawkesworth> yes!
+13:33:06 <gregdek> https://public.etherpad-mozilla.org/p/ansible-summit-october-2016
+13:33:54 * threebean waves
+13:34:09 <gundalow> threebean: hi Agenda is here https://public.etherpad-mozilla.org/p/ansible-summit-october-2016
+13:35:35 <threebean> thanks :)
+13:37:00 <sgallagh> Could someone put the etherpad and agenda links in the /topic?
+13:37:11 <gundalow> gregdek: can you please #chair me
+13:37:25 <gundalow> sgallagh: https://public.etherpad-mozilla.org/p/ansible-summit-october-2016
+13:38:14 <gregdek> Notes here:
+13:38:14 <gregdek> https://public.etherpad-mozilla.org/p/ansible-summit-october-2016-core-update
+13:38:20 <gregdek> #chair gundalow
+13:38:20 <zodbot> Current chairs: gregdek gundalow
+13:38:38 <gundalow> #topic https://public.etherpad-mozilla.org/p/ansible-summit-october-2016
+13:38:42 <gundalow> Thanks
+13:44:42 <maxamillion> ahoy o/
+13:44:49 <gundalow> maxamillion: Hi :)
+13:45:19 <gundalow> maxamillion: you onsite, if not you need to join the BlueJeans link in the topic
+13:45:28 <maxamillion> gundalow: I am, thank you though :)
+13:47:38 <gundalow> Nothing from me
+13:47:46 <jhawkesworth> nope, carry on
+13:53:26 <gundalow> gregdek: Yes we can hear fine
+13:53:31 <jhawkesworth> yep
+13:55:05 <gundalow> https://public.etherpad-mozilla.org/p/ansible-testing-working-group
+13:55:13 <gregdek> https://public.etherpad-mozilla.org/p/ansible-summit-october-2016-testing-update
+13:55:31 <gundalow> gregdek: https://public.etherpad-mozilla.org/p/ansible-testing-working-group
+14:01:29 <sgallagh> Is Ansible hooked up with scan.coverity.com? It's free for open-source projects and supports Python vulnerability analysis.
+14:03:50 <gundalow> sgallagh: Nop, but that's a good point, thanks
+14:06:33 <jimi|ansible> hi jds2001! didn't see you sitting back there
+14:09:53 <jds2001> jimi|ansible: im a sneaky guy :D
+14:11:20 <bcoca> anyone have bj link? toshio wants to join
+14:11:55 <abadger1999> https://bluejeans.com/3008457278/
+14:12:02 <abadger1999> Found it -- top of the etherpad
+14:15:09 <abadger1999> But do we have a playbook that creates the docker image?
+14:16:00 <abadger1999> And do we have a bit of abstraction to be able to put different create and destroy of the httptester image if it lives in a different type of image?
+14:16:19 <bcoca> ^ 3rd fallback, 'give me http address'
+14:16:26 <bcoca> or httptester address
+14:16:36 <bcoca> should not be hard to modify
+14:16:46 <abadger1999> Yeah, httptester address would work for the 2nd.
+14:17:12 <abadger1999> First question, though... perhaps that's something we have to write?
+14:18:14 <bcoca> tests are in repo, people can contribute, as long as they dont break other test paths
+14:19:27 <abadger1999> I guess I was thinking -- when the question of whether httptester could be made pluggable, it seems like we could make it pluggable if we had a playbook to generate the httptester image.
+14:20:18 <gregdek> I think that's the consensus
+14:20:27 <gregdek> But it's not the place to start
+14:20:34 <abadger1999> That way if someone wants to create a local machine or a vm, it's easy for them to reuse the majority of the playbook to create that.  They just have to add the bits of creating a different image.
+14:21:02 <abadger1999> otherwise, it's an opaque container of information and server responses.
+14:21:35 <jimi|ansible> i think this is a round-about way of dealing with random timeouts and failures, which are a pain because shippable doesn't give us a method to restart a single job
+14:21:47 <jimi|ansible> i think if we pushed shippable to implement that feature it would solve a lot of the problems
+14:22:00 <jimi|ansible> re-running 1 out of 30 tasks is way better than re-running all 30
+14:22:20 <jtanner> here's the code https://github.com/sivel/docker-images/tree/master/httptester
+14:22:28 <misc> especially since they pay the bill, they should prefer that
+14:22:35 <jimi|ansible> you would think
+14:22:42 <gundalow> jimi|ansible: That's a good point, though unless we can detect random timeouts and trigger tests that's still a manual process
+14:22:47 <bcoca> jimi|ansible: but then you also limit the ability of users to do same w/o access to shippable
+14:23:04 <jimi|ansible> bcoca: not if they have shippable enabled on their fork
+14:23:55 <bcoca> for internal use, not for external
+14:24:08 <abadger1999> Yeah, if we have either a fallback (so it's no worse than today) or a way for people to plug in their own type of replacement, then it is a great thing to me.
+14:24:53 <bcoca> jimi|ansible: yes, it can become amonster and it will do so incrementally
+14:27:54 <jds2001> abadger1999: you're on call 24/7, right?
+14:27:59 <jds2001> you never sleep :D
+14:28:21 <jimi|ansible> jhawkesworth: do you write anything in python 3? I thought you were doing all powershell nowadays :)
+14:28:26 <jtanner> i believe that is a true statement jds2001
+14:28:40 <abadger1999> jds2001: :-)
+14:29:05 <jhawkesworth> I do have some custom python modules.
+14:29:06 <jimi|ansible> ihave no idea when abadger1999 sleeps, except maybe a short window between 2-4am
+14:29:21 <jhawkesworth> no point trying to talk to oracle via windows for example
+14:29:22 <jlk> It's like tempest, but for Ansible....
+14:29:30 <abadger1999> I sleep when it's hot -- so I take a nap in my afternoon ;-)
+14:31:22 <abadger1999> One piece of metadata that we are thinking of adding is a simple boolean "tested" whose meaning is just "This module has automated test scripts which we run regularly"  that will usually mean there's an integration test that is running in our CI
+14:31:44 <abadger1999> (Note, that metadata isn't in metadata 1.0 but would be simple to add)
+14:33:27 <abadger1999> *that piece of metadata
+14:33:41 <bcoca> metadata is starting SMALL
+14:33:46 <bcoca> we will expand as needed
+14:33:46 <gundalow> ************* 12 minute break ***************************
+14:36:59 <misc> until we need to have metadata about metadata
+14:37:02 <misc> metaception
+14:37:43 * abadger1999 works up a proposal ;-)
+14:38:01 <gregdek> METAMETAMETADATADATA
+14:43:02 <gundalow> Where do we store information regarding if there is metadata?
+14:43:29 <sivel> jtanner: httptester is also in the ansible repo: https://github.com/ansible/ansible/tree/devel/test/utils/docker/httptester
+14:44:22 <abadger1999> gundalow: It'll be in the module... Either the global variable will exist or it won't.
+14:44:43 <gundalow> sorry, that was meant to be a a metameta joke
+14:46:01 <gregdek> HA
+14:46:04 <gregdek> I totally got it
+14:46:17 <gundalow> :P
+14:46:27 <gundalow> Jokes work best when you have to explain them
+14:46:44 <gregdek> Next discussion: module curation
+14:46:45 <gregdek> https://public.etherpad-mozilla.org/p/ansible-summit-october-2016-module-curation
+14:47:39 <abadger1999> :-)
+14:48:26 <abadger1999> bcoca: You talking about me in the background?
+14:48:35 <bcoca> yes, i need an extension cord
+14:48:52 <abadger1999> hehe .. ask jds2001 if he has a fedora friend finder ;-)
+14:49:59 <jtanner> wtf is a fedora friend finder?
+14:50:02 <rcarrillocruz> is there going to be a bluejeans for the zuul track?
+14:50:16 <misc> something that find fedora friend
+14:50:22 <gundalow> rcarrillocruz: Good question, I hope so
+14:50:24 <jlk> jtanner: it's like the bat signal, but with an F?
+14:50:43 <abadger1999> The metadata format for 2.3: https://github.com/ansible/proposals/issues/30#issue-170901038
+14:50:50 <jtanner> jlk: i'll take one
+14:50:51 <abadger1999> migration of issues and prs
+14:51:00 <Shrews> rcarrillocruz: i hope so as well
+14:51:01 <misc> jtanner: or a multi plug with Fedora sticker :p
+14:51:04 <sgallagh> jtanner: http://www.malak.ca/blog/fedorafriendfinder/fedorafriendfinder.org.pdf
+14:51:21 <gundalow> rcarrillocruz: I've added a note to the agenda. I think it may continue on this channel - given that Docs Sprint has it's own BlueJeans ID
+14:51:23 <jtanner> sgallagh: aha, thanks
+14:51:33 <rcarrillocruz> good, thx
+14:53:12 <abadger1999> migrating issues -- will people find it useful for us to move them even if they lose ownership?
+14:53:29 <abadger1999> gregdek: ^ good question for the room full of contributors
+14:53:45 <gregdek> will ask
+14:53:49 <abadger1999> cool.
+14:55:26 <abadger1999> https://github.com/ansible/proposals/issues/30#issue-170901038
+15:04:59 <abadger1999> +1 to gregdek's explanation of how things wrt partners are now.
+15:06:47 <abadger1999> No, and it is full of worms.
+15:07:55 <abadger1999> there's questions like "If modules end up in five separate tarballs, what happens for us and for downstream redistributors"
+15:08:02 <abadger1999> The workflow isn't.
+15:08:05 <abadger1999> The defaults are.
+15:08:16 <abadger1999> But the workflow between the states is not.
+15:08:49 <abadger1999> (About the module status and supported_by tags and how a module would move from one to another)
+15:09:13 <Shrews> What about "new" modules for an "existing" set of related modules? Will they be preview/community even though the rest may be labeled otherwise (stable, etc)?
+15:09:37 <abadger1999> Shrews: I'd say yes.
+15:09:38 <abadger1999> But
+15:09:51 <abadger1999> A team (internal or external)  can fast track it.
+15:10:07 <abadger1999> it's a balancing act for the team.
+15:11:01 <abadger1999> Only you label the module stableinterface you'll end up carrying backwards compatible code if you have to change the params in backwards incompatible ways.
+15:11:14 <abadger1999> *once you label
+15:11:18 <abadger1999> Shrews: ^
+15:11:29 <Shrews> abadger1999: gotcha
+15:12:29 <abadger1999> Committers probably want a say before stableinterface is put on a module to make sure that "common params" have similar names across modules.
+15:16:46 <abadger1999> PRs are way harder :-(
+15:17:13 <jlk> Prs probably have to be done by the person, not the system.
+15:17:22 <gundalow> abadger1999: aye, though it was on the gDoc as a list of things to check, so I added it to the discussion
+15:17:35 <gundalow> jlk: I expect so
+15:17:39 <jlk> thankfully git gives you at least 5 different ways to get to a pull request, so totally easy to write docs for..
+15:17:44 <jhawkesworth> I guess number of individuals who have a lot of 'in flight' modules is probably pretty small
+15:18:14 <abadger1999> jlk: yep, if we did it, it would basically become read-only
+15:19:25 <abadger1999> gundalow: thanks
+15:19:51 <gundalow> abadger1999: I don't need thanking for asking akward questions :P
+15:21:07 <misc> then thanks for not asking them more often /o\
+15:21:22 <gundalow> misc: Challange accepted :)
+15:21:28 <misc> (I have another meeting, so I do not even know what is the akward question)
+15:22:23 <gundalow> :)
+15:28:45 <abadger1999> what's Tom's irc nick?
+15:29:04 <gundalow> abadger1999: I think the Google Tom is supertom
+15:29:09 <abadger1999> Cool.
+15:29:29 <abadger1999> jds2001: You just came for the free food ;-)
+15:30:09 <jhawkesworth> sorry no voice today
+15:30:37 <jhawkesworth> yes
+15:30:45 <bcoca> gundalow: WEE CAN HEAR YOU
+15:31:35 <gundalow> bcoca: We could see you
+15:31:44 <jds2001> abadger1999: exactly :D
+15:31:46 <bcoca> sorry about that
+15:31:56 <gundalow> :)
+15:32:12 <jds2001> abadger1999: i just came to see all the people who abandoned me :D
+15:33:20 <gundalow> buuuuuuuuuurn
+15:35:04 <gundalow> gregdek: What are we doing about the other proposed topics on the etherpad?
+15:35:25 <gundalow> gregdek: there was some votes for Python3
+15:38:50 <abadger1999> https://app.shippable.com/runs/57fb23d9b48edb0e0039b65b/32/console
+15:40:33 <jhawkesworth> thanks all, gotta drop. If anyone is still around 3pm EST I'll join again. cheers
+15:41:15 <gundalow> jhawkesworth: thanks for your time. When you return check https://public.etherpad-mozilla.org/p/ansible-summit-october-2016 for where the different afternoon tracks are happening
+15:41:24 <abadger1999> The 2 blacklists live in this directory: https://github.com/ansible/ansible/tree/devel/test/utils/shippable
+15:44:28 <abadger1999> syntax compilation
+15:45:50 <abadger1999> ryansb: Hit your mic.
+15:47:14 <gundalow> gregdek: exception handling https://docs.ansible.com/ansible/developing_modules_python3.html#exceptions
+15:49:19 <gundalow> gregdek: before we break where are Track 1 & Track 2 taking place (IRC/Bluejeans links need adding)
+15:49:23 * misc has a talk on "how ansible support python 2 and 3" scheduled for pycon.fr this weekend
+15:49:36 <misc> (but I didn't prepare anything, except some obscure jokes)
+15:51:18 <gundalow> gregdek: is their a 3rd track?
+15:51:50 <abadger1999> gregdek: If we need to setup a new meeting channel -- will need to ask nirik to get zodbot in there for logging.
+15:52:56 <misc> you no longer have access to do that in fedora infra ?
+15:54:47 <gundalow> Can you just do /invite zodbot?
+15:54:49 * nirik can do so anytime you like.
+15:55:49 <gundalow> nirik: Could you please add the bot to #ansible-docsprint ?
+15:56:09 <nirik> zodbot: join #ansible-docsprint
+15:56:26 <gundalow> nirik: sweet, thanks
+17:02:31 <Shrews> gross
+17:02:44 <pabelanger> lawl
+17:03:48 * gundalow clearly missed something
+17:05:17 <abadger1999> mordred: But we want to shoot the golden goose! (re: Linux desktop)
+17:06:05 <gundalow> Zuul link https://public.etherpad-mozilla.org/p/ansible-summit-october-2016-zuul
+17:06:08 <threebean> ah ha
+17:06:12 <threebean> gundalow++
+17:06:15 <gundalow> #topic Zuul https://public.etherpad-mozilla.org/p/ansible-summit-october-2016-zuul
+17:06:37 <abadger1999> threebean: Hey, you didn't get up in the introductions section and say hi ;-)
+17:15:33 <abadger1999> Remember -- for questions, turn mics on
+17:15:50 <Shrews> ++
+17:23:44 <bcoca> depends-on <= HUGE feature for multi repo
+17:24:03 <Shrews> oh, i recognize that commit
+17:26:30 <bcoca> github exposes PRs as branches
+17:29:16 <abadger1999> docschick: Can you turn the camera?
+17:29:36 <jeblair> bcoca: i think something like a 21-deep depends-on change series showed up the other day in openstack... so it's been a hit :)
+17:29:43 <abadger1999> oops, wrong channel
+17:30:43 <bcoca> jeblair: we can barely handle a 1 deep depends-on in ansible
+17:31:08 <dminca> abadger1999 lol
+17:32:34 <bcoca> translating yaml dsls!
+17:33:06 * dminca hides
+17:46:26 <jlk> anybody got a link to what monty has on screen?
+17:47:06 <jeblair> jlk: http://inaugust.com/talks/test-it-like-you-deploy-it.html
+17:58:03 <mprahl> https://public.etherpad-mozilla.org/p/ansible-summit-october-2016-zuul
+18:45:23 <threebean> abadger1999: :)
+18:52:42 <Shrews> zuulkeeper. LOL
+19:04:55 <abadger1999> rbergeron: ping
+19:04:55 <zodbot> abadger1999: Ping with data, please: https://fedoraproject.org/wiki/No_naked_pings
+19:05:04 <abadger1999> rbergeron: Could you turn off recording ;-)
+19:06:28 <abadger1999> bcoca: You still in the zuul room?
+19:06:32 <bcoca> yes
+19:06:41 <abadger1999> bcoca: tell one of them to turn off recording.
+19:06:55 <abadger1999> bcoca: as long as this is not zuul discussion.
+19:07:04 <abadger1999> thanks :-)
+19:07:06 <bcoca> done
+19:07:07 <bcoca> yw
+19:07:41 <abadger1999> Now they can discuss GNOME and  ostree and flatpak all they want ;-)
+19:07:53 * gundalow -> away from PC. Once the meeting has finished can someone endmeeting
+19:07:57 <gundalow> #chair
+19:07:57 <zodbot> Current chairs: gregdek gundalow
+19:08:08 <abadger1999> gundalow: I'll be around if you want to chair me
+19:08:17 <gundalow> #chair abadger1999 bcoca mattclay Shrews
+19:08:17 <zodbot> Current chairs: Shrews abadger1999 bcoca gregdek gundalow mattclay
+19:08:21 <gundalow> Thanks :)
+19:09:07 <jlk> In this room, nerds arguing over Linux on the Desktop
+19:09:10 <jlk> (any year now...)
+19:09:18 <jds2001> i gave up
+19:09:29 <jds2001> my XPS 13 runs windows :)
+19:09:35 <jds2001> and it runs wonderfully
+19:09:55 <jds2001> putty and virtviewer are great things :)
+19:10:53 <agaffney> I've been using linux on the desktop exclusively for ~15 years, but I'm not exactly the typical user
+19:11:33 <abadger1999> jds2001: heh, I upgraded my mother's laptop from f18 to f25 ... amazingly, the only thing I had to fix post-upgrade was an selinux relabel.
+19:13:16 <jds2001> agaffney: im semi the typical user.
+19:13:18 <abadger1999> jlk: walk by one of them and cough: "systemd".
+19:13:26 <jlk> that happened
+19:13:36 <jds2001> agaffney: being a server guy, i want my desktop to just work
+19:13:45 <jds2001> agaffney: i can muck with servers all day lonhg
+19:13:51 <agaffney> jds2001: same here, which is why I switched from Gentoo to Ubuntu on my desktop :)
+19:13:59 <agaffney> after initial setup, I've found Ubuntu to "just work"
+19:14:33 <jds2001> agaffney: you might have taken a step too far :)
+19:14:37 * jds2001 would have gone to Fedora
+19:14:59 <agaffney> I like CentOS on servers and for "work" stuff in general, but I prefer Ubuntu for workstations
+19:15:12 <agaffney> I *started* a step too far with Gentoo, and then took a step back towards sanity when switching to Ubuntu
+19:15:24 <abadger1999> btw, is the real meeting done for the rest of hte day or is this just a break?
+19:16:04 <jds2001> the only reason that I use Windows is I need some propietary software for one, and two the hardware of my laptop is.....bad.
+19:16:09 <jds2001> (the non-dev XPS 13)
+19:16:20 <jds2001> abadger1999: i think it's just a break
+19:16:23 <jhawkesworth> yeah.  I was quite happy with lubuntu but hardware support was not great so back on win 10 for laptop.  at least I can fire up bash and pretend I have Ubuntu.
+19:17:36 <abadger1999> k
+19:17:55 * abadger1999 grabs a snack  too
+19:18:21 <jhawkesworth> thanks for the py3 module porting page btw abadger1999 - that's going to be a big help
+19:18:55 <abadger1999> jhawkesworth: No problem.  If you need anything else added to it feel free to bug me.  I sometimes forget to document things that I figure out.
+19:18:58 <agaffney> my original use case for Ubuntu was on a Macbook Pro, because I was tired of OSX and the stupid things that IT at that company was doing with it (3 reboots in one day, all while in the middle of doing work....screw that)
+19:19:40 <misc> agaffney: if were doing more meeting, you wouldn't have been bothered as much by the reboot
+19:19:43 <jhawkesworth> we all do that, not enough hours.
+19:19:45 <cinerama> wow that sounds really evil
+19:20:56 <jhawkesworth> that just about beats windows update over the last couple of months :-)
+19:21:13 <agaffney> the reboots wouldn't have bothered me if it gave you a chance to save your work, but a reboot without warning, 3 times in one day, was the final straw
+19:24:16 <gregdek> Yes, it's definite hallway track now. :)
+19:31:03 <abadger1999> gregdek, rbergeron: Need to turn recording back on
+19:32:50 <jlk> we're back to zuul
+19:32:55 <jlk> not sure if anybody started the recording again :(
+19:33:21 <abadger1999> it's not.
+19:33:32 <abadger1999> No blinky red dot i nthe corener of blue jeans
+19:33:41 <abadger1999> excellent
+19:34:04 <abadger1999> For the people who are going to watch the recording later...
+19:34:39 <abadger1999> Having to listen to minutes of discusion on desktop linux is better avoided ;-)
+19:34:49 <gregdek> We're back on. :-)
+19:35:00 <gregdek> Or should be.
+19:36:16 <abadger1999> yep, blinky red dot is back
+19:38:38 <Shrews> this grey wall is lovely to look at. thank goodness it is recorded
+19:40:09 <bcoca> still seeing wall?
+19:40:38 <Shrews> yep
+19:41:09 <Shrews> yay!
+19:41:50 <cinerama> http://specs.openstack.org/openstack-infra/infra-specs/specs/zuulv3.html
+19:47:00 <cinerama> plus some currently open spec stuff: https://review.openstack.org/#/q/status:open+project:openstack-infra/infra-specs+message:zuul
+19:55:54 * jds2001 is the proud new owner of washpad.net :D
+20:00:37 <jhawkesworth> have a good 'fest everyone.  cheers!
+20:13:24 <abadger1999> #endmeeting

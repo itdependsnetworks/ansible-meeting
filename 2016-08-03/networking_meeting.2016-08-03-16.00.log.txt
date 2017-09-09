@@ -1,0 +1,79 @@
+16:00:29 <gundalow> #startmeeting Networking meeting
+16:00:29 <zodbot> Meeting started Wed Aug  3 16:00:29 2016 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:00:29 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:00:29 <zodbot> The meeting name has been set to 'networking_meeting'
+16:00:41 <gundalow> #chair Qalthos
+16:00:41 <zodbot> Current chairs: Qalthos gundalow
+16:01:37 <gundalow> Hey everyone, who's around?
+16:01:49 * gregdek lurks
+16:02:00 <caphrim007> i'm here
+16:02:12 <gundalow> Agenda as always https://github.com/ansible/community/issues/110
+16:02:18 <stianvi> still here
+16:02:29 <gundalow> If anyone else has anything please add it to the ticket
+16:04:08 <gundalow> #topic Networking Hub @ AnsibleFest SanFran
+16:05:17 <caphrim007> @gundalow: I updated the gtm_datacenter pr
+16:05:17 <gundalow> #info Peter and I ran the first "Networking Hub" day long event at San Fran last week where we had demos of the latest Networking modules. We also had VMware, Cisco, Cumulus and Arista there. Was very busy and really useful to see what people are using Ansible for
+16:05:26 <gundalow> caphrim007: excellent
+16:05:37 <caphrim007> it's ready afaik pending other reviews
+16:06:01 <caphrim007> i'm not yet sold on the gtm facts module yet. it's giving me problems
+16:06:16 <gundalow> #Network Hub will return at Brooklyn, Sign up is live https://www.ansible.com/ansiblefest
+16:06:31 <gundalow> #topic Module Reviews
+16:06:56 <gundalow> #info gundalow is going to make an effort to stay on top of reviews and ensure the process is moving
+16:07:36 <gundalow> #info If people see stuff getting stuck either ping me directly or add the module to https://github.com/ansible/community/issues/110
+16:07:58 <gundalow> caphrim007: ACK. Shout out if you need anything from me
+16:08:16 <gundalow> Do we have anyone from F5 here?
+16:08:27 <caphrim007> @gundalow I'm from F5
+16:08:47 <caphrim007> we have a greater effort underway to re-do the existing modules too
+16:09:08 <gundalow> duh, sorry, still trying to learn IRC, GitHub and realnames :)
+16:09:09 <caphrim007> but i'm willing to let the other contributors PR's slide and then I'll redo them in the longer term
+16:09:25 <gundalow> Peter said: F5 guys should be on to handle: ansible/ansible-modules-extras#554
+16:09:28 <gundalow> ansible/ansible-modules-extras#1000
+16:09:37 <caphrim007> yeah
+16:10:09 <gundalow> cool
+16:10:42 <caphrim007> 1000 is my pr, so it should be as f5-ish as you can get. 554 is a non-f5
+16:10:53 <caphrim007> but i'm reviewing it in any case as I have the resources to do so
+16:10:56 <gundalow> caphrim007: At somepoint I'll arrange a call with you guys and privateip just to introduce myself more formally and get a better understanding of where you are upto
+16:11:04 <caphrim007> k
+16:13:39 <gundalow> (was just updating agenda)
+16:14:32 <gundalow> caphrim007: Not sure how I was looking at an out of date diff, I'll look again at https://github.com/ansible/ansible-modules-extras/pull/1000
+16:14:53 <caphrim007> @gundalow I pushed an updated PR ~5/10 min ago
+16:15:03 <gundalow> ah, OK
+16:15:05 <gundalow> cool
+16:15:12 <gundalow> #topic openfloor
+16:15:18 <gundalow> Anyone got anythign else
+16:15:27 <gundalow> What else would people like to see from this meeting?
+16:15:41 <stianvi> anything in regards of #4104 ?
+16:16:03 <gundalow> Enabling JSON for network/junos/junos_command.py ?
+16:16:07 <stianvi> yaeh
+16:16:16 <stianvi> ahh, it's a go? i.e. PRs that are close to being able to be merged:
+16:16:41 <gundalow> Code looks good to me. I'm getting privateip to be the final gatekeeper before merging
+16:16:45 <stianvi> ack
+16:16:52 <stianvi> thanks
+16:17:42 <gundalow> gregdek: process question. Do you think I should assign PRs to privateip that are good to merge
+16:17:59 <gregdek> I would.
+16:18:05 <gundalow> networking is a little different to Core as we currently use privateip as teh final sign off
+16:18:09 <gundalow> cool
+16:18:34 <gregdek> I mean, you're still putting things in "shipit" also, I assume?
+16:19:06 <gundalow> I'm adding the word "shipit", do I need to do things with lables for ansible-modules-core/extra?
+16:20:03 <gundalow> sivel: https://github.com/ansible/ansible/pull/16434 I think that needs a rebase to fix Shippable
+16:20:41 <gundalow> erm
+16:20:49 <gundalow> stianvi: https://github.com/ansible/ansible/pull/16434 I think that needs a rebase to fix Shippable
+16:20:54 <stianvi> gundalow: ack, I'll fix it tomorrow
+16:21:15 <gundalow> gregdek: do I need to manually add the label?
+16:22:15 <gregdek> gundalow: yeah, but if you're assigning...
+16:22:26 <gundalow> #topic extras/issues/2542 mikrotik routeros support
+16:22:31 <gundalow> https://github.com/ansible/ansible-modules-extras/issues/2542
+16:23:00 <gundalow> #info The Core team doesn't plan to add mikrotik routeros support, if someone else is interested they will need to add that
+16:23:55 <gundalow> Just an FYI incase anyone else here has info
+16:24:06 <gundalow> Just an FYI incase anyone else here has an interest
+16:25:11 <gundalow> #topic Open Floor
+16:25:21 <gundalow> Anyone got anything else?
+16:25:55 <gundalow> The meetings will get a bit smoother over time :)
+16:27:02 <gundalow> Qalthos: Anything you'd like to add?
+16:27:13 <Qalthos> nothing here yet
+16:27:26 <caphrim007> @gundalow I've left my comments here https://github.com/ansible/community/issues/110 on this meeting
+16:27:36 <caphrim007> otherwise nothing else from me
+16:27:50 <gundalow> sweet
+16:28:30 <gundalow> I'd welcome feedback on this meeting, if there is anything we can do to make it more useful to you. Feel free to "/query gundalow" with your thoughts :)
+16:28:43 <gundalow> cool, so I guess I'll call the end of the meeting then
+16:28:59 <gundalow> #endmeeting

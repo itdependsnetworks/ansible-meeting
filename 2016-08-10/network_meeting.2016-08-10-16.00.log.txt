@@ -1,0 +1,112 @@
+16:00:11 <gundalow> #startmeeting Network Meeting
+16:00:11 <zodbot> Meeting started Wed Aug 10 16:00:11 2016 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:00:11 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:00:11 <zodbot> The meeting name has been set to 'network_meeting'
+16:00:18 <stianvi> Hi!
+16:00:25 <gundalow> #chair Qalthos
+16:00:25 <zodbot> Current chairs: Qalthos gundalow
+16:00:33 <gundalow> Hi stianvi
+16:01:05 <gundalow> #info Agenda, as always is https://github.com/ansible/community/issues/110 Feel free to add things
+16:01:13 <gundalow> #chair Qalthos privateip
+16:01:13 <zodbot> Current chairs: Qalthos gundalow privateip
+16:02:48 <gundalow> #info I've reviewed the items that are alread on the agenda. They are two sets 1) Ansible Core need to do final review and merge 2) Creator has updates to make. There doesn't seem to be anything extra that needs reviewing
+16:03:01 <gundalow> stianvi: Did you have anything
+16:03:01 * gregdek lurks
+16:03:21 <gundalow> gregdek: :)
+16:03:22 <stianvi> just the py24 thingy :) #16434
+16:03:35 <stianvi> it states on the website: Currently Ansible can be run from any machine with Python 2.6 or 2.7 installed
+16:03:46 <stianvi> can't see that network modules should run anywhere but the control machine
+16:03:49 <gundalow> #topic Python24 support for Modules
+16:03:55 <gundalow> privateip: you around?
+16:04:00 <privateip> yep
+16:04:04 <stianvi> never got an answere why :)
+16:05:08 <gundalow> privateip: with Networking modules can you/do people always run on the machine running ansible-playbook, or could they sometimes be delegated to a ssh jump box, or someother machine that might only have py2.4 on?
+16:05:14 <gundalow> caphrim007: hi :)
+16:05:19 <caphrim007> i was late
+16:05:21 <caphrim007> i blame the bus
+16:05:47 <privateip> correct the cli transport is built to take advantage of delegate_to
+16:06:06 <privateip> whats the question?
+16:06:31 <stianvi> why does the network modules need to work with python2.4 if ansible requires python2.6?
+16:06:36 <gundalow> privateip: https://github.com/ansible/ansible/pull/16434 & https://github.com/ansible/ansible-modules-core/pull/4032
+16:06:46 <privateip> ansible supports py2.4 today
+16:07:07 <privateip> that is going away (not soon enough)
+16:07:19 <stianvi> http://docs.ansible.com/ansible/intro_installation.html
+16:07:19 <stianvi> > Currently Ansible can be run from any machine with Python 2.6 or 2.7 installed (Windows isn’t supported for the control machine).
+16:07:38 <gregdek> LOL. No, not soon enough.
+16:08:06 <privateip> thats the control machine req
+16:08:17 <stianvi> yes :)
+16:08:18 <gundalow> stianvi: "can be run from" = The machine that you are executing "ansible" or "ansible-playbook" on
+16:08:34 <privateip> is there a problem supporting py24 in your PR?
+16:08:42 <gundalow> machine with Ansible -> network switch
+16:08:55 <gundalow> machine with Ansible -> Some other machine (via deligate_to) -> network switch
+16:09:05 <gregdek> It is possible to note in the module that py24 isn't supported by that module.
+16:09:12 <stianvi> ok
+16:09:24 <gundalow> In the 2nd case the "other machine" may only have py2.4 on
+16:09:35 <stianvi> got the design now, thanks gundalow.
+16:09:47 <gundalow> :)
+16:09:58 <gregdek> From the module checklist: "Modules must be written to support Python 2.4. If this is not possible, required minimum python version and rationale should be explained in the requirements section in DOCUMENTATION."
+16:10:09 <gregdek> http://docs.ansible.com/ansible/developing_modules.html
+16:10:38 <stianvi> I can always fork out and run my version for now. I'll see if I can rewrite a bit, but juniper seem to require with statement that was introduced in py25 for the feature
+16:11:01 <privateip> pyez?
+16:11:47 <stianvi> not whole pyez, but the configure mode part of it
+16:12:05 <privateip> im looking at 4032 and dont see any issue with it support py2.4 as is
+16:12:09 <privateip> did i miss something?
+16:13:27 <stianvi> https://github.com/ansible/ansible/pull/16434
+16:14:13 <stianvi> https://github.com/Juniper/py-junos-eznc/blob/master/lib/jnpr/junos/utils/config.py
+16:14:29 <privateip> oh this is in the shared module ... got it now
+16:15:02 <stianvi> https://github.com/Juniper/py-junos-eznc/blob/master/lib/jnpr/junos/utils/config.py#L622
+16:15:19 <stianvi> according to doc in pyez, requires with.
+16:15:33 <stianvi> but I might be wrong
+16:15:39 <stianvi> my python is pretty fresh
+16:18:20 <privateip> ok to avoid turning this into a mountain ... lets caveat it in the junos_config module
+16:19:08 <stianvi> fair enough
+16:19:14 <privateip> this only affects one argument
+16:19:53 <privateip> please update the docstring as gregdek pointed out ^^^
+16:20:36 <gregdek> I think abadger1999 actually posted the 2.4 deprecation timeline the other day, if that's helpful.
+16:20:44 * gregdek rummages about.
+16:20:54 <gundalow> #action stianvi to update docstring in requirements
+16:20:55 * privateip celebrates (never to early to start)
+16:21:19 <abadger1999> The release after march 2017 will no longer have python-2.4 compat
+16:21:20 <gregdek> March 2017.
+16:21:35 <stianvi> want me to rewrite 4032 and close #16434
+16:21:48 <stianvi> correct?
+16:21:50 <abadger1999> releases before March 2017 will continue to support py2.4 as long as we keep making maintainance releases for them.
+16:23:42 <privateip> stianvi: just 4032 will be fine
+16:23:50 <stianvi> ack
+16:24:04 <stianvi> thanks guys
+16:24:24 <gundalow> stianvi: Thanks for your time to work though the issues
+16:24:39 <gundalow> caphrim007: Did you have anything?
+16:24:55 <caphrim007> gundalow: yes, this module should be ready now https://github.com/ansible/ansible-modules-extras/pull/998
+16:25:30 <caphrim007> my other prs should just require an updating of the doc fragment and then they should also be ready
+16:25:42 <gundalow> caphrim007: Can you please put "ready_for_review" on that to kick the bot to move it on
+16:25:47 <caphrim007> ok
+16:25:48 <gundalow> #topic F5 modules
+16:26:12 <gundalow> Thanks
+16:26:47 <gundalow> caphrim007: "At least one of value and state C(reset) are required"
+16:26:48 <gundalow> I might be missing it (it might be inside f5.bigip, which I don't have), however I don't see a test to ensure at least of of those parameters are passed
+16:26:52 <gundalow> Did that get resolved?
+16:27:08 <caphrim007> lemme check
+16:27:32 <gundalow> You've squashed the commits (which is fine), but it means I can't quickly check :)
+16:32:53 <caphrim007> gundalow: there is now a check for it and an updated pr
+16:33:17 * gregdek ducks out
+16:33:23 <gundalow> cool, I'll review then I'll add it to the merge pile
+16:33:29 <caphrim007> thx
+16:33:43 <gundalow> Thanks for the modules :)
+16:34:47 <gundalow> #topic Open Floor
+16:34:58 <gundalow> privateip: Qalthos Anything else from you?
+16:35:21 <privateip> just a quick update on 2.2 refactor ... things are progressing along
+16:35:42 <privateip> i'm hoping to start pushing module updates within a week or so
+16:36:02 <privateip> to fix a lot of the nagging issues brought up as a result of the refactoring activity
+16:36:24 <caphrim007> privateip: is there anything that module authors should be aware of to fix in their own modules?
+16:36:50 <privateip> not yet
+16:37:05 <privateip> this is mostly reorganizing code to take advantage of ansiballz
+16:37:48 <caphrim007> i missed the memo on that...is that the ziploader? or something else?
+16:38:03 <gundalow> ansiballz = ziploader
+16:38:04 <jtanner> s/ziploaders/ansiballz
+16:38:10 <caphrim007> hehe. ok
+16:39:40 <gundalow> Anything else?
+16:40:34 <gregdek> Any events we should be getting to?
+16:41:16 <gundalow> Shameless plug, Ansible Fest brooklyn in 11th October
+16:41:21 <gundalow> https://www.ansible.com/ansiblefest
+16:45:51 <gundalow> I guess we are done then
+16:45:53 <gundalow> #endmeeting

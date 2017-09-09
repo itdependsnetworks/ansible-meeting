@@ -1,0 +1,207 @@
+16:02:13 <privateip> #startmeeting Networking Working Group
+16:02:13 <zodbot> Meeting started Wed Jun  8 16:02:13 2016 UTC.  The chair is privateip. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:02:13 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:02:13 <zodbot> The meeting name has been set to 'networking_working_group'
+16:02:40 <privateip> short list of topics today
+16:03:04 <privateip> biggest agenda item is continuation of facts discussion
+16:03:56 <mhite> Excellent
+16:03:56 <privateip> #topic Facts
+16:04:13 <privateip> i had previously posted a concept of generalized network facts
+16:04:14 <privateip> https://gist.github.com/privateip/562aa722b7306f25f6d414cab38e8eae
+16:05:04 <privateip> mhite: i know you had some concerns
+16:05:05 <kei> yep, love that, privateip!
+16:05:19 <kei> mhite: love to hear!
+16:05:28 <mhite> So I have several comments on this. I started work on creating the equivalent for BIG-IP devices and several things jumped out at me.
+16:05:48 <kei> mhite: love to hear your insight
+16:05:57 <kei> as I want to do the same for OpenSwitch soon
+16:05:59 <mhite> 1) I'm guessing the output you present is mostly Cisco-esque
+16:06:17 <mhite> 2) We need to not only define the keys, but also what should go in the values of said keys
+16:06:24 <mhite> For example:
+16:06:36 <mhite> (one sec, creating a gist)
+16:06:45 <kei> nice! :)
+16:07:26 <mhite> https://gist.github.com/mhite/5042eac9a7a630db730c6162cb0c4682
+16:07:45 <mhite> You can see the BIG-IP equivalent I started doesn't really entirely fit the same mold
+16:08:01 <mhite> This begs the question... do we care?
+16:08:14 <mhite> Or do we just care that the key names are standard, and that the contents of said key names are somewhat aligned?
+16:08:16 <privateip> yeah thats a fair point
+16:08:19 <mhite> Or is it free reign?
+16:08:37 <privateip> my hope was we could achieve some (very basic) baseline set of facts
+16:08:38 <mhite> How to define a schema has been hashed out in the industry
+16:08:52 <privateip> bah I dont want to go there
+16:09:06 <mhite> ;)
+16:09:25 <privateip> i guess what i gather from this is the "base" might be to "basic" to be functional
+16:09:25 <mhite> So I shouldn't mention OpenConfig?
+16:09:28 <mhite> ;)
+16:09:41 <mhite> Lots of yang models defined here: https://github.com/openconfig/public/tree/master/release/models
+16:09:47 <privateip> damn where is an op to use the kick function when you need one :)
+16:10:00 <mhite> Although the models aren't really ideal for our purposes, they at least provide guideposts
+16:10:05 * privateip ignoring mhite for the rest of this meeting
+16:10:09 <mhite> hahah, sorry
+16:10:14 <privateip> :)
+16:10:26 <mhite> Also, in your example, you have a fact which contains an entire config
+16:10:42 <privateip> yeah that one i know is very route/switch specific
+16:10:43 <mhite> In BIG-IP land, you can pull a binary file called a UCS.
+16:10:58 <privateip> its an optional subset to gather that relates more to networking modules
+16:11:02 <mhite> There's also SCF (which is text-based), but it is partial and is also not available via the API
+16:11:24 <mhite> Ok, sorry, I just think we need to define a schema if the goal is to get consistency across manufacturers
+16:12:16 <mhite> Also, it your example, it  looks like your view of interfaces includes layer 2 and layer 3 interfaces under one hierarchy. BIG-IP has a different view: VLANs, self-IPs, physical interfaces, trunks, etc.
+16:12:38 <privateip> i really dont want to get that formal with it so lets say for facts modules we build them to order
+16:12:54 <mhite> What does 'build them to order' mean to you?
+16:12:59 <privateip> i just dont think its worth the headaches of trying herd cats on a common schema
+16:13:05 <privateip> i mean build them per platform
+16:13:12 <privateip> for what makes sense for that platform
+16:13:34 <privateip> we can still build a base for route/switch but is loosely common but not exact
+16:14:01 <kei> I live "loosely common but not exact" part. :)
+16:14:07 <privateip> hahaha
+16:14:13 <kei> and is this the way on server side, too?
+16:14:19 <mhite> I'd also like to understand if there was some benefit to namespacing them using ansible_net_* rather than an entry marked {'delegate_facts': {}} under normal facts
+16:14:20 <privateip> no
+16:14:21 <kei> say facts between ubuntu and centos
+16:14:41 <privateip> we try to normalize where we can across server os
+16:14:57 <privateip> we can do the same with route/switch just not generic enough for all network
+16:15:11 <privateip> mhite: to align with how we do facts with servers
+16:16:02 <mhite> if we put it in the same top-level namespace, there is no good way to just target network facts (or more generally, 'delegated'/proxy factS)
+16:16:18 <privateip> you mean besides the key?
+16:16:20 <mhite> you have to manually iterate through said top-level namespace and filter
+16:16:28 <privateip> yeah thats how facts work today
+16:16:37 <mhite> but they are all server facts
+16:16:56 <privateip> sorry perhaps im missing your point here
+16:17:01 <mhite> so you could have server facts and proxy-facts (ie. switch facts) in the same top level
+16:17:10 <mhite> if you don't disable collection of local facts
+16:17:20 <privateip> sure for instance, ansible_hostname and ansible_net_hostname
+16:17:27 <mhite> exactly
+16:17:41 <privateip> where's the problem with this?
+16:17:43 <mhite> so we prevent collisions by namespacing using a variant key name
+16:18:09 <privateip> but there is no collision
+16:18:23 <mhite> ...because you prepend the facts with ansible_net_*
+16:18:48 <mhite> I'm just trying to pose the question of why are we mixing the locally collected facts into the same data structure as the remotely/proxy collected facts?
+16:19:39 <privateip> i guess i look at it the other way.... what harm does it cause?
+16:19:40 <mhite> Why not have a hierarchy that separates the locally collected facts from the remotely (proxy) collected facts
+16:20:14 <mhite> That way if you want to do something special with JUST the remotely collected facts, you don't have to manually iterate looking for keys that start with ansible_net_*
+16:20:38 <mhite> Rather, you could just look through some new key name that has all the remotely collected facts under them
+16:21:00 <kei> sounds reasonable, though I might miss the point...
+16:21:01 <privateip> but why are you iterating over facts to begin with?
+16:21:35 <privateip> thats the part im missing
+16:21:53 <privateip> if i want a value i dont have to iterate over anything,  i just specify the key path
+16:22:16 <mhite> I was suggesting that you would need to iterate over the facts to filter on ansible_net_* if you wanted to drop ansible_net_* facts into its own structure to do something with
+16:22:30 <mhite> if you didn't separate them out into their own hierarchy
+16:22:51 <mhite> We can't presume the only use case for facts is to target a single known key name and do a specific thing with it
+16:23:23 <privateip> sorry im totally missing the use case here but....
+16:23:49 <mhite> And this is high-level issue; it's whether or not to co-mingle locally collected facts and remote/proxy collected facts into the same data level in a data structure hierarchy
+16:24:33 <privateip> sure i understand that part, i just dont understand why its a problem if the they are commingled
+16:25:43 <mhite> You've already name spaced them out using ansible_net_*... why not just put that into a proper key -> {'ansible_proxy_facts': {'ansible_hostname': 'etc', 'ansible_fact2': 'etc2'}}
+16:25:44 <privateip> that said, if we aren't building a common consistent set of facts for network, you can build the BIGIP fact structure exactly as you have outlined
+16:26:35 <mhite> I think I can make a better case and more thoroughly explain the issue if I write out something a bit more formal.
+16:26:44 <privateip> i get that ... so to reference something now its ['ansible_proxy_facts']['ansible_hostname'] instead of ['ansible_net_hostname'] but what does it get me besides more typing?
+16:27:07 * privateip not trying to be a PITA, just trying to understand
+16:27:14 <mhite> Even just doing a debug output on just the remotely collected facts is greatly simplified, for example
+16:27:21 <mhite> No problem, sorry if I am obtuse
+16:27:43 <mhite> because then you can have debug output all of ansible_proxy_facts
+16:27:47 <privateip> so we have filter argument for filtering facts
+16:27:58 <privateip> does that not solve the problem
+16:28:00 <mhite> rather than ALL facts, including the locally collected ones of the server you are running ansible on
+16:28:22 <mhite> the filtering facts presumably is only going to filter what has been collected by the network fact collecting module
+16:30:32 <mhite> Imagine you have gather_facts on in your playbook. This will make your ansible server include locally collected facts about the ansible server in the facts. IE. ansible_hostname, etc. And then you get all your proxy collected facts for your network device when you run the network fact module. Those show up as ansible_net_hostname, etc. in the same level of the facts. Now say I want to use debug to output the network collected facts. There is no easy
+16:30:32 <mhite> way to do this, because if you dump just the facts, you'll see them all -- local and remote. Why not make a top-level key under the normal facts key the separates out local from remote.
+16:31:01 <privateip> ok now i understand your use case
+16:31:10 <privateip> the filtering discussion was the key
+16:32:27 <privateip> i see pros and cons both ways
+16:32:28 <mhite> Cool, like I said, this isn't just about network devices but more about the co-mingling of facts collected on the ansible server along with the facts a fact collecting module might contribute (I keep calling these "proxy facts")
+16:32:47 <privateip> yeah we should carry this discussion over to #ansible-devel
+16:33:05 <privateip> this is much more than just network
+16:33:23 <privateip> this really impacts any module that is API driven using connnection=local
+16:33:27 <mhite> It seems silly to namespace this using prefixes when we've already got a data structure at our disposal. we don't _have_ to keep it flat
+16:33:38 <mhite> yes
+16:34:01 <privateip> technically its easy enough to accomplish
+16:34:04 <mhite> because using ansible_net_* is really just a very basic way of namespacing and avoiding collisions
+16:34:16 <privateip> im more thinking about user expectation
+16:34:37 <mhite> yeah, i think it's worth a wider discussion outside this W.G. for sure
+16:35:11 * kei agreed but prefer to have a continued discussion here as well. :)
+16:35:15 <privateip> #action privateip to widen and generalize discussion about facts
+16:35:39 * privateip to get head examined for density
+16:35:45 <privateip> :)
+16:36:07 <mhite> haha
+16:36:19 <privateip> #topic netvirt
+16:36:34 <christx21> hi
+16:36:39 <privateip> the floor is yours
+16:36:51 <christx21> brief update from me - we have received the Ok for GPLv3 (previously MIT)
+16:36:59 <privateip> nice
+16:37:13 <christx21> i'm busy documenting each of the modules, as you guys request python module to have some verbage
+16:37:19 <privateip> yep
+16:37:31 <christx21> that means i have some work to do, just to be clear - each modulde in python wil get one .md
+16:37:34 <privateip> you have the link to the doc string standards right?
+16:37:47 <christx21> nope, is it in the guidelines for writing mods?
+16:37:58 <christx21> might as well paste it in for me to be sure
+16:38:04 <privateip> no you should be documenting the module in the module docstring
+16:38:14 <privateip> thats how the Ansible documentation system generates the docs
+16:38:35 <christx21> okay, ..so no seprate md for it?
+16:38:47 <christx21> can you paste the info, i will check
+16:39:07 <privateip> http://docs.ansible.com/ansible/developing_modules.html#documenting-your-module
+16:39:34 <christx21> yeah, so defo not in the modules
+16:39:42 <christx21> we focussed on getting the code / api right
+16:39:50 <christx21> as usual.. code before docs :/
+16:39:56 <privateip> lol
+16:40:10 * kei :)
+16:40:13 <privateip> ok once you are ready we can review the PR
+16:40:22 <christx21> come on its true
+16:40:22 <christx21> ;)
+16:40:26 <privateip> looking forward to it
+16:40:30 <christx21> yes, request to keep it open, will add the doc strings now in
+16:40:35 <privateip> great
+16:40:40 <privateip> #topic Open Discussion
+16:40:41 <christx21> that will save me pain generating an .md for each of the 39 mods
+16:40:47 <christx21> i'm done!
+16:40:54 <privateip> anyone have anything else?
+16:41:04 <kei> ansible fest update?
+16:41:09 <privateip> ohhhh thanks
+16:41:13 <privateip> i almost forgot!!
+16:41:32 <privateip> https://www.ansible.com/ansiblefest
+16:41:38 <privateip> 7/28 - SF
+16:41:47 <privateip> just come, you wont regret it! :)
+16:41:55 <privateip> seriously though
+16:42:06 <SKG_NET> Where can I update the 2.2 Roadmap
+16:42:07 <christx21> i wish, i'm in Amsterdam at devopsdays
+16:42:11 <privateip> we are, for the first time, going to have a "networking hub"
+16:42:21 <christx21> i'm happy to name drop ansible in my workshop
+16:42:29 <kei> networking hub?
+16:42:44 <privateip> the networking hub will be a dedicated space just for folks interested and doing network automation with ansible
+16:42:52 <SKG_NET> Going to miss it :( in India currently
+16:42:56 <privateip> we will have a  demo network + tower running
+16:43:06 <mhite> I remember when Ansible fest was $100 ;)
+16:43:07 <kei> demo network!  yes!
+16:43:07 <privateip> SKG_NET: send a PR for roadmap
+16:43:22 <privateip> lol me too
+16:43:37 <kei> buy 3 get one free! :)
+16:43:38 <privateip> the networking hub will be open all afternoon
+16:43:52 <kei> is that still one day fest?
+16:43:57 <privateip> come hang out and lets discussion networking + ansible and how to take over the world
+16:44:00 <kei> and hub in the afternoon?
+16:44:01 <privateip> yep one day
+16:44:05 <privateip> yep
+16:44:13 <privateip> morning is general session
+16:44:16 <privateip> afternoon is tracks
+16:44:21 <privateip> new format
+16:44:24 <kei> multiple sessions, then?
+16:44:30 <privateip> yes three tracks
+16:44:33 <kei> wow!
+16:44:46 <kei> that's why three time more!? :)
+16:44:54 <privateip> technical, user stories, best practices (i think those are the three)
+16:44:57 <privateip> + networking hub
+16:45:21 <kei> all will be recorded and posted as well?
+16:45:30 <privateip> all afternoon session yes
+16:45:36 <kei> nice!
+16:45:40 <privateip> we typically dont record the general session
+16:45:45 <privateip> you will be there right?
+16:45:46 <privateip> :)
+16:45:54 <jimi|ansible> privateip: i'd like to push them to do so this go round
+16:46:14 <kei> jimi|ansible: push the morning session recorded?
+16:46:18 <privateip> yeah im with you on that
+16:46:21 <christx21> i need to run gentlemen, speak next week
+16:46:34 <jimi|ansible> kei: yes
+16:46:41 <kei> jimi|ansible: nice!
+16:46:48 <kei> but i'll be there, in any case
+16:46:56 <privateip> excellent
+16:47:08 <privateip> any other topics before we call it a day?
+16:47:14 <kei> but having recording helps me to encorage others to come for the future fest. :)
+16:47:42 <privateip> ok thanks all ... see you next time
+16:47:44 <privateip> #endmeeting

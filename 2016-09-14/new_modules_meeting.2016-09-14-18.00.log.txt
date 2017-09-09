@@ -1,0 +1,57 @@
+18:00:55 <nitzmahone> #startmeeting New Modules Meeting
+18:00:55 <zodbot> Meeting started Wed Sep 14 18:00:55 2016 UTC.  The chair is nitzmahone. Information about MeetBot at http://wiki.debian.org/MeetBot.
+18:00:55 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+18:00:55 <zodbot> The meeting name has been set to 'new_modules_meeting'
+18:01:34 <nitzmahone> Roll call...
+18:01:53 <alikins> howdy
+18:02:50 <nitzmahone> yo @tima
+18:02:57 <tima> hello.
+18:03:11 * gundalow waves
+18:04:01 <nitzmahone> I see tima has an item on the agenda- while we wait to see if anyone else is coming, want to chat about that?
+18:04:32 * mattclay waves
+18:04:38 <tima> sure. i just stuck it on there because it was a PR I was tracking and it got 2 shipits.
+18:05:18 * nitzmahone looks
+18:06:14 <tima> trying to find the link to that PR.
+18:06:23 <nitzmahone> https://github.com/ansible/ansible-modules-extras/pull/2305/
+18:06:27 <nitzmahone> #topic https://github.com/ansible/ansible-modules-extras/pull/2305/files
+18:06:38 <tima> ah. thanks.
+18:07:00 <nitzmahone> Looks like ryansb just recently added a comment about using the module_utils boto3_conn stuff to make it work with profiles.
+18:07:03 <tima> crap. looks like ryan spotted another thing.
+18:07:11 <tima> yep. that's that i was typing.
+18:07:23 <tima> listening to him now on the webinar.
+18:07:34 <MichaelBaydoun> here now
+18:07:40 * MichaelBaydoun is here now
+18:08:01 <nitzmahone> Yeah, so this one will probably have to wait until that gets addressed- that's definitely an important UI consideration
+18:08:10 <tima> understood.
+18:08:28 <tima> this is just a question -- when are we going to document the module utilities?
+18:08:44 <tima> it seems to me a lot of time is wasted in situations like these.
+18:09:13 <nitzmahone> Last we discussed, it'll probably be in 2.3- we're planning to make them a little more granular
+18:09:19 <tima> i know ryan and know he would have used the method ryan flagged.
+18:09:41 <tima> it just dawned on me i'm talking about two ryans.
+18:09:43 <nitzmahone> (break out into smaller chunks and use standard plugin docs for all)
+18:10:08 <tima> ryan the contributor would have used... ryan the core developer flagged.
+18:10:25 <abadger1999> I think module_utils will be documented before standard plugin docs overall.
+18:10:27 <tima> that will be a big help @nitzmahone.
+18:11:02 <abadger1999> basic.py will take a while (and probably will be helped by splitting of that code which is in itself a large task)
+18:11:31 <abadger1999> Other module_utils could start getting documented in code now, but we still need to setup infrastructure to pull that documentation into the website doc build.
+18:11:41 <nitzmahone> I think the last big contention point was "inline vs alongside"- inline is best for preventing drift, but bloats the stuff that's getting sent remote. There was talk of comment/dpc stripping and caching, and then it went off the rails IIRC
+18:11:43 <abadger1999> EOF
+18:12:03 <nitzmahone> s/dpc/doc/
+18:12:04 <abadger1999> I think we decided: for everything but basic.py, inline.
+18:12:18 <abadger1999> For basic.py, inline when it splits.  EXternal until then.
+18:12:49 <abadger1999> I've started on a basic.rst that douments it but it's so huge... I haven't even gotten into the AnsibleModule code yet.
+18:14:10 <abadger1999> EOF
+18:14:23 <nitzmahone> ryansb added a couple of lambda modules, but he's busy... I know mattclay might be interested in that, as we're already doing something a little different with his lambda modules in the Ansible CI (maybe some functionality could be merged together)
+18:14:56 <nitzmahone> We'll probably have to punt that one to next week when Ryan can be here, but for reference: https://github.com/ansible/ansible-modules-extras/pull/2829
+18:15:38 <nitzmahone> #topic open floor
+18:16:41 <nitzmahone> anyone got any other module-related stuff they want to kick around?
+18:16:49 <gundalow> Nothing from me
+18:17:04 <resmo> nope
+18:17:29 <gundalow> Just a reminder of the Contribuors Summit https://www.ansible.com/blog/ansible-contributor-summit-brooklyn-2016
+18:17:38 <nitzmahone> adjourning in 1m if no takers...
+18:18:00 <gundalow> also also cheap tickets for Anisble run out on 16th Sept https://www.ansible.com/ansiblefest
+18:18:06 <nitzmahone> thanks for the reminders gundalow!
+18:18:18 <gundalow> (even cheaper if you join the contributor summit, see the blog post for details)
+18:18:28 <nitzmahone> Sounds like we're out- thanks everyone!
+18:18:30 <gundalow> For those not able to make it in person it will be in this channel
+18:18:30 <nitzmahone> #endmeeting

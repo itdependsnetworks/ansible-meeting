@@ -1,0 +1,485 @@
+16:00:47 <akasurde> #startmeeting Ansible VMware Working Group Meeting
+16:00:47 <zodbot> Meeting started Mon Aug  7 16:00:47 2017 UTC.  The chair is akasurde. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:00:47 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:00:47 <zodbot> The meeting name has been set to 'ansible_vmware_working_group_meeting'
+16:00:59 <dag> o/
+16:01:13 <akasurde> #chair dag
+16:01:13 <zodbot> Current chairs: akasurde dag
+16:01:18 <akasurde> dag, hi
+16:01:35 * dag notices we are using "ansible_vmware_working_group_meeting" for this WG, so I will have to change the link in the WG README.md
+16:01:57 <akasurde> ok
+16:02:22 <jtanner> hello
+16:02:25 <dahr> Where are we meeting today?
+16:02:26 <akasurde> #chair jtanner
+16:02:26 <zodbot> Current chairs: akasurde dag jtanner
+16:02:31 <akasurde> #chair dahr
+16:02:31 <zodbot> Current chairs: akasurde dag dahr jtanner
+16:02:42 <akasurde> dahr, here :)
+16:03:29 <pdellaert> o/
+16:03:36 <jtanner> don't have to talk about this now, but the simulator has been unstable for some tests https://app.shippable.com/github/ansible/ansible/runs/30778/39/tests
+16:03:37 <akasurde> #chair pdellaert
+16:03:37 <zodbot> Current chairs: akasurde dag dahr jtanner pdellaert
+16:04:00 <dericcrago> hi
+16:04:04 <dag> jtanner: good to know
+16:04:14 <akasurde> #chair dericcrago
+16:04:14 <zodbot> Current chairs: akasurde dag dahr dericcrago jtanner pdellaert
+16:04:28 <dag> jtanner: sometimes it would be nice to have a CI status overview, so that when CI is going haywire, we don't have to guess :-)
+16:04:39 <jtanner> *shrug*
+16:04:53 <jtanner> ci_verified was the first step towards that iirc
+16:05:07 <jtanner> we've started to at least have some data about who's at fault
+16:05:12 <dag> right
+16:05:43 <jtanner> mattclay is the head honcho for that sort of thing though
+16:05:49 <akasurde> what do we have on today's agenda
+16:05:55 <akasurde> #chair jdatx
+16:05:55 <zodbot> Current chairs: akasurde dag dahr dericcrago jdatx jtanner pdellaert
+16:06:42 <dag> jtanner: I'll put it on the agenda of the Test WG
+16:06:50 <jtanner> cool
+16:07:00 <dahr> I'm currently in transit to Toronto but myself and Jake are here to answer any questions and provide input.
+16:07:20 <akasurde> #action dag To put VMware + ci_verified related to stuff to Test WG
+16:07:45 <akasurde> dahr, sure thanks
+16:07:52 <jtanner> were there other topics?
+16:08:06 <akasurde> I don't see any
+16:08:10 <jtanner> k
+16:08:18 <jtanner> well, i have some thoughts about the simulator issues
+16:08:32 <akasurde> #topic govcsim simulator issues
+16:08:40 <akasurde> jtanner, go ahead
+16:08:54 <jtanner> i suspect there might be some conflicts with spinning up the contain for multiple concurrent tests
+16:09:18 <jtanner> we need to confirm if each test run gets it's own instance of the container or if it's shared among all
+16:09:48 <jtanner> second, we need to have the spawn route do better validation on startup and return an error code if not sucess
+16:10:11 <jtanner> and tests to fail earlier instead of using the error message as a value for module inputs
+16:10:40 <akasurde> ok
+16:10:50 <jtanner> stuff i should have done on initial implementation but got overwhelmed with $WORK
+16:11:11 <dag> akasurde: there were various PR's raised in the agenda, maybe refresh the agenda issue ?
+16:11:17 <pdellaert> (sorry on two calls at once, i'll read , but ping me if important)
+16:12:09 <akasurde> dag, ok
+16:13:06 <akasurde> jtanner, what do you suggest for simulator issue then ?
+16:13:26 <jtanner> exactly what i said above i guess
+16:13:39 <dahr> Aside from our initial call, how would you like us (vmware) to assist in your iniatives?
+16:14:32 <dag> akasurde: I see a lot of entries in the agenda that are not fully struck (strikken, stroke?), which means they are not completed. Apart from the new-modules review (which we always should review to see if there's anything that is stuck
+16:14:42 <jtanner> dahr: if you guys are really offering time, it would help to start with review on PRs and/or triage on open issues
+16:15:10 <akasurde> #action jtanner Look into running separate container for govcsim
+16:15:16 <dag> dahr: There are a lot of GPL3+ modules that look quite interesting in your Github repository
+16:15:30 <dag> dahr: I wonder if there is a plan to get those upstream ?
+16:15:33 <akasurde> dag, yes there are pending due to code-review
+16:15:53 <akasurde> they == PR*
+16:16:06 <bcoca> wouldnt that be 'downstream'?
+16:16:15 <akasurde> #chair bcoca
+16:16:15 <zodbot> Current chairs: akasurde bcoca dag dahr dericcrago jdatx jtanner pdellaert
+16:16:41 <dag> bcoca: depends, for people using Ansible I'd say Ansible is upstream and VMware github is 3rd party
+16:16:41 <jdatx> yes, I'm currently looking at removing any overlap on whats currently in our GPL3 and other module repos
+16:17:51 <akasurde> dahr, There is also a need of "magic" method to find objects
+16:18:07 <dahr> Understood.  I'm not sure how much time we can commit to but once we scope the needs, we can start putting some time in.  This is helpful.  Do we have a contact point?
+16:18:36 <jtanner> contact in what context?
+16:18:47 <bcoca> ^ thaumos?
+16:18:58 <jtanner> i'm almost always available via email, but #ansible-vmware is the goto spot
+16:19:13 <jtanner> jtanner@redhat.com
+16:19:21 <bcoca> normally one or more core team here or in other irc channels
+16:19:39 <dag> ok, so who would "scope the needs" and make a proposal plan
+16:20:03 <jtanner> seems like something that the whole group should devise
+16:20:29 <jtanner> devise/design/deliberate
+16:20:32 <dag> jtanner: what would the modus operandi then be ? During special meetings, one-by-one reviewins ?
+16:20:54 <dahr> Lol, every time I start to type, you guys already get the conversation going.
+16:21:08 <akasurde> first priority will be making existing modules robust and finish with existing issues
+16:21:08 <dag> dahr: welcome to IRC ;-)
+16:21:26 <bcoca> then 'feature completeness'
+16:21:46 <akasurde> I think we have pretty much load of things on plate right now
+16:21:47 <jtanner> dag: i dunno ... i hate meetings. i prefer tickets and working through them adhoc
+16:21:56 <dahr> Agreed.
+16:21:58 <akasurde> yes, feature completeness is also priority
+16:22:10 <jdatx> + 1 @jtanner ^^
+16:22:19 <jtanner> vsphere_guest -> vmware_guest priority
+16:22:25 <dag> akasurde: sure, but I picked up that if there is a plan, we'd have extra resources
+16:22:48 <dag> akasurde: if you propose we first do the stuff we are doing, this is being blocked to a point that is undefined and may never happen
+16:22:51 <akasurde> #link https://github.com/ansible/community/wiki/VMware%3A-vsphere_guest_deprecation
+16:23:02 * dag prefers unblocking people in this case
+16:23:20 <dag> maybe it means "only do the stuff that does not overlap"
+16:23:32 <jtanner> https://github.com/ansible/community/wiki/VMware%3A-action-list looks like a "plan" to me
+16:23:34 <dahr> The issue on our side is that we have so much going on (i.e. repo tracking on our end, engagements, etc...) that I want to be sure we have visibility to your needs.
+16:24:08 <dag> jtanner: well, that plan is updated all the time, so we could add individual tasks for the VMware people
+16:24:15 <akasurde> we also lack reviewers which make PR submission and merge process slow
+16:24:16 <dag> jtanner: my question is, what would those tasks be
+16:24:34 <jtanner> dunno, everything depends on time commitment
+16:24:47 <jtanner> review requests may be a good initial phase
+16:24:55 <dag> jtanner: and time commitment is hard if there's no scope and no requirements
+16:25:06 <akasurde> dag, same here
+16:25:22 <dag> yeah, so that's not how the community works (even we all want it to work like this)
+16:25:42 <dag> "you can only work on the stuff *you* would like to do, if you first emerge yourself in the stuff *we* want to get done"
+16:25:51 <jtanner> heh
+16:25:52 <dahr> For context, we are not solely dedicated to development as we are also PSO.  Therefore, we'll need to plan some time around collab with you guys.
+16:26:28 <bcoca> bugfixes / review can be done with limited commitment X hours a week
+16:26:41 <jtanner> dahr: most people are in the same boat
+16:26:44 <bcoca> having a development plan for rest can still be done in p;arallel
+16:27:21 <dag> so my proposal is that we first set the scope (e.g. make a list of modules that do not overlap with existing modules), get those submitted and reviewed
+16:27:33 <dahr> Perfect.  I just want to set expectations to limit disappointment.
+16:27:39 <jtanner> dahr: maybe we could start with getting your github nicks added to the wiki, so akasurde/dag/etc could request your reviews on PRs?
+16:27:46 <dag> (if the reviews go too slow, you can help out reviewing other stuff so others can help with your stuff)
+16:27:58 <dahr> Jake, are you catching this?
+16:28:03 <jdatx> yes sir
+16:28:55 <akasurde> #action akasurde add nick wise PR for review request
+16:29:19 <dag> in the process of submitting these PRs and the reviews, I am sure new decisions and library updates will happen, and people will get to know processes and people
+16:29:25 <jdatx> @jtanner - my todo is to remove anything in the vmware module repos that ansible currently supports and look to get non overlapping modules into upsteam
+16:29:42 <dahr> Perfect.  I'll make some notes, circle up with Jake and Tom Scanlan and them put a plan together.
+16:29:52 <dag> we can track the progress of this "project" from: https://github.com/ansible/community/wiki/VMware%3A-progress-tracker
+16:30:10 <jtanner> oh ... i just remembered something
+16:30:16 <jtanner> and it would help if vmware contributed
+16:30:17 <akasurde> #action jdatx to remove anything in the vmware module repos that ansible currently supports and look to get non overlapping modules into upsteam
+16:30:19 <dag> just add a new section, list the modules one-by-one, add the PR numbers in there
+16:30:40 <jtanner> we need an FAQ on why we don't have tagging support in vmware_inventory.py or vmware_*.py
+16:30:59 <jtanner> something to explain how the soap api doesn't deliever tags
+16:31:02 <jtanner> deliver*
+16:31:39 <jtanner> i get pinged on that at least once a month
+16:32:34 <akasurde> jtanner, Do you think a wiki page will help ?
+16:32:42 <dahr> I think it would.
+16:32:48 <jtanner> yes, should be okay
+16:33:06 <jtanner> official docs doesn't do "FAQs" imo
+16:33:21 <akasurde> Ok I will start a page in wiki, dahr/jdatx can work on it
+16:33:27 <jtanner> cool
+16:33:52 <akasurde> #action akasurde add a wiki page for FAQs to discuss issues like tagging support
+16:33:53 <jtanner> i  can also add some stuff about how to perf tune vmware_inventory.py
+16:34:00 <jtanner> which is another thing i get pinged about
+16:34:27 <akasurde> Perf == magic method to find objects :)
+16:34:35 <jtanner> heh, no
+16:34:38 <dahr> Guys, I'm sorry but I gotta run.  Need to eat lunch before my flight.  If you can, please send a summary email to dahr@vmware.com and jdupuy@vmware.com
+16:35:11 <akasurde> dahr, Ok, sure.
+16:35:33 <dahr> If you guys feel the need for it, I can set up a recurring webex (monthly, bi-weekly) to discuss.
+16:35:39 <jtanner> perf == limiting the properties collected instead of serializing everything
+16:36:03 <dahr> I hate meetings but I see a need for them....from time to time.
+16:36:09 <jtanner> dahr: let's continue on with this meeting for a bit long (we're still new at it)
+16:36:18 <jtanner> a bit longer*
+16:36:21 <dag> dahr: I think we all prefer these weekly IRC meetings to track progress, or unblock things
+16:36:37 <dahr> No worries.  Just let me know.  You guys take care and we'll start working towards a tighter collabe.
+16:36:40 <dahr> *collab
+16:37:07 <dag> but you can always ask here for advice
+16:37:52 <dag> ok, that was useful ! (closes one of the questions on the wiki I had wrt. the VMware modules, I'll write up a brief summary)
+16:38:01 <dag> can we go to the normal agenda now ? :-)
+16:38:15 <akasurde> if wee don't have anything else we can start with dag's requests
+16:39:41 <akasurde> #link https://github.com/ansible/ansible/pull/25140
+16:40:01 <akasurde> need a second shipit on this ^^
+16:40:04 <dag> dahr, jdatx, Tom Scalan, if you want to raise a topic to this meeting, you can do that here: https://github.com/ansible/community/issues/206
+16:40:23 <dag> Also please add your name/github id at: https://github.com/ansible/community/blob/master/group-vmware/README.md
+16:41:05 <dag> akasurde: so I would like to get that merged
+16:41:59 <dag> akasurde: I already regretted making that PR, but not pushing through would make it all an ever bigger waste of time
+16:42:12 <jtanner> it's going to remain needs_revision until that version_added error is fixed
+16:42:24 <dag> jtanner: that version_added is not an error
+16:42:33 <dag> jtanner: the parameter was undocumented
+16:42:47 <akasurde> state was undocumented
+16:42:54 <dag> (and it's always a hassle to get those things fixed because everyone believes the CI more than me :-))
+16:43:06 <jtanner> we still have to make the test pass
+16:43:07 <akasurde> hehe
+16:43:15 <jtanner> version_added: legacy ... iirc
+16:43:32 <dag> jtanner: no mattclay told me it should just be merged
+16:43:49 <jtanner> oh
+16:44:08 <dag> he always signs off on these things
+16:44:09 <dag> https://github.com/ansible/ansible/pull/25140#issuecomment-311494205
+16:44:31 <jtanner> merged
+16:44:39 <dag> so here we come back to my biggest ansibot complaint, nobody reads the whole history because of old CI errors (noise) messing with the real content (signal)
+16:44:54 <dag> ansibot is lowering the signal-to-noise ratio
+16:45:09 <dag> it does not help the review process, and it does not help stuff to be merged quicker
+16:45:18 <jtanner> i don't want to delete those messages
+16:45:25 <dag> (especially not when you actually need CI for testing stuff you cannot test beforehand)
+16:45:27 <jtanner> i may be willing to turn them into invisible comments
+16:45:32 <jtanner> <!--- -->
+16:45:50 <dag> yeah, you told me, but people miss the real information (because of old CI issues)
+16:46:00 <dag> and that's worse IMO
+16:46:04 <jtanner> the bot has no facility for editing/deleting old comments right now
+16:46:29 <jtanner> it would not be a quick implementation
+16:46:31 <dag> I understand, but that feature request was denied (to add it) as denied, so it wilml never get that :-)
+16:47:08 <jtanner> if anything, that test should get "smarter"
+16:47:29 <dag> anyway, some of the things that PR was supposed to do was already done in other PRs (talking about waste of existing resources there)
+16:47:31 <akasurde> also we need more reviewers
+16:47:41 <jtanner> as a busy person, i don't want to have to keep a mental map of what tests can be ignored
+16:48:24 <akasurde> #link https://github.com/ansible/ansible/pull/25143
+16:48:32 <akasurde> jtanner, thanks for merge
+16:49:36 <jtanner> 25143 merged
+16:49:40 <dag> jtanner: agreed
+16:49:57 <dag> we're on a roll :-D
+16:50:02 <akasurde> jtanner, thanks
+16:50:04 * jtanner has hope that vcsim will support license soon
+16:50:18 <dag> PR 27005 needs integration tests, I was planning to do that before this meeting, but alas
+16:50:44 <akasurde> dag, it needs rebase too
+16:51:10 <akasurde> dag, are you planning to address my review requests ?
+16:51:22 <dag> akasurde: not again :-(
+16:51:41 <dag> akasurde: I didn't see the review requests :-(
+16:51:53 <jtanner> that's why i don't like touching changelog in PRs
+16:51:53 <akasurde> dag, ah
+16:52:00 <dag> akasurde: probably because when I got out of vacancies new CI tests added new errors
+16:52:24 <akasurde> yup and also some refactor thingy
+16:52:27 <dag> jtanner: I don't mind if we make that a rule (although it's nice for others to see what's coming in the next release)
+16:52:48 <pdellaert> dag, jtanner - i suggest having changelog changes in a separate PR
+16:52:50 <dag> vacancies ? I meant vacation :)
+16:52:55 <jtanner> we have ways of figuring out what modules are missing from the changelog
+16:53:01 <pdellaert> after the main PR is merged
+16:53:22 <jtanner> https://github.com/jctanner/ansible-tools/blob/master/modules_changelog.py
+16:53:22 <dag> pdellaert: if that PR takes ages to get merged, the same hell IMO
+16:53:27 <pdellaert> same for BOTMETA
+16:53:34 <dag> pdellaert: the real issue here is that PRs stay open for months
+16:53:53 <pdellaert> dag: in my (one) experience, the changelog/BOTMETA PR was merged an hour or 2 after i created it
+16:53:56 <jtanner> botmeta shouldn't need update, if "authors" is filled out properly in the module
+16:54:11 <dag> jtanner: is that active ? nice !
+16:54:25 <jtanner> was part of botmeta implementation
+16:54:39 <pdellaert> jtanner: ah, i was informed by someone i had to :), good to hear
+16:54:39 <jtanner> allowed the initial file to be much smaller
+16:54:56 <akasurde> #link https://github.com/ansible/ansible/pull/27236
+16:55:02 <dag> pdellaert: it was needed when we had MAINTAINERS.txt
+16:55:23 <jtanner> yep, things are a bit different now
+16:55:26 <jtanner> easier to keep track of
+16:55:40 <pdellaert> akasurde: just want to know if there's anything that needs to happen on 27236
+16:55:50 <jtanner> is 27236 a fact module?
+16:55:57 <jtanner> oh, a wait_for?
+16:56:07 <pdellaert> no, it is a module to wait for the vmware tools to become available
+16:56:16 <akasurde> pdellaert, I am OK with PR 27236
+16:56:23 <pdellaert> main use casE: wait until a command can be pushed through the tools
+16:56:25 <jtanner> nah ...
+16:56:41 <jtanner> if it's primary goal is to wait for something, it should have "wait" in the name ... imo
+16:56:54 <pdellaert> yeah, but the goal is to expand with tools installation
+16:56:58 <pdellaert> (trigger it)
+16:57:29 <dag> pdellaert: the examples still call it vmware_guest_tools_wait BTW
+16:57:35 <jtanner> well, i'll only say that this is a topic the working group needs to deliberate and hopefully vote on
+16:57:44 <pdellaert> oh, dag thanks, i'll update
+16:57:57 <pdellaert> sure, and i can always rename/refactor of course :)
+16:58:26 <jtanner> you can have module that does lots of things and users need to read the docstrings to understand fully, or you can have separate modules with less guessing
+16:58:55 <dag> pdellaert: I would also separate it into two modules, one for installing/updating vmware-tools, and one for waiting
+16:59:34 <dag> pdellaert: I wonder if the waiting could be done with a loop over vmware facts instead
+16:59:58 <dag> that way people can wait for anything actually, not just the availability (or the availability of a specific version) of vmware_guest tools
+17:00:12 <pdellaert> dag, potentially yes, but that would require more work in the playbook itself?
+17:00:28 <dag> pdellaert: true, but also a lot more versatile solution
+17:01:03 <dag> pdellaert: it would be one of the examples of such facts module, and could be part of the VMware-specific documentation we could add
+17:01:33 <akasurde> Can we move on to https://github.com/ansible/community/issues/206#issuecomment-318256386
+17:01:36 <akasurde> ?
+17:01:37 <pdellaert> why not offer both? A simple solution for something that is a typical use case (sending commands over vmware tools), and provide examples for facts to wait for other stuff?
+17:01:45 <pdellaert> akasurde: i need to know what to do :)
+17:02:05 <akasurde> pdellaert, Ok
+17:02:15 <dag> pdellaert: I'll let others decide, I stated my view ;-)
+17:02:26 <jtanner> gonna have to be democratic
+17:02:45 <pdellaert> i'm ok with rename, i do think the module still has purpose
+17:02:52 <akasurde> I am OK with two separate module - as it is more managable and robust
+17:03:05 <jtanner> yes, module definitely has purpose ... i think we all agree on that
+17:03:32 <akasurde> #action pdellaert rename module in 27236
+17:03:37 <pdellaert> ok, so rename it it, `vmware_tools_wait` to keep it simple?
+17:04:25 <jtanner> it's long, but ... vmware_guest_tools_wait
+17:04:28 <jtanner> is my vote
+17:05:03 <akasurde> +1 for vmware_guest_tools_wait
+17:05:07 <pdellaert> ok, done
+17:05:10 <pdellaert> thanks!
+17:05:19 <pdellaert> (well, done as in decided ;))
+17:06:39 <akasurde> #link https://github.com/ansible/ansible/pull/25944
+17:08:01 <jtanner> people ignoring bot message about template =(
+17:08:02 <pdellaert> There is something wrong, ha-datacenter only works for the ESXi host, while the username is administrator@vsphere.local, which is vCenter based
+17:08:23 <jtanner> we're at the top of the hour, so we should end the meeting before starting a new PR
+17:08:53 <jtanner> don't have to though
+17:09:12 <jtanner> i need to go eat before 2pm est meeting
+17:09:19 <pdellaert> i'll add my comment as a review
+17:10:05 <pdellaert> jtanner: what is the right way to define author so that BOTMETA picks it up? Is it github handle?
+17:10:32 <jtanner> one sec, i'll look at code
+17:10:51 <pdellaert> thx
+17:11:16 <jtanner> https://github.com/ansible/ansibullbot/blob/master/ansibullbot/utils/moduletools.py#L588
+17:11:26 <dag> Name (@handle)
+17:11:44 <akasurde> pdellaert, dag should we close and continue in the next meeting ?
+17:12:07 <dag> jtanner: why isn't that processed as yaml ? ;-)
+17:12:21 <jtanner> it isn't?
+17:12:38 <dag> akasurde: I don't mind stretching it a bit if we can get some more things nublocked
+17:12:45 <pdellaert> akasurde: same
+17:12:49 <jtanner> the data is sent to yaml.load
+17:12:57 <akasurde> ok
+17:13:24 <dag> ah, a lot lower than I expected
+17:13:33 <jtanner> pdellaert: this should be a valid example https://github.com/ansible/ansible/blob/devel/lib/ansible/modules/cloud/vmware/vmware_guest.py#L25-L27
+17:13:34 <dag> I saw a lot of data-mangling
+17:13:55 <dag> jtanner: so the question has to be, why the data-mangling to only pass the author-lines ? :)
+17:14:00 <jtanner> yes, datamanagling is a an unfortunate necessity for what most of the bot has to do
+17:14:21 <jtanner> dag: what is the alternative?
+17:14:39 <dag> can't you just give it the whole documentation-string, and just get author out of it ?
+17:14:41 <jtanner> i can't just put the whole .py into yaml.load
+17:14:56 <jtanner> the datamangling is looking for the docstrings
+17:15:08 <dag> no, true, but import the module and get DOCUMENTATION ?
+17:15:20 <dag> isn't that the purpose for putting it in a variable ?
+17:15:41 <jtanner> that would be a lot of importing for a long running process
+17:15:42 <dag> (if you don't have time for this now, just tell me ;-))
+17:15:50 <dag> ah, ok
+17:15:54 <pdellaert> can we continue with the PRs? ;)
+17:15:56 <jtanner> if it were sandboxed, maybe
+17:16:04 <dag> pdellaert: sure
+17:16:08 <pdellaert> thx for the example, jtanner :)
+17:16:09 <akasurde> https://github.com/ansible/ansible/pull/25857
+17:16:10 * jtanner has to relocate ... bbiaf
+17:16:22 <akasurde> #link https://github.com/ansible/ansible/pull/25857
+17:16:29 <dag> pdellaert: you asked the question that got use sidetracked :-p
+17:16:38 <pdellaert> dag, not that it's not interesting, just want to continue the meeting ;)
+17:16:50 <pdellaert> dag: sure, i'll take the blame! I'm used to that :D
+17:17:23 <dag> akasurde: I see a few things I would do differently, but unrelated to the patch
+17:17:36 <akasurde> dag, shoot
+17:17:48 <dag> (description needs a trailing dot, required=False is unwanted, etc.)
+17:17:58 <dag> the usual cosmetic stuff
+17:18:09 <dag> author should be a list
+17:18:11 <akasurde> dag, I am planning for new PR (let us get this one merged first)
+17:18:25 <dag> sure
+17:18:33 <dag> ah, it's yours !
+17:18:57 <akasurde> #action akasurde file PR for cosmetic changes in vmware_vswitch
+17:19:22 <akasurde> dag, I am also maintainer of this module :)
+17:19:52 <dag> I don't have the time to test it myself (with v2.4 around the corner and plenty of PRs I have to maintain because they don't get merged :-/)
+17:20:42 <pdellaert> can't test, but looks ok to me
+17:22:07 <akasurde> OK anything else on my side to do
+17:22:33 <dag> version_added needs to be a string
+17:23:07 <dag> you don't have to do any special handling for string vs list
+17:23:24 <dag> since you set it to be a list from the argument_spec, it will always be a list
+17:23:36 <dag> (if someone puts a string there, it will be converted into a one-item list)
+17:23:46 <dag> so actually, the change is even smaller
+17:24:02 <dag> (remove the square brackets)
+17:25:06 <akasurde> dag, ok
+17:25:10 <dag> I would also rename that parameter from 'nic_name' to 'nics' (and keep the alias)
+17:25:43 <akasurde> noted
+17:25:52 <dag> and personally I would use 'switch' instead of 'switch_name', but that's not that important
+17:26:14 <akasurde> can add as alias though
+17:26:34 <dag> that's just personal preference (or consistency throughout Ansible)
+17:26:49 <dag> but Ansible is not very consistent, that ship has sailed a long time ago :p
+17:27:14 <dag> it would be nice to have at least consistency for the vmware modules
+17:27:19 <dag> I think that is more important
+17:27:26 <dag> (we are doing the same thing for Windows modules BTW)
+17:27:43 <akasurde> ok
+17:27:47 <dag> you often see things like user_name vs user vs username :-/
+17:28:24 <dag> can we do some more PRs ?
+17:29:28 <dag> akasurde: we can always do a VMware sprint, which is basically what we are doing, but maybe we a more focused scope, and issue/PR owners are invited
+17:29:59 <dag> (if you wonder why my sentences are missing stuff, I only slept 3 hours)
+17:30:02 <akasurde> sure, sounds interesting
+17:30:23 <akasurde> dag, np, got the sense of sentence
+17:30:31 <dag> it can help to get more people involved (because we involve the issue/PR owners, and we ask other contributors to join)
+17:30:47 <pdellaert> sounds like a good plan, indeed
+17:31:05 <dag> for Windows we looked at the modules with the most issues, made a list and gets those reviewed
+17:31:34 <akasurde> dag, link please ?
+17:31:48 <dag> we're focusing on issues here, because we want those to get fixed before looking at the open PRs
+17:31:49 <dag> https://github.com/ansible/community/wiki/Windows%3A-sprints#sprint-1
+17:32:20 <dag> you can see that most of them got resolved,not always immediately, but the additional attention caused some extra effort afterwards
+17:32:44 <dag> and by working per-module, some of the context is already there, so it becomes easier to refactor things and fix more than one issue in the same effort
+17:33:10 <dag> (it becomes clear when an approach, or implementation was in need of an overhaul)
+17:33:28 <akasurde> Cool
+17:33:50 <dag> for vmware the number of open tickets is still manageable
+17:33:54 <akasurde> dag, can you please add same page for vmware ?
+17:33:59 <dag> sure
+17:34:12 <akasurde> #action dag Add sprint page for VMware efforts
+17:34:25 <dag> we also picked the modules that were easy to test ourselves (not requiring specific infrastructure)
+17:35:26 <dag> the original idea was that we would do that stuff in parallel, but it proved more valuable (and enjoyable) to do it together
+17:35:41 <dag> especially since some of the stuff requires a discussion or decision
+17:35:48 <akasurde> ok
+17:36:04 <dag> so do we want to do some more PRs ?
+17:36:20 <dag> or do we want to discuss e.g. what to do by v2.4 ?
+17:36:41 <dag> I saw the meeting minutes, but that basically said "let's stick to the plan"
+17:36:45 <pdellaert> do we still have much time to do more?
+17:36:46 <akasurde> I am Ok for some more PRs maybe 2 or 3
+17:37:09 <dag> but the question I wanted to ask was, do we want to add stuff to the plan :-)
+17:37:19 <dag> things that have more merit than other stuff
+17:37:29 <dag> like adding integration tests, or better coverage support
+17:37:40 <akasurde> dag we have enough for 2.4
+17:37:43 <dag> rather than adding more stuff, make the existing stuff better
+17:38:03 <akasurde> yes, lets make exisiting stuff more better
+17:38:07 <dag> akasurde: the idea is not "with the resources we have" but "how can we find more resources"
+17:38:25 <jtanner> welcome to my life =)
+17:38:30 <dag> if you make a project and add focus, new outside people can start working on it
+17:38:51 <jtanner> that's why i prioritize bot work
+17:38:57 <jtanner> make the spice flow
+17:39:01 <dag> for Windows we are seeing improvement and acceleration, albeit not as much as I had hoped
+17:39:09 <dag> jtanner: yes, that's important
+17:40:06 <dag> akasurde: a lot of people have joined the VMware WG after I asked who wanted to join
+17:40:25 <akasurde> dag, yes indeed
+17:40:27 <dag> akasurde: and those people are currently not activated (while they did spoke out the wish to become more involved)
+17:40:46 <dag> so I think we are missing out on a real opportunity
+17:40:56 <dag> (for Windows, nobody signed up :p)
+17:41:05 <jtanner> can you blame them
+17:41:06 <jtanner> =P
+17:41:09 <dag> the difference could not be bigger
+17:41:24 <pdellaert> ;)
+17:41:34 <dag> the exact same message, to the same people (prior contributors, existing PR owners)
+17:41:57 <dag> and there were 3x more Windows people than VMware people
+17:42:12 <dag> anyway, how can we activate them ?
+17:42:20 <akasurde> what is situation now
+17:42:23 <jtanner> finding more volunteers/maintainers is a larger problem for the entirety of the ansible project
+17:42:37 <jtanner> it's an issue we haven't solved
+17:42:42 <dag> ask for reviews would be a simple request, but I am afraid that may not trigger people
+17:43:10 <dag> maybe the sprints could work here better
+17:43:31 <akasurde> Do you think the time is the issue ?
+17:43:35 <dag> and merge things while we're doing it
+17:43:44 <jtanner> finding people who know vmware, know the soap api, know pyvmomi, know ansible, know how to dev ansible is a difficult set of qualities to find
+17:43:56 <dag> akasurde: I think most people wonder what they're contribution could be
+17:44:03 <dag> their
+17:44:13 <akasurde> ah
+17:44:19 <jtanner> again, a problem for all of ansible
+17:45:03 <dag> and I think the solution is to get them into it step-by-step (so a sprint, or making integration tests together)
+17:45:42 <jtanner> that's what i started with filament
+17:45:53 <jtanner> or tried
+17:45:58 <dag> jtanner: the question is if we need all SOAP api/pyvmomi experts, for testing modules we don't
+17:46:03 <pdellaert> and, as jtanner says, in case of vmware, finding the combination is not easy. However, of one or two are missing, they could learn those
+17:46:21 <dag> the people that signed up at least are interested
+17:46:39 <dag> either to be in the loop (notified) or to contribute (because they depend on it)
+17:46:53 <jtanner> they can learn the ansible side via https://tannerjc.net/wiki/index.php?title=Ansible_Developer_Filament
+17:47:41 <dag> jtanner: right, but that's already a big scary commitment
+17:48:01 <dag> jtanner: if you look at that, you think "a few hours work" and you do something else
+17:48:16 <jtanner> *shrug* ... i they can't do level 1 from that, they're probably not ready for python development
+17:48:25 <dag> hehe
+17:48:55 <dag> maybe I look at it from a different point of view
+17:49:04 <dag> I don't think they all of have to be jtanner's
+17:49:08 <dag> I am not a jtanner
+17:49:14 <jtanner> i'm not a dag
+17:49:27 <dag> :-)
+17:49:55 <dag> you answered so quick, I am actually wondering if you're scripted :)
+17:50:12 <dag> ok, let's do some PRs now
+17:50:21 <dag> and I'll see if we can prepare a sprint
+17:50:41 <dag> the whole feel-good story behind sprints are here: https://github.com/ansible/community/blob/master/SPRINTS.md
+17:52:27 <akasurde> #link https://github.com/ansible/ansible/pull/26323
+17:54:50 <jtanner> dag: i might be a script ... that would be the ultimate career goal for people like us, right?
+17:55:11 <akasurde> ansibot == jtanner
+17:55:15 <akasurde> hehe
+17:55:30 <jtanner> i LOVE to label
+17:55:40 <dag> akasure: I would change the logic a bit
+17:55:43 <akasurde> I am sure jtanner is a script now
+17:56:07 <akasurde> AI maybe
+17:56:21 <dag> akasurde: I would set sslContext to None by default, change it if 'not validate_certs', and call SmartConnect only once
+17:56:35 <dag> that simplifies the code a bit, since sslContext is None by default if not specified
+17:57:08 <dag> then you can add the try/except directly around the SmartConnect line, so that's preferred as well
+17:57:20 <akasurde> dag, OK, I don't remember why kept it apart
+17:58:26 <dag> there's still the issue with the second SmartConnect call in the except block, that could be improved I guess (since an new exception will cause an improper module failure)
+17:59:17 <akasurde> there is no smartconnect in except block
+17:59:20 <dag> ah, sorry
+17:59:23 <dag> you already removed it
+17:59:25 <dag> damned :)
+17:59:33 <akasurde> dag you need sleep
+17:59:40 <dag> so that's perfect !
+18:00:03 <dag> yeah, and tonight another all-nighter (Pacific Time)
+18:00:36 <dag> personally I would catch all the various exception as 'e'
+18:00:43 <dag> and use 'e' in all the messages
+18:01:24 <dag> I don't see a good reason to have unique exception names in an exception-cascade (I find it more confusing even)
+18:01:46 <akasurde> ok
+18:02:57 <dag> akasurde; if you do it now, we can merge it !
+18:03:20 <akasurde> just sslContext, right ?
+18:06:14 <dag> yeah, so:
+18:06:15 <dag> sslContext = None
+18:06:15 <dag> if not validate_certs:
+18:06:15 <dag> sslContext = ...
+18:06:15 <dag> try:
+18:06:15 <dag> service_instance = connect.SmartConnect(..., sslContext=sslContext)
+18:06:15 <dag> except SomeException as e:
+18:06:16 <dag> module.fail_json(... % e)
+18:06:16 <dag> except AnotherException as e:
+18:06:17 <dag> module.fail_json(... % e)
+18:06:37 <dag> sorry, that was ssl_context
+18:07:05 <akasurde> ok
+18:07:34 <dag> I am also wondering why we have that apierror result value
+18:07:44 <dag> I would prefer we add the error to the msg-string
+18:08:01 <dag> otherwise different error messages look exactly the same without the additional context
+18:08:30 <akasurde> ok
+18:08:31 <dag> and apierror is not something people would want to check for anyhow, so there's no real benefit of having another custom error-marker in the output
+18:09:43 <dag> and then you don't have to add the error_msg string at the top, just repeat it twice with %s in it
+18:09:56 <dag> I always prefer to have the error-string at the location where it is raised
+18:10:31 <dag> so you can easily grep for it (and if it is in the code more than once, you can tell straight away)
+18:11:00 <akasurde> dag, have a look
+18:11:06 <dag> we're not optimizing for memory efficiency (or at least leave that up to the compiler ;-))
+18:11:46 <dag> yup, I would move the error_msg directly into module.fail_json() though
+18:12:23 <dag> even if it is the same string (but it doesn't have to be the same string, you could actually indicate a connection error, or an invalid login error in that message
+18:12:44 <dag> Unable to connect is very broad, especially if we now the login was invalid
+18:12:54 <akasurde> ok
+18:13:23 <akasurde> I will close the meeting and then we can take the discussion to ansible-vmware, OK ?
+18:13:23 <dag> So "Failed to login to vCenter or ESXi API. %s" % e.msg
+18:13:33 <dag> yeah :-)
+18:13:48 <dag> BTW we could have a bot in ansible-vmware and do meetings there
+18:14:03 <dag> we don't have to, but it does make it easier to list the meeting logs/minutes by channel
+18:14:21 <bcoca> bot has resource limits that is why we dont have it on all channels
+18:14:26 <dag> and people only interested in vmware are automatically involved
+18:14:33 <dag> bcoca: the resource limits have been lifted
+18:14:43 <akasurde> #endmeeting

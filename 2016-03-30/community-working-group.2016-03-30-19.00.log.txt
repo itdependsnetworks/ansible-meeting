@@ -1,0 +1,255 @@
+19:00:01 <gregdek> #startmeeting  community-working-group
+19:00:01 <zodbot> Meeting started Wed Mar 30 19:00:01 2016 UTC.  The chair is gregdek. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:00:01 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:00:01 <zodbot> The meeting name has been set to 'community-working-group'
+19:00:08 <gregdek> #chair rbergeron
+19:00:08 <zodbot> Current chairs: gregdek rbergeron
+19:00:21 <gregdek> #topic Agenda as always: https://waffle.io/ansible/community
+19:00:32 <gregdek> We'll wait a couple of minutes and get started
+19:00:37 <gundalow> cool
+19:02:27 <rbergeron> greetings
+19:02:38 <gundalow> hey rbergeron :)
+19:02:43 <gundalow> you stationary today?
+19:03:10 <rbergeron> i am indeed
+19:03:11 <gregdek> ok, back
+19:03:13 <gundalow> woot
+19:03:28 <gregdek> Let's go through our in progress stuff!
+19:03:37 <gregdek> #topic https://github.com/ansible/community/issues/47
+19:03:47 <gregdek> Travis performance.
+19:03:52 <gregdek> gundalow: any update?
+19:04:29 <rbergeron> ahhh.
+19:04:35 <bcoca> performance is not cause of our tests (they run in <12mins on my personal repo) but probably on volume in ansible/
+19:04:47 <gundalow> So for an experiment I split the tests into 3x5 minute blocks https://github.com/ansible/ansible/pull/15176
+19:04:59 <bcoca> gundalow: those actually take longer
+19:05:05 <gundalow> which worked, but as expected the total run time is longer (more instances)
+19:05:09 <bcoca> about 18mins on my repo
+19:05:28 <bcoca> ^ though most of that seems to be network latency on package installs
+19:06:07 <gundalow> there may be little hacks I can make to speed up things a bit, but I think the long term solutions are
+19:06:28 <gregdek> package caching somewhere? /me shrugs
+19:06:31 <gundalow> 1) kill tests if one part fails. ie if the sanity checks fail, kill everything (no point wasting the queye)
+19:07:00 <bcoca> i would not do that, as a change can break more than one thing
+19:07:01 <gundalow> I've made a note of repo caching
+19:07:21 <gundalow> and updated :)
+19:07:37 <bcoca> again, i dont think our tests are a problem, its teh travis limitations on our account
+19:07:38 <gundalow> 2) One travis job to run multiple tests in parallel
+19:07:43 <bcoca> on my own account they run fast and fine
+19:07:50 <gundalow> bcoca: Do you think (1) would help
+19:08:04 <gundalow> travis-ci performance is split into a few different issues
+19:08:06 <bcoca> i think 1) will make iterations slower, if change breaks 3 tests ....
+19:08:36 <gundalow> a) How fast a single jobs runs (e.g. the difference between bare metal on your laptop v a VM on travis.org)
+19:08:50 <gundalow> b) How many travis jobs can be run in paralel
+19:08:59 <jimi|ansible> a) doesn't matter much, b) is much more important
+19:09:02 <gundalow> c) How many existing travis jobs there are already running
+19:09:21 <bcoca> d) jobs in queue <= i think this is our biggest issue
+19:09:31 <jimi|ansible> bcoca c == d
+19:09:37 <gundalow> I believe that's current 4
+19:09:58 <jimi|ansible> b & c is why i want to move back to Jenkins, even though it's more time and cost involved
+19:09:59 <gundalow> I've got an action to email travis-ci and see what they suggest, though I wanted to get some more data
+19:10:18 <jimi|ansible> gundalow: i think we need to just close your PR to split things up, i don't think it helps
+19:10:34 <gundalow> jimi|ansible: I'm happy with that, I'll close it now
+19:10:52 <jimi|ansible> cool
+19:11:12 <bcoca> jimi|ansible: i was distinguishign jobs running (currently being tested with hard cap of 4 in travis) vs queue (20 prs before yours)
+19:11:27 <jimi|ansible> bcoca: then b == d :)
+19:11:53 <gregdek> gundalow: ping me when you think we're done with the convo on this topic pls :)
+19:12:04 <gundalow> gregdek: nod
+19:12:09 <bcoca> b = 4
+19:12:16 <bcoca> d = queue
+19:12:22 <bcoca> c = x/4
+19:12:59 <gundalow> As people know improving the testing is one of the things I'd really like to do, though I don't want to totally hijack gregdek's meeting(s)
+19:13:13 <gregdek> It's the community meeting. :)
+19:13:23 <gregdek> If we're moving the ball forward here, I'm fine with it.
+19:13:27 <gundalow> OK
+19:13:52 <gregdek> But also ready to move on when you say.
+19:13:58 * bcoca takes the ball home
+19:14:21 <gundalow> So my current planned next steps are to contact Travis and see if they can share some stats on the queue utilisation/throughput for our three repos as I think that might help us understand the real issue
+19:15:14 <bcoca> gundalow: i expect them to answer "pay for our service to get more resources"
+19:15:18 <gundalow> and find out if Travis is generally OK, apart from the three times you look at it and you are waiting hooooours for for tests to finish on a particular PR you'r interested in
+19:15:27 <bcoca> ^ its why they made the service in teh first place
+19:15:38 <gundalow> bcoca: sure, though i'd hope they could give us some stats to back that comment up
+19:15:46 <gundalow> (that may be wishful thinking)
+19:16:01 <gundalow> Does anyone have any other suggestions?
+19:16:07 <bcoca> just test with your own repos, you'll see that the slowness is gone
+19:16:08 <gregdek> sounds like paying doesn't always help that much
+19:16:32 <gregdek> anyway, gundalow, you have next actions, correct? update the issue with those?
+19:16:36 <gundalow> sure
+19:16:48 <gundalow> I guess unless anyone has anything else </topic>
+19:17:05 <jimi|ansible> bcoca: queue to me is all the jobs waiting to run, not just the sub jobs within one job
+19:17:29 <jimi|ansible> but i'll stop being pedantic
+19:17:31 <bcoca> huh?
+19:17:33 <gregdek> ok, let's move on.
+19:17:34 <gregdek> :)
+19:17:46 <jimi|ansible> point is, this is why i want to run a second instance of jenkins
+19:18:06 <jimi|ansible> we can run every PR as soon as it comes in, and every sub-job in parallel
+19:18:12 <gregdek> #topic issue triage process
+19:18:12 <jimi|ansible> that will alleviate the problem
+19:18:15 <gregdek> https://github.com/ansible/community/issues/36
+19:18:22 <gregdek> rbergeron: progress?
+19:21:33 <rbergeron> okay, so:
+19:21:57 <rbergeron> gliffy is back, (good), the things i had worked on in that time period where apparently things went wrong, gone, bad.
+19:22:21 <rbergeron> godo news is that i hadn't gotten that far on paper but plenty far in head -- so i will redraw up the diagram of issue workflow
+19:22:32 <rbergeron> and note that it is *as i would love to see it be automated* and not "how it is now"
+19:22:34 <gregdek> k, eta?
+19:22:37 <rbergeron> since right now it's...
+19:22:46 <rbergeron> "things happen... blehhhh ignore saddddd"
+19:22:55 <rbergeron> friday for this meeting? should be easy at this point.
+19:23:01 <rbergeron> easier with gliffy on also. lol.
+19:23:22 <gregdek> okey doke!
+19:23:26 <rbergeron> that's a drafty pic for discussion but ... yeah.
+19:23:38 <rbergeron> I think we'll still have to tackle better label descriptions at that point
+19:23:57 <gregdek> Good enough. Just something to get started with.
+19:24:00 <gregdek> Moving on:
+19:24:18 <gregdek> https://github.com/ansible/community/issues/23
+19:24:21 <gregdek> Proposals process!
+19:24:26 <gregdek> Which feels -- pretty close!
+19:24:34 <rbergeron> #topic docs proposals process
+19:24:43 <rbergeron> #link https://github.com/ansible/community/issues/23
+19:24:49 <rbergeron> for better organization
+19:24:52 <rbergeron> wait, am i chaired?
+19:24:56 <rbergeron> i guess i must be
+19:24:59 <rbergeron> anyway:
+19:25:05 <rbergeron> so the files are moved.
+19:25:10 <rbergeron> #info files are moved over.
+19:25:18 <rbergeron> and
+19:25:45 <rbergeron> #info Created an issue, https://github.com/ansible/proposals/issues/5
+19:26:12 <rbergeron> So: Just moving over the files and all that jazz sort of further exposed the ... awkwardness of teh proposal process as proposed.
+19:26:15 <rbergeron> Even more.
+19:26:28 <rbergeron> Since now those files aren't really PRs to be commented on since they got merged directly
+19:26:35 <rbergeron> and ... it's all sort of a pain in the ass the more i look at it.
+19:26:49 <rbergeron> So: That issue does link to the docs proposal in its new place
+19:26:53 <rbergeron> but:
+19:26:53 <dag-> nice
+19:27:01 <dag-> to have templates
+19:27:04 <rbergeron> I've basically added some thoughts / suggestions in the issue.
+19:27:07 <rbergeron> Which is basically:
+19:27:19 <gregdek> templates++
+19:27:26 <rbergeron> #info Suggestion: PRs suck for proposals, can we not just do it with an issue and template in this separate repo?
+19:27:42 <gundalow> Would github wiki work better?
+19:27:43 <rbergeron> Because I think that solves most of the problems and gets rid of most of the awkwardness.
+19:27:53 <rbergeron> undalow: no, because it has no commenting facility.
+19:28:08 <gundalow> fair point
+19:28:18 <rbergeron> it's not like regular mediawiki / moinmoin / normal wikis that most people would rely on for something like this.
+19:28:23 <gregdek> rbergeron: what does wiki stand for again?
+19:28:29 <rbergeron> believe me, this option has been discussed :)
+19:28:32 <rbergeron> where information kills itself
+19:28:36 <gregdek> ^^^
+19:28:37 <misc> ah ah
+19:28:43 <gundalow> lol
+19:29:05 <gregdek> makes me lol every time I see it in writing. :)
+19:29:26 <gregdek> ok, so I suspect that this new process is going to be The Process for a while, since people are already using it.
+19:30:21 <rbergeron> anyway: so I guess now ... we sort of need to get consensus from others (and also make sure that existing things don't fall through the cracks but also make sure that they don't feel like they have to redo their existing things.
+19:30:25 <rbergeron> )
+19:30:36 <rbergeron> so I guess... mailing list with link to issue?
+19:31:03 <rbergeron> or?
+19:31:05 <rbergeron> suggestions?
+19:31:06 <gregdek> I like that.
+19:31:07 <rbergeron> whiskey?
+19:31:08 <rbergeron> okay.
+19:31:20 <gregdek> We're not going to get perfect consensus, I don't think, though.
+19:31:23 <misc> whiskey seems a more productive idea
+19:31:28 <rbergeron> misc: i know right
+19:31:39 <rbergeron> #action rbergeron to mail mailing list with link to issue for update
+19:31:48 <rbergeron> gregdek: then we'll need a meeting time to come to some conclusion
+19:31:51 <rbergeron> lol
+19:31:52 <rbergeron> :)
+19:31:52 <gregdek> I think we need to decide, and inform people "we're going with this for now".
+19:32:05 <rbergeron> okay, so?
+19:32:09 <rbergeron> #undo
+19:32:09 <zodbot> Removing item from minutes: ACTION by rbergeron at 19:31:39 : rbergeron to mail mailing list with link to issue for update
+19:32:14 <gregdek> No, you're right.
+19:32:18 <rbergeron> #redo
+19:32:21 <gregdek> Let's give it a week.
+19:32:21 <rbergeron> damnit
+19:32:30 * rbergeron cues sad trombone
+19:32:35 <rbergeron> #action rbergeron to mail mailing list with link to issue for update
+19:32:41 <gregdek> And then we can make the call.
+19:32:46 <rbergeron> #info give it a week and then make the call :)
+19:33:45 <gregdek> ok, moving on!
+19:34:00 <gregdek> #topic https://github.com/ansible/community/issues/40
+19:34:06 <gregdek> Code of conduct update!
+19:34:30 <gregdek> So, um, it'll take UP TO TWO WEEKS for Red Hat to get us the email address "codeofconfuct@ansible.com".
+19:34:33 * gregdek rages quietly.
+19:34:38 <gregdek> But then we'll be ready to go.
+19:35:34 <gregdek> LOL
+19:35:38 <gregdek> Um...
+19:35:40 <gregdek> yeah.
+19:35:44 <gregdek> "codeofconduct".
+19:35:51 <gregdek> I assure you I spelled it correctly in the ticket.
+19:35:53 * gregdek blushes.
+19:36:19 <rbergeron> :)
+19:36:44 * rbergeron is just glad to see this move forward with the help of some caring contributors :)
+19:37:17 <misc> gregdek: 2 weeks ?
+19:37:27 <rbergeron> misc: apparently
+19:37:43 <gregdek> Yep.
+19:37:59 <rbergeron> this is about 1 week and 6.95 days longer than it used to take
+19:38:03 <gregdek> Something I could have done in 2 minutes previously.
+19:38:07 <gregdek> BUT I DIGRESS.
+19:38:11 <gregdek> Anyway!
+19:38:15 <gregdek> It's moving forward.
+19:38:17 <gregdek> Moving on:
+19:38:26 <rbergeron> confuct indeed.
+19:38:29 <rbergeron> :)
+19:39:49 <rbergeron> okay, so next is....
+19:40:26 <rbergeron> #topic clarify PR labels and process
+19:40:43 <rbergeron> #link https://github.com/ansible/community/issues/45
+19:40:47 <rbergeron> okay, so:
+19:41:11 <rbergeron> #info having my gliffy stuff back is helpful, since the old picture of the process is now existing properly more or less
+19:41:32 <rbergeron> but: gregdek and resmo have been graciously going full-speed-ahead on automating all the things.
+19:41:46 <gregdek> w00t!
+19:41:57 <rbergeron> and i get the sense from seeing things here and there (even in the previous modules meeting before this hour) that -- "things are changing"
+19:42:06 <rbergeron> or certain things aren't being handled the same way anymore
+19:42:16 <rbergeron> and i'm not sure exactly what those things are just yet.
+19:42:25 <resmo> gregdek: I am lost which channel now? :)
+19:42:30 <rbergeron> Or if more are intended to be coming, more usefully.
+19:43:04 <rbergeron> resmo, sorry :) i'm just hashing through myself trying to document the process that y'all are automating and not being quite sure how it looks exactly, though i guess i can dig into it and figure it out.
+19:43:12 <rbergeron> I guess the thing is: are there other changes coming
+19:44:14 <gregdek> rbergeron: there are. We might need a review process for putting changes into this gliffy...
+19:44:27 <gregdek> ...since there are subtle changes happening often.
+19:44:50 <gregdek> Maybe just best to sit down and review the document every month.
+19:44:56 <resmo> rbergeron: sure thing, maybe I was to offense with the namespace thing. but I had the opinion we discussed it
+19:45:01 <gregdek> And then make the appropriate changes.
+19:45:09 <resmo> the way it is implemented
+19:45:30 <gregdek> In fairness, the current new_module mechanisms are poor anyway.
+19:45:46 <gregdek> In this case, we surprised a contributor who didn't intend to give a "shipit", but there are worse things. :)
+19:46:09 <gregdek> Again, I think the real issue there is that owner_prs should no longer get automatic shipits, we should require the submitter to give an explicit shipit. This solves lots of corner cases:
+19:46:11 <resmo> gregdek: yeah the transistion is a bit a surprise :)
+19:46:17 <gregdek> 1. New modules getting automatic shipits;
+19:46:29 <gregdek> 2. People who want to leave their own PRs open for review from others.
+19:46:38 <gregdek> Well, it solves two corner cases. :)
+19:46:57 <gregdek> So I think if we get #54 solved, we're done with the issue we were discussing on #ansible just now.
+19:47:21 <gregdek> And we did discuss #54 on the ansible-devel mailing list.
+19:48:06 <resmo> gregdek: #54 makes a lot of sense to me
+19:48:45 <gregdek> I await your PR :)
+19:48:47 <resmo> especially if we plan to keep the namespace maintainers
+19:48:55 <gregdek> Yes, and we will keep the namespace maintainers.
+19:49:07 <gregdek> Even if we have to revise the new modules policy again -- which I think we should.
+19:49:42 <resmo> gregdek: ehm what about existing PR with new modules
+19:49:51 <gregdek> Same.
+19:49:52 <resmo> how should we handle it?
+19:49:55 <gregdek> Oh wait.
+19:49:56 <gregdek> Um...
+19:50:01 <gregdek> Hm.
+19:50:04 <gregdek> I dunno! :)
+19:50:17 <gregdek> #54 lets us punt, LOL
+19:50:29 * gregdek thinks.
+19:50:51 <gregdek> You know, I think #54 will solve this.
+19:51:02 <resmo> gregdek: what about keep owner_pr label and use it to identify this situation:
+19:51:15 <gregdek> Because for new modules, it will basically tell namespace maintainers "you have the right to shipit if you choose" and then let's see how it goes.
+19:51:20 <resmo> if we have a owner_pr, we dont say a word
+19:51:26 <gregdek> Right now, the biggest problem is that we're not getting enough new modules into shipit.
+19:51:27 <resmo> on new modules
+19:51:41 <resmo> ok that's right
+19:51:41 <gregdek> So maybe this is the exact right time to loosen that policy for namespace maintainers.
+19:51:52 <resmo> gregdek: got it$
+19:52:01 <gregdek> If anyone *should* have the ability to give one knowledgeable shipit, it's the namespace maintainer :)
+19:52:07 <gregdek> And we'll see how it goes!
+19:52:12 <resmo> let's try
+19:52:17 <gregdek> Thanks resmo.
+19:52:20 <gregdek> And now:
+19:52:35 <gregdek> I need to leave this meeting, because my back is killing me. :/
+19:52:47 <bcoca> i would still give a once over as many owners are very lax on what they accept
+19:53:00 <gregdek> bcoca: you always will. The core team always does.
+19:53:28 <gregdek> The issue, right now, is that we are not getting enough new modules into shipit in the first place. The pipe is empty.
+19:53:38 <resmo> bcoca: the merger has still the change to give it a review (what I do)
+19:53:40 <gregdek> So I'm happy to experiment with this and see how it goes.
+19:53:59 <gregdek> Carry on discussing as you see fit. Meeting is over. :)
+19:54:02 <gregdek> #endmeeting

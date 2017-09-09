@@ -1,0 +1,233 @@
+18:59:17 <gregdek> #startmeeting community-working-group
+18:59:17 <zodbot> Meeting started Mon Mar 21 18:59:17 2016 UTC.  The chair is gregdek. Information about MeetBot at http://wiki.debian.org/MeetBot.
+18:59:17 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+18:59:17 <zodbot> The meeting name has been set to 'community-working-group'
+18:59:21 <gregdek> #chair rbergeron
+18:59:21 <zodbot> Current chairs: gregdek rbergeron
+18:59:38 <gregdek> #info agenda as always: https://waffle.io/ansible/community
+19:00:06 <gundalow> evening
+19:00:11 <gregdek> Hi gundalow :)
+19:00:53 <gregdek> #topic Travis performance
+19:01:05 <gregdek> https://github.com/ansible/community/issues/47
+19:01:09 <gundalow> oh, so I guess this is me
+19:01:14 <gregdek> gundalow: :)
+19:01:31 <gregdek> Wondering what's directly actionable here.
+19:01:59 <gundalow> It looks like it takes 10 minutes to run the tests
+19:01:59 <gregdek> Breaking up particular test cases?
+19:02:21 <gundalow> We can split that using "Matrix" into multiple sections.
+19:02:29 * gregdek nods
+19:02:46 <gregdek> Do you know where the current travis tests are stashed?
+19:03:19 <gregdek> I know we're doing regular syntax checks etc., but I don't recall how this was set up.
+19:03:29 <gundalow> We might get some of this when we split testing into a-c-modules a-c-extra
+19:03:34 * gregdek nods
+19:03:56 <misc> we do syntax scheck here: https://github.com/ansible/ansible-modules-extras/blob/devel/.travis.yml
+19:04:00 <gregdek> But it takes 10 minutes to run *every* travis test?
+19:04:10 <misc> and here https://github.com/ansible/ansible-modules-core/blob/devel/.travis.yml
+19:04:18 <bcoca> the tests are paralell by 'instance'
+19:04:18 <gregdek> Thanks misc :)
+19:04:47 <misc> so the core/extra test shouldn't take 10 minutes, but they are just syntax check
+19:04:55 <misc> while ansible has the full test suite: https://github.com/ansible/ansible/blob/devel/.travis.yml
+19:04:57 <gundalow> I've not had a chance to dig into it in much detail as I'm on holiday
+19:05:00 <gregdek> So looking at those travis files, those should be like 30 seconds or something
+19:05:06 <gregdek> Ah, ok
+19:05:46 <gregdek> So what's the next step for this issue? Validate that tests are taking 10 minutes? Figure out which ones?
+19:05:47 <gundalow> I wonder if this need parking till we move to tests to be along side the code
+19:05:47 * misc learn about #ansible-notices
+19:06:24 <gundalow> Well,  I could look at spending up ansible/ansible
+19:06:25 * rbergeron lols at deadsnakes
+19:06:50 <gregdek> I just want to understand what we think the issue is, and what problem we're trying to solve, more than "travis is slow".
+19:07:04 <gregdek> Which is surely a problem, but more data is helpful. :)
+19:07:31 <bcoca> builds are taking longer even w/o changes on our side, i believe its a travis resource issue, not ours
+19:07:37 <misc> yeah
+19:08:14 <gregdek> Seems like we're pretty sure it's a queueing issue, then?
+19:08:18 <misc> now, maybe having faster/more efficient tests could help
+19:08:43 <gundalow> The raised issue was the time from submitting PR to getting results. Which breaks down to a number of things,  including how many jobs we are allowed to. Run (queing) As well as how long tests take to run.
+19:08:45 <misc> but I do not remember seeing anything inefficient in the current test suite
+19:08:46 <bcoca> not sure we have 'slow' tests
+19:09:12 <bcoca> one thing that might be an issue is apt/yum tests when refreshing repo caches
+19:09:23 <gregdek> So we as an org are allocated a certain amount of resource, and Travis is slow because we're consuming all of that resource and creating blocking queues?
+19:09:23 <bcoca> also, travis takes a long time when installing the prereqs
+19:09:38 <misc> gregdek: I think yes
+19:09:42 * gregdek hrms
+19:09:48 <gundalow> I need to collect some more data. Just not had a chance/easy to do on a phone :)
+19:09:52 <bcoca> possibly, but they also seem to have slown down independant of that (more people using them?)
+19:09:59 <gregdek> ok :)
+19:10:13 <gregdek> So the action item here is "gundalow to collect more data". That makes sense to me!
+19:10:20 <misc> bcoca: I guess more people have moved to the docker based setup, which in turn started to fill
+19:10:26 <misc> when compared to before, when it was new :)
+19:10:31 <gregdek> Want us to put a check-in time for this issue, or put it in the parking lot, or what?
+19:10:36 <rbergeron> I think more data sounds delightful :)
+19:11:07 <gundalow> Also, if f Ansible Inc are happy, can I call not act Travis to see if they have any extra data they can share. Such as queue utilisation.
+19:11:20 <bcoca> i've seen an increased delay, not only in tests themselves, but even in starting/queueing them, that is why i think this is a travis issue
+19:11:24 <gundalow> Hum,  that wasn't English
+19:11:27 <gregdek> LOL
+19:11:33 <gregdek> It was in parts!
+19:11:59 <gregdek> I presume you're asking "can I ping Travis folks to ask this?" and I think the answer is "yes, we would love that."
+19:12:13 <gundalow> Yes. Thanks
+19:12:59 <gregdek> Got it!
+19:13:02 <gundalow> OK. So. Actions
+19:13:03 <gregdek> Ticket updated.
+19:13:17 <gundalow> 1) collect more data
+19:13:27 <rbergeron> #action gundalow collect more data / info
+19:13:30 <gundalow> 2) Ask Travis Inc
+19:13:46 <rbergeron> #action gundalow ping travis humans for more data on queue utilisation, etc.
+19:13:55 <gundalow> :)
+19:14:07 <gundalow> Thanks.
+19:14:14 <rbergeron> #action gundalow receive hugs!
+19:14:17 <rbergeron> L)
+19:14:18 <rbergeron> :)
+19:14:20 <rbergeron> thanks.
+19:14:33 <gregdek> OK!
+19:14:38 <gregdek> Next:
+19:14:55 <gundalow> My background is in QA,  and infrastructure. So his is all good stuff from me
+19:15:03 <gundalow> Lol
+19:15:07 <gundalow> Next!
+19:15:09 <gregdek> :)
+19:16:04 <gregdek> A bunch of "not much progress"...
+19:16:30 <gregdek> #topic New Module Review
+19:16:50 <gregdek> https://github.com/ansible/community/issues/39
+19:16:53 <rbergeron> YAY
+19:16:55 <rbergeron> what's the word
+19:17:00 <gregdek> So we're going to have a meeting this Wednesday at 1pm.
+19:17:11 <gregdek> The first meeting will probably be *unbearably painful*.
+19:17:18 <rbergeron> 1pm in what time zone? :)
+19:17:23 <rbergeron> in where utc? :)
+19:17:24 <misc> I was about to ask
+19:17:25 * rbergeron grins
+19:17:30 <gregdek> I'll put it in the calendar. :)
+19:17:47 <rbergeron> I believe he means 1pm eastern.
+19:17:47 <gregdek> We're UTC-4 on the east coast currently, right?
+19:17:51 <rbergeron> eastern is utc-4 i think
+19:17:52 <rbergeron> so
+19:18:00 <gregdek> That would mean 1700 UTC.
+19:18:25 <gregdek> #info Inaugural meeting 1700 UTC
+19:18:58 <rbergeron> and is there a designated friend assigned for this?
+19:18:58 <gregdek> We will review some "new" modules. By which I mean, we will review modules that have been waiting patiently forever. :)
+19:19:03 <rbergeron> or what's the scoop?
+19:19:20 <gregdek> There is! But I don't know who yet. newtMckerr said "set the meeting and people will show up to help."
+19:19:23 <gregdek> Thus, meeting.
+19:19:31 <rbergeron> gregdek: would it be good to make a list in a doc or a gist somewhere just to help... list them all in order
+19:19:46 <rbergeron> order of tackling or ... whatever?
+19:19:56 <gregdek> I will send an announcement out shortly. We will probably just use a Github query for this, likely "most commented" or "oldest" or some such.
+19:20:21 <rbergeron> gregdek: excellente. :)
+19:20:39 <gregdek> And we'll probably be figuring out what the *real* new module guidelines are in the process of going through them, since we seem to have disagreements when we try to pin them down.
+19:20:52 <rbergeron> do people need to do any pre-work or anything? is the expectation to come to the meeting having already tested stuff or to just be like ... "hey who has a cloud account!"?
+19:20:55 * rbergeron nods
+19:20:56 <gregdek> But now we'll have a time every week when we incur that pain unavoidably. :)
+19:21:03 <rbergeron> gregdek: indeed
+19:21:06 <gregdek> Not yet.
+19:21:10 <rbergeron> well, hopefully we can reduce the overall pain :)
+19:21:22 <gregdek> I think we're going to spend a lot of time learning and documenting.
+19:21:28 <rbergeron> just the backlook is painful to look at ;)
+19:21:29 <rbergeron> ack.
+19:22:16 <gundalow> Learning is good. Just need to chew through each item in turn, size of backlog isn't an issue as. Long as stuff keeps moving.
+19:22:39 <gregdek> Exactly.
+19:22:48 <gregdek> And right now we're just not doing a good enough job of that.
+19:22:50 <gregdek> But we will!
+19:23:02 * rbergeron nods
+19:23:15 <gundalow> And avoid over optimising early on :)
+19:23:24 <gregdek> #action gregdek will announce the weekly new module meeting for 1700 UTC on Wednesdays
+19:24:49 <gregdek> Next:
+19:24:53 <gregdek> #topic Ansible Durham meetup
+19:25:06 <gregdek> https://github.com/ansible/community/issues/14
+19:25:24 <gregdek> Will be finalizing speakers this week and will move this to closed then.
+19:25:32 <gregdek> Pretty much ready to go.
+19:26:23 <gregdek> I think that's all we've made progress on in "doing".
+19:26:58 <gundalow> How ofen does the Engineering Team physically get together?
+19:27:39 <gregdek> ¯\_(ツ)_/¯
+19:27:51 <gregdek> Ansiblefest usually gets the core team together.
+19:28:00 <gregdek> But the whole team is fairly distributed.
+19:28:20 <gregdek> And about to get more distributed. :)
+19:28:28 <gundalow> oh?
+19:28:50 <gundalow> I
+19:29:02 <gregdek> Picking up more folks at some point, and we've been hiring remote folks all along, so.
+19:29:10 <rbergeron> YAY REMOTENESS
+19:29:38 <gundalow> I know there are people in East and West coast. Not sure where you are gregdek
+19:29:47 <gundalow> rbergeron: :)
+19:30:00 <gundalow> you stationary today?
+19:30:07 <gregdek> jimi|ansible and I are both out of the Durham office. Everyone else is distributed.
+19:30:14 <rbergeron> well i am ... at home :)
+19:30:43 <gundalow> Cool and cool.
+19:31:03 <gregdek> ok, I think that's all we managed to get done between Friday afternoon and today. :)
+19:31:23 <gregdek> #topic open floor
+19:31:23 <gundalow> :)
+19:32:03 <gundalow> Just wanted to say,  I think this channel and process is good.
+19:32:40 <gregdek> Thanks! Getting there. :)
+19:32:56 <rbergeron> we try! :)
+19:33:46 <gundalow> Got some comments about ticket management,  if I may
+19:34:01 <rbergeron> go for it :)
+19:34:48 <gundalow> I'll start by saying I'm not suggesting we move out of github to  Jira to something else
+19:35:32 <gundalow> Do you have any other overarching/project plan stuff over the top of Github issues?
+19:36:08 <gundalow> Or was of linking tickets and their dependencies?
+19:36:22 <gregdek> The process is emergent, shall we say. :)
+19:36:25 <rbergeron> for the community-working-group or in general?
+19:36:48 <gregdek> The goals are straightforward: "help the community be more productive." That can manifest itself in many ways; some tactical, some strategic.
+19:37:01 <rbergeron> I think we're just working with two aims right now: (a) be more transparent about what this particular team is doing", (b) without a lot of process/overhead/tool proliferation.
+19:37:04 <gundalow> rbergeron: oh, you fell for that one. So I'll have to say both :)
+19:37:07 <rbergeron> bureaucracy can be terribad :)
+19:37:45 <rbergeron> gundalow: i think for this, once some projects are at a bigger point then they might get their own repos with milestones and etc. and waffleboards.
+19:37:54 <gregdek> This meeting is specifically for the cwg. The expectation is that other working groups will fall out over time. First goal is to model a working group.
+19:37:55 * rbergeron notes, https://waffle.io/ansible/community
+19:38:49 <rbergeron> for ansible itself, there are some things like roadmaps and etc. and as we continue to grow and refine processes, that will probably have more structure.
+19:39:24 <gundalow> Ah, right, so when items group it's expected they will "spin out" to there own meeting/waffle/etc. That makes sense
+19:39:27 <rbergeron> but it's easy to fall into the trap of having so much process that people can't figure out how to get things done, and that can be kind of bad :)
+19:39:42 <gundalow> Oh,  I totally agree.
+19:39:50 <rbergeron> gundalow: for example, as the testing working group gets more spun up then there will probably be a separate repo and meeting and etc.
+19:40:01 <gregdek> (God, I hope so.)
+19:40:10 <rbergeron> but right now, we're just looking for ways to make sure that people know there are places to get things started and we can spin out from there. :)
+19:40:39 <gundalow> I see myself getting a lot more in to that.
+19:40:41 <rbergeron> we just need people around with a bit of initiative and willing to forge new paths and take leaps of faith :)
+19:41:06 <gundalow> Though discussions with McKerr, Brian,  etc are ongoing :)
+19:41:08 <rbergeron> and people willing to say YES, YOU CAN! AND NOW YOU OWN IT, muhahahahaaha.
+19:41:15 <rbergeron> (this is a greg speciality)
+19:41:30 <rbergeron> anyway.
+19:41:34 <gundalow> Hehe
+19:41:35 <gundalow> Cool
+19:41:36 <rbergeron> so that's the state of that. :) make sense?
+19:41:56 <gundalow> Makes perfect sense to me.
+19:42:41 <gundalow> +1 for the first Roadmap entry by the way
+19:43:23 <rbergeron> okay.
+19:43:27 * gundalow tries to think if there was anything he wanted to ask about testing stuff.
+19:43:43 <rbergeron> anything else for open floor? :)
+19:44:11 <gundalow> Oh,  what's the view on linters,  pep8,  pycheck, etc
+19:44:20 <rbergeron> gundalow: it's possible that not all the folks are around who can answer that stuff (but maybe they are) -- but a mail on ansible-devel might be good for some things too, just for a wider audience
+19:44:42 <gundalow> Sure
+19:44:48 * rbergeron has no idea offhand. we know there are things that are good and might be useful --
+19:45:01 <rbergeron> and some of that stuff may get built in over time --
+19:45:06 <gregdek> I'll tell you what I know about that stuff:
+19:45:12 <rbergeron> kind of an experiment in progress :)
+19:45:26 <gregdek> * pep8, nice to have but not a blocker. We don't kick out code that isn't pep8.
+19:46:25 <gregdek> * linters: more and more yes. What we have in travis right now is basically linting, and that's a start. For modules, goal is to have as much of the "module guideline" stuff incorporated into travis linting so that reviewers can focus on actual functionality.
+19:46:55 <gregdek> Right now, the biggest thing we check for is python 2.4 compatibility, since most folks don't bother to do that, but it's essential for a module.
+19:47:17 <gundalow> Would we pep8 new modules when putting them into Extras should we tidy them up straight away
+19:48:33 <gundalow> To avoid the concern of making merges harder later?
+19:48:33 <gregdek> I'll be clearer: we don't currently enforce pep8.
+19:49:24 <gregdek> Context: https://groups.google.com/forum/#!topic/ansible-devel/VqeXQNZAKc8
+19:49:57 <gregdek> Oh, wait!
+19:50:03 <gregdek> Better context from abadger1999:
+19:50:04 <gregdek> https://groups.google.com/forum/#!msg/ansible-project/Npbh6biKePE/fJ3x3kV3nZAJ
+19:50:08 <gregdek> (And much more recent)
+19:51:12 <gregdek> So I think that's where we stand currently. abadger1999 and bcoca may be able to elaborate.
+19:52:32 <rbergeron> okay! anything else from anyone? :)
+19:52:35 <abadger1999> so I like pep8, bcoca dislikes a lot of it.
+19:52:41 <gundalow> OK.
+19:52:54 <gregdek> At some point we'll need to have the pep8 deathmatch, lol.
+19:52:55 <gundalow> That's clear.
+19:52:59 <abadger1999> I don't think there's a problem with fixing a newly submitted module for some definition of newly
+19:53:22 <abadger1999> (and probably don't touch characters-per-line or bcoca will not like it regardless ;-)
+19:53:38 <gundalow> Mythought was if it gets done straight away it should have any downsides.
+19:53:39 <abadger1999> that's all I have to add ;-)
+19:53:43 <abadger1999> yep.
+19:53:55 <gundalow> Shouldn't, ffs
+19:53:57 <abadger1999> I (not speaking for core team as a whole) agree
+19:55:06 <gregdek> anyhoo. That's someone else's battle. :)
+19:56:04 <gregdek> Just about at the hour. Anything else?
+19:56:14 <gundalow> I've stsrted using shellcheck recently, and tgats found a few valid issues with some bash code. I'll slowly chip through those and once clean look at off it makes sense adding to Travis
+19:56:36 <gundalow> Right, I'll shut up now and go back to holiday mode.
+19:56:51 <gundalow> :)
+19:57:25 <rbergeron> :)
+19:58:31 <gundalow> 90 seconds to spare
+19:58:51 <gregdek> OK, then!
+19:58:52 <gundalow> take.ca
+19:58:54 <rbergeron> :)
+19:58:55 <gregdek> #endmeeting

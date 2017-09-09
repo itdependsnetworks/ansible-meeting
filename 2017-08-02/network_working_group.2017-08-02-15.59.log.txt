@@ -1,0 +1,186 @@
+15:59:49 <Qalthos> #startmeeting Network Working Group
+15:59:49 <zodbot> Meeting started Wed Aug  2 15:59:49 2017 UTC.  The chair is Qalthos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:59:49 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:59:49 <zodbot> The meeting name has been set to 'network_working_group'
+16:00:10 <newswangerd> hey!
+16:00:20 <jmighion> o/
+16:00:33 <Qalthos> #link https://github.com/ansible/community/issues/110
+16:01:06 <Qalthos> #chair newswangerd jmighion ganeshrn funzo gundalow trishnag
+16:01:06 <zodbot> Current chairs: Qalthos funzo ganeshrn gundalow jmighion newswangerd trishnag
+16:01:47 <Qalthos> #chair skg-net
+16:01:47 <zodbot> Current chairs: Qalthos funzo ganeshrn gundalow jmighion newswangerd skg-net trishnag
+16:02:51 <Qalthos> skg-net: you had some topics?
+16:03:02 <skg-net> yes..
+16:03:03 <Qalthos> #chair mikewiebe
+16:03:03 <zodbot> Current chairs: Qalthos funzo ganeshrn gundalow jmighion mikewiebe newswangerd skg-net trishnag
+16:03:59 <skg-net> First I would like to discuss about the Vendor Neutral Modules -> VNM
+16:04:38 <Qalthos> #topic Vendor Neutral Modules
+16:05:39 <skg-net> Is there a roadmap doc community can refer to for the support of VNM
+16:07:23 <akasurde> Qalthos, hi
+16:07:30 <Qalthos> skg-net: you're referring to the net_* modules?
+16:07:35 <Qalthos> #chair akasurde
+16:07:35 <zodbot> Current chairs: Qalthos akasurde funzo ganeshrn gundalow jmighion mikewiebe newswangerd skg-net trishnag
+16:07:41 <skg-net> Yes
+16:08:20 <Qalthos> skg-net: I don't think we have anything at present, though I might be wrong
+16:09:19 <skg-net> okay..
+16:09:23 <skg-net> How additional generic/vendor specific attributes can be added VNM?
+16:10:35 <Qalthos> I'm a bit rusty on this as I haven't been working on these myself, so someone who knows better can chime in
+16:10:40 <ganeshrn> skg-net: you can add it in the venor specific implementation modules
+16:10:52 <Qalthos> skg-net: there you go (:
+16:11:45 <Qalthos> additional generic options require that option to be valid and meaningful against all/most of the modules, so adding those are less likely
+16:12:10 <ganeshrn> so for example if you see modules/interface/net_interface.yml file it has arguments that are common to all platforms
+16:12:12 <skg-net> if some vendors doesn't support that attribute is that fine? How this is being envisioned?
+16:12:23 <ganeshrn> yes it is fine
+16:12:30 <ganeshrn> when net
+16:13:18 <skg-net> for example.. net_interface - generic/common attibutes net_interface_extn - for more vendor specific extension to that module..
+16:13:20 <ganeshrn> when net_interface tasks is run the control will go to the implementation module based on network_os value provided in inventory file
+16:14:08 <ganeshrn> separate module is not required
+16:14:21 <skg-net> okay..
+16:15:08 <skg-net> Do you have plans for writing net_acl net_qos modules..
+16:15:37 <ganeshrn> we don't have plans for these modules as of now
+16:15:50 <skg-net> can community contribute those and other modules..
+16:15:55 <ganeshrn> yes sure
+16:16:55 <skg-net> ganeshrn:can you share the current list of modules targeted.. so that the community can contribute other modules..
+16:17:01 <ganeshrn> so net_acl.py need to have arguments that are common across platform
+16:17:35 <skg-net> we don't want to write something which is already in the works..
+16:17:45 <ganeshrn> for 2.4 all the net_* modules are commited
+16:18:05 <ganeshrn> no new modules under development
+16:18:21 <ganeshrn> 2.5 roadmap is still work in progess
+16:18:25 <Qalthos> (and 2.5 work won't start until around the time the roadmap is public)
+16:18:36 <skg-net> yes, I plan to start with standard yang (OpenConfig/IETF) so that will be vendor neutral..
+16:18:44 <ganeshrn> cool
+16:19:04 <ganeshrn> so that is net_acl and net_qos
+16:19:24 <skg-net> yes to start with..
+16:19:30 <ganeshrn> ok
+16:19:53 <ganeshrn> so to confirm no one is working on those currently
+16:20:09 <skg-net> port-mirroring will be next, if others haven't picked that yet..
+16:20:36 <ganeshrn> ok, even that is not in roadmap as of yet
+16:21:20 <skg-net> okay..we will start with those and keep the community posted on the status..
+16:21:41 <ganeshrn> cool...Thank you
+16:22:20 <skg-net> Thats what I had for vendor neutral modules.. btw is that how its referenced or  net_* modules
+16:22:38 <Qalthos> skg-net: you can poke into #ansible-network if you want to know the up-to-date status on something like that that might change in the future
+16:23:12 <ganeshrn> is is called platform agnostic declartive intent modules
+16:23:13 <Qalthos> skg-net: I just wanted to make sure we were talking about the same things, I have been so far away from new features lately...
+16:23:24 <Qalthos> ganeshrn: that's the one I was looking for
+16:23:37 <skg-net> Qalthos: Thanks..I will use that channel, if need some clarification..
+16:23:38 <Qalthos> or just platform agnostic works too
+16:23:43 <bcoca> 'network platform' .. or OS/pc users will get confused
+16:24:00 <skg-net> okay going forward..I will use the same term as well..
+16:24:38 <Qalthos> Moving on
+16:24:51 <skg-net> Next.. I would like to discuss on the CliConf provider for DellOS* modules
+16:24:52 <Qalthos> #topic Cliconf for DellOS
+16:25:49 <skg-net> Is the ansible team working on migrating DellOS modules to  CliConf infra?
+16:26:50 <Qalthos> The Ansible team is not working on DellOS at all, they are community supported
+16:28:07 <skg-net> okay..Is migration to CliConf infra mandatory?
+16:28:14 <Qalthos> Additionally, (and again, far far from features and I may be confused) Cliconf is being considered for 2.5, so nothing is being worked on in that regard right now anyway
+16:29:13 <Qalthos> skg-net: I shouldn't think so, though it should make a few thing much more pleasant to develop with
+16:29:40 <skg-net> I see commits from ganeshrn migrating most of the modules to CliConf infra..
+16:29:58 <skg-net> thats the reason..I asked..
+16:30:07 <ganeshrn> skg-net: i have just added the infra
+16:30:35 <ganeshrn> moving to cliconf we will be something that is in consideration for 2.5
+16:31:12 <ganeshrn> both terminal and cliconf will continue to exit
+16:31:52 <skg-net> okay thanks for the clarification..we will plan to migrate to CliConf for 2.5 then..
+16:31:54 <ganeshrn> if in future we decide to do away with terminal it will be communicated well in advance
+16:32:26 <ganeshrn> i think asa modules are already migrated
+16:32:43 <skg-net> dellos* modules
+16:33:32 <skg-net> thats what I had for Cliconf for DellOS
+16:33:45 <Qalthos> Okay then
+16:33:47 <Qalthos> #topic Openswitch modules
+16:36:03 <Qalthos> skg-net: what do you want to know about these?
+16:36:46 <skg-net> Openswitch code has been completely revamped.. the older openswitch (HP) now called libreswitch https://github.com/libreswitch
+16:37:23 <skg-net> so the current openswitch modules needs to be deprecated or moved libreswitch..
+16:38:35 <skg-net> I can raise a PR to move them, if still the maintainers are available..
+16:40:22 <skg-net> We are planning add support for the current openswitch..
+16:42:00 <Qalthos> I think a PR or an issue would be a fine response to that, feel free to submit one
+16:42:32 <skg-net> The current openswitch have APIs at base level and application level..
+16:43:14 <skg-net> for example the route can be configured at base level or at application level (Quagga, Snaproute, GoBGP etc)..
+16:44:33 <skg-net> since application have their own Ansible modules.. we are planning to contribute to base level API's.. opx_base_*
+16:46:18 <skg-net> I just wanted to vet this with the community and also wanted to confirm is anybody is already working on supporting the new openswitch
+16:48:23 <ganeshrn> from Ansible Network team no one is working on openswtich modules
+16:49:26 <skg-net> okay thanks for the confirmation..
+16:49:29 <ganeshrn> so i think you can raise a issue and assign to yourself
+16:49:38 <ganeshrn> so that people know you are working on it
+16:50:23 <skg-net> thats good suggestion..will do that..I will also add as part of the network wiki...
+16:51:01 <skg-net> Thats all I had for today..
+16:51:15 <Qalthos> excellent!
+16:51:15 <gundalow> skg-net: I believe we are going to delete all the existing openswitch modules in 2.4 as they are totally borken
+16:51:45 <Qalthos> #topic Lenovo in CHANGELOG
+16:51:49 <gundalow> no deprecation cycle as they are totally broken, that will free up the namespace for new (working) modules
+16:51:52 * gundalow -> away
+16:52:09 <skg-net> gundalow: As I mentioned it will work with the libreswitch.. since the new openswitch code is completely different..
+16:52:48 <Qalthos> Unless someone pipes up, I'm assuming this  comment is just a reminder that we should do this
+16:54:04 <Qalthos> #action make sure someone updates CHANGELOG with references to CNOS additions
+16:54:48 <Qalthos> Now on to my favorite part
+16:54:52 <Qalthos> #topic NXOS
+16:55:07 <Qalthos> rahushen: I see you ave some updates for me
+16:55:23 <rahushen> Yes.. I do
+16:55:55 <rahushen> Thanks for re-opening #26262
+16:55:55 <Qalthos> 27340 looks good, will get merged when tests come in
+16:56:24 <Qalthos> Yeah, I knew I was keeping the other PR open for some reason
+16:56:45 <Qalthos> So let's start there, then
+16:58:23 <rahushen> Just out of curiosity ... what machine are you running integration tests against ?
+16:58:50 <Qalthos> show version says an NX-OSv version 7.3(0)D1(1)
+17:00:00 <rahushen> Hmm ... thats looks like the N7K virtual machine
+17:00:10 <Qalthos> that is my understanding
+17:00:13 <rahushen> I suppose you're using VIRL
+17:00:47 <rahushen> VIRL has the newer N9K virtual machines available as well
+17:01:02 <rahushen> might be beneficial to get those added to tests as well
+17:02:26 <Qalthos> It's all a black box to me, all I get are hostnames and an SSH connection (:
+17:04:01 <Qalthos> That said, knowing what I'm running on, might you have some idea why our tests are failing in different ways?
+17:04:40 <rahushen> It could be platform differences
+17:04:44 <mikewiebe> Qalthos: Agree with rahushen that adding N9k to your mix would be good.
+17:05:06 <mikewiebe> We have a more comprehensive matrix but adding just the N9k would allow you guys to see more differences as well
+17:05:30 <rahushen> We don't run tests against the older 7k VM ... but we do run tests against the 7K hardware
+17:06:02 <Qalthos> mikewiebe: You've no argument here, but that's not something I personally have access to, maybe we can get further with that tomorrow morning
+17:06:20 * ganeshrn away
+17:06:40 <Qalthos> rahushen: Interesting. And the 7k hardware has no problems?
+17:06:45 <mikewiebe> Qalthos: Sounds good
+17:07:06 <rahushen> Not with the tests I've pushed out ... I can re verify this later
+17:08:04 <Qalthos> I get the feeling `remove-private-as all` is an issue with configuration, and log-neighbor-changes probably won't fail the task if it's the last command
+17:08:24 <rahushen> the 7K VM and hardware were different build targets and were built with different build flags , so I wouldn't be surprised if there are differences from hardware
+17:08:48 <rahushen> I can try that out
+17:09:34 <Qalthos> rahushen: if you can follow up with those results and maybe some context, we might be able to get somewhere
+17:10:19 <rahushen> Will do
+17:10:43 <Qalthos> I think the same with the nxos_bgp test, though I think until we get Cliconf, the answer might just be "Don't do that", i.e. take the lines out of the test
+17:12:04 <rahushen> you mean the 'suppress_fib_pending' property ?
+17:15:06 <rahushen> let me take an AI to verify these two tests manually ... I'll check if warning are generated on the CLI
+17:15:14 <Qalthos> no, I mean `neighbor_down_fib_accelerate` and `reconnect_interval`
+17:15:51 <rahushen> those work on the (K
+17:15:53 <rahushen> 9K
+17:16:11 <Qalthos> right, but cause errors on our 7K
+17:21:00 <Qalthos> So nxos_bgp_neighbor and nxos_bgp are failing in different ways between your 9K and our 7K, if you could test those on a 7K and report back your results to the PR and hopefully we can get this merged
+17:21:50 <rahushen> Sounds good ... I'll update the PR with appropriate data
+17:22:09 <Qalthos> mikewiebe: have you had a chance to look at https://github.com/ansible/ansible/pull/26370 recently?
+17:22:58 <mikewiebe> Qalthos: I have been testing it for the past 20 mins or so.  Looks better but strange issue with idempotence
+17:23:45 <mikewiebe> Qalthos: I am simply re-applying the same config a second time and the nxos device generates a syntax error
+17:23:51 <mikewiebe> not sure why yet.
+17:24:14 <mikewiebe> Other then that the fix looks promising
+17:24:35 <Qalthos> mikewiebe: well phooey. Update with whatever you find and hopefully I'll be able to fix it
+17:25:10 <Qalthos> rahushen: mikewiebe anything else you want my attention on right now?
+17:26:01 <mikewiebe> Qalthos: Nothing specific.  We can chat more tomorrow about how we address the issues we have opened to date
+17:26:23 <rahushen> @mwiebe ... how about that 'timeout' issue you were seeing yesterday
+17:26:46 <mikewiebe> rahushen: Thanks for the reminder
+17:27:22 <mikewiebe> Qalthos: Are all of the nxos_* modules supposed to honor the timeout: for either transport?
+17:27:57 <mikewiebe> Qalthos: Based on our testing it's only honored when we configure it under group_vars as part of the provider args
+17:28:17 <mikewiebe> When we configure it as part of a task it seems to make no difference
+17:28:57 <Qalthos> timeout should be honored top level, though it is deprecated there
+17:29:34 <Qalthos> I'll look into if there is something keeping it from working outside of provider
+17:30:09 <Qalthos> #action Qalthos nxos top level timeout
+17:30:20 <mikewiebe> If it's deprecated, how are we supposted to control this for command that take longer to complete
+17:30:50 <rahushen> @Qalthos ... it works at top level, not working for task level
+17:31:20 <Qalthos> Longer timeout in provider shouldn't have any negative effects for tasks that are shorter
+17:31:58 <Qalthos> unless you specifically want something to time out earlier for some reason
+17:32:41 <mikewiebe> We would like to be able to set it at the top level and override that per task in some cases
+17:35:53 <Qalthos> By top level, are you referring to in the provider?
+17:36:19 <mikewiebe> Yes in the provider in our group_vars directory
+17:38:04 <Qalthos> Just to be clear then, we are each referring to the opposite thing as being top level
+17:38:52 <mikewiebe> Ok, so how do we configure a timeout globally and then override on a per task level
+17:42:02 <Qalthos> For the time being, bare timeout should continue to work to override provider. At some point in the future it is expected to go away, and I am not certain how you might override that
+17:43:31 <Qalthos> There very well may be something I'm forgetting, but I don't know why you would want a shorter timeout for some tasks than others, so it is not something I've tried to do
+17:44:17 <Qalthos> I'll see what I can find out for you, though
+17:44:42 <Qalthos> #topic Open Floor
+17:44:45 <rahushen> Qalthos ... that'd be great. mikewiebe had to leave for a meeting
+17:45:14 <Qalthos> We're already 45 minutes over, so that's not to unreasonable
+17:45:45 <Qalthos> Last call if anyone wants to bring something up, or I'll close the meeting
+17:46:35 <Qalthos> closing in 30
+17:47:00 <Qalthos> #endmeeting

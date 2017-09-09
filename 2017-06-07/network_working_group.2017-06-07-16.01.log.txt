@@ -1,0 +1,63 @@
+16:01:29 <gundalow> #startmeeting Network Working Group
+16:01:29 <zodbot> Meeting started Wed Jun  7 16:01:29 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:01:29 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:01:29 <zodbot> The meeting name has been set to 'network_working_group'
+16:02:13 <gundalow> #chair funzo Qalthos trishnag
+16:02:13 <zodbot> Current chairs: Qalthos funzo gundalow trishnag
+16:02:36 <funzo> o/
+16:02:50 * Qalthos waves
+16:03:05 <gundalow> #info Agenda https://github.com/ansible/community/issues/110
+16:04:34 <gundalow> #topic Networking Update
+16:05:17 <akasurde> o/
+16:05:20 <gundalow> #info As a reminder all Network modules (or PRs that extend functionality) MUST include unit tests.
+16:05:54 <gundalow> #info Examples of Unit tests can be found in https://github.com/ansible/ansible/test/units
+16:06:34 <trishnag> https://github.com/ansible/ansible/tree/devel/test/units
+16:06:35 <akasurde> #info correct link https://github.com/ansible/ansible/tree/devel/test/units
+16:06:36 <gundalow> #info Examples of integration tests https://github.com/ansible/ansible/test/integration/targets - Speak to gundalow before working on Integration tests as we need to get a VM up and running
+16:06:44 <gundalow> oh
+16:06:46 <gundalow> Thanks
+16:06:52 <akasurde> gundalow, np
+16:07:22 <gundalow> #info correction: https://github.com/ansible/ansible/tree/devel/test/integration/targets
+16:07:43 <gundalow> #info The next version of the open source Ansible project (version 2.4) is currently in development, and Ansible Engineering would like to provide ample notice for partners interested in having code reviewed and included in time for its release. The following milestones have been created as submission deadlines for code (core code, modules, plug-ins, etc.) in order for proper expectations to be met:
+16:07:53 <gundalow> #info -- Core Code Development Freeze Date: 2017-Jul-15
+16:08:02 <gundalow> #info -- Partner Modules Submission Deadline: 2017-Jul-15
+16:08:10 <gundalow> #info -- Partner Modules Development Freeze Date: 2017-Aug-01
+16:08:19 <gundalow> #info -- GA: August/September (tentative, subject to change)
+16:08:35 <gundalow> #info In order for partner modules to be properly triaged, reviewed, tested, and included into Ansible 2.4, all module updates and submissions must be completed by 2017-Jul-15 for high probabilities of inclusion (subject to review).
+16:10:06 <gundalow> skg-net: st8less mwiebe bjolivot_ If you are planning on any more Network modules for 2.4 please be aware of the above dates & Unit test requirements
+16:10:40 <mwiebe> gundlow, thanks for the milestone dates.  Those are helpful.
+16:11:25 <mwiebe> Quick question on Unit Test requirements - does this include bug fixes?
+16:11:55 <gundalow> mwiebe: I'd love to say yes, though I don't want to put people off bug fixing
+16:12:09 <skg-net> gundalow thanks
+16:12:32 <mwiebe> gundlow, Understood.
+16:14:14 <gundalow> mwiebe: Extra love will be award for bug fixes that do include unit tests :)
+16:14:15 <Qalthos> I mean, at the very least a test that proves some part of the bug fix actually worked would be nice (:
+16:16:15 <gundalow> Indeed
+16:17:04 <mwiebe> Qualthos: Makes sense.  Just clarifying the requirement for unit tests vs. sample playbook to demonstrate problem before/after.
+16:17:07 <gundalow> #info If a bug fix is for one of the modules defined in https://github.com/ansible/ansible/tree/devel/test/integration/targets those tests can (should) be extended. This applies to all modules, not just networking
+16:19:48 <Qalthos> mwiebe: Sample playbooks are fine for reproducing a bug in an issue or PR, but tests can help ensure that issue doesn't come back
+16:20:06 <mwiebe> Qualthos: ack
+16:20:59 <Qalthos> Not every issue can easily be broken down into unit tests, but wherever possible, it would make our jobs easier and probably make the PR move faster
+16:21:19 <gundalow> +1
+16:21:23 <gundalow> That's all I had
+16:21:33 <gundalow> Anyone got any other questions about dates or testing
+16:21:36 <gundalow> Or anything else?
+16:23:01 <mwiebe> Nothing more here.
+16:23:42 <gundalow> #topic Open Floor
+16:26:34 <st8less> Are the tests being run against new PR's?
+16:26:44 <st8less> Or is this new to 2.4?
+16:27:34 <gundalow> st8less: Unit tests are run (and have been for a few releases) on all PRs/merged via GitHub
+16:27:47 <st8less> Ok, cool.
+16:28:11 <gundalow> Today we only have vyos_command integration tests running via GitHub (for Networking).
+16:28:35 <gundalow> st8less_: Today we only have vyos_command integration tests running via GitHub (for Networking).
+16:28:40 <st8less_> Oops, got bumped off
+16:29:29 <gundalow> nps
+16:29:34 <st8less_> Is anyone actively working on developing new tests?  I assume one would more or less follow the framework with similar modules.  Any specific guidelines?
+16:30:23 <gundalow> #info Network integration tests info http://docs.ansible.com/ansible/dev_guide/testing_integration.html#network-tests
+16:31:25 <st8less_> Cool, thanks!
+16:31:58 <gundalow> Feel free to poke me in #ansible-devel if anything there doesn't make sense and I'll update the docs
+16:32:03 * gundalow has to run now
+16:32:14 <gundalow> Anything else?
+16:32:38 <st8less_> I'm good
+16:47:34 <gundalow> Thanks everyone
+16:47:37 <gundalow> #endmeeting

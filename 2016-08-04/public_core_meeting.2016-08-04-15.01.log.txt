@@ -1,0 +1,109 @@
+15:01:16 <gundalow> #startmeeting Public Core Meeting
+15:01:16 <zodbot> Meeting started Thu Aug  4 15:01:16 2016 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:01:16 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:01:16 <zodbot> The meeting name has been set to 'public_core_meeting'
+15:01:38 <svg> o/
+15:01:48 <gundalow> #chair abadger1999 alikins bcoca gregdek jimi|ansible jtanner mattclay mordred  nitzmahone rbergeron
+15:01:48 <zodbot> Current chairs: abadger1999 alikins bcoca gregdek gundalow jimi|ansible jtanner mattclay mordred nitzmahone rbergeron
+15:01:51 <gundalow> hey svg
+15:02:02 <gundalow> #info Agenda https://github.com/ansible/community/issues/116
+15:02:16 <gundalow> Where svg has adding something, so I guess we will start there
+15:02:44 <gundalow> #topic Exception handling for MySQLdb warnings extras/pull/2594
+15:02:52 <gundalow> #info https://github.com/ansible/ansible-modules-extras/pull/2594
+15:03:15 <jtanner> hello
+15:03:19 <svg> So this is a PR I reintroduced, after modifying it as discussed in th eoriginal PR referenced in there
+15:03:26 <gundalow> svg: So what do you need, some reviews?
+15:03:40 <svg> yes
+15:03:41 <gundalow> Doesn't look like the current maintainer @banyet has looked at it in the past 15 days
+15:04:14 <svg> indeed, the old PR (9 mo ago) had pretty much the same problem, and that maintainer said he didn;t have the infra to get it tested back then
+15:04:34 <gundalow> Was that also @banyet, I wonder if we should remove him?
+15:04:41 <gundalow> ... as maintainer
+15:04:52 <svg> it was @banyek yes
+15:05:02 <svg> no clue if that is a permanent problem
+15:05:29 <gundalow> We can add multiple maintainers (if you are an "expert" we can add you as well)
+15:05:34 * gundalow dooks
+15:05:39 <gundalow> ducks*
+15:05:48 <svg> I am currently working at the same customer where @grypyrg was working at the time, see #719 and #720
+15:06:01 <svg> banyek and grypyrg are mysql experts both
+15:06:22 <svg> I am not, but I have been doing several ansible modules
+15:06:44 <svg> on the other hand, being able to work on this depends heavily of having the infra (mysql cluster)
+15:06:54 <svg> which I have here, but not all the time handy
+15:07:00 <gundalow> jtanner: does https://github.com/ansible/ansible-modules-extras/pull/2594/files look sensible to you?
+15:07:39 <svg> the thing is to not let a mysql waring exception fail the module
+15:08:08 <jtanner> seems okay to me, but why aren't we waiting on banyek's response?
+15:10:05 <gundalow> I thought after 2 weeks we pinged them again. Maybe that's for a different type of PR
+15:10:54 <jtanner> it's been 15 days
+15:11:12 <jtanner> maybe ansibullbot will ping on the next run (every 6 hours)
+15:11:24 <gundalow> ah, ok
+15:11:26 <abadger1999> Codewise looks okay to me.  From the discussion in the previous PR it seems okay.
+15:11:47 <gundalow> svg: It this causing you issues? I assume you're just running with a patch locally
+15:12:06 <svg> gundalow: what issue do you mean?
+15:12:08 <gundalow> We aren't close to the 2.2 changefreeze yet
+15:12:21 <gundalow> not having that PR merged
+15:12:26 <abadger1999> banyek okay'd the premise in the previous PR
+15:12:44 <svg> oh, not at all, i just suspect banyek might not be responsive, that is all
+15:13:51 <abadger1999> +1 to merge from me
+15:14:50 <abadger1999> svg: Note: the exception handling isn't python3 ready (but the exception handling in the rest of the file isn't either so....)
+15:15:21 <svg> thx - I haven't update myself to pyton3 either tbh
+15:15:53 <abadger1999> <nod>
+15:16:14 <abadger1999> jtanner, gundalow: If no objections, I'll merge now.
+15:16:32 <jtanner> none from me
+15:16:40 <gundalow> abadger1999: none from me
+15:16:51 <mordred> looks good to me
+15:16:52 <abadger1999> Cool.
+15:17:06 <svg> (while you are at it, #2595 has shipit and is for the same module)
+15:17:10 <gundalow> Will leave @banyet as maintainer for the moment
+15:17:19 <svg> I think that's best
+15:17:32 <mordred> one could imagine a world in which a user might want to have mysql-level warnings be errors, but that's a theoretical desire - I do not actually have it myself right now
+15:17:43 <gundalow> #topic https://github.com/ansible/ansible-modules-extras/pull/2595
+15:17:55 <bcoca> considering what mysql considered a 'warning' in past would be fatal error in real RDBMS .....
+15:19:15 * mordred refrains from taking the bait on 'real'
+15:20:53 <gundalow> mordred: :)
+15:20:53 <bcoca> well, considering that there is no current product that meets actual RDBMS standard ....
+15:20:56 * ryansb makes popcorn
+15:21:00 <mordred> svg: the PR looks good in general - personally the capitalized Is_Master and Is_Slave seem a little odd, but shrug. might be nice to return both keys in both results so that users don't have to check for key existence
+15:21:07 <gundalow> aaaaaaaanyway
+15:21:30 <svg> mordred: both keys are added in the second commit
+15:21:55 <mordred> svg: they do not show up in the files changed view?
+15:21:56 * bcoca must let go of SQL not being relational algebra
+15:22:03 <abadger1999> svg: Hmmm.... Not sure why that isn't being caught in the exception handler.
+15:22:22 <abadger1999> svg: what does  get_master_status(cursor) return?
+15:22:25 <abadger1999> Is it always None?
+15:22:32 <svg> + the capitalisation was done to be in par with the result set from the module when it is retuning data
+15:22:33 <abadger1999> Or does it sometimes have useful information?
+15:22:42 <mordred> svg: ah. gotcha. that makes sense to me
+15:24:02 <svg> abadger1999: what part are you talking about exactly?
+15:24:38 <abadger1999> ahh... I see how it works
+15:26:09 <abadger1999> +1 to merge
+15:27:21 <svg> ok, thanks guys
+15:27:32 <abadger1999> I think that's +1 from three of us, so I'll merge it now.
+15:29:07 <gundalow> cool, thanks
+15:29:17 <gundalow> #topic Open floor
+15:29:24 <gundalow> Anyone got anything else?
+15:29:47 <jhawkesworth> not sure if this is the place, but is there a known process for deprecating a module at the moment?
+15:29:56 <gundalow> jhawkesworth: sure
+15:31:00 <jhawkesworth> win_msi is a pain, and its pretty much superceeded by win_package.
+15:31:08 <abadger1999> nitzmahone: ^
+15:31:16 <nitzmahone> Yep, I've got it on my list
+15:31:29 <nitzmahone> It'll be deprecated in 2.2
+15:31:30 <abadger1999> jhawkesworth: I think the process is pretty ad hoc -- raise it here and then discussion ensues.
+15:32:03 <abadger1999> nitzmahone: Is that gating on anything?  (Any features that must be completed in win_package for instance?)
+15:32:13 <nitzmahone> Assuming we do *something* with the module split, win_package will be "adopted" by core and win_msi deprecated.
+15:32:38 <jhawkesworth> oh ok.  So tests for win package would be a nice thing to have to enable adoption
+15:32:48 <jhawkesworth> I can tackle that
+15:32:54 <nitzmahone> That'd be awesome
+15:33:09 <jhawkesworth> ok I'll put it on my list
+15:33:18 <gundalow> jhawkesworth: Thank you :)
+15:33:25 <svg> I'm off, thanks all. \o
+15:33:25 * nitzmahone hopes jhawkesworth's list is shorter than his ;)
+15:34:02 <gundalow> svg: Thanks
+15:34:07 <abadger1999> svg: thank you!
+15:34:12 <jhawkesworth> mines long but that task is going to the top.
+15:34:33 <jhawkesworth> ok well I think that's that topic dealt with.
+15:35:19 <nitzmahone> We'll chat offline about timing/frequency for the Windows working group, so probably no need to bring that up here unless anyone else present wants to discuss.
+15:35:53 <abadger1999> not i
+15:35:54 <jhawkesworth> sure.  still thinking about that, need to keep a lid on scope I think
+15:35:59 <nitzmahone> yup
+15:47:25 <gundalow> ok, so I guess we are done for today
+15:47:27 <gundalow> thanks all
+15:47:29 <gundalow> #endmeeting

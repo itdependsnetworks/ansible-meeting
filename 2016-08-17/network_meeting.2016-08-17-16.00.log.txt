@@ -1,0 +1,95 @@
+16:00:08 <gundalow> #startmeeting Network Meeting
+16:00:08 <zodbot> Meeting started Wed Aug 17 16:00:08 2016 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:00:08 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:00:08 <zodbot> The meeting name has been set to 'network_meeting'
+16:00:14 <gundalow> #topic Agenda
+16:00:21 <gundalow> #chair Qalthos
+16:00:21 <zodbot> Current chairs: Qalthos gundalow
+16:00:32 <Qalthos> hiya
+16:00:33 * gundalow looks around
+16:00:36 <caphrim007> yo
+16:01:04 <gundalow> Hi Qalthos and caphrim007
+16:01:34 <gundalow> Agenda, as always is https://github.com/ansible/community/issues/110
+16:01:55 <mhite> ello
+16:04:03 <gundalow> So looking through what's in the Agenda I don't see anything current for discussion
+16:04:37 <caphrim007> i think my pr's are all caught up to date atm
+16:05:36 <gundalow> 5~https://github.com/ansible/ansible-modules-extras/pull/554 "Modify F5 GTM Pool" still needs work
+16:05:51 <gundalow> ah, that's with perzizzle
+16:05:55 <caphrim007> perzizzle and i go back and forth on that
+16:06:02 <caphrim007> there are times that we think its dead
+16:06:13 <caphrim007> and then he pops back up and says he'll work on it
+16:06:20 <gundalow> caphrim007: Anything we can do to help, or is it just with you guys?
+16:06:47 <caphrim007> i'd be happy to finish it off for him in a different pr, considering i'll likely be maintaining it anyway
+16:07:22 <gundalow> caphrim007: That sounds logical. Have you suggested that?
+16:07:52 <caphrim007> not in this pr
+16:08:08 <caphrim007> there was another he had that i offered @gregdek
+16:08:34 <gundalow> Might be worth doing as you suggest
+16:08:57 <caphrim007> okie doke
+16:09:14 <gundalow> #topic Open Floor
+16:09:54 <gundalow> #action caphrim007 to contact perzizzle and finished off https://github.com/ansible/ansible-modules-extras/pull/554 "Modify F5 GTM Pool" which seems to have gotten stuck
+16:09:57 <gundalow> Thank you :)
+16:10:08 <gundalow> Anyone got anything else?
+16:12:03 <gundalow> Internally we are continuing with the refactor that will be released in Ansible 2.2. Currently `devel` may be broken in places, so we suggest sticking with stable-2.1 branch
+16:13:02 <gundalow> Qalthos: Anything you'd like to add?
+16:13:05 <Qalthos> but if you're keen on being on the bleeding edge, please let us know what's broken
+16:13:14 <gundalow> :)
+16:13:20 <Qalthos> ^_^'
+16:13:27 <caphrim007> its the only way to fly
+16:14:00 <gundalow> Qalthos: Out of interest do you have any other F5 changes planned of the next month or so?
+16:14:10 <gundalow> change everything to use docs_fragment?
+16:14:32 <caphrim007> yeah i'll do that
+16:14:39 <caphrim007> and i have more modules
+16:15:00 <gundalow> \o/
+16:15:32 <caphrim007> not sure what interest there is for this, but i also posted packerfiles and will post vagrant files i use to test our bigips
+16:15:43 <caphrim007> may be relevant to someone that has VE's in house they want to use
+16:15:56 <caphrim007> it's in the f5devcentral github org
+16:16:14 <gundalow> It's on my list to setup CI for the networking modules, so that is interesting to me
+16:16:44 <caphrim007> here are the packer templates for the moment
+16:16:44 <caphrim007> https://github.com/f5devcentral/f5-packer-templates
+16:18:16 <caphrim007> ok, i pinged perzizzle. thats all i've got
+16:19:11 <gundalow> mhite martian_law Qalthos: Anything else from you?
+16:19:31 <mhite> nope
+16:19:33 <Qalthos> none from me at the moment
+16:19:50 <mhite> @caphrim007 looks good!
+16:19:51 <martian_law> na, just joined to see what was happening.
+16:20:18 <gundalow> martian_law: That's why we have the meetings in public. Do you use any of the Network modules?
+16:20:44 <SKG_NET> I have raised a PR to include Dell networking in the 2.2 Roadmap
+16:21:05 <SKG_NET> Can you merge that?
+16:21:13 <gundalow> SKG_NET: Got a link/
+16:21:23 <bcoca> roadmap is normally stuff we commit to doing, does not normally include community contributions
+16:21:41 <martian_law> gundalow: we've only recently gone to 2.1 and haven't had much time to test them out. We're still using some custom modules that leverage napalm.
+16:21:42 <SKG_NET> https://github.com/ansible/ansible/pull/17114
+16:22:39 <gundalow> SKG_NET: If those modules exist then that feels like something that should go into https://github.com/ansible/ansible/blob/devel/CHANGELOG.md
+16:23:34 <SKG_NET> no not yet..we will start sending PR's for the actual modules by end of this month
+16:23:46 <SKG_NET> I will update the changelog as well
+16:23:57 <mhite> Is that for Force10 OS or Powerconnect OS?
+16:24:10 <SKG_NET> for both
+16:24:12 <gundalow> OK. I'll kill the ROADMAP one. Once the modules are in you can add them to CHANGELOG.md
+16:24:19 <SKG_NET> and for the new OS10 as well
+16:24:39 <mhite> @SKG_NET - Well that will be a nice addition.
+16:24:50 <SKG_NET> I checked with Peter before raising this..
+16:25:15 <SKG_NET> Couple of our customers also wanted to see that we are part of the Roadmap as well
+16:25:21 <SKG_NET> Thanks @mhite
+16:26:12 <caphrim007> gundalow, is that split between core and extras still happening?
+16:27:12 <gundalow> caphrim007: ansible/ansible, ansible/ansible-modules-core and ansible/ansible-modules-extras will be merged into one Git repo, there will be an announcment soon
+16:27:26 <gundalow> SKG_NET: ah, OK. I'll ping Peter and ask him
+16:27:27 <caphrim007> k
+16:29:52 <SKG_NET> ok
+16:30:44 <gundalow> SKG_NET: Cool. I've added some comments on the PR. Please let us know once the modules are ready, feel free to add it to https://github.com/ansible/community/issues/110
+16:31:36 <gundalow> SKG_NET: End of the month will be tight for getting it into 2.2. Will require quick turn around of feedback. Should be possible though :)
+16:31:48 <gundalow> Anyone got anything else?
+16:32:36 <SKG_NET> We have a total of 16 modules... I can start sending them earlier once the testing is done...
+16:33:12 <SKG_NET> sure
+16:34:12 <gundalow> Sending through one module first may be a good idea. We often find when there are a collection of new modules we often give similar feedback (especially around documentation). So as soon as you are happy with one module send that through the process and we'll review it and you can apply that feedback to the other 15 modules
+16:35:08 <gundalow> SKG_NET: If you can ensure the modules are clean according to:
+16:35:21 <gundalow> pep8 -r  --ignore=E501,E221,W291,W391,E302,E251,E203,W293,E231,E303,E201,E225,E261,E241,E402 network/dell
+16:35:45 <gundalow> That will make our lives a lot easier when we add in a CI test for Network Modules
+16:36:17 <SKG_NET> sure will check them...
+16:37:24 <SKG_NET> I will send the initial modules early next week...
+16:38:19 <gundalow> SKG_NET: Excellent, feel free to add @gundalow on the review so I'll see them
+16:38:31 <gundalow> So I guess we are done for today
+16:38:36 <gundalow> Thanks for your time everybody
+16:38:37 <SKG_NET> sure Thanks
+16:39:05 <gundalow> As always if you think of anything feel free to add it to https://github.com/ansible/community/issues/110
+16:39:44 <gundalow> Reminder that the new "Testing Working Group" meeting starts tomorrow at https://duckduckgo.com/?q=1700+UTC
+16:39:49 <gundalow> #endmeeting

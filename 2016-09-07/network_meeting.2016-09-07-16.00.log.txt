@@ -1,0 +1,197 @@
+16:00:09 <gundalow> #startmeeting Network Meeting
+16:00:09 <zodbot> Meeting started Wed Sep  7 16:00:09 2016 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:00:09 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:00:09 <zodbot> The meeting name has been set to 'network_meeting'
+16:00:23 <gundalow> #chairs Qalthos privateip
+16:00:46 <gundalow> #topic Roll call
+16:00:50 <gundalow> who's around today?
+16:00:58 * caphrim007 raises hand
+16:01:01 * skg_net Hey
+16:01:49 <gundalow> Hello everybody :)
+16:02:00 <gundalow> So working bottom up through https://github.com/ansible/community/issues/110
+16:02:34 <caphrim007> PR 2783 we can cross off
+16:02:38 <caphrim007> it's merged
+16:02:47 <gundalow> #topic https://github.com/ansible/ansible-modules-core/pull/4715 enabling output format JSON for junos
+16:03:11 <gundalow> caphrim007: updated, thanks :)
+16:03:24 <gundalow> stianvi: So this is your PR
+16:04:12 <gundalow> So the code looks sensible, I'm just confused by Line 186 why we are doing a check there
+16:04:34 <gundalow> which I realise isnt your code
+16:05:08 <gundalow> (just waiting for privateip to join)
+16:05:13 <gundalow> ah, he will be a few minutes
+16:05:51 <gundalow> so will return to that short;y
+16:05:55 <gundalow> #topic 2.2 update
+16:06:53 <gundalow> I believe we just have two functional changes left to integrate into `devel`, then we start all the heavy testing. We are already aware of a number of issues across the modules that we need to fix and that's going to be the focus for the next week or so
+16:07:52 <gundalow> Once we are reasonablly happy we will add something onto https://github.com/ansible/community/issues/110 saying which version of Ansible is availble for early testing so you can ensure your networking playbooks still work
+16:08:10 <gundalow> So thanks in advance for your help in testing this :)
+16:09:34 <caphrim007> gundalow: I will own PR 554. we can close it now though as it wont be ready for 2.2
+16:09:37 <privateip> hi all ... apologizes for being late
+16:09:44 <gundalow> caphrim007: Just saw your update thanks
+16:09:47 <caphrim007> i'll open my own pr for it later
+16:09:50 <gundalow> privateip: No problem
+16:10:00 <gundalow> #topic https://github.com/ansible/ansible-modules-core/pull/4715 enabling output format JSON for junos
+16:10:37 <gundalow> privateip: https://github.com/ansible/ansible-modules-core/pull/4715 Code looks sensible, I just wasn't sure about the existing check that was in there
+16:11:46 * privateip looking
+16:13:50 <privateip> i believe there needs to be change as well in the junos.py in module_utils to support this PR
+16:14:02 <privateip> is there a corresponding PR in ansible/ansible?
+16:14:28 <gundalow> stianvi: ^ Is there a similar change for ansible/ansible as well?
+16:14:58 <privateip> actually this creates some other issues
+16:15:16 <privateip> the problem is the display argument is global to the task for all commands and *rpcs*
+16:15:24 <privateip> rpcs don't support json formatting
+16:15:50 <privateip> we can add support for json formatting but we need to add some additional validate checks
+16:16:02 <privateip> and the aforementioned changes to junos.py
+16:16:37 <privateip> in short...this isn't as easy a change as it looks on the surface
+16:16:40 <gundalow> stianvi: You around stil? Does that make sense?
+16:19:46 <gundalow> privateip: Thanks, I'ce copied that into the PR
+16:19:57 <privateip> ok sounds good
+16:20:01 <privateip> i think its a valid want
+16:20:07 <privateip> i just dont know if we can get there in 2.2
+16:20:09 * gundalow assumes stianvi has had to step aware from the PR for a bit
+16:20:11 <gundalow> sure
+16:20:21 <gundalow> Should I go onto the next topic?
+16:20:29 <privateip> good by me
+16:20:31 <stianvi> I'm back
+16:20:37 <gundalow> stianvi: :)
+16:20:38 <stianvi> sorry about that
+16:20:41 <gundalow> That's cool
+16:20:48 * gundalow gives you a minute to read the above
+16:21:19 <stianvi> no, nothing for junos.py
+16:21:38 <stianvi> tested successful with the old code - not sure with the new PR4715
+16:22:20 <privateip> stainvi: there were some significant changes made in 2.2 to support per command encoding
+16:22:39 <privateip> i think the problem will be if you set display=json and use rpcs
+16:23:13 <stianvi> fair enough
+16:23:26 * privateip says all that after spending a grand total of 2.3 min looking at the code
+16:23:39 <stianvi> and yes, a PR for junos.py is probably needed
+16:23:48 <privateip> its definitely doable and i think it makes sense
+16:24:24 <privateip> we can try to tackle it but no promises... otherwise if you have some cycles we have a couple more days to get the change in for 2.2
+16:24:34 <privateip> short of that, it will be post 2.2 before we can do this
+16:24:36 <stianvi> on a side note - should I document somewhere that it requires junos 14 something?
+16:24:52 <privateip> good point
+16:24:54 <stianvi> junos isn't supported in 12.3
+16:25:05 <stianvi> 12.3 is jtac recommended for ex's
+16:25:18 <privateip> #action add junos min version to requirements in modules
+16:25:24 <privateip> awwww ... fail
+16:25:38 <stianvi> gundalow probably know meetbot commands
+16:25:39 <privateip> gundalow ^^ if you dont mind
+16:25:47 <Qalthos> privateip: you're fine
+16:25:53 <Qalthos> action doesn't respond
+16:26:03 <privateip> oh i didn't know that
+16:26:11 * privateip too many irc meetings with different bots
+16:26:30 <stianvi> so 1. add junos requirements. 2. fix PR for junos.py for junos output format.
+16:26:50 <privateip> that sounds right
+16:26:56 <gundalow> in the DOCUMENTATION: just add requirements: [ 'junos>= x ']
+16:26:59 <gundalow> #chair privateip
+16:26:59 <zodbot> Current chairs: gundalow privateip
+16:27:09 <privateip> yes
+16:28:03 <Qalthos> ((oh, didn't actually notice the failed #chairs above))
+16:28:16 <Qalthos> privateip: you might want to #action again
+16:28:48 <privateip> #action add junos min version to requirements in modules
+16:29:04 <stianvi> for junos_command.py, add output format json requires junos >= x. Right?
+16:29:14 <privateip> stainvi: yes thats right
+16:29:18 <stianvi> I'll add a commit to PR right away
+16:29:28 <privateip> +1
+16:29:38 <gundalow> the #action will mostlikely get lost in the IRC logs :(
+16:30:03 <skg-net> Hey
+16:30:26 <gundalow> skg-net: hi :)
+16:30:34 <gundalow> Anything else on junos?
+16:31:20 <stianvi> not from me
+16:31:25 <gundalow> cool
+16:31:28 <gundalow> #topic Open Floor
+16:31:31 <skg-net> can look into this PR https://github.com/ansible/ansible-modules-core/pull/4709
+16:31:54 <skg-net> https://github.com/ansible/ansible/pull/17399
+16:32:02 <gundalow> #topic https://github.com/ansible/ansible-modules-core/pull/4709 https://github.com/ansible/ansible/pull/17399 dnos10_template
+16:32:20 <skg-net> https://github.com/ansible/test-network-modules/pull/3
+16:32:28 <skg-net> is there anything pending, I need to address
+16:32:38 <skg-net> can we close on this..
+16:32:52 <privateip> 4709 looks good to me
+16:33:08 * gundalow will merge 4709
+16:33:39 <privateip> 17399 looks good
+16:34:46 <privateip> test-network-modules/3 looks good as well
+16:34:57 <skg-net> can I raise PR for other modules in parallel?
+16:35:10 <gundalow> skg-net: One PR per module please
+16:35:27 <gundalow> otherwise reviewing comments can get lost
+16:35:39 <privateip> change log line 80 needs to be fixed ... should be dnos10 not Dell Networking
+16:36:00 <gundalow> privateip: ah, good spot, I'll edit that directly
+16:36:07 <privateip> thx
+16:36:39 <skg-net> gundalow: yes, I will raise 1 PR per module, but can I raise multiple at the same time...
+16:37:13 <gundalow> a ) "dnos10 Networking"
+16:37:17 <gundalow> b) "Dell dnos10 Networking"?
+16:37:26 <privateip> skg-net: if i understand you right ... yes... 1 module per PR x as many PRs as you want to raise in parrallel
+16:37:39 <privateip> dnsos10
+16:37:41 <skg-net> since I have 9 more modules left to go..
+16:37:45 <skg-net> yes thats correct
+16:37:46 <privateip> err
+16:37:54 <privateip> gundalow: dnos10
+16:37:55 <stianvi> dnos = dell network os :)
+16:38:01 <privateip> skg-net: yes go for it
+16:38:13 <skg-net> thanks
+16:38:24 <privateip> np
+16:38:34 <gundalow> CHANGELOG.md updated
+16:39:12 <privateip> dnos Networking should be dnos10
+16:39:59 <privateip> s/dnos Networking/dnos10/
+16:40:12 <gundalow> ah, OK
+16:40:13 <gundalow> done
+16:40:39 <privateip> s/dnos/dnos10/
+16:40:44 <privateip> we will get there :)
+16:40:45 <gundalow> ffs
+16:40:52 <gundalow> 3rd time lucky
+16:40:56 <privateip> lol
+16:41:23 * privateip thinks it must be beer-thirty in the UK
+16:41:32 <privateip> :)
+16:41:48 <gundalow> hum, also shouldn't this be alphabetical
+16:42:11 <privateip> yeah that makes sense
+16:43:34 <privateip> YAY
+16:43:35 <gundalow> coo, tests merged (now that we have a separate stable-2.1) branch in test-network-modules
+16:44:10 <gundalow> #topic Open Floor
+16:44:14 <gundalow> Anyone else?
+16:44:36 <gundalow> privateip: did you want to give a very quick update?
+16:44:50 <privateip> sure ... quick update on 2.2 work
+16:45:00 <privateip> all network refactoring is code complete at this point
+16:45:01 <gundalow> #topic 2.2 update
+16:45:10 <privateip> now the bug hunting begins
+16:45:32 <privateip> please file any and all issues at this point no matter how small they may seem
+16:45:45 <privateip> lots of updates coming in test cases as well
+16:45:57 <privateip> gundalow is busy getting the testing repo into shape
+16:46:04 * gundalow nods
+16:46:17 <privateip> please test 2.2 as much as your time allows
+16:46:28 <privateip> absolute freeze for 2.2 coming 9/16
+16:46:31 <gundalow> caphrim007: Have you had a chance to run your full F5 test suite on `devel` recently?
+16:46:49 <caphrim007> not yet. i can do it now
+16:47:20 <caphrim007> we identified one thing that I thing abadger1999 had a say in involving that map() change
+16:47:29 <caphrim007> i dont know if it affects any other modules
+16:47:34 <gundalow> caphrim007: ah, was this a py3 related change?
+16:47:47 <caphrim007> yeah importing the map method from six I think
+16:47:56 <gundalow> ah, yes,that sounds familiar
+16:48:03 <caphrim007> changed the return value from a list to an iterator
+16:48:08 <gundalow> nod
+16:48:10 <caphrim007> so calling len() on results will fail
+16:48:52 <abadger1999> <nod>  Did we fix that?  I thought I did but I forget...
+16:49:12 <caphrim007> i fixed it in my module, but i didnt look at the rest of the modules to see if anyone else used it
+16:49:19 <abadger1999> Just have to do list(map([...]))   instead of map([...])
+16:49:23 <abadger1999> <nod>
+16:49:47 <abadger1999> It's hard to grep because not all modules have ported to python3 yet.
+16:50:15 <abadger1999> Guess I can grep for combinations of six + map for current problems.
+16:51:54 <abadger1999> welp, that's not going to work either.
+16:52:37 <abadger1999> map is available on python3... it just returns an iterator there but returns a list on py2.  six.map always returns an iterator.
+16:52:47 <caphrim007> correct
+16:53:40 <caphrim007> looks like i might have one other usage of it in bigip land. i can look at some other modules, but i dont have tests for them
+16:54:02 <caphrim007> looks like i'll be sitting it at the next testing meeting! :-)
+16:54:09 <gundalow> abadger1999: will pylint/pyflakes help detect this?
+16:54:12 <gundalow> caphrim007: woot :)
+16:54:28 <abadger1999> <nod>  I'm not too worried for 2.2 -- any module that works on yp3 in 2.2 is a bonus, not a given ;-)
+16:54:38 <gundalow> caphrim007: Could you please add a comment to https://github.com/ansible/community/issues/114 so we remember
+16:54:47 <caphrim007> sure
+16:54:52 <gundalow> Thanks
+16:54:58 <abadger1999> gundalow: pylint --py3k might detect it, I'll have to check....
+16:56:04 <gundalow> cool
+16:56:48 <gundalow> Anything else?
+16:57:06 * gundalow looks forward to seeing all the bugs you raise :)
+16:57:57 <stianvi> skg_net : any plan for dnos9 any time soon?
+16:58:25 <stianvi> ah, he left
+16:58:25 <gundalow> stianvi: skg_net has left the channel
+16:58:41 <gundalow> :)
+16:59:30 <gundalow> cool, so I guess we are done
+17:00:00 <stianvi> great hour
+17:00:11 <gundalow> As always please feel free to add anything to the agenda https://github.com/ansible/community/issues/110
+17:00:15 <gundalow> I think so too
+17:00:20 <gundalow> Thansk for making it so :)
+17:00:21 <gundalow> #endmeeting

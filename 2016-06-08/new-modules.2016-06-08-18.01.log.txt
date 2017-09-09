@@ -1,0 +1,105 @@
+18:01:08 <gregdek> #startmeeting new-modules
+18:01:09 <zodbot> Meeting started Wed Jun  8 18:01:08 2016 UTC.  The chair is gregdek. Information about MeetBot at http://wiki.debian.org/MeetBot.
+18:01:09 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+18:01:09 <zodbot> The meeting name has been set to 'new-modules'
+18:01:43 <gregdek> #topic Roll Call
+18:01:45 <gregdek> Who's about?
+18:02:03 <alikins> howdy
+18:03:09 * MichaelBaydoun lurking
+18:03:14 * gregdek rummages around for the agenda
+18:04:06 <nitzmahone> yo
+18:04:36 <gregdek> Ah yes.
+18:04:38 <gregdek> https://github.com/ansible/community/issues/92
+18:05:19 <jimi|ansible> yo
+18:05:21 <gregdek> Let's work our way up it.
+18:05:42 <jtanner> hi
+18:05:46 <gregdek> #topic openssl_privatekey
+18:05:57 <gregdek> https://github.com/ansible/ansible-modules-extras/pull/2326
+18:06:31 <gregdek> Looks like mgedmin put this one through quite a bit of comment, so that's one deserved shipit probably
+18:07:06 <gregdek> mscherer also made quite a few comments that were resolved
+18:07:19 <gregdek> So perhaps we ping mscherer and ask him for a second shipit?
+18:09:13 <bcoca> i would add it should return the public key
+18:09:46 <gregdek> bcoca: want to add in comments?
+18:09:50 <bcoca> did
+18:09:59 <gregdek> sounds good.
+18:10:10 <bcoca> whole reason you generate private is so others can use public to verify
+18:10:11 <gregdek> I'll also ping mscherer for another take and we'll move on.
+18:10:18 <gregdek> Yes. Great point.
+18:10:25 <nitzmahone> bccoa: maybe optionally, that's likely not something you want logged somewhere...
+18:10:41 <nitzmahone> Oh, public, NM
+18:10:47 <jtanner> public is okay to log
+18:11:22 <gregdek> It better be :)
+18:11:36 <nitzmahone> (the word "private" showed up too many times when I was skimming back)
+18:11:37 <gregdek> or we've all been doing this cryptography thing super wrong.
+18:11:50 <gregdek> (which we probably have anyway!)
+18:12:05 <gregdek> Next:
+18:12:06 <jtanner> maybe stupid question, but does this module actually create a pubkey?
+18:12:08 <chouseknecht> https://github.com/ansible/ansible-modules-core/pull/3728
+18:12:12 <gregdek> #topic docker-networking module
+18:12:15 <bcoca> i've made worse gaffe, confused with pubic
+18:12:31 <gregdek> pls never say that again bcoca
+18:12:39 <bcoca> jtanner: public key is derived from private
+18:12:40 <nitzmahone> doesn't store it separately- you can extract from the stored pem
+18:13:13 <gregdek> I agree with bcoca on the point that you should be able to get the public key from the output directly, would be super useful at least as an option
+18:13:27 <gregdek> Anyway, it's in the comments
+18:14:00 <gregdek> https://github.com/ansible/ansible-modules-core/pull/3728
+18:14:13 <gregdek> I'm out of my depth on this one. (Also, it's a new module in core.)
+18:14:51 <jimi|ansible> https://github.com/ansible/ansible-modules-core/pull/3728/files#diff-7cc1288d7739eb652c127b5350c6f627R51
+18:15:01 <jimi|ansible> ^ is that idempotent? ie. does it always recreate the network?
+18:15:10 * jimi|ansible is just getting through the doc string
+18:16:28 <jimi|ansible> looks like based on the state doc that it only recreates if the params are different, so good
+18:16:37 <bcoca> you are using both < and  >  as yaml continuations .. only one of em is actually valid
+18:17:35 <nitzmahone> I'm not seeing where it actually compares- looks like if there's one with the right name, it doesn't do anything.
+18:17:42 <bcoca> s/incremental/append/ to match other modules
+18:18:57 <gregdek> I'm gonna assume that y'all are commenting, etc. as you see fit, and you'll tell me when you think it's time to move on from this one.
+18:18:59 <chouseknecht> if it exists, there is no ability to update
+18:19:04 <gregdek> Since it's in core review.
+18:19:22 <alikins> heh, that ends up with me finding http://stackoverflow.com/a/21699210/781180  which is awesome, useful, and weird
+18:19:26 <jimi|ansible> chouseknecht: that's fine, but looking for where it compares the current settings to see if it needs to remove/recreate
+18:19:39 <chouseknecht> if the network exists, there is no method in docker-py to update it.
+18:19:51 <chouseknecht> yeah, it doesn't do a compare.
+18:20:00 <jimi|ansible> that's... bad
+18:20:18 <chouseknecht> yeah... maybe so.
+18:20:24 <jimi|ansible> users will get an 'ok' when specifying different params and think things were all good but then it won't match what is in their playbook
+18:21:13 <jimi|ansible> so it should compare, and if different remeber which containers are connected, disconnect them, blow the net away, recreate, and then reconnect containers
+18:21:43 <jimi|ansible> PITA but if there's no update facility that's the only way
+18:21:43 <bcoca> ^ only needs to remember on incremental=yes
+18:22:17 <chouseknecht> hmm...
+18:22:45 <jimi|ansible> bcoca: perhaps, though if connected is not specified it should take that as the canonical list
+18:23:17 <jimi|ansible> which should really be what it's doing anyway, otherwise if you don't specify connected your net will be empty every time
+18:23:31 <jimi|ansible> which would be a real PITA if you have hundreds of containers on a net
+18:23:57 <bcoca> agreed, connected: [] is explict way of doing that, ommiting, not good
+18:24:26 <bcoca> so remember `if connected is None or incremental`
+18:24:33 <jimi|ansible> so, -1 from me, ^ those things need to be addressed
+18:24:42 <chouseknecht> so incremental should be True
+18:24:47 <chouseknecht> by default
+18:24:55 <bcoca> post in ticket, i labeled
+18:25:34 <bcoca> i can see the reasons for the default either way, i'm fine with false
+18:25:34 <jimi|ansible> chouseknecht: can you write these down and do one update so we don't bombard the issue and/or step on each others comments?
+18:26:08 <bcoca> also it works closer to how other modules currently do same
+18:26:30 <jimi|ansible> chouseknecht: as bcoca said, if connected is specified, it's canonical unless incremental is True (default off is fine), but if connected is left out (None) the connected list should be populated with the currently connected containers
+18:26:43 <jimi|ansible> in which case that would be the canonical list, and incremental wouldn't matter
+18:27:40 <chouseknecht> updating the ticket
+18:28:00 <gregdek> OK, I assume that marks the end of that discussion, so thanks all.
+18:28:07 <chouseknecht> yep
+18:28:31 <jimi|ansible> https://github.com/ansible/ansible-modules-core/pull/3728/files#diff-7cc1288d7739eb652c127b5350c6f627R289 <- not sure if type='list' can have a default of None?
+18:28:36 <gregdek> Looking through the agenda to see which of these are still open...
+18:28:39 <jimi|ansible> ^ bcoca?
+18:28:59 <jimi|ansible> i'm not sure if i've ever tried that
+18:29:17 <jimi|ansible> i don't think it'd work
+18:29:20 <bcoca> all types should be able to default to None
+18:30:02 <bcoca> and yes, that default is a problem as it will 'remove' every time
+18:31:05 <gregdek> OK, the others in the agenda are either closed or no change.
+18:31:15 <gregdek> #topic Open Floor
+18:31:21 <bcoca> yeah, connected also needs 'none check'
+18:32:04 <gregdek> The big thing from me: it's time to buckle down and get the "passes_guidelines / worksforme" split working. So that's my big commitment, getting that working by next week's meeting so we can move to it.
+18:32:16 <gregdek> Been dragging too long already.
+18:32:33 <gregdek> I only intend to use it for new modules, but once the code is in, we can use it for other use cases as we see fit.
+18:32:45 <gregdek> That's an argument bcoca and I can have later. :)
+18:35:00 <bcoca> gregdek: its been better, it was really bad 2 weeks ago, spent more time then 'correcting' the bot than doing triage
+18:35:20 <gregdek> Little fixes add up. :)
+18:35:20 <bcoca> now its down a lot, only a few corrections
+18:35:26 <bcoca> yes, thanks
+18:36:00 <gregdek> So that's all I've got for this time, unless anyone has any particular modules they want to hit.
+18:38:15 <gregdek> okeydoke!
+18:38:20 <gregdek> #endmeeting

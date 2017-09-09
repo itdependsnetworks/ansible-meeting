@@ -1,0 +1,254 @@
+15:01:16 <jimi|ansible> #startmeeting Core Public Meeting
+15:01:16 <zodbot> Meeting started Thu May 12 15:01:16 2016 UTC.  The chair is jimi|ansible. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:01:16 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:01:16 <zodbot> The meeting name has been set to 'core_public_meeting'
+15:01:54 <ryansb> hi!
+15:02:30 <jimi|ansible> #chair jtanner|t420 abadger1999 bcoca alikins Qalthos ryansb Shrews nitzmahone
+15:02:30 <zodbot> Current chairs: Qalthos Shrews abadger1999 alikins bcoca jimi|ansible jtanner|t420 nitzmahone ryansb
+15:02:42 <nitzmahone> Yo
+15:03:02 <jimi|ansible> #topic Ansible 2.1 - pending issues for RC2
+15:03:05 * bcoca is in 2 meetings right now, so might need prodding sometimes
+15:03:20 <jimi|ansible> bcoca: just let us know if there's anything outstanding for rc2
+15:03:33 <jimi|ansible> assuming you had not made any progress on the signal thing?
+15:03:36 <bcoca> not right now
+15:03:44 <bcoca> i think i know the issue, not sure though
+15:03:56 <jimi|ansible> k, is that a blocker to releasing 2.1?
+15:04:09 <bcoca> not in my view, but Tower folk might disagree
+15:04:28 <bcoca> ^ this has been broken before for long periods
+15:04:58 <jimi|ansible> ok, i'd say follow up on it tonight, and if you can fix it great, otherwise we'll release rc2 as planned tomorrow
+15:05:04 <bcoca> current theory: dsiplay and ziploader multiprocess Lock is not being released so it keeps 'master' until they can be freed
+15:05:07 <jimi|ansible> assuming nothing else is blocking of course
+15:05:48 <bcoca> ^ in 'installer framework meeting' al day (also will need to let in water main workers a few times) so not sure if i'll get any work done today
+15:06:16 <abadger1999> I think we'll probably want rc3 but no objections to rc2 tomorrow... I think there's a few p2s still open and quite a few smaller bugfixes that add up to a lot.
+15:06:16 <jimi|ansible> no problem, tomorrow morning if possible, like i said i won't hold up the rc2 release for it
+15:06:35 <jimi|ansible> abadger1999: yeah i'm digging back through my list of notifications, fixing things i see as i go
+15:06:35 * bcoca really did not want a view to neighbour's port-a-potty nor knowledge of their usage schedule ... but right out my window
+15:06:43 <jimi|ansible> i've got a few patches in devel which i have not merged to 2.1 yet
+15:07:22 <jtanner|t420> jimi|ansible, i think the tower guys are going to want a fix for the sftp batch mode (in whatever form it is fixed)
+15:07:42 <bcoca> but they have clear workaround, disable that setting
+15:07:58 <jimi|ansible> jtanner|t420: that's another bug which has been long-standing, isn't it?
+15:08:00 <bcoca> ^ if they can confirm that works, we should not need to rush it
+15:08:04 <newtMcKerr> jtanner, is there a ticket for that one?
+15:08:06 <jimi|ansible> i'm all for getting the fix in, if it's ready
+15:08:10 <newtMcKerr> ditto
+15:08:26 <jimi|ansible> otherwise it can wait until 2.1.1
+15:08:44 <jtanner|t420> newtMcKerr, re-opened https://github.com/ansible/ansible/issues/13401
+15:09:15 <bcoca> jtanner|t420: did you check with users that toggling that config solves the issue?
+15:09:35 <jtanner|t420> which users, which config
+15:09:56 <bcoca> DEFAULT_SFTP_BATCH_MODE:
+15:10:00 <bcoca> ticket/tower users
+15:10:40 <bcoca> ansible.cfg [ssh_connection]sftp_batch_mode or ANSIBLE_SFTP_BATCH_MODE env var
+15:10:57 <bcoca> ^ have them set to false and check if issue goes away
+15:11:38 * bcoca really needs to get ansible-config dump/list working
+15:14:12 <jtanner|t420> jimi|ansible, bug has been open for a while, but now surfaces in tower because adhoc commands are wrapped with proot and they disabled all ssh args to make that work
+15:14:56 <bcoca> easy test, they just need to set ANSIBLE_SFTP_BATCH_MODE=False
+15:17:04 <jimi|ansible> ok, so moving on
+15:17:29 <jimi|ansible> jtanner|t420: please have the tower team test that, and have any patches to fix it ready by tomorrow
+15:17:48 <jtanner|t420> they/he have been notified to test via slack
+15:17:58 <jimi|ansible> i've moved all P2 issues on the stable-2.0 milestone to the 2.1.0 milestone, of which there are now 16
+15:18:58 <jimi|ansible> https://github.com/ansible/ansible/issues/15745 has a PR which looks good, just giving it a quick once-over to make sure
+15:19:12 <jimi|ansible> https://github.com/ansible/ansible/issues?utf8=✓&q=is%3Aopen+milestone%3A2.1.0+label%3AP2+
+15:19:21 <jimi|ansible> ^ meant to share that first
+15:19:33 <jimi|ansible> starting with the oldest:
+15:19:35 <jimi|ansible> https://github.com/ansible/ansible/issues/11311
+15:20:15 <jimi|ansible> ^ this one seems to be very old?
+15:21:16 * gundalow waves
+15:22:20 <gundalow> (just idleing here)
+15:25:07 <jimi|ansible> looking at 11311, i believe that's fixed
+15:25:36 <bcoca> looks like dupe to me, but not trusting my RAM right now
+15:26:40 <jimi|ansible> well, maybe not
+15:27:05 <jimi|ansible> i had a reproducer from when that was originally opened and i just checked it, still seems to use the same variable regardless
+15:27:29 <jimi|ansible> i don't think that's necessarily a P2 though, so i'm going to bump that to 2.2 and remove the P2 label
+15:27:56 <jimi|ansible> abadger1999: this is yours: https://github.com/ansible/ansible/issues/12255
+15:28:09 <jimi|ansible> ^ also not a P2, and I believe this is/should be a proposal?
+15:28:18 <jimi|ansible> this is pretty much the loop_control idea we came up with
+15:29:10 <bcoca> a bit diff
+15:29:27 <bcoca> lookup plugins have 3 or 4 ways of parsing params, we need to 'normalize' the interfaces
+15:29:28 <jimi|ansible> yeah, actually that's not just for loops even
+15:29:31 <bcoca> not having to do with loops
+15:29:49 <abadger1999> jimi|ansible: yes to proposal -- opened in 2015 before proposals were around.  Very different from loop_control.
+15:29:58 <bcoca> since we want to decouple lookups and the new 'loop' .. this will become more relevant
+15:30:07 <newtMcKerr> sorry to go back, but 13401: tower crew says, not critical but would like fixed in 2.1 if possible.
+15:30:21 <bcoca> newtMcKerr: does the config setting fix it for them?
+15:30:38 <newtMcKerr> they said they have a workaround, I assume that’s it
+15:30:51 <newtMcKerr> so consider it not a blocker for 2.1
+15:30:51 <bcoca> confirmation would be nice before we change the code
+15:30:58 <bcoca> ok
+15:31:04 <jtanner|t420> the first workaround was scp_if_ssh
+15:31:09 <jtanner|t420> they confirmed that worked
+15:31:22 <abadger1999> newtMcKerr, bcoca: also -- there's two different config settings.  I believe they may be using scp_if_ssh as their workaround instead of the other one.
+15:31:32 <jimi|ansible> bcoca / abadger1999: well, passing as params to a method is the way to do it there, loop_control would be used to create a standard way of passing those into lookups used within a loop
+15:31:33 <bcoca> we might still want to test the other config as not all users can use scp
+15:32:10 <abadger1999> jimi|ansible: this issue/proposal is only about a single loop.
+15:32:10 <bcoca> jimi|ansible: lets make it easier, loop JUST takes lists, you can use lookups|filters|whatever to provide them
+15:32:25 <bcoca> ^ decoupling makes loops MUCH easier and explicit, will prevent soo many issues/errors
+15:32:26 <jimi|ansible> anyway, we'll move that to a proposal
+15:32:47 <jimi|ansible> bcoca: we can figure that out, that would be a big change
+15:32:54 <jtanner|t420> jimi|ansible, proposal++ 2.1RC--
+15:33:09 <bcoca> jimi|ansible: new var 'loop', with_ will still be there for a while
+15:33:15 <bcoca> s/var/directive/
+15:33:23 <bcoca> to match the new 'loop_control'
+15:33:29 <bcoca> ^ better loops
+15:35:02 <jimi|ansible> bcoca: this was marked as P2, not sure if it really is, but it's kind of feature-ish: https://github.com/ansible/ansible/pull/13623
+15:35:38 <newtMcKerr> 13401: confirmed they are using scp_if_ssh
+15:36:31 <bcoca> jimi|ansible: feature idea, no p2, push to 2.2
+15:36:41 <bcoca> ^ we had dif rules when that was created
+15:36:56 <bcoca> newtMcKerr: still need to confirm when using sftp and the other setting
+15:37:10 <jimi|ansible> k
+15:37:48 <bcoca> scp_if_ssh bypasses the whole code, the sftp_batch_mode affects the SPECIFIC part of the code that is being looked at
+15:39:21 <jimi|ansible> bcoca: thoughts? https://github.com/ansible/ansible/issues/14914
+15:39:34 <jimi|ansible> i haven't heard anything else about that from other users, so not sure what the deal is there
+15:39:48 <jimi|ansible> i don't believe i had ever tried to reproduce it
+15:40:51 <bcoca> no, i would expect the issue if localhost ansible_ssh_host=129.424.43.34
+15:41:11 <jtanner|t420> i can try the repro
+15:41:30 <newtMcKerr> ok. let’s punt 13401 for now.  I’ll follow up with those guys about it.
+15:42:08 <jimi|ansible> bcoca: hrm, i think that error may actually be the setup task failing...
+15:42:35 * abadger1999 thinks 13401 should be in 2.1 final.... lots of people running across it and jtanner|t420 has a fix... just needs testing and tweaking.
+15:42:41 <jimi|ansible> yeah, if i add `gather_facts: no` to his example, it works fine
+15:42:44 <jimi|ansible> ^ jtanner|t420
+15:42:53 <bcoca> probably, jsut error is truncated
+15:42:58 <bcoca> ^ but that is probably it
+15:43:55 <jtanner|t420> abadger1999, if there's more test scenarios suggested, i'm willing to try ... i went through all the ones i could think of
+15:45:06 <jtanner|t420> jimi|ansible, yep, seeing same behavior. Testing all versions now.
+15:45:41 <jimi|ansible> jtanner|t420: just to be clear, which same behavior?
+15:45:47 <jimi|ansible> that he reported or that i reported
+15:45:58 <bcoca> abadger1999: we have toggle that can already work as fix, that is why im not pushing for it in 2.1
+15:45:59 <abadger1999> jtanner|t420: <nod>  Thinking mainly the "confirmation from a user" that we were talking about above.  I'll try to poke at your PR after meeting... I'd probably be for merging for rc2 on the theory that it's highly desirable that a fix is in final so the more testing the better.
+15:47:03 <jtanner|t420> jimi|ansible, appears to have never worked
+15:47:03 <abadger1999> bcoca: if we change the default then it's  fix, otherwise it's a workaround ;-).... not sure about changing the default as that seems to regress the original bug report.
+15:47:20 <bcoca> abadger1999: that is why i'm saying we add 'smart' instead of just bypassing toggle
+15:47:27 <bcoca> ^ but would like confirmation on fix before that
+15:47:52 <bcoca> since toggle is specific to that line of code ... lets test taht, using scp instead is not a good test
+15:48:04 <abadger1999> jimi|ansible: 13623 --  we need to discuss.
+15:48:39 <abadger1999> jimi|ansible: I made it p2 because gce is broken right now.
+15:48:50 <abadger1999> jimi|ansible: we have to merge or we have to revert changes to the gce module.
+15:49:18 <bcoca> did he fix the PR? last i looked it still had issues, if still true we should revert
+15:50:13 <jtanner|t420> jimi|ansible, nevermind, might be pebkac ... retesting
+15:50:35 <abadger1999> jimi|ansible: the gce  module changes went in in December.
+15:50:42 <jimi|ansible> abadger1999: ahh, ok
+15:50:55 <nitzmahone> I on-site fixed this for a customer last year with like a 2 line code change
+15:50:56 <abadger1999> bcoca: yeah, he did... asked for re-review 15 hours ago.
+15:50:56 <jimi|ansible> he did address the issues, so if that looks ok go ahead and merge it
+15:50:59 <bcoca> almost tempted to merge and fix pending issues myself
+15:51:02 <nitzmahone> (always meant to PR it)
+15:51:26 <bcoca> hmm, he did not fix import issue ...
+15:51:31 <bcoca> wtf did he change?
+15:52:07 <nitzmahone> The existing path will accept JSON as well IIRC on newer versions of libcloud, so you don't actually have to change that.
+15:52:57 <abadger1999> hah
+15:53:00 <bcoca> ^ import libcloud will throw exception that won't be caught by module and not display friendl exit_json
+15:53:04 <abadger1999> bcoca: he didn't fix it... but it was pre-existing.
+15:53:20 <abadger1999> so he probably didn't understand what you meant because of that.
+15:53:34 <bcoca> fine, lets just fix after merge ...
+15:53:52 <bcoca> i did give specific instructions and even pointer at ec2.py as example ...
+15:53:54 <abadger1999> wfm, I'll do that since you have a ton of other stuff.
+15:54:09 <abadger1999> <nod>
+15:54:16 <nitzmahone> abadger1999: got gce creds to test?
+15:54:21 <bcoca> right now i'm terrrified at RH meeting ... some very sane people, but others ....
+15:54:34 <bcoca> ^ you can easily get 500 credit test creds
+15:54:48 <nitzmahone> (was just going to say I do, if you want)
+15:55:21 <abadger1999> nitzmahone: I don't I figured that the PR had already been tested?
+15:55:41 <nitzmahone> It's a pretty simple change, looks like it *should* work
+15:56:19 <abadger1999> and  schwidt from irc had tested earlier.
+15:56:56 <abadger1999> nitzmahone: if you're willing, I'll ping you after I merge?
+15:57:16 <nitzmahone> sure
+15:57:24 <abadger1999> We've got a plan :-)
+15:57:52 <nitzmahone> Looking more closely, he *is* using the same target arg anyway, just added a second version of it and checking to see if it's json first.
+15:58:46 <jimi|ansible> abadger1999: you cherry-picked that gce thing?
+15:58:56 <abadger1999> jimi|ansible: I'm in process of cherry-picking now
+15:59:16 <jimi|ansible> Qalthos: https://github.com/ansible/ansible/pull/15134
+16:01:29 <jimi|ansible> ^ the submitter says they've rebased, so please re-review that one and merge if good
+16:01:51 <Qalthos> I'm... not entirely sure why this got sent to me. It seems reasonable, but I'm not sure of the ramifications of getting this in vs the generic solution bcoca is working on
+16:02:19 <jimi|ansible> ok, if this falls under the more generic path thing, which is still outstanding, we can consider that, but i'm not sure it's ready yet either
+16:02:50 <bcoca> nope, still trying to figure out how not to change lookup api
+16:03:06 <bcoca> ^ i do have the action_plugin case working .. but they should match
+16:06:01 <Qalthos> I didn't think it was ready, but this seems like a band-aid compared to the full fix, and I'm not sure how to handle that. Do we merge this and remember to take it out when the real thing is ready?
+16:07:08 <abadger1999> Qalthos: It is a bandaid but we're not going to have the full fix for 2.1
+16:07:21 <abadger1999> Qalthos: so it's to you to see if the band-aid is okay.
+16:07:47 <abadger1999> we'll do that for 2.1 if it is okay, then look at something more generic for 2.2.
+16:08:11 <abadger1999> so, yes.  if it's an okay bad-aid -- we merge it now and remember to take it out later.
+16:09:21 <Qalthos> abadger1999: alright, I can work with that
+16:12:07 <abadger1999> Cool.
+16:12:33 <jtanner|t420> jimi|ansible, updated 14914 ... wfm
+16:16:10 <jtanner|t420> meeting over?
+16:17:50 <bcoca> ^ current 'main' behaviour is 'find in roles dir' which is far from correct but will work for most people
+16:18:11 <bcoca> ^ that fix is 'find in current role or roles that depend on me' which is the correct way
+16:18:25 <bcoca> ^ both also fallback to playbook_dir
+16:19:37 <abadger1999> jimi|ansible: gce cherry-picked and bcoca's comments addressed.
+16:19:50 <abadger1999> nitzmahone: gce with fix now in devel and stable-2.1 head.
+16:20:04 <nitzmahone> noice- I'll poke at it in a bit
+16:20:25 <bcoca> abadger1999: ++
+16:20:59 <abadger1999> thanks
+16:24:15 <jimi|ansible> jtanner|t420: sorry got distracted by other stuff (kids coming home from school)
+16:24:53 <jimi|ansible> jtanner|t420: want to look at this one? https://github.com/ansible/ansible/issues/15126
+16:25:04 <jimi|ansible> ^ i hadn't tried to reproduce that either, it's been on my list for a while
+16:25:05 <jtanner|t420> sure
+16:25:54 <bcoca> ^ pointer, fetch changes to slurp when using sudo, so it is all in memmory
+16:25:59 <bcoca> so if swapping ....
+16:26:39 <jimi|ansible> yeah could be bad
+16:26:47 <jimi|ansible> bcoca: https://github.com/ansible/ansible/issues/15548
+16:26:55 <jimi|ansible> ^ i'm thinking that's probably correct?
+16:27:15 <jimi|ansible> include_vars goes into the non-persistent fact cache, which is higher priority than static vars like those specified on tasks
+16:27:52 <bcoca> i dont disagree on facts ... but i would want it to work as user expects
+16:28:12 <bcoca> ^ under fine tuning variable precedence
+16:28:23 <bcoca> nothing i think we should work on right now, mebbe 2.2
+16:28:29 <bcoca> ^ if we decide to change or not
+16:29:37 <jimi|ansible> i think from our precedence rules it's correct as-is
+16:30:00 <jimi|ansible> if we change it now, it could break others playbooks
+16:30:29 <jimi|ansible> set_fact/include_vars > vars/vars_files
+16:32:33 <bcoca> i thought facts < vars
+16:32:40 * bcoca needs to reread those
+16:32:53 <jimi|ansible> all_vars = combine_vars(all_vars, self._vars_cache.get(host.get_name(), dict()))
+16:32:54 <jimi|ansible> all_vars = combine_vars(all_vars, self._nonpersistent_fact_cache.get(host.name, dict()))
+16:32:57 <jimi|ansible> ^ those are done almost last
+16:33:20 <jimi|ansible> include params, extra vars, and magic variables are the only higher precedence things
+16:40:13 <jimi|ansible> bcoca: closed that one
+16:43:20 <bcoca> ok
+16:50:18 <jimi|ansible> abadger1999: willthames squashing stuff, it looked ok to me: https://github.com/ansible/ansible/pull/15657
+16:50:23 <jimi|ansible> anyone else have an opinion
+16:50:24 <jimi|ansible> ?
+16:50:44 <abadger1999> jimi|ansible: we talked about it last night.
+16:51:13 <bcoca> was the corner case issue resolved?
+16:51:17 <jimi|ansible> o rly? apparently i missed that
+16:51:18 <bcoca> i missed last nights convo
+16:51:20 <abadger1999> I made some more new testcases and fixed the original traceback  will merge those today.
+16:51:32 <jimi|ansible> talked about in IRC i guess? i wasn't watching it
+16:51:36 <bcoca> ok, really want to remove squashign in new 'loop'
+16:51:48 <abadger1999> I think that would retarget his PR to 2.2
+16:51:57 <abadger1999> yeah -- let me get my PR.
+16:51:59 <jimi|ansible> abadger1999: there was your PR and will's, are you merging both?
+16:52:15 <abadger1999> jimi|ansible: no, just mine.
+16:52:46 <abadger1999> jimi|ansible: I should summarize what will and I talked about into the ticket too.
+16:52:52 <abadger1999> so many things to do...
+16:52:54 <jimi|ansible> k
+16:53:43 <abadger1999> https://github.com/abadger/ansible/compare/5c2ca5403929...c1995a5c224e
+16:53:56 <abadger1999> https://github.com/ansible/ansible/pull/15825
+16:55:04 <abadger1999> gist of the discussion was that I didn't think that the test case changes were all correct.  I proposed new testcases but fixing some of them would require a lot more work on willthames's PR.
+16:55:25 <abadger1999> So I made this change which fixes the original bug but doesn't implement any of will's cleanups.
+16:56:33 <abadger1999> I'll merge my PR now unless someone would like to review first.
+17:00:19 <jimi|ansible> abadger1999: that looks simple enough
+17:00:25 <jimi|ansible> the diff i mean
+17:01:48 <jimi|ansible> abadger1999: you drop this line bit: https://github.com/ansible/ansible/pull/15825/files#diff-76ffc0551f8cf3d6255500316568e60bL237
+17:01:59 <jtanner|t420> jimi|ansible, i see a "hang" without sudo on a 9.6GB file. I don't believe it's a problem with the connection though because a python pid on the controlhost is churning @23%CPU in a D state. It may be the final checksum calculation that is not-optimized for large files.
+17:02:01 <jimi|ansible> ^ when is _squash_items() ever called internally?
+17:02:26 <jtanner|t420> the fetched file is complete (based on size)
+17:03:12 <jtanner|t420> just finished
+17:03:37 <bcoca> jimi|ansible: when it matches list of modules + one of the listed options is also present in task
+17:03:40 <jimi|ansible> so it didn't hang, it just took a while (due to slurp)
+17:03:48 <jimi|ansible> ^ jtanner|t420
+17:04:14 <jtanner|t420> if "slurp" is to blame for checksum calc, then yes?
+17:04:28 <jimi|ansible> bcoca / abadger1999: ok, just want to make sure it really is squashing things for yum, etc.
+17:04:32 <jtanner|t420> the -vvvv log doesn't really show that the xfer is done
+17:04:36 <bcoca> ^ toshio fixed checksum to be chunked, check if slurp/fetch are not using their own function
+17:04:41 <jimi|ansible> jtanner|t420: could be
+17:04:53 <bcoca> jimi|ansible: it should as long as they did not override config and remove yum from list
+17:04:58 <jimi|ansible> k
+17:05:00 <jtanner|t420> gonna dig some more, after i get some food
+17:05:03 <abadger1999> jimi|ansible: Oh oops... bad changing of earlier attempt at fix (putting the try except at the callpoint)
+17:05:04 <jtanner|t420> i'll assign ticket to me
+17:05:06 <abadger1999> I'll fix that.
+17:06:22 <jimi|ansible> huh, could have sworn i fixed this: https://github.com/ansible/ansible/issues/15697
+17:06:49 * jimi|ansible looks at that one
+17:09:21 <nitzmahone> abadger1999: gce updates work fine for me
+17:15:17 <abadger1999> nitzmahone: excellent.  Thanks :-)
+17:21:40 <jimi|ansible> well i think we're officially past time, so i'll wrap it up
+17:21:42 <jimi|ansible> #endmeeting

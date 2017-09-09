@@ -1,0 +1,167 @@
+16:02:11 <gundalow> #startmeeting Network Working Group
+16:02:11 <zodbot> Meeting started Wed Mar 15 16:02:11 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:02:11 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:02:11 <zodbot> The meeting name has been set to 'network_working_group'
+16:02:27 <gundalow> #chair rcarrillocruz Qalthos
+16:02:27 <zodbot> Current chairs: Qalthos gundalow rcarrillocruz
+16:03:05 <gundalow> #info Agenda, feel free to add items
+16:03:14 <gundalow> #info Agenda, feel free to add items https://github.com/ansible/community/issues/110
+16:03:28 <gundalow> #topic Core Update
+16:04:02 <gundalow> #info Ansible RC1 will be released very shortly, expect email to the Google Mailing lists in the next hour or so
+16:04:38 <dkasberg> great, that answered the one question I had..
+16:04:39 <gundalow> #info Ansible 2.3 Networking: We’ve introduced new performance upgrades and additional vendor support. For more information about what’s new with Ansible Networking, take a look at https://www.ansible.com/blog/networking-features-in-ansible-2-3
+16:04:58 <epicdean> hello
+16:05:33 <gundalow> #info Lots of new Modules, 267 network modules, thanks to everyone that's help with that http://docs.ansible.com/ansible/list_of_network_modules.html
+16:05:37 <gundalow> hey epicdean
+16:05:47 <gundalow> epicdean: Ansible RC1 will be released very shortly, expect email to the Google Mailing lists in the next hour or so
+16:06:03 <epicdean> oh nice
+16:06:08 <gundalow> epicdean: Ansible 2.3 Networking: We’ve introduced new performance upgrades and additional vendor support. For more information about what’s new with Ansible Networking, take a look at https://www.ansible.com/blog/networking-features-in-ansible-2-3
+16:06:21 <gundalow> That's the only think you've missed so far
+16:06:23 <gundalow> ....
+16:06:31 <epicdean> ok perfect
+16:06:40 <gundalow> #info We are tracking a handful of issues for this release candidate that we expect to have fixed by the time we release version 2.3; you can monitor the list of known issues https://github.com/ansible/ansible/issues?utf8=%E2%9C%93&q=is%3Aissue%20is%3Aopen%20milestone%3A2.3.0%20label%3Anetworking
+16:07:01 <gundalow> #info Please do test RC1 when it's released, *any* issues please raise in GitHub
+16:07:08 <epicdean> will there be better support for legacy nxos like 7009
+16:08:08 <gundalow> epicdean: I'm not sure, could you add it as a question on https://github.com/ansible/community/issues/110 (with a bit more detail) and we will get back to you on that
+16:08:36 * skg-net waves
+16:09:08 <gundalow> hey skg-net
+16:09:17 <epicdean> ok thanks
+16:09:21 <kennc> I would like to see the https://github.com/ansible/ansible/issues/22619 added to tracked issues
+16:09:33 <epicdean> besides that great work guys keep it up
+16:09:45 <stacywsmith> and I would like to see #22589 added to tracked issues.
+16:09:54 <kennc> seems like offline mode should be working for the first release
+16:11:43 <kennc> and also I commented on banner issue. Is there a technical reason to separate *_banner from *_config ? seems to me like if there is a fix, it should work in *_config ?
+16:12:51 <gundalow> OK, added 22619 to Milestone 2.3
+16:13:00 <kennc> thanks!
+16:13:11 * gundalow looks at #22589
+16:13:51 <kennc> wait, 2.3 or 2.4?
+16:14:06 <gundalow> stacywsmith: ah, I'd added the PR to 2.3, but not the issue, both are marked as 2.3 now
+16:14:24 <gundalow> We've just done RC1 for 2.3, there will be at least one more RC
+16:14:32 <stacywsmith> thanks
+16:15:17 <rcarrillocruz> Cos handling multiline in a general purpose module is hard
+16:15:27 <gundalow> kennc: Maybe I missed something, do you think 22619 needs fixing in 2.3, or it can wait till 2.4
+16:15:40 <kennc> 2.3, right?
+16:15:45 <rcarrillocruz> Is better to have an specific module for that for a code maintenance perspective
+16:15:49 <gundalow> kennc: fixed
+16:15:55 <kennc> thanks
+16:16:26 <stacywsmith> Sorry. Looks like #22589 has affects_2.3 label, but not the networking label
+16:16:32 <kennc> If that is the official answer, then that is the official answer. It just tends to break the idea of ios_config
+16:16:43 <epicdean> stupid question Persistent connection in 2.3
+16:17:06 <skg-net> gundalow:All the Dell modules are throwing error with Ansible 2.3. I have reported the same to Peter.
+16:17:26 <gundalow> skg-net: If you haven't already please raise a bug
+16:17:53 <gundalow> #Info Unless there is a bug raised, the issue doesn't exist :)
+16:17:56 <epicdean> I am guessing my playbooks will execute a lot faster ?
+16:18:00 <gundalow> Just as a general remunder
+16:18:10 <gundalow> epicdean: Remind me in a minute about Persistent connection
+16:18:14 <skg-net> sure will do
+16:18:23 <gundalow> Just trying to make sure I've covered the aboe
+16:18:33 <kennc> counts down 59, 58....
+16:18:46 <gundalow> :P
+16:19:03 <gundalow> stacywsmith: Network labl added to 22589
+16:19:14 <stacywsmith> thanks. I see it now.
+16:19:37 <gundalow> Cool
+16:19:38 <gundalow> .............
+16:19:55 <gundalow> Anything else I missed from the above apart from Persistent Connection?
+16:20:19 <kennc> just the final verdict on ios_config vs ios_banner
+16:20:23 <gundalow> ah
+16:20:29 <kennc> I think I got it, but just want to confirm
+16:20:45 <kennc> might have to change it to ios_partial_config :)
+16:21:24 <gundalow> hehe
+16:21:43 <kennc> not trying to make code maintenance a "well not my problem" but just don't want it to get overlooked and cause confusion.
+16:22:43 <gundalow> #action gundalow to get some wording generated about how the new ephemeral state modules and why that means we split things into smaller modules (ios_config -> ios_banner)
+16:23:03 <kennc> fair enough, thanks
+16:23:38 <epicdean> nope
+16:23:57 <rcarrillocruz> ++
+16:24:07 <kennc> --
+16:24:08 <kennc> :)
+16:24:22 <gundalow> #topic Network Documentation
+16:25:25 <gundalow> #info we know we've spent a lot of time in 2.3 improving how the modules can be used, though with a few late blocks of refactoring this has taken time away from adding in more documentation about how to use the modules
+16:26:31 <gundalow> #info We have (hopefully) make the `provider:` option easier, this change https://gist.githubusercontent.com/gundalow/4bdc3669d696268328ccc18528cc6718/raw/98ce795a41035810133228ebc747ed201911ca21/nested-provider.png should be being live on docs.ansible.com later today
+16:27:13 <kennc> nice!
+16:28:58 <gundalow> #info in 2.3 you don't need to give `provider`, we will support network modules, ssh keys & inventory files in the usual way we do with Linux machines
+16:29:47 <kennc> so does that mean: ansible_ssh_user ?
+16:29:53 <gundalow> yup
+16:30:08 <kennc> does it work with delegate_to?
+16:30:45 <gundalow> I need to double check that, I've got a placeholder in my docs regarding delegate_to vs Proxy stuff
+16:30:55 <kennc> k, thanks
+16:32:28 <gundalow> I've started working on a debug & trouble shooting guide
+16:32:32 <gundalow> just lost the PR
+16:32:34 * gundalow looks
+16:33:24 <kennc> any documentation on persistence? e.g. if I use ios_config in task 1 and then ios_banner in task 2, does it persist?
+16:34:05 <gundalow> Yup, that will persist
+16:34:27 <kennc> and same, ios_config, set_fact, ios_banner ?
+16:34:37 <gundalow> yup
+16:34:41 <kennc> nice!
+16:34:47 <gundalow> likewise ios*, eos*, ios*
+16:34:58 <gundalow> (in three tasks
+16:34:59 <gundalow> )
+16:35:10 <kennc> and non-core implementations can take advantage?
+16:36:09 <gundalow> #info Network modules will need to be updated to take advantage of Persistent Connection
+16:36:51 <kennc> thanks!
+16:38:19 <gundalow> #info for 2.3 the modules that ship with Ansible will support Persistent Connect: eos_*, ios_*, iosxr_*, junos_*, and vyos_*.
+16:38:32 <epicdean> ah ok
+16:38:36 <gundalow> #info sros_* also, but that's not in RC1
+16:38:50 <epicdean> no nxos yet
+16:38:52 <gundalow> #info Some of the nxos_* modules, but not all (their are a lot of them)
+16:38:54 <gundalow> hehe
+16:39:10 <rcarrillocruz> nxos will come up in 2.4
+16:39:15 <rcarrillocruz> Aye
+16:41:15 <gundalow> #info WIP for debug guide https://github.com/gundalow/ansible/blob/bcf6934c3eb1a85f607f4e1210c28c242c0bc767/docs/docsite/rst/network_debug_troubleshooting.rst
+16:41:40 <echou> gundalow: how does not specifying provider play into API vs. SSH for things like Arista and Nexus with both SSH and API ?
+16:41:51 <echou> do they just default back to SSH unless told otherwise?
+16:41:54 <gundalow> Since there are a few people in here today it would be great to get feedback on what else you can still do
+16:41:58 <epicdean> i had the same question
+16:42:06 <gundalow> Ah, great question
+16:43:03 <gundalow> #info Default (without provider (or transport)) is ssh, you can still specify `transport: eapi` (or `provider:\n  transport: eapi`)
+16:43:22 <echou> got it, thanks
+16:43:46 <gundalow> Any thoughts on https://github.com/gundalow/ansible/blob/bcf6934c3eb1a85f607f4e1210c28c242c0bc767/docs/docsite/rst/network_debug_troubleshooting.rst
+16:44:21 <gundalow> The aim is when we get questions we will update that doc to make it easier for people in the future
+16:45:35 <kennc> Is there a way to see actual ssh process?
+16:46:19 <gundalow> Just to clarify, do you mean when you use Ansible currently against a Linux box running with -vvvvv you can see the SSH command in the debug?
+16:47:17 <kennc> that makes sense. I am always doing it against network device, but do remember reading the verbose 5 should show ssh happenings
+16:47:50 <gundalow> So for non-network that works
+16:48:51 <gundalow> With modules that use Persistent Connection you are actually going ansible-playbook --(socket)---> ansible-connection --(ssh)--> Network device
+16:51:27 <gundalow> #topic Module changes
+16:51:53 <gundalow> So regarding ios_config vs ios_banner
+16:52:00 <gundalow> I've got some words
+16:52:29 <gundalow> #info This (smaller specific modules) has always been the long term plan to start with the overall config first and then start to seed more specific stateful modules
+16:53:05 <gundalow> #info Its a natural evolution of how we plan to support network devices, for some features (such as banners) we can better support it in a specific module as opposed to a more generic config module.
+16:53:26 <gundalow> #info Longer term we want to be able to support a role call "banner" (for instance) that can abstract away the device os
+16:53:37 <gundalow> kennc: Does that in anyway answer your question?
+16:53:45 <kennc> it does
+16:54:05 <kennc> again, not my preference, but it is clear
+16:54:17 <gundalow> Cool
+16:54:35 <gundalow> It's part of a grand scheme, which we need to document and communicate
+16:54:39 <gundalow> #topic Open Floor
+16:54:47 <gundalow> Anything else?
+16:55:06 <kennc> One more since I haven't hijacked this enough :)
+16:55:20 <gundalow> Please test RC1 when it comes out, the networking modules have changed a *lot*, so they will no doubt be bugs
+16:55:24 <gundalow> kennc: Sure
+16:56:29 <kennc> non-core modules. What is the support for them. with the search for setup (I think in 2.1) for gather_facts, it makes it hard to distribute them (via pip), and it sounds like it will be 5 versions, before that is addressed
+16:56:29 <epicdean> and RC1 is coming today right
+16:56:59 <gundalow> epicdean: Yup, they are working on cutting the release at the moment
+16:57:23 <epicdean> ok
+16:58:16 <gundalow> If you ensure you are "subscribed" to notifications on https://github.com/ansible/community/issues/110 I'll post there and in networktocode when RC1 has been released
+16:58:34 <gundalow> kennc: I'm going to defer that to the Core Meeting
+16:59:01 <gundalow> which is https://github.com/ansible/community/issues/156
+16:59:06 <kennc> ok, didn't have luck with that in ansible-devel :(
+16:59:09 <gundalow> may have been discussed their a bit
+16:59:25 * gundalow doesn't have the background on that stuff
+16:59:32 <gundalow> though I'm aware of the issue you are refering to
+16:59:41 <gundalow> Anything else
+16:59:43 <epicdean> This is probably the wrong place to ask but any news on when ansible tower will be opensource ?
+17:00:09 <kennc> yea, there are a bunch or issues open, so I'm sure you will see them for the next few years :)
+17:00:10 <gundalow> epicdean: https://www.ansible.com/open-tower :)
+17:00:22 <epicdean> ah ok
+17:00:23 <epicdean> thanks
+17:00:46 <gundalow> epicdean: People are working on it. I personally have zero more information than that
+17:01:09 <epicdean> ya thats fine thought i would ask
+17:01:15 <gundalow> epicdean: hehe, it's cool
+17:01:24 <gundalow> cool, anything else?
+17:01:36 <gundalow> Great to see lots of people in here
+17:01:39 <epicdean> nope thats all i have
+17:01:55 <gundalow> Who is going to be in London for AnsibleFest?
+17:02:20 <gundalow> Super Early Bird prices run out today https://www.ansible.com/ansiblefest
+17:04:29 <gundalow> Cool
+17:04:33 <gundalow> Thanks again everyone
+17:04:39 <gundalow> #endmeeting

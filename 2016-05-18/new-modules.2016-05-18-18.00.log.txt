@@ -1,0 +1,259 @@
+18:00:25 <gregdek> #startmeeting new-modules
+18:00:25 <zodbot> Meeting started Wed May 18 18:00:25 2016 UTC.  The chair is gregdek. Information about MeetBot at http://wiki.debian.org/MeetBot.
+18:00:25 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+18:00:25 <zodbot> The meeting name has been set to 'new-modules'
+18:00:25 <gregdek> ...?
+18:00:34 <gregdek> I guess I was lagging. :)
+18:00:34 * gundalow waves
+18:00:37 <gregdek> #topic roll call
+18:01:30 <rbergeron> role call! oh wait
+18:01:35 <rbergeron> wrong thing
+18:02:08 * rbergeron is here
+18:02:11 <gundalow> hey rbergeron :)
+18:02:13 <rbergeron> (in case that wasn't obvious)
+18:03:14 <gundalow> https://github.com/ansible/community/issues/96
+18:03:19 <gregdek> #info Agenda at https://github.com/ansible/community/issues/96
+18:04:15 <gundalow> oh, and "nitzmahone> #accepted - we will use tested_working and meets_guidelines as comment tags
+18:04:18 <gundalow> "
+18:04:27 <gundalow> from yesterdays core meeting (apparently
+18:04:31 <gregdek> Yes. The bot needs to be made to do this, though.
+18:04:32 * gundalow adds to '96
+18:04:42 * abadger1999 hereish
+18:04:43 <gregdek> Which was already an open ticket, iirc :)
+18:04:47 <gundalow> cool
+18:04:50 <gundalow> #95
+18:05:05 * sivel is also hereish
+18:05:10 <gundalow> should we use those new comments now, or wait for bot to be updated
+18:05:51 <gregdek> We really need to wait for the bot, because most people won't have any way of knowing what the protocol is until the bot tells them.
+18:05:59 <gundalow> gregdek: ACK
+18:06:00 <rbergeron> yup.
+18:06:34 <gregdek> OK, let's go through the agenda.
+18:06:56 <gregdek> #topic extras/1987
+18:07:26 <gundalow> just waiting for core to merge
+18:07:40 <gregdek> https://github.com/ansible/ansible-modules-extras/pull/1987
+18:08:02 <gregdek> Oh, yeah, it's in shipit.
+18:08:02 <gregdek> Next:
+18:08:15 <gregdek> #topic extras/1988
+18:08:22 <gregdek> https://github.com/ansible/ansible-modules-extras/pull/1988
+18:09:00 * gundalow adds a shipit (rather than meets_guidelines)
+18:09:01 * MichaelBaydoun is here but late
+18:09:13 <gregdek> Yep.
+18:09:20 <gregdek> Two shipits = shipping. :)
+18:09:21 <ryansb> oops. Right, meeting.
+18:09:28 <gundalow> hey MichaelBaydoun and ryansb
+18:09:41 * bcoca is lurking
+18:10:24 * MichaelBaydoun waves at gundalow
+18:10:27 <gundalow> gregdek: Looks like a number of these got a second shipit since I added them to the Agenda. I added them to the Agenda so we could (if needed) get an extra set of eyes on them to get them over the line
+18:10:35 <gregdek> yep.
+18:10:38 <gundalow> which looks like it's already been done for the first two
+18:11:14 <gregdek> Well, this is as good a time as any to officially put them in shipit if that's what's required. :)
+18:11:14 <gregdek> Moving on:
+18:11:21 <gundalow> :)
+18:11:36 <gregdek> #topic extras/2208
+18:11:39 <gregdek> https://github.com/ansible/ansible-modules-extras/pull/2208
+18:12:12 <gregdek> Lots of disagreement. It's in needs_revision. I think that's safe for now.
+18:12:34 <gundalow> aye, lots of updates in the last couple of hours,
+18:12:41 <rbergeron> plenty of discussion still going on, indeed
+18:12:49 <rbergeron> move on :)
+18:12:50 <gundalow> don't think anything we need to poke for now
+18:12:52 <gregdek> So let's let it simmer!
+18:12:52 <gundalow> :)
+18:12:56 <gregdek> Next:
+18:13:13 <gregdek> "Enforce pep8 for new modules".
+18:13:17 <gregdek> ¯\_(ツ)_/¯
+18:13:22 <bcoca> -1
+18:13:25 * gundalow hides
+18:13:27 <gregdek> ^^^
+18:13:29 <sivel> not strict pep8
+18:13:37 <sivel> the pep8 that we have in the make with specific exclusions
+18:13:43 <sivel> I think is the "ask"
+18:13:49 <gregdek> So "not strict pep8" immediately brings us the question "what subset of pep8 and how is that documented and enforced"?
+18:13:55 <gundalow> pep8 as defined in Makefile but with the E402 exception
+18:13:56 <gregdek> Which...
+18:13:59 <gregdek> ¯\_(ツ)_/¯
+18:14:05 <gundalow> for imports not being at the top
+18:14:15 <sivel> I am +1
+18:14:28 <abadger1999> gundalow: we should change that one now.
+18:14:40 <gregdek> So we say "must conform to this makefile, this is our version of pep8 compliance"?
+18:14:41 <abadger1999> Imports can and probably should go to the top for new modules
+18:14:41 <gundalow> abadger1999: Hello Mr Ziploader :)
+18:14:46 <abadger1999> ;-)
+18:14:52 <sivel> there is too much inconsistency in modules as it is.  any consistency we can improve upon I think is better
+18:14:53 * bcoca would add many exceptions
+18:15:09 <bcoca> i have not seen 1 module in which 'style' is a problem
+18:15:15 <sivel> I mean we have modules with like 500 characters in a line
+18:15:17 <gundalow> sivel: I am right in thinking ansible-validate-modules knows the version_added, we could add it there
+18:15:58 <gundalow> My reasons (and we've talked about this a bit before in here and Communtiy Meeting) is if we have a clean start we can keep it clean.
+18:16:05 <sivel> we didn't enforce pep8 historically, not because it is BS, largely because we were trying to lower the barier to contribute
+18:16:24 <sivel> but we need to draw the line hard on PRs that only address formatting and pep8
+18:16:40 <gundalow> I'm currently only talking about new modules
+18:16:49 <sivel> yeah, just adding that 2 cents
+18:16:52 <gundalow> sivel: :)
+18:17:00 <abadger1999> another thing I'd like to see for new modules -- no more wild card imports.
+18:17:15 <sivel> abadger1999: I can address that as well in ansible_testing
+18:17:25 <abadger1999> Cool.
+18:17:32 <sivel> I'll add that as an issue
+18:17:34 <MichaelBaydoun> I was asked to make my recent module pass pep8 checks, and didn't see it as a burden, fwiw
+18:17:37 <ryansb> sivel: you mean hard line against, right?
+18:17:46 <ryansb> (against format-only changes)
+18:17:47 <gundalow> so for the last few dozen modules I've reviewed I've checked them for pep8 (with the previous mentioned -Ennn exceptions) and everyone had happily fixed them
+18:17:49 <sivel> ryansb: yes
+18:17:58 <ryansb> ok, +1 for that
+18:18:01 <gundalow> Only one person asked why this wasn't documented
+18:18:08 <gundalow> which is a far question
+18:18:12 <gregdek> It's not a standard if it isn't documented. :)
+18:18:33 <gundalow> gregdek: Correct. It's just me making random requests when reviewing stuff
+18:19:00 <bcoca> at least, i beg, no 80 col limit
+18:19:05 <sivel> I am +1 as long as we document, what exceptions, only for new, and no formatting changes for old modules (unless specifically granted)
+18:19:09 <gregdek> That's well scoped. :)
+18:19:09 <gundalow> So I'm proposing that all *new* modules should be pep8 as per the Makefile+E402
+18:19:10 <sivel> bcoca: I think we have it set at like 160
+18:19:23 <bcoca> ^ that HAS created problems
+18:19:35 <gregdek> Makefile+E402+160col limit?
+18:19:52 <gregdek> Er... pep8+E402+160col limit == what's in the Makefile currently?
+18:19:54 <sivel> I think we need to confirm 160.  I don't have proof in front of me right now
+18:19:56 * abadger1999 notes that in addition to the makefile stuff, there's also an exception list in tox.ini
+18:19:58 <gundalow> --ignore=E501,E221,W291,W391,E302,E251,E203,W293,E231,E303,E201,E225,E261,E241 is the Makefile
+18:20:09 <gregdek> Ah. Well, that's more.
+18:20:12 <gregdek> But that's okay!
+18:20:16 <sivel> ah yes, tox.ini specifies max-line-length = 160
+18:20:16 <bcoca> ^ yes add those
+18:20:36 <bcoca> havin (a, b) vs (a,b) i also find ridiculous ... but not going to fight on it
+18:21:16 <gregdek> So. Should we just say "we enforce a flavor of pep8, see this Makefile for exceptions"?
+18:21:20 <sivel> Do we have any hard objections to this for new modules?
+18:21:20 <abadger1999> I don't mind going above 80 columns but there is a limit... reading diffs (especially on github with a phone) becomes impossible with columns too long.
+18:21:44 <bcoca> dont do diff review on phone ....
+18:21:45 <sivel> abadger1999: agreed.  I think 160 is still a bit much
+18:21:48 <gregdek> I do not object.
+18:21:49 <gundalow> bcoca: +1
+18:21:49 <abadger1999> <nod>
+18:21:55 <sivel> pep8 actually says 99 if you need it
+18:21:59 <bcoca> or im going to complain you don't 'fill' my 50" monitor
+18:22:07 <abadger1999> Eh -- sometimes, you are somewhere and you take a look at your email.
+18:22:20 <abadger1999> See something interesting and want to review it then and there.
+18:22:28 <gregdek> I'm happy to compromise on character limit.
+18:22:29 <gundalow> Well if we have 160 in tox.ini, I guess we don't want higher than 160
+18:22:35 <gregdek> ¯\_(ツ)_/¯
+18:22:58 <gundalow> meh, someone just pick a number. Whatever we pick people will have issue
+18:22:58 <sivel> ... it is okay to increase the nominal line length from 80 to 100 characters (effectively increasing the maximum length to 99 characters) ...  < pep8
+18:23:32 <sivel> abadger1999 / bcoca what do you feel about max?  Personally 160 seems huge to me still
+18:23:33 <abadger1999> gregdek: <nod>  Getting an approved set of X style rules is better than no approved set of style guidelnes.
+18:23:46 <bcoca> 160 is 1/5th of my screen, but fine
+18:23:51 <sivel> lmao
+18:23:53 <gregdek> ok!
+18:24:03 <gregdek> Our character limit is 160.
+18:24:04 <abadger1999> sivel: I can go lower. I set it to double 80 columns to try to compromise with bcoca ;-)
+18:24:05 <ryansb> 160 works
+18:24:09 <bcoca> abadger1999: also, set phone in landscape!
+18:24:26 <abadger1999> bcoca: I can't read 500 chars even in landscape ;-)
+18:24:28 <ryansb> ... yes, because development on mobile is important.
+18:24:29 <sivel> ok, I'll concede with abadger1999
+18:24:36 <gregdek> #agreed new modules will adhere to a subset a pep8, as defined and documented in the Makefile.
+18:24:45 <bcoca> scroll!
+18:25:05 <sivel> we enforce strict pep8+pyflakes here, so 160 makes me crazy :)
+18:25:11 <abadger1999> bcoca: github dosn't scroll horizontally in mobile (or didn't used to or something).
+18:25:16 <gregdek> And this will go into rbergeron's document!
+18:25:27 <gregdek> And into the current module guidelines.
+18:25:31 <ryansb> lol
+18:25:43 <gundalow> I'll update module quidelines
+18:25:45 <abadger1999> gundalow: We're going to check that tox and Makefile agree?
+18:25:49 <gundalow> uidelines*
+18:25:52 <gundalow> ffs
+18:26:12 <gregdek> #action gundalow will update quidelines / uidelines
+18:26:18 <sivel> abadger1999: we do need to
+18:26:22 * gregdek watches from the sidelines
+18:26:27 * MichaelBaydoun feels it should be mentioned here http://docs.ansible.com/ansible/developing_modules.html
+18:26:29 <sivel> we'll just force gundalow to do that too
+18:26:34 <abadger1999> yay!
+18:26:36 <abadger1999> ;-)
+18:26:38 <gundalow> sivel: :)
+18:26:43 * dharmabumstead lurks.
+18:26:45 <gregdek> MichaelBaydoun: that's what we mean by "existing module guidelines"
+18:26:46 <gundalow> what random number did we pick 160?
+18:26:52 <gregdek> Yes. 160.
+18:26:54 <sivel> yes 160
+18:27:05 <sivel> for now anyway, until I can get bcoca a smaller monitor
+18:27:17 <gundalow> #info We all agreed 160 chars.
+18:27:25 <gundalow> hum, am I chair?
+18:27:28 <bcoca> sivel: i will just use it to extend existing desktop
+18:27:34 <gregdek> #chair gundalow
+18:27:34 <zodbot> Current chairs: gregdek gundalow
+18:27:39 <gundalow> #info We all agreed 160 chars.
+18:27:41 <gregdek> #chair rbergeron
+18:27:41 <zodbot> Current chairs: gregdek gundalow rbergeron
+18:27:42 <gundalow> Thanks
+18:27:53 * gregdek hands gundalow the gavel ;)
+18:28:04 <gregdek> IT'S YOUR MEETING NOW BUDDY
+18:28:13 <abadger1999> sivel: Wait long enough and his eyesight will start to go.
+18:28:38 <gregdek> bcoca will look stunning with bifocals and a cardigan sweater.
+18:28:45 <gundalow> jesus, I can fit 460x141 on my screen
+18:28:52 <bcoca> gregdek: how did you know what im wearing?!?!
+18:29:04 <gregdek> don't ask.
+18:29:06 <gregdek> ANYWAY:
+18:29:30 <gundalow> I'll update the docs and push it via people here for review
+18:29:42 <gregdek> thx!
+18:29:45 <gregdek> Next:
+18:30:03 <gregdek> Oh, that's it for our agenda. Great!
+18:30:15 <gundalow> open the floor?
+18:30:25 <gregdek> Sure!
+18:30:26 <bcoca> nitzmahone: ansible_setup_plugin proposal?
+18:30:29 <gregdek> #topic Open Floor
+18:30:52 <nitzmahone> Will be writing it this afternoon (after win_msi bugfix that's holding up rc3)
+18:32:13 <abadger1999> Python3 opinions: how do people feel about requiring new modules be python3-syntax compatible? (*maybe* for 2.3 making that  even more strict -- runnable under python3).
+18:32:22 <nitzmahone> +1
+18:32:32 <nitzmahone> (especially once we can verify in PR)
+18:32:36 <sivel> py2.4 to py3.5?
+18:32:46 <sivel> that can be super hard, unless you are only referring to syntax
+18:32:46 <abadger1999> sivel: yep.
+18:32:49 <sivel> and not operability
+18:32:53 <abadger1999> Right now, only syntax.
+18:33:02 <bcoca> both, unless other dep requires them not to be 24
+18:33:16 <nitzmahone> We'll have to be really good about providing/documenting the common gotchas
+18:33:17 <abadger1999> Maybe for ansible 2.3 making it operate but I'm not sure yet.
+18:33:27 <abadger1999> Have to see just how much pain that will be for contributors.
+18:33:58 <nitzmahone> Could get ugly with stuff that has questionable deps
+18:33:59 <privateip> operability is going to be really really tough on the network side for 2.3 i suspect
+18:34:01 <sivel> I mean I have some code supporting py2.4 through 3.5 and I have 156 lines of try/except import statements
+18:34:02 <nitzmahone> (operation, anyway)
+18:34:07 <privateip> network is very slow to move
+18:34:40 <nitzmahone> Does network really need 2.4 support though? Would think you're usually working from local, so 2.6+
+18:34:52 <privateip> yeah 2.6+ is fine
+18:34:56 <bcoca> nitzmahone: jump host is rhel5
+18:34:58 <nitzmahone> (eg, no RHEL5 jump box)
+18:35:01 <bcoca> ^ that scenario
+18:35:26 <nitzmahone> Something tells me we're not actually testing that though
+18:35:38 <nitzmahone> (and that we shouldn't support it for something this new)
+18:35:56 <bcoca> except ... many network devices exist in very old corp setups
+18:35:58 <abadger1999> We may drop python-2.4 support in a few releases too... it might be better to wait on operability until then.
+18:36:05 <bcoca> ^ our main user base
+18:37:05 <abadger1999> But the operability question is still very unknown... I'm just wondering how people feel about syntax for now.
+18:37:38 <bcoca> +1 on syntax, keeping modules 'same' will make it easier on review
+18:37:47 <privateip> agreed +1 on syntax
+18:37:55 <bcoca> easier to spot issues and easier for people to standarize
+18:39:02 <sivel> if we want to do python3 syntax for new modules, the compileall tasks should use exclusions rather then inclusions (unless it already does that)
+18:39:40 <abadger1999> sivel: Its currently using inclusions but we only started work on python3 compileall testing this weekend.
+18:39:59 <bcoca> ^ lets not flip that switch yet, got a lot to go over first
+18:40:05 <sivel> yeah, so if we do py3 for new modules, switch to exclusions, but we may want to wait a bit
+18:40:05 <bcoca> but agreed on enabling that
+18:40:33 <abadger1999> What I'm thinking is that we have started including whole directories.
+18:42:07 <abadger1999> which means that contributors to those directories will see python3 syntax breakage but if we haven't decided that that's a rule yet, there will be debate as to what the right thing to do is.
+18:42:58 <abadger1999> I can switch it to an exclusion today if we decide this is an okay rule and people think it's a prequisite.
+18:43:15 <sivel> I am ok with it
+18:45:02 <abadger1999> Okay, sounds like a plan then.
+18:45:17 <abadger1999> a chair can record that as an action for me if htey like.
+18:45:38 <abadger1999> And I suppose adding it to the module checklist as well?
+18:45:53 <gundalow> abadger1999: What do you want me to record?
+18:46:05 <gundalow> sorry, I was updating PRs
+18:46:24 <abadger1999> np
+18:46:33 <gundalow> #chair abadger1999
+18:46:33 <zodbot> Current chairs: abadger1999 gregdek gundalow rbergeron
+18:46:39 <gundalow> YOU ARE EMPOWERED
+18:47:42 <abadger1999> #action abadger1999 to update module tests to check new modules are valid python3 syntax and add an item to module guidelines that modules should be valid python3 syntax.
+18:53:30 <gundalow> cool
+18:53:34 <gundalow> 7 minutes left
+18:53:38 <gundalow> Anymore for anymore?
+18:56:12 <gregdek> nope.
+18:56:15 <gregdek> :)
+18:57:33 <gundalow> endmeeting?
+18:58:07 <bcoca> #endmeeting
+19:00:00 <gundalow> #endmeeting

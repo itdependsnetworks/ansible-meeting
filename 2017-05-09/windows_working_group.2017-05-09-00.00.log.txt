@@ -1,0 +1,207 @@
+00:00:03 <nitzmahone> #startmeeting Windows Working Group
+00:00:03 <zodbot> Meeting started Tue May  9 00:00:03 2017 UTC.  The chair is nitzmahone. Information about MeetBot at http://wiki.debian.org/MeetBot.
+00:00:03 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+00:00:03 <zodbot> The meeting name has been set to 'windows_working_group'
+00:00:21 <dag> o/
+00:00:24 <nitzmahone> Howdy!
+00:00:31 <nitzmahone> #info agenda: https://github.com/ansible/community/issues/153
+00:01:30 <nitzmahone> I'll give just a moment in case anyone else is joining...
+00:01:37 <dag> I quickly added my (worthy) windows PR's, but feel free to discuss more important items first :)
+00:01:49 <nitzmahone> Might just be the two of us today. :)
+00:02:08 <nitzmahone> #topic https://github.com/ansible/community/issues/153#issuecomment-300023131
+00:02:23 <nitzmahone> dag: You wanna go through those in the listed order?
+00:02:24 <dag> But there are a lot of worthwhile windows PR's to look at
+00:02:32 <dag> nitzmahone: sure, no preference
+00:02:59 <dag> The first one I just rebased
+00:03:02 <nitzmahone> True dat (been buried with conference talks, kerberos fun, and other things for $paying_customer recently)
+00:03:38 * dag sympathizes, know that feeling :)
+00:04:14 <nitzmahone> Yeah, I just fixed a bug on that in devel where it only kept the last value
+00:04:46 <nitzmahone> (looked like a psobject vs dict compat issue)
+00:05:00 <dag> hmm, I see a small typo in the comments, will force push
+00:05:11 <dag> s/ot/or/g
+00:06:16 <nitzmahone> Looks like you accommodated that fix in both places here
+00:07:47 <dag> come again ?
+00:08:20 <dag> what do you mean ?
+00:08:20 <nitzmahone> Ditching the Get-Member jazz- that didn't work properly with the change to dict result objects
+00:08:30 <dag> ah
+00:08:53 <dag> I wasn't doing that at first, but I did that 10 minutes ago when rebasing
+00:09:05 <nitzmahone> I just tried to use the new deprecation warning stuff in a win_feature change, and I happened to put in two warnings and only got the first one. :)
+00:09:10 <nitzmahone> s/first/last/
+00:09:40 <dag> ok :-)
+00:09:53 <nitzmahone> Yeah, that one looks good- will merge when green on shippable (well, as green as possible, our AWS stuff has been broken lately so the Windows tests are timing out after an hour)
+00:10:20 <nitzmahone> I think it's a T2 CPU credit problem, but we don't have the logging in CI to prove it yet
+00:10:39 <nitzmahone> Matt Clay will be working on that at some point soon I think
+00:10:56 <dag> I also had planned a clean-up to use Add-Warning, but have to look in my stash for those changes :-)
+00:11:32 <dag> next one is: https://github.com/ansible/ansible/pull/23422
+00:11:39 * nitzmahone reviews
+00:11:56 <nitzmahone> Is there ever a situation where we'd want the banner?
+00:12:22 <dag> it was there before, so I did not want to influence the existing behaviour
+00:12:32 <dag> but no, I don't think it is something you want
+00:12:38 <nitzmahone> ok
+00:12:40 <dag> however, older versions of psexec did not have the option
+00:13:07 <nitzmahone> I guess since we shipped it that way in 2.3, it's possible (though unlikely) that someone's doing work to strip it already (though that behavior would break with the default now anyway)
+00:13:10 <dag> that was also why I didn't know this was possible, it's not listed on the website
+00:13:19 <nitzmahone> ahh
+00:13:57 <dag> from the tests, it appears the psexec behaviour is not consistent on all Windows versions
+00:14:16 <dag> so I disabled those tests, not sure how or if we want to handle those differences in the tests :-/
+00:14:24 <nitzmahone> That's not terribly surprising- we ran into weird stuff with our old deployment system that bootstrapped with psexec too
+00:14:31 <dag> it was related to elevated
+00:14:52 <nitzmahone> Strangely inconsistent behavior.
+00:15:27 <nitzmahone> I guess it's not any more broken now by current changes, but overall note: we might want to do quoting on extra_opts
+00:16:37 <dag> ah, extra_opts now uses the -type "list" which is part of the next PR IIRC
+00:17:02 <dag> and that one will probably conflict with the previous changes once merged ;-)
+00:17:06 <dag> \o/
+00:17:47 <dag> how would you do quoting on extra_opts ?
+00:18:07 <dag> AFAIU psexec parses arguments until the next option
+00:18:19 <dag> so that paths with spaces work :)
+00:19:03 <dag> hmm, the link in my module no longer works, sigh
+00:19:17 <nitzmahone> Hrm, that test is potentially overly destructive if run on a "real" host
+00:21:09 <dag> sigh, psexec docs moved from "https://technet.microsoft.com/en-us/sysinternals/pxexec.aspx" to "https://technet.microsoft.com/en-us/sysinternals/bb897553"
+00:21:10 <nitzmahone> Not a fan of the weird negation default of "nobanner: yes", but I understand why it's the way it is
+00:21:26 <dag> I don't mind doing the opposite
+00:21:30 <dag> I prefer that myself
+00:21:32 <nitzmahone> Yeah, to hell with human-readable urls. :(
+00:21:38 <dag> and now is the time to do this
+00:22:00 <nitzmahone> Yeah, reversing that might be better (still defaulting to suppression)
+00:22:57 <nitzmahone> Matt won't be happy with even more external download requirements, but we can move that to our internal package store when we get rid of the others. :)
+00:23:12 <dag> we already have -noprofile though
+00:23:37 <nitzmahone> Yeah, I don't have strong feelings there either way- I understand why it's the way it is
+00:24:47 <nitzmahone> #topic https://github.com/ansible/ansible/pull/23162
+00:24:56 <nitzmahone> Wow, big changeset there. That one's needed love for a long time
+00:28:20 <dag> Yes, I started fixing an issue, then found it was broken, and when I was finished, everything was restructured
+00:28:31 <nitzmahone> dag: are you coming to London in June?
+00:28:39 <nitzmahone> (can't remember if we talked about it before)
+00:28:40 <dag> Yes
+00:28:43 <nitzmahone> noice
+00:28:55 <dag> there was a agenda-conflict with RH EMEA Partner conf
+00:29:06 <dag> but I got refunded fully :p
+00:29:11 <nitzmahone> ahh yeah, that's right
+00:30:23 <dag> the very first remark: TODO: Reimplement this using Powershell cmdlets
+00:30:30 <dag> is an important one :)
+00:30:31 <nitzmahone> Not that it matters in Powershell, but what's with the changing the case on the enumerated-ish type values in the docs?
+00:30:36 <dag> I didn't see myself doing that rewrite
+00:30:46 <dag> let me see
+00:30:58 <nitzmahone> Yeah, that was my first thought when I looked at this a long time ago ("why isn't this using the cmdlets?"
+00:31:31 <dag> good question
+00:31:48 <dag> don't know :-/
+00:32:07 <nitzmahone> defacto standard seems to be all lowercased
+00:32:12 <dag> in itself it doesn't matter, both are accepted
+00:32:16 <nitzmahone> (for better or worse)
+00:32:26 <dag> I think I got it from the docs or something
+00:32:29 <nitzmahone> Right, at least in PS- I think the Python modules actually care in a lot of cases
+00:32:54 <dag> well, we pass this to the command
+00:33:10 <dag> The example are TitleCase, that's confusing
+00:33:10 <nitzmahone> (which should also be case-insensitive IIRC)
+00:33:23 <dag> tell me what you prefer, I will fix
+00:33:50 <nitzmahone> lowercase, just for consistency I guess
+00:34:10 <nitzmahone> ('In''Out''Allow''Block''Bypass')
+00:34:19 <nitzmahone> should all still be lowercase IMO
+00:35:09 <dag> everything is lowercase indeed
+00:35:10 <nitzmahone> The internal stuff I don't care about- it was just those values in the docs that look out of place
+00:35:13 <dag> I will go over it
+00:38:34 <dag> Ah, there is one big issue, the output parsing is case-sensitive
+00:38:47 <dag> that's why some of the stuff in the code is TitleCase (and we have a function for that)
+00:39:30 <nitzmahone> ick
+00:39:39 <dag> :-)
+00:40:18 <dag> we compare our output with the compared stuff, so that has to match for idempotency
+00:40:26 <dag> that was fairly broken before
+00:41:51 <nitzmahone> Should we just do a case-insensitive match? You'd miss some weird cases like renaming a rule with only case changes, but that seems pretty minimal
+00:42:25 <nitzmahone> Wait, you're already doing a case-insensitive match
+00:42:39 <dag> Well, we bring it to the casing of Windows
+00:42:43 <dag> so it shouldn't matter
+00:43:18 <dag> I guess that's why I changed the examples too, for the command it didn't matter, but it was what Windows returned to us
+00:43:28 <dag> but the user shouldn't care
+00:43:33 <nitzmahone> right
+00:43:46 <dag> lowercase it will be
+00:44:19 <nitzmahone> (since it's doing -match and not -cmatch, *shouldn't* matter)
+00:45:12 <nitzmahone> That's the only thing I see there
+00:46:00 <dag> It matters for the diff
+00:46:48 <dag> BTW We plan to do a presentation about what we are doing at Cisco at AnsibleFest SFO
+00:46:49 <nitzmahone> bugger
+00:46:54 <nitzmahone> Woot
+00:47:24 <dag> incl. the windows, networking, hyperv, vcenter and maybe openstack stuff
+00:47:28 <nitzmahone> I'll *probably* be there to see it- somebody's trying to get me to do an internal training thing in APAC the same day, but 'Fest usually takes priority
+00:48:02 <dag> onto next PR please :)
+00:48:10 <dag> only 12mins left !
+00:48:11 <nitzmahone> Especially since this SF is "in my neighborhood" (only a 2h flight away)
+00:48:23 <nitzmahone> #topic https://github.com/ansible/ansible/pull/23140
+00:48:27 <dag> where are you based ?
+00:48:32 <nitzmahone> Portland
+00:48:38 <dag> ah nice :)
+00:48:42 <nitzmahone> (ish), Beaverton if you want to be specific.
+00:49:45 <nitzmahone> oof, this one is a poster-child for $module.execute_command equivalent in a separate module_utils file for 2.4. :)
+00:52:39 <nitzmahone> So why are you using Process.Start for this one instead of just running the command?
+00:52:50 <dag> https://github.com/ansible/ansible/pull/23162 has been adapted
+00:53:17 <dag> because I have no clue what I am doing :)
+00:53:28 <nitzmahone> https://github.com/ansible/ansible/pull/23131 merged
+00:53:35 <nitzmahone> (bring on the merge conflicts)
+00:53:38 <dag> dod I mention you I know nothing of Windows/Powershell and you let me touch this :p
+00:53:42 <nitzmahone> heh
+00:53:57 <nitzmahone> You know how to do arg splatting in PS, yeah?
+00:54:09 <dag> there might be a good reason, but I really can't remember
+00:54:16 <dag> Teach me !
+00:54:37 <nitzmahone> $a = @('foo','bar')
+00:54:45 <nitzmahone> somecommand @a
+00:54:58 <nitzmahone> works for k/v dict args on PS cmdlets too
+00:55:15 <dag> yes
+00:55:20 <nitzmahone> $a = @{key='value'}
+00:55:25 <nitzmahone> somecommand @a
+00:56:25 <dag> the whole Process.Start was taken from elsewhere :) The comments are the proof of that :p
+00:56:55 <nitzmahone> Yeah, just not seeing the need for it at a glance- in this case, direct exec or `Start-Process` is probably sufficient
+00:57:01 <nitzmahone> (w/ -Wait)
+00:57:15 <nitzmahone> Well, you want the output, so Start-Process is no good
+00:57:54 <nitzmahone> Normally I'd say just use Optimize-Volume, but only 2012+
+00:59:51 <nitzmahone> Should be able to just do $output = defrag.exe @a instead of all that
+00:59:54 <dag> yes, that's why I did it like this
+01:00:04 <dag> but on 2012+ you have much more options
+01:00:18 <dag> I bet there's a nice DSC ùmodule for that too :p
+01:00:23 <nitzmahone> heh
+01:01:00 <nitzmahone> Yeah, I think you can ditch all my Process gobbledygook and just call it directly like above
+01:01:20 <dag> ok
+01:01:42 <dag> will do, and ping you when done
+01:02:33 <dag> I guess we need to do a proper Windows bugsquashing day, if we want to clean the existing queues :-/
+01:02:35 <nitzmahone> #topic https://github.com/ansible/ansible/pull/23138/files
+01:03:05 <nitzmahone> Definitely- it's theoretically an every-other-week task for us, but so far I've always had to do regular new issue triage instead
+01:04:02 <dag> jhawkesworth is doing good work though
+01:04:09 <nitzmahone> Yupyup
+01:04:40 <nitzmahone> We can duck out of contributor stuff for an hour or so if there's something we uniformly aren't interested in and do a quickie hackathon or something
+01:05:20 <nitzmahone> Sounds like you'll be there, Jon will be there, I haven't heard back from Trond if he's coming over or not (or can join remotely)
+01:06:04 <nitzmahone> #topic https://github.com/ansible/ansible/pull/21898
+01:06:29 <nitzmahone> I don't have any problems with the changes made here
+01:06:51 <nitzmahone> Was just hoping to spend some time adding more useful bits to the output, but this definitely cuts down on a lot of the garbage
+01:07:42 <nitzmahone> Might want to move the decoded_cmd stuff to -vvvvv, it'll be exactly the same for everything ATM
+01:07:48 <nitzmahone> (or just nuke it altogether)
+01:08:10 <nitzmahone> I might repurpose cmd again, but at the moment it will always be the exec wrapper stub (even for raw)
+01:08:12 <dag> https://github.com/ansible/ansible/pull/23520 rebased
+01:08:23 <nitzmahone> That allows us to do raw + become, which is legit on *nix
+01:08:49 <dag> nitzmahone: a customer asked me about the different PS channels
+01:09:03 <nitzmahone> You mean debug/info/warning/etc?
+01:09:05 <dag> they have lots of scripts written that use those channels, and Ansible doesn't support these
+01:09:11 <dag> guess so
+01:09:30 <nitzmahone> Yeah, we get it all, we just currently drop it on the floor since we have no sane way to display it
+01:10:01 <dag> right
+01:10:04 <nitzmahone> Actually I'm not sure we're getting it all right now with the new exec wrapper- there are a couple extra layers that might be filtering it on the target right now
+01:10:19 <dag> but we plan to do something with this ?
+01:10:21 <nitzmahone> Certain things will get it (win_shell, raw)
+01:10:49 <nitzmahone> Yeah- Brian Coca and I have both been diddling with the "module intermediate output" thing, and this would probably play into that.
+01:10:54 <dag> ok, I guess script is important in this case :)
+01:11:09 <dag> right, that's what I told them, things are coming ;-)
+01:11:22 <nitzmahone> We could also potentially merge it into the module output at the end, but it'd be nice to take advantage of the fact that we get it in realtime as opposed to module output
+01:11:32 <dag> yup
+01:12:08 <nitzmahone> I think the current exec wrapper will require a custom PS host interposer to preserve the "real time" component, since we're buffering stdout/stderr on the server during module exec now (used to just let it fly directly over WinRM)
+01:12:37 <nitzmahone> Definitely doable, it's simple to write the interposer
+01:13:13 <nitzmahone> (bonus, we probably wouldn't have to parse the damn CLIXML from stderr anymore)
+01:14:45 <nitzmahone> Will watch for decent-looking shippable results on those others and merge when looking reasonably successful
+01:14:53 <nitzmahone> Anything else you want to go over?
+01:16:09 <nitzmahone> Closing in 5...
+01:16:14 <dag> Well, there are some PRs from others
+01:16:38 <dag> but nothing urgent for me
+01:17:03 <nitzmahone> We can hit some of those on Friday or next time- I gotta make dinner. :)
+01:17:09 <dag> we have some contributions waiting for weeks that really need some love, contributors want feedback
+01:17:17 <dag> ok
+01:17:43 <dag> it's 3:17AM here ;-)
+01:17:46 <dag> bye !
+01:17:52 <nitzmahone> Yep, I feel like if we can get heads above water on some of the issues/PRs, it won't be hard to keep it there. :)
+01:17:56 <nitzmahone> Thanks for everything!
+01:17:59 <nitzmahone> Sleep well. :)
+01:18:02 <nitzmahone> #endmeeting

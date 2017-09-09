@@ -1,0 +1,78 @@
+15:01:45 <gundalow> #startmeeting Public Core Meeting
+15:01:45 <zodbot> Meeting started Thu Apr 13 15:01:45 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:01:45 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:01:45 <zodbot> The meeting name has been set to 'public_core_meeting'
+15:02:11 <gundalow> #chair abadger1999 alikins bcoca ganeshrn jimi|ansible jtanner mattclay newtMcKerr nitzmahone Qalthos ryansb shertel
+15:02:11 <zodbot> Current chairs: Qalthos abadger1999 alikins bcoca ganeshrn gundalow jimi|ansible jtanner mattclay newtMcKerr nitzmahone ryansb shertel
+15:02:16 <abadger1999> Greetings
+15:02:20 <gundalow> #topic Ansible 2.3.0 FINAL
+15:02:22 <jtanner> hello
+15:02:24 <shertel> hi
+15:02:26 <alikins> howdy
+15:02:40 * bcoca waves
+15:02:57 * Qalthos 🌊🌊
+15:03:05 <gundalow> #info Ansible 2.3.0 FINAL has been released. Thank you to everyone that has helped get us to this point
+15:03:10 <gundalow> #info https://groups.google.com/forum/#!topic/ansible-project/aKnggI-Y8dk for more info
+15:03:11 * mattclay waves
+15:04:30 <gundalow> #action EVERYONE Please go test and report any issues via https://github.com/ansible/ansible/issues/new
+15:04:44 <gundalow> #chair nitzmahone_
+15:04:44 <zodbot> Current chairs: Qalthos abadger1999 alikins bcoca ganeshrn gundalow jimi|ansible jtanner mattclay newtMcKerr nitzmahone nitzmahone_ ryansb shertel
+15:05:19 <gundalow> is 2.2.2 out as well?
+15:05:32 * sivel is here too
+15:05:52 <gundalow> #chair sivel
+15:05:52 <zodbot> Current chairs: Qalthos abadger1999 alikins bcoca ganeshrn gundalow jimi|ansible jtanner mattclay newtMcKerr nitzmahone nitzmahone_ ryansb shertel sivel
+15:06:38 <abadger1999> ansible-2.2.2.0.tar.gz 	2017-03-27 20:33 	2.4M
+15:07:02 <gundalow> hum, that was a while ago
+15:07:29 <gundalow> #topic Other updates
+15:07:33 <gundalow> #info Most of the core team will be off on Friday 14th, and some will also be on holiday on Monday 17
+15:07:43 <jtanner> i'm out all next week
+15:07:51 <mattclay> I'm on PTO all next week as well.
+15:07:52 <jtanner> so bot SLA will be low
+15:08:53 <gundalow> #Info planning for Contributors Summit (the day before AnsibleFest London) will start soon, if you have any ideas please ping me, especially if you plan on attending in person, more details on that soon
+15:09:08 * gundalow looks at the agenda
+15:09:34 <gundalow> "Discuss extending the module "shipit" workflow to non-modules," Don't think anything has changed here
+15:10:03 <jtanner> ermahgurd
+15:10:18 <gundalow> #topic Fix for wildcards inside of a path for fileglob lookup (ie: with_fileglob: "/tmp/*/some.conf")
+15:10:25 <gundalow> #info https://github.com/ansible/community/issues/159#issuecomment-291567721
+15:10:35 <gundalow> #info https://github.com/ansible/ansible/pull/23265
+15:10:54 <gundalow> looks like bcoca's fix need some extra eys on it
+15:11:21 <gundalow> abadger1999: looks like that's with you for the moment
+15:11:47 <bcoca> gundalow: nothing changed since tuesday ... we are still trying to figure out 'correct functionality'
+15:11:51 <gundalow> ack
+15:12:01 <gundalow> bcoca: same for "how should paths work"?
+15:12:18 * gundalow has been in 3 days of meetings, and hasn't had a chance to look though Tuesday's meeting minutes yet
+15:12:19 <bcoca> idem
+15:12:21 <abadger1999> <nod> I'll try to get to it for the Tuesday meeting
+15:12:21 <gundalow> ack
+15:12:42 <gundalow> #action abadger1999 to try and review for next meeting
+15:12:59 <gundalow> #topic Plugin docs
+15:13:05 <gundalow> #info https://github.com/ansible/community/issues/159#issuecomment-291569609
+15:13:11 <gundalow> #action gundalow to add in CI for this
+15:13:22 <gundalow> #topic Versioned docs
+15:13:55 <gundalow> I spoke with docschick, versioned docs work should start soon
+15:14:24 <gundalow> So we need to ensure we backport docs fixes (docs/docsite/rst) as well as module docs where applicable to (at least) stable-2.3
+15:15:02 <gundalow> This is needed as by default (default URL, internal searhc & google) will prefer the docs for the latest stable *over* devel
+15:15:18 <gundalow> Everyone OK with that?
+15:15:28 <abadger1999> +1
+15:15:34 <mattclay> +1
+15:16:12 <gundalow> \o/
+15:16:17 <Qalthos> +1
+15:16:39 <gundalow> #action COMITTERS remember to backport docs (docs/docsite/rst) as well as module docs to (at least) stable-2.3
+15:16:48 <gundalow> #topic Open Floor
+15:16:56 <gundalow> anyone else got anything?
+15:17:11 <gundalow> sivel: anything from you?
+15:17:13 <bcoca> does backport include 2.4 features?
+15:17:25 <bcoca> ^ shoudl clarify that only 'doc fixes'
+15:17:31 <sivel> Nope, was just looking to see if I had anything, I do not seem to
+15:17:33 <gundalow> Ah, good question
+15:17:57 <gundalow> Docs + functionality should be in the same branch
+15:18:14 <bcoca> lots of version_added: "2.4" stuff will be added to docs, dont think that stuff should be backported (cause its whole reason people want versioned docs to begin with)
+15:18:25 <gundalow> bcoca: +1
+15:18:42 <bcoca> though it would be funny ....
+15:19:17 <abadger1999> sensible to me as well.
+15:19:45 <gundalow> Just need to remember when creating/updating RST to backport them
+15:20:21 <gundalow> Anyone got anything else?
+15:22:57 <gundalow> mkay
+15:23:05 <gundalow> Thank y'all
+15:23:16 <gundalow> #info Please test 2.3.0 FINAL :)
+15:23:19 <gundalow> #endmeeting

@@ -1,0 +1,144 @@
+19:07:43 <jimi|ansible> #startmeeting Ansible Core Public Meeting
+19:07:43 <zodbot> Meeting started Tue Aug  9 19:07:43 2016 UTC.  The chair is jimi|ansible. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:07:43 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:07:43 <zodbot> The meeting name has been set to 'ansible_core_public_meeting'
+19:08:11 <jimi|ansible> #topic issues issues issues
+19:08:31 <jimi|ansible> MichaelBaydoun: did you have anything you wanted to discuss?
+19:11:06 <gundalow> yo
+19:11:23 <newtMcKerr> howdy
+19:11:34 * shertel waves
+19:11:46 <MichaelBaydoun> jimi|ansible: I don't, just here to listen
+19:11:51 <jimi|ansible> k
+19:12:00 <jimi|ansible> just crickets right now :)
+19:12:15 <bcoca> *crick*
+19:12:18 <gundalow> There are two items on the agenda
+19:12:21 <gundalow> https://github.com/ansible/community/issues/117
+19:12:21 * jimi|ansible is working on issue #17018
+19:12:34 <jimi|ansible> ahh thanks gundalow, i forgot to look at that
+19:12:47 <bcoca> I'm fine with accepting the gpl one but we need to clarify docs
+19:13:15 <jimi|ansible> hrm, resmo added a topic but is not here
+19:13:56 <abadger1999> Óla
+19:13:59 <gundalow> I think he just wanted is to decide and record the decision
+19:14:03 <jimi|ansible> bcoca: no, i don't want to mix licenses in module_utils
+19:14:17 <jimi|ansible> i am opposed to accepting that as GPL
+19:15:07 <jimi|ansible> #topic licenses on module_utils code
+19:15:10 <abadger1999> Note -- we do have mixed licenses in module_utils due to bundling.
+19:15:33 <jimi|ansible> python licenses yes, but not gpl (unless someone snuck one in when i wasn't paying attention)
+19:15:37 <jimi|ansible> what else is bundled there?
+19:16:09 <abadger1999> the python license for the ssl match hostname and an MIT style for six.
+19:16:23 <abadger1999> No copyleft yet.
+19:16:35 <jimi|ansible> hrm, vmware.py is gpl
+19:16:36 <Qalthos> abadger1999: er...
+19:16:38 <abadger1999> :-(
+19:17:03 <abadger1999> netcfg.py
+19:17:05 <Qalthos> abadger1999: network module_utils is gpl3,
+19:17:08 <abadger1999> k
+19:17:13 <Qalthos> all of it, I'd reckon
+19:17:17 <abadger1999> :-(
+19:17:19 <jimi|ansible> well... crap
+19:17:39 <abadger1999> docker_common.py too
+19:17:53 <abadger1999> huh
+19:17:57 <abadger1999> splitter.py is still gpl
+19:18:17 * abadger1999 looks askance at jimi-c
+19:18:27 <jimi|ansible> that's all me and mpd though, we were supposed to change the license header a while back
+19:18:42 <jimi|ansible> no one else has a commit in that file
+19:18:48 <jimi|ansible> vmware is a mess though
+19:19:06 <jimi|ansible> network.py would be easy to fix
+19:19:07 <Qalthos> I'd imagine some of this is unintentional, at least network-side
+19:19:11 <jimi|ansible> yeah
+19:19:49 <jimi|ansible> this is my fault, i haven't been paying close enough attention to what's been added there, though frankly i'm surprised we didn't notice vmware.py, that has been in for quite a while
+19:20:38 <abadger1999> junos.py ~5 committers.openswitch ~4
+19:20:39 <jimi|ansible> azure_rm_common too
+19:20:43 <abadger1999> ismount, another python license
+19:21:10 <abadger1999> netcfg.py ~5
+19:21:12 <jimi|ansible> python license is fine, MIT too, i don't care about either one of those
+19:21:16 <jimi|ansible> i care about gpl in there onl
+19:21:25 <jimi|ansible> only
+19:21:27 <gundalow> Can't expect people to be the gatekeepers on this.
+19:22:11 <jimi|ansible> #todo fix GPL licensing on module_utils code
+19:22:21 <bcoca> most of that code is ours anyways
+19:22:28 <jimi|ansible> #action fix GPL licensing on module_utils code
+19:22:30 <jimi|ansible> most, not all
+19:22:38 <jimi|ansible> vmware.py i think will be the trickiest
+19:22:50 <jimi|ansible> the others, there's maybe 1-2 people we'll have to contact
+19:22:53 <bcoca> not the vendord stuff, vmware i believe is mostly charlls
+19:23:01 <jimi|ansible> vendored stuff no
+19:23:11 <jimi|ansible> nah, log it, there's 5-6 non ansible people i think
+19:23:51 <bcoca> the stuff we 'comissioned' we also own
+19:23:59 <bcoca> which i think covers most of rest
+19:24:35 <abadger1999> nxos vyos netcmd vca vmware network ios facts azure_rm_common shell iosxr.py eos.py asa.py api.py docker_common splitter netcfg openswitch junos
+19:24:42 <jimi|ansible> https://gist.github.com/jimi-c/d5032462d2a6c369ca977c5ad741086f
+19:25:07 <jimi|ansible> ^ none of them are CSC, who were the ones working on vmware stuff
+19:25:35 <bcoca> csc was not what we 'comissioned'
+19:25:59 <bcoca> they just provided a few modules, diff group .... i forget who knew about contract, tim might remember
+19:26:11 <bcoca> gerla/cramer were involved
+19:26:33 <jimi|ansible> ahh yeah, the stuff benno was originally working on
+19:26:42 <bcoca> soundsrite
+19:26:52 <jimi|ansible> yeah not sure any of that actually made it in?
+19:26:59 <jimi|ansible> anyway his name isn't in the list
+19:27:53 <jimi|ansible> i wonder if that's even being used anymore by the stuff jctanner's working on
+19:29:49 <gundalow> Side thing,  can someone remind me of the new performance branch that recently got created?
+19:31:55 <jimi|ansible> gundalow: it's been merged into devel now, so no need to worry about a separate branch
+19:32:08 <gundalow> jimi|ansible: ah, cool, thanks
+19:32:35 <abadger1999> jimi|ansible: what is the story with fact.py's license?
+19:34:40 * gundalow -> plane
+19:35:05 <abadger1999> gundalow: good flight!
+19:36:14 <jimi|ansible> abadger1999: that one may have been kept gpl because it's only used by setup.py
+19:36:29 <jimi|ansible> i honestly don't recall any decisions around that one and never paid much attention to it
+19:36:32 <abadger1999> :-(
+19:37:09 <jimi|ansible> that license has been there in that state since 2014-03-16 16:02:37
+19:37:13 <abadger1999> That's not good because we were thinking of reusing some of the code there... Oh well.  It would be a royal pain to disentangle it now.
+19:37:22 <jimi|ansible> yeah no way with that one
+19:37:52 <abadger1999> We'll just have to clean room any of the detection stuff that we want to make reusable.
+19:37:53 <jimi|ansible> $ git log --follow lib/ansible/module_utils/facts.py | grep Author|sort -u | wc -l
+19:37:54 <jimi|ansible> 175
+19:38:07 <jimi|ansible> ^ several dupes in there, but i bet it's still well over 125 authors
+19:39:08 <jimi|ansible> abadger1999: where would we reuse facts.py?
+19:40:12 <abadger1999> jimi|ansible: detection of platform, detection of init daemon, (detection of package manager?), I think were things we thought we might want elsewhere.
+19:42:46 <bcoca> platform is universal, rest, even harware/networking can be moved to subset
+19:44:16 <abadger1999> by elsewhere I mean, the could could be of use to other modules.
+19:45:35 <jimi|ansible> ok, anything else to discuss here?
+19:46:10 <bcoca> need to write up stuff first, but got proposal on what module metadata should look like
+19:47:04 <jimi|ansible> that's a different topic so ok, moving on
+19:47:17 <jimi|ansible> #topic https://github.com/ansible/ansible-examples/pull/148
+19:47:20 <jimi|ansible> ^ Habbie
+19:47:27 <Habbie> ha
+19:47:29 <Habbie> i'm here :)
+19:47:30 <jimi|ansible> that's just ansible-examples,so i'm fine with adding that
+19:48:03 <jimi|ansible> anyone have any objections?
+19:48:10 <Habbie> none from me ;)
+19:49:31 <jimi|ansible> ok, hearing none
+19:49:46 <jimi|ansible> done
+19:49:58 <jimi|ansible> #topic open floor
+19:51:10 <abadger1999> bcoca: Cool on the module metadata proposal.  I was working on it but am happy to let you do it.
+19:51:26 <abadger1999> bcoca: what's the status since it seems to block most of the rest of hte work?
+19:51:54 <abadger1999> Are you going to cover both the metadata format and the tags that we're going to use for the tag portion of metadata?
+19:54:33 <bcoca> yep
+19:54:43 <bcoca> for format i was thinking to expand current doc in modules
+19:55:00 <bcoca> as for keywords, proposing a few, but that will be bikeshed fodder
+19:55:43 <abadger1999> bcoca: I'd rather make it a simple dictionary.
+19:55:55 <bcoca> metadata: key1, key2?
+19:56:05 <jimi|ansible> +1 to simple dictionary
+19:56:13 <abadger1999> If a dictionary then we can just use ast.parse to get it.
+19:58:32 <abadger1999> ANSIBLE_METADATA = dict( tags=[tag1, tag2], FUTURE_ARG_SPEC=argument_spec, FUTURE_REQUIRES=[{'pypi': ['botocore'], 'system': ['python>=3.4', 'yum']})
+19:59:13 <abadger1999> the only thing we'd be intereseted in implementing now would be tags but we could potentially do the others later.
+20:00:19 <bcoca> but then showing it in docs is harder, was going to keep it 'yaml'
+20:01:36 <abadger1999> We primarily need metadata to be used programatically.
+20:01:50 <abadger1999> Do we need tags to be in both places?
+20:01:54 <abadger1999> like arugment spec?
+20:02:05 <abadger1999> which is really in two places right now...
+20:02:45 <bcoca> shorthand yaml and python are interchangable ...
+20:03:08 <abadger1999> But you need parsers to extract the information.
+20:03:23 <abadger1999> Much better to be able to use ast.parse to extract the info.
+20:03:26 <jimi|ansible> for the docs, couldn't we just as easily do yaml.load() as ast.parse()?
+20:03:51 <abadger1999> yaml and pyhton aren't interchangable either...
+20:03:54 <abadger1999> yaml and json are.
+20:04:07 <abadger1999> but yaml and python have incompatibilities that bite you now and then.
+20:04:55 <bcoca> yaml shorthand dicts and python should not be an issue
+20:04:59 <abadger1999> they are
+20:05:20 <bcoca> or lists,  don't think we need the corner cases here
+20:05:22 <abadger1999> quoting of strings is not the same.
+20:06:35 <jimi|ansible> do you two want to take this back to #ansible-devel? we're past the hour for the meeting
+20:07:13 <abadger1999> yep, can do
+20:08:18 <jimi|ansible> kk, i'll wrap it up then
+20:08:20 <jimi|ansible> #endmeeting

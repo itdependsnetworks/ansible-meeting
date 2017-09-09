@@ -1,0 +1,119 @@
+15:00:03 <thaumos> #startmeeting Ansible Core Meeting
+15:00:03 <zodbot> Meeting started Thu May 11 15:00:03 2017 UTC.  The chair is thaumos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:00:03 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:00:03 <zodbot> The meeting name has been set to 'ansible_core_meeting'
+15:00:08 <thaumos> #chair thaumos
+15:00:08 <zodbot> Current chairs: thaumos
+15:00:15 <thaumos> Good day everyone!
+15:00:28 * mattclay waves
+15:00:30 <branko> 'lo
+15:00:37 <thaumos> #chair mattclay branko
+15:00:37 <zodbot> Current chairs: branko mattclay thaumos
+15:00:40 * nitzmahone lurks
+15:00:46 <thaumos> #chair nitzmahone
+15:00:46 <zodbot> Current chairs: branko mattclay nitzmahone thaumos
+15:01:00 * gundalow waves
+15:01:05 <thaumos> #chair gundalow
+15:01:05 <zodbot> Current chairs: branko gundalow mattclay nitzmahone thaumos
+15:02:21 <thaumos> I'll give folks another minute before we get started
+15:03:12 <sivel> howdy
+15:03:16 <gundalow> hey sivel :)
+15:03:33 <thaumos> #chair sivel
+15:03:34 <zodbot> Current chairs: branko gundalow mattclay nitzmahone sivel thaumos
+15:04:04 <thaumos> #topic ansible/ansible#24463
+15:04:08 <thaumos> #link https://github.com/ansible/ansible/pull/24463
+15:04:37 <thaumos> I just wanted to see if we're cool with merging it.
+15:04:52 <gundalow> thaumos: I'm happy with it
+15:04:57 <mattclay> Fine with me.
+15:05:03 <thaumos> cool
+15:05:06 <gundalow> abadger1999: will https://github.com/ansible/ansible/pull/24463/files need backporting to stable-2.3?
+15:05:10 <nitzmahone> +1
+15:05:13 <thaumos> should I backport?
+15:05:21 <gundalow> I assume METADATA needs to be kept in sync across branches?
+15:05:28 <thaumos> thx gundalow 😃
+15:06:22 <thaumos> #action thaumos to follow up with abadger1999 offline to confirm backport
+15:06:32 <gundalow> :)
+15:06:44 <thaumos> I'd assume so as well, unless we want to show history in some way.
+15:06:57 <thaumos> #topic Open floor
+15:07:06 * gundalow assumes so, though the first one, so time to ask akward questions
+15:07:12 <gundalow> :P
+15:07:18 <thaumos> heh
+15:07:47 <branko> Just hijack topic, or...? :)
+15:08:13 <thaumos> Pretty much, @branko.  If you have something bring it up!
+15:08:56 <branko> #topic https://github.com/ansible/ansible/pull/23015 (DConf + D-Bus daemon spawning/cleanup within module)
+15:09:10 <thaumos> \o/
+15:09:18 <branko> So, not sure if people have read this one, I'll try to write small description.
+15:09:31 <thaumos> #link https://github.com/ansible/ansible/pull/23015
+15:09:50 <branko> Essentially, wrote a module for doing configuraiton changes via dconf tool. This is used by recent Gnome and Gnome/GTK+ apps.
+15:10:07 <branko> However, you need running D-Bus user session for this (dbus-daemon binary).
+15:10:24 <branko> And you should try very hard not to spawn multiples, because things can step over each-other.
+15:10:57 <branko> The problem is that there is no offical standard way to ensure you have just one daemon running, and there is no official way to get its address.
+15:11:05 <branko> The address needs to be set via environment variable.
+15:11:29 <branko> Depending on distro you are using, you may or may not get things running in some standard way.
+15:11:35 <bcoca> if there is no sure way to do it, just make it a requirement of using the module
+15:11:45 <bcoca> if env var is not set, user must set it for module
+15:11:48 <branko> Yes, but that removes a lot of usability from it.
+15:11:57 <bcoca> i dont disagree, but i dont see other way forward
+15:12:29 <bcoca> aside from finding a spare tardis and getting dbus/systemd to standarize in a discoverable way 5yrs ago
+15:12:37 <branko> Heheh
+15:12:56 <branko> So, is daemon spawning/managing a big no-no in Ansible modules?
+15:12:57 <sivel> That was roughly my recommendation as well.
+15:13:47 <thaumos> Not everyone would be happy if a daemon spawned randomly.
+15:13:57 <sivel> It is somewhat mixing the functionality of the module.  Is it to start dbus, is it to configure things via dbus?
+15:14:05 * thaumos shakes head at own poor attempt at demon joke
+15:14:32 <branko> It is to configure things via d-bus.
+15:14:40 <bcoca> branko: not normally, service modules are used for that, most other modules have no need
+15:14:47 <bcoca> d-bus is a special monster
+15:14:47 <sivel> Maybe break the module into 2?  The dconf stuff in one, another module that can manage whether dbus is running
+15:14:56 <sivel> in another
+15:15:20 <branko> Hm... That's an option, I guess. The user would still need to clean-up afterwards, though.
+15:15:50 <branko> What if I would make the spawning an option?
+15:15:57 <branko> With big red warning in docs?
+15:16:08 <sivel> I'd still prefer it not in the dconf module
+15:16:33 <bcoca> not sure that would work well either
+15:16:40 <branko> Hm... Would it be acceptable to have this separate module strictly for dbus-daemon management?
+15:16:48 <bcoca> diff ssh sessions, are you going to get teh correct env for reusing the daemon?
+15:17:10 <branko> For me the main thing is to know what course to take in terms of trying to make this pull request work for everyone, or just abandoning it.
+15:17:29 <thaumos> I think it would be for everyone if it just configured, and that's it.
+15:17:30 <branko> bcoca: Maybe :)
+15:17:44 <branko> And that's also one of the problems. There is no reliaable way to get connecting address.
+15:18:16 <bcoca> i think at thsi point simplest approach is bets, make module require 'workable environment' , it trying to spawn services to make this work seems very wrong
+15:18:49 <thaumos> think of it similar to ssh-agent
+15:19:09 <bcoca> ssh-agent will not conflict with other copies
+15:19:18 <bcoca> dbus will
+15:19:29 <thaumos> i meant in just the sense that if you don't have it running, it don't work
+15:19:59 <bcoca> good point, thought you meant its pretty safe to start  if needed (which it is)
+15:20:26 <branko> I'm just thinking on how useful the module would be to other people if they need to understand all about D-Bus daemons etc in order to use it.
+15:20:32 <bcoca> here the issue is intrinsic to the tools involved, dbus has no good way to detect itself running nor safe way to run multiple user sessions of it
+15:20:50 <thaumos> It's probably safe to assume that if they're gonna use the module, they might know it.
+15:21:01 <bcoca> branko: if you are using dconf batch confiuration, you SHOULD know about dbus
+15:21:25 <branko> bcoca: Well, I can tell you I didn't when I started off with this :)
+15:21:36 <branko> Wasn't even aware dconf needed it, actually.
+15:21:55 <bcoca> branko: i dont doubt, neither did i first time i delved into it, was eye opener (also reason i avoid dconf)
+15:22:27 <branko> I think eye opener is an understatement :)
+15:22:28 <bcoca> branko: most people aren't, which for me forces exposure on how badly designed this is for batch/central management
+15:22:31 <branko> I think my jaw drapped ;)
+15:22:49 <branko> Ok, I guess the conclusion is that no D-Bus daemon spawning of any form should be in the dconf module, and it should be replaced with user providing address for communication?
+15:22:56 <thaumos> so branko, to close out,  just keeping it simple and only have it configure.
+15:22:58 <thaumos> yep
+15:23:25 <bcoca> branko: you can try default (see if var is there) but otherwuse, yeah, onus is on user to discover proper setting
+15:23:40 <branko> Hm...
+15:23:43 <bcoca> just document it clearly
+15:23:51 <branko> While at it, should user pass this as an option, or environment parameter?
+15:24:00 <bcoca> either works for me
+15:24:04 <bcoca> and probably for module
+15:24:19 <bcoca> i think option is nicer
+15:24:26 <branko> Ok, will do that then.
+15:24:50 <branko> I'll open the floor if noone has any extra input?
+15:24:54 <thaumos> #action branko to add option to module for dconf module
+15:25:10 <branko> #action branko to remove D-Bus daemon handling from dconf module
+15:25:15 <branko> While at it
+15:25:25 <thaumos> thanks! 😃
+15:25:28 <branko> #topic Open floor
+15:25:32 <branko> Thanks for the input :)
+15:26:54 <thaumos> any other topics to discuss today?
+15:27:07 <bcoca> patch 7.2.5
+15:27:39 <thaumos> lol
+15:29:11 <thaumos> if no topics at the half, I'll end meeting
+15:30:13 <thaumos> https://i.makeagif.com/media/12-30-2015/zuZvki.gif
+15:30:19 <thaumos> #endmeeting

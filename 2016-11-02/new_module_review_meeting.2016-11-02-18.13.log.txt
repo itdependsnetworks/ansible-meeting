@@ -1,0 +1,105 @@
+18:13:43 <abadger1999> #startmeeting New Module Review Meeting
+18:13:43 <zodbot> Meeting started Wed Nov  2 18:13:43 2016 UTC.  The chair is abadger1999. Information about MeetBot at http://wiki.debian.org/MeetBot.
+18:13:43 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+18:13:43 <zodbot> The meeting name has been set to 'new_module_review_meeting'
+18:13:55 <ryansb> hi team
+18:14:06 <alikins> howdy
+18:14:15 <tima> hello.
+18:14:53 <jtanner> modules, modules, modules
+18:14:58 <abadger1999> Greetings.
+18:15:03 * abadger1999 looks for agenda
+18:15:18 <abadger1999> Agenda: https://github.com/ansible/community/issues/92
+18:17:25 <abadger1999> Hmm... problem with standing agendas... need to be recreated once in a while.
+18:17:30 <abadger1999> #topic Open Floor
+18:17:46 <abadger1999> Let's start with -- anyone here have a specific module/ticket they want addressed?
+18:18:05 <jtanner> can someone fix vmware modules for me?
+18:19:16 <abadger1999> ryansb: You're on vacation right?  Don't say anything if you're not really here ;-)
+18:19:29 <ryansb> no, I'm here
+18:19:33 <abadger1999> Oh cool.
+18:19:43 <ryansb> I was at slsconf last week, but I'm back
+18:19:54 <abadger1999> #topic https://github.com/ansible/ansible-modules-core/pull/4054  Make launch config module convergent
+18:20:17 <abadger1999> ryansb: ec2_lc ticket.
+18:20:54 <thaumos> Just as an aside, I wish we had new modules come with a playbook to test them with.
+18:21:23 <jtanner> 90% of them wouldn't work without some third party system
+18:21:40 <ryansb> yeah, but that'd be alright just so I don't have to write a 100% new playbook
+18:21:50 <ryansb> don't mind signing up for some 3rd party thing to test
+18:22:30 <ryansb> So the ec2_lc thing is...complicate
+18:22:37 <ryansb> *complicated
+18:22:41 * gundalow waves
+18:22:45 <ryansb> main issue is that it's a huge behavior change
+18:23:46 <abadger1999> k
+18:24:39 <ryansb> The current behavior kind of sucks, since it crashes on modifications
+18:24:55 <ryansb> but that's because the underlying resource (launch configs) is immutable
+18:24:56 <abadger1999> Is there something solid to change about it (like a backwards compat parameter?)
+18:25:34 <ryansb> the solid thing is "needs other community input" since if it's a breaking change people *want* I'm ok with it, because the current behavior is a pain
+18:26:13 <abadger1999> People in general.... what's our method for soliciting community input?
+18:26:41 <ryansb> Usually I comment on the ticket that I need community input, but that's hit or miss
+18:26:44 <abadger1999> Do we just ask on the ansible-project mailing list and then take whatever people say there as consensus?
+18:26:50 <abadger1999> <nod>
+18:27:33 <jtanner> probably something we need to do more of across other modules
+18:27:52 <ryansb> k, I'll mail ansible-project
+18:28:06 <abadger1999> jimi|ansible: ^ We do not have a current procedure for that, right?  If we don't, I'll ask greg/robyn to weigh in
+18:29:11 <jtanner> needs_subject_matter_experts
+18:29:28 <thaumos> @jtanner, exactly… this is something i intended on doing for vmware*
+18:29:31 <abadger1999> gregdek, rbergeron: Sometimes we need community (meaning user) input on a change... in this case, should we make a backwards incompatible change to make the module "better".  Does solicit in bug report and on ansible-project mailing list seem like a good way to do that?
+18:29:45 <thaumos> RE: same for other modules
+18:30:20 <alikins> whats the story on 'blue'?
+18:31:10 <jtanner> versus green
+18:31:45 <abadger1999> ryansb: okay... until/unless greg or robyn get back to us, I think that's the best we can do to solicit info.
+18:31:59 <thaumos> or irc?
+18:32:07 <thaumos> and/or i should say
+18:32:15 <ryansb> alikins: blue?
+18:32:17 <abadger1999> ryansb, thaumos: Yeah, irc is good too.
+18:32:25 <ryansb> blue whats?
+18:32:41 <thaumos> id wwrite th post on group, and post the link to that in irc and say please contribute :-P
+18:32:50 <jtanner> https://jctanner.github.io/ansible/stats/modules/ec2_lc/
+18:32:59 <jtanner> ping fdv and garethr
+18:33:28 <abadger1999> jtanner: Awesome
+18:34:36 <abadger1999> #action ryansb to solicit community input on the ec_lc change since it's backwards incompatible
+18:34:48 <abadger1999> #topic New ProxySQL Modules: https://github.com/ansible/ansible-modules-extras/pull/2917/files
+18:35:24 <abadger1999> 8  modules here.
+18:35:43 <abadger1999> I reviewed one for code style and the contributor made the requested changes.
+18:36:51 <abadger1999> Beyond that I don't use proxy_sql so I'm not much good.  Shall we just add it to extras now?
+18:37:52 <abadger1999> It's received three +1's/shipits (but the bot didn't add shipit label so I believe those are just users, not contributors)
+18:37:59 <jtanner> as long as he knows the bot will ping him on future issues for those modules
+18:38:23 <abadger1999> Cool.
+18:38:47 <jtanner> i thought we had altered "shipit"
+18:39:12 * jtanner should probably familiarize himself with that code soon
+18:39:14 <abadger1999> #action abadger1999 will merge the proxy_sql modules
+18:39:19 <bcoca> i thought it was x2
+18:39:40 <abadger1999> jtanner: Not sure... the old code would probably be what was running when the shipits were given anyway.
+18:39:43 <jtanner> there are 3+ in there that i can see
+18:40:10 <jtanner> and a "sheep it"
+18:41:54 <abadger1999> #topic dimensiondata modules: https://github.com/ansible/ansible-modules-extras/pull/2977
+18:42:13 <abadger1999> In the agenda it looks like there's some process question around how modules get added to the ticket.
+18:42:30 <abadger1999> But we still have 20 minutes so I think we should take a look at these.
+18:43:42 <abadger1999> Looks like I reviewed the first one in the list 2 weeks ago and the maintainer hasn't replied.
+18:43:58 <abadger1999> I'll reping him.
+18:44:21 <abadger1999> #action abadger1999 to ping the dimensiondata module submitter about changes needed for his PRs
+18:44:27 <abadger1999> #topic Open Floor
+18:44:42 <abadger1999> Any one else have ticket/modules to discuss?
+18:45:08 <jtanner> abadger1999: maybe we should put a check for 'type() =' in the module linters?
+18:46:41 <abadger1999> jtanner: To catch things like: type(obj) == 'str' ===>  use this instead: isinstance(obj, str)  ?
+18:47:03 <jtanner> yeah, pretty sure the linters can do that
+18:47:11 <abadger1999> <nod>
+18:47:27 <jtanner> that being said, i don't really know where the linters live
+18:47:47 <abadger1999> If you want to whip up a short shell script that can go into the code-smell tests.  ansible repo, test/code-smell
+18:48:06 <jtanner> i'll file a bug and assign self
+18:48:14 <abadger1999> Talk to gundalow/mattclay if you want it to go into ansible-modules-validate.
+18:48:36 <jtanner> where is that?
+18:48:47 * gundalow looks up
+18:49:40 <mattclay> abadger1999: Actually, it's in test/sanity/code-smell now.
+18:49:58 <jtanner> so the script just needs to exit 1 or 0 ?
+18:50:04 <mattclay> jtanner: Yes.
+18:50:20 <jtanner> k, i'll get to it
+18:50:29 <gundalow> jtanner: please include me and mattclay on the review
+18:50:32 <gundalow> Thanks :)
+18:50:38 <mattclay> jtanner: stdout should have useful information in the case of a failure though.
+18:51:46 <abadger1999> Cool.
+18:51:49 <abadger1999> Anyone anything else?
+18:51:55 <abadger1999> I'll close in 60s if not.
+18:52:16 <gundalow> Anyone going to Velocity in Amsterdam next week? I'll be there
+18:52:52 <jtanner> https://github.com/ansible/ansible/issues/18310
+18:53:02 <abadger1999> #info gundalow will be iat Velocity Amsterdam next week if you want to meet him in person
+18:53:18 <gundalow> jtanner: Thanks
+18:53:54 <abadger1999> #endmeeting

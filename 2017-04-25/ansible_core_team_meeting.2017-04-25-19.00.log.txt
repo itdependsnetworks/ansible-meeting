@@ -1,0 +1,385 @@
+19:00:26 <thaumos> #startmeeting Ansible Core Team Meeting
+19:00:26 <zodbot> Meeting started Tue Apr 25 19:00:26 2017 UTC.  The chair is thaumos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:00:26 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:00:26 <zodbot> The meeting name has been set to 'ansible_core_team_meeting'
+19:00:42 <thaumos> #chair abadger1999 thaumos bcoca
+19:00:42 <zodbot> Current chairs: abadger1999 bcoca thaumos
+19:00:55 * gundalow waves (here for a little bit)
+19:01:02 <thaumos> #chair gundalow
+19:01:02 <zodbot> Current chairs: abadger1999 bcoca gundalow thaumos
+19:01:33 <shertel> hello
+19:01:45 <thaumos> #chair shertel
+19:01:45 <zodbot> Current chairs: abadger1999 bcoca gundalow shertel thaumos
+19:01:50 <thaumos> hello @shertel
+19:03:10 <thaumos> anyone else here?
+19:03:22 <bcoca> no
+19:03:30 * thaumos cries
+19:03:34 <ryansb> I'm here
+19:03:41 <thaumos> #chair ryansb
+19:03:41 <zodbot> Current chairs: abadger1999 bcoca gundalow ryansb shertel thaumos
+19:03:41 <ryansb> ssshhhh don't cry
+19:03:54 <thaumos> You make me a little bit happier, ryansb
+19:04:18 <thaumos> #topic Discuss current meeting frequency and propose new times
+19:05:14 <thaumos> So I recall that there were ideas floating around already on the topic, could we rehash those so I remember?
+19:05:34 <thaumos> Something about rotating weekly for timezones?
+19:05:38 <jtanner> hi
+19:05:43 <thaumos> #chair jtanner
+19:05:43 <zodbot> Current chairs: abadger1999 bcoca gundalow jtanner ryansb shertel thaumos
+19:05:52 <bcoca> i was thinking weekly with 8h rotating times
+19:05:59 <abadger1999> We have less items on the agenda now so we seem to have caught up with the backlog.  would like to have fewer meetings based on that.
+19:06:09 <abadger1999> TZs were one reason for multiple meetings.
+19:06:32 <thaumos> agreed on count of items on agenda for now.  However, i am sure it will fluctuate release to release.
+19:06:38 <abadger1999> rotating times has the drawback of people never knowing which week it is so what time they have to show up to make it
+19:06:51 <gundalow> -1 to rotating timezones
+19:06:59 <thaumos> what is the least common denom for all tz's?
+19:07:07 <jtanner> honestly, i think a monthly meeting would suffice
+19:07:14 <jtanner> but that's just my opinion
+19:07:23 <abadger1999> we have a backlog of proposals to go through (but then that leads us into the question of what is the proposal process... Do we need to look at any proposals unless someone has actively pushed it to the meeting agenda?)
+19:07:23 <gundalow> Currently the meetings are 4 hours apart
+19:07:24 <bcoca> 2/week to 1/month might be a drastic change
+19:07:25 <thaumos> monthly to bi-weekly... imo
+19:07:42 <bcoca> gundalow: and we have people complain
+19:07:42 <gundalow> +1 to reviewing proposals in this meeting
+19:07:58 <abadger1999> jtanner: monthly has the same problem as rotating times... people can't remember if this is the week that has the meeting or not.
+19:07:59 <bcoca> gundalow: we've barely had any new ones in a while
+19:08:00 <jtanner> proposals are going to grow like PRs and if our meetings are consumed by them, we won't do much else
+19:08:07 <gundalow> bcoca: I was stating a fact, not offering a view
+19:08:16 <abadger1999> (same for bimonthly)
+19:08:45 <thaumos> Okay, so then once a wk, at specific time?
+19:09:00 <abadger1999> That's all the previous discussion that I remember.
+19:09:06 <gundalow> There hasn't been much activity on the agenda items for sometimes, we've only had a few small things added recently. It would be good to start going through the proposals in here, even if we limit it just to thas last 30mins
+19:09:37 <bcoca> gundalow: we were doing that already for new proposals, we just have not had one in a while
+19:09:44 <thaumos> let's say wed @ 1300 UTC?
+19:10:18 <abadger1999> thaumos: I won't be able to make that
+19:10:29 <thaumos> How about for now let's talk about just the timing of the meetings?  We can discuss the proposals process after this?
+19:10:41 <thaumos> @abadger1999, I know that one's harder for our tz...
+19:11:17 <gundalow> thaumos: how about we just kill one of tue or thursdays meetings
+19:11:56 <abadger1999> 1600UTC is when it starts to be nice for me but I can almost always start probably one hour earlier... I forget whether daylight savings means that  one hour earlier become almost never for half the year, though.
+19:11:56 <bcoca> gundalow: leaves many timezones out of 'service' hours
+19:12:12 <gundalow> bcoca: as does picking a new time
+19:12:23 <bcoca> abadger1999: most of the time its 2weeks per change of extra/less hour diff
+19:12:34 <bcoca> gundalow: that is why i said 'rotating'
+19:13:09 <abadger1999> I'm a proponent of leaving some tzs out.
+19:13:28 <thaumos> by killing a day, it would make it once a wk.
+19:13:37 <bcoca> considering we have plenty of users and contributors in all ranges ... i think that isn't wise
+19:13:50 <abadger1999> and (1) adjusting if other people become regulars for meetings (2) having special meetings if certain people are needed.
+19:13:58 <thaumos> most of our range is in the US to EURO tz's
+19:14:24 <thaumos> our IST folks are going to always be the odd ones out, unfortunately.
+19:14:48 <thaumos> which makes Thursday's time slot more preferable for them
+19:15:05 <thaumos> 1500 UTC, is 0800 PDT.
+19:15:12 <bcoca> they try to stay up late to be able to attend
+19:15:27 <bcoca> not trying to do 'office hours' but at least not 'past midnight'
+19:16:04 <thaumos> right now it's almost 1am in IST.
+19:16:11 <thaumos> so today's time is clearly a no go.
+19:16:17 <bcoca> i know, that is why they tend to attend on thrusday
+19:16:19 <abadger1999> rotating times makes it inconvenient for everyone (to remember).  multiple meetings is hard to keep attendance up because people feel they can get more work done if they don't have to spend multiple hours per week in meetings.
+19:16:29 <abadger1999> basically... all strategies have cons.
+19:16:33 <bcoca> abadger1999: isn't that what calendars are for?
+19:16:43 <bcoca> even with fixed times ... people dont remember, they are mostly 'reminded'
+19:16:55 <thaumos> What's the con for once a week, Thursday at 1500 or 1600 UTC?
+19:16:56 <gundalow> IST will mostly be working on networking stuff, which has a separate meeting, though we don't want to create an active split between groups
+19:17:22 <thaumos> agreed to that @gundalow because this meeting is Engine + overall product imo
+19:17:23 <bcoca> gundalow: but we have plenty of 'non rh contributors' in similar tz
+19:17:32 <thaumos> whom?
+19:17:43 <gundalow> also, what's wrong with the existing schedule, if we don't have stuff to discuss then it's a shorter meeting
+19:18:11 <bcoca> we have enough in any zone, aussies, chinese, nepal, vietnam, hawai ... we gots people everywhere
+19:18:16 <jtanner> does anyone here have an opinion on this that is also on the core team?
+19:18:21 <thaumos> Personally, I think the existing schedule is fine.  I think once a week is sufficient
+19:18:23 <jtanner> isn't* also
+19:18:32 <abadger1999> bcoca: calendars only work for people who have calendars... when do you not?  (1) You just have one issue to present; then you probably didn't enter it onto your calendar.  (2) If you are away from your device that has your calendar and have to schedule another event (like at the doctor's office)
+19:18:45 <gundalow> I've not seen any non-core people in here today
+19:19:00 <bcoca> ^ that is why we are talking about reducing the meetings
+19:19:16 <bcoca> if we cannot agree on other scheulde, maybe keep as we have and just cut them short as needed
+19:19:31 <bcoca> abadger1999: if they can get on irc to the meeting .. they can figure out calendar
+19:19:33 <gundalow> +1
+19:19:49 <thaumos> Personally, I am fine with keeping the frequency.
+19:19:50 <jhawkesworth> hello. I'm not core but +1 to keep schedule but have short meetings if nothing to say
+19:19:51 <abadger1999> Keeping current schedule won't reduce our meeting load in two ways:
+19:19:57 <thaumos> #chair jhawkesworth
+19:19:57 <zodbot> Current chairs: abadger1999 bcoca gundalow jhawkesworth jtanner ryansb shertel thaumos
+19:20:00 <gundalow> and maybe an email to ansible-devel to remind people that this exists
+19:20:11 <bcoca> also we publish it in easy access https://raw.githubusercontent.com/ansible/community/master/ansible_community_meetings.ics
+19:20:45 <thaumos> Okay, so let's vote formally.
+19:20:54 <abadger1999> (1) You always have to schedule with the expectation of it lasting the whole hour (so you can't schedule another meeting that conflicts) (2) meetings almost always expand to fill all available time... Must be a law of physics or something ;-)
+19:21:01 <thaumos> #info Vote on retaining schedule, shorter meeting if no topics
+19:21:16 <abadger1999> I think with no time pressure, discussions like these take an hour instead of 10 minutes.
+19:21:19 <bcoca> 1) that is a 'feature' so i can get stuff done during extra time
+19:21:29 <bcoca> 2) that is when there is no strong moderation, it can be avoided
+19:21:32 <gundalow> abadger1999: stronger chairing skills
+19:21:36 <thaumos> ^^
+19:21:40 * gundalow includes himself in that
+19:21:40 <jtanner> what are the vote choices?
+19:21:41 <abadger1999> thaumos: note: I would say, that's no change from the present.
+19:21:45 <ryansb> That's what we have thaumos for
+19:21:54 <thaumos> That's the proposal @thaumos
+19:21:57 <bcoca> +1 to no change as the options seem to be too divisive
+19:21:58 <abadger1999> We don't purposefully leave the meeting open if there's nothing left to discuss.
+19:22:02 <abadger1999> -1
+19:22:03 <thaumos> +1 to no change
+19:22:28 <gundalow> +1 no change, apart from stronger chairing
+19:22:30 <abadger1999> Or maybe +0... I think there's a problem but I don't want to discuss the meta-question of how often the meeting should be.
+19:22:34 <jtanner> +1 no change ... i don't know why we're talking about this
+19:22:37 <thaumos> I will chair stronger
+19:22:39 <abadger1999> (for the whole of this meeting ;-)
+19:23:08 <bcoca> jtanner: cause last 4 meetings ended early
+19:23:22 <jtanner> many more haven't
+19:23:31 <bcoca> and almost no non core attended
+19:23:47 <ryansb> *barring the occasional "I have this PR"
+19:23:52 <jtanner> people only come to these when they want something
+19:23:52 <bcoca> jtanner: true but the trend is currently downward
+19:23:52 <abadger1999> many in-core haven't been attending as well.
+19:23:55 <gundalow> 4*+1, 1*-1
+19:24:18 <thaumos> #agreed No change to current schedule, stronger chairing (read cat herding)
+19:24:41 <thaumos> So if I continue to run the meeting, I promise I will do my best to keep the pace.
+19:24:50 <jtanner> perhaps shipit+automerge rules have reduced some of the reason people came to these?
+19:25:04 <gundalow> jhawkesworth ryansb shertel votes please: Keep meeting schdule as it is +1/-1
+19:25:05 <bcoca> jtanner: what are automerge numbers?
+19:25:09 <jtanner> it's somewhat clear now how to get a bugfix in and it doesn't involve us
+19:25:17 <shertel> +1
+19:25:21 <ryansb> -1 , I'd be happy with once a week
+19:25:23 <bcoca> jtanner: being evil i expect desperation from non advancment keeps people away
+19:25:24 <jhawkesworth> keep shedule as is +1 from me
+19:25:28 <thaumos> jhawkesworth did a +1 already I thought.
+19:25:38 <ryansb> voter fraud
+19:25:44 <thaumos> lol
+19:25:46 <gundalow> :P
+19:25:50 <jhawkesworth> please only count my vote once
+19:26:04 <bcoca> ryansb:  ^ windows guy, he needs to do it several times and reboot to make sure it counted
+19:26:09 <thaumos> just make sure his IP stays in one state.
+19:26:14 <gundalow> jhawkesworth: As !core, your vote actually counts for more
+19:26:19 <gundalow> aaanwyay
+19:26:19 <thaumos> lmao @bcoca
+19:26:20 <gundalow> what's next
+19:26:21 <jtanner> bcoca: i have a guess that seeing the rules state that it's not just the core team holding out on them and that they need to take an active part in getting their PR shipit'ed has possibly diverted some of it
+19:26:37 <jtanner> not that it's actually creating a bunch of automerges
+19:26:40 <jhawkesworth> :-)
+19:26:41 <bcoca> jtanner: that would be my hope
+19:26:50 <thaumos> alright folks, let's reset.
+19:26:59 <thaumos> #Topic Discuss open proposals.
+19:27:18 <jtanner> close them all, see who notices > = ]
+19:27:43 <bcoca> thaumos: look at meeting notes we had proposal about proposal process
+19:28:09 <sivel> I suppose I missed the part I needed to participate in, because I can't make the 2pm meetings
+19:28:14 <sivel> or whatever UTC time it is now
+19:28:41 <thaumos> #chair sivel
+19:28:41 <zodbot> Current chairs: abadger1999 bcoca gundalow jhawkesworth jtanner ryansb shertel sivel thaumos
+19:29:09 <sivel> we should really put a link out for times the meetings work
+19:29:11 <thaumos> @sivel, we're keeping the current schedule, no change.
+19:29:16 <sivel> ok :)
+19:29:34 <thaumos> On current topic, @bcoca, it's been weeks that the new proposed process has been out there
+19:29:36 <sivel> I can usually catch the end of this one, my daily team stand up overlaps, in any case...
+19:29:40 <thaumos> :-)
+19:30:18 <thaumos> can someone #link the current proposed process please?
+19:30:20 <sivel> I have a feeling, the proposal about the prosal process isn't going to move very much, unless someone here really champions it
+19:30:34 <sivel> My feeling, is it's not an interesting topic for most
+19:30:36 <gundalow> sivel: nod
+19:30:36 <bcoca> sivel: that is problem with most proposals
+19:30:43 <shertel> sivel - I think consensus was that meetings might end early now, if there is little to discuss.
+19:30:54 <bcoca> ^ part of the proposal proposal was shifting the burden to the proposal's advocate
+19:31:16 <thaumos> Okay how about this, if we're still held up on the proposal process... I'll take a formal action to review it, and champion it.
+19:31:20 <thaumos> fair?
+19:31:21 <jtanner> my question remains unanswered https://github.com/ansible/proposals/pull/59#issuecomment-288755014
+19:31:32 <sivel> ideally proposals can be useful, I think in practice they are a way to ignore what people want ;)
+19:32:04 <sivel> although those created by the core team, usually get pushed through
+19:32:13 <abadger1999> thaumos: yep... latest action on it is that it needs the review comments incorporated... you could decide to rewrite it though... it's base is a process from another project that doesn't seem to fit well with how we've traditionally done things.
+19:32:15 <sivel> in any case, I'm just talking
+19:32:15 <thaumos> Proposals are useful to have a way to get a "request" in... There needs to be an easier process either way from both a community usage standpoint as well as community devel standpoint to get a voice heard.
+19:32:38 <bcoca> for me they are a good way to hash out design before starting work
+19:32:40 <jtanner> "heard" doesn't mean action
+19:32:42 <sivel> does anyone have experience with PEPs?
+19:32:45 <sivel> I don't
+19:32:46 <abadger1999> sivel: +1 to your sentiment.. I think the revised process needs to fix that.
+19:32:54 <sivel> they seem to work at some level
+19:33:01 <thaumos> #action Thaumos to review current proposed, proposal process.  Implement a process based on the proposal for future meetings.
+19:33:01 <jtanner> sivel: i've been meaning to research the process
+19:33:07 <abadger1999> sivel: I do.  they're good in many ways.
+19:33:17 <bcoca> we are closer to RFCs
+19:33:31 <abadger1999> I think we tend to do more work via IRC instead fo email but otherwise the PEP process would be a good fit for us.
+19:33:58 <thaumos> #info, review PEP, RFC, current proposed process...
+19:34:08 <abadger1999> PEPs have an appointed dictator, though.
+19:34:08 <sivel> we could probably take a bit from how PEPs operate.  I don't know enough about the process, and am not really concerned enough to go figure it out. But figured it could be useful
+19:34:11 <jtanner> thaumos: why exactly does a proposal need to be "heard"
+19:34:12 <jtanner> ?
+19:34:20 <thaumos> email is hard because we'd have to figure how to include others outside the RH org email.
+19:34:20 <jtanner> and what good is that
+19:34:23 <abadger1999> Which is something we'd have to add (right now we have "eventual voting"
+19:34:36 <gundalow> I think the issues is just allocating time to looking at them and defining the order
+19:34:45 <jhawkesworth> heard='checked for sanity'
+19:34:48 <gundalow> Don't need any strong process
+19:34:59 <abadger1999> heard != checked for sanity
+19:35:07 <jtanner> see .. disagreement
+19:35:11 <thaumos> @jtanner I really view proposals as a method for someone to request functionality in a more formal manner.  Whether that is a user or a developer.
+19:35:21 <bcoca> @gregdek @robyn ^ community issue, think you guys should at least be aware
+19:35:27 <sivel> It also requires people to get interested so that feedback can be had.  I feel like interest is probably low in most cases, so we as the core team, don't focus on them as much as we may be able to
+19:35:28 <abadger1999> read, review, propose modification, record why things should be done in a certain way instead of others....
+19:36:09 <jtanner> sounds like what we already do via PR reviews
+19:36:28 <jhawkesworth> yeah but don't have to code anything for a proposal
+19:36:32 <bcoca> yes, but once author does not have time, proposal stagnates
+19:37:01 <abadger1999> could be... there are some real differences and some not so real differences... real difference: proposal doesn't need an implementation.
+19:37:28 <bcoca> https://github.com/ansible/proposals/issues/62 <= some are very specific, sounds great to me, but this is mostly for those focusing on cloud testing
+19:37:41 <sivel> anyway, I never got the feeling that the proposal proposal did what we needed. I'll have to guage that from others, but maybe a more PEP like process, something that is more similar to what people are used to might work
+19:37:48 <abadger1999> not-real-difference: PRs don't have the same visibility as proposal (we've now started putting PRs onto the agenda instead of proposals so this difference has gone away)
+19:37:51 <thaumos> obviously everyone has their own opinion what a proposal is.
+19:38:15 <bcoca> well, proposals were supposed to be 'before writing code'
+19:38:31 <bcoca> PR is a proposal + implementation
+19:38:44 <jhawkesworth> don't see much difference between a proposal and a feature idea, but accept might not want to clutter bug tracking with proposals/feature ideas
+19:39:00 <jtanner> "obviously everyone has their own opinion what a proposal is." ... and i think this "proposal proposal" is with the false belief that it will somehow speed up getting things accepted into devel
+19:39:05 <sivel> feature ideas in the repo now aren't really looked at either
+19:39:07 <bcoca> i would argue that stuff like 'inventory plugins' is too broad to just go ahead and create PR w/o discussing first (i think proposals worked well for this one)
+19:39:12 <abadger1999> proposal benefit: we have the ability to record in the proposal, the discussion that lead to it being that way.
+19:39:24 <abadger1999> In PRs, that all tends to get lost.
+19:39:25 <bcoca> sivel: they are looked at ... acted on is diff issue
+19:39:35 <abadger1999> (this is one of hte main benefit I see to well written PEPs
+19:39:37 <sivel> well, yeah I mean I see them via email, and then I move on
+19:39:45 <jtanner> i acted on a few, with needs_contributor =P
+19:39:59 <bcoca> sivel: i revisit them from time to time, but mostly if i'm planning on doing work related/near them
+19:40:08 <thaumos> alright, let's take a step back. we're arguing now what a proposal is.
+19:40:18 <jtanner> i take credit for that
+19:40:19 <bcoca> thaumos: that has never been settled
+19:40:24 <thaumos> I know it hasn't.
+19:40:32 <thaumos> but we never settle on anything
+19:40:51 <bcoca> ^ that is why this does not advance
+19:40:53 <jtanner> in triage, we have a template written by jimi-c that states proposals are for making major changes to ansible
+19:40:55 <abadger1999> that's why I've said we need a proposal about proposals :-)
+19:41:11 <bcoca> abadger1999: we have one, got so bad author abandoned
+19:41:23 <jtanner> https://github.com/ansible/ansible/blob/devel/ticket_stubs/proposal.md
+19:41:24 <thaumos> not to joke too much, then we'll need a proposal for the proposalled proposals
+19:41:26 <abadger1999> Write a strawman.  We critique it and redraft to satisfaction.  then make it official
+19:41:50 <abadger1999> otherwise we don't have any definitions.
+19:42:13 <bcoca> abadger1999: we had one, we ignored it, attempts to ammend it have failed
+19:42:27 <abadger1999> bcoca: I didn't see any comments to indicate there was any badness in the process of creating the proposal... My take is just that he didn't have time to keep following through.
+19:42:31 <bcoca> https://github.com/ansible/proposals/pull/59
+19:42:45 <bcoca> abadger1999: he gave up, yes
+19:42:47 <sivel> https://www.python.org/dev/peps/pep-0001/
+19:43:01 <thaumos> Like I said, I am going to take action on reviewing the current proposed process, and we will go from there.  I will make sure that it will close in two weeks time. Fair?
+19:43:09 <thaumos> #link https://github.com/ansible/proposals/pull/59
+19:43:19 <thaumos> #link https://www.python.org/dev/peps/pep-0001/
+19:43:32 <abadger1999> bcoca: Unlss you know something I don't, I'm just having issues with your nuances.
+19:43:40 <bcoca> sivel: the problem with that and #59 is there is no 'proposal comitee' and most core members dont have time to manage one
+19:43:42 <abadger1999> thaumos: Except for "close in two weeks time" good plan.
+19:43:50 <abadger1999> We should aim for progress... can't aim for closure.
+19:44:07 <thaumos> close the discussion, doesn;'t mean close progress
+19:44:14 <thaumos> obviously this will always be a moving target.
+19:44:19 <abadger1999> thaumos: now I'm not sure what you mean.
+19:44:20 <jhawkesworth> thaumos sounds like a plan
+19:44:44 <bcoca> abadger1999: tickets can be closed, does not mean they cannot be reopened or reffered to in a new one
+19:44:52 <bcoca> if people WANT to push a proposal, they'll insist
+19:45:11 <thaumos> All I am saying is, in two weeks time we can start a new proposed process.  Since this is a new version cycle, we can reset.
+19:45:22 <bcoca> ^ part of why i wanted to shift responsability to advocate, cause current norm dictates WE in core evaluate all proposals
+19:45:44 <thaumos> #action thaumos also to sync with @robyn and @gregdek on the proposal process offline.
+19:45:48 <jtanner> what is the end result of a proposal supposed to be?
+19:45:58 <abadger1999> thaumos: If bcoca is expressing what you mean then my point still stands.  To put it in other terms... this is a health care bill... aim to make progress in the discussion by $week, don't aim to have a showdown vote by $weeks.
+19:46:06 <jhawkesworth> suggestion: a PR or a roadmap item
+19:46:26 <bcoca> abadger1999++ for political slam
+19:46:35 <jtanner> i can imagine A) go ahead and write it B) we'll put it on the core team roadmap C) nevergunnagetit
+19:46:37 <thaumos> health care in the states is a sham
+19:46:41 <sivel> I don't think a proposal should move on without the core teams approval or a proposal committe approval
+19:46:44 <abadger1999> jtanner: mandate to implement a feature.
+19:46:51 <ryansb> thaumos: not the point
+19:46:53 <jtanner> yeah but who?
+19:46:56 <bcoca> thaumos: my healthcare is a plane ticket to spain
+19:47:02 <thaumos> ++
+19:47:08 <ryansb> that's a vacation plan
+19:47:17 <jtanner> the submitter of https://github.com/ansible/proposals/issues/61 isn't going to write the code
+19:47:24 <thaumos> One thing to definitely consider is a proposal committee.
+19:47:41 <abadger1999> jtanner: Yeah, so I think results is if we approved, (A), if we rejected, (C).  In a few cases, we explicitly say we'll do (B).
+19:47:43 <thaumos> Because there are others like sivel and jhawkesworth who are here a lot to be a part of the committee, for instance.
+19:47:46 <bcoca> jtanner: there is little consensus there also
+19:48:00 <sivel> we need a BDFL
+19:48:01 <jtanner> regardless of concensus
+19:48:05 <jhawkesworth> the reason I raised the one proposal that I did (now closed) is 'cos I wouldn't be able to write the code
+19:48:08 <jtanner> sivel: yer it!
+19:48:16 <sivel> I can make decisions
+19:48:28 <sivel> people may not like them, but I can certainly make them
+19:48:45 <bcoca> sivel: so can i, the problem is getting consensus
+19:48:49 <jtanner> i propose we have elections for BDFL
+19:48:51 * sivel writes a proposal for appointing a BDFL
+19:48:53 <abadger1999> as in, "this is such a good idea that abadger1999 is going to add it to the 2.4 roadmap as an item that he's taking care of"... if approval lacks that sort of statement then proposal submitter is responsible for carrying through to implementation.
+19:49:19 <bcoca> abadger1999: or finding suck ... er software engineer to do so
+19:49:23 <abadger1999> sivel: Or a BDFOP
+19:49:43 <thaumos> ansible/prosals#61 is a good example.  From a project stand point we have a request/proposal to change a behaviour.  That behaviour has implications from both a user and development stand point. We need to make a decision based on that proposal that doesn't adversely affect the project usage.
+19:49:46 <jtanner> bcoca: so now it all comes clear why you put pyvmomi on the roadmap
+19:49:50 <abadger1999> (benevolent dictator for one PEP... it's how PEPs work these days)
+19:50:09 <bcoca> jtanner: i just had diff su... ser software engineer in mind, but he quit
+19:50:53 <sivel> it was easier when we had a BDFL that just said yes or no, and consensus didn't matter :)
+19:51:01 <jtanner> twas mostly NO
+19:51:05 <bcoca> sivel: true
+19:51:12 <sivel> for better or for worse, it worked
+19:51:13 <bcoca> sivel: but easy != good
+19:51:25 <thaumos> alright, we're coming up on time.
+19:51:32 <sivel> and I am wasting it :)
+19:51:38 <sivel> sorry folks
+19:51:39 <thaumos> So any other #action's anyone want to capture?
+19:51:43 <bcoca> https://github.com/ansible/ansible/pull/23971
+19:51:49 <bcoca> https://github.com/ansible/ansible/pull/20717
+19:52:20 <abadger1999> bcoca: those are new topics (for open floor), yes?
+19:52:43 <sivel> When deprecating, shouldn't we have a deprecation warning for X releases before we actually deprecate.  Looks like 23971 just documents deprecation
+19:52:45 <thaumos> I thought bcoca was using them as more proposal examples.
+19:52:57 <sivel> it doesn't warn
+19:52:59 <thaumos> okay, moving to open floor
+19:53:04 <thaumos> #topic Open floor
+19:53:05 <abadger1999> I'm not sure.
+19:53:23 <abadger1999> that's why I was asking ;-)
+19:53:26 <bcoca> sivel: we deprecated them in 2.0 ... we just never removed them, and no never had warnings
+19:53:42 <sivel> bcoca: yeah, I get that, but we never visibly displayed warnings to users using them
+19:53:44 <thaumos> well, he didn't say anything so open floor :-P
+19:53:49 <sivel> so we had no way of informing users ahead of time
+19:54:16 <bcoca> i'll see about switching, argsparse has no good way of showing deprecation
+19:54:26 <thaumos> how about remove it and revert if we get enough complaints?
+19:54:28 <sivel> ideally we should visibly warn during runtime for X releases, before removing something
+19:54:44 <thaumos> ^ yes ideally.... and we need to get better at doing so.
+19:54:52 <sivel> gotta start somewhere ;)
+19:54:57 <bcoca> sivel: we normally do and have been warning about sudo/su in play for 3 releases already (in diff PR i add 2.7 as removal)
+19:55:12 <sivel> hrm, maybe I have missed it
+19:55:20 <sivel> in any case, general comment there
+19:55:21 <abadger1999> bcoca: we can do it.  You need to keep both args saving to different variable names.
+19:55:46 <abadger1999> bcoca: then in code you compare the settings to see if the deprecated one was used.
+19:56:13 <sivel> bcoca: I think I am thinking of just pure CLI invocations, there is no warning there, if the playbook doesn't use those options
+19:56:17 <abadger1999> bcoca: I think I do something like the second half of that for the behaviour of --tags --skip-tags changing.
+19:56:50 <bcoca> https://github.com/ansible/ansible/commit/1a0b94fa17f58e2a2413e4ee814c9a24813e5497
+19:57:05 <bcoca> ^ is the other thing i did, i'll try to match
+19:57:29 <bcoca> not going to do 4 from now as we had signaled deprecation long time ago
+19:58:15 <thaumos> we have had that warning since 2.4, right?
+19:58:26 <bcoca> thaumos: 2.1 iirc
+19:58:33 <thaumos> /s/2.4/2.0
+19:58:39 <thaumos> hmm either way.
+19:58:41 <bcoca> possibly 2.0
+19:58:42 <thaumos> 3 version.
+19:58:44 * abadger1999 on the fence of how long... Loves to get rid of deprecated code but also feels like CLI options being removed is some of hte most annoying things to users.
+19:59:12 <abadger1999> thaumos: yes... but that's only for hte playbook construct, not hte cli args.
+19:59:14 <bcoca> abadger1999: goign from 2 (original) to 4 current. .. this still has 6 versions from deprecation to removal
+19:59:20 <thaumos> we have it documented that 3 versions things get removed, right?
+19:59:25 <abadger1999> 4
+19:59:28 <bcoca> 4
+19:59:36 <thaumos> ok
+19:59:41 <thaumos> where in docs is that?
+20:00:36 <thaumos> Basically, if we have it documented we should remove the code.  We can't keep hobbling along.
+20:01:30 <thaumos> I am +1 to removing this because everyone has known about the deprecation for a long long time.
+20:01:35 <abadger1999> thaumos: as always, it will come down to definitions... what is the definition of "deprecated"... is enough that we put it in the changelog?  Or do we need to have using the feature emit a deprecation warning at runtime.
+20:01:54 <thaumos> For the userbase, there needs to be a msg.
+20:02:17 <abadger1999> if that's so, then... this has not yet been deprecated.
+20:02:20 <thaumos> We can't expect all users to look at the changelog.  In the case of this specific use case, we have had a msg displayed for quite some time.
+20:02:38 <abadger1999> ansible -a 'whoami' localhost --sudo does not emit a deprecation message.
+20:02:54 <sivel> yeah, it is only when using the options in a play that you get a warning
+20:02:59 <thaumos> ^^
+20:03:07 <sivel> so we didn't necessarily say that the cli flags were deprecated
+20:03:10 <jhawkesworth> I thought it was two versions - it mentions versions here: https://docs.ansible.com/ansible/porting_guide_2.0.html
+20:03:18 <sivel> just the use of sudo/su in a play
+20:03:35 <thaumos> ansible command is not something we have to worry about, because 95% of usage is via ansible-playbook
+20:03:40 <abadger1999> jtanner: we need to update that/... I though there was a ansible/proposal with the update to 4 versions but I don't see it .
+20:03:46 <abadger1999> sorry jtanner.. jhawkesworth^
+20:03:56 <bcoca> jhawkesworth: we changed it in meeting a couple of months back, seems we forgot to update docs
+20:04:09 <abadger1999> We discussed it in one of htese meetings.  debated whether to use 3 or 4 versions and settled on 4 as the new standard.
+20:04:33 <thaumos> #action Thaumos to sync with jmckerr on this.
+20:04:34 <jhawkesworth> oh ok, 4 versions seems most generous given current release cycle.. unless that's changed since I last looked
+20:04:35 <abadger1999> thaumos: still have to worry
+20:04:43 <thaumos> I know.
+20:04:52 <thaumos> Will make this a product decision.
+20:04:52 <abadger1999> thaumos: ansible-playbook localhost play.yml --sudo also doesn't emit a warning msg
+20:04:57 <abadger1999> k
+20:05:45 <thaumos> #info Will make ansible/ansible#23971 a product decision
+20:05:47 * jhawkesworth doesn't use sudo/become much, probably not going to qualify as typical user regarding this
+20:06:28 <thaumos> #info ansible/ansible#20717 as product decision
+20:06:38 <thaumos> Okay, cool.
+20:06:41 <bcoca> https://gist.github.com/bcoca/2e70c487c6ff570b2e8e1821e69c74b4 <= new code
+20:06:56 <thaumos> any other quick things, if not I will #endmeeting
+20:07:16 <thaumos> #endmeeting

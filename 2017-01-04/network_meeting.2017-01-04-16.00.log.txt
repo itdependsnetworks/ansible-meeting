@@ -1,0 +1,79 @@
+16:00:36 <gundalow> #startmeeting Network Meeting
+16:00:36 <zodbot> Meeting started Wed Jan  4 16:00:36 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:00:36 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:00:36 <zodbot> The meeting name has been set to 'network_meeting'
+16:01:21 <gundalow> #info Agenda as always https://github.com/ansible/community/issues/110
+16:01:37 <gundalow> Hope you all have a good Christmas/New years
+16:02:15 <gundalow> #chair Qalthos
+16:02:15 <zodbot> Current chairs: Qalthos gundalow
+16:03:41 <gundalow> allanice001: How you getting on, anything you'd like to discuss?
+16:03:49 <gundalow> You were looking at NSoT?
+16:03:50 <allanice001> all good
+16:04:03 <allanice001> got one minor issue that may be of interest
+16:04:39 <allanice001> re - child modules (like pysnot pyjuniper etc etc)
+16:04:49 <gundalow> #topic child modules (like pysnot pyjuniper etc etc)
+16:05:00 <allanice001> gee thanks :D
+16:05:36 <allanice001> one thing i noticed is these modules grow idependantly of either their parent projects and ansible
+16:06:19 <allanice001> so, compatibilty testing becomes a bit of a headache when versionioning dependancies / contrib modules
+16:07:00 <allanice001> any ideas on how to tame it down ? (meta data with dependancy tracking is what i thought of)
+16:07:46 <gundalow> Would really need Peter's (privateip's) ideas on that one
+16:07:57 <bcoca> that is one of the 'future' plans for metadata
+16:09:07 <gundalow> Would one use case be adding in meta data to say "This module requires/has been tested with pyLibFoo versions 1.2-2.1
+16:09:10 <gundalow> "
+16:09:12 <allanice001> in the example of my PR (which i’m still working on) https://github.com/ansible/ansible/blob/devel/contrib/inventory/nsot.py
+16:10:15 <allanice001> yeah
+16:10:33 <allanice001> so the latest pynsot breaks that code in any case
+16:10:42 <allanice001> in the example above
+16:11:27 <gundalow> bcoca: What do you think would be the best way to move forward with this?
+16:11:43 <gundalow> Feels like we are at the step before https://github.com/ansible/proposals/issues
+16:13:15 <bcoca> gundalow: it was in original metadata proposals, but we tabled it for 'future' and decided to keep a simple intial implementation
+16:14:02 <gundalow> ah, OK
+16:14:25 <gundalow> allanice001: Maybe poke us in a month?
+16:14:41 <allanice001> sure
+16:14:52 <bcoca> just to not get bogged down on 'all possiblities' and address the immediate issues on repo merge, but spec is open specifically for requriements and other dependencies (os/etc)
+16:14:58 <gundalow> aye, +!
+16:15:20 <gundalow> aye, +1, to why we just did the small bit initially
+16:15:22 <allanice001> was just something i noticed, and, it’s probably only contained to contrib for now
+16:16:00 <gundalow> allanice001: Out of interest, which network platforms are you using Ansible for?
+16:16:07 <gundalow> #topic Open Floor
+16:16:14 <allanice001> juniper, cisco and fgt
+16:16:19 <allanice001> (fortigate)
+16:17:19 <gundalow> fgt, not seen that before, where are those modules?
+16:17:41 <allanice001> one sec, gonna hunt it down quickly
+16:18:22 <gundalow> Just interested to know what people are using, not a massive issue
+16:18:42 <allanice001> https://pypi.python.org/pypi/pyfg/
+16:19:00 <allanice001> and napalm also has decent fgt support
+16:19:27 <gundalow> ah, so not Ansible, OK
+16:19:43 <allanice001> not native ansinble, no
+16:20:01 <gundalow> Cool, thanks
+16:20:05 <gundalow> Anything else?
+16:20:34 <allanice001> not from my side (yet)
+16:20:39 <gundalow> :)
+16:20:44 <gundalow> Thanks for your time
+16:20:49 <allanice001> no sweat
+16:21:19 <gundalow> We will be getting some extra people in the networking team starting soon, so more stuff
+16:21:45 <allanice001> btw, hows yout vyos stuff going?
+16:21:51 <gundalow> and at that point I'm thinking of getting a bit more activity in these meetings, and maybe get more of the networktocode people in
+16:22:05 <gundalow> #topic Ansible CI testing with VyOS
+16:22:13 <gundalow> Good question!
+16:23:18 <gundalow> I've got VyOS machine running in AWS that can be correctly powered down and restarted (so it can be cloned) running
+16:24:10 <gundalow> Just about to test getting the CI Test SSH keys loaded in via AWS' UserData interface
+16:24:56 <gundalow> Once that's proved to be working I'll need to
+16:24:59 <gundalow> 1) Template it
+16:25:14 <gundalow> 2) Update CI script to spin up a VYOS machine
+16:25:41 <allanice001> take a look at the api / cli commands
+16:25:42 <gundalow> 3) modify ansible-test to know about network test, this will let you do ansible-test integration net/vyos/*
+16:26:02 <allanice001> if you have the ami-id it becomes easier
+16:26:04 <allanice001> http://docs.aws.amazon.com/cli/latest/reference/ec2/run-instances.html
+16:26:36 <gundalow> We already have the ability to spin up machines in AWS via Shippable
+16:26:45 <allanice001> ahh, ok
+16:27:26 <gundalow> https://github.com/ansible/ansible/blob/devel/shippable.yml#L10
+16:28:27 <gundalow> Most of that is in AWS
+16:29:43 <allanice001> #suggest at a quick glance, you may need at least 2 more macs, latest osx is 10.12, and some may be running 10.10
+16:31:53 <allanice001> but really decent testing infra from what i can see
+16:32:12 <gundalow> aye, mattclay has done 90%+ of all that, it's really good
+16:32:26 <gundalow> cool, gona call it and keep on hitting VyOS
+16:32:29 <gundalow> well, after dinner
+16:32:36 <allanice001> cool
+16:32:41 <gundalow> chat soon
+16:32:43 <gundalow> #endmeeting

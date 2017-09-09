@@ -1,0 +1,175 @@
+15:59:21 <funzo> #startmeeting Network Working Group
+15:59:21 <zodbot> Meeting started Wed Jul 19 15:59:21 2017 UTC.  The chair is funzo. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:59:21 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:59:21 <zodbot> The meeting name has been set to 'network_working_group'
+15:59:36 <caphrim007> o/
+15:59:40 <newswangerd> hello
+16:00:28 <funzo> #chair caphrim007 newswangerd
+16:00:28 <zodbot> Current chairs: caphrim007 funzo newswangerd
+16:00:31 <rcarrillocruz> o/
+16:00:39 <funzo> #chair rcarrillocruz
+16:00:39 <zodbot> Current chairs: caphrim007 funzo newswangerd rcarrillocruz
+16:00:43 <trishnag> hi
+16:00:49 <funzo> #chair trishnag
+16:00:50 <zodbot> Current chairs: caphrim007 funzo newswangerd rcarrillocruz trishnag
+16:00:50 * ganeshrn waves
+16:01:01 <funzo> #chair ganeshrn
+16:01:01 <zodbot> Current chairs: caphrim007 funzo ganeshrn newswangerd rcarrillocruz trishnag
+16:01:33 <funzo> We'll get started in just a couple min
+16:01:38 <funzo> #link https://github.com/ansible/community/issues/110
+16:01:49 * Qalthos 🌊🌊
+16:02:20 <funzo> #chair Qalthos jmighion
+16:02:20 <zodbot> Current chairs: Qalthos caphrim007 funzo ganeshrn jmighion newswangerd rcarrillocruz trishnag
+16:02:47 <funzo> We're going to start the meeting with comment #23 on the agenda
+16:03:29 <funzo> #topic #26842 "Adds refactored bigip_monitor_tcp"
+16:03:38 <caphrim007> yo
+16:03:51 <funzo> #link https://github.com/ansible/ansible/pull/26842
+16:03:58 <funzo> hi caphrim007
+16:04:34 <caphrim007> trusty networking
+16:04:38 <caphrim007> fml
+16:05:00 <funzo> :)
+16:05:08 <caphrim007> that PR is just the last part of the general tcp monitor changes
+16:05:10 <funzo> ok, did you want to discuss this PR with the group?
+16:05:25 <caphrim007> nah, it's ready to go. it just needs a merge
+16:05:29 <funzo> there are some sanity checks to fix up
+16:05:36 <caphrim007> still?
+16:05:51 <funzo> i might be reading it wrong
+16:05:52 <caphrim007> looks green at the bottom
+16:05:58 <funzo> oh it says all checks have passed
+16:06:06 <funzo> you're right
+16:06:29 <funzo> typically we have someone help out with a review
+16:06:46 <funzo> for your previous PRs have you been self reviewing and merging?
+16:06:54 <caphrim007> funzo: i work at f5, and we own all the f5 modules
+16:07:02 <caphrim007> gundalow usually merges them
+16:07:07 <funzo> caphrim007: understood, got it
+16:07:37 <funzo> merged :)
+16:07:53 <caphrim007> roger that
+16:07:56 <funzo> #topic #/27035 "Allow to run tests for f5.bigip_monitor_tcp_half_open when no f5-sdk"
+16:08:20 <caphrim007> that just came up this morning
+16:08:28 <funzo> looks like you've already reviewed it for fred
+16:08:29 <caphrim007> i made that fix in the aforementioned tcp pr you just merged
+16:08:31 <akasurde> o/
+16:08:37 <funzo> #chair akasurde
+16:08:37 <zodbot> Current chairs: Qalthos akasurde caphrim007 funzo ganeshrn jmighion newswangerd rcarrillocruz trishnag
+16:08:43 <funzo> cool
+16:08:50 <caphrim007> yeah, thanks fred, wherever you are, for catching that
+16:08:59 <funzo> caphrim007: is his PR still applicable?
+16:09:00 <caphrim007> the shippable tests dont catch it
+16:09:07 <caphrim007> fred's PR is
+16:09:12 <caphrim007> it fixes _echo and _half_open
+16:09:15 <funzo> kk
+16:09:21 <funzo> i'll merge
+16:10:04 <Salman> Hi
+16:10:09 <funzo> o/
+16:10:13 <funzo> #chair Salman
+16:10:13 <zodbot> Current chairs: Qalthos Salman akasurde caphrim007 funzo ganeshrn jmighion newswangerd rcarrillocruz trishnag
+16:10:17 <funzo> dag: are you around?
+16:10:38 <FrederikSuijs> Hey, I also want a chair :) < Tired of standing
+16:10:42 <funzo> There is a suggestion on the agenda to add technology domains
+16:10:54 <funzo> #chair FrederikSuijs
+16:10:54 <zodbot> Current chairs: FrederikSuijs Qalthos Salman akasurde caphrim007 funzo ganeshrn jmighion newswangerd rcarrillocruz trishnag
+16:10:57 <funzo> my pleasure
+16:11:38 <funzo> caphrim007: did you want to discuss https://github.com/F5Networks/f5-ansible/issues/281 ?
+16:12:02 <caphrim007> umm
+16:12:13 <funzo> just saw it as a link in the agenda
+16:12:20 <Salman> Please do take some time out to discuss https://github.com/ansible/ansible/issues/26577 i
+16:12:21 <caphrim007> is there?
+16:12:38 <funzo> it was probably just referenced somewhere else
+16:12:40 <funzo> we can move on
+16:12:56 <caphrim007> ahh yeah it was just mentioned in that pr
+16:13:00 <caphrim007> it's not ready yet in any event
+16:13:01 <funzo> Salman: roger that, hang on to it and we'll come back to it
+16:13:01 <caphrim007> 2.5
+16:13:25 <funzo> FrederikSuijs: you have added an agenda item
+16:13:45 <FrederikSuijs> Yes, no really sure if this was the right format
+16:13:56 <funzo> #topic ios command prompt for confirmation
+16:14:34 <funzo> FrederikSuijs: it's all good
+16:14:54 <funzo> rcarrillocruz: did you catch FrederikSuijs' question on the agenda?
+16:15:04 <Qalthos> there was some talk of ios confirmations before, I think, but I can't remember what became of it
+16:15:12 <funzo> rcarrillocruz: do you recall?
+16:15:20 <funzo> #link https://github.com/ansible/community/issues/110
+16:15:24 <funzo> last comment ^
+16:15:25 <FrederikSuijs> Thanks, it looks like some people have encountered the same issues, but I couldn't find anything recent
+16:15:33 <rcarrillocruz> FrederikSuijs: that link from groups google seems broken
+16:15:36 <rcarrillocruz> mind pasting here?
+16:16:01 <trishnag> rcarrillocruz: just updated the comment.
+16:16:35 <FrederikSuijs> oops, I might have made a typo in the link
+16:16:52 <rcarrillocruz> interesting
+16:16:52 <FrederikSuijs> thanks trishnag
+16:17:02 <rcarrillocruz> mind opening a GH issue with a playbook to reproduce
+16:17:04 <rcarrillocruz> ?
+16:17:08 <funzo> FrederikSuijs: so does peter's reply help you?
+16:17:22 <rcarrillocruz> cos peter suggests there's a way to fix it, but i have to admit i've never used that response option
+16:17:29 <FrederikSuijs> not really, is this documented ?
+16:17:49 <rcarrillocruz> not sure
+16:17:49 <FrederikSuijs> or some kind of hidden feature? I did try it, but couldn't get it working
+16:17:51 <rcarrillocruz> let's do this
+16:17:53 <rcarrillocruz> open an issue
+16:17:58 <rcarrillocruz> with a playbook to reproduce
+16:18:09 <rcarrillocruz> if the feature is there, and works, doc bug, i'll fix it
+16:18:22 <rcarrillocruz> if it's a code bug, i'll fix and comment in the GH issue
+16:18:37 <FrederikSuijs> ok, sounds like a plan!
+16:18:43 <funzo> #action FrederikSuijs to open issue with playbook example to reproduce
+16:19:00 <funzo> ok, next up...
+16:19:21 <funzo> Salman: you wanted to go over an issue?
+16:19:34 <Salman> Yes
+16:19:39 <Salman> https://github.com/ansible/ansible/issues/26577
+16:19:44 <funzo> #topic 26577 https://github.com/ansible/ansible/issues/26577
+16:19:54 <rcarrillocruz> i have issues to setup a config to repro the problem
+16:20:06 <rcarrillocruz> it seems the issue just appears when advertised routes are more than zero
+16:20:16 <Salman> Yes
+16:20:26 <rcarrillocruz> Salman: can you provide an example to set up BGP in one or two routers
+16:20:32 <rcarrillocruz> so the advertised-routes is more than 1
+16:20:43 <rcarrillocruz> then once i have that set up i can repro the issue at ansible module level
+16:20:52 <rcarrillocruz> i suspect it may be some terminal plugin regex problem
+16:21:07 <rcarrillocruz> the fact rc is 0 or 1 depending on output leads me to think that
+16:21:16 <Salman> In the same thread I have given output of what exactly the bjp output looks like
+16:21:32 <Salman> bgp*
+16:21:46 <rcarrillocruz> yeah, i see that, but i need a setup in the lab to get to that output
+16:21:58 <Salman> I can get details as in how to set it up in lab
+16:22:05 <rcarrillocruz> i.e. setup bgp, with networks correct so they shouw up as advertised routed
+16:22:14 <Salman> Where shud I update that? In the agenda link?
+16:22:22 <rcarrillocruz> k, thx, please paste that in the GH issue and then i'll move forward
+16:22:27 <rcarrillocruz> Salman: the GH issue
+16:22:37 <Salman> Got it.. Will do in few hrs
+16:22:40 <Salman> Thanks
+16:22:40 <rcarrillocruz> thx
+16:22:45 <ganeshrn> rcarrillocruz: yup this seems a regex issue in terminal
+16:23:19 <funzo> #action Salman to update GH issue with bgp setup
+16:23:32 <funzo> Those are all the agenda items
+16:23:35 <rcarrillocruz> ganeshrn: yah
+16:23:40 <ganeshrn> https://github.com/ansible/ansible/blob/devel/lib/ansible/plugins/terminal/ios.py#L44
+16:23:57 <funzo> #topic open floor
+16:26:12 <mikewiebe> This is not exactly network related but roughly how long do we have before 2.4 ships?
+16:26:13 <Salman> I just have to thanks Pete for his session today. It was great
+16:26:50 <funzo> mikewiebe: uncommitted timing of middle of sept given how everything comes together
+16:27:28 <funzo> the more feedback we get on the RC releases and reported issues earlier than later will help us get it out more quickly
+16:27:54 <funzo> mikewiebe: did I miss anything you put on the agenda for today?
+16:28:06 <caphrim007> funzo: are new module commits frozen atm though?
+16:28:17 <caphrim007> the previous date for that was the 15th
+16:28:22 <funzo> yes
+16:28:24 <caphrim007> k
+16:28:28 <mikewiebe> funzo: Thanks for the info
+16:28:33 <funzo> you betcha
+16:28:55 <mikewiebe> funzo: No you did not miss anything from the agenda.  Just thought to ask now :)
+16:29:06 <funzo> mikewiebe: ok, great
+16:29:35 <funzo> I'll hang out here for a few minutes in case we have folks come up with an item for the open floor topic
+16:30:37 <jmighion> funzo: https://github.com/ansible/ansible/pull/26769
+16:30:49 <jmighion> it's functional, just battling shippable at the moment. needs a reviewer
+16:32:15 <funzo> jmighion: got anyone one in mind for a reviewer?
+16:32:16 <jmighion> side question : is there a better way to restart/rerun a shippable build than closing and reopening a PR?
+16:32:30 <funzo> not unless you have a shippable login
+16:32:51 <jmighion> funzo: not really. ganeshrn reviewed my last one, but it doesnt really matter to me who reviews it
+16:33:06 <funzo> ganeshrn: you up for reviewing it?
+16:33:09 <ganeshrn> i can review this
+16:33:32 <funzo> #action ganeshrn to review https://github.com/ansible/ansible/pull/26769
+16:33:52 <jmighion> thanks
+16:33:52 <funzo> just added you as reviewer on the PR
+16:33:54 <rcarrillocruz> jmighion: there is , but you shippable account, we have a 'rebuild' button
+16:34:15 <rcarrillocruz> you *need* i meant
+16:34:28 <jmighion> oh yeah. i'd need merge permissions to ansible/ansible i think
+16:34:34 <jmighion> got a shippable account
+16:35:32 <rcarrillocruz> ah k
+16:37:23 <funzo> ok, last call for open floor items
+16:37:51 <funzo> Thank you everybody for your time today!
+16:38:16 <funzo> #endmeeting

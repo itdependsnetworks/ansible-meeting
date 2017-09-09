@@ -1,0 +1,339 @@
+19:00:01 <gundalow> #startmeeting Ansible Core Meeting
+19:00:01 <zodbot> Meeting started Tue Feb 28 19:00:01 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:00:01 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:00:01 <zodbot> The meeting name has been set to 'ansible_core_meeting'
+19:00:14 * thaumos waves
+19:00:34 <funzo> o/
+19:00:51 <gundalow> #chair abadger1999 alikins bcoca funzo jimi|ansible jtanner mattclay nitzmahone Qalthos ryansb shertel thaumos
+19:00:51 <zodbot> Current chairs: Qalthos abadger1999 alikins bcoca funzo gundalow jimi|ansible jtanner mattclay nitzmahone ryansb shertel thaumos
+19:01:01 <jtanner> hi
+19:01:02 <abadger1999> Greetings
+19:01:05 <nitzmahone> yo
+19:01:07 <shertel> hi
+19:01:26 <gundalow> #info Agenda https://github.com/ansible/community/issues/150
+19:01:38 <gundalow> #topic Windows Working Group
+19:01:43 <gundalow> #info IT'S ALIVE
+19:01:57 <gundalow> #info Windows Agenda https://github.com/ansible/community/issues/153
+19:02:13 <gundalow> #info Windows Meeting Times https://github.com/ansible/community/blob/master/MEETINGS.md
+19:02:21 <gundalow> Join in the fun!
+19:02:29 <gundalow> nitzmahone: Anything else to add?
+19:02:36 <ryansb> hi team
+19:02:40 <nitzmahone> Just that if there's enough interest, we could start one this week
+19:02:46 <nitzmahone> (or Monday next week)
+19:03:10 <nitzmahone> I've got some travel for an Ansible event next week, but I know dag and maybe some others wanted to do one adhoc before 2.3 RC
+19:03:48 <gundalow> ACK
+19:03:55 <gundalow> did it get announced on the mailing lisst?
+19:04:08 <nitzmahone> No, probably should be...
+19:04:11 * nitzmahone will do that
+19:04:27 <gundalow> #action nitzmahone to announce Windows Working Group on both mailing lists
+19:04:30 <gundalow> ace
+19:05:45 <gundalow> #topic Discuss extending the module "shipit" workflow to non-modules
+19:05:57 <gundalow> abadger1999: bcoca ryansb what's next with this?
+19:06:19 <bcoca> paused as it requires metadata which we are currrently rethinking
+19:06:40 <gundalow> #info paused as it requires metadata which we are currrently rethinking
+19:06:41 <gundalow> ACK
+19:07:19 <nitzmahone> gundalow: TBC, this is non-module *plugins*, not all non-module code, yeah?
+19:07:40 <gundalow> Discuss extending the module "shipit" workflow to non-modules, such as:
+19:07:40 <gundalow> lib/ansible/plugins
+19:07:40 <gundalow> lib/ansible/module_utils
+19:07:41 <gundalow> contrib/inventory
+19:07:54 <gundalow> Is what https://github.com/ansible/community/issues/150#issuecomment-277025899 says
+19:08:09 <bcoca> ^ but not the base classes in lib/asnible/plugins those are always core
+19:08:19 <nitzmahone> cool, just wanted to make sure we weren't talking about automerging core engine code
+19:08:31 <gundalow> :)
+19:08:35 * nitzmahone pulse drops
+19:08:36 <bcoca> and in 2.4 contrib/inventory will be phased out in favor of lib/ansible/plugins/inventory
+19:08:50 <bcoca> nitzmahone: no, that is direct merge, not automerge ...
+19:09:14 <bcoca> cat /dev/urandom >> /bin/asnible && git push
+19:09:20 <nitzmahone> :P
+19:09:38 <gundalow> OK, anything else on that topic?
+19:12:00 <thaumos> Guess not?
+19:12:02 <gundalow> ryansb: Anything more to discuss on proposal 14 Module Rename?
+19:12:32 <ryansb> Proposal has been updated: additional feedback either in the form of issue comments or in-meeting comments
+19:12:49 <gundalow> #topic ansible/proposals#14 Proposal: Module Rename Lifecycle
+19:13:00 <gundalow> #action everyone Please review proposal and add comments
+19:13:43 <gundalow> #topic discussion is in order on how to tackle the "modules are used for adding, changing, removing and giving information about an object".
+19:13:52 <gundalow> #link https://github.com/ansible/community/issues/150#issuecomment-282733423
+19:14:15 <gundalow> #info Discussion triggered by: ansible/ansible#20399 (review)
+19:14:42 <bcoca> state=current
+19:15:00 <bcoca> kill info/list/query
+19:15:18 <bcoca> if we really dont want _facts modules
+19:15:27 <gundalow> dag: you around?
+19:16:16 <gundalow> What do others think?
+19:17:37 <abadger1999> I don;t care.  pick one and let's stick to it.
+19:17:52 <abadger1999> *pick one strategy
+19:17:56 <sivel> I honestly don't think _facts modules are the right way to go, since often you aren't getting facts for the inventory_hostname in a fair number of cases
+19:18:30 <bcoca> sivel: agreed, _facts make sense when they are actually 'host facts' but other info does not fit
+19:18:35 <sivel> state=current doesn't sound very explicit to me
+19:18:56 <bcoca> ^ implies 'no change'
+19:19:06 <bcoca> and should return 'current state'
+19:19:08 <sivel> Yeah, I could just see it as being misinterpreted frequently
+19:19:23 <bcoca> list <- info is not always a list
+19:19:23 <sivel> whereas `query` is a little more explicit in what is happening
+19:19:26 <bcoca> query is not a state
+19:19:34 <bcoca> info  aslo not a state
+19:19:35 <sivel> it's not, it's an action
+19:19:57 <bcoca> so if we are keeping state= ... current is best i could come up with
+19:20:12 <sivel> I don't have a good solution, and I'm not sure I care.  current does sound best if we keep it with state
+19:20:21 <sivel> maybe we should separate that though?
+19:21:04 <sivel> hrm, I mean I want to query the state, it's not a state, but depicts what you want to do with the state
+19:21:08 <bcoca> when using present/absent you imply action to 'make it so'
+19:21:09 <sivel> just throwing ideas out
+19:21:10 <abadger1999> yeah cuold do a separate param and mutually_exclusive
+19:21:42 <bcoca> hard to find declaritive way to say 'get the info'
+19:21:51 <sivel> query: true
+19:22:24 <sivel> that is pretty declarative
+19:22:27 <bcoca> will you ever use query: false?
+19:22:42 <sivel> the default would be false I suppose
+19:22:54 <sivel> if you haven't noticed, I like booleans :)
+19:22:57 <bcoca> default can be none
+19:23:21 <bcoca> also by making it diff option, it brings questions about state
+19:23:30 <bcoca> state MUSt allow none now
+19:23:47 <bcoca> most plugins assume state is always set or defaults to present
+19:24:51 <sivel> honestly, I wouldn't be too bothered to just add a state of query
+19:25:08 <sivel> it's not really a state, but everyone understands the intent
+19:25:39 <abadger1999> <nod>
+19:26:10 <sivel> I mean, state is really about describing intent
+19:26:43 <bcoca> still, i hate the imperative nature
+19:26:51 <ryansb> I'd much prefer facts modules
+19:27:12 <sivel> the problem with _facts is that they imply the use of ansible_facts
+19:27:20 <sivel> and I don't think that fits well everywhere
+19:27:23 <bcoca> which many do
+19:27:40 <bcoca> and those should stay, but we need either _info or something similar
+19:27:45 <bcoca> or actually overload state=
+19:27:57 <sivel> and I think creating a bunch of _facts modules isn't time best spent.  A lot of code added, for what may have been 10 lines of code in the "parent" module
+19:27:57 <bcoca> right now we have it 'multiple ways', we just need a standard one
+19:29:55 <ryansb> sivel: but it can also bloat the parameters
+19:30:08 <sivel> Not sure we have enough feedback here to come to a concensus
+19:30:25 <ryansb> and adds more codepaths. I'd prefer more simpler code to less, more complicated modules
+19:30:48 <bcoca> ryansb:  so overloading state or _info modules?
+19:31:05 <sivel> sounds like ryansb is in favor of _info/_facts
+19:31:57 <bcoca> we already have _facts and i dont think we need to remove (some might) but we want to restrict those to 'actual host facts and use ansible_facts'
+19:32:13 <sivel> As mentioned, I don't know that I care enough really. I'm thinking about ease of use, and effort currently
+19:32:17 <bcoca> we have 'general info' that is not a host fact, to deal with
+19:32:41 <ryansb> Yeah, I'd rather a separate module with arguably duplicated code. I'm fine with _facts as a name, but can see the arguments for _info so +0 on changing facts->info
+19:32:53 <bcoca> like 'list of ec2 security groups' , the fact would be 'security groups associated with host X'
+19:32:55 <mattclay> I like the idea of _info (when _facts isn't appropriate), but I'm concerned about potentially having to duplicate a lot of code between a module and the _info/_facts module.
+19:32:58 <sivel> I feel like ease of use is better having it with the "parent", and effort also brings us back to keeping it in 1.  But I do see ryansbs point
+19:32:58 <ryansb> yeah, lots of non-host stuff (cloud modules, other services, etc)
+19:33:07 <sivel> mattclay++
+19:33:20 <bcoca> module_utils/dupe_code.py
+19:33:39 <sivel> well you end up with a whole bunch of docs and such, that aren't really needed also
+19:33:44 <bcoca> some of these modules are better as lookup plugins ...
+19:33:50 <sivel> all the boilerplate grows the code base, somewhat unnecessarily in this case
+19:33:52 <bcoca> lookup('ec2_security_groups'
+19:35:15 <ryansb> I could see the argumenf for lookups instead of facts modules
+19:35:18 <ryansb> *argument
+19:35:19 <sivel> overall I think I am +0 on all of the options. Except that I am -1 on calling them _facts where not appropriate
+19:35:36 <bcoca> agreed on 'stricter _facts criteria'
+19:35:45 <sivel> lookups just don't meet the need of give me info about this installed package
+19:35:53 <alikins> first thought is a GET/READ 'mode' for modules to return info (ala check mode). But also like _facts modules.  Would like to see a single module be able to operate as read-write state setter and as a read only _facts provider
+19:36:01 <bcoca> sivel: installed packages are facts
+19:36:18 <sivel> bcoca: yeah, I am saying a lookup doesn't work there
+19:36:41 <bcoca> sivel: but we have solution for that apt_facts or package_facts , as those are clearly 'host related'
+19:36:47 <sivel> that was all, but yes, package_facts would be acceptable
+19:36:52 <bcoca> sivel:  the problem is for info that is not host related
+19:36:56 <sivel> in fact, tower ships with a `scan_packages`
+19:37:15 <bcoca> ^ i have no control on their naming
+19:37:29 <sivel> no, I don't care about the naming, just talking they have code that can do it already :)
+19:38:05 <ryansb> I feel like adding a mode would be kinda bloaty, and more ambiguous than the split between modules
+19:38:09 <bcoca> sivel: not what we are discussing
+19:38:22 <sivel> do we want to vote?  _facts for host related, _info for non host related
+19:38:30 <sivel> bcoca: hey, I like to go off topic
+19:38:42 <bcoca> but the beach sand is coarse!
+19:39:16 <abadger1999> a lookup of ec2_securit_groups is not as flexible for different environments as a module..
+19:39:33 <abadger1999> environment where only certain boxes are allowed to connect to the outside world.
+19:39:55 <abadger1999> Or an environment where only certain boxes have the libraries or services that you need to run the code installed.
+19:40:09 <alikins> like _info, mainly because _info being separate is an easier path to exposing it as its own object tree.  And that starts to look a lot like a non-host inventory.
+19:41:07 <thaumos> @abadger1999 you could argue in that use case a local action on control node and register it for use later.
+19:41:20 <sivel> so?  lookup where it makes sense, _info for non host facts, _facts for things that are effectively host facts?
+19:41:21 <mattclay> Do we really need to have only one way to provide info? Perhaps having one way for in-module and the other being _info (again, when _facts isn't appropriate).
+19:41:49 <bcoca> mattclay: we currently have 5 or 6, we want to have 'official way'
+19:41:53 <bcoca> cause it keeps diverging
+19:42:15 <bcoca> state=query|list|unspecified or _facts (that dont return facts)
+19:42:18 <abadger1999> Kinda guessing on what all the topics we're discussing at this point.... +1 on separation of _facts and _info as concepts (I don;t care about implementation), -1 to moving _facts/_info into lookups, +0 on the proposals of whether _facts/_info should be in separate modules or the same modules.
+19:42:26 <sivel> I don't think 1 way is the "solution" though, I am seeing 3 things that make sense at this point
+19:42:48 <sivel> lookups make sense some places, _facts in some, _info in others
+19:42:49 <bcoca> abadger1999: s/moving/adding as lookups/ <- lookups do make sense as they are designed to query external data
+19:42:53 <sivel> _info shouldn't return ansible_facts
+19:43:12 <abadger1999> bcoca: but you can do it from a module as well with more flexibility.
+19:43:42 <abadger1999> if we add _info concept then it becomes a designated way to query external data.
+19:43:59 <bcoca> soo we are leaning for _info?
+19:44:12 <ryansb> [has 4 standards] ok let's propose a new standare
+19:44:13 <bcoca> abadger1999: they are complimentary
+19:44:43 <bcoca> ryansb: https://xkcd.com/927/
+19:44:44 <abadger1999> we could have the ansible_info return value in the same way as we have ansible_facts as a return value as well if we want to allow state changing modules to return information.
+19:45:04 <bcoca> abadger1999: nah, jsut return data and register:
+19:45:19 <bcoca> last thing we need is more namespacing issues from modules
+19:45:26 <abadger1999> hehe.
+19:45:45 <bcoca> unless you want jimi|ansible to go bald
+19:45:46 <abadger1999> (We could always namespace info right off the bat.)
+19:46:00 <bcoca> abadger1999: or just use existing register which already works?
+19:46:00 <abadger1999> and later deprecate the non-namespaced facts.
+19:46:09 <abadger1999> idk
+19:46:14 <alikins> _info could be ansible_facts if non-hosts existed in inventory or host_vars (or its equilivent)
+19:46:15 <abadger1999> throwing it out there.
+19:46:16 <bcoca> i have PR for namespacing facts, that is diff issue
+19:46:42 <bcoca> just saying we have existing facility, no need to create yet another parallel one that ddoes same thing
+19:46:51 <abadger1999> Also note... we're over 30 minutes on this topic..
+19:46:56 <sivel> +1 _info+register
+19:47:17 <bcoca> we can table for now, think about it and decide in future meeting, not everything needs immediate decisions
+19:47:18 <abadger1999> Maybe we need someone to take an action to write up a proposal along with why they are not in favour of hte alternatives.
+19:47:36 <bcoca> +1 for dag writting up proposals
+19:47:40 <abadger1999> sivel: _info + register would work for me too.
+19:47:40 <sivel> haha
+19:47:57 <abadger1999> bcoca: heh --- then we'll have 6 standards ;-)
+19:48:13 <abadger1999> since dag hasn't been here to participate in this discussion.
+19:48:25 <bcoca> which is another reason to deffer decision making
+19:48:30 <abadger1999> true.
+19:48:33 <thaumos> let's table it for the moment.
+19:48:41 <bcoca> we are already screwed with N ways, lets try to find something that works for most
+19:48:46 <abadger1999> alright ... does anyone wish to take an action item on this?
+19:49:00 <abadger1999> If not, we'll simply table and get back to it next meeting (thursday)
+19:49:01 * jimi|ansible is already going bald
+19:49:02 <thaumos> is your propsed action to write a proposal?
+19:49:06 <abadger1999> yeah
+19:49:11 <jimi|ansible> if F/OSS doesn't do it, having twins will
+19:49:11 <abadger1999> someone to write a proposal
+19:49:14 <bcoca> jimi|ansible: im trying to save what is left!
+19:49:19 <gundalow> can someone #info and #action a few bits
+19:49:23 <sivel> writing a proposal should probably be done by someone who actually cares about this
+19:49:37 <bcoca> ^ [14:47] <bcoca> +1 for dag writting up proposals
+19:50:06 <thaumos> #action thaumos to write proposal for _facts, _info, lookup plugins
+19:50:22 <abadger1999> #info three separate ideas for modules returning data:
+19:50:23 <gundalow> Thanks
+19:50:42 <bcoca> so state= is off the table?
+19:50:50 <thaumos> nope, I'll have it in the proposal too
+19:50:53 <abadger1999> #info split between _facts (host-specific) and _info (host-agnostic... for instance, query for info from ec2)
+19:51:11 <bcoca> ^ it seems to be where most of us are leaning
+19:51:19 <thaumos> I am going to list all the options and as much discussion around it as  possible for context.
+19:51:25 <alikins> I guess question 0 would be 'what are the use cases?'
+19:51:41 <bcoca> alikins: ec2 security groups is one example ...
+19:51:48 <abadger1999> #info what to do about having a module return info (state=SOMEVALUE where we standardize SOMEVALUE) or query=True/False
+19:51:52 <bcoca> most 'cloud specific but not host speciric' info
+19:51:58 <bcoca> mysql_query modules ....
+19:52:13 <bcoca> *shudder*
+19:52:20 <abadger1999> #info whether to push more _info module type functionality into lookup plugins instead
+19:52:39 <bcoca> abadger1999: not an either/or thing
+19:53:07 <abadger1999> #info these can be each be decided upon separately
+19:53:50 <abadger1999> bcoca: yeah... but someone should explain why lookups are not just a subset (plus some sugar) for module functionality... I'm unclear on that.
+19:54:35 <bcoca> alternative, they are designed to query data, which makes them a natural fit, but they always execute on controller ... which might not have access to query endpoint (here module is better)
+19:54:55 <bcoca> more concise, people like lookups caue they are not 'extra task'
+19:55:09 <bcoca> ^ we keep getting asked for 'remote lookups' which ... are tasks ....
+19:56:13 <abadger1999> Sounds like... lookups are sugar so that's why they are desirable.
+19:56:32 <sivel> so, since we've taken a lot of time here, and are going to revist, should we move on?
+19:56:40 <abadger1999> yes please
+19:56:46 <thaumos> we'll revisit
+19:56:51 <thaumos> let's go!
+19:56:53 <bcoca> kindof, there is not anythign a lookup can do you canont do with a task
+19:57:17 <bcoca> ^ use in template (but registerd vars are a workaround)
+19:58:11 <sivel> who's drivign this thing? :)
+19:58:20 <abadger1999> gundalow: we're ready for next topic :-)
+19:58:27 <bcoca> sivel: dag
+19:58:33 <sivel> stahp it
+19:58:45 <sivel> I mean the meeting btw :)
+19:59:18 <bcoca> #topic metadata
+19:59:32 <bcoca> ^ seems we can all drive it (chairs?)
+19:59:37 <abadger1999> #info https://github.com/ansible/proposals/issues/54  New metadata proposal
+19:59:44 <sivel> yeah, I don't know that I am chaired
+19:59:55 <bcoca> im sitting on bench ...
+19:59:56 <abadger1999> This is a minor update to the 1.0 metadata.
+20:00:04 <sivel> I am still not a fan of curated, but like it better than committer
+20:00:12 <abadger1999> Would like to get it in before 2.3 so we don't have to bump version.
+20:00:22 <gundalow> all #chair'ed people can do stuff
+20:00:24 <bcoca> sivel: we also had 'supervised' ... been through many iterations
+20:00:34 <abadger1999> We may decide to revamp in a much bigger way for 2.4... still discussing that.
+20:01:00 <abadger1999> #chair sivel
+20:01:00 <zodbot> Current chairs: Qalthos abadger1999 alikins bcoca funzo gundalow jimi|ansible jtanner mattclay nitzmahone ryansb shertel sivel thaumos
+20:01:08 <sivel> also, what field is this for? can someone remind me
+20:01:09 <abadger1999> You now have the power
+20:01:15 <abadger1999> sivel: supported_by
+20:01:45 * bcoca has metaregrets
+20:01:47 <sivel> how is curated different than core?
+20:01:58 <abadger1999> it also renames the version field to metadata_version (that hasn't seemed controversial though)
+20:02:10 <sivel> what we have now is 'core', 'community', 'unmaintained', 'committer'
+20:02:19 <abadger1999> core means the core team will actively fix bugs and work on new features.
+20:02:27 <thaumos> #link http://docs.ansible.com/ansible/modules_support.html
+20:02:36 <abadger1999> curated means we'll review PRs from others but probably won't generate new code on our own.
+20:02:36 <sivel> we are talking about changing committer to curated
+20:02:37 <thaumos> shows what the three sections cover
+20:02:48 <bcoca> fyi core team == commiters
+20:02:48 <abadger1999> sivel: correct.  basically a rename
+20:03:54 <sivel> yeah, I suppose I am just somewhat confused about the namings
+20:04:04 <abadger1999> (the three change are rename commiter => curated; remove unmaintained as a value; rename version => metadata_version)
+20:04:31 <sivel> I guess overall I am +0
+20:05:00 <alikins> sivel: everyone is confused about the namings
+20:05:08 <sivel> core and community make since to me.  I'll let someone else say what to name the other
+20:05:26 <sivel> from what I gather, is that "curated" are community maintained, but require core review
+20:05:31 <thaumos> bingo
+20:05:47 <sivel> so I am wondering if `supported_by` is really just the wrong field
+20:05:55 <thaumos> we've gone through that too
+20:05:59 <sivel> but I suppose we don't need to get too crazy
+20:06:02 <abadger1999> <nod>  If we do a bigger revamp in 2.4; we'll try to split who does stuff from what they do... after a lot of discussion we decided we didn't want to attempt that for 2.3, though.
+20:06:19 <sivel> yeah I get it
+20:06:55 <sivel> anywho, I don't see any reason why not to just push this through
+20:07:01 <abadger1999> Cool.
+20:07:01 <bcoca> s/_by//
+20:07:07 <abadger1999> Votes?
+20:07:47 <thaumos> because @sivel, @abadger1999 wanted to get votes
+20:07:48 * gundalow has to head offline
+20:07:52 <thaumos> +1 to current
+20:08:08 <thaumos> proposal that is
+20:08:21 <sivel> Like I said, I am +0, I could deal with the way things are.  But I am also fine to just push it through.  Not sure it is really impacting
+20:08:38 <thaumos> it's causing confusion in multiple places.
+20:08:45 <sivel> as for as me being okay with ammending it, then +1
+20:08:58 <abadger1999> bcoca: I thought about that... but I'd rather just do that in the display.  Changing the key is a bigger deal than changing values (since a lot of code (example ansible-doc ) will handle value changes without update but would need modification for key changes.
+20:09:18 <abadger1999> If we do get around to revamping for 2.4 anyway... it will be changed then.
+20:09:23 <bcoca> doc does not deal with keys either
+20:09:23 <abadger1999> +1 from me
+20:09:33 <bcoca> +0
+20:09:37 <sivel> I don't think anyone is -1, so regardless of +1s I think we just do it :)
+20:09:43 <abadger1999> Cool.
+20:10:56 <abadger1999> #info Metadata 1.0 changes approved  +1: 2.5 +0 1.5, -1:0
+20:11:21 <abadger1999> #action abadger1999 to work on the dependencies to get metadata changed in time for 2.3
+20:11:29 <abadger1999> #topic Open Floor
+20:11:33 <sivel> I don't want to discuss it now, but if anyone is interested in a new proposal, go read over https://github.com/ansible/proposals/issues/55
+20:11:35 <sivel> "Category Action Plugins"
+20:11:55 <sivel> it can be added to the agenda some time later
+20:12:23 <bcoca> that requires a mapping for action=> modules, right now that is name based (with network modules adding directory into consideration)
+20:12:52 <sivel> yep, for now I propose just adding some comments to the proposal
+20:12:58 <sivel> just a thought I had
+20:13:00 <abadger1999> #info sivel interested in a new design for choosing action plugins that allows for better code reuse.  Will create a proposal here: https://github.com/ansible/proposals/issues/55
+20:13:17 <sivel> I did some diffs against action plugins, that the network action plugins are *very* similar
+20:13:31 <sivel> in some cases just a few lines different
+20:13:36 <sivel> a return instead of a raise
+20:14:05 <abadger1999> I had a thought at one point htat we should have a better selector for generic module other than "if there's not a specific action plugin then always use normal"
+20:14:07 <sivel> I have no real specific implementatio details
+20:14:12 <bcoca> that has alt fix by allowing inheritance, plugin loader mod to allow alternate class loading
+20:14:29 <abadger1999> I think that fits the same idea
+20:14:29 <sivel> at this point, it's just some ideas
+20:14:52 <abadger1999> <nod>
+20:15:02 <abadger1999> Okay, anyone else?
+20:15:16 <abadger1999> If not, I'll close in 60 seconds
+20:16:12 <grastogi> I wanted to get opinion on the https://github.com/ansible/ansible/pull/21927
+20:16:40 <grastogi> I would have liked to have same namespace between module and module_utils however had to change it for avoiding import error
+20:17:02 <abadger1999> #topic error when using the same name for module and module_utils https://github.com/ansible/ansible/pull/21927
+20:17:29 <abadger1999> grastogi: I couldn't see what would cause an error there.  Could you give more details?  (Liek the traceback?)
+20:17:43 <sivel> Is it due to the SDK also being called avi?
+20:17:52 <grastogi> yes
+20:18:00 <grastogi> both have same namespace avi
+20:18:17 <grastogi> module_utils.avi and avi.sdk
+20:18:18 <abadger1999> ohh I see... Inside of module_utils.avi if you do import avi then you get an error.
+20:18:41 <abadger1999> I don;t think that's solvable on python 2.4 or python 2.5.
+20:18:49 <grastogi> I couldn't figure out better way to handle it... just wondering if anyone had better solution
+20:18:52 <abadger1999> is this module already python-2.6+?
+20:19:01 <grastogi> yes, it is python 2.7+
+20:19:02 <sivel> yeah, I was thinking from __future__ import absolute_import
+20:19:07 <grastogi> that didn't work
+20:19:12 <grastogi> I tried it
+20:19:15 <abadger1999> What did it do then?
+20:19:27 <grastogi> kept giving import error exception
+20:19:37 <sivel> it could be that sys.path has '' in it?
+20:20:01 <grastogi> yes, but didn't seem it was a good idea to mess with sys.path
+20:20:11 <abadger1999> I can try to diagnose this with you in #ansible-devel after the meeting if you like.
+20:20:25 <grastogi> sure. that would be great.
+20:20:29 <abadger1999> Cool.
+20:20:34 <abadger1999> #topic Open Floor
+20:20:38 <abadger1999> Okay, anything else?
+20:20:44 <abadger1999> Or I'll close in 60s
+20:22:11 <abadger1999> #endmeeting

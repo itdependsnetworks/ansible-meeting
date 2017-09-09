@@ -1,0 +1,327 @@
+19:00:22 <gregdek> #startmeeting community-working-group
+19:00:22 <zodbot> Meeting started Wed Apr  6 19:00:22 2016 UTC.  The chair is gregdek. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:00:22 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:00:22 <zodbot> The meeting name has been set to 'community-working-group'
+19:00:24 <gundalow> oh
+19:00:27 * gundalow waves
+19:00:36 <gregdek> #chair rbergeron
+19:00:36 <zodbot> Current chairs: gregdek rbergeron
+19:00:44 <rbergeron> hi greg!
+19:00:48 * gregdek takes 5m for bio break
+19:00:56 <rbergeron> me too.
+19:01:14 <gregdek> jimi|ansible: will ping offline. Would be nice to solve that problem.
+19:01:17 <gregdek> We'll start back in 5.
+19:04:30 <jimi|ansible> k
+19:05:39 <gregdek> ok.
+19:05:50 <gregdek> #topic Agenda, as always: https://waffle.io/ansible/community
+19:06:11 <rbergeron> mmmm waffles
+19:06:42 <gregdek> #info Done in last week: Durham meetup, automation of triage
+19:07:04 <rbergeron> "continued automation of triage"
+19:07:12 <gregdek> #info Closed in last week: New module testing (we already have these guidelines, just need to clean them up a bit and promote them)
+19:07:32 <gregdek> IN progress:
+19:07:46 <gregdek> #topic Weekly new module report
+19:08:04 <gregdek> https://github.com/ansible/community/issues/51
+19:08:20 <gregdek> Sent out a manual version on Tuesday.
+19:08:34 <gregdek> Which served as the framework for the automated version.
+19:08:43 <gregdek> Most of the actual code is done; now need to get the formatting.
+19:08:48 <gundalow> lLooked good, hopefully it will get more people involved
+19:08:51 <gregdek> Should be complete in time for next week's report.
+19:09:06 <gregdek> It will change again with the new process we're proposing for new module review.
+19:09:11 <gregdek> But we'll get v1 done next week.
+19:09:23 <rbergeron> gregdek: I think i commented to you that maybe a thing we should do is make it clear somewhere (how to write a new module or whatever) that "the title of your PR can help you get people to review it, be clear!"
+19:09:42 <gregdek> Did you make than an issue or PR? :)
+19:09:46 <rbergeron> I will open an issue on that now -- i think it would help.
+19:09:51 <gregdek> ok.
+19:09:59 <rbergeron> I thought it went through the issue trigger in your brain.
+19:10:02 <gregdek> Any other questions/comments on this one?
+19:10:06 <rbergeron> i say things and they get automatically created.
+19:10:08 <rbergeron> no? :)
+19:10:13 <gregdek> Thank God No.
+19:10:29 <gundalow> It's moving along :)
+19:10:52 <gregdek> OK, next up:
+19:11:10 <gregdek> #topic Issue Triage Process
+19:11:12 <gregdek> https://github.com/ansible/community/issues/36
+19:11:25 <gregdek> An excellent doc by rbergeron -- nearly a full spec for implementation!
+19:11:55 <rbergeron> A few outstanding questions though, as noted.
+19:11:58 <gregdek> Yep.
+19:12:00 <gregdek> OPEN QUESTION: How to handle if submitter does not believe it was resolved?
+19:12:12 <rbergeron> #link https://github.com/robynbergeron/thingsandstuff/blob/master/issue_workflow_v1
+19:12:18 <gregdek> Ah thx!
+19:12:22 <gregdek> My take on this Q:
+19:12:53 <gregdek> Well, I don't know, LOL.
+19:13:02 <gregdek> I mean, Github is already opinionated about this.
+19:13:16 <gregdek> If a PR gets merged that says "fixes #xx", then by God, that's it! It's closed
+19:13:30 <gregdek> Github would say "reopen it then!"
+19:13:41 <gregdek> So maybe that's what we should do. We don't want to reinvent the wheel.
+19:14:07 <rbergeron> Okay, but this is issues. I don't think people can reopen issues, can they?
+19:14:27 <gregdek> If they reported it, I think they can...?
+19:14:45 <rbergeron> you can re-open your own issues *if you closed them yourself
+19:14:45 <rbergeron> you cannot close or re-open issues opened by someone else
+19:14:45 <rbergeron> you cannot re-open your own issues if a repo collaborator closed them
+19:15:01 <gregdek> Ah, right.
+19:15:03 <gregdek> http://stackoverflow.com/questions/21333654/how-to-re-open-an-issue-in-github
+19:15:14 <rbergeron> hey, you are on the same page i am!
+19:15:22 <gregdek> THANKS GOOGS
+19:15:34 <rbergeron> File a ticket in the community queue asking for your issue to be reopened?
+19:15:41 <gregdek> No. File a new issue.
+19:15:50 <gregdek> No reason to create process for corner cases.
+19:16:24 <gregdek> Always possible to refer to the old issue -- "hey, you guys closed #nnn, but I have new data that says you were wrong!"
+19:16:31 <rbergeron> I guess. I will go with "faith that people won't perpetually do that" vs. "would provide visibility into perpetually closing not fixed issues"
+19:16:31 <gundalow> (I'm sshing from my phone now, hence not as active)
+19:16:40 <rbergeron> :)
+19:16:50 <gundalow> +1
+19:17:12 <gregdek> OPEN QUESTION: Apply info_provided with *every* additional comment from submitter? Or just once?
+19:17:45 <gregdek> needs_info is, frankly, a goofy state.
+19:18:04 <gregdek> But info_provided makes sense.
+19:18:14 <gregdek> Maybe we should put that into PRBot as well, since we have the same problem there.
+19:18:45 <rbergeron> Yeah, since the resopnse isn't always "ready_for_review"
+19:18:58 <rbergeron> We could see if / how it works in issuebot first before proceeding to that.
+19:19:07 <rbergeron> In the event that it isn't really helping / useful.
+19:19:18 <gregdek> I'm also wondering if we should change the way we do labels, but that's maybe separate.
+19:19:20 <gregdek> :)
+19:19:26 <rbergeron> so: every additional comment?
+19:19:37 <rbergeron> as in, the label matches the action?
+19:19:59 <rbergeron> i guess that made no sense as a sentence
+19:20:04 <rbergeron> I think that's separate.
+19:20:25 <gregdek> Yeah, explicitly: +needs_review == "add needs_review label", -shipit == "remove shipit label", etc.
+19:20:28 <gregdek> But need to think more about it.
+19:20:34 <gregdek> Anyway.
+19:20:43 <rbergeron> so is the answer for now, "just ping with every addition comment that doesn't have ready_for_review, that is from the submitter, if in needs_info?"
+19:21:00 <rbergeron> err, not ready for review, i guess that's PRs
+19:21:11 <gregdek> ...
+19:21:15 <rbergeron> sorry
+19:21:15 <gregdek> thinking.
+19:21:39 <gregdek> The front end of the issue triage is very clear.
+19:21:44 <gregdek> The back end is murkier.
+19:21:58 <gregdek> I'm less inclined to enforce too much workflow, I think, once we know who the owner is.
+19:22:14 <gregdek> At some point, an issue is really more a conversation.
+19:22:19 <gundalow> aye
+19:23:01 <rbergeron> okay, so maybe just apply info_provided once and move on
+19:23:16 <rbergeron> and if it's been 30 days since a submitter provided info, the friendly_reminder boilerplate will take care of that.
+19:23:21 <gregdek> Perhaps we might consider just having "timeout" be the chief concern. "Hey, notice nobody's talking about this issue in the last month! ping @submitter to see if it's still a problem and @maintainer to see if you're still working on it, thanks!"
+19:23:26 <gregdek> Yeah.
+19:23:28 <rbergeron> Oh.
+19:23:29 <rbergeron> Hmmm.
+19:23:52 <rbergeron> I honestly might do that sooner than a month, maybe.
+19:23:57 <gundalow> + Comment about ready
+19:24:07 <rbergeron> #idea "Perhaps we might consider just having "timeout" be the chief concern. "Hey,
+19:24:10 <rbergeron> notice nobody's talking about this issue in the last month! ping @submitter to
+19:24:13 <rbergeron> see if it's still a problem and @maintainer to see if you're still working on
+19:24:16 <rbergeron> it, thanks!"
+19:24:19 <rbergeron> AUGH
+19:24:20 <rbergeron> uh, lag
+19:24:21 <rbergeron> well,
+19:24:24 <rbergeron> #undo
+19:24:24 <zodbot> Removing item from minutes: IDEA by rbergeron at 19:24:07 : "Perhaps we might consider just having "timeout" be the chief concern. "Hey,
+19:24:48 <gregdek> How often should we harass people about issues? :)
+19:25:08 <rbergeron> #idea perhaps consider having timeout be the chief concern. ping submitter to see if it's still a problem and maintainer to see if you're still working on it.
+19:25:18 <rbergeron> well, I'm not sure. If it's a clear state, that's fine.
+19:25:18 <gregdek> I worry if we do it too often, the maintainers will just say "I GOT ENOUGH PROBLEMS MAN ALIVE COME ON"
+19:25:44 <rbergeron> okay, 30 days then. :)
+19:25:59 <rbergeron> I will see how that works in here. or "timeout" could be an addon and we could just get to work on the rest of this.
+19:26:04 <gregdek> I mean, for a PR, there's a lot of states. But for an issue, once we've ascertained we have all the info, it's kind of "someone cares lately" or "no one seems to care lately".
+19:26:41 <rbergeron> right.
+19:26:49 <rbergeron> issues are harder for people to get to follow up on.
+19:27:06 <rbergeron> because sometimes it starts working and they forgot or they assume someone closed it because the code now works which means someone fixed something.
+19:27:57 * gregdek looks at other OPEN QUESTIONS
+19:28:12 <gregdek> OPEN QUESTION: After 30 days, then? Reapply friendly_reminder boilerplate?
+19:28:29 <gregdek> I think after 30 days of inactivity, we reapply friendly_reminder boilerplate until the end of time :)
+19:28:37 <rbergeron> okay.
+19:28:52 <rbergeron> #agreed after 30 days of inactivity by maintainer, we reapply friendly_reminder boilerplate until end of time
+19:29:13 <gundalow> Person looks at it
+19:29:24 <gundalow> Cool
+19:29:37 <gregdek> Well...
+19:29:40 * gregdek hrms again.
+19:30:07 <gregdek> I would say 30 days of inactivity by anybody.
+19:30:19 <gregdek> And then make the reminder to both submitter and maintainer.
+19:30:19 <gundalow> Apart from the bot
+19:30:53 <gregdek> No, including the bot, because otherwise the bot comments every day after 30.
+19:32:02 <gregdek> I think a simple rule accommodates most of these cases. "Hey, it's been 30 days, have y'all worked this out yet? I'll keep asking. Thanks for keeping this one mooooooving! Love, Ansibull."
+19:32:20 <gundalow> Sounds good
+19:32:40 <rbergeron> okay, so:
+19:32:40 <gregdek> Because otherwise, we have to keep track of "who said something last" which isn't always indicative and doesn't always add much value.
+19:32:43 <rbergeron> then that brings up another question
+19:32:58 <rbergeron> because I think we said if it's been 30 days since a needs_info from the submitter
+19:33:01 <rbergeron> then we'd do pending_action
+19:33:08 <gregdek> Right. I think that's true.
+19:33:09 <rbergeron> and then 2 weeks later close it
+19:33:18 <rbergeron> so now i have in hte friendly reminder boilerplate
+19:33:19 <rbergeron> @submitter: Sometimes issues can get into funky states. If you have any updates, please add them in a comment with the comment "info_provided" so we can get this back in gear."
+19:33:33 <rbergeron> in addition to the maintainer ping.
+19:34:05 <gundalow> Or review ready?
+19:34:29 <gundalow> Or is that a different work flow
+19:35:34 <gregdek> I guess what I'm proposing is that once we know we've got the initial data -- which should be entirely parseable from the template -- then we stop caring about the state and we assume that submitter and maintainer are working on it. Which is one blanket state "in progress" until it gets fixed, or the submitter says "nah I'm closing it" -- or the maintainer
+19:35:34 <gregdek> says "I ain't fixing it because it ain't a problem". We need to give them that option, I guess.
+19:36:06 <gregdek> And we keep pinging "in progress" issues to make sure people are still talking.
+19:36:14 <gregdek> Does that make sense? Is it too simplistic?
+19:36:23 <rbergeron> well it would have made typing all of this a hell of a lot easier :)
+19:36:28 <gregdek> LOL
+19:36:32 <gundalow> Simple is good
+19:36:35 <gregdek> Well, typing it all helps us think through it.
+19:36:49 <gregdek> How do I know what I think until I see what I say?
+19:37:18 <rbergeron> okay, i'll .. revisit some of this and see about a workflow that accommodates that idea.
+19:37:21 <rbergeron> tomorrow?
+19:37:25 <rbergeron> you wanted to implement this next week, right?
+19:37:30 <rbergeron> maybe?
+19:37:41 <gregdek> If we can. Sooner is better.
+19:37:52 <gregdek> But if there's other stuff, this can wait another week and no one will die.
+19:38:08 <rbergeron> #action rbergeron to modify with simpler workflow
+19:39:00 <gregdek> Should we give the maintainer a way to say WONTFIX?
+19:39:20 <rbergeron> #info updated issue with the above context
+19:39:37 <rbergeron> Possibly. Yeah.
+19:39:42 <rbergeron> "not actually a problem"
+19:39:51 <gregdek> "pebcak"
+19:39:58 <gregdek> "rtfm"
+19:40:30 <rbergeron> #action rbergeron account for the wontfix/pebkac/not actually a problem case
+19:40:59 <gregdek> Might want a persistent flag there so we can see if people are closing too many things WONTFIX... hm.
+19:41:13 <rbergeron> gregdek: hah
+19:41:30 <gregdek> Maybe not a thing to worry about yet. :)
+19:41:33 <rbergeron> that's what i was saying with the "closing my issue but it wasn't actually fixed" case.
+19:41:37 <gregdek> But I could see it becoming a problem.
+19:41:38 <rbergeron> "have faith" :)
+19:41:55 <gregdek> Well, this is a good question
+19:41:59 <gregdek> What closes an issue?
+19:42:07 <gregdek> Maybe it's either:
+19:42:11 <gregdek> * A PR;
+19:42:17 <gregdek> * or "wontfix" in the text.
+19:42:23 <gregdek> And that's it.
+19:42:39 * gregdek remembers back to the bugzilla dats
+19:42:41 <gregdek> days
+19:42:43 <gregdek> -ENOTIME
+19:43:16 <rbergeron> or non-responsive submitter not updating an improperly created issue
+19:43:39 <gregdek> Oh, right. Yes, that one.
+19:43:58 <rbergeron> And i also have bug_resolved as a thing a maintainer can type
+19:44:12 <rbergeron> Beacsue often times it's "well it was already fixed by a pr that didn't link to this issue to auto-close it"
+19:44:18 <gregdek> Good point.
+19:44:35 <rbergeron> or "i answered your question or helped you out"
+19:44:42 <rbergeron> which isn't quite the same as wontfix
+19:44:45 <gregdek> Yeah.
+19:44:50 <rbergeron> sometimes that turns into "i will fix the documentation" or etc.
+19:44:51 <gregdek> Maybe "wontfix" isn't right.
+19:44:59 <gregdek> Maybe it is just "resolved".
+19:45:08 <gregdek> And the reasons can be ¯\_(ツ)_/¯
+19:45:20 <rbergeron> bug_resolved can cover the case of "determined that this isn't a bug, soorrrrrry"
+19:45:32 <rbergeron> "notabug" i think is a thing in bugzilla
+19:45:34 <gregdek> I mean, if we want to, we can add several resolution states.
+19:45:39 <gregdek> It is, yes.
+19:45:52 <rbergeron> CLOSED NOTABUG LOL
+19:46:02 <gregdek> We can follow the bz example and require different resolution states, all of which close an issue, but provide different diagnostic info.
+19:46:16 <gregdek> (Measurement info for after the fact, that is.)
+19:46:33 <gregdek> worth doing that yet, do you think?
+19:46:54 <gregdek> I mean, they would all result in closure, so the workflow would be simple enough.
+19:47:17 <gregdek> And maybe it's nice to require a maintainer to offer more than "nooope!"
+19:47:30 <rbergeron> yeah.
+19:47:40 <rbergeron> I think so.
+19:47:57 <gregdek> well, then. maybe several texts that equate to "closed" that add different post-closure labels for later review?
+19:48:12 <rbergeron> it's a lot of things to explain as options for maintainers to type if they could just type bug_resolved and explain their reasoning there
+19:48:26 <rbergeron> but I will draft up some "related to closed" types of things and see how that looks
+19:48:34 <gregdek> ok, sounds good.
+19:48:57 <rbergeron> #action rbergeron to add some variances on "closed" (aka: notabug, wontfix, resolved by a PR, just gave som ehelp and resolved it, whatever)
+19:49:41 <rbergeron> okay, i've got the ticket all updated with all that stuff.
+19:49:47 <gregdek> At some point, we're gonna have more process than can easily fit into bot notices.
+19:49:56 <rbergeron> my head can't take any more on this one :)
+19:49:56 <gregdek> But that's for another day. :0
+19:50:04 <gregdek> Soooooory!
+19:50:15 <rbergeron> it's all good, i'll be happy to see things not be sad and lonely
+19:50:18 <gregdek> But thanks for thinking it out.
+19:50:27 <gregdek> And for being patient with me. :)
+19:50:52 <gregdek> OK, let's move on!
+19:50:54 <gregdek> Finally!
+19:50:55 <rbergeron> :)
+19:51:03 <gregdek> #topic Proposal Proposal
+19:51:16 <gregdek> https://github.com/ansible/community/issues/23
+19:51:19 <rbergeron> oh god, why is this all me
+19:51:20 <rbergeron> lol
+19:51:27 <gregdek> Fortunately, I think this one is done!
+19:51:46 <gregdek> You sent the note, no negative feedback, I'd say This Is The Process and we can resolve it, right?
+19:52:00 <gregdek> Or wait, did dag have something to say?
+19:52:29 <gregdek> Maybe not.
+19:52:31 <rbergeron> I'll let you look. I can't emember.
+19:52:33 <gregdek> I can't find it now.
+19:52:40 <rbergeron> #link https://github.com/ansible/proposals/issues/5 was the issue in proposals/proposals.
+19:53:12 <gregdek> I see no dissent.
+19:53:15 <gregdek> Let's ratify
+19:53:16 <gregdek> !
+19:53:19 <rbergeron> DONE
+19:53:24 <rbergeron> that was terrible of us
+19:53:31 <rbergeron> lol
+19:53:36 <rbergeron> but yes, unblock and move ahead.
+19:53:40 <gregdek> :)
+19:53:56 <gregdek> The issue stuff is way more important, so I'm glad we spent the time.
+19:53:57 <rbergeron> So now it's back to next steps: Document that this is a process somewhere.
+19:54:08 <rbergeron> and probably mail the mailing list.
+19:54:14 <rbergeron> yes?
+19:54:15 <rbergeron> OH WAIT
+19:54:19 <gregdek> Yep. And then we can close that one for good, right?
+19:54:22 <rbergeron> we need to find a time to discuss proposals.
+19:54:28 <gregdek> Ohhhhhh.
+19:54:37 <rbergeron> dat public irc meeting tho
+19:54:38 <gregdek> How about here?
+19:55:18 <rbergeron> I thought the original plan was "the core team will have a public irc meeting to discuss whatever (not the new / old modules), and if there are blocked proposals then we can address them there"
+19:55:19 <gregdek> We only need a place to discuss if the issue blocks or is insufficient.
+19:55:34 <gregdek> I'm hoping that we won't have many that block.
+19:56:12 <gregdek> I don't want to call a weekly meeting that most weeks isn't anything.
+19:56:16 <rbergeron> And we still need the place where it is ascertained that it's "approved" or "looks good" or whatever.
+19:56:27 <rbergeron> okay, well, i'll leave that part out i guess
+19:57:00 <rbergeron> who is responsible for tracking / making sure they are poking along, i guess is the other question
+19:57:10 <rbergeron> if we're not going to ascertain "finality" status in some sort of meeting
+19:57:46 <gregdek> Yeah.
+19:57:48 * gregdek looks.
+19:58:20 <gregdek> So here's one:
+19:58:20 <gregdek> https://github.com/ansible/proposals/blob/master/publish-subscribe.md
+19:58:23 <gregdek> From resmo.
+19:58:25 <gregdek> No comment at all.
+19:58:35 <rbergeron> Becasue there's not a process.
+19:58:48 <gregdek> Well, the issue is the first thing.
+19:58:50 <rbergeron> So I think we should probably (a) create issues for all PRs that were created before the issue thing was a thing.
+19:58:59 <gregdek> Yep. +1.
+19:59:06 <gregdek> That should be pretty quick.
+19:59:24 <gregdek> And we just point to the file for those.
+19:59:38 <rbergeron> But the ongoing question is: who is theowner for making sure proposals are getting comments / feedback / moving along
+19:59:49 <gregdek> We could have a weekly proposal email, just like the weekly new module mail...
+20:00:43 <rbergeron> maybe?
+20:00:54 <gregdek> ...but the question is, is the core team, to whom most of these proposals are directed, *obligated* to consider them?
+20:01:21 <gregdek> And if the answer is "we think so," then we should get jimi|ansible or newtMckerr to commit to that.
+20:01:39 <rbergeron> if they're going to potentially -1 something after someone submits a proposal and gets no feedback and then goes ahead and implements it because nobody said no
+20:01:48 <gregdek> Right. Exactly.
+20:01:56 <gregdek> And that's the point: to make sure that doesn't happen.
+20:02:01 <rbergeron> that's what we're tryign to solve
+20:02:03 <rbergeron> so
+20:02:06 <gregdek> So yes, the next step is to get the core team to commit.
+20:02:23 <jimi|ansible> that goes partially to the question now of how we're handling big decisions in general
+20:02:53 <gregdek> Yes, indeed it does.
+20:02:54 <jimi|ansible> in the past, like i had told abadger1999, i generally went for 2/3 of the team (when there were 3 of us that worked well), now that the team is expanding, we may want to consider some other way of making those decisions
+20:03:09 <gregdek> So maybe this is a pipeline into your process there.
+20:03:57 <jimi|ansible> yeah we'll have to figure out something there, but in general i'd say proposals should be voted on by the core team, unless we're wanting some kind of review board
+20:04:21 <gregdek> We've now got a mechanism for *making* these kinds of proposals, and it's probably Good Enough. When/where/how does that consensus/voting process happen?
+20:04:37 <gregdek> Would you prefer meetings? Issues? What?
+20:05:27 <jimi|ansible> maybe a good thing to review during our proposed public core meetings?
+20:05:53 <rbergeron> hmmm feels like a thing i suggested to gregdek above
+20:05:57 <gregdek> LOL
+20:06:04 <gregdek> Yes, rbergeron was correct.
+20:06:13 <gregdek> I am sometimes slow to catch up.
+20:06:26 <gregdek> So jimi|ansible -- when do you want to have the core meeting?
+20:06:47 <jimi|ansible> heh sorry if i missed that, i hadn't read up past my name being mentioned
+20:07:19 <jimi|ansible> 2 hours once a week seemed to be a bit much in the past, so i'm leaning towards twice a week for an hour
+20:07:39 <gregdek> OK, tell me when you want them!
+20:08:18 <rbergeron> I don't even know that it needs to be two hours -- does it? is that how long they went?
+20:08:24 <gregdek> jimi|ansible: I assume you'll get back to me?
+20:08:27 <jimi|ansible> tue/thu, one a bit earlier (10am?) and the other later (3pm?)
+20:08:39 <rbergeron> jimi|ansible: i was going to suggest something like that -- would be nice to accommodate other folks
+20:08:43 <rbergeron> in other tz
+20:08:48 <gregdek> Sounds good.
+20:08:56 <rbergeron> though that will suck for toshio and robyn, but we will be okay
+20:09:03 <rbergeron> well i will
+20:09:05 <gregdek> So Tue 1400 UTC and Thu 1900 UTC?
+20:10:12 <jimi|ansible> if toshio/matt can't make the early one, bcoca and I could take it and they could take the second one
+20:10:29 <rbergeron> jimi|ansible: okay. do you just want to confirm and we can circle back with you?
+20:10:37 <jimi|ansible> yep
+20:10:41 <rbergeron> sounds good
+20:10:55 <rbergeron> #action gregdek to ping jimi in a day or two to confirm times of Tue 1400 UTC and Thu 1900 UTC
+20:11:29 <jimi|ansible> we could also do 11am EST which would be 8am for them and 4pm for UK?
+20:11:39 <gregdek> Up to you. Discuss with your team. :)
+20:11:48 <gregdek> Any time you pick will be wrong!
+20:11:56 <gregdek> Pick it anyway. ;)
+20:12:01 <jimi|ansible> yep
+20:12:07 <gregdek> Aaaaaand that's that. Thanks y'all!
+20:12:10 <gregdek> #endmeeting

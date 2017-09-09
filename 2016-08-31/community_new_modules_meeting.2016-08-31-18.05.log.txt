@@ -1,0 +1,60 @@
+18:05:40 <ryansb> #startmeeting Community New Modules Meeting
+18:05:40 <zodbot> Meeting started Wed Aug 31 18:05:40 2016 UTC.  The chair is ryansb. Information about MeetBot at http://wiki.debian.org/MeetBot.
+18:05:40 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+18:05:40 <zodbot> The meeting name has been set to 'community_new_modules_meeting'
+18:06:04 <ryansb> sorry for the lateness
+18:06:12 <ryansb> alright, who's here?
+18:06:16 <MichaelBaydoun> present
+18:06:18 <ryansb> #rollcall
+18:06:27 <hulquest> present
+18:06:27 <linuxdynasty> sup
+18:07:51 <ryansb> Ok, I'm going to try something a bit different with agenday
+18:08:09 <ryansb> we're going to start with having folks toss in modules they're here to talk about & do those firstt
+18:08:47 <MichaelBaydoun> hulquest: do you have a module you would like to discuss?
+18:08:57 <hulquest> i'd like to talk about storage/netapp_e/na_eseries_facts.py
+18:09:08 <hulquest> and na_eseries_storage_system.py
+18:09:13 <hulquest> pr 2748
+18:09:15 <ryansb> please link to the PR :)
+18:09:18 <hulquest> https://wikid.netapp.com/w/AppAware/PowerShellLibrary/Lehigh
+18:09:34 <hulquest> opps...wrong buffer https://github.com/ansible/ansible-modules-extras/pull/2748
+18:09:46 <ryansb> I'd like to add https://github.com/ansible/ansible-modules-extras/pull/2558 (execute_lambda) to the agenda
+18:10:23 <ryansb> ok, let's start w/ hulquest's module
+18:10:43 <ryansb> #topic netapp_e modules https://github.com/ansible/ansible-modules-extras/pull/2748
+18:11:24 <hulquest> the last comment from @abadger was to doc validate_certs and to resolve the netapp vs netapp_e namespace
+18:12:09 <hulquest> i just pushed a commit to doc validate_certs.  i'd like to keep the netapp_e name because our puppet and chef modules are known as netapp_e.  ontap plugins are simply netapp
+18:13:35 <ryansb> what does the _e stand for?
+18:14:10 <hulquest> e-series.  it's the block storage platform in the netapp portfolio.
+18:14:40 <hulquest> the solidfire platform will probably be netapp_s or _sf when they implement modules
+18:15:36 <hulquest> imho, having ontap, eseries, and solidfire modules in the same directory will get kind of messy
+18:15:47 <ryansb> gotcha
+18:20:12 <ryansb> That module looks good to me - I'll add my shipit after the meeting
+18:20:31 <ryansb> anyone else have comments?
+18:20:51 <hulquest> we've got 17 more that are ready to go.  they are all pretty boilerplate
+18:21:18 <hulquest> can i make all the changes from this PR to the other 17 and submit an uber-PR?
+18:21:25 <ryansb> is there code shared/copied between them?
+18:21:32 <ryansb> or do you just mean the docs etc?
+18:22:08 <hulquest> there is common code but it has yet to be refactored to a common class
+18:22:42 <hulquest> each module adds functionality specific to the storage platform.  make a volume, storage pool, snapshots, etc...
+18:23:26 <ryansb> Got it. We have a module_utils directory in the github.com/ansible/ansible repo that you can put shared classes and such in
+18:23:37 <ryansb> especially if you've got 17 users for said shared code
+18:25:02 <ryansb> Ok, lacking other comments we'll move on
+18:25:25 <ryansb> #topic execute_lambda https://github.com/ansible/ansible-modules-extras/pull/2558
+18:30:43 <ryansb> ...anybody
+18:32:20 <MichaelBaydoun> no comments on that one
+18:32:29 <hulquest> i don't have anything to offer
+18:32:47 <MichaelBaydoun> needs a second shipit/worksforme
+18:33:28 <ryansb> k, on to the agenda
+18:33:31 <defionscode> I think it looks fine
+18:34:40 <ryansb> thanks defionscode
+18:34:44 <ryansb> next up: https://github.com/ansible/ansible-modules-core/pull/4054
+18:34:52 <ryansb> hey wait, that's not a new modules
+18:34:59 <ryansb> scratch that
+18:35:05 <ryansb> new module: https://github.com/ansible/ansible-modules-extras/pull/2521
+18:35:11 <ryansb> #topic jenkins_job https://github.com/ansible/ansible-modules-extras/pull/2521
+18:36:54 <MichaelBaydoun> lots of discussion
+18:37:33 <MichaelBaydoun> resmo: offered to test again soon
+18:43:56 <ryansb> looks ok, but I can't test it
+18:54:28 <ryansb> ok, rest of the agenda is awaiting action
+18:54:33 <ryansb> so nothing else to review here
+18:55:38 <ryansb> anyone have additional topics (otherwise I'll close this meeting off)
+18:58:54 <ryansb> #endmeeting

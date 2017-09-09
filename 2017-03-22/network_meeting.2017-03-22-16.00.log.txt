@@ -1,0 +1,144 @@
+16:00:45 <funzo> #startmeeting Network Meeting
+16:00:45 <zodbot> Meeting started Wed Mar 22 16:00:45 2017 UTC.  The chair is funzo. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:00:45 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:00:45 <zodbot> The meeting name has been set to 'network_meeting'
+16:01:19 <funzo> #topic Networking Update
+16:01:45 <funzo> #topic RC2 is planned for today
+16:02:48 <funzo> Show of hands, who's tested RC1?
+16:03:26 <funzo> standing agenda: https://github.com/ansible/community/issues/110
+16:04:17 <funzo> I'll wait a couple more minutes to see if folks trickle in
+16:05:08 <funzo> a couple of the networking core team members are out today, so we might have a lightly attended meeting
+16:05:17 <funzo> Has anyone here tested RC1?
+16:06:30 <funzo> #chair andriusb
+16:06:30 <zodbot> Current chairs: andriusb funzo
+16:06:37 <funzo> #chair grybak
+16:06:37 <zodbot> Current chairs: andriusb funzo grybak
+16:06:53 <funzo> alrighty then, let's touch on the standing agenda...
+16:07:30 <funzo> take a look at the last comment of https://github.com/ansible/community/issues/110
+16:08:28 <funzo> #info RC2 comes out today (planned), but in case you haven't seen the RC1 details and want to test it now https://groups.google.com/forum/#!topic/ansible-devel/V2ESSQqLnS0
+16:08:55 <funzo> #chair lbalhar
+16:08:55 <zodbot> Current chairs: andriusb funzo grybak lbalhar
+16:09:20 <funzo> lbalhar: the meeting started a few minutes ago and we are just taking a look at the standing agenda. Have you had a chance to test RC1?
+16:09:23 <funzo> RC2 is coming out today
+16:10:42 <funzo> Ok if no other comments, look for an email to the dev mailing list for the RC2 announcement today
+16:10:50 <funzo> #topic Open Floor
+16:11:22 <funzo> I'll start the timer for 60 seconds, then move on
+16:12:49 <funzo> 60 seconds have passed and I will now go continue to sit alone in the dark
+16:12:55 <funzo> thank you and good day
+16:13:23 <funzo> privateip: you joined at the very end, anything to add other than RC2 planned for today?
+16:13:31 <funzo> very end because i'm alone in the dark
+16:13:49 <privateip> thats what i call timing :)
+16:13:58 <funzo> o/*\o
+16:14:02 <privateip> Q&A session in an hour
+16:14:16 <privateip> oops
+16:14:17 <privateip> two hours
+16:14:38 <funzo> do you have the info handy to paste it here?
+16:14:39 <andriusb> and the wolves are after him
+16:14:47 <privateip> https://attendee.gotowebinar.com/register/8226671723620160257
+16:14:58 <andriusb> https://www.ansible.com/ask-ansible
+16:15:05 <funzo> #info Ask the Experts session ^^
+16:15:14 <funzo> thanks for the reminder
+16:15:18 <privateip> any and all questions welcome and fair game
+16:15:49 <funzo> For anyone that has joined late, we now have an open floor
+16:16:03 <funzo> and you'll be able to read the history on the meetbot link posted at the end
+16:16:22 <funzo> ok, any other items to bring up to the group?
+16:16:48 * skg-net waves
+16:16:58 <funzo> o/
+16:17:00 <privateip> hi skg-net
+16:17:07 <skg-net> I would like discuss on Dell modules for Ansible 2.3
+16:17:16 <skg-net> privateip: hi
+16:17:26 <funzo> skg-net: ok, cool - what specifically would you like to talk about
+16:18:38 <skg-net> I have submitted the PR for dellos9 and dellos10 https://github.com/ansible/ansible/pull/22856
+16:19:13 <skg-net> would like to get it merged..
+16:19:48 <funzo> privateip: have you looked over this, I see gundalow did
+16:20:01 <privateip> i haven't but i have some time this afternoon to review it
+16:20:55 * privateip commits to reviewing it in depth and comments (or merging) today
+16:20:56 <skg-net> As part of the testing we found that, the facts for a CLI previously use to return..in a single item of the list..
+16:21:14 <skg-net> Thanks @privateip
+16:21:15 <privateip> thats a big PR
+16:21:16 <privateip> :)
+16:21:22 <privateip> np
+16:22:15 <funzo> skg-net: thanks for your contribution!
+16:22:45 <skg-net> Now, CLI show output is large, its splitting into multiple lines...
+16:22:47 <funzo> skg-net: if you could watch it closely as it gets reviewed, we are really coming down to the wire on releasing 2.3 so any changes requested would need to be made quickly
+16:23:00 <funzo> that will make it go much faster
+16:23:01 <skg-net> is this expected
+16:23:23 <privateip> no that is definitely not expected
+16:23:49 <skg-net> Eg: For two elements in command list the responses list has three elements .i.e here the second command output is split and stored.   commands = [‘show version | display-xml’, ‘show system | display-xml’] responses = ['<?xml version="1.0" encoding="UTF-8"?>\n<rpc-reply>\n  <data>\n … </data>\n</rpc-reply>’, '<?xml version="1.0" encoding="UTF-8"?>\n<rpc-reply>\n  <data>\n… <power-supply>', '<status>fail</status>\n
+16:24:25 <privateip> yeah that seems odd
+16:24:30 <skg-net> sure @funzo, will respond to comments as soon as possible..
+16:24:34 <privateip> i suspect its a false positive on the prompt match
+16:25:14 <skg-net> privateip: The code is mostly what you have written..:)
+16:25:35 <skg-net> ok, will debug and keep you posted on that..
+16:25:40 <privateip> oh in that case its correct... i never introduce bugs :)
+16:26:12 <funzo> *crickets*
+16:26:15 <privateip> lol
+16:26:30 <privateip> that was hard to type with a straight ummm face ;)
+16:26:39 <funzo> i got a great laugh out of it
+16:27:01 <funzo> any other detail on that issue to discuss here?
+16:27:14 <privateip> not until i can dig into it more this PM
+16:27:14 <skg-net> How do we need to handle platform specific items in the new connection plugin ?
+16:27:31 <privateip> what do you mean?
+16:27:38 <privateip> do you have an example?
+16:29:05 <skg-net> the terminal length 0 can be executed only when the device is authorized for dellos6
+16:29:48 <skg-net> but in the current infra, its handled before the authorize..
+16:31:25 <privateip> hmmmm
+16:31:30 <skg-net> dowe write a new connection plugin in such case?
+16:31:56 <skg-net> its just an example..dellos6 deviates more..
+16:32:14 <privateip> there is an on_authorize hook in the terminal plugin
+16:32:24 <privateip> that would allow you to run the commands post authorize
+16:33:29 <skg-net> let me explore that option..
+16:33:53 <privateip> kk
+16:34:16 <funzo> alrighty, moving on then... any other issues to bring up to the group?
+16:34:30 <skg-net> Last item..we also hit randomly the command output is partial sometimes..
+16:35:23 <skg-net> this is with dellos9_command module..
+16:35:37 <privateip> is there an open issue?
+16:35:43 <funzo> https://github.com/ansible/ansible/issues/22863
+16:35:44 <funzo> like that?
+16:35:48 <funzo> except not ios
+16:36:22 <skg-net> yes thats correct
+16:36:44 <skg-net> we haven't opened issues yet..
+16:37:01 <privateip> please do for tracking purposes
+16:37:10 <skg-net> sure, will do..
+16:37:18 <privateip> thanks
+16:37:43 <funzo> ok, if there are no other items to bring up to the group I'll pull the plug
+16:37:50 <kennc> one sec
+16:37:55 <funzo> kennc: o/
+16:38:17 <kennc> with the new net_cli, what happens if the sessions fails between tasks?
+16:38:36 <privateip> you mean if the connection drops?
+16:39:12 <kennc> correct, or times out because the task before takes too long for all the hosts to complete
+16:39:27 <privateip> the next task will create a new connection
+16:39:30 <kennc> and can you confirm there is no going back to the old method if net_cli has issues?
+16:39:39 <kennc> thanks for that info!
+16:40:10 <privateip> did that answer both of your questions?
+16:40:12 <funzo> also, if you know you are going to be running long tasks, there is a timeout you can alter just as an fyi
+16:40:18 <privateip> yes
+16:40:21 <kennc> no, just the first
+16:40:51 <funzo> oh you want to know if there is a way to go back to the old method
+16:41:11 <kennc> yes
+16:41:23 <privateip> sorry im not following... whats the "old method"?
+16:41:31 <kennc> not creating a socket
+16:42:39 <kennc> and one more to add on, how to use delgate_to? Trying to wrap my head around ansible_ssh_user, I feel like that both the jump host and network device wants to use that
+16:42:55 <privateip> no going back from the new arch
+16:42:59 <privateip> no going back from the new architecture
+16:43:29 <kennc> k, I like definitive answers, even when I don't agree :)
+16:43:29 <funzo> you can just say 'ngbftna' and everyone will get it
+16:43:54 <privateip> lol
+16:44:08 <kennc> lol
+16:44:12 <privateip> as far as delegate_to ... it doesn't work with the new connection plug
+16:44:26 <kennc> now, i'll go back to my second question :)
+16:44:44 <kennc> you see the issue here?
+16:45:01 <privateip> but you can use ProxyCommand as documented
+16:45:04 <privateip> http://docs.ansible.com/ansible/faq.html#how-do-i-configure-a-jump-host-to-access-servers-that-i-have-no-direct-access-to
+16:45:12 <privateip> to achieve the same thing but in a more secure way
+16:45:20 <kennc> ok.... that is the piece I was missing
+16:45:26 <kennc> let me look at this
+16:46:01 <kennc> can you add an action to add this to gundalow's documentation ?
+16:47:07 <kennc> and potentially provide an example? not %100 making sense, but it sounds to be what I am looking for
+16:47:07 <funzo> #action Add ProxyCommand reference for how to more securely replace delagate_to with net_cli
+16:47:23 <kennc> thanks
+16:47:53 <kennc> and I still still having issues with ios_banner, but rcarrillocruz is working on it
+16:48:01 <kennc> that's it from me
+16:48:37 <funzo> ok anyone else have anything for the group?
+16:49:42 <funzo> thanks everyone for your participation
+16:50:10 <funzo> #endmeeting

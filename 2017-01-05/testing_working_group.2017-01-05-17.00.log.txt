@@ -1,0 +1,120 @@
+17:00:04 <gundalow> #startmeeting Testing Working Group
+17:00:04 <zodbot> Meeting started Thu Jan  5 17:00:04 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+17:00:04 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+17:00:04 <zodbot> The meeting name has been set to 'testing_working_group'
+17:00:09 <gundalow> #chair gundalow mattclay
+17:00:09 <zodbot> Current chairs: gundalow mattclay
+17:00:11 * mattclay waves
+17:00:14 <gundalow> #topic Roll call
+17:00:16 <gundalow> hey mattclay :)
+17:00:22 <gundalow> Agenda as always is https://github.com/ansible/community/issues/114 feel free to add items
+17:00:27 * allanice001 waves
+17:00:38 <gundalow> hey allanice001
+17:00:43 <gundalow> #topic Update
+17:01:13 <gundalow> So, not nothing major to report since last meeting as we've all been on holiday
+17:01:26 <gundalow> I hope everyone else had some downtime as well
+17:03:01 <gundalow> I'm continuing on getting network test appliances into AWS
+17:03:15 <gundalow> and we've just added some more unit tests for Network modules
+17:03:37 <gundalow> test/units/modules/network/
+17:04:17 <gundalow> That's it from Core
+17:04:21 <gundalow> #topic Open Floor
+17:04:37 <gundalow> allanice001: anything from you?
+17:05:05 <allanice001> nothing much, we touched on dependancy modules on Tuesday
+17:05:46 <allanice001> and bcoca was hunting for a home for ansible-doc bot if i recall
+17:07:02 <bcoca> i was not hunting, i stated that we require one
+17:07:38 <allanice001> srry, i was under the impression that implied you gonna find it a home :D
+17:07:54 <gundalow> What are the requirements for the host?
+17:08:25 <allanice001> realistically aws t2.small / mediium should be more that sufficient
+17:09:26 <gundalow> cool
+17:09:28 <bcoca> allanice001: im pretty sure i was clear about not volunteering ;-), but we can probably host it with whatever home we find for ansibot
+17:09:32 <allanice001> mostly memory for indexing is where your bottleneck would be
+17:09:40 <allanice001> lol
+17:09:56 <bcoca> we have several tools 'in search for a home'
+17:11:06 <allanice001> what i like about aws, (not that i’m biased) is it’s cheap and scalable and can be idempotent without to much work
+17:11:26 <gundalow> So what's next, do we need to generate an initial set of documentation pointers for it?
+17:11:46 <jtanner> allanice001: cool, give us your cc # and we'll host lots of bots on aws
+17:11:49 <bcoca> its not a technical issue, its a 'company provisioning issue'
+17:11:57 <bcoca> jtanner++
+17:12:02 <allanice001> lol
+17:12:21 <bcoca> gundalow: or just use the search api we are already paying for?
+17:13:07 <allanice001> bcoca: i would suggest using the search api, as it is fairly future-proof
+17:13:52 <gundalow> What's the bot give us over http://lmgtfy.com/?q=ansible+inventories
+17:13:53 <allanice001> ie - all future developments in docs (such as adding metadata) would be added to api too
+17:14:22 <gundalow> hum, OK. I guess with our own search api then module docs get a higher weighting
+17:14:36 <bcoca> gundalow: i'm fine with the bot just linking lmgtfy .....
+17:15:01 <gundalow> So I'm now confused on what the issues is we are trying to solve
+17:15:58 <gundalow> Originally it was to have something like they do in #nginx where their is a key: documentation blob mapping
+17:16:26 * gundalow rereads https://github.com/ansible/proposals/issues/48
+17:17:29 <gundalow> To me that reads as a hand crafted mapping of keywords to urls & canned responses
+17:17:52 <bcoca> bot can do both
+17:18:08 <bcoca> !doc -> searches docs for provided keyword and gives url
+17:18:11 <sivel> I wrote the bot that #wordpress used for a long time, and it had both, special keywords, and google site search effectively
+17:18:21 <bcoca> !resp -> key/val that gives canned response
+17:18:38 <bcoca> !rtfm
+17:18:44 <bcoca> !fo
+17:18:50 <bcoca> many commands we can implement
+17:21:40 <gundalow> Well I guess their isn't anything stopping !doc to be implemented that wraps round our existing search api
+17:25:32 <allanice001> IsHelp is my bot
+17:25:43 <allanice001> !help will show you the default commands
+17:25:53 <allanice001> !help
+17:27:20 <allanice001> it’s set to PM
+17:27:28 <gundalow> !help
+17:27:39 <gundalow> cool
+17:29:19 <allanice001> stuff like !slap is canned responses (with dictionaries)
+17:29:29 <allanice001> stuff like !time is lookups
+17:29:34 <allanice001> !time london
+17:29:34 <IsHelp> (allanice001) This command requires a Google Developers Console API key.
+17:31:23 <allanice001> !about
+17:31:23 <IsHelp> (allanice001) IsHelp is powered by CloudBot Refresh! (1.0.9) - https://github.com/CloudBotIRC/CloudBot/
+17:32:42 <allanice001> as an fyi - Threads: 10, CPU Usage: 0.0, Memory Usage: 146M
+17:38:38 <gundalow> Cool, do you want to have a go removing and just putting in !doc which talks to ansible.com's existing search?
+17:38:51 <allanice001> can do
+17:39:11 <allanice001> if you’re okay with it running from one of my DO instances
+17:39:35 <bcoca> !weather
+17:39:44 <bcoca> !weather 07087
+17:39:44 <IsHelp> (bcoca) This command requires a Weather Underground API key.
+17:39:59 * bcoca slaps IsHelp
+17:40:02 <gundalow> allanice001: Initially I think that's OK
+17:40:04 * allanice001 will add keys too bcoca
+17:40:23 <allanice001> !slap IsHelp
+17:40:23 * IsHelp slaps allanice001 in the chest with a toaster.
+17:40:57 <gundalow> help and docs are the only features we need initially
+17:41:16 <gundalow> sorry bcoca you'll have to look out the window to see what thedaystar is doing
+17:44:09 <bcoca> too much effort
+17:44:50 <allanice001> is that a feature request bcoca ?
+17:44:56 <bcoca> no
+17:44:56 <allanice001> :P
+17:45:17 <agaffney> bcoca is just sad that my bot in another channel doesn't work for weather anymore (because wunderground.com changed their mobile site, which the code used)
+17:45:55 <agaffney> I've been too lazy to fix it, because the code just uses the Weather::Underground perl module, which is now broken, and I don't feel like writing it all from scratch myself
+17:46:22 * allanice001 doesnt mind enabling it
+17:46:31 <allanice001> bot is written in py
+17:47:57 <gundalow> If you want to do that in another channel sure, it's your bot
+17:48:07 <gundalow> though in #ansible*, less is more :)
+17:48:32 <agaffney> yeah, we probably don't want a "noisy" bot in #ansible
+17:48:52 <agaffney> ideally, we shouldn't even have the !slap and similar functionality, because it will end up being abused
+17:48:55 * allanice001 agrees
+17:49:07 * bcoca would be main abuser
+17:49:25 * agaffney slaps bcoca in the chest with a toaster
+17:49:39 * bcoca pays agaffney his fee
+17:49:43 <gundalow> heh
+17:49:51 <allanice001> it starts…..
+17:50:16 <agaffney> that reminds me of long ago when I used mirc (and windows), and it had the built-in command to slap someone around with a large trout
+17:50:55 <bcoca> in wow i keep a large trout with me at all times
+17:51:14 <gundalow> :)
+17:51:33 <allanice001> large trout would become sushi….
+17:51:48 <gundalow> Once we've got the bot running and we see if it's useful we can then look at extending it and finding a better home
+17:51:53 <gundalow> Anyone got anything else?
+17:51:56 <bcoca> its been in my bag for 4 yrs ... i would not consider it 'fresh'
+17:53:08 <gundalow> Otherwise I'll call this
+17:53:16 <allanice001> gundalow: not from me
+17:54:05 <bcoca> call it or my jokes just get worse from here on out
+17:54:08 <gundalow> Hum, not sure how you can talk to the search API. It's some AJAX thing
+17:54:42 <bcoca> its a remote request
+17:54:51 <allanice001> ill dig into it this weekend, and let you know
+17:55:38 <bcoca> i've used python to simulate ajax requests before (it aint pretty, but it works)
+17:56:27 <allanice001> if i can post / get from it, it can work
+17:57:51 <gundalow> mattclay: What did you think of the tests for git reorg https://github.com/ansible/ansible/pull/19737
+17:57:53 <bcoca> ansible -m ping USPS
+17:58:56 * mattclay takes a look
+18:00:53 <gundalow> Cool
+18:01:01 <gundalow> #endmeeting

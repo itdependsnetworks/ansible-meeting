@@ -1,0 +1,150 @@
+16:00:03 <gundalow> #startmeeting Network Working Group
+16:00:03 <zodbot> Meeting started Wed Jun 28 16:00:03 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:00:03 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:00:03 <zodbot> The meeting name has been set to 'network_working_group'
+16:00:16 <gundalow> #chair ganeshrn davidn caphrim007
+16:00:16 <zodbot> Current chairs: caphrim007 davidn ganeshrn gundalow
+16:00:24 <gundalow> Qalthos: rcarrillocruz ola
+16:00:32 <gundalow> #chair Qalthos rcarrillocruz
+16:00:32 <zodbot> Current chairs: Qalthos caphrim007 davidn ganeshrn gundalow rcarrillocruz
+16:00:36 * rcarrillocruz waves
+16:00:44 <gundalow> #chair trishnag
+16:00:44 <zodbot> Current chairs: Qalthos caphrim007 davidn ganeshrn gundalow rcarrillocruz trishnag
+16:00:50 <trishnag> hi
+16:01:56 <ganeshrn> hi
+16:02:15 <gundalow> #topic #25175 "junos_config" executes commands fine, but looses connection to the device and PB fails
+16:02:23 <gundalow> #link https://github.com/ansible/ansible/issues/25175
+16:02:26 <gundalow> #chair mwiebe
+16:02:26 <zodbot> Current chairs: Qalthos caphrim007 davidn ganeshrn gundalow mwiebe rcarrillocruz trishnag
+16:02:57 <gundalow> ganeshrn: Looks like the reporter has added some more details
+16:03:40 <ganeshrn> yes, i checked those details
+16:03:55 <ganeshrn> i am still am able to reproduce the issue
+16:04:39 <gundalow> able or unable?
+16:04:42 <gundalow> How can we help
+16:04:54 <ganeshrn> oops
+16:05:00 <ganeshrn> unable*
+16:05:31 <ganeshrn> can changing hostname cause session to close?
+16:06:37 <ganeshrn> i need to add more debug logs
+16:07:01 <gundalow> ansible-connection uses the hostname specified to Ansible (generally via inventory)
+16:07:26 <ganeshrn> yes, but in the playbook hostname value is changed
+16:08:01 <ganeshrn> i will share the patch with debug logs in the issue and request the reporter to reproduce it
+16:08:16 <gundalow> #action ganeshrn share the patch with debug logs in the issue and request the reporter to reproduce it
+16:08:19 <gundalow> Thanks
+16:09:45 <gundalow> #topic fix for nxos_acl_interface idempotency #26156
+16:09:52 <gundalow> #link https://github.com/ansible/ansible/pull/26156
+16:10:00 <sai_> I am here
+16:10:12 <gundalow> sai_: Ah, this is yours?
+16:10:15 <sai_> yes
+16:10:16 <gundalow> #chair sai_
+16:10:16 <zodbot> Current chairs: Qalthos caphrim007 davidn ganeshrn gundalow mwiebe rcarrillocruz sai_ trishnag
+16:10:37 <gundalow> #info GH saichint  = IRC sai_
+16:10:50 <gundalow> trishnag: Have you been looking at nxos?
+16:11:14 <sai_> yes, I work for cisco and so we look at all nxos devices
+16:11:24 <gundalow> sai_: ah, cool, welcome :)
+16:11:28 <sai_> this is my first ansible code
+16:11:37 <gundalow> Nice to see tests
+16:11:55 <sai_> those were written by Mike Wiebe and I used them
+16:12:15 <gundalow> It's Qalthos (Nate) that looks after nxos, he's not here at the moment
+16:12:22 <trishnag> gundalow: yes.
+16:12:33 <mwiebe> gundlow:  Sai is on my team and just switched to help us on Ansible nxos modules
+16:12:35 <trishnag> maybe Qalthos would be the right to discuss about nxos acl_interface
+16:13:01 <trishnag> s/the right/the right person
+16:13:06 <gundalow> #action Qalthos to review fix for nxos_acl_interface idempotency #26156
+16:13:08 <gundalow> ack
+16:13:13 <trishnag> I cannot type
+16:13:17 <trishnag> thanks gundalow
+16:13:20 <gundalow> :)
+16:13:36 <gundalow> sai_: mwiebe Thanks for the PR, Qalthos will get back to you (via GitHub comments)
+16:13:44 <sai_> ok
+16:14:33 <gundalow> #topic Error with paramiko 2.1.0 <--> 2.2.1: Unicode-objects must be encoded before hashing #26146
+16:14:39 <gundalow> #info https://github.com/ansible/ansible/issues/26146
+16:15:18 <gundalow> #info This looks worrying, though it's strange that not more people have reported the issue
+16:15:42 <gundalow> #action privateip to investigate
+16:16:24 * gundalow has to step out for a couple of minutes
+16:16:55 <gundalow> #topic Open Floor
+16:17:08 <caphrim007> gundalow i have several issues that need merging
+16:17:11 <gundalow> Waiting on Qalthos for NXOS, he might appear online shortly
+16:17:22 <caphrim007> https://github.com/ansible/community/issues/110#issuecomment-308511388
+16:18:18 <caphrim007> gundalow: ^^
+16:21:07 <Qalthos> sai_: it looks good to me, if that's the proper way to get that info, then I don't see any issues
+16:21:40 <sai_> Yes, this is the right way
+16:22:32 <gundalow> back
+16:22:49 <gundalow> caphrim007: yup, two left :)
+16:22:53 <mwiebe> Qualthos: https://github.com/ansible/ansible/pull/26142 are the integration tests for nxos_acl_interface idempotency #26156
+16:23:00 <gundalow> caphrim007: was great to meet other F5 people last week
+16:23:05 <Qalthos> sai_: Alright, I have some comments on the PR, but we can take that there
+16:23:46 <sai_> the integration tests check both general functionality and idempotency
+16:23:54 <gundalow> +1
+16:24:27 <Qalthos> well, while we're on this topic, mwiebe have you seen/tested any of the PRs I've put through on your issues?
+16:25:04 * skg-net waves
+16:25:16 <gundalow> #chair skg-net
+16:25:16 <zodbot> Current chairs: Qalthos caphrim007 davidn ganeshrn gundalow mwiebe rcarrillocruz sai_ skg-net trishnag
+16:25:28 <mwiebe> Qualthos: I have seen the PRs but have not run then against our CI.  I will do that today.
+16:26:49 <mwiebe> Qualthos:  Thanks for working through the issues.  I also have an open PR for one of them.  ansible/ansible#25966 Fix nxos_acl module and add IT tests
+16:27:20 <mwiebe> trishnag approved but just waiting for your approval and merge on it.
+16:28:02 <Qalthos> mwiebe: I've seen it and it'll have a response shortly
+16:28:22 * Qalthos quietly points out his name has no 'u' in it
+16:28:34 <Qalthos> (:
+16:30:05 <mwiebe> Argh..  apologies  ( :
+16:30:20 <gundalow> mwiebe: pro tip q<tab>
+16:30:40 <gundalow> caphrim007: both merged
+16:30:42 <Qalthos> You are neither the first nor remotely the last to make that mistake
+16:30:52 <caphrim007> gundalow: thanks
+16:31:07 * gundalow has been called bungalow on at least one occurance
+16:31:51 <caphrim007> gundalow: 25980 was merged too?
+16:32:01 <caphrim007> ahh there it is
+16:32:16 <gundalow> caphrim007: had to refresh & merge
+16:32:50 <gundalow> caphrim007: FYI in Testing Working Group tomorrow we are going to be talking about
+16:32:52 <caphrim007> gundalow: here's a straggler
+16:32:53 <caphrim007> https://github.com/ansible/ansible/pull/26121
+16:32:58 <Qalthos> mwiebe: is there some issue with nxos_nxapi? I saw a conversation on that earlier, but I can't find it now
+16:33:00 <gundalow> https://github.com/ansible/community/issues/114#issuecomment-311000594
+16:33:34 <gundalow> caphrim007: which will also include discussion about if all external modules should be mocked out
+16:33:59 <gundalow> caphrim007: If you are around for that it would be great to get your input, as someone that's done a lot of unit testing
+16:34:21 <caphrim007> ok
+16:34:22 <mwiebe> Qalthos: gundalow was asking about this: https://github.com/ansible/ansible/pull/26142/files#diff-d8f5a59259d245b0e618d5ea42f2dc6eR2
+16:35:19 <gundalow> caphrim007: also merged bigip_iapp_service: Support full path templates
+16:35:24 <Qalthos> mwiebe: and that's also in the nxos_acl PR, why move away from nxos_nxapi?
+16:35:24 <caphrim007> thx
+16:36:21 <mwiebe> Qalthos: Correct.  If you merge the nxos_acl PR first, I will remove it from https://github.com/ansible/ansible/pull/26142
+16:36:25 <skg-net> I would like discuss about the common net_* modules..
+16:36:27 <Qalthos> OH, I think I understand now
+16:36:38 <gundalow> skg-net: sure
+16:37:32 <gundalow> Qalthos: mwiebe sai_ Let me know when you have finished and we can move on to discussing the platform agnostic net_* modules (I'm not rushing you)
+16:37:51 <mwiebe> Qalthos: I'm done.
+16:38:16 <sai_> Qalthos: I am done too. I added comments for your questions, you can check them later
+16:38:50 <Qalthos> gundalow: I think we can move on now, we'll work it out in PRs
+16:39:09 <gundalow> thanks
+16:39:16 <skg-net> is there a separate forum the net_* are discussed?
+16:39:21 <gundalow> #topic Platform agnostic net_* modules
+16:39:42 <gundalow> skg-net: The floor is yours, what would you like to know
+16:40:12 <skg-net> how are the parameters decided for the net_* modules..
+16:41:25 <gundalow> skg-net: Internally we have a sheet that lists what we think makes sense and what functionality exists across the different platforms
+16:41:35 <skg-net> Initial understanding I had was we take open-config and enhance it with other params it doesn't support
+16:42:13 <skg-net> since open-config focuses on some use cases alone..
+16:42:23 <gundalow> open-config?
+16:42:51 <skg-net> http://openconfig.net/
+16:43:02 <skg-net> Vendor-neutral, model-driven network management designed by users
+16:43:10 <gundalow> ah, OK
+16:43:27 <skg-net> is that still the case
+16:44:11 <gundalow> skg-net: Could you put the question in an email to Peter and I (jobarker@) he's traveling this week
+16:45:02 <skg-net> for example for net_vlan, I would expect member ports as a parameter..but I don't see it. Looks like it helps in creation of VLAN alone..
+16:45:30 <skg-net> gundalow I already have an email thread with Peter, I will include you as well..
+16:45:37 <gundalow> skg-net: Thanks :)
+16:45:55 <gundalow> Just so next time someone askes I've got more context :)
+16:47:49 <gundalow> #topic Open Floor
+16:47:55 <gundalow> Anyone got anything else?
+16:48:07 <skg-net> can we have a BJ call scheduled to discuss these vendor neutral models?
+16:49:57 <skg-net> for example for net_vlan, I would expect member ports as a parameter..but I don't see it. Looks like it helps in creation of VLAN alone..
+16:50:26 <skg-net> how would the user configure the members of a VLAN?
+16:50:57 <gundalow> skg-net: That sounds like a good idea
+16:52:23 <skg-net> gundalow: can you please setup?
+16:52:50 <ganeshrn> skg-net: there is net_l2_interface module in pipeline which assign access/trunk vlans
+16:54:05 <skg-net> thanks @ganeshrn
+16:54:27 <gundalow> skg-net: will do
+16:55:27 <gundalow> Cool
+16:55:38 <skg-net> can we start implementing for net_* modules for Dell OS10..do you see any changes coming shortly..
+16:56:19 <skg-net> and openswitch as well..
+16:59:54 <gundalow> skg-net: We can discuss with Peter next week. Though what you've said sounds sensible :)
+17:00:08 <gundalow> Thank you everybody for your time today
+17:00:10 <gundalow> #endmeeting

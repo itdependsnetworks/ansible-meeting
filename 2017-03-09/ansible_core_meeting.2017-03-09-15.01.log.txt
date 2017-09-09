@@ -1,0 +1,117 @@
+15:01:18 <gundalow> #startmeeting Ansible Core Meeting
+15:01:18 <zodbot> Meeting started Thu Mar  9 15:01:18 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:01:18 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:01:18 <zodbot> The meeting name has been set to 'ansible_core_meeting'
+15:01:20 <gundalow> alikins: Mornin'
+15:01:50 <gundalow> #chair abadger1999 alikins bcoca funzo jtanner mattclay nitzmahone rcarrillocruz shertel
+15:01:50 <zodbot> Current chairs: abadger1999 alikins bcoca funzo gundalow jtanner mattclay nitzmahone rcarrillocruz shertel
+15:01:56 <jtanner> hi
+15:02:11 <shertel> hello
+15:02:15 <rcarrillocruz> 'lo
+15:02:29 <gundalow> #info Agenda https://github.com/ansible/community/issues/156
+15:02:36 <abadger1999> morning
+15:03:18 <gundalow> #topic ansible/ansible#22330 moved README.md to README.rst
+15:03:28 <gundalow> #info https://github.com/ansible/ansible/pull/22330
+15:03:35 <gundalow> 7 Mar: Three +1s (abadger, bcoca, sivel) if someone wants to take on the task. No objections. Light attendance at the meeting today.
+15:03:48 <gundalow> So just checking that we are happy with that since we only had three people
+15:04:18 <gundalow> Also is CHANGELOG.md used by anything other than humans?
+15:04:45 * allanice001 waves
+15:04:59 <gundalow> This seems to be the only thing on the agenda
+15:06:53 * allanice001 looks at README.md
+15:08:11 <allanice001> I can put in a pr for read by tomorrow
+15:08:23 <allanice001> gundalow 6
+15:08:27 <allanice001> gundalow ^^
+15:08:28 <allanice001> :P
+15:08:49 <gundalow> allanice001: someones already done README
+15:09:09 <gundalow> #info README.md -> RST https://github.com/ansible/ansible/pull/22330
+15:09:24 <bcoca> +1
+15:09:41 <allanice001> Should all md files be changed ?
+15:09:54 <gundalow> I *think* so
+15:10:41 <rcarrillocruz> oh nice
+15:10:58 <gundalow> Having one format wouldbe good
+15:11:11 <rcarrillocruz> +1
+15:11:14 <gundalow> Not sure if GitHubRST viewer supports table of contents
+15:13:09 <allanice001> Should RELEASES become rst too ? (Currently txt)
+15:14:51 <gundalow> I think releases is written to by a script (look at the version in stable-2.2), so nop
+15:15:08 <gundalow> s/script/release playbooks/
+15:17:50 <allanice001> ack
+15:18:08 <allanice001> ```
+15:18:08 <allanice001> $ ls *.md
+15:18:08 <allanice001> CHANGELOG.md         CODING_GUIDELINES.md CONTRIBUTING.md      MODULE_GUIDELINES.md README.md
+15:18:08 <allanice001> ```
+15:18:27 <allanice001> ```
+15:18:27 <allanice001> $ ls */*.md
+15:18:27 <allanice001> contrib/README.md                          ticket_stubs/bug_misunderstanding.md       ticket_stubs/needs_template.md             ticket_stubs/proposal.md
+15:18:27 <allanice001> hacking/README.md                          ticket_stubs/bug_not_a_bug.md              ticket_stubs/no_thanks.md                  ticket_stubs/resolved.md
+15:18:28 <allanice001> test/README.md                             ticket_stubs/change_applied.md             ticket_stubs/pr_cleanup_commits.md         ticket_stubs/thanks.md
+15:18:31 <allanice001> ticket_stubs/README.md                     ticket_stubs/file_under_another_project.md ticket_stubs/pr_duplicate.md               ticket_stubs/wider_discussion.md
+15:18:34 <allanice001> ticket_stubs/bug_cannot_reproduce.md       ticket_stubs/great_idea.md                 ticket_stubs/pr_merged.md
+15:18:37 <allanice001> ticket_stubs/bug_confirmed_p1_or_p2.md     ticket_stubs/needs_info.md                 ticket_stubs/pr_needs_rebase.md
+15:18:40 <allanice001> ticket_stubs/bug_is_really_a_question.md   ticket_stubs/needs_locale_info.md          ticket_stubs/pr_needs_revision.md
+15:18:43 <allanice001> ```
+15:18:45 <allanice001> Those are all the md files
+15:19:11 <allanice001> I have panic installed, and can do a quick run for all of them
+15:19:22 <allanice001> S/panic/pandoc
+15:19:42 <abadger1999> allanice001: ticket_stubs should stay md I think.
+15:19:44 <gundalow> leave the ticket_stubs, as they are designed to be copy & pasted into GitHub issues/PRs
+15:19:51 <abadger1999> As those are for cut and pasting into github tickets.
+15:19:54 <abadger1999> jinx
+15:19:59 * gundalow hifives abadger1999
+15:20:04 <abadger1999> :-)
+15:20:04 <allanice001> ack
+15:20:25 <gundalow> #agreed ticket_stubs should stay as .md as they are for people to copy & paste into GitHub PRs/issues
+15:20:54 <gundalow> #info Need to grep for each filename to find any links in other docs to the pages
+15:24:08 <allanice001> Ansible/ansible/#22446
+15:24:46 <gundalow> Cool
+15:25:00 <gundalow> Are those headings the official RST ones?
+15:25:13 <gundalow> I think for TITLES, we decided to use over and under markers
+15:25:34 <gundalow> (Scott has an action to add this to the document style guidelines)
+15:25:37 <gundalow> allanice001: gw
+15:26:43 <allanice001> Thats a quick conversion using pandoc - I doubt it has styling in place the way you want it
+15:27:00 <allanice001> Point me to the rest styles, and I can update it to match the rest files
+15:27:01 <gundalow> Good tool for getting t to 80%
+15:27:26 <gundalow> http://docutils.sourceforge.net/docs/ref/rst/restructuredtext.html#sections
+15:27:33 <gundalow> =============== Section Title
+15:27:33 <gundalow> ===============
+15:27:35 <gundalow> ffs
+15:27:38 <allanice001> Will take a look
+15:27:42 <gundalow> Thanks
+15:27:48 <gundalow> #topic Open Floor
+15:27:59 <gundalow> Anyone got anything else?
+15:29:22 <allanice001> # proposal process
+15:29:30 <allanice001> I'm still working on it
+15:29:47 <gundalow> #info allanice001 is still working on proposal process
+15:29:50 <gundalow> Cool
+15:29:57 <allanice001> I had a read through the ideas in etherpad
+15:30:08 <allanice001> Just need to work them back into the document
+15:30:08 <gundalow> We are all busy on 2.3 stuff, so not much else to report yet
+15:30:12 <gundalow> +1
+15:31:06 <allanice001> We touched the orphan process a while back
+15:31:10 <allanice001> Does one exist?
+15:31:29 <jtanner> i dunno
+15:31:36 <allanice001> Does it need to be reviewed to be inline with the the proposal process ?
+15:31:46 <gundalow> orphan of what?
+15:31:53 <bcoca> proposal exists
+15:31:56 <jtanner> but i wrote some scripts to figure out which maintainers/modules are probably "orphaned"
+15:32:07 <allanice001> dev nulling proposals that just sit there
+15:32:29 <gundalow> Just close with the correct set of labels
+15:32:29 <allanice001> Or finding new maintainers / champions
+15:34:04 <allanice001> Should we put a time limit / reach out to existing painter process in place?
+15:34:18 <gundalow> I don't know if we are at that stage yet
+15:34:32 <gundalow> I'd leave that as an issue for the future
+15:34:33 <jtanner> bcoca: where is the proposal?
+15:34:53 <allanice001> IE: no touchy in 3 - 4 weeks, reach out; still no touchy no feedback in 8 weeks, Coles with correct labels
+15:35:10 <jtanner> painter?
+15:35:14 <gundalow> We talked about one meeting a month doing a run through of all the proposals to review and kick them back into life (inc finding champions)
+15:35:50 <allanice001> jtanner - https://github.com/allanice001/proposals/issues/3
+15:36:10 <allanice001> and
+15:36:15 <jtanner> i was looking for the "orphan" process
+15:36:21 <allanice001> https://github.com/allanice001/ansible-template-for-proposals/blob/master/Proposal.md
+15:36:25 <allanice001> ahh
+15:36:32 <allanice001> I dunno, thus asking
+15:37:50 <gundalow> I think all our brain power is in 2.3 stuff at the moment
+15:38:00 <gundalow> So I'll close the meeting shortly unless anyone has anything else
+15:38:06 <bcoca> we has brains?
+15:38:22 <gundalow> sorry, brian power
+15:38:22 <allanice001> * zombie *
+15:38:41 <gundalow> #endmeeting

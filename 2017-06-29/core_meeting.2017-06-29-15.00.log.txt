@@ -1,0 +1,146 @@
+15:00:18 <thaumos> #startmeeting core meeting
+15:00:18 <zodbot> Meeting started Thu Jun 29 15:00:18 2017 UTC.  The chair is thaumos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:00:18 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:00:18 <zodbot> The meeting name has been set to 'core_meeting'
+15:01:06 <ryansb> hey errbody
+15:01:10 <chillysurfer> hello!
+15:01:13 <thaumos> #chair ryansb chillysurfer
+15:01:13 <zodbot> Current chairs: chillysurfer ryansb thaumos
+15:01:24 <chillysurfer> happy thursday
+15:02:00 <thaumos> and to you
+15:03:01 * gundalow waves
+15:03:08 * mattclay waves
+15:03:31 * samdoran dances
+15:03:37 <gundalow> :D
+15:03:46 <thaumos> #chair gundalow mattclay samdoran
+15:03:46 <zodbot> Current chairs: chillysurfer gundalow mattclay ryansb samdoran thaumos
+15:04:55 * nitzmahone lurks
+15:05:01 <thaumos> #chair nitzmahone
+15:05:02 <zodbot> Current chairs: chillysurfer gundalow mattclay nitzmahone ryansb samdoran thaumos
+15:05:05 <thaumos> #topic Open Floor
+15:07:24 <chillysurfer> would like to see this pr merged: https://github.com/ansible/ansible/pull/26077
+15:07:32 <chillysurfer> basically it fixes python3 incompatibilities
+15:07:41 <chillysurfer> backward compatible with python2 as well
+15:07:41 <thaumos> #topic ansible/ansible#26077
+15:07:52 <thaumos> #link https://github.com/ansible/ansible/pull/26077
+15:08:16 <chillysurfer> as it stands right now, these azure modules don't work with python3. this is important as we move to merge in support for azure==2.0.0 to have a copmlete solution
+15:08:35 <chillysurfer> and likewise most end users would be using a local connection, which would commonly use python3
+15:08:56 <abadger1999> Hola
+15:08:59 <thaumos> and just to say it out loud, it also works for python2, correct?
+15:09:01 <thaumos> #chair abadger1999
+15:09:01 <zodbot> Current chairs: abadger1999 chillysurfer gundalow mattclay nitzmahone ryansb samdoran thaumos
+15:09:09 <chillysurfer> thaumos: that's correct
+15:09:14 <thaumos> 👍
+15:10:12 <thaumos> @abadger1999 would you mind glancing at the PR mentioned to give a +1 for python3 compat?
+15:10:29 <abadger1999> <nod>
+15:10:32 <abadger1999> Yep, I'll merge
+15:10:33 <thaumos> ty!
+15:10:35 <thaumos> cool
+15:10:53 <chillysurfer> awesome, thank you so much
+15:11:08 <thaumos> #action abadger1999 to view and merge the PR
+15:11:18 <chillysurfer> fwiw the breaking change in python3 is that dict.keys() returns dict_keys class now instead of list
+15:11:22 <thaumos> ready for your topic abadger1999?
+15:11:46 <chillysurfer> calling `list(dict.keys())` solves this when appending through additive to another list
+15:11:54 <chillysurfer> and of course backwards compat with python2
+15:11:57 <chillysurfer> thanks, all!
+15:12:02 * jhawkesworth_ waves
+15:12:19 <thaumos> no no, thank you chillysurfer
+15:12:24 <shaps> Hi
+15:12:28 <chillysurfer> :-)
+15:12:30 <thaumos> #chair jhawkesworth_ shaps
+15:12:30 <zodbot> Current chairs: abadger1999 chillysurfer gundalow jhawkesworth_ mattclay nitzmahone ryansb samdoran shaps thaumos
+15:12:45 <shaps> just silently following, I'm in another meeting too :)
+15:12:45 <thaumos> #topic docstring format for metadata for 2.4
+15:12:59 <thaumos> abadger1999, you have the floor bud
+15:13:25 <abadger1999> So metadata in plugins is a new feature that bcoca added for 2.4
+15:13:50 <abadger1999> When doing it, he made it so the metadata can be in special methods like in the modules
+15:13:52 <abadger1999> or in docstrings.
+15:14:11 <abadger1999> I want to get rid of the docstring portion for metadata.
+15:15:10 <abadger1999> As written in the meeting ticket, there's no need for metadata to be in docstrings (documentation needs to for filters and tests plugins but not hte metadata)
+15:15:37 <jhawkesworth_> seems sensible not to have more than one way to do it, especially as it is new
+15:15:38 <abadger1999> the implementation is lacking write support
+15:15:40 <nitzmahone> Don't see why we'd need two ways for something that has to be written in Python anyway
+15:15:52 <chillysurfer> +1
+15:15:55 <shaps> +1
+15:16:15 <abadger1999> and the implementation is lacking support in the code I just ported over from metadatatool to lib/ansible/parsing/metadata.py
+15:16:33 <abadger1999> Getting rid of docstring support just for metadata fixes all of that.
+15:16:40 <abadger1999> (well... eliminates the problem)
+15:16:46 <mattclay> +1 to fewer ways to write metadata
+15:17:12 <nitzmahone> So this would also apply to modules, right?
+15:17:30 <abadger1999> nitzmahone: correct.
+15:17:51 <chillysurfer> any examples for the module implementation we could browse? or is that not available yet?
+15:18:14 * resmo waves
+15:18:22 <nitzmahone> So it just means that non python modules will continue to need a python doc stub. I don't think that's really a problem, but just makes that more "set in stone".
+15:18:32 <chillysurfer> got it
+15:18:46 <abadger1999> With bcoca's current code, metadata could theoretically be in docstrings in the modules... the plugindocs code would find it there.  However, any additional tools we have built to process metadata wouldn't work with it because they only anticipate the metadata forms we accepted i nthe proposal, not hte docstring style
+15:19:12 <abadger1999> nitzmahone: well... the docstrings wouldn't help you... docstrings are a python technology.
+15:20:21 <abadger1999> nitzmahone: i'm not getting rid of the yaml string format that is listed i nthe metadata proposal; I just want to get rid of being able to put metadata in docstrings.
+15:20:26 <nitzmahone> Ah ok, it's not YAML comments
+15:21:02 <nitzmahone> Gotcha, definitely +1 then
+15:21:18 <abadger1999> Cool.
+15:21:30 <jhawkesworth_> wondering if this was intentional - perhaps to support metadata in things that currently don't have it - say filters?
+15:21:58 <jhawkesworth_> or is it unintended?
+15:21:59 <abadger1999> I wish bcoca was here to defend this but I'm glad people seem to be in agreement.
+15:22:24 <abadger1999> jhawkesworth_: Sorta.  I think that's bcoca's intention.  But it doesn't seem like it's needed for metadata.
+15:24:20 <abadger1999> because it would be quite painful to have one file with multiple pieces of metadata for it.
+15:24:49 <jhawkesworth_> yep that would be painful.
+15:25:09 <thaumos> okay, so verdict is to remove docstring support for metadata
+15:25:42 <samdoran> Sounds good
+15:25:43 <alikins> I'm -1/+1 on it... not a fan of deserializing from a inline string, but dont really like doing ast on real code to get the data either
+15:26:18 <abadger1999> alikins: note that you have to use ast either way.
+15:26:27 <abadger1999> alikins: with the docstring you have to use ast to get the docstring.
+15:27:18 <abadger1999> thaumos: okay, do we want to call this decided?  Or do we want to get more votes or something else?
+15:27:37 <thaumos> yes
+15:27:41 <thaumos> it's decided.
+15:27:44 <alikins> abadger1999, yup
+15:27:44 <abadger1999> Cool.  thanks.
+15:28:06 <thaumos> #info votes taken for proposal.
+15:28:23 <thaumos> #action abadger1999 to remove docstring support for metadata
+15:28:30 <thaumos> #topic Open Floor
+15:29:36 <jhawkesworth_> https://www.irccloud.com/pastebin/s4qfePEf/
+15:29:53 <jhawkesworth_> #link https://github.com/ansible/community/issues/162#issuecomment-311900850
+15:30:21 <jhawkesworth_> both prs seem to be tackling the same thing really - more flexible doc building.
+15:30:37 <gundalow> +1000000000
+15:30:45 <gundalow> #topic Doc building
+15:31:26 <gundalow> #info https://github.com/ansible/ansible/pull/24576
+15:31:36 <gundalow> #info https://github.com/ansible/ansible/pull/25791
+15:32:16 <jhawkesworth_> in 24576 you limit by setting environment variables
+15:32:58 <jhawkesworth_> in 25791 there's a command docs/bin/ansible-makepage
+15:33:03 <gundalow> So minor points
+15:33:16 <gundalow> though I think it's nice being able to drive this from the top level
+15:33:59 <gundalow> hum, adding docs/bin/ansible-makepage.sh to PATH in hacking/env-setup would solve that
+15:34:38 <jhawkesworth_> that's definitely doable
+15:35:26 <jhawkesworth_> not sure the project wants bash scripts to proliferate
+15:35:27 <shaps> #25791 covers *all* docs pages where #24576 doesn't
+15:36:34 <gundalow> dharmabumstead: you around?
+15:36:37 <jhawkesworth_> arguing slightly against my on pr, 25791 doesn't let you rebuild everything, have to make webdocs for that.
+15:36:49 <jhawkesworth_> ^ on = own
+15:37:31 <abadger1999> Do we want both?
+15:38:06 <shaps> also, isn't #24576 very similar to https://github.com/ansible/ansible/pull/25313
+15:38:31 <alikins> heh, I have a branch for this as well, but it's not different enough to muddy the waters
+15:38:42 <shaps> sorry, sounds like I'm against #24576. I'm not, just pointing out things :)
+15:39:12 <jhawkesworth_> both prs I think are trying to make #25313 a little easier to use
+15:40:27 <jhawkesworth_> abadger1999 both is an option
+15:40:42 <jhawkesworth_> might dev guide a little more verbose I suppose though
+15:40:51 <gundalow> python over bash may be easier to maintain in the future
+15:41:17 <jhawkesworth_> good point.
+15:41:40 <gundalow> 24576 does the same thing without adding a new file into the mix
+15:42:24 <jhawkesworth_> sorry I have to leave now - maybe time to move on to next topic anyway
+15:42:26 * jhawkesworth_ afk
+15:42:42 <gundalow> does Jon's only allow building one page
+15:43:15 * gundalow votes for 24576 as
+15:43:17 <gundalow> 1) No new file
+15:43:25 <abadger1999> +1 to 24576
+15:43:29 <gundalow> 2) Allows building multiple modules in a single command
+15:43:36 <gundalow> 3) Python
+15:43:46 <gundalow> #agreed we will use 24576
+15:43:59 <gundalow> thaumos: what's next?
+15:44:04 <thaumos> #topic Open floor
+15:44:07 <thaumos> ^
+15:44:16 <thaumos> we don't have anything else on the docket for today
+15:44:28 <thaumos> if nothing else, we can close
+15:45:02 <thaumos> alright, thanks everyone for the discussions today!
+15:45:05 <gundalow> Testing Working Group is in 1h15, we will be discussing the new structure of Working Groups, and dependencies
+15:45:09 <gundalow> all welcome
+15:45:13 * gundalow has nothing else
+15:45:18 <thaumos> #endmeeting

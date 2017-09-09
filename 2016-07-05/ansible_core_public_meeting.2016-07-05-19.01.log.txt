@@ -1,0 +1,188 @@
+19:01:19 <jimi|ansible> #startmeeting Ansible Core Public Meeting
+19:01:19 <zodbot> Meeting started Tue Jul  5 19:01:19 2016 UTC.  The chair is jimi|ansible. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:01:19 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:01:19 <zodbot> The meeting name has been set to 'ansible_core_public_meeting'
+19:01:52 <jimi|ansible> #topic Github Issues and PRs
+19:03:33 <alikins> howdy
+19:03:58 <Qalthos> hiya
+19:04:30 * gundalow waves
+19:08:36 <ryansb> sup?
+19:10:05 * MichaelBaydoun indicates that he is lurking
+19:14:36 * ttom waves
+19:16:54 <MichaelBaydoun> hears crickets
+19:19:20 <jimi|ansible> most days...
+19:20:40 <jimi|ansible> so, crazy idea i had for a new set up plugins: password sources
+19:21:22 <jimi|ansible> ie. rather than having to prompt for a password, allow ansible to talk to things to get passwords, ie. "Secret Service" (linux api for password storage), maybe LastPass or similar...
+19:21:25 <jimi|ansible> ^ discuss
+19:21:35 <jimi|ansible> s/set up/set of/
+19:21:58 <ryansb> How does that differ from `vault`, just in that it can get secrets from other places?
+19:22:15 <jimi|ansible> it wouldn't be the secrets, it would be the password to unlock the vault
+19:22:36 <jimi|ansible> so rather than prompting for the vault password, allow it to be read in from a secure place
+19:22:43 <bcoca> jimi|ansible: you can already do that
+19:22:55 <bcoca> you can point to vault secrets file, if executable ... ansible runs it
+19:22:55 <jimi|ansible> bcoca: you can?
+19:22:59 <ryansb> yeah
+19:23:10 <ryansb> just set vault_password_file to an executable
+19:23:14 <bcoca> ^ several examples online with lasptass/keypass and gpg
+19:23:14 * ryansb uses that feature
+19:23:25 <jimi|ansible> ahh yeah, i forgot about that, but i was also thinking of a more general purpose use beyond vault
+19:23:38 <bcoca> lookups?
+19:23:39 <jimi|ansible> ssh passphrases, etc.
+19:27:37 <ryansb> in what context, like for nodes in the inventory?
+19:27:58 <jimi|ansible> yes, or remote user passwords in general for those
+19:28:53 <jimi|ansible> basically instead of prompting for any passwords, have a plugin that would fetch them securely
+19:29:55 <ryansb> maybe the way to go would be similar to the executable for the vault_password_file
+19:30:03 <alikins> jimi|ansible: ansible-agent ?
+19:30:20 <ryansb> maybe call it "remote_lookup" or something, and let people provide arbitrary executables
+19:30:36 <ryansb> with some default ones (like inventory contrib)
+19:30:47 <jimi|ansible> ryansb: well they can do that today with lookup('pipe', '/path/to/whatever')
+19:31:08 <ryansb> Oh, I'd never used that. /me adds to bag o' tricks
+19:31:19 <jimi|ansible> but that is specific to the template/variable engine, and isn't really accessible to some internal parts
+19:32:21 <jimi|ansible> this line of thought was inspired by a blog post i saw retweeted, basically saying "quit saving your API credentials in text files"
+19:34:26 <alikins> jimi|ansible: contrib/vault/vault-keyring.py   is a script that can use the python keyring module (which can use osx/gnome keychain and a few others).  (That script is specifically for invocation via vault though...)
+19:34:54 <bcoca> we can already do something similar via lookup and assigning to asnible_ssh_pass ... ssh keys are another matter, i would point people at ssh agents
+19:35:04 <jimi|ansible> alikins: right, like i said something a bit more formal than that specifc implementation for vault, but that was the general idea
+19:37:00 <jimi|ansible> bcoca: i know there are various ways to do it, the idea was to generalize it and clean it up so it was easier to use/extend
+19:37:16 <alikins> jimi|ansible: I wanted to see if ssh-agent itself could be extended to do something like this, but it pretty much only does 'get the result of using keyid BLAHBLAH to verify pub key FOO'  (ie, no direct access to the keys themselves, or to any results other than 'yup, that checks out')
+19:37:41 <bcoca> jimi|ansible: i fear it will require X new command line switches ... we are already pretty large
+19:37:42 <Shrews> jimi|ansible: i had a crazy idea myself that i think would be useful... timeouts at the 'block' level. so, block-rescue-always would now support block-rescue-always-timeout
+19:38:12 <ryansb> Shrews: that would actually be pretty legit
+19:38:14 <bcoca> Shrews: timeout force a 'rescue'?
+19:38:29 <ryansb> I think he means a separate timeout block
+19:38:33 <ryansb> err, clause
+19:38:35 <prw777> any chance we can get with_items: on a block?
+19:38:45 <Shrews> bcoca: i think it would be useful to be able to differentiate between 'fail' and 'timeout'
+19:39:04 <Shrews> ryansb: yes, separate
+19:39:47 <jimi|ansible> Shrews: so basically a special portion of a block that would be hit for unreachable hosts only?
+19:40:02 <prw777> or like, with_block_items: so you could still do with_items on the tasks inside a block?
+19:40:12 <jimi|ansible> prw777: we've discussed it, but right now you can do so with a block inside an include+loop
+19:40:19 <jimi|ansible> so not a priority
+19:40:40 <jimi|ansible> blocks were desiged as try/except structures, not for loops
+19:40:49 <Shrews> jimi|ansible: not just unreachable, but similar to an async timeout, if the tasks within the 'block' did not complete within the timeout for any reason, trigger the 'timeout' clause
+19:41:06 <bcoca> Shrews: i would call that 'failed'
+19:41:19 <alikins> jimi|ansible: for ssh auth, I suspect 'extend or write a ssh-agent that can use other datasources' is reasonable. Or... for ssh/ssh-agent, provide an pkcs11 module that knows how to talk to... some ansible thing.
+19:41:22 <bcoca> would make it a task level property, plays/blocks/roles can hold for 'inheritance'
+19:41:50 <jimi|ansible> Shrews: yeah, i think maybe having a general `timeout: ` field for tasks might do the trick, which if exceeded would fail the task and allow a jump into the rescue portion
+19:41:59 <jimi|ansible> ^ jinx bcoca
+19:42:43 <bcoca> great minds ...
+19:42:48 <Shrews> jimi|ansible: that may work, but makes grouping tasks with the same timeout more difficult.
+19:43:02 <jimi|ansible> Shrews: not if it can be set at the block level as bcoca said
+19:43:12 <jimi|ansible> so all tasks inside that block would inherit it
+19:43:15 <bcoca> Shrews: no, timout is a 'task property' but can bue used like 'environment' you can set at play/block/role/include leevels
+19:43:27 <alikins> if you want to add a timeout, might as well add idle events, with handlers attached at block/play/playbook levels
+19:43:38 <jimi|ansible> tricky thing is then that would mean the rescue/always portions would also inherit the value
+19:43:38 <bcoca> only 'works' on tasks, but others can set it for 'groups of tasks'
+19:43:48 <jimi|ansible> so... might get a double whammy there
+19:43:54 <bcoca> hehe, had not thought of that ...
+19:44:00 <jimi|ansible> if your rescue/always stuff takes longer than the timeout
+19:44:14 <bcoca> KABOOM!
+19:44:15 <alikins> and inherit the event handlers as approriate (ie, a block would try it's local timeout/idle hadler, then check it's parent, etc)
+19:44:26 <Shrews> jimi|ansible: well, the particular case i have in mind (ping mordred) is we don't want each task to inherit the total timeout, but, rather, whatever timeout is remaining (so as not to exceed the defined total timeout for the entire block)
+19:44:39 <Shrews> (if that makes sense)
+19:44:42 <jimi|ansible> hrm, that's definitely more tricky
+19:45:01 <bcoca> ah, timout for a series of tasks
+19:45:10 <bcoca> hrmmph
+19:45:17 <bcoca> that gets REALLY tricky
+19:45:21 <Shrews> bcoca: right
+19:45:27 <bcoca> ^ strategy?
+19:45:39 <jimi|ansible> yeah that sort of thing would be better suited to a strategy
+19:45:53 <Shrews> mordred actually has *something* similar to this in a plugin we've written
+19:45:54 <mordred> yah
+19:46:07 <mordred> well, yah - we're doing it in a callback plugin
+19:46:08 <jimi|ansible> unfortunately it'd have to allow for playbook syntax that would be read by all strategies
+19:46:09 <bcoca> ^ we probably need way to pass params to strategies (like serial to linear, but not on play as it is confusing)
+19:46:24 <jimi|ansible> strategy_options
+19:46:32 <prw777> @jimi|ansible: cool, the include workaround isn't bad.  sometimes you want to loop over the same items for a bunch of tasks though, so adding with_items functionality to blocks would be nice and keep code looking clean/more readable
+19:46:34 <mordred> which is calculating a remaining time from a total and then we're passing that as a param to each async call
+19:46:43 <ttom> +1 passing params to strategies
+19:46:56 <mordred> +1 passing params to strategies
+19:46:57 <bcoca> debug:
+19:47:03 <jimi|ansible> prw777: right, i see the usefulness, it's just very low priority right now, since there is a work-around
+19:47:07 <bcoca> options: breakpoint: 23 (task)
+19:47:15 <mordred> that seems like it would be a thing we could make use
+19:47:30 <mordred> of
+19:47:31 <prw777> @jimi|ansible: gotcha
+19:49:27 <jimi|ansible> Shrews / mordred this could still be an over-arching playbook thing though, since you want a cumulative timeout there could be a play/cli option for that
+19:49:38 <jimi|ansible> ie. if this play overall takes more than 20 minutes, kill it
+19:50:16 <mordred> jimi|ansible: yah - that's the thing we're mostly trapping against now
+19:50:47 <jimi|ansible> yeah, so basically you want a zuul test to have a hard timeout and fail right?
+19:50:52 <mordred> yup
+19:51:14 <mordred> will be even more important once we let people express multi-play jobs
+19:51:57 <ttom> btw, if you add an async task to one of the integration tests - it makes the docker container hang, as there's nothing there to kill it. maybe the timeout will help there as well
+19:52:00 <jimi|ansible> ok, so in that case i'd just recommend a cli/ansible.cfg option to control max run time
+19:52:42 <jimi|ansible> ttom: that's interesting, is the async task something which never exits on its own?
+19:52:46 <mordred> jimi|ansible: that makes me think of something ... now I want to go look at some code
+19:52:56 <jimi|ansible> mordred: heh k
+19:52:59 <ttom> jimi|ansible: it leave zombie processes
+19:53:31 <jimi|ansible> ttom: that sounds like the async wrapper isn't properly doing a double fork
+19:53:32 <ttom> I think that it can be overcome by replacing the entrypoint of the containers with something that scrubs zombies
+19:53:39 <jimi|ansible> or it's not closing fd's maybe?
+19:55:15 <alikins> well, per 'context'[1] default timeout, where a 'ansible-playbook' invocation as is is just one context. But if ansible-playbook is running multiple 'jobs', it could be a context per job  [1] context here in the eventloop/main context sense, not the ansible play context
+19:55:16 <ttom> jimi|ansible: If you do async + poll with a really long value, it hangs there forever. I thought it was beacuse the container has no init process to monitor zombies.
+19:56:05 <ttom> jimi|ansible: had to work around it by adding a 'teardown' role that kills the process
+19:56:29 <jimi|ansible> ttom: possibly, however some of the ones i baked at least are using systemd internally, so it should have an init process to reparent the zombies
+19:57:11 <ttom> jimi|ansible: I'll look into it again.
+19:57:45 <jimi|ansible> sure, same for the ubuntu 14 ones, those should be running upstart i believe
+19:58:02 <bcoca> i would not add to cli as you can already do this in command line
+19:58:22 <bcoca> timout 300 ansible-playboook
+19:58:30 <jimi|ansible> bcoca: i figured there was probably some wrapper you could do that under
+19:58:33 <bcoca> timeout -s 15 300 ansible-playbook
+19:58:41 <bcoca> ^ can even control signal sent
+19:58:47 <jimi|ansible> neat
+19:59:46 <mordred> yah - there's a reason we're not doing it on the subprocess invocation I think ... but I'm digging through to remember why
+20:00:53 <mordred> but it's not terribly useful to say "so, I've got this problem, but I don't remember why - fix it!" ... so I'll come back with more infos :)
+20:01:41 <Shrews> mordred: i can't recall either... maybe something to do with the process exit code
+20:02:16 <bcoca> timeout will give you an exit code depending on if processed finished in time or not
+20:02:16 <jimi|ansible> --preserve-status
+20:02:21 <jimi|ansible> ^ timeout option
+20:02:39 <bcoca> ^ that is if it 'finishes in time, but has non 0 return'
+20:03:07 <jimi|ansible> bcoca: i think it will also apply based on the rc generated by a specific signal
+20:03:24 <jimi|ansible> ie. if you use -s1 and your process is nice about HUPs
+20:03:52 <bcoca> only usabele signals will be kill/int/stop, none of which should return anything
+20:05:08 <ttom> can we talk about https://github.com/ansible/ansible/pull/16491?
+20:06:20 <bcoca> mattclay, gundalow ^
+20:07:03 <mordred> bcoca: timeout ansible-playbook doesn't give ansible the chance to clean up after itself, nor does it let ansible emit a failure log message
+20:07:39 <mordred> bcoca: (I knew there was a reason we weren't just doing timeout ansible-playbook - which you're right, is equiv functionality from a stop-execution perspective)
+20:08:21 <mordred> (also, happy to come back and talk about this later, since there is a PR on the docket)
+20:08:53 <ttom> mordred: sorry. thought you were done. I can wait
+20:08:55 <mattclay> ttom: Any specific questions on that PR, or are you just looking for someone to review?
+20:09:11 <ttom> mattclay: Looking for review
+20:09:17 <mordred> ttom: no worries - I can bug people any time - we can consider me done
+20:09:39 <robinro> ttom: I like the idea of that PR a lot
+20:10:16 <bcoca> mordred: that is why a strategy makes sense, but i would not do it at CLI level
+20:10:39 <ttom> mattclay: wanted to get your comments/input. I use it a lot while (trying to) write modules. Ansible's changing all the time, and running integration tests helps make sure everything's working as expected. this PR helps with the output.
+20:10:42 <ttom> robinro: thanks!
+20:10:49 <mordred> bcoca: wfm!
+20:10:52 <jimi|ansible> bcoca: https://gist.github.com/jimi-c/6aab9b17f5f3da6845ca5fbc198247ca
+20:11:00 <jimi|ansible> ^ mordred too
+20:11:29 <jimi|ansible> some signals do produce different rc's, and using the --preserve-status option you can see that
+20:11:43 <mattclay> ttom: I'll take a look.
+20:11:47 <robinro> ttom: did you run the integration tests with the new test strategy? ignore_errors: yes globally might break something (like the test that checks whether ignore_errors work)
+20:11:55 <bcoca> i would test 3 and 20 also
+20:12:23 <jimi|ansible> so potentially we could also simply add in some special signal handling for timeout?
+20:12:49 <bcoca> ttom: i would maybe rename the strategy 'assurance' as it is not as much testing as 'asserting'
+20:13:09 <ttom> robinro: I'm using it for running specific targets from the makefile. not 'all'. the use case is that when you have a play with something like 20 tasks, 10 pairs of task + assert, you don't want it to stop on the first failed assert, but rather have a report at the end, sort of like nosetests
+20:13:10 <jimi|ansible> ie. send ansible-playbook a HUP and it'd interpret that as a "stop what i'm doing and exit"
+20:13:27 <bcoca> jimi|ansible: is a bit broken right now though
+20:13:42 <bcoca> in 2.1/2.2 ... was working in 2.0.0.2
+20:14:34 <jimi|ansible> sure, and one fun thing i noticed is using those examples in that gist, you actually have to reset the terminal because the output is still hidden by the pause module
+20:14:39 <jimi|ansible> err. input rather
+20:14:46 <jimi|ansible> so no terminal echos
+20:14:57 <bcoca> yeah, not good module to test that with
+20:15:03 <bcoca> i use wait_for
+20:15:25 <jimi|ansible> could do an async task that sleeps instead
+20:15:38 <jimi|ansible> but just easier to test with the cli real quick than writing a playbook
+20:15:41 <bcoca> wait_for: timeout=30s
+20:15:48 <bcoca> ^ easier than that?
+20:16:02 <jimi|ansible> well, pause/wait_for, equal
+20:18:00 <jimi|ansible> wait_for is a bit nicer for this, since it doesn't hide input
+20:18:13 <jimi|ansible> -s20 doesn't do anything in ansible, btw
+20:18:24 <jimi|ansible> no timeout, and finishes with success
+20:18:35 <jimi|ansible> exit code is 124 still, without --preseve-satus
+20:18:40 <jimi|ansible> status
+20:19:08 <bcoca> i guessed as much as we don't handle it
+20:19:16 <bcoca> but now .. i know!
+20:19:59 <jimi|ansible> mordred: i think --preserve-status is what you want, unless you recall some other reason you didn't want to wrap it like that
+20:20:18 <bcoca> probably, interrupts ansible callback output
+20:20:19 <jimi|ansible> and to all others, i guess we'll wrap up the public meeting time, since we're 20 past
+20:20:28 <jimi|ansible> #endmeeting

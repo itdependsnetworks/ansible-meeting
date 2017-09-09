@@ -1,0 +1,179 @@
+15:09:27 <abadger1999> #startmeeting Public Core Meeting
+15:09:27 <zodbot> Meeting started Thu Sep  1 15:09:27 2016 UTC.  The chair is abadger1999. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:09:27 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:09:27 <zodbot> The meeting name has been set to 'public_core_meeting'
+15:09:50 <abadger1999> 3topic Roll call
+15:09:53 <nitzmahone> Yo
+15:09:57 <abadger1999> #topic Roll call
+15:10:10 <abadger1999> #chair Trozz linuxdynasty caseylucas shertel nitzmahone
+15:10:10 <zodbot> Current chairs: Trozz abadger1999 caseylucas linuxdynasty nitzmahone shertel
+15:10:53 <Trozz> I wanted to talk about the current issue open on ansible#16612 (link: https://github.com/ansible/ansible/issues/16612)
+15:11:06 <abadger1999> Agenda is here: https://github.com/ansible/community/issues/121
+15:11:51 <abadger1999> #topic Figure out how to represent missing python libraries in facts https://github.com/ansible/ansible/issues/16612
+15:12:07 <Trozz> Currently when displaying the fact information, if a module is missing e.g. libselinux-python instead of an error we return simply 'False'
+15:12:26 <Trozz> this has lead to this ticket being created due to confusion
+15:13:30 <Trozz> I think displaying an error there (e.g. missing-module) would be better than false as it informs the user that something is missing and cannot be checked
+15:13:52 * jimi|ansible lurks
+15:14:04 <abadger1999> #chair jimi|ansible
+15:14:04 <zodbot> Current chairs: Trozz abadger1999 caseylucas jimi|ansible linuxdynasty nitzmahone shertel
+15:14:11 <sivel> yo
+15:14:14 <Trozz> How does everyone else believe this should be?
+15:14:21 * docschick is here for a little while, too
+15:14:21 <Trozz> hey sivel jimi|ansible
+15:14:36 <abadger1999> Trozz: I agree but I'm not sure the best way to represent it either.
+15:14:42 <abadger1999> None?
+15:15:00 <abadger1999> We want to avoid breaking people who have checks in their playbook like:
+15:15:21 <abadger1999> when: ansible_selinux
+15:15:49 <abadger1999> #chair docschick
+15:15:49 <zodbot> Current chairs: Trozz abadger1999 caseylucas docschick jimi|ansible linuxdynasty nitzmahone shertel
+15:15:50 <Trozz> yeah as I could imagine some people have used, when: ansible_selinux = False
+15:16:17 <abadger1999> Trozz: yeah, a comparison to False will break if we change it at all.
+15:16:19 <sivel> don't provide the ansible_selinux fact at all?  that would at least cause the playbook to die where it is
+15:17:02 <Trozz> I don't think we have ever stipped a fact even if it doesn't exist. which is why I think the current default was False
+15:17:10 <abadger1999> <nod>  We could do that -- the drawback would be it's a little hard to discover then
+15:17:48 <abadger1999> ansible -m setup localhost might no longer be as complete a picture of what's available, for instance.
+15:17:49 <Trozz> I think either None OR explanation text would be better than nothing what so ever
+15:18:31 <abadger1999> <nod>  Explanation text would be nice but it would also be "truthy" for the purposes of when: ansible_selinux
+15:18:51 <sivel> coudl we create a special type, that could include a reason, but still blow up if used?
+15:19:28 <sivel> sort of like our "omit" but you know that does something different, carries a reason, although that would be a lot more work
+15:20:03 <sivel> note: those statements have not been thoroughly though out :)
+15:20:33 <sivel> thought*
+15:20:41 <sivel> having trouble typing this morning, fingers aren't warmed up yet
+15:20:59 <Trozz> lol :-) I am torn between either None and explanation either one will cause a break for people that have currently written checks against ansible_selinux
+15:21:05 <abadger1999> It travels over the wire as json so we'd have to have logic on the controller side that says if one of our values returned via json is Foo Basic Type with this marker, then print a warning contianed in the type and replace it with False/None/something else.
+15:22:46 <sivel> my memory is likely failing, but I had believed it started as None, and then became True/False, but it could be what we do for supporting ssl context
+15:23:27 <Trozz> also if the module is installed then the feedback for ansible_selinux is "ansible_selinux": { "status": "disabled" }
+15:23:38 <abadger1999> {'_ansible_optional_facts_warning': 'selinux python library not found, unable to determine if this was set', 'set_to': None }
+15:24:26 <Trozz> that sounds good
+15:25:54 <abadger1999> Trozz: note that the fact itself would still be misleading.... but we can print the warning to stdout so that the user can see it.
+15:26:03 <abadger1999> Does that work out fine?
+15:26:24 <Trozz> yeah as long as we inform the user I do not see an issue
+15:26:28 <abadger1999> k
+15:27:11 <Trozz> everyone in agreement with that?
+15:27:49 <abadger1999> Hmm... if it's just a warning... It might be better to leave ansible_facts alone and instead return a warning in a new toplevel key.
+15:28:10 <abadger1999> that way we don't have to look through the entire return value.
+15:28:18 <Trozz> if we go for the route of simply displaying a warning we can leave it as False so we don't mess with peoples current logic
+15:28:25 <abadger1999> <nod>
+15:28:36 <sivel> abadger1999: that sounds reasonable, and removes the need for a recursive function
+15:28:56 <abadger1999> bcoca: Do we already have a warning key in return values or is that something we have to implement?
+15:29:39 <abadger1999> Trozz: Okay, I think we have the outline of a plan even though we don't have precise implementation.
+15:30:06 <abadger1999> #info End user will see a printed warning but facts will stay the same.
+15:30:23 <bcoca> 'warnings'
+15:30:30 <Trozz> sounds great, ill have a look at that when i get a chance
+15:30:36 <bcoca> ^ its a list
+15:31:20 <sivel> We need to make sure that gather_facts would also cause the warning to be displayed, I don't remember if it will, since we suppress the output there anyway
+15:31:33 <abadger1999> #info Trozz will look at using the existing "warnings" return value (a list) to implement this.
+15:32:03 <abadger1999> #info Need to look at gather_facts to make sure it won't supress the warning output
+15:32:04 <Trozz> +1 I will also update the public ticket letting everyone involved on it
+15:32:12 <abadger1999> Thanks Trozz!
+15:32:32 * mattclay waves
+15:32:42 * Trozz waves
+15:32:42 <abadger1999> #topic speed up async module execution by removing some sleeps https://github.com/ansible/ansible-modules-core/pull/4432
+15:32:49 <abadger1999> #chair bcoca mattclay
+15:32:49 <zodbot> Current chairs: Trozz abadger1999 bcoca caseylucas docschick jimi|ansible linuxdynasty mattclay nitzmahone shertel
+15:33:19 <abadger1999> dag_: If you're here, we haven't done unarchive yet, we can do that next.
+15:33:43 <abadger1999> caseylucas: This one is your topic :-)
+15:34:08 <caseylucas> i'd like some expert knowledge here.  modified code assumes there are two files that a sent to remote server. files are kept (via rename) before returning.
+15:34:11 <abadger1999> mordred, Shrews, jeblair_: I know you guys took a look at this last week too.
+15:34:21 <caseylucas> i just dont know if this is valid assumption
+15:35:01 <mordred> I didn't do it
+15:35:07 * mordred looks
+15:36:04 <mordred> I like the PR in general, I have not yet tried it in anger
+15:36:26 <nitzmahone> I actually had to do something different for that in Windows async- the watchdog had to delete the files (so the Windows wrapper opts out of deletion)
+15:36:26 * gundalow waves
+15:37:04 <nitzmahone> I actually only need it in the binary module case
+15:37:13 <caseylucas> module file and possible arguments are copied before returning (and later removed), but if there are other files that are transferred that i dont know about it may break
+15:37:29 <abadger1999> #chair gundalow mordred
+15:37:29 <zodbot> Current chairs: Trozz abadger1999 bcoca caseylucas docschick gundalow jimi|ansible linuxdynasty mattclay mordred nitzmahone shertel
+15:37:46 <gundalow> abadger1999: Thanks :)
+15:37:49 <nitzmahone> Wondering if the same trick would work
+15:38:42 <caseylucas> watchdog does removal of transferred module and possible arguments file with this PR
+15:38:42 <abadger1999> caseylucas: I'd look at things like the copy module to see.  copy might have the source file as an extra.
+15:39:30 <caseylucas> k. i can look at that
+15:39:57 <nitzmahone> The way I did it for Windows gets the control side involved so we don't need to copy the temp
+15:40:42 <nitzmahone> We'll need to reconcile regardless, or we'll have merge conflict or overlapping impls
+15:41:03 <nitzmahone> Win async should be merged this week
+15:41:39 <caseylucas> nitzmahone: can you send link to windows changes?
+15:42:37 <abadger1999> If I'm looking at copy correctly, the copy action plugin (lib/ansible/plugins/action/copy.py ) cleans up the file that it copied over.  However, the copy module may have to create a temporary file if remote_src is specified.
+15:43:00 <abadger1999> and then the copy module will clean that temp file up.
+15:44:38 <nitzmahone> caseylucas: here's the updated action plugin: https://github.com/nitzmahone/ansible/blob/win_async/lib/ansible/plugins/action/async.py
+15:44:46 <caseylucas> thx
+15:45:01 <abadger1999> jimi|ansible: Do you know off the top of your head the answer to caseylucas's question?  "I'd like to make sure there are no transferred file cases I missed. Code currently assumes only two files (module source and possible arguments) are shipped to remote server." ?
+15:46:31 <abadger1999> Alright... caseylucas I guess you have some things to look into now and we can take further discussion to #ansible-devel after the meeting?
+15:46:53 <caseylucas> k. thx
+15:47:21 <abadger1999> #info Windows async changes  https://github.com/nitzmahone/ansible/blob/win_async/lib/ansible/plugins/action/async.py
+15:47:58 <abadger1999> #info copy module is good thing to look at to tell if more files are being transferred
+15:48:18 <abadger1999> #info further discussion in #ansible-devel and next meeting if necessary
+15:48:39 <abadger1999> #topic archive module parameters: https://github.com/ansible/ansible-modules-extras/pull/2323#issuecomment-237360607
+15:48:57 <abadger1999> dag_: If you're here, we're onto the archive module
+15:49:25 <abadger1999> bcoca: This was one you were interested in continuing to discuss at last meeting
+15:50:43 <abadger1999> To summarize, we probably should have looked at the parameters for this module before merging.  Name-wise it looks like it corresponds with the unarchive module but parameterwise and functionalitywise it is different
+15:51:10 <abadger1999> We also don't think the current parameters are sufficient for what users will want to do with it.
+15:51:41 <abadger1999> So what do we want to do with this for 2.2?
+15:52:55 <bcoca> https://github.com/ansible/ansible/pull/17351
+15:53:28 <bcoca> ah, backlog just scrolled ....
+15:53:36 <abadger1999> heh.
+15:53:37 <bcoca> have not had time to look at archive/unardchive
+15:53:55 <abadger1999> yeah, and I fear that will be the story for all of us until 2.2.
+15:54:23 <Trozz> if we do not believe the module is where it should be and does not meet users needs we shouldn't look to ship it with 2.2
+15:58:18 <abadger1999> Okay, so proposal, when 2.2 branches, revert from 2.2 tree.  If we get enough time to review changes to the parameters to the module and they get implemented, revert the revert and cherry-pick additional changes to fix the parameters.
+15:59:10 <mattclay> abadger1999: +1
+15:59:23 <bcoca> i need more coffee before i can parse that sentence
+15:59:25 <bcoca> but +1
+15:59:27 <abadger1999> If no one objects to this, I'll post it to the issue and also apologize that we don't have more time to devote to helping to define it right now (but inviting the maintainers to ping us on #ansible-devel if they want to try to get more eyes on it)
+15:59:53 <Trozz> abadger1999 +1
+16:00:22 <abadger1999> okee doke.
+16:01:42 <abadger1999> #action abadger to apologize for lack of time and post idea to revert from 2.2 with the possibility of restoring it if proper parameters can be worked out in time.
+16:01:46 <abadger1999> #topic open floor
+16:01:54 <abadger1999> Okay, anything else that people have?
+16:02:31 <Trozz> I think we might need some people with time to go through the open issues and close off what should be closed
+16:02:48 <abadger1999> Trozz: yeah, that would be helpful.
+16:02:53 <gundalow> Testing Working Group meeting is in one hour, hope to see lots of the community there <--- shameless plug
+16:03:04 <Trozz> I will be driving sadly :(
+16:03:10 <abadger1999> gundalow: Is Trozz's idea something that falls sort of in your realm?
+16:03:29 <abadger1999> (of coordinating people)
+16:03:54 <docschick> Just want to mention the DocSprint for the Ansible contributor summit in early Oct (Brooklyn) <-- trying to drum up some interest :)
+16:04:05 <abadger1999> Doc Sprint ++
+16:04:19 <gundalow> https://www.ansible.com/blog/ansible-contributor-summit-brooklyn-2016
+16:04:49 <abadger1999> #info Testing Working Group has started.  Meeting today at 17:00 UTC
+16:05:00 <gundalow> #info Agenda + info on Docs Sprint
+16:05:02 <gundalow> ffs
+16:05:08 <gundalow> #info Agenda + info on Docs Sprint https://public.etherpad-mozilla.org/p/ansible-summit-october-2016
+16:05:22 <abadger1999> #info Doc sprint happening at the next Ansible Contriubtor Summit: Early October in Brooklyn
+16:05:56 <gundalow> docschick: I have some ideas for completely redoing http://docs.ansible.com/ansible/developing_modules.html
+16:06:35 <gundalow> Once 2.2 stuff has calmed down a bit I'll get more of it written up and speak to you and Scott(?)
+16:06:39 <abadger1999> gundalow: put your head together with dharmabumstead (unfortunately, he's on US West Coasttime and doesn't keep as odd hours as I do)
+16:06:42 <bcoca> https://github.com/ansible/ansible/pull/17351 <= need to link that there too
+16:06:56 <bcoca> he 1h window
+16:07:06 <docschick> @gundalow sounds good!
+16:07:21 <gundalow> abadger1999: will do
+16:07:22 <abadger1999> #info https://github.com/ansible/ansible/pull/17351 Start of documentation of names of common and internal return values
+16:07:52 <gundalow> Trozz: Do you mean all issues under github/ansible/ansible*
+16:08:06 * docschick heads afk for a bit
+16:10:45 <gundalow> bcoca: developing_modules needs to link to common_return_values.rst
+16:10:46 <gundalow> ?
+16:11:10 <abadger1999> Okay, since Trozz seems to be busy, let's table the discussion of triaging old issues for things that can be closed for later.
+16:11:23 <Trozz> just popped away, im back now
+16:11:28 <abadger1999> ah cool.
+16:11:36 <Trozz> yeah, theres alot dating back quite a while
+16:12:01 <bcoca> i try to dedicate part of backlog to oldest pr/issues, but have not been doing triage last 2 weeks
+16:12:05 <Trozz> I can help dig through and mention someone if that helps when I think an issue should props be closed
+16:12:16 <bcoca> it does help
+16:12:24 <gundalow> That would be a massive help :)
+16:12:47 <gundalow> Trozz: You could add them onto the agenda ticket (when we create one for next weeks meeting)
+16:13:12 <gundalow> $url $suggestion$
+16:13:13 <Trozz> Yeah that sounds good :-) which meeting should I add it to as not sure if it falls in to Core
+16:13:35 <gundalow> Will propbs be the core team that needs to review the list
+16:13:50 <Trozz> kk
+16:13:56 * gundalow create agenda for next week
+16:14:10 <bcoca> @jtanner:  a bot label 'proposed_closed'?
+16:15:39 <abadger1999> gundalow: also -- I think you have to close old agendas.. when I tried, I think I didn't have permission.
+16:16:07 <abadger1999> #info Trozz will get teh ball rolling on closing old issues by putting them on the meeting agenda for next week.
+16:16:36 <abadger1999> Okay, we've gotten through some good stuff here today.
+16:16:38 <gundalow> Trozz: https://github.com/ansible/community/issues/122 agenda. Feel free to keep on editing the same comment rather than adding multiple comments
+16:17:02 <abadger1999> If there's nothing new, I'll close in a minute.
+16:17:03 <Trozz> gundalow I would do as constant comments can get very annoying ;-)
+16:17:14 <abadger1999> (But feel free to keep talking here or in #ansible-devel ;-)
+16:17:37 <Trozz> think that's everything
+16:18:29 * gundalow -> food -> run Testing Working Group meeting
+16:18:39 <abadger1999> #endmeeting

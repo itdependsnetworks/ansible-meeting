@@ -1,0 +1,289 @@
+16:02:59 <gundalow> #startmeeting Network Working Group
+16:02:59 <zodbot> Meeting started Wed Jun 14 16:02:59 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:02:59 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:02:59 <zodbot> The meeting name has been set to 'network_working_group'
+16:03:13 <gundalow> #cahir funzo trishnag caphrim007 Qalthos rcarrillocruz
+16:03:20 <gundalow> #chair funzo trishnag caphrim007 Qalthos rcarrillocruz
+16:03:20 <zodbot> Current chairs: Qalthos caphrim007 funzo gundalow rcarrillocruz trishnag
+16:03:23 * Qalthos waves
+16:03:50 <gundalow> #info Agenda: https://github.com/ansible/community/issues/110#issuecomment-307207911
+16:04:10 <gundalow> #topic bigip_* PRs
+16:04:14 <caphrim007> i believe i have a number of open prs :-P
+16:04:24 <gundalow> #info https://github.com/ansible/community/issues/110#issuecomment-307207911
+16:04:32 <gundalow> caphrim007: Just a few, you've been busy
+16:04:59 <caphrim007> i panicked when i saw your timeline announcement
+16:05:16 <gundalow> Excellent, so it worked :)
+16:05:23 <caphrim007> -.-
+16:05:54 <gundalow> In previous years we get a mass rush of new modules the week before the deadline
+16:05:58 <itdependsnetwork> for those not as familiar, can you provide timeline again?
+16:06:04 <gundalow> not just networkin that's across the board
+16:06:12 <gundalow> #chair itdependsnetwork
+16:06:12 <zodbot> Current chairs: Qalthos caphrim007 funzo gundalow itdependsnetwork rcarrillocruz trishnag
+16:06:14 <caphrim007> gundalow: understood
+16:06:33 <gundalow> #info 2.4 deadlines https://github.com/ansible/community/issues/110#issuecomment-306850073
+16:06:37 <gundalow> itdependsnetwork: https://github.com/ansible/community/issues/110#issuecomment-306850073
+16:06:57 <gundalow> mwiebe: Hi :)
+16:07:05 <mwiebe> Hi
+16:07:50 <akasurde> o/
+16:08:26 <gundalow> #chair mwiebe akasurde
+16:08:26 <zodbot> Current chairs: Qalthos akasurde caphrim007 funzo gundalow itdependsnetwork mwiebe rcarrillocruz trishnag
+16:08:36 <gundalow> caphrim007: From a few quick look the new modules look OK
+16:08:44 <caphrim007> k
+16:09:08 <gundalow> in F5: Adds a reconnect method
+16:09:15 <gundalow> where does reconnect get called from?
+16:09:30 <gundalow> oh, that's in module_utils
+16:09:34 <caphrim007> from inside the sdk's management root
+16:09:38 <gundalow> cool
+16:09:53 <gundalow> merged reconnect
+16:09:58 <caphrim007> thx
+16:11:32 <gundalow> #action Networking Team to review and merge the remaining bigip_* new module PRs
+16:12:10 <gundalow> #topic asa_config #25319 #25680
+16:12:24 <gundalow> #link https://github.com/ansible/ansible/pull/25680 https://github.com/ansible/ansible/issues/25319
+16:12:39 <gundalow> From ogenstad:
+16:12:45 <gundalow> > I've submitted PR #25680 which would solve parts of this. However I think it would be best to have some discussion and a plan for the shared module_utils and perhaps a coordinated effort to try to avoid these types of things in the future.
+16:12:51 <gundalow> > The PR won't solve all of the config issues but will make sure the base feature work. It should be cleaned up after the discussion and perhaps changed altogether (so that the module var doesn't have to be passed around everywhere)
+16:13:07 <gundalow> trishnag: Qalthos What do you think?
+16:14:51 <gundalow> #chair bdlamprecht
+16:14:51 <zodbot> Current chairs: Qalthos akasurde bdlamprecht caphrim007 funzo gundalow itdependsnetwork mwiebe rcarrillocruz trishnag
+16:15:54 <gundalow> #chair dkasberg
+16:15:54 <zodbot> Current chairs: Qalthos akasurde bdlamprecht caphrim007 dkasberg funzo gundalow itdependsnetwork mwiebe rcarrillocruz trishnag
+16:16:15 <Yasser> join
+16:16:22 <trishnag> gundalow: checking. can we have ogenstad here?
+16:17:00 <akasurde> Does anyother module uses shell.py ?
+16:17:06 <akasurde> Just asking ...
+16:17:07 <gundalow> trishnag: I've pinged him, though I don't think he's online at the moment
+16:18:23 <Qalthos> akasurde: cloudengine, f5_cli, openswitch
+16:18:45 <trishnag> gundalow: If this solves the issue for now without affecting other modules, then we can have it for now. But I am +1 to have specific things for asa in module_utils/asa perhaps.
+16:19:09 <trishnag> I can coordinate with ogenstad tomorrow.
+16:19:33 <itdependsnetwork> I think there are some overall concerns about the shared utils, without knowing the full impact
+16:19:43 * akasurde thinking about side-effects of shell.py
+16:19:53 <Qalthos> It looks like those should be broken anyway...
+16:22:00 <caphrim007> f5_cli is not used
+16:22:05 <caphrim007> i intend to remove it for 2.4
+16:22:31 <Anil_> join
+16:23:32 <Qalthos> caphrim007: Ah. I just put what I found in devel
+16:23:34 <gundalow> trishnag: He can't join the meeting at the moment, we can maybe follow up later in #ansible-devel
+16:23:40 <trishnag> +1
+16:23:43 <caphrim007> Qalthos: yep, np
+16:24:12 <trishnag> maybe we should have a look at module_utils/network_common
+16:24:46 <itdependsnetwork> +1
+16:27:02 <gundalow> I need to step out for a bit, can someone please continue the meeting and #topic onto the next item as needed, thanks
+16:28:33 <itdependsnetwork> was hoping to get a final vote on: https://github.com/ansible/ansible/pull/23526
+16:29:31 <itdependsnetwork> Seems reasonable to me to follow RFC and fix the issue. Backwards functionality is not followed in many many cases, and it does not work as one would expect to begin with.
+16:32:44 <itdependsnetwork> for the record, silence counts as affirmation
+16:34:45 * bdlamprecht agrees with itdependsnetwork
+16:39:20 <gundalow> back
+16:39:59 <gundalow> #info Will follow up with ogenstad in #ansible-devel when he's around
+16:40:08 <gundalow> #topic Network support for /32
+16:40:18 <gundalow> #link https://github.com/ansible/ansible/pull/23526
+16:40:35 <gundalow> funzo: ^
+16:40:49 <gundalow> So the question seems to be, do we
+16:40:55 <gundalow> A) We are ok with proposal - Please proceed
+16:41:01 <gundalow> B) We are not ok with proposal - Please use kwargs for backwards compatibility
+16:41:39 <gundalow> [17:32] < itdependsnetwork> for the record, silence counts as affirmation
+16:41:42 <gundalow> Nice try :)
+16:41:56 <itdependsnetwork> haha, I read it on the internet, must be true :)
+16:42:17 <gundalow> oh, on Wikipedia?
+16:42:41 <gundalow> My only view on this stuff as
+16:42:43 <funzo> the feedback from privateip was it's fine to introduce to make the change but it should be backwards compatible
+16:42:51 <gundalow> ah, OK
+16:43:16 <itdependsnetwork> no good for me :(
+16:43:20 <itdependsnetwork> you can close the PR then
+16:43:46 <gundalow> *confused* I though funzo comment was a vote for (A)
+16:44:25 <itdependsnetwork> nothing else is kept backwards compatible in the name of forward progress/it was not intended that way
+16:44:33 <funzo> perhaps my grammar on the PR was incorrect. I intended to communicate privateip's feedback
+16:44:55 <itdependsnetwork> no, it's added complexity for the fringe use case that is not as per RFC
+16:45:01 <gundalow> funzo: I'm trying to page back into memory the discussions we had
+16:45:27 <gundalow> If the current implementation is obviously broken, does that imply that no one is using it and therefore it's OK to change the functionality?
+16:46:09 <itdependsnetwork> I get you have other concerns. I just can't see spending time making it non-RFC compliant by default. would not want my name on that code
+16:47:09 <gundalow> Personally I'm OK with fixing something so it's RFC compliant, we just need to know how to document that
+16:47:31 <gundalow> Which may be a mix of CHANGELOG.md and the new porting_2.4 guide (yet to be written)
+16:49:10 <gundalow> #cahir ogenstad
+16:49:12 <ogenstad> Hi
+16:49:13 <gundalow> ffs
+16:49:16 <gundalow> #chair ogenstad
+16:49:16 <zodbot> Current chairs: Qalthos akasurde bdlamprecht caphrim007 dkasberg funzo gundalow itdependsnetwork mwiebe ogenstad rcarrillocruz trishnag
+16:49:25 <gundalow> typing is dificult :(
+16:50:41 <gundalow> privateip: Hi :)
+16:50:46 <privateip> hi all
+16:50:50 <gundalow> privateip: We are talking about https://github.com/ansible/ansible/pull/23526
+16:50:53 * privateip party crasher
+16:50:55 <gundalow> #chair privateip
+16:50:55 <zodbot> Current chairs: Qalthos akasurde bdlamprecht caphrim007 dkasberg funzo gundalow itdependsnetwork mwiebe ogenstad privateip rcarrillocruz trishnag
+16:51:13 <gundalow> Personally I'm OK with fixing something so it's RFC compliant, we just need to know how to document that
+16:51:18 <itdependsnetwork> ain't no party like an ansible-meeting party :)
+16:51:19 <gundalow> Which may be a mix of CHANGELOG.md and the new porting_2.4 guide (yet to be written)
+16:51:55 * privateip reading
+16:52:00 <gundalow> :)
+16:52:52 <privateip> so is there a concern about making the requested update?
+16:53:02 <privateip> or whats the issue / concern to get this merged?
+16:54:21 <itdependsnetwork> from me?
+16:54:27 <privateip> is there a concern moving to using kwargs for backwards compat?
+16:54:44 <itdependsnetwork> yea, it's added complexity to do something wrong
+16:55:02 <privateip> understood but be cannot break backwards compat
+16:55:23 <itdependsnetwork> tell that to ogenstad: :)
+16:55:39 <privateip> is he here?
+16:55:49 <ogenstad> What did I do? :)
+16:55:52 <itdependsnetwork> haha
+16:55:54 <privateip> lol
+16:56:02 <itdependsnetwork> I'm just stirring the pot :)
+16:56:04 <ogenstad> Yes I was summoned :)
+16:56:11 <akasurde> hehehe
+16:56:24 <privateip> trying to understand what is holding up 23526 changes to get merged
+16:56:49 <privateip> the current PR will break playbooks
+16:57:08 <privateip> we cant do that so i suggested moving the added feature to a kwarg in the filter
+16:57:26 <itdependsnetwork> anyway. Like I said before, ansible is a bigproject, but many things have been not backwards compatiable. setup.py, use of nested library, and the answer is always, not intended/or in need of forward progress
+16:58:05 <privateip> just because it was wrong before isn't a valid reason to repeat the same
+16:58:23 <itdependsnetwork> ok, you win, i'll close the PR
+16:58:35 <privateip> its not win or lose ... the PR is valid
+16:59:02 <privateip> im trying to understand why using a kwarg seems to be the sticking point here
+16:59:30 <itdependsnetwork> I feel like I am going to be rude just re-typing what I have said, and it's not my intention
+16:59:47 * privateip is easy going
+16:59:53 <itdependsnetwork> lol
+17:00:00 <itdependsnetwork> I know
+17:00:02 <privateip> its not rude, its opinion which is healthy
+17:00:45 <itdependsnetwork> so. Just that it add's complexity, and puts my name on something that is knowingly incorrect.
+17:00:46 <bcoca> normally we frown at kwargs as it is a bad pattern, makes it easy to misplace/misinterpet paramters
+17:01:04 <bcoca> calling the function x2 in try/except for old/new version is also acceptable
+17:01:11 <privateip> bcoca: agreed, but this change to the filter will break existing playbooks
+17:01:28 <bcoca> hence my use of 'normally'
+17:02:35 <itdependsnetwork> I'm good with it. I have just learned to use custom filters. Trying to give back in a logical way, but I understand the needs of such a large project.
+17:03:01 <itdependsnetwork> again, I made my case, and am ok with the outcome
+17:03:38 <privateip> so, just to be clear here, you dont want to change it to being kwarg based simply because you dont want your named tagged to it?
+17:04:02 <privateip> due to you feel its a wrong implementation?
+17:04:05 <itdependsnetwork> @bcoca, would be more interested in that gather_facts.py PR get put in :)
+17:04:28 <itdependsnetwork> yes, it's wrong in implementation
+17:06:33 <privateip> ok
+17:06:36 <itdependsnetwork> and if you look at original issue: https://github.com/ansible/ansible/issues/23517
+17:06:47 <itdependsnetwork> going to have this same question 7 times
+17:07:21 <bcoca> itdependsnetwork: doesnt look like it will go in anytime soon
+17:07:31 <itdependsnetwork> this is not right -> cidr            192.168.0.10/23, how do you make that backwards compatible?
+17:07:39 <itdependsnetwork> @bcoca, why?
+17:07:50 <bcoca> itdependsnetwork: lack of consensus
+17:07:58 <privateip> nobody is questioning the fact that the implementation currently is wrong
+17:08:03 <itdependsnetwork> it really causes a lot of headaches for non core modules
+17:08:17 <privateip> its about how to move foward without breaking potentially 100s (or more) of existing playbooks
+17:08:49 <itdependsnetwork> I would be more interested in leaving them alone and creating new methods that do what they intended to
+17:08:50 <bcoca> itdependsnetwork: 'resolution' of that 'bad cidr' can emit a 'warning: this is wrong, doing this instead'
+17:08:54 <bcoca> ^ for backwards compat
+17:09:04 <bcoca> and havea  strict_cidr=no|yes option
+17:11:02 <itdependsnetwork> actually that is a bad example :)
+17:11:12 <itdependsnetwork> I literally don't know what some of these were intended to do
+17:11:44 <itdependsnetwork> well anyway, enough yammering on from me
+17:12:28 <itdependsnetwork> I'll spend my time in -devel trying to understand why setup.py was not made backwards compat,
+17:14:19 <Qalthos> Okay, moving on then?
+17:14:34 <itdependsnetwork> yes
+17:15:06 <privateip> wait
+17:15:11 <privateip> what are we doing with the PR
+17:15:34 <itdependsnetwork> I'll close it
+17:16:06 <itdependsnetwork> welcome to modify and move on. But I can't justify spending more time talk about it then I did to create tests
+17:17:47 <ogenstad> What's left on the agenda?
+17:18:08 <ogenstad> I guess you talked about the ASA issues before I showed up?
+17:19:01 <Qalthos> Yes we did, trishnag was hoping to have a conversation about that
+17:19:13 <mwiebe> I would like to discuss a list of open issues impacting NX-OS modules.  I added the list to the meeting agenda
+17:20:04 <ogenstad> Did you start the conversation?
+17:20:57 <ogenstad> Or where there any questions?
+17:22:27 <ogenstad> As I've written elsewhere I think we really should try to avoid changing the module_utils if modules which are using them are impacted without any tests to see potential errors that are introduced.
+17:23:11 <ogenstad> While changing the shell.py one I just wanted to avoid to impact any of the other modules. But I don't think that PR should be merged as it is now.
+17:25:42 <Qalthos> My only contribution is that keeping the version of ComplexDict without module seems unnecessary... any code calling that is already broken by virtue of calling ComplexDict incorrectly as you have found
+17:25:47 <gundalow> #topic ASA
+17:25:47 * bdlamprecht needs to leave, if there is an opportunity to review my issues which I've put on the agenda that would be great.
+17:26:34 <ogenstad> @Qalthos, yes I guess that's true.
+17:27:22 <ogenstad> Aside from that I don't like the way the module has to be passed around everywhere between functions just to be there to there to be send to ComplexDict.
+17:27:54 <ogenstad> A solution would perhaps instead be to store it in a class property?
+17:29:17 <privateip> ogenstad: i'm not sure i follow your concern re: passing around arguments?
+17:29:20 <ogenstad> The same code from shell.py is also used from cloudengine, f5_cli and openswitch. I don't know how the modules using those work and if there are other modules which fail in the same way as asa_config now does.
+17:29:41 <Qalthos> I don't know how useful it is, but https://github.com/ansible/ansible/commit/b0c01bbb820802bca53cd7274ef161ff64335b1f is the change to ComplexDict, which shows how it is used elsewhere
+17:31:11 <ogenstad> privateip: Not really a concern, more that the code feels more bloated: https://github.com/ansible/ansible/pull/25680/files
+17:32:18 <ogenstad> I.e. a "lot" of different places where the module is just passed around. If it was stored as self.module somewhere we could just access it from where it's needed.
+17:33:52 <privateip> sure its dev pref, i get it .... no reason certain modules couldn't be refactored in that structure
+17:35:14 <ogenstad> But I'm not sure I should decide which changes make it into module_utils/shell.py as it could also impact other modules. So perhaps it should be a coordinated effort?
+17:36:10 <ogenstad> So something like what I submitted could perhaps be merged after removing the code as per Qalthos comments if there's a new release of 2.3 coming out soon.
+17:36:58 <ogenstad> Or do you have any thoughts about which way to go?
+17:40:31 <gundalow> privateip: Qalthos trishnag I think that's a question for you
+17:41:07 <privateip> oops
+17:41:51 <privateip> is there already a PR for the proposed changes?
+17:42:21 <privateip> i would rather see ASA move towards using persistent connections and away from shell.py
+17:42:32 <Qalthos> privateip: https://github.com/ansible/ansible/pull/25680
+17:42:37 <privateip> the code base is much more stable
+17:42:40 <Qalthos> is what we're talking about
+17:42:48 <privateip> ah
+17:43:28 * privateip looking
+17:43:54 <ogenstad> I can agree that it would make more sense to have it more in line with the other modules and also use persistent connections. I'm also guessing that this is one of the problems now that some parts were changed but then never tested.
+17:44:20 <privateip> yeah that could be the case
+17:44:37 <ogenstad> And it would really be good if the tests were able to reach a virtual ASA.
+17:44:56 <privateip> working on that part ;)
+17:45:34 <ogenstad> :)
+17:47:00 <privateip> by the time we digest this change we could have the persistent connection work done for asa
+17:47:07 <ogenstad> My only comment regarding persistent connections as it relates to the ASA is that the ASA supports multiple contexts and there might be playbooks which use different contexts on different plays.
+17:47:17 <privateip> ah
+17:47:20 <privateip> good point
+17:47:55 <ogenstad> That could be solved with some documentation, but it might also cause some unexpected issues.
+17:47:57 <privateip> we could not use persistent and simply use the current connection per task as it is today
+17:48:10 <privateip> but drop shell.py in favor of network_cli.py in the connection plugin
+17:48:34 <privateip> what triggers the context change
+17:48:40 <privateip> ogenstad: ^
+17:48:54 <privateip> is it an arg in the module?
+17:49:09 <ogenstad> Yes an arg.
+17:50:06 <privateip> ok im going to propose we table this for the moment ... lets look at moving asa to the connection plugin
+17:50:15 <privateip> i think you will be much much happier that way
+17:50:30 <ogenstad> So the problem might be if someone targets a context and then on the next task the context arg would be left out. With persistent connections changes could be made to the first context.
+17:50:49 <privateip> right we can use network_cli without persistent connections
+17:51:01 <privateip> so it will operate same as it works today by creating a connection per task
+17:51:17 <ogenstad> Ok
+17:51:20 <privateip> but instead of shell.py it will use the network_cli connection plugin which is significantly more stable
+17:51:43 <privateip> we can then figure out a good long term soluton to the context changes
+17:51:56 <privateip> i have some ideas but want to think about them some more and document the thoughts
+17:52:10 <ogenstad> Sounds good.
+17:52:51 <privateip> Qalthos: go ahead and add an action to me to provide more feedback on this issue
+17:52:56 <ogenstad> The context issue should only impact a small portion of the users and could perhaps be avoided if the context arg were to be specified on all tasks.
+17:53:33 <Qalthos> #action privateip provide more feedback about moving asa to network_cli
+17:53:34 <privateip> yeah with the changes going to into 2.4 we have quite a bit more flexibility to deal with these situations
+17:53:45 <Qalthos> #chair privateip
+17:53:45 <zodbot> Current chairs: Qalthos akasurde bdlamprecht caphrim007 dkasberg funzo gundalow itdependsnetwork mwiebe ogenstad privateip rcarrillocruz trishnag
+17:53:57 <privateip> any chance you are coming to Fest next week ogenstad?
+17:54:40 <ogenstad> Would like to but I'm vacationing in Greece with the family.
+17:54:48 <privateip> and that is more fun ???
+17:54:49 <privateip> :)
+17:55:19 <ogenstad> Well, it will be more fun the week afterwards when I meet the wife again ;)
+17:55:25 <privateip> lol
+17:56:27 <privateip> ok i think we are good to move on
+17:56:27 <ogenstad> I haven't looked at that part of the code though.
+17:57:01 <ogenstad> Are there any other modules which use network_cli without persistent connections?
+17:57:06 <privateip> no
+17:57:14 <privateip> at least not in devel
+17:57:52 <gundalow> We good to move on?
+17:58:07 <privateip> yep
+17:58:13 <gundalow> #topic nxos issues
+17:58:24 <gundalow> #link https://github.com/ansible/community/issues/110#issuecomment-308473891
+17:58:35 <gundalow> mwiebe: Thanks for the bug reports
+17:58:41 <ogenstad> Yeah I'm good. Have to get some dinner now. Bye!
+17:58:48 <privateip> thx ogenstad
+17:58:56 <ogenstad> thanks
+17:58:56 <gundalow> ogenstad: Thanks :)
+17:58:59 <mwiebe> gundlow: Sure thing.
+17:59:38 <gundalow> Qalthos: This may be one for you
+17:59:50 <mwiebe> Just looking for feasibility of getting them resolved before the July 15th deadline.
+18:00:13 <Qalthos> mwiebe: So there's a lot here, are there any in particular you want to bring attention to?
+18:01:20 <mwiebe> Qualthos: vxlan issues are the highest priority, followed by pim , then acl
+18:02:05 <mwiebe> These are all (with the exception of AAA) in the P1 bucket I sent to Qalthos a while back.
+18:03:05 <Qalthos> That's what I thought, just wanted to make sure there wasn't anything P0 for you or something
+18:03:22 <Qalthos> And again, thank you so much for all these issues
+18:04:45 <Qalthos> We'll get through them as quickly as we can, this is probably going to be on my plate, and I'll try to keep you up to date on all these getting through
+18:04:52 <mwiebe> Qualthos: NP.  If you can give me an idea of how many in this list you can get to before the deadline my team can chip in on others.
+18:08:07 <Qalthos> Honestly, the more you can turn into PRs on your own, the quicker this is all going to go through
+18:10:22 <mwiebe> Qualthos: We are primarily focused on certifying all of the nxos modules against the various targets (nxos platforms/releases) + beefing up the IT tests.
+18:11:27 <mwiebe> We plan to contribute the IT tests via PRs once they are ready so we don't have a lot of resources to fix the modules that are erroring out in advance of the deadline but will as much as possible.
+18:11:39 <Qalthos> mwiebe: Yeah, I didn't think it'd be that easy d:
+18:11:52 <mwiebe> :)
+18:12:19 <gundalow> Qalthos: Nice try :)
+18:12:30 <gundalow> Yay for tests though :)
+18:16:00 <mwiebe> Qualthos and gundalow: We really need to get the issues fixed ahead of the deadline so let us know which of these you can commit to and we will try and fix the others.
+18:16:46 <gundalow> mwiebe: We will discuss that internally and get back to you
+18:17:04 <gundalow> Thanks again for raising the issues
+18:17:11 <mwiebe> Thanks!
+18:17:14 <gundalow> :)
+18:17:30 <gundalow> hum, well that's 2h10 of meeting
+18:18:01 <gundalow> #action Networking team to work out which issues they can fix and report back to mwiebe
+18:18:06 <gundalow> #end meeting
+18:18:08 <gundalow> #endmeeting

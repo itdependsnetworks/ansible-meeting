@@ -1,0 +1,233 @@
+16:05:15 <privateip> #startmeeting Networking Working Group
+16:05:15 <zodbot> Meeting started Wed Apr 27 16:05:15 2016 UTC.  The chair is privateip. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:05:15 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:05:15 <zodbot> The meeting name has been set to 'networking_working_group'
+16:05:23 <privateip> hi all
+16:05:35 <dgethings> hey
+16:05:42 <privateip> welcome to the kick off of the networking working group community meeting for Ansible
+16:05:49 <privateip> and thanks for joining us today
+16:06:02 <privateip> Agenda for today
+16:06:09 <privateip> * Team / Community Introductions
+16:06:13 <privateip> * Meeting Goals
+16:06:23 <privateip> * 2.1 Summary / Update
+16:06:27 <privateip> * 2.2 Roadmap
+16:06:34 <privateip> * Open Q&A
+16:06:53 <privateip> any other agenda items anyone wants to add that doesn't fit in those topics?
+16:07:44 <dgethings> none from me
+16:08:00 <privateip> #topic Team and Community Introductions
+16:08:25 <privateip> ok i thought since this is our first meeting i would take a moment to introduce key members of the Ansible community
+16:08:45 <privateip> these are folks that you can call on anytime via IRC for help engaging in the Ansible community
+16:08:55 <privateip> as I call on you, if you are here please say hi
+16:09:33 <privateip> the overall Ansible community is run and managed by @gregdek and @rbergeron
+16:10:20 <privateip> both are great resources for any help getting involved with any aspect of the Ansible community including outbound as well (meetups, conferences, etc)
+16:10:28 * gregdek hullos and lurks
+16:11:01 <privateip> next up is @newtMcKerr .... he manages the Ansible core engineering team
+16:11:34 <privateip> you will find him lurking about here and there and always willing to swamp a good story or two
+16:12:32 <privateip> we also have a number of folks from the core engineering team hanging around @bcoca @badger1999 @nitzmahone @jtanner (hope i dont miss any)
+16:12:49 <privateip> all great resources to help you on our ansible journey working with the community
+16:12:53 <bcoca> yes, but team is growing, i dont know full list either!
+16:13:05 <nitzmahone> yo
+16:13:31 <Qalthos> privateip: abadger1999
+16:13:42 <privateip> finally myself @privateip (that was redundant) :) and @Qalthos
+16:13:58 <Qalthos> Hello 👋
+16:14:05 <privateip> the two of use are saddled with making networking magic happen in Ansible working with all of you
+16:14:16 <dgethings> lucky!
+16:14:24 <privateip> :)
+16:15:05 <privateip> please feel free to reach out to any of us here ... you will find us hanging out at #ansible and #ansible-devel normally
+16:15:11 * abadger1999 waves
+16:15:25 <privateip> #topic Meeting Goals
+16:16:07 <privateip> the reason we are putting this community together is to collectively build the best automation platform that supports networking period
+16:16:41 <privateip> and we want to do this collaboratively as a community
+16:17:07 <privateip> my single biggest goal is to enable all of you to become contributors in one way or another to Ansible
+16:17:25 <privateip> even if you dont want to write code... there are plenty of other ways to get involved
+16:17:44 <privateip> developing roles, best practices for networking, docs, the list is endless
+16:17:56 <bcoca> writing docs ...
+16:18:26 <privateip> to that end we have established this meeting to have a designated time and place to get together to review ....
+16:18:31 <privateip> networking pull requests
+16:18:36 <privateip> feature requests
+16:18:42 <privateip> best practices
+16:18:46 <privateip> general updates
+16:19:12 <privateip> at the present time i have committed to being here every week at this time ... if that winds up being excessive we can scale the meeting back a bit
+16:19:23 <privateip> biweekly or whatever makes sense
+16:19:59 <privateip> i would ask folks that are currently maintainers of network modules to try to make as many of these meetings as possible as well
+16:20:11 <privateip> this is where we will define "whats next?" for ansible and networking
+16:20:23 <dgethings> ok, cool
+16:20:36 <caphrim007> works for me
+16:20:42 <privateip> if you want to contribute and not sure how to get started... please feel free to DM me (or anyone else on the team) and we can help you
+16:21:16 <privateip> overall the goal is to be as open and transparent as possible moving forward so we all have inputs
+16:21:30 <privateip> #topic 2.1 Summary and Updates
+16:21:46 <privateip> Ansible 2.1 RC1 was released yesterday !!
+16:22:08 <privateip> this is a big deal for networking as it s the first release that networking will be part of Ansible mainline
+16:22:08 <dgethings> woot!
+16:22:35 <dgarros> Congrats !!
+16:22:35 <privateip> let me say firstly "Great Job!" to everyone that contributed and thank you for all your hard work
+16:22:55 <privateip> but is definitely a marathon not a sprint :)
+16:22:56 <caphrim007> privateip: mainline as in the networking modules are no longer in extras?
+16:23:11 <privateip> we added over 50 modules for networking into 2.1
+16:23:34 <privateip> most based on basic push of commands and collecting state (show commands)
+16:23:52 <privateip> thats right @caphrim007
+16:23:59 <caphrim007> roger
+16:24:02 <privateip> networking modules are in ansible-modules-core
+16:24:38 <privateip> over the next few weeks please test as much as your time allows and send in issue if you need but Pull Requests if you can :)
+16:25:19 <privateip> supported platforms for 2.1 include eos, ios, iosxr, nxos, junos, openswitch, cumulus (in no certain order)
+16:25:56 <caphrim007> privateip: for other networking-like platforms, should they continue to go in extras?
+16:26:02 <privateip> in each of the cases we build _command, _config and _template modules (with some getting some additional ones)
+16:26:06 <caphrim007> and have their maintainers maintain them there?
+16:26:29 <mhite> also, will old modules for the aforementioned platforms be removed from -extras?
+16:26:32 <privateip> @caphrim007 thats a good question
+16:27:09 <privateip> i would say for starters lets have the conversations here about what work is being done and we can figure it out as we go
+16:27:30 <privateip> @mhite i dont' think any of those platforms are in extras
+16:27:58 <caphrim007> privateip: mhite and I are actively maintaining the bigip_* modules, for example
+16:28:43 <privateip> i would like to see those moved into core
+16:28:56 <privateip> are they all in extras today?
+16:29:03 <ktbyers> Some of these new modules use SSH channel. Do you have plans on switching over to use API (assuming a reasonably good API exists), for example, Juniper?
+16:29:06 <privateip> there is significant demand for them
+16:29:08 <caphrim007> they are in a side-band repo at the moment
+16:29:12 <mhite> privateip: my bad, i thought eos lived for a while in -extras
+16:29:23 <caphrim007> since they are going through a lot of revs right now to make them stable
+16:29:47 <dgarros> @ktbyers all junos_ modules are using netconf now
+16:30:05 <privateip> @mhite yeah those were moved out some time ago
+16:30:05 <ktbyers> Okay
+16:30:27 <ktbyers> Using pyez/ncclient?
+16:30:36 <dgarros> @ktbyers yes sir :)
+16:30:37 <privateip> #action collect list of network modules in extras and present for next week discussion to move to core where applicable
+16:30:47 <ktbyers> Okay, nice.
+16:30:54 <jedelman8> @dgarros the junos_ modules in core or are you referring to the modules on the juniper repo?
+16:31:02 <dgarros> both
+16:31:09 <jedelman8> k, cool.
+16:31:18 <jeffmcsco> @ktbyers Cisco Nexus at least has the option to use NXAPI or SSH
+16:31:25 <mhite> is there a desire to have things that end up in core fit the _command, _config, and _template mold?
+16:31:41 <privateip> @mhite doesn't have to fit that mold
+16:31:56 <ktbyers> Sounds good...nice to have both (i.e. API + SSH)
+16:32:00 <privateip> that was a catch all (least common denominator) across network devices
+16:32:13 <privateip> so lets talk about 2.2
+16:32:18 <privateip> #topic 2.2 Roadmap
+16:32:37 <privateip> one of the things on the 2.2 roadmap is network abstractions and a want / need for them
+16:32:55 <privateip> we have basic modules that wrap the CLI at the moment
+16:33:16 <privateip> and there is a proposal in Ansible core to make roles more flexible for using them
+16:34:02 <ktbyers> Can you expand on what that means..."make roles more flexible for using them"?
+16:34:04 <privateip> ref: https://github.com/ansible/proposals/blob/master/roles_revamp.md
+16:34:10 <privateip> sorry had lost the link
+16:34:15 <ktbyers> Thanks.
+16:34:40 <privateip> question i post here is thoughts around building abstractions for networking devices
+16:34:56 <privateip> is there community demand for it
+16:35:14 <privateip> if so, what should it look like
+16:35:17 <dgarros> can you give an example of the type of abstraction you have in mind ?
+16:35:26 <dgethings> tbh I’m just trying to get my head around what that would look like
+16:35:55 <privateip> *_vlan: with args like vlanid, name, state, status, etc, etc (or whatever makes sense)
+16:35:58 <jedelman8> are you talking about things like vlans,interfaces, etc. dare I saw common data model?
+16:36:00 <jedelman8> yeah
+16:36:01 <privateip> yep
+16:36:21 <privateip> i wouldn't think data model as much as abstraction of the resource
+16:36:27 <jedelman8> right
+16:36:31 <privateip> the data model is still over the top that implements the resource
+16:36:48 <ktbyers> I think we should probably think more about higher level functions that people want to do--like config change, OS upgrade, fact gathering (show commands)
+16:36:57 <ktbyers> i.e. what operations are people looking to automate.
+16:37:42 <jeffmcsco> we have this option with nexus thanks to jedelman8, but i still see ansible used a lot for CLI templating
+16:37:57 <jedelman8> I think it'd be difficult for device features, but we have some modules that support 4 vendors on system level tasks such as rebooting systems, backing up configs, etc.  have no issue getting these into core/extras.  but today they support junos, ios, nxos, and eos.  they are actually modeled after features juniper already has.
+16:38:16 <jedelman8> these also support facts, upgrades, etc. @ktbyers
+16:38:37 <jedelman8> for your viewing pleasure later: https://github.com/networktocode/ntc-ansible/tree/master/library
+16:39:25 <jedelman8> based on demand, they could be kept as-is or fully de-coupled to nxos_ eos_ ios_ ...
+16:39:31 <ktbyers> Personally, I don't think it matters if it is in core/extras or not, but open to argument that it does matter.
+16:39:59 <privateip> this brings up an additional question around platform neutral vs platform specific modules
+16:40:05 <jeffmcsco> you get into vendor-specific stuff quickly (VPC vs MCLAG, etc) but it would be nice to have some standard abstractions that are cross-vendor with vendor-specific as needed
+16:40:19 <privateip> remember we can do that with roles
+16:40:40 <kei> +1 for roles! :)
+16:40:42 <privateip> we dont (and I believe shouldn't) build functionality that is already available
+16:40:48 <bcoca> think of the 'package' module, it does some generic, but its really the specific apt/yum/etc that do the heavy lifting as their 'api' is very differnt
+16:40:52 <kei> though am open to anything. :)
+16:41:02 <bcoca> ^ the generics are nice, but they are limited to being 'generic'
+16:41:16 <jedelman8> Yeah, from a maintability and time to market, roles are probably the way to go for features, at least for now.  but system level things are still an option for multi-vendor modules
+16:41:18 <dgethings> my view is that the abstraction has to make sense in the context of what the user is trying to achieve. Adding a vlan is all good an well but is only useful when part of orchestration that also spins up the associated VM, for example
+16:41:27 <kei> bcoca: true.
+16:41:45 <bcoca> the abstraction is limited by the reality of the diversity of existing systems
+16:42:20 <ogenstad> One thing I think we need is some handling of public ssh keys of the devices we connect to. Most current networking modules just ignore the keys. This can work fine in internal environments but isn't great if you need to connect to devices over an untrusted medium.
+16:42:38 <bcoca> if all packages/packaging systems would be the same, 'package' would be great, the way the networking world is, i think this is something to strive for
+16:43:07 <privateip> @ogenstad agreed... do we have a feature request filed for that?
+16:43:27 <ogenstad> Not by me...
+16:43:42 <bcoca> privateip: we can reuse the per host/group ssh args that we already use in inventory
+16:43:43 <privateip> are you good to file one?
+16:44:09 <privateip> yep good idea
+16:44:26 <ogenstad> Sure, I can write something
+16:44:45 <privateip> #action file feature request for handling ssh keys
+16:45:06 <mhite> i'd suggest that we ask vendors to support some basic set of modules, ie. config, facts -- table stakes basically. we then create another set of very common primitives, ie. vlan, bgp, ospf, lldp, etc. that can be optional. then another set of suggested modules can be vendor specific stuff, ie. entities that vary from vendor to vendor.
+16:45:11 <privateip> ok in the interest of time im going to start a proposal on a abstractions
+16:45:22 <privateip> it will be posted here: https://github.com/ansible/proposals
+16:45:39 <mhite> [and by say 'we ask vendors', i really mean the community. sorry. ]
+16:45:41 <privateip> i would ask those that feel strongly one way or another please ocntribute
+16:45:47 <privateip> contribute even
+16:46:34 <privateip> next item is support for additional networking OS
+16:46:56 <privateip> i sent a list around as food for thought: quagga, ovs, gobgp, others?
+16:47:18 <privateip> looking for feedback and volunteers to help develop these (assuming they make sense)?
+16:47:26 <mhite> firewalls?
+16:47:34 <dgethings> sorry all. gotta drop. I’ll hang on here so I can read up on what was dicussed
+16:47:36 <dgethings> cheers all
+16:47:45 <jedelman8> was just thinking that mhite
+16:47:51 <ogenstad> I have some plans on creating modules for Cisco ASA.
+16:47:52 <privateip> definitely open to other firewalls as well
+16:47:54 <jedelman8> Palo Alto Networks has a bunch I'll be testing soon
+16:48:19 <ktbyers> Yes, ASAs are a big gap...so nice ogentstad.
+16:48:32 <jedelman8> not sure if PAN is planning to get theirs into core...or if they are present today.
+16:48:33 <privateip> thats great
+16:48:38 <mhite> wireless products also
+16:49:03 <jedelman8> love seeing non DC products mentioned :)
+16:49:07 <privateip> #action start proposal with list of identified platforms to support
+16:49:19 <privateip> i will get the list started and share via ansible ML
+16:49:23 <dgarros> Would be great to have support for IXIA & Spirent as well
+16:49:50 <privateip> please remember though ... these are all great ideas and nice to haves but we need community involvement to make it reality
+16:49:52 <privateip> :)
+16:49:59 <jedelman8> :)
+16:50:02 <privateip> let me be more direct
+16:50:02 <yonradz1> mentioned ^^ I think but the most common enterprise ADCs (F5 BIGIP, A10 ACOS, etc)- will any be incorporated / built-in to the main release in the future? Happy to help on the F5 BIGIP front with use cases, etc.
+16:50:05 <privateip> community development
+16:50:09 <bcoca> nah, you can do this all yourself, tomrrrow deliver?
+16:50:16 <privateip> hahahaha
+16:50:24 <ogenstad> I just need you to fix that ordering bug before I start ;)
+16:50:32 <kei> do we have someone from quagga, ovs, or gobgp here?
+16:50:33 <caphrim007> @yonradz1 yes. mhite and I are doing the bulk of the work on the F5 modules
+16:51:13 <caphrim007> @yonradz1 I'd love to hear more use cases
+16:51:17 <privateip> ok i will get the list started ... please subscribe to ansible ML if you aren't already and we can continue discussions there
+16:51:29 <privateip> # topic Open Q&A
+16:51:46 <privateip> floor is open ... anything you want to discuss
+16:51:55 <alikins> how will network modules be integrated into testing/qa/ci?
+16:51:55 <mhite> testing testing testing
+16:51:57 <yonradz1> excellent! i'm doing a bulk migration of about 150 Virtual Servers from one LTM pair to another today and then working on some GTM stuff. will followup with you or feel free to reach out.
+16:52:01 <privateip> #topic Open Q&A
+16:52:02 <dgarros> any plan for network testing ?
+16:52:10 <mhite> @alikins - jinx ;)
+16:52:29 <caphrim007> yeah +1 testing
+16:52:32 <kei> dgarros: great topic, network testing in ansible!
+16:52:34 <ktbyers> Is there movement to have a transport span multiple tasks (for example, an API connection or SSH connection). Especially, in connection: local context.
+16:52:39 <profetik> documentation documentation documentation -- something that someone who maybe hasn't written a module can understand
+16:52:41 <privateip> im looking at how best to do this now ... is a very complex problem
+16:53:09 <kei> privateip: which one, testing or transport?
+16:53:09 <privateip> for starters we have published testing playbooks for networking that anyone can use and contribute to
+16:53:15 <privateip> oops... testing
+16:53:25 <kei> privateip: awesome, links?
+16:53:26 <privateip> we are working to get them updated
+16:53:45 <kei> privateip: i'm more than happy to contribute.
+16:53:50 <dgarros> https://github.com/ansible/test-network-modules
+16:53:58 <privateip> my first inclination is to start a community of testing playbooks all following a similar desing at that anyone can use
+16:54:15 <privateip> that way anyone can pull them down and run them in their own env / labs
+16:54:18 <profetik> ^
+16:54:30 <caphrim007> @dgarros thanks for that
+16:54:35 <privateip> further down the road I would like to have a more integrated testing approach
+16:54:56 <privateip> but that has complications as network OS in VM  != network os on the device in all cases
+16:55:27 <privateip> @profetik anything in particular you are looking for
+16:55:43 <privateip> ie module development? playbooks development?
+16:56:17 <privateip> #action update on testing framework for next week
+16:56:37 <profetik> Generally when looking at ansible documentation - it seems to be written for folks who are already well-seasoned at Ansible. To gain some momentum we'd want to make documentation that makes sense for an average user.
+16:57:17 <profetik> This is mostly around plabook development.
+16:57:17 <gregdek> profetik: maybe a special getting started guide for networking users?
+16:57:23 <profetik> ^
+16:57:24 <mhite> Reference vs. guides
+16:57:43 * kei gotta go in a couple of min...
+16:58:06 <privateip> ok lets keep that convo going either via ML or next week as we are at the top of the hour
+16:58:13 <nitinkr> after 2.1 release, if any major bugs are fixed in the modules, what will be the time frame of next minor/major release? can these locally changes modules be used via roles (by easy way)
+16:58:20 <privateip> thanks everyone for joining ... great start
+16:58:25 <profetik> i think privateip's idea of a library of sample playbooks is a good start, but writing your own instead of hack-fu'ng existing playbooks could use better docs.
+16:58:35 <privateip> hope to see you all in the IRC rooms and on the ML
+16:58:40 <profetik> Thanks for the invite!
+16:58:55 <kei> thanks team!
+16:58:58 <privateip> @nitinkr can you post that to the ML?
+16:59:10 <privateip> #endmeeting

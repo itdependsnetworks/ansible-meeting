@@ -1,0 +1,148 @@
+19:02:22 <gregdek> #startmeeting community-working-group
+19:02:22 <zodbot> Meeting started Fri Apr  1 19:02:22 2016 UTC.  The chair is gregdek. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:02:22 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:02:22 <zodbot> The meeting name has been set to 'community-working-group'
+19:02:25 <gregdek> #chair rbergeron
+19:02:25 <zodbot> Current chairs: gregdek rbergeron
+19:02:36 * gundalow waves
+19:02:42 <gregdek> #topic Agenda as always: https://waffle.io/ansible/community
+19:03:03 <gregdek> So rather than going over the list today, let's do this: who has something new to report on any of those items?
+19:03:13 <gundalow> Nothing from me
+19:03:22 <gregdek> ok thx. rbergeron?
+19:04:35 <rbergeron> hi!
+19:04:42 <rbergeron> I have things to report on the issue triage stuff.
+19:05:00 <gregdek> https://github.com/ansible/community/issues/36
+19:05:27 <rbergeron> #topic Issue Triage
+19:05:40 <rbergeron> so in the aforementioned issue (#36) -- i put a few things in:
+19:05:55 <rbergeron> #info Initial draft of issue triage logic
+19:05:59 <rbergeron> #link https://github.com/robynbergeron/thingsandstuff/blob/master/issue_workflow_v1
+19:06:13 <rbergeron> #info initial draft of issue triage ... workflow picture
+19:06:33 <rbergeron> #info (which is not quite done and thus includes a happy april 1st easter egg)
+19:06:51 <rbergeron> #link https://github.com/robynbergeron/thingsandstuff/blob/master/issue_workflow_draft1.png
+19:07:00 <rbergeron> And some additional follow-on questions / ponderings.
+19:07:05 <rbergeron> But I think it's looking okay.
+19:07:27 <rbergeron> A bit more pondering / fine tuning but happy to hear anything now before i go further :)
+19:07:27 <gregdek> Looks good to me so far.
+19:08:14 <gundalow> Diagram makes sense to me
+19:08:22 <rbergeron> I knew you liked tht part about everything being assigned to you. :)
+19:08:27 <gregdek> I think once we add the timeout/auto-closure stuff for bugs that don't have the right data, we should be able to move forward with it.
+19:08:37 <gregdek> (Yes, that will obviously change, LOL)
+19:08:58 <rbergeron> NOOOO
+19:09:04 <rbergeron> yeah, okay.
+19:09:08 <gundalow> One possible minor tweak to the text version would be to use the text from the diagram as the headings for each section
+19:09:27 <gundalow> oh, I like the bottom right :)
+19:09:34 <gregdek> staaaahp
+19:09:42 <gregdek> Trust me, no one would like that, LOL.
+19:09:45 <rbergeron> #action rbergeron to add some timeout / autoclosure wording for needs_revision
+19:09:50 <rbergeron> dag- :)
+19:10:13 <dag-> is there a meeting ?
+19:10:27 <gregdek> We're in the midst of it. :)
+19:10:38 <gregdek> See topic for agenda. Going through progress on opens right now.
+19:12:23 <gundalow> rbergeron: text is well presented. Clear and simple steps.
+19:13:33 <dag-> (meeting on a Friday evening at 21pm, don't think Europe is joining this one ;-))
+19:13:48 * gundalow waves from Cambridge UK
+19:13:57 <dag-> oh ! that's dedication ;-)
+19:14:14 <gundalow> :)
+19:14:28 <gundalow> IRC is easy :)
+19:14:31 <gregdek> dag-: that's ok. :)
+19:14:41 <gregdek> We'll probably add some time rotation at some point.
+19:14:50 <gregdek> Faster if someone files an issue, LOL
+19:14:55 <gundalow> dag-: we are reviewing https://github.com/robynbergeron/thingsandstuff/blob/master/issue_workflow_v1 and https://raw.githubusercontent.com/robynbergeron/thingsandstuff/master/issue_workflow_draft1.png
+19:14:56 <rbergeron> dag-: yeah, we're just being transparenty about whatever people want to be transparent about. :)
+19:16:03 <gundalow> FYI doodle.com is good for seeing if other times would work for people
+19:16:59 <gundalow> rbergeron: should "cant_find_module" be define on that page?
+19:17:06 <gundalow> line 24
+19:17:25 <rbergeron> gundalow: not sure, still thinking about it
+19:17:28 <gundalow> sure
+19:17:41 <rbergeron> gregdek: you have anything else?
+19:17:53 <dag-> is the workflow meant to be run by ansibull-bot ?
+19:18:08 <gundalow> I guess it depends on how much validation Ansibullbot does (check it's a valid module so it know which maintainers to ping)
+19:18:17 <gregdek> Quick Code of Conduct update: waiting two weeks for an email address.
+19:18:18 <gundalow> hum, which I guess Ansibullbot already does
+19:18:40 <gregdek> dag-: yes, but right now it only runs for PRs, goal is to run it for issues too, now that issues are properly templatized
+19:18:57 <gundalow> Is there any value of putting the new CoC page live without the email address? Does it add any value sooner?
+19:19:06 <dag-> gregdek: looking good
+19:19:10 <gregdek> I'd rather wait until we can make it Official Official.
+19:19:21 <gundalow> i.e DONE DONE
+19:19:22 <gundalow> sure :)
+19:19:23 <gregdek> And then it goes on the main web site, not just in docs.
+19:19:33 <gregdek> Willing to wait another week to make that happen. :)
+19:19:47 <gundalow> ah, so a little more of a pain to have to update, twicem sure
+19:20:04 <dag-> I see that after sufficient time no response -> auto-close ?
+19:20:34 <gregdek> dag-: only for bugs that aren't properly filled out and waiting on submitter to provide necessary data.
+19:20:42 <dag-> gregdek: aha
+19:20:45 <gregdek> Otherwise, I don't think we'll autoclose bugs for timeouts.
+19:20:56 <rbergeron> dag-: not closing things that, say, maintainers haven't responded to or fixed or etc.
+19:21:05 <gregdek> If something is reported and the maintainer doesn't address it, it's still a bug so it should stay open.
+19:21:10 <rbergeron> just if someone can't fill out the template and we can't even figure out or assign it :)
+19:21:13 <gregdek> (Or a theoterical bug anyway.)
+19:21:13 <dag-> ok, but still I'd prefer if a human would look if anything is valid before closing
+19:21:36 <gregdek> Yes. That's the goal.
+19:21:49 <gregdek> Only bugs that don't have "sufficient data" will be closed.
+19:21:56 <dag-> my experience is that some people just escalate but don't follow-up (don't care)
+19:21:58 <dag-> ok
+19:22:12 <rbergeron> dag-: i think the minimmum we'd ask is "please at least have an issue type"
+19:22:15 <gregdek> And yes, plenty of people Fire and Forget.
+19:22:20 <gregdek> Yes, issue type and module name.
+19:22:26 <gregdek> Issue type so we know "what is it"
+19:22:31 <gregdek> Module name so we know "who owns it"
+19:22:39 <gregdek> And both will have to be valid.
+19:22:49 <rbergeron> and module name, and "can't figure out module name" might be a problem but ... we can wait and see.
+19:23:05 <gundalow> How is https://github.com/ansible/ansibot different to https://github.com/ansible/ansibullbot
+19:23:20 <rbergeron> a lot of the ansibullbot stuff right now is also "this bot isn't doing what i expect it to, so i'm waving my flag"
+19:23:26 <rbergeron> ansibullbot is for extras/core modules.
+19:23:29 <gregdek> ansibullbot is for modules; ansibot is older and is for ansible/ansible.
+19:23:48 <gregdek> ansibullbot is under much more active development.
+19:24:05 <gundalow> Cool, thanks :)
+19:24:23 <rbergeron> anyway: so waiting on an email address from the IT department for 2 weeks?
+19:24:33 <rbergeron> maybe that response time will be going up now :) lol
+19:24:36 <rbergeron> err, down
+19:24:45 <rbergeron> whatever. SHORTER TIME TO ADDRESS, how's that :)
+19:24:51 <gregdek> SIgh
+19:24:57 * gundalow hugs rbergeron
+19:25:00 <gregdek> Yes, two weeks through servicenow
+19:25:51 <dag-> TBH a fast response time after an issue was opened is the best guarantee to get the issuer involved
+19:26:00 <dag-> so I am pretty excited about this bot-stuff
+19:26:20 <gregdek> Thanks! Me too. Been working on it, but my code is Teh Sux so glad resmo has been able to dig in :)
+19:26:31 <dag-> that's why I try to answer new issue as quickly as possible if I think I can add something (or reproduce it)
+19:26:37 <gregdek> One of our key metrics this year will be response time for all stuff.
+19:26:38 <rbergeron> dag-: I am glad i pestered greg into writing something :)
+19:26:50 <gregdek> rbergeron was right :)
+19:27:00 <rbergeron> you say that like it's a rare occurrence!
+19:27:02 <rbergeron> :)
+19:27:14 <dag-> and this stuff is re-usable for other projects too
+19:27:32 <dag-> strange that nobody wrote something like this before ?
+19:27:49 <rbergeron> dag-: people have, just not in python.
+19:27:51 <dag-> (or maybe I am just out of touch)
+19:27:52 <gregdek> Well, the modules thing makes in complicated.
+19:27:58 <rbergeron> or at least i saw a few python things, but they were very very bare bones.
+19:28:17 <gregdek> We have a whole lot of files that are all individually "maintained" and I never found a bot that worked with that model.
+19:28:31 <rbergeron> there is one in ruby, and one in go, that i've seen, but ... you know how that goes.
+19:28:35 <gregdek> Mostly they assume that everyone using the bot has the same level of access, which for us is not true.
+19:28:38 <dag-> gregdek: what was confusing to me is that the bot is responding with you account
+19:28:45 <dag-> your
+19:28:47 <rbergeron> everyone has their own flow, too, as gdk is pointing out
+19:28:53 <gregdek> Yes. We should probably change that at some point.
+19:29:00 <gregdek> Now that it's fully automated.
+19:29:31 <gregdek> Robyn and I were running it semi-automated for about six months while we figured out the actual workflows :)
+19:30:16 <dag-> aha, so it was you ;-)
+19:30:48 <gregdek> It was me!
+19:30:55 <gregdek> I was in semi-cyborg mode. ;)
+19:33:31 <gregdek> OK, I think that's all the updates we have today. rbergeron
+19:33:32 <gregdek> ?
+19:33:48 * gundalow notes he's never seen gregdek and ansi*bot in the same room at the same time
+19:33:58 <gregdek> (ssh)
+19:34:03 <gregdek> (I mean shh)
+19:34:11 <gundalow> :D
+19:35:18 <gundalow> DONE!
+19:35:58 <rbergeron> :)
+19:36:05 <rbergeron> all done? :)
+19:36:08 <gregdek> (The big miss for me is the new module report; I'm hoping to work on that this weekend)
+19:36:14 <gregdek> Anyway. yes.
+19:36:20 <gundalow> gregdek: oh, what's that?
+19:36:39 <gregdek> gundalow: a list to ansible-devel reminding people that there are lots of new modules that need love and testing, and how to do that.
+19:37:18 <gregdek> Anyhoo.
+19:37:19 <gundalow> ah, cool. I may should make some time available to do that :)
+19:37:26 <gregdek> I hope you do!
+19:37:41 <gregdek> And now: I'm out. I'm going to have an early pint.
+19:37:44 <gregdek> #endmeeting

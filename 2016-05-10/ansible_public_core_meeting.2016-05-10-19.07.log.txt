@@ -1,0 +1,296 @@
+19:07:12 <abadger1999> #startmeeting Ansible Public Core Meeting
+19:07:12 <zodbot> Meeting started Tue May 10 19:07:12 2016 UTC.  The chair is abadger1999. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:07:12 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:07:12 <zodbot> The meeting name has been set to 'ansible_public_core_meeting'
+19:07:20 <jtanner|t420> hi! late again
+19:07:22 <gundalow> \o/
+19:07:23 <abadger1999> Anyone want to run the meeting today?
+19:07:38 <abadger1999> #chair jtanner|t420 gundalow ryansb MichaelBaydoun caphrim007
+19:07:38 <zodbot> Current chairs: MichaelBaydoun abadger1999 caphrim007 gundalow jtanner|t420 ryansb
+19:07:49 * jtanner|t420 reluctanly raises hand, but has no idea what to do
+19:08:26 <MichaelBaydoun> two items on the agenda
+19:08:40 <abadger1999> jtanner|t420: okay, first thing -- try to get the rest of the people who should be here, here ;-)  So ping the relevant people.
+19:09:13 <jtanner|t420> bcoca, gregdek nitzmahone rbergeron meeting time?
+19:09:18 <gundalow> #topic smart fact caching https://github.com/ansible/ansible/issues/14456#issuecomment-217920803
+19:09:32 <abadger1999> meetbot commands are here: https://fedoraproject.org/wiki/Zodbot#Meeting_Functions  you'll mostly use:
+19:09:50 <MichaelBaydoun> I believe there is a flaw in smart fact caching
+19:10:00 <gundalow> jtanner|t420: #topic (as above) #info some note, and #action PERSON to so do x
+19:10:01 <abadger1999> #chair to give people the ability to set topics, etc.  #info to put a line into the end-of-meeting-summary, and #topic to introduce a new meeting agenda item.
+19:10:24 <jtanner|t420> alikins, meeting?
+19:11:22 <MichaelBaydoun> If facts are cached at start of large playbook run, they are not refreshed, but then expire before playbook completes, resulting in undefined variable errors.
+19:11:22 * nitzmahone needs to change reminder to 1m before instead of 10 (dismiss, work on something else, forget)
+19:11:22 <jtanner|t420> so anyone chaired can set the topic?
+19:11:27 <abadger1999> additionally, you kind of move the meeting along to make sure we don't stall out or spend so much time on a single item that we don't get through most agenda items.
+19:11:32 <abadger1999> jtanner|t420: correct.
+19:12:45 <abadger1999> (moving meeting along, can include summarizing for 3info so we don't repeat ourselves, assigning #actions, and asking if we people think we should discuss something next time or out of meeting if it seems to just be going in circles)
+19:12:46 <MichaelBaydoun> I wonder if the smart behavior should be, if facts expire for a host, and are needed, then gather at that time
+19:13:08 <MichaelBaydoun> instead of failing the playbook
+19:13:25 <nitzmahone> oof, big change
+19:13:37 <jtanner|t420> so introduce magic calls to the setup module?
+19:13:40 <MichaelBaydoun> nitzmahone, I was afraid it might be
+19:13:55 <MichaelBaydoun> I don't see how smart is useful in it's current state
+19:14:38 <abadger1999> Alternative would be to check expiration at the beginning of hte play and then make sure not to expire mid-play, right?
+19:14:45 <MichaelBaydoun> whenever a playbook is run, there can be facts for hosts cached that are just short of expiring, and will expire before the end of the run
+19:15:01 <MichaelBaydoun> abadger1999, if you know how long the playbook takes to run
+19:15:18 <nitzmahone> abadger1999: that's kinda what I was thinking- something to refresh the lock or preemptively refresh. Inserting extra calls to setup at random times throughout the run could be a disaster
+19:15:44 * nitzmahone chalks up one more reason to dislike fact caching
+19:15:44 <jtanner|t420> i don't want to do that
+19:16:13 <MichaelBaydoun> I guess we could add another argument, refresh if remaining time is less than (parameter user supplies)
+19:16:16 <nitzmahone> Think about how much harder it gets with strategy: free
+19:16:43 <MichaelBaydoun> as the users know how long their playbooks take to run
+19:17:04 <bcoca> MichaelBaydoun: need to fix to do what it did before, not chekc on server side, but check if a 'flag' facct is set for host
+19:17:04 <nitzmahone> Just out of curiosity: what's your reason for using fact caching?
+19:17:05 <abadger1999> Mmm...
+19:17:12 <bcoca> ^ then if cache expires, facts will be regathereed
+19:17:21 <bcoca> ^ also ... might want to make longer cache
+19:17:29 <abadger1999> I was actually thinking,  maybe we can check for expiration at the start of the play only.
+19:17:40 <abadger1999> right now we check on get.
+19:17:43 <MichaelBaydoun> nitzmahone, we cache facts because it can take so long to gather them, and we have a lot of plays included in our site.yml
+19:17:43 <jtanner|t420> first play or all plays?
+19:17:48 <bcoca> abadger1999: no, need to check for 'are facts tehre' for each play
+19:17:50 <abadger1999> CacheModule.get()
+19:17:58 <nitzmahone> abadger1999: that's saner, at least we're not injecting any *new* magic tasks
+19:18:13 <abadger1999> Instead, we should check at the start of play, then don't check again until start of the next play.
+19:18:15 <bcoca> we just need to revert to the old behaviour
+19:18:27 <jtanner|t420> which was?
+19:18:44 <nitzmahone> Per-play makes the failure window smaller, but doesn't actually eliminate the problem
+19:19:00 <abadger1999> jtanner|t420: for your first question to me, start of all plays.
+19:19:07 <bcoca> ^ what i mentiond above, still will have issue of 'gather->expire->use' but each play will gather facts if they are not found (expired or never gathered)
+19:19:22 <jtanner|t420> fact caching is still new to me, so i have to ask dumb questions
+19:19:37 * nitzmahone is not a fan
+19:19:55 <abadger1999> nitzmahone: why doesn't it eliminate it?
+19:20:03 <MichaelBaydoun> we have worked around the issue for now by using explicit instead of smart, and having one play at the top of site.yml that explicitly refreshes the cache, even if not expired yet
+19:20:04 <bcoca> triggering a new 'fact gathering' in middle of play cause facts expired, not good, if fact expiration is an issue, user should manage cache time
+19:20:12 <nitzmahone> If you have (long running task) followed by (short task)
+19:20:36 <abadger1999> nitzmahone: the short task should still get the old facts.
+19:20:53 <bcoca> ^ actually, cache should only expire at gathering, not in middle fo play?
+19:20:55 <abadger1999> So I guess what I mean is not just checking, but actually, not expiring them.
+19:21:00 <MichaelBaydoun> or, we could just not expire facts until the end of the full playbook
+19:21:05 <abadger1999> right.
+19:21:11 <nitzmahone> bcoca: trick is, even w/ that you need to "refresh" facts at the beginning of a long run, else I could have 24h cache lifetime, but start playbook run at 23:59 and crap out after 1m
+19:21:43 <nitzmahone> Yeah, but IIRC expiration can be handled out of band (eg, redis)
+19:21:44 <bcoca> ^ so now we expire 'on access', we should exipre 'on check' .. which means there is only 1 key that exipres
+19:22:13 <nitzmahone> So we're not using redis' key expiration, but always managing ourselves?
+19:22:13 <jtanner|t420> #info expiration of facts during play execution is a concern
+19:22:35 <MichaelBaydoun> nitzmahone, we are using file based caching, not using redis
+19:22:36 <abadger1999> bcoca: <nod>
+19:22:40 * nitzmahone hasn't looked at redis fact cache for long time
+19:22:45 <bcoca> nitzmahone: we are using 'underlying system', in case of redis, yes, in case of json file and others no
+19:23:02 <nitzmahone> ok, so behavior would be mechanism specific
+19:23:12 <abadger1999> we might have to load the facts into memory.
+19:23:13 <bcoca> ^ so .. really only need 1 key that expires
+19:23:17 <abadger1999> do we do that now anyway?
+19:23:24 <bcoca> kindof
+19:23:32 <bcoca> json plugin does, redis does not
+19:23:37 <MichaelBaydoun> I like bcoca idea that we only expire at 'on check'
+19:23:38 <abadger1999> k
+19:23:38 <bcoca> but redis 'is in memory'
+19:24:03 <jtanner|t420> #chair bcoca
+19:24:03 <zodbot> Current chairs: MichaelBaydoun abadger1999 bcoca caphrim007 gundalow jtanner|t420 ryansb
+19:24:03 <bcoca> ^ i think it makes less sense to expire on access than on setup check
+19:24:09 <abadger1999> <nod>  Yeah -- the problem being that then external things (like a different ansible running) could expire the redis cache.
+19:24:18 <alikins> whats the difference between 'on access' and 'on check'?
+19:24:21 <jtanner|t420> #chair nitzmahone
+19:24:21 <zodbot> Current chairs: MichaelBaydoun abadger1999 bcoca caphrim007 gundalow jtanner|t420 nitzmahone ryansb
+19:24:28 <bcoca> check = do i run setup
+19:24:36 <bcoca> access = using ansible_default_ipv4
+19:25:05 <nitzmahone> yeah, on access would get expensive / contentious
+19:25:14 <bcoca> abadger1999: can overwrite, but if we remove the per key expire ... another ansible will not leave w/o facts
+19:25:25 <bcoca> on access == current
+19:26:08 <bcoca> ^ might need to redesign how the plugins work
+19:26:22 <bcoca> probably break backwards compat
+19:26:33 <jtanner|t420> what happens to an expired fact during the course of a play?
+19:26:41 <alikins> so fact caching is managed 'above' the setup module?  ie, we don't always ask setup and expect it to DTRT to provide the facts?
+19:26:41 <bcoca> jtanner|t420: becomes undefined
+19:26:42 <jtanner|t420> is the key deleted?
+19:26:48 <MichaelBaydoun> it causes an undefined variable error
+19:26:56 <bcoca> alikins: setup provides facts, unless using cache
+19:27:02 <bcoca> jtanner|t420: yes
+19:27:23 <bcoca> def _expire_keys(self):
+19:27:23 <bcoca> if self._timeout > 0:
+19:27:23 <bcoca> expiry_age = time.time() - self._timeout
+19:27:23 <bcoca> self._keys.remove_by_timerange(0, expiry_age)
+19:27:25 <alikins> could it always provide facts, even if using cache ?
+19:27:31 <bcoca> def keys(self):
+19:27:31 <bcoca> self._expire_keys()
+19:27:31 <bcoca> return list(iter(self._keys))
+19:27:32 <jtanner|t420> so the problem is really that the key is gone? perhaps we are looking at an option for how to "expire", rather than "when to gather"
+19:28:02 <alikins> nm, setup doesn't know about the cache, which is reasonable
+19:28:17 <bcoca> alikins: setup ALWAYS provides facts to the cache, never directly, the cache (default in memory w/o expiration)
+19:28:25 <bcoca> the cache provides vars to user
+19:28:28 <jtanner|t420> #chair alikins
+19:28:28 <zodbot> Current chairs: MichaelBaydoun abadger1999 alikins bcoca caphrim007 gundalow jtanner|t420 nitzmahone ryansb
+19:28:36 <MichaelBaydoun> only expiring at end of playbook would possible work
+19:28:52 <bcoca> alikins: also setup is not only 'fact' module
+19:28:58 <nitzmahone> (so long as you're not doing concurrent runs)
+19:29:12 <bcoca> ^ others can write to cache, by returning 'ansible_facts' key
+19:29:13 <jtanner|t420> cache_expire_behavior='(delete|wait_for_play|wait_for_playbook|etc)'
+19:29:37 <bcoca> jtanner|t420: that would be nice, but Royal PITA to implement
+19:29:44 <bcoca> also needs to happen in each plugin
+19:29:46 <jtanner|t420> *shrug* ... ideating out loud here
+19:30:10 <nitzmahone> also problematic for things that want to manage their own expiration (eg, redis)
+19:30:24 <nitzmahone> could change to permanent keys, but ouch
+19:30:30 <bcoca> nitzmahone: the trick is not using redis expiration except for the 'one key'
+19:30:59 <nitzmahone> bcoca: is redis currently using a blob store under a single key? I thought it was discrete keys
+19:31:01 <MichaelBaydoun> can facts be gathered or read from cache, and stored in "playbook" memory, so each concurrent run has it's own copy?
+19:31:13 <bcoca> nitzmahone: each key
+19:31:15 <bcoca> iirc
+19:31:35 <bcoca> also memcached plugin
+19:31:43 <jtanner|t420> #info expiration behavior is also controlled by the external source and out of ansible's control
+19:31:50 <nitzmahone> MichaelBaydoun theoretically, but you could run into coherency issues
+19:31:51 <bcoca> MichaelBaydoun: default cache IS playbook memory
+19:31:53 <ryansb> nitzmahone: redis allows you to put blobs under a single key, but the expiry is per-key
+19:32:14 <bcoca> ^ json file also implements it this way (double cache, memory backed by file) but redis does not, its plugin dependant
+19:32:23 <nitzmahone> ryansb: sure, that's how redis works, but are you talking about our existing redis plugin's behavior?
+19:32:27 <bcoca> also it depends on each fact read
+19:33:04 <bcoca> def set(self, key, value):
+19:33:04 <bcoca> value2 = json.dumps(value)
+19:33:04 <bcoca> if self._timeout > 0: # a timeout of 0 is handled as meaning 'never expire'
+19:33:04 <bcoca> self._cache.setex(self._make_key(key), int(self._timeout), value2)
+19:33:04 <bcoca> else:
+19:33:05 <bcoca> self._cache.set(self._make_key(key), value2)
+19:33:05 <bcoca> self._cache.zadd(self._keys_set, time.time(), key)
+19:33:09 <bcoca> ^ redis, key == host
+19:33:53 <bcoca> _cache == redis connection
+19:34:01 <bcoca> _make_key creates prvefix
+19:35:06 <bcoca> MichaelBaydoun: this requires a redesign of how the plugins work, I don't think we have any short term solutions for you other than increasing cache timeout
+19:35:42 <MichaelBaydoun> bcoca increasing timeout doesn't help, the next playbook launch can still be 5 minutes before the next expiration
+19:36:13 <MichaelBaydoun> setting explicit and gathering at top of playbook only, is our current workaround
+19:36:27 <nitzmahone> MichaelBaydoun: caching is a tricky biz- I was just going to suggest exactly that
+19:36:41 <bcoca> if play takes longer than 5 mins, you'll hiti the issue
+19:36:47 <MichaelBaydoun> The only other thing I don't understand, is why we didn't see these undefined variable failures until 2.0
+19:37:08 <MichaelBaydoun> were the facts expiring, and going to null, and we just didn't see it?
+19:37:09 <bcoca> ^ play accesses fact After N when N was timeout left
+19:38:01 <bcoca> MichaelBaydoun: do you not see it if you revert to 1.9?
+19:38:37 <MichaelBaydoun> we didn't get any undefined variable errors until going to 2.0, and at that time, had to turn fact caching off.
+19:39:00 <MichaelBaydoun> after 2.0, we got them on every playbook run
+19:39:17 <MichaelBaydoun> randomly, different hosts, different variables, different plays
+19:39:33 <MichaelBaydoun> took until now to figure out what was really happening
+19:39:56 <bcoca> well, 2 possible reasons, a) 2.0 does not skip errors the way pre 2.x did
+19:40:17 <bcoca> b) things have changed to made teh race condition more visible
+19:40:35 <jtanner|t420> MichaelBaydoun, do you suspect that 1.9.x wasn't deleting the key on expiration during play execution?
+19:40:51 <bcoca> liek if we check per playbook instead of per play, that woulc create b)
+19:40:53 <bcoca> c) both
+19:41:12 <bcoca> ^ actually, we DID have bug in 1.9 in which redis was not deleting keys ...
+19:41:25 <MichaelBaydoun> I don't know, it either wasn't deleting the key on expiration, or it was but wasn't causing the playbook to fail and we didn't notice
+19:41:28 <bcoca> i forget when it got fixed
+19:41:44 <jtanner|t420> bcoca, would that have been relevant for jsonfiles too?
+19:41:49 <MichaelBaydoun> we have always been file based cache
+19:42:31 <MichaelBaydoun> and we probably only turned caching on in the 1.9.* timeframe
+19:42:42 <bcoca> jsonfiles did not implement timeout for a while, was not as much not working as not implemented
+19:43:01 <MichaelBaydoun> we will continue with the explicit workaround, and I'll note that workaround in the issue in case others are having  the same problem
+19:43:14 <jtanner|t420> not that it would solve the immediate problem, but it would be good to confirm behavior across versions
+19:43:26 <abadger1999> Ahh... jsonfile looks like it would not expire... but I'll have to check 2.x code now...
+19:43:39 <abadger1999> yeah
+19:44:09 <abadger1999> okay 1.9, jsonfile first checks if the key exists in the in-memory cache and returns it, then it checks if the key has expired (presumably from disk)
+19:44:24 <abadger1999> 2.0, it checks expired before both of those.
+19:44:37 <bcoca> ^ that explains it
+19:44:41 <MichaelBaydoun> yes it does
+19:44:47 <jtanner|t420> #info abadger1999 confirmed that expiration check logic changed between 1.9 and 2.x
+19:44:51 <bcoca> probably a 'fix' to 'improper expiration'
+19:45:21 <bcoca> 0aa018337afbc061633d9046109f12d4dd929c25 <= james 'fixed'
+19:46:10 <bcoca> https://github.com/ansible/ansible/issues/12722 <= for this ticket
+19:46:36 <bcoca> so he changed the order and now it works 'like redis'
+19:47:12 <bcoca> its a 2 line change to restore previous behaviour ... teh question is .. do we wanna?
+19:47:32 <jtanner|t420> i don't feel confident that i know which behavior is "right"
+19:47:43 <abadger1999> #12722I think the previous behaviour was less wrong....
+19:47:44 <jtanner|t420> i prefer it to be configurable with current behavior as default
+19:47:48 <bcoca> well, i think old behavior was right, this is more consistent
+19:48:11 <bcoca> ^ you should not expire fact in middle of play as it is only 'refreashable' during setup
+19:48:17 <abadger1999> +1
+19:48:25 <MichaelBaydoun> I believe smart is mostly useless with current behavior, and worked with previous behavior
+19:48:26 <bcoca> but then we need to change 'all plugins'
+19:48:29 <jtanner|t420> #info expiration behavior was a result of fixing https://github.com/ansible/ansible/issues/12722
+19:48:40 <bcoca> MichaelBaydoun: not useless, but problematic with race conditions and small caches
+19:49:10 <MichaelBaydoun> ok, useless for us, every playbook run fails, even with a 3 hour cache timeout
+19:49:13 <bcoca> ^ this change was in middle of other fixes for unrelated problem
+19:49:16 <abadger1999> So I'd say, two change to revert back and then fix it right at some later time.... of course, have to figure out if changing it back means other code is needed for 12722  as well.
+19:49:30 <abadger1999> *two line change to revert back
+19:49:32 <bcoca> no, the other code had to do with finally: f.close()
+19:49:39 <abadger1999> <nod>
+19:50:01 <alikins> maybe some sort of expire_handler, and way for play/task/etc objs to block that handler? and reset it... play_iterator?
+19:50:28 <alikins> handler in the generic sense, not ansible specific ones
+19:51:34 <bcoca> https://gist.github.com/bcoca/cecca870587adb052cb8cc4b2bd51cd8
+19:51:57 <abadger1999> alikins: I don't think there's too much problem at that level... seems more like we need one new method on cache plugins and changes to cache plugins to (1) not check expired in get and (2) perhaps store redis facts in process memory (as opposed redis memory)
+19:52:36 <bcoca> abadger1999: we might need that for all plugins .. probably need to make the 'memory' a base plugin that rest inherit and populate
+19:52:41 <abadger1999> bcoca: +1
+19:52:45 <abadger1999> <nod>
+19:53:05 <bcoca> so going to push this fix for now, make note of looking at all plugins to keep 'in play sanity'
+19:53:14 <bcoca> ^ review expire ONLY at gather time
+19:53:39 <abadger1999> bcoca: Might be a has-a relationship, BaseCache has-a dict, self.store.  All other plugins are expected to put their values in self.store.
+19:53:44 <bcoca> though that makes using redis/etc not as good
+19:53:51 <bcoca> abadger1999: yep
+19:54:01 <jtanner|t420> #action bcoca to create intermediate patch for expiration only at gather time and then review other plugins at a later date
+19:54:03 <bcoca> kind of playbooks/base
+19:54:09 <jtanner|t420> should we move to next topic?
+19:54:12 <bcoca> MichaelBaydoun: what ticket was it?
+19:54:24 <MichaelBaydoun> https://github.com/ansible/ansible/issues/14456#issuecomment-217920803
+19:54:33 <MichaelBaydoun> and yes, let's move to next topic
+19:54:45 <jtanner|t420> caphrim007, you around?
+19:54:48 <caphrim007> i am
+19:54:52 <jtanner|t420> #chair caphrim007
+19:54:53 <zodbot> Current chairs: MichaelBaydoun abadger1999 alikins bcoca caphrim007 gundalow jtanner|t420 nitzmahone ryansb
+19:54:57 <caphrim007> mine shouldn't take very long
+19:55:07 <caphrim007> i had this pr here https://github.com/ansible/ansible/pull/15434
+19:55:13 <caphrim007> and mhite and i reviewed it for inclusion
+19:55:16 <jtanner|t420> erm, someone help me with the topic
+19:55:32 <caphrim007> but upon waiting for travis to bless it, it would repeatedly fail to build
+19:55:41 <MichaelBaydoun> #topic https://github.com/ansible/ansible/pull/15434
+19:55:49 <abadger1999> #topic https://github.com/ansible/ansible/pull/15434  Add port argument for bigsuds
+19:55:54 <caphrim007> when i looked at it, it was related to ssl timeouts of something; not related to the pr itself
+19:56:01 <bcoca> MichaelBaydoun: pushed to devel and 2.1
+19:56:08 <caphrim007> closing and reopening multiple times with no success
+19:56:19 <MichaelBaydoun> bcoca thanks, and thanks all btw
+19:56:27 <bcoca> caphrim007: ignore travis
+19:56:32 <caphrim007> so was wondering if this would prevent it from merging and if not, could we merge it as mhite gave it a shipit
+19:56:38 <jtanner|t420> caphrim007, expected ... sivel has a tentative solution for that
+19:56:41 <bcoca> MichaelBaydoun: thank you for catching this one, it was  simple but 'hidden'
+19:56:51 <caphrim007> and it would allow us to move on to updating the f5 modules
+19:57:16 <bcoca> caphrim007: there is networking meeting tmrow, we probably want privateip on merging those modules
+19:57:24 <bcoca> ^ he was also talking about moving them to core, iirc
+19:57:40 <caphrim007> bcoca, yes, this is outside of the modules as this is in core
+19:57:47 <jtanner|t420> module util code
+19:57:53 <caphrim007> and the modules that mhite and i are working on are still in the pipeline
+19:58:24 <caphrim007> but i'll be at the networking meeting tomorrow as well
+19:59:04 <jtanner|t420> patch looks fine to me
+19:59:17 <jtanner|t420> although i don't know jack about f5s
+19:59:28 <caphrim007> hehe
+19:59:55 <caphrim007> the patch allows one to provide a server port argument
+20:00:02 <abadger1999> caphrim007: for your travis question specifically, there was a bug that was causing all but one integration test run to fail.  Hopefully, that's fixed.  Still have some transient bugs -- I usually check that all unittests pass , several integration tests pass, and that another integration test is failing because of one of the transient errors.
+20:00:18 <caphrim007> so that the ansible modules can be run on our stuff in house that is in a VM or some other "non standard" port
+20:00:36 <jtanner|t420> job seems to be restarted
+20:00:36 <caphrim007> abadger1999: thanks for the tip!
+20:00:42 <jtanner|t420> not sure how to look at old logs for it
+20:01:16 <caphrim007> the last time i restarted it (i'm guessing the state its currently in) it seems to be wedged waiting for a resource to build on
+20:01:59 <abadger1999> <nod>  Right now, there's several jobs in queue before it.
+20:02:16 <jtanner|t420> is mhite marked as the maintainer for bigip?
+20:02:23 <caphrim007> mhite and myself should be
+20:02:52 <caphrim007> among others
+20:03:46 <jtanner|t420> i would merge if travis would show me the unit test outputs
+20:05:08 <caphrim007> jtanner|t420: here's an example https://travis-ci.org/ansible/ansible/jobs/128434685
+20:05:10 <abadger1999> jtanner|t420: https://travis-ci.org/ansible/ansible/builds/128755707
+20:05:37 <abadger1999> jsut have to scroll down through travis's PR build history far enough to find an old job.
+20:06:30 <jtanner|t420> ok, can i press the green button then and get these guys moving?
+20:06:38 <abadger1999> and yeah, that looks like the test_uri w/ sni problem that I resolved.
+20:06:40 <abadger1999> jtanner|t420: +1
+20:07:14 <jtanner|t420> #action jtanner merged https://github.com/ansible/ansible/pull/15434
+20:07:19 <jtanner|t420> other topics?
+20:07:23 <caphrim007> jtanner|t420 abadger1999: thanks!
+20:07:37 <jtanner|t420> github issue has no more listed
+20:07:39 <jtanner|t420> caphrim007, np
+20:08:04 <jtanner|t420> #topic open floor
+20:08:31 <jtanner|t420> anyone?
+20:09:15 <abadger1999> nothing from me.
+20:09:33 <abadger1999> if we had new proposals, we could do those now but I don't think we do.
+20:09:41 <jtanner|t420> bcoca, nitzmahone alikins ?
+20:09:51 <nitzmahone> not today
+20:10:04 <jtanner|t420> ryansb, ?
+20:10:13 <jtanner|t420> gundalow, ?
+20:10:28 <gundalow> Nothing from me today
+20:10:53 <jtanner|t420> ok, ending meeting in 5
+20:10:56 <jtanner|t420> 5
+20:11:00 <jtanner|t420> 4
+20:11:01 <jtanner|t420> 3
+20:11:02 <jtanner|t420> 2
+20:11:03 <jtanner|t420> 1
+20:11:07 <jtanner|t420> #endmeeting

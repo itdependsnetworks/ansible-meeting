@@ -1,0 +1,136 @@
+16:30:13 <nitzmahone> #startmeeting Windows Working Group
+16:30:13 <zodbot> Meeting started Fri Mar 31 16:30:13 2017 UTC.  The chair is nitzmahone. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:30:13 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:30:13 <zodbot> The meeting name has been set to 'windows_working_group'
+16:30:13 <jhawkesworth> hello.  am I right time for windows meeting?
+16:30:19 <nitzmahone> Ayup!
+16:30:26 <jhawkesworth> hey
+16:30:42 <jhawkesworth> I'm on packed commuter train on mobile data so... bear with me!
+16:30:50 <nitzmahone> heh, good luck!
+16:31:07 <nitzmahone> #chair jhawkesworth
+16:31:07 <zodbot> Current chairs: jhawkesworth nitzmahone
+16:31:38 <nitzmahone> #topic 2.3 status
+16:31:54 <nitzmahone> Looks like 2.3.0 RC3 will probably be cut today
+16:32:05 <bcoca> woot
+16:32:38 <nitzmahone> The one remaining P2 issue I'm aware of is https://github.com/ansible/ansible/issues/23143
+16:32:42 <jhawkesworth> shall we give it a minute to see who else is about?
+16:33:09 <nitzmahone> s'ok by me...
+16:34:22 <jhawkesworth> hmm 23143 looks like a packaging thing.
+16:34:43 <jhawkesworth> FWIW my testing of RC2 is going well.
+16:35:16 <nitzmahone> Oops, wrong link: https://github.com/ansible/ansible/issues/22218
+16:35:28 <nitzmahone> The "become breaks on NTLM/Kerb" thing
+16:35:28 <jhawkesworth> script seems to pay attention to return status now..  meaning I'm finding a bunch of bugs in my powershell scripts :-)
+16:36:11 <nitzmahone> Is it the return status, or is it StrictMode/ErrorActionPreference?
+16:36:28 <nitzmahone> I forgot to check if we were enforcing that on script/shell/raw
+16:36:43 <nitzmahone> I got a backhanded report that we were, which was unintentional
+16:36:52 <jhawkesworth> ah ok.  22218 Not actually a breaker for me although obviously would like it fixed
+16:37:29 <jhawkesworth> I think its return status but the way it behaves now is better - I allways want it to 'fail fast'
+16:38:02 <jhawkesworth> I have pretty much eliminated raw in my playbooks now.
+16:38:20 <jhawkesworth> although using win_command less than I would like due to the quoting issues which are known already.
+16:38:26 <nitzmahone> I've raised the white flag with a couple of Microsoft contacts on 22218. I'm afraid it's an undocumented restriction of the SLS, which means I'll have to shred a good chunk of the feature and impose more stringent privilege requirements if so. :(
+16:38:40 <jhawkesworth> but... win_shell is fine so its all improvements.
+16:39:02 <jhawkesworth> yeurgh.
+16:39:02 <nitzmahone> Yeah, I think I have a fix that'll work for the win_command quoting issues (you're talking about the embedded quotes in args issue that was recently filed?)
+16:39:23 <jhawkesworth> yes, that's right
+16:40:05 <nitzmahone> Yeah, I think I have a path forward for that one that should make it a lot better. I didn't realize that CommandLineToArgvW stripped mid-arg-embedded quotes, which of course causes all sorts of problems.
+16:40:26 <nitzmahone> (new test cases to come as well once I have a working fix)
+16:40:31 <jhawkesworth> cool
+16:40:47 * jhawkesworth has to get off train, brb
+16:40:49 <nitzmahone> (that'd be 2.2-backport-worthy)
+16:44:34 <nitzmahone> jhawkesworth: once you're back, we should probably discuss "last resort" options for 22218
+16:44:50 <jhawkesworth> agreed. i am going from 2.1.1.0 to 2.3 but so far chnges to playbooks have been minimal.  mostly just syntax cleanups to get rid of warnings.
+16:45:20 <nitzmahone> (naked vars in `with_X` etc?)
+16:46:41 <nitzmahone> I'm going to do some testing to make sure we're doing the right thing for scripts and stuff- we shouldn't be pushing strictmode or ErrorActionPreference settings on scripts/raw/win_shell.
+16:46:58 * jhawkesworth off train at last
+16:47:03 <nitzmahone> nice
+16:47:21 <jhawkesworth> so.. let me look at 22218
+16:47:53 <nitzmahone> Given how late I discovered the problem in the 2.3 cycle, I see a couple of options:
+16:47:54 <jhawkesworth> hang on 22218 is not about with_X...
+16:48:28 <nitzmahone> (overlapping  conversations- that comment was about the warnings you're cleaning up in playbooks)
+16:48:51 <jhawkesworth> oh sorry I follow now.
+16:48:53 <nitzmahone> I was asking if the warnings were due to naked vars in with_X
+16:49:11 <nitzmahone> So for 22218, we could basically:
+16:49:18 <jhawkesworth> mostly when: followed by {{ }}
+16:49:23 <nitzmahone> 1) yank become from 2.3 entirely
+16:49:47 <nitzmahone> 2) mark it experimental (and possibly with a warning on use that it may change)
+16:49:54 <jhawkesworth> seems draconian to pull it.
+16:49:59 <nitzmahone> 3) make it a different become method
+16:50:38 <nitzmahone> What I'm afraid of is that the usage requirements (and possibly behavior) will be vastly different if I switch the internals to LogonUser/CreateProcessAsUser
+16:50:46 <jhawkesworth> 3 not a bad idea... struggling to think of a name for it
+16:51:01 <nitzmahone> So I don't want people relying on what's there and changing significantly from 2.3-2.4
+16:51:29 <nitzmahone> What's there works great for certain cases (non-NTLM/Kerb, non-elevated-under-UAC)
+16:51:34 <jhawkesworth> become: runas_experimental
+16:51:55 <bcoca> +1 to experimental
+16:52:22 <nitzmahone> I'd rather not bake the experimental into the name itself though
+16:52:31 <jhawkesworth> easy search and replace if the interface stays the  same.. and if it has to change.. well again easy to find where you need to fix things
+16:52:40 <jhawkesworth> yeah just my first idea
+16:52:48 <jhawkesworth> basic_runas
+16:52:50 <nitzmahone> It's more just that "this probably isn't going to be the end-all-be-all" for Windows become, but there's no reason we can't leave it there as-is forever
+16:53:05 <jhawkesworth> makes sense
+16:53:12 <nitzmahone> Could also use become_flags to activate this mode or another mode (and not have a default)
+16:53:39 <nitzmahone> It's possible that this one could be "fixed" later if MS comes up with any tricks
+16:53:46 <jhawkesworth> cool  - not looked at become_flags much.
+16:54:01 <nitzmahone> So I also don't really want to bake in stuff about its current limitations into the name
+16:54:04 <bcoca> suggestion: have current become method issue warning 'this is experimental' ... just to make sure we have many things to point at incase it needs change
+16:54:09 <jhawkesworth> you would think it would be in their interests as all automation frameworks including their own would like hit it
+16:54:19 <nitzmahone> bcoca: of the options I presented, that was my fave as well
+16:54:25 <jhawkesworth> yeah I like that.  then if its stable.. message goes away
+16:54:28 <bcoca> ah, missed it, +1
+16:54:46 <jhawkesworth> +1 to warning
+16:54:50 <nitzmahone> jhawkesworth: yeah, except DSC effectively runs under an agent, so it's using a full service logon, not a batch logon
+16:55:16 <bcoca> it does sound liek 2 methods would be ok here
+16:55:24 <bcoca> runas, runas_dsc
+16:55:48 <nitzmahone> Yeah, the behavior of LogonUser/CPAU would be very different (and has much more stringent privilege requirements)
+16:55:51 <bcoca> or runas_crippled, runas_slightly_less_crippled
+16:55:56 <nitzmahone> heh
+16:56:36 <nitzmahone> I think we're pretty well covered with just an experimental warning for now- I'm OK to leave the name and behavior as-is if we go that route, because at least nobody could say they were surprised by it
+16:56:51 <jhawkesworth> yep, make sense
+16:57:02 <nitzmahone> ("it" being a future behavior change once we figure out better/different ways)
+16:57:06 * jhawkesworth had to move, laptop getting rained on
+16:57:20 <nitzmahone> OK, I'll keep that up my sleeve if I don't hear anything back from MS in the next few days.
+16:57:29 <nitzmahone> (or if their answer is "you're boned")
+16:58:03 <nitzmahone> #topic debugging
+16:58:20 <jhawkesworth> oh, thanks .. any top tips for debugging
+16:59:22 <jhawkesworth> didn't realise how much I used ANSIBLE_KEEP_REMOTE_FILES=1
+16:59:22 <nitzmahone> I was hoping to get the persist wrapper plugin cleaned up and shipped before 2.3.0, but 22218 has occupied about 90% of my time for the past few weeks
+16:59:37 <nitzmahone> So it'll probably slide into 2.3.1 or something
+16:59:41 <nitzmahone> Meantime...
+16:59:44 <jhawkesworth> ok.
+17:00:17 * gundalow waves, just lurking
+17:00:19 <nitzmahone> Easiest thing is to just run powershell.ps1 once by itself in ISE
+17:00:28 <jhawkesworth> I contemplated just checking out stable 2.2
+17:00:40 <jhawkesworth> but then module code maybe out of sync
+17:00:47 <nitzmahone> That works too, though you'd miss out on a bunch of the goodies dag added to Get-AnsibleParam
+17:00:57 <jhawkesworth> good point
+17:01:15 <jhawkesworth> yeah so I catted powershell.ps1 and the module code together
+17:01:32 <jhawkesworth> then got tied up trying to make valid json for the args
+17:02:04 <jhawkesworth> maybe I can grab args json file out of debug output thinking about it now
+17:02:24 <nitzmahone> The way it *will* work with the persist exec plugin is that KEEP_REMOTE will drop the wrapper and the exec manifest, in a mode where you can run it like Ansible does (ala Ansiballz if you're familiar with how Python does it since 2.1), or where you can do an integrated "debug" mode where it'll load the relevant Ansible powershell modules directly into a
+17:02:24 <nitzmahone> debuggable env and run the module (so you can set breakpoints and trace around)
+17:02:50 <nitzmahone> Right now the exec wrapper is making heavy use of runspaces, so it's very difficult to debug the module code.
+17:03:01 <jhawkesworth> that will be nice!
+17:03:27 <jhawkesworth> I can do without until
+17:03:29 <nitzmahone> I think the debug experience will be way easier than pre-2.3 once all's said and done, but this transitional period is painful. :(
+17:04:03 <jhawkesworth> yeah no worries I can be patient, just wanted to check I hadn't missed an obious quick win/hack
+17:04:52 <nitzmahone> Mostly due to poor time-management on my part- I should've moved to start production-izing prototypes earlier, since so many of the 2.3 features interact with each other. That's what killed me- everything worked in isolation, but broke together
+17:05:09 <jhawkesworth> I got 'not needs_info windows bug count down to 30 at one point this week.
+17:05:21 <nitzmahone> Nice- thanks for that!
+17:05:23 <jhawkesworth> no worries, we have a boat load of new toys in 2.3 thanks to you and dag
+17:05:35 <nitzmahone> Any other bugs or stuff off the agenda to discuss?
+17:05:40 <jhawkesworth> some of it was by dumping them off windows list
+17:06:01 <nitzmahone> heh, yeah, bot's a little overzealous with the windows tag sometimes
+17:06:14 <nitzmahone> #topic open floor
+17:06:17 <jhawkesworth> no I will try and tackle some more bugs and some docs stuff this.
+17:06:40 <jhawkesworth> gonna bail, getting cold sitting on train platform floor!
+17:06:44 <nitzmahone> Noice. You gonna go to London 'Fest? I can probably hook you up with a discount code if you haven't already bought
+17:07:10 <jhawkesworth> haven't bought yet.  I put in talk proposal though so hoping to go.
+17:07:32 <nitzmahone> Cool- me too. I think they're deciding talks pretty soon
+17:07:34 <jhawkesworth> discount might help me swing it with managment
+17:08:10 <nitzmahone> Well, if your talk is accepted I think you're free anyway, but let me know either way and I'll make it happen
+17:08:21 <jhawkesworth> great thank you.
+17:08:25 <nitzmahone> Pretty sure we're doing contributor summit again as well
+17:08:34 <jhawkesworth> cool.
+17:08:51 <nitzmahone> OK, well, shall we wrap up then?
+17:09:04 <jhawkesworth> yep, I'll let you get on.  have a good one
+17:09:10 <nitzmahone> Take it easy!
+17:09:13 <nitzmahone> #endmeeting

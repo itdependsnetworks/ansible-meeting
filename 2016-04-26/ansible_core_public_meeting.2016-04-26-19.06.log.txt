@@ -1,0 +1,500 @@
+19:06:46 <abadger1999> #startmeeting Ansible Core Public Meeting
+19:06:46 <zodbot> Meeting started Tue Apr 26 19:06:46 2016 UTC.  The chair is abadger1999. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:06:46 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:06:46 <zodbot> The meeting name has been set to 'ansible_core_public_meeting'
+19:07:31 <abadger1999> #info Meeting agenda: https://github.com/ansible/community/issues/84
+19:07:51 <abadger1999> #chair nitzmahone willthames alikins tima bcoca samdoran Qalthos jtanner
+19:07:51 <zodbot> Current chairs: Qalthos abadger1999 alikins bcoca jtanner nitzmahone samdoran tima willthames
+19:08:44 <abadger1999> jimi|ansible, privateip, jtanner, any other interested parties :-)
+19:09:07 <jtanner> huh?
+19:09:38 <abadger1999> sorry... you already spoke up.
+19:10:02 <abadger1999> hmm... This is also supposed to be a proposal meeting isn't it.
+19:10:16 <willthames> abadger1999, I hope so
+19:10:30 <bcoca> among other things, we have 1 proposal in queue (several new ones we might want to consider)
+19:10:37 <abadger1999> #topic https://github.com/ansible/proposals/issues/7 Proposal Auto-install roles
+19:10:38 <bcoca> i have 1 question on PR that can be quick
+19:10:52 <bcoca> ^ +1 idea, -1 to implementation
+19:11:06 <abadger1999> This is the first item on both the agenda and the proposals list.
+19:11:09 <bcoca> i want it in broader scope
+19:11:13 <tima> i'm with @bcoca.
+19:11:16 <tima> ageed.
+19:11:34 <bcoca> needs to handle versioning and want to collapse number of ways to define/reference a role
+19:11:39 <willthames> I think broadening its scope is unnecessary at this time
+19:11:45 <willthames> it already handles versioning
+19:11:57 <bcoca> ?? did not see any updates to that
+19:12:00 <willthames> and adds no further ways
+19:12:09 <willthames> what do you mean by versioning then?
+19:12:25 <willthames> if you mean installs multiple versions at the same time, it doesn't do that
+19:12:36 <willthames> I think extending scope further could be done as a separate proposal
+19:12:39 <bcoca> in play reference, not just requirements file (actually i want to remove requirements file )
+19:12:45 <willthames> including installing multiple versions
+19:12:49 <willthames> I think that's a bad idea
+19:13:15 <willthames> versions installed should be a separate concern to roles run
+19:13:17 <tima> unfortunately @willthames that's the reality of many users I work with with.
+19:13:33 <bcoca> ^ its not that i advocate its use, its a necesity of many users
+19:13:47 <tima> agreed.
+19:13:53 <willthames> sure, but it's not *this* proposal
+19:14:04 <bcoca> this proposal has direct impact and dependency
+19:14:14 <tima> you can't put this out without having that other part.
+19:14:21 <willthames> why not?
+19:14:24 <bcoca> makes it harder to change, that is why i want to unify formats first
+19:14:53 <tima> because too many users I deal with will be annoyed they can't use this.
+19:14:53 <willthames> these can be done separately
+19:15:11 <willthames> they can if they use a separate roles directory per playbook :)
+19:15:24 <bcoca> yes, but the order is important, otherwise you create workflows and plays that are going to keep us from implementing the other options
+19:16:16 <tima> nice try. not going to fly @willthames.
+19:17:06 <bcoca> tima: he is not trying to game a system, just a solution, @willthames: in many environments that is not up to our users
+19:17:21 <bcoca> i want something that works for the most people possible, this is very limiting
+19:17:45 <bcoca> and entrenches us in more things we need to avoid
+19:18:32 <willthames> my problem with the alternatives is that they just handwave a bunch of stuff rather than getting us any nearer a solution
+19:18:33 <abadger1999> it seems like it would be helpful to know what things are seen as prerequisites and why.
+19:18:51 <willthames> all very well in theory, but makes implementation months off rather than weeks
+19:19:05 <willthames> galaxy could be much more usable, right now
+19:19:06 <alikins> could includes (inc roles) be lookups?  the order of ops there is probably wrong, but conceptually.  Sort of dependency injection...
+19:19:31 <bcoca> expained in ticket, and yes, its theory cause of lack of time, something i'm hoping will be fix with more commiters/core team members
+19:20:19 <bcoca> alikins: not sure what you mean, have you looked at my 'role revamp' proposal?
+19:21:40 <willthames> you could use the proposal to drive role specification reduction, but I think rolesfile is really useful (you already deprecated one rolesfile version). meta/main.yml already behaves similarly to rolesfile except it's as a child of dependencies (could have meta/requirements.yml or similar)
+19:22:10 <willthames> I would strongly advocate against removal of roles files completely
+19:22:32 <bcoca> we disagree on that point
+19:23:09 <willthames> having independent roles files allows environment specific roles versioning while having consistent playbooks
+19:23:16 <bcoca> or let me rephrase, we might still need a maping from role to role source but that should not be the file against we install, the play should be
+19:23:23 <tima> sorry i'm logging in from 35K and the wifi is being dodgey.
+19:23:26 <willthames> it shouldn't
+19:23:31 <bcoca> ^ and we should allow for source info to be in play
+19:23:33 <willthames> for the reasons I just said
+19:23:47 <bcoca> willthames: not consistent when you need double accounting
+19:23:52 <willthames> it's still a rolesfile if it's includable
+19:24:00 <willthames> who needs double accounting? for what purpose?
+19:24:09 <willthames> these are just made up requirements
+19:24:12 <bcoca> role definition in play, roles file with role definitions
+19:24:26 <bcoca> no, those are current requirement
+19:24:33 <bcoca> sand stated requriements in your proposal
+19:25:23 <willthames> you could do that, but I think you'll just add a new role requirement definition rather than consolidate it further
+19:26:08 <willthames> no other software requirements definition (pip, maven etc) puts versions concerns inside the thing using the dependency
+19:26:37 <bcoca> actually golang inspired
+19:26:57 <bcoca> ^ seems cleaner, imo, and prevents double accounting issues
+19:27:08 <bcoca> same file that uses, is file that is used to reference requirements
+19:27:30 <bcoca> i find consistency and logic in that, if im alone in that, i'll drop it
+19:27:48 <willthames> golang seems to have godep which puts the versions into a completely separate file to the import
+19:28:28 <tima> sorry i lost track of what's being argued at this point -- we're talking no more requirements.yml file?
+19:28:30 <bcoca> so would the roles be, in a specific path
+19:28:43 <bcoca> tima: that is what i want
+19:29:00 <abadger1999> willthames: by version concerns inside the thing using the dep, you mean as if, theoretically, import in python could be "import LIBRARY at VERSION"?
+19:29:07 <bcoca> willthames: difference between reference/requirement and actually the required object, in both cases those are separate
+19:29:21 <willthames> abadger1999 that is my understanding of what is being suggested by
+19:29:38 <tima> hum. not sure about that one. so if i want to test my existing playbook with a new version of a role I need to modify the playbook with the version?
+19:29:39 <bcoca> abadger1999: yep, making that possible and defaulting to 'installed or latest'
+19:29:51 <tima> and remember to do that across on my playbooks?
+19:29:54 <bcoca> tima: no, unless you specify a version
+19:30:04 <abadger1999> ahh... hhmm... that's something I've wantedfor a long time... pkg_resources kinda gives that to you via pkg_resources.requires()
+19:30:12 <willthames> not versioning roles is a terrible idea and will bite you
+19:30:29 <tima> well in these large sprawling orgs they do for auditing purposes.
+19:31:21 <willthames> of course you can not version roles now, but I heartily recommend against
+19:32:00 <bcoca> willthames: this will allow not only versioning but being able to use multiple versions simultaneouslly
+19:32:08 <willthames> you can do this now too
+19:32:10 <tima> this is why @willthames proposal here doesn't fly with the users I work with -- they have issues with galaxy versioning and testing their internal stuff. They've never said gee I wish galaxy ran for me automatically.
+19:32:11 <bcoca> ^ which might not be 'best practice' but many people need
+19:32:21 <bcoca> willthames: only if you control roles path dir structure
+19:32:24 <willthames> tima, I'm telling you that it is essential
+19:32:34 <willthames> bcoca, you totally should
+19:32:45 <willthames> which is why I included roles_path
+19:32:48 <bcoca> willthames: should != can
+19:32:56 <willthames> typically we just use "{{playbook_dir}}/roles"
+19:33:10 <bcoca> so do i, but not solving just 'our case'
+19:33:16 <bcoca> trying to solve in most general way possible
+19:33:20 <willthames> tima, we have had people had broken ansible runs because people updated the playbook but forgot to update the roles
+19:33:25 <willthames> auto updating would avoid that
+19:33:37 <tima> ok but multiple versions roles?
+19:34:03 <bcoca> ^ this is why i'm saying, first we need to get format/versioning fixed, then we can deal with autoupdate
+19:34:07 <tima> understood that it happens. the different versions of roles is more common an issue in my epxerience.
+19:34:07 <willthames> tima, if people are installing all their roles in the same place with galaxy now, they already have this problem, they just might not know it
+19:34:11 <bcoca> otherwise we are just setting trasp for ourselves
+19:34:48 <willthames> tima, and ansible-galaxy completely fails at that right now - even my idempotency fix gives a slightly better experience
+19:35:10 <willthames> I really think that format/versioning doesn't need solving
+19:35:19 <abadger1999> Okay, we've been at this for 20 minutes -- what can we do to move the chains forward?
+19:35:24 <willthames> the multiple versions might do, but I think we'd be in no worse place
+19:38:20 <abadger1999> willthames, bcoca, tima, jimi|ansible: Could I get some ideas here?  I don't know enough about roles to state any actions that would move us forward.
+19:38:58 <willthames> tima, bcoca are you able to come up with a new proposal for multiple roles
+19:39:10 <tima> sorry i'm reading over all the comments in the proposals issues
+19:39:16 <willthames> and I'll just put 7 on hold until we have something to argue against
+19:39:23 <bcoca> i think most of us want this feature, I just think its premature and that more changes to role are needed before this
+19:39:37 <tima> there is still a lot unanswered and ... what bcoca just said.
+19:39:37 <willthames> bcoca, and those should be documented
+19:39:42 <bcoca> and i admit, we have not 'produced' more than intentions
+19:39:47 <sivel> I'm of no use here either, since I don't use (ansible-)galaxy for anything
+19:40:05 <bcoca> willthames: trying to 'roles revamp' is a very small part of what i want to do to make roles really useful and flexible
+19:40:22 <willthames> sure, put out some proposals :)
+19:40:25 <samdoran> seems we need to first figure out a standard way to handle role declaration, and the version(s) of those roles, in order to move forward effectively
+19:40:48 <bcoca> willthames: imdoingthat, i admit that not as fast as anyone of us wants
+19:40:50 <willthames> samdoran, I was happy with the v1.8 standard. I can live with the v2.0 deprecation
+19:41:08 <tima> @sivel: users want a package manager and they think galaxy is it. That is waaaay out of scope here now though.
+19:41:17 <bcoca> samdoran: yes, that is my point, want 1 role declaration
+19:41:23 <willthames> having it be a bit like pip requirements works
+19:41:43 <bcoca> tima: yes, but ... galaxy is already a package manager, just a very very bad one, need to make it decent
+19:42:00 <tima> bcoca: ok i'll give you that.
+19:42:12 <samdoran> agree there as well
+19:42:13 <willthames> I would prefer not to have another v2.0 "let's make everything perfect" and not get anywhere for a year
+19:42:20 <willthames> with ansible-galaxy
+19:42:20 <bcoca> willthames: we are not even close to pip requirements cause we dont follow well dependencies in roles, which currently dont have install source either
+19:42:36 <willthames> you can have install source in meta/main.yml
+19:42:51 <bcoca> willthames: agreed, trying to focus on galaxy/vaul for 2.2
+19:42:57 <willthames> i.e. - git+https://example.com/repo
+19:42:59 <sivel> so do we want to say "dunno yet"?  and move the meeting forward?
+19:43:00 <willthames> works in meta main
+19:43:01 <bcoca> though people keep asking me for ansible-config
+19:44:02 <willthames> abadger1999 if we have an action to create further proposals I'm happy to move on
+19:44:22 <abadger1999> okay -- who's going to commit to making proposals for next meeting:  bcoca, tima?
+19:44:36 <bcoca> to commit or to be commited ...
+19:44:45 <bcoca> put me down, it was on my list already
+19:45:20 <tima> everyone will be happy to know i will be onsite and won't be able to get in to IRC even if I had the hour to sign in.
+19:45:29 <tima> next week that is.
+19:45:29 <abadger1999> #action bcoca to make alternative or supplementary roles proposals to unblock  #7 Auto install ansible roles
+19:46:01 <abadger1999> #topic  Proposal: Re-run handlers option https://github.com/ansible/proposals/issues/9
+19:46:02 <willthames> tima, no problem, can be two weeks time
+19:47:21 <abadger1999> resmo isn't here to explain this one.
+19:47:28 <willthames> I definitely +1 the concept, not 100% sure of the implementation
+19:47:44 <abadger1999> I'm wondering if restructuring these playbooks to be blocks would help?
+19:48:07 <tima> do handlers fire at the end of a block abadger1999?
+19:48:12 <tima> i didn't think so.
+19:48:22 <abadger1999> Can the notify's be placed in an always block or something?
+19:48:27 <abadger1999> tima: I don't know the answer.
+19:48:35 <bcoca> they fire at 'end of stage'
+19:48:43 <bcoca> pretasks, roles,tasks, posttasks
+19:49:08 <bcoca> you can see internal flush handlers task when using --list-tasks in 2.0
+19:49:11 <willthames> sometimes you need a few other things to have happened before the handler fires
+19:49:33 <willthames> so if the interruption happens before the other things happen, it being in an always won't work
+19:49:48 <tima> the way i read this is that ansible doesn't give a user anyway of re-running a handler that should have fired because ansible never got to it
+19:50:05 <tima> because it was interrupted by an error or something
+19:50:07 <willthames> tima, that's my understanding
+19:50:16 <willthames> and we've definitely hit it dozens of times
+19:50:22 <bcoca> ^ thre is feature idea that i think is better, on .retry file, log 'non fired handlers' and find way to readdthem when using it for rerun
+19:50:29 <abadger1999> Do we have a block label like python's "try: else:" ?  (I know I asked for that, seems like it might be what's wanted here)
+19:50:30 <willthames> usually fixed by logging onto the box and doing service blah restart :/
+19:50:42 <bcoca> --retry /path/to/file <= both as inventory and --start at task and notified handlers
+19:51:03 <bcoca> abadger1999: no, we have block/always/rescue/ no else
+19:51:16 <samdoran> Seems the solution is asking for a way to manually run handlers if a failure causes the playbook to exit (+1 tima)
+19:51:21 <willthames> I can't remember the last time retry actually worked for me, but I got burned a few times and gave up trying
+19:51:38 <bcoca> willthames: retry is just 'list of hosts that failed'
+19:52:00 <bcoca> works more for --limit than for inventory, making it usefule with a 'smart' --retry might be next step
+19:52:06 <willthames> the trouble with start-at-task is that it skips the tags: always stuff
+19:52:29 <willthames> which means that if you have include_vars task early on, stuff breaks later
+19:52:42 <bcoca> not easy
+19:53:00 <willthames> on that basis, this would still need to be separate
+19:53:10 <samdoran> For instance, task stops service, next task fails, handler to start service doesn't fire. Being able to manually fire the handlers would save an ssh into the box, or ad-hoc command, as willthames said.
+19:54:02 <bcoca> ^ soo many combinations ...
+19:54:05 <willthames> rerunning the whole playbook is most likely to succeed. if handlers fire at end of tasks, pre_tasks etc you might need to specify which block the handlers should run in (but default to tasks)
+19:54:11 <samdoran> Doesn't look like the proposal is asking for handlers to automatically fire on failure, which I think could have lots of bad implications.
+19:54:27 <willthames> samdoran, agreed, you really don't want that
+19:54:28 <bcoca> samdoran: we already have that feature
+19:54:31 <bcoca> force handlers
+19:54:54 <willthames> and it's probably useful in specific instances, but not for this use case
+19:54:58 <samdoran> bcoca: Then maybe that is the solution.
+19:55:04 <bcoca> related, but not same
+19:55:31 <bcoca> the problem is that there are many cases  and many solutions
+19:56:03 <samdoran> Would it be crazy to add always_run to a handler? Seems like that could be equally good and bad...
+19:56:09 <bcoca> im worried it requires 20 piecemieal options --run-handlers-after-always-tags-and-always_run-whith-limit /path/toretry
+19:56:18 <willthames> samdoran that's a task, not a handler ;)
+19:56:22 <bcoca> --run-handlers-ignore-always-tags ....
+19:56:33 <willthames> bcoca, don't worry about the always stuff
+19:56:51 <willthames> just rerun the whole playbook at that time, but notifying the handlers that need to run
+19:56:54 <bcoca> willthames: many things to worry about, as you stated, we don't know the dependencies
+19:56:56 <samdoran> willthames Right. I was (insanely) suggesting allowing handlers to have that option.
+19:57:25 <abadger1999> samdoran: thinking about your example use case... that one seems to be a use case for blocks over handlers.  stop_service, block: task_that_can_fail always: start_service
+19:57:49 <bcoca> so .. --retry /path/to.retry that 'limits' inventory to those hosts, reruns tasks and reattempts handlers that were 'notified but not run'?
+19:58:13 <abadger1999> (Not saying there's not use cases... just that that particular one does seem like one where using blocks works)
+19:58:17 <willthames> bcoca or keep retry and notify handlers separate (but no further options needed)
+19:58:35 <bcoca> willthames: still need to keep notified/unhanled handler list
+19:59:01 <willthames> bcoca oh definitely - I think resmo's suggestion is pretty close to what we actually want
+19:59:09 <bcoca> you probably don't want to run handlers on stuff you did not notify
+20:00:06 <willthames> no, I thought that was the point - it kept a track of all the handlers that had been notified so far
+20:00:17 <willthames> and then just pass those handlers on to the next attempt
+20:00:37 <samdoran> abadger1999 A better example is task that copies a template file runs and has a handler that needs to restart a service, next task fails, therefore service restart handler doesn't fire. Re-running the playbook, template task runs but no changes made and therefore no handler firing, assuming the subsequent playbook run goes to completion w/o failure.
+20:01:17 <alikins> need a check 'did_handler_run', but that needs state
+20:01:32 <samdoran> That's the issue at the heart of this proposal. Not crazy about the proposed implementation, but I acknowledge it's an issue.
+20:01:42 <abadger1999> <nod>
+20:01:45 <willthames> samdoran, but extend that to there being about twenty other tasks in between, so getting a useful block around that becomes near impossible
+20:01:55 <willthames> and possibly spanning several different roles
+20:02:50 <abadger1999> samdoran: yeah, that's a better example.  blocks allow you to write the playbook to rollback the template change.  But in reality, only a small number of playbooks will be written to do that.
+20:04:35 <samdoran> DId somebody propose a "notified but didn't fire" list of handlers?
+20:04:55 <willthames> samdoran I thought that's exactly what resmo's suggestion was
+20:05:03 <willthames> isn't that what we're discussing?
+20:05:20 <samdoran> Roger. I thought he was asking to run all the handlers.
+20:05:28 <bcoca> my only issue with proposal is that user MUST know which handlers he is missing, that is why i think this should be dumped into .retry file
+20:05:29 <abadger1999> So what are we thinking...?  retry should be extended to keep a list of notified but didn't fire handlers?
+20:05:44 <bcoca> jinx!
+20:05:49 <samdoran> +1
+20:05:49 <willthames> bcoca, resmo suggests that
+20:05:52 <willthames> doesn't he?
+20:05:52 <sivel> Of note here, without the context of the run, just running handlers that haven't fired, may not be enough.
+20:06:03 <tima> the command line option would imply its run for all handlers sdoran
+20:06:09 <willthames> sivel, in what way?
+20:06:10 <sivel> for example, we use set_fact, and use that in handlers.  Without that context, the handler isn't useful
+20:06:15 <alikins> for notify/handlers... do the 'queued' notifies get persisted anywhere?
+20:06:32 <bcoca> willthames: did not seem clear to me, talks about how to run, but not how to save
+20:06:43 <sivel> willthames: or the handler acting off of registered values, such as from the output of stat
+20:06:44 <willthames> sivel, right, I see you running the whole playbook agai
+20:06:53 <sivel> but if nothing changes, handlers don't fire
+20:06:59 <willthames> again, but the same notifies would happen in the previous run
+20:07:08 <willthames> the previous failing run would output the test.handlers file
+20:07:11 <bcoca> ^ that is the other issue that came up here, this seems to solve only a very specific case
+20:07:12 <willthames> in resmo's example
+20:07:21 <willthames> and that would be the input to the next playbook run
+20:07:36 <sivel> so allowing handlers to be re-run, assumes that they don't care about the context of the playbook run
+20:07:44 <willthames> bcoca, it solves the major problem most people have with handlers - that interrupted playbooks cause problems with handlers being unfired after changes
+20:07:49 <sivel> assuming you are just blindly firing handlers that didn't execute
+20:08:07 <bcoca> willthames: no, it solves a subset, in which it does not matter which task failed as long as handler was notifie
+20:08:10 <willthames> sivel, the test.handlers is the list of handlers that should have fired but didn't fire before we got there
+20:08:29 <willthames> you do have to rerun the playbook to regenerate the context
+20:08:38 <bcoca> most handlers will be service restart, but some can depend on 'gathered facts' for example
+20:08:40 <willthames> and does assume that people don't have "when: x
+20:08:49 <willthames> "when: x|changed"
+20:08:57 <abadger1999> willthames: I think that test.handlers vs adding that information to .retry is the difference between what resmo proposed and what bcoca is proposing.
+20:08:57 <willthames> in things that really matter
+20:09:22 <willthames> sure, as long as retry doesn't get extended to start at task as well
+20:09:38 <bcoca> willthames: agreed, that was me spitballing, ignore
+20:10:10 <abadger1999> #info bcoca wonders if we can add the test.handlers information into the .retry file instead of having a separate file
+20:10:14 <sivel> willthames: yeah, I guess it is hard to understand, as our plays are hugely complex, and highly dependent on prior tasks.  So if the app updates, we do some more checks, and based on those checks, we register vars, that help handlers that fire only when the app was updated
+20:10:39 <sivel> so re-running the play would do nothing, and the handlers would fail to work as intended
+20:10:52 <willthames> sivel, sure - I think this proposal will help in 90+% of cases but not 100% for that reason
+20:10:59 <bcoca> tempted to expand to having --retry /file that does a) rerun playbook with same options, limit hosts, fire unhandled handlers
+20:11:11 <willthames> bcoca nice
+20:11:29 <abadger1999> #info sivel points out that the play could contain context that simply running the handlers won't have (ex: a play could use set_fact: and then fail.  I f the handler was run in the original it would have access to that fact. )
+20:11:57 <sivel> the only way we could possibly use it, is if a snapshot of the full play run were stored, and used for 'continuation' as opposed to just firing handlers
+20:13:18 <bcoca> ^ any objections to the last? can update proposal ticket with taht
+20:13:47 <bcoca> sivel: not 'continuation' but 'rerun' which means only need 3 items, original args, hosts that failed, notified unhandled handlers
+20:14:00 <bcoca> ^ all which should be easy to add to current retry file
+20:14:00 <abadger1999> #info sivel's use case is a play that: (1) tries to update an app (2) if that happens, then it performs checks (3) those checks are used to register vars (4) handlers then fire which make use of the registered vars.  Simply running handlers won't work in this instance.
+20:14:41 <bcoca> ^ what i propose can still fail in some cases, but should handle most situations 'as correctly as possible'
+20:14:48 <willthames> continuation would be quite different and would need to have the entire state of the playbook run captured in a file
+20:14:51 <abadger1999> bcoca: I have no objection but I don't know if that solves sivel's use case.
+20:15:09 <bcoca> abadger1999: only if play is mostly idempotent
+20:15:09 <sivel> as an FYI, I didn't believe this solution would solve my problems
+20:15:22 <sivel> so I am not too concerned
+20:15:28 <abadger1999> bcoca: In (1), the app gets updated.  That triggers everything else however, only (4) is triggered via the handler mechanism.
+20:15:51 <sivel> I just wanted to make everyone aware that there are situations that may require more context, that would not be available on a re-run
+20:16:14 <bcoca> abadger1999: very much a corner case i dont expect we can ever solve
+20:16:19 <abadger1999> bcoca: so if we rerun -- (1) doesn't change, therefore (2&3) don't happen.  Then we fire off (4) because they're handlers that are listed as needing to be run... but they don't have data from step3.
+20:16:36 <bcoca> abadger1999: but if the 1st change had notified, handlers would still be run
+20:16:56 <bcoca> as i said before, it should solve most cases, but not all, cause  ... plays ...
+20:16:57 <abadger1999> bcoca: yes.  but more needs to be rerun then just handlers.
+20:17:08 <bcoca> abadger1999: that is exactly what i'm proposing
+20:17:31 <abadger1999> 2 & 3 would also need to be run via handler for that use case to work.
+20:17:36 <willthames> abadger1999 wisest move is for the whole playbook to be rerun, this just says fire these handlers even if the stuff that notifies them doesn't fire
+20:18:12 <bcoca> abadger1999: all will be rerun, change would not be detected as 1 would not change, but if 1 fired handler it would run, if 2 and 3 depend on changed status ... problem
+20:18:17 <abadger1999> willthames: yes -- but I'm saying none of this solves sivel's use case... which is fine (as he said).  but it simply doesn't.
+20:18:27 <abadger1999> It sounds like sivel has something like
+20:18:29 <bcoca> agreed, but i dont think we can solve all use cases
+20:18:32 <sivel> anywho, this could rabbit hole.  I over complicated things with my example :)
+20:18:33 <bcoca> w/o having a state machine
+20:18:35 <willthames> abadger1999 I don't think any of us are really disagreeing :)
+20:18:58 <bcoca> i just think this solves 'most'
+20:18:59 <alikins> add a persistent_notify? that would attempt to persist whatever context it needs?
+20:19:11 <bcoca> alikins: saved to the retry file
+20:19:15 <abadger1999> task1:  register: blah \n  task2: register: handler_data when: blah.changed
+20:19:25 <bcoca> alikins: sadly context is 'full play state'
+20:19:43 <bcoca> which we really don't want to do
+20:20:01 <tima> oooof. that looks like programming code abadger1999.
+20:20:15 <bcoca> too many things CAN be used at handler level, hostvars[hostthatsucceded][factnownotgathered] <= reason a handler can fail
+20:20:47 <bcoca> basically you guys are asking for a 'program debugger that can retroactively retry program from break point'
+20:21:04 <bcoca> ^ dont think we'll ever get there (or want to)
+20:21:08 <willthames> bcoca that sounds great, can you have that done by next week?
+20:21:13 <samdoran> which is too big a problem to solve
+20:21:14 <willthames> ;)
+20:21:17 <alikins> bcoca: and really, all of the state of the env that isn't captured in the play context at all, but alas. arguably a handler that depends on state not explicitily given too it is a bad handler, but thats getting picky
+20:21:22 <bcoca> willthames: yes, but will need a Tardis
+20:21:33 <abadger1999> Okay, bcoca -- would you like to update the ticket with the changes we're proposing to it?
+20:21:40 <samdoran> I think the "most" solution bcoca proposed is a good solution
+20:21:42 <bcoca> alikins: agreed
+20:21:49 <bcoca> will do
+20:22:00 <abadger1999> Excellent
+20:22:22 <abadger1999> #action bcoca to update the handlers ticket with proposed changes from the meeting.
+20:22:53 <abadger1999> #topic  Module names should be singular https://github.com/ansible/proposals/issues/10
+20:23:13 <alikins> ooh, names
+20:23:18 <tima> fun!
+20:23:39 <willthames> abadger1999 I'm pretty much +1 on this - might be easier to just make it a new standard going forward.
+20:24:02 <defionscode> I agree with it
+20:24:02 <sivel> I am meh, on this one. Feels unncessary really. I personally like bike sheds that are red
+20:24:19 <abadger1999> This came up last week because people thought it would be good to have a standard around singular or plural.  I standardized on singular nad added a few exceptions to the rule that seemed to make sense.
+20:24:28 <willthames> sivel, you wrote a standards checker. having *documented* standards are good
+20:24:33 <abadger1999> also stated that we can alaises to the plural name where it makes sense.
+20:24:57 <sivel> in the example of `rax_files` that is for a product called 'cloud files', so making it `rax_file` is less related to the product
+20:25:03 <defionscode> Anything that improves overall UX is a good thing which i feel this does
+20:25:13 <bcoca> https://github.com/ansible/proposals/issues/9#issuecomment-214874966
+20:25:59 <sivel> and renaming to remove plural, can be confusing if the standard in terminology outside of ansible is to make it plural
+20:26:14 <tima> i'm with @defionscode.
+20:26:16 <bcoca> +1, no renames right now, aliases
+20:26:29 <bcoca> ^ or rename to singular and add plural alias for backwards compat
+20:26:38 <defionscode> Yep, aliases are key
+20:26:40 <sivel> but what does that really give?
+20:26:48 <abadger1999> sivel: <nod>  we could decide that something like rax_files falls under the "Proper Name" exception or simply that having the alias for both singular and plural makes it make sense to both sets of people.
+20:26:53 <bcoca> sivel: predictability
+20:26:59 <sivel> for the sake of making the file not have an 's' we also alias it so that it does?
+20:27:27 <defionscode> Low time cost to implement really
+20:27:35 <bcoca> sivel: docs dont show aliases, so future plabyooks will use new names, eventually we can deprecate and remove old names
+20:27:47 <sivel> just my 2 cents.  but like I said, I just have opinions, that are no more than a bike shed here.
+20:28:03 <bcoca> it is some bikeshedding, i'm fine if we just enforce going forward
+20:28:18 <bcoca> but would like to normalize in the end, people make less mistakes when things are boring and predictable
+20:28:24 <willthames> document and enforce
+20:28:47 <tima> bcoca +1
+20:28:50 <defionscode> Bikeshed standards are important if you have 500+ of them to take care of
+20:29:33 <abadger1999> proposal currently has this: "* Existing modules which use plural should get aliases to singular form."
+20:29:40 <bcoca> i move to call this yac shaving, better image than bikeshedding
+20:30:06 <bcoca> abadger1999: i woudl ammend, renamed to singular form and make alias to plural for backwards compatibility
+20:30:24 <bcoca> ^ just cause docs would now find singular
+20:30:27 <abadger1999> fine with me if that's the consensus here.
+20:30:27 <defionscode> Ok...if you have 500+ yacs to shave...
+20:30:52 <tima> agree with bcoca here.
+20:31:13 <bcoca> tima: but now i want sheep shaving!
+20:31:51 <abadger1999> rax_files might still fall under proper name exception (not sure -- if it was rax_cloud_files it definitely would)
+20:31:54 <tima> bcoca: how about alpaca?
+20:32:15 <bcoca> alergies
+20:32:35 <defionscode> GMO alpacas then
+20:33:55 <abadger1999> okay, so should I consider this -- change the existing modules line to be rename and alias.  Accepted?
+20:34:08 <bcoca> +1
+20:34:10 <defionscode> Yes
+20:34:12 <abadger1999> I'll add it to the module guidelines for new modules.
+20:34:21 <tima_> +1
+20:34:31 <abadger1999> People can submit PRs to rename and alias existing modules as they come up.
+20:34:50 <abadger1999> We can talk about cornercases like rax_files there.
+20:35:11 <abadger1999> #action abadger1999 to change existing modules strategy to rename and alias
+20:35:32 <abadger1999> #action abadger1999 to add the singular module name rule to the module guidelines
+20:35:54 <abadger1999> 3topic open floor
+20:35:58 <abadger1999> #topic open floor
+20:36:08 <abadger1999> We've come to the end of our hour and a half.
+20:36:18 <abadger1999> Anything people want to bring up before we go?
+20:36:29 <sivel> I don't know that I can easily update ansible-testing to check for that, as there are singular words that end in 's'
+20:36:37 <abadger1999> <nod>
+20:36:56 <bcoca> my item, quick decision on resurrectin delegate_to as a var or not
+20:37:10 <bcoca> ^ many 'directives' bled into vars pre 2.x
+20:37:14 <willthames> bcoca, I think the linked fixes all look good
+20:37:23 <willthames> the docs have been updated to use ansible_host
+20:37:28 <abadger1999> #topic Should we resurrect delegate_to as a var?
+20:37:44 <bcoca> willthames: just want to make sure we are all on same page on policy before i accept those
+20:38:04 <abadger1999> what are the fixes?
+20:38:14 <bcoca> @jimi|ansible you might want to weigh in on this one
+20:38:17 <willthames> use ansible_host rather than delegate_to, and update the docs
+20:38:22 <bcoca> abadger1999: remove delegeat_to as 'special var'
+20:38:38 <willthames> bcoca, that's not the fix, that's just reality of ansible 2.0
+20:38:46 <bcoca> from docs
+20:38:58 <willthames> bcoca, ah, right, yeah
+20:39:22 <bcoca> if im wrong about policy (reality is what it is) the fix would be to reinstante delegate_to as a var exposed to play
+20:39:30 <abadger1999> <nod>  So the proposal is -- delegate_to does *not* come back as a special var in tasks.
+20:39:36 <bcoca> basically
+20:39:46 <abadger1999> People can use ansible_host in its stead.
+20:39:53 <bcoca> i think that is correct, just wanted to confirm with others
+20:40:25 <abadger1999> That works for me... We do need to make sure it's recorded somewhere so that we know that it's by design.
+20:40:44 <bcoca> i think ticket is good enough, dont think we'll find many of these
+20:40:49 <abadger1999> Maybe also needs to be in the porting to 2.0 page?
+20:40:50 <bcoca> might be worth note in migration docs
+20:40:58 <abadger1999> <nod> jinx again ;-)
+20:40:58 <bcoca> jinx!
+20:41:46 <abadger1999> #action Decided that we're not bringing delegate_to back as a special task variable.  bcoca will update migration from 2.0 docs to mention it.
+20:41:53 <abadger1999> #topic Open Floor
+20:42:13 <abadger1999> Anything else people want to discuss?
+20:42:52 <abadger1999> One note from me:  we have the agenda for this meeting here: https://github.com/ansible/community/issues/84   but we discussed proposals the whole time.
+20:43:04 <abadger1999> So I'm going to relabel that as the agenda for the Thursday meeting.
+20:43:22 <willthames> some of those are mine
+20:43:29 <bcoca> we sorted out the 2.4 stuff already
+20:43:31 <willthames> my python 2.4 question has been solved
+20:43:32 <willthames> yep
+20:43:34 <abadger1999> <nod>
+20:43:37 <bcoca> abadger1999: you did the update
+20:43:47 <abadger1999> I think all we have left is this one:
+20:43:48 <abadger1999> PRs are being accepted before all tests pass (see ansible/ansible#15586). How is this acceptable?
+20:44:17 <bcoca> related, but see later as this is the travis 'legacy breakage loop' issue
+20:45:01 <willthames> the original PR that broke all subsequent tests would have failed itself if left to completion
+20:45:16 <abadger1999> #info py2.4 compat question was answered as we're only keeping python2.4 compat for modules which do not have dependencies which require a higher version of python.  So things like docker_common.py are excluded from the python2.4 test in tests/utils/run_tests.sh
+20:45:41 <willthames> but I understand it's currently difficult to tell the difference between weird travisness and actual failure, but that is a worry in itself
+20:45:41 <abadger1999> #topic
+20:45:41 <abadger1999> PRs are being accepted before all tests pass (see ansible/ansible#15586). How is this acceptable?
+20:45:47 <abadger1999> #topic PRs are being accepted before all tests pass (see ansible/ansible#15586). How is this acceptable?
+20:46:17 <abadger1999> I think the problems we're currently facing are transient failures
+20:46:22 <bcoca> willthames: we have plan, need to chagne travis test to not checkout just PR branch, but to rebase PR on top of /devel, then we can start weeding out this issue
+20:46:23 <abadger1999> and travis is painfully slow
+20:46:36 <abadger1999> bcoca: i thought that sivel already added that?
+20:46:39 <bcoca> ^ that too, its compounding the issue
+20:46:45 <bcoca> sivel: did you?
+20:47:19 <abadger1999> by transient failures I mean -- the ssh timeout bug and third-party websites that aren't 100% reliable.
+20:47:34 <willthames> I noticed one of mine failed against httpbin.org
+20:47:52 <sivel> did I what?  I stepped away for a second
+20:47:55 <willthames> can we replace those tests with an in-test service
+20:48:06 <abadger1999> sivel: add code so travis is testing PRs rebased against current devel.
+20:48:08 <sivel> ah, rebase
+20:48:08 <bcoca> sivel: fix travis test to rebase and not 'carry on failures' to next PR
+20:48:30 <sivel> in -extras we have traivs rebase using origin/devel
+20:48:33 <abadger1999> willthames: yes, that would be wonderful.  Just no one's taken the time to do that.
+20:48:44 <bcoca> ah, nice, so 'soon' we can have in all 3 repos
+20:48:46 <willthames> abadger1999, understood
+20:48:51 <sivel> bcoca: https://github.com/ansible/ansible-modules-extras/blob/devel/.travis.yml#L12-L15
+20:49:17 <sivel> that also catches PRs that have merge commits in them somewhat frequently, which is also kinda good
+20:49:21 <sivel> the build fails in that case
+20:49:32 <bcoca> nice!
+20:49:43 * bcoca will stop ignoring travis as much
+20:49:55 <abadger1999> willthames: some of them are TLS tests so need a webserver, some self signed certs with various problems (expired, CA not in root bundle, domain name doesn't match cert) and then enhance the tests to put those into place and test against them.
+20:49:57 <sivel> we just need to get that into -core and ansible proper
+20:50:18 <bcoca> woot
+20:50:24 <bcoca> sivel++
+20:50:41 <sivel> abadger1999 / willthames: we can also pip install httpbin and run that somehow in travis
+20:50:46 <sivel> and target that
+20:50:53 <willthames> abadger1999 that kind of TLS test suite sounds like it could be more widely useful anyway (how to teach your engineers to understand certificate issues ;) )
+20:50:59 <sivel> might be possible with badssl.com too
+20:51:04 <sivel> since it is on github
+20:51:07 <willthames> sivel, that sounds like a great approach
+20:51:09 <bcoca> self signed
+20:51:38 <willthames> bcoca?
+20:51:40 <sivel> https://pypi.python.org/pypi/httpbin
+20:51:42 <abadger1999> the ssh bug jimi added some code that makes it happen less frequently but it still exists.
+20:51:42 <sivel> https://github.com/lgarron/badssl.com
+20:52:07 <sivel> even a docker version of badssl.com
+20:52:08 <bcoca> ^ self signed is good way to check 'bad/unverified cert' and no external deps
+20:52:16 <bcoca> just need to run openssl on localhost
+20:52:31 <sivel> it gets hard to test SNI and all sorts of other scenarios though
+20:53:11 <sivel> although I have never seen httpbin.org actually not accept a request
+20:53:22 <bcoca> a good cert is harder, you need to have self signed CA and 'trust it'
+20:53:25 <bcoca> but still doable
+20:53:43 <bcoca> ^ sni just requires cert done that way + aliases to localhost
+20:53:53 <abadger1999> travis being slow we don't have a workaround currently... It's hard to be patient about merging a PR when you're looking at it now but there's 15 other builds enqueued in travis before you (and each takes about 20 minutes to run)
+20:54:09 * bcoca has several thousand lines of perl somewhere that automated all this .. but probably worth creating playbook
+20:54:09 <willthames> sivel https://travis-ci.org/ansible/ansible/jobs/125763880
+20:54:25 <bcoca> abadger1999: i just push them to
+20:54:28 <bcoca> 'my repo'
+20:54:38 <bcoca> travis still slow, but MUCH faster than for ansible/
+20:54:41 <abadger1999> bcoca: ah -- so you checkout the pr, then push them to your personal?
+20:54:49 <bcoca> yep, then you can delete
+20:54:52 <abadger1999> <nod>
+20:54:59 <sivel> willthames: as an fyi I just restarted those jobs for you
+20:55:02 <bcoca> or not, does not cost YOU, but i like having clean repo
+20:55:04 <abadger1999> that would seem to be a workaround.
+20:55:23 <willthames> sivel thanks
+20:55:38 <bcoca> or we have big enough backlog you can just run through, restart and then see results next week ....
+20:55:40 <sivel> I was working on seeing if I could stand up a drone env that could handle our builds, as we could have much more flexibility on concurrency and load
+20:56:03 <sivel> but I didn't get too far.  A number of things need to be reworked in how we run tests to handle it, due to differences in capabilities
+20:56:12 <sivel> I may look into it again
+20:56:21 * bcoca starts adding bitcoin mining test to ansible repo
+20:57:35 <sivel> drone is what we use internally to handle all of our CI stuff, so I have good familiarity with it
+20:58:11 <abadger1999> willthames: so... I guess that's a good outline of the territory.  what would you like to see to resolve this agenda item?
+20:58:51 <willthames> being pragmatic, we need to improve test performance and reduce test failure scenarios
+20:58:55 <sivel> would still be limited to the longest run, but if you had 36CPUs and 96GB of RAM, I think we could handle a lot of concurency
+20:58:56 <bcoca> i think we just need to expand on sivel's fix
+20:59:10 <willthames> perhaps an action to reduce 3rd party dependencies
+20:59:40 <willthames> bcoca, you mean drone?
+20:59:58 <bcoca> no, the fix currently in extras, at least for now
+21:00:13 <bcoca> need to look for resources for most of the travis performance issues though
+21:00:21 <willthames> bcoca, that would be good too
+21:00:23 <bcoca> ^ been asking in RH for those
+21:00:28 <willthames> I'd have still hit the test failures though
+21:01:54 <abadger1999> <nod>  Does anyone currently have time to look at standing up httpbin/badssl/ad hoc web server within tests to replace the external sites that cause us issues?
+21:02:31 <willthames> abadger1999 I wonder if we make it a proposal/issue and then someone can pick it off if they do have time
+21:02:39 <abadger1999> works for me.
+21:02:54 <alikins> was thinking about that yesterday... the current testserver didn't seem worth extending, I could look into that tomorrow
+21:02:56 <willthames> I'd like to take a look but just can't guarantee that I'll get around to it (happy to create the issues though)
+21:02:57 <bcoca> wfm
+21:03:06 <abadger1999> alikins: Cool.
+21:03:08 <alikins> well, aside from the 11 meetings on my schedule
+21:03:11 <bcoca> i wish i had time
+21:04:09 <abadger1999> #action alikins to look at pulling tests that hit flakey external web servers into tests against web servers setup inside the test.
+21:04:20 <alikins> I exaggerate, it's only 10
+21:04:41 <abadger1999> alikins: If it turns out you don't have time report back and we can open a proposal and see if someone else picks it up.
+21:04:58 <abadger1999> #topic Open Floor
+21:05:10 <abadger1999> Okay -- if nothing else, I'll close this in 60s
+21:06:41 <abadger1999> #endmeeting

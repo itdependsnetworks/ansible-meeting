@@ -1,0 +1,182 @@
+15:00:11 <gundalow> #startmeeting Public Core Meeting
+15:00:11 <zodbot> Meeting started Thu Jan  5 15:00:11 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:00:11 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:00:11 <zodbot> The meeting name has been set to 'public_core_meeting'
+15:00:18 * mattclay waves
+15:00:31 <gundalow> #chair abadger1999 allanice001 jimi|ansible jtanner mattclay nitzmahone
+15:00:31 <zodbot> Current chairs: abadger1999 allanice001 gundalow jimi|ansible jtanner mattclay nitzmahone
+15:00:42 <allanice001> holla
+15:00:46 <nitzmahone> Yo
+15:01:00 <gundalow> #info Agenda https://github.com/ansible/community/issues/148
+15:01:56 <gundalow> Gona start from the end and work up
+15:02:06 <gundalow> #topic When should we start removing submodule commands from various docs/scripts?
+15:02:07 <ryansb> Ok, guess that's me
+15:02:17 <gundalow> #chair ryansb
+15:02:17 <zodbot> Current chairs: abadger1999 allanice001 gundalow jimi|ansible jtanner mattclay nitzmahone ryansb
+15:02:39 <jtanner> why couldn't submodule refs be removed right now?
+15:02:58 <ryansb> The `hacking` scripts use --recursive clones, and submodule update. It doesn't hurt anything, but I don't know if people always use the checked out versions of those scripts
+15:03:16 <ryansb> like, do people use a newer hacking script located somewhere in their env to work on older ansible versions?
+15:03:18 <jtanner> i've always run hacking from the checkout
+15:03:20 <gundalow> It can only be removed from scripts that are versioned. I'm not sure if their are any parts of releasing/hacking that are always from from `devel`
+15:03:50 <jtanner> i don't understand what that means
+15:03:54 <gundalow> Do any of these instances give out warnings/errors?
+15:03:57 <ryansb> If not, we can remove it from all of those (including the pkgbuild for arch) and assume people use the checked out versions
+15:04:46 <gundalow> jtanner: For example. Are the build & release scripts always run from devel, rather than from stable-x.y
+15:05:03 <jtanner> no
+15:05:10 <ryansb> gundalow: for the stable releases we'd use the version on that branch
+15:05:13 <jtanner> releases come from stable branches
+15:05:36 <ryansb> so we wouldn't backport the "remove submodule command" changes to the pre-2.2 stable
+15:05:42 <ryansb> err, 2.2 and older
+15:09:18 <gundalow> hum, I thought packaging/release/release.yml always got run from devel, though I may be miss remembering. Would need jimi|ansible to confirm
+15:09:30 <jimi|ansible> it does get run from devel only
+15:10:19 <jimi|ansible> however, because it checks things out it still needs the submodule stuff in the release.yml
+15:10:46 <jimi|ansible> i mean, it clones the repo clean and then checks out the stable branch, which still uses submodules
+15:10:50 <jimi|ansible> make sense?
+15:11:21 <ryansb> Ah, ok, so can't touch the release script
+15:11:34 <jtanner> oh ...
+15:11:44 <jtanner> it doesn't build from the current checkout?
+15:11:53 <jtanner> how does one test a patch to the build scripts?
+15:12:36 <gundalow> to avoid local changes releases are generally always made from a fresh & dedicated checkout
+15:16:24 <allanice001> so, for 2.3, removing submodule from release script  would be the final step?
+15:17:53 <allanice001> but would most likely break backport for 2.2 and older
+15:18:31 <ryansb> ok, so I think that's resolved. Don't touch submodule refs in release scripts, but other places are fine
+15:18:40 <ryansb> sound good?
+15:18:44 <jtanner> shipit
+15:18:50 <allanice001> +1
+15:19:13 <ryansb> #action ryansb remove outdated submodule refs from error messages and non-release scripts
+15:24:38 <gundalow> cool, next topic then?
+15:24:46 <gundalow> #topic ansible/ansible#19500 Update assemble to allow alternate source of files
+15:25:00 <gundalow> #info https://github.com/ansible/ansible/pull/19500
+15:25:34 <gundalow> Needs some other eyes on it
+15:25:44 <kennc> looks good to me :)
+15:25:48 <jtanner> who is the maintainer?
+15:26:05 * gundalow has to step out for 5 mins
+15:26:23 <jtanner> has none .. =/
+15:26:34 <jtanner> supported by core though
+15:28:23 <bcoca> -1 on that, i dont think that feature makes much sense
+15:28:31 <kennc> why?
+15:28:42 <kennc> I think I make a clear case for it
+15:28:49 <kennc> provide testing on it?
+15:29:15 <bcoca> passing a list of files vs having the files in a directory
+15:29:27 <kennc> why does ordering in alphabetical make sense?
+15:29:28 <bcoca> a directory is a list of files
+15:29:36 <bcoca> ordering is filesystem based
+15:29:45 <bcoca> if you want ordering make a sorting feature, not a list
+15:29:58 <bcoca> this is alternate source, not ordering
+15:30:11 <kennc> If you look at my example, I think it will make sense
+15:30:47 <bcoca> i understand what you are trying to do, i just don't think it is a good feature
+15:30:58 <kennc> alright
+15:31:13 <bcoca> current ordering depends on filesystem (most common ones use alphabetical, but it can also be different)
+15:31:24 <kennc> can't argue with people's opinions
+15:31:40 <kennc> only can state it has come up several times
+15:32:11 <ryansb> kennc: would having a param like "sort_method" or similar resolve your problem?
+15:32:11 <bcoca> sorting has, sourcing has not
+15:32:16 <kennc> no
+15:32:34 <kennc> that was to ryansb
+15:32:36 <bcoca> and mostly as a question, not as  reques
+15:33:00 <kennc> sorry, should have clarfied
+15:33:06 <kennc> it has come up several times to me
+15:33:35 <jtanner> looks as though the pr adds the ability to span across multiple directories/files ... so doesn't appear a sort_method would help
+15:33:39 <bcoca> understood, but we need to look at the big picture, i dont see this as useful to the general user
+15:33:45 <mattclay> The first example could be handled by using a single directory with symlinks to the various files. The second example by prefixing the source file names with numbers for ordering. That works w/o making changes to assemble.
+15:33:59 <bcoca> jtanner: its not a sort, its a 'list of files not from a directory'
+15:34:06 <ryansb> Or using a jinja2 template that uses file lookups
+15:34:15 <jtanner> just responding to ryansb about sort_method
+15:34:27 <kennc> doesn't really scale the same way doing symlink
+15:34:31 <bcoca> yes, many ways to get around it w/o need of option
+15:35:12 <bcoca> im not against a pure 'sort' option,  this 'alternate source' seems too niche
+15:35:33 <ryansb> alternately: having this option doesn't impede regular users either
+15:35:49 <kennc> /var/config/{{ inventory_hostname }}/route
+15:35:55 <kennc> doesn't scale with symlinks
+15:35:58 <bcoca> i think it will confuse them
+15:36:05 <kennc> who is them?
+15:36:10 <bcoca> users
+15:36:22 <bcoca> as it works in very differnt manner than the directory
+15:36:37 <jtanner> we can't know the psychology of everyone ... i'm also not clear as to why core owns this module
+15:37:30 <bcoca> like template it is a basic way of managing file configurations
+15:37:45 <bcoca> not that this cound not be done via template and jinja2 includes
+15:38:11 <jtanner> so it simplifies a common pattern
+15:38:12 <bcoca> ^ kennc i would actualy point you to that if you want to supply an ordered list to assemble
+15:38:51 <jtanner> if making unncessary symlinks to span across multiple dirs is another common pattern people use for the module, i don't see why we can't allow someone to abstract that
+15:38:54 <bcoca> well, the big difference is that tempalte always operates on controller, assemble was initially created to operate ONLY on target, local operation was added later on
+15:39:15 <bcoca> ^ i think they overlap too much as it is
+15:40:04 <kennc> the idea is to have config sections with jinja, output pieces and then assemble based on logical ordering
+15:40:43 <bcoca> if you are already using jinja, why not assemble there? you can already control the exact list/order there
+15:40:44 <kennc> bcoca: if you are saying one large jinja, I don't think that will work
+15:40:54 <bcoca> and again, this feature does not add ordering, just an alternate source list
+15:41:29 <bcoca> kennc: not sure what you mean by that, but assemble cannot do anything template cannot
+15:41:30 <kennc> a thought by definition a list is ordered
+15:41:37 <bcoca> ^ except 'remote assemble'
+15:42:11 <allanice001> jinja templates can be easily extended / included in parent and child templates
+15:42:12 <bcoca> kennc: that is a consequence of the feature, otherwise it would just be a sort
+15:43:29 <alikins> I have no strong opinions on the feature, but the code looks reasonable. And it has tests!
+15:43:31 <bcoca> the feature as added is not an 'alternate ordering' its an 'alternate source', order in both cases depends on source ordering
+15:46:15 <kennc> all I can say is it provides a function that is more logical than 001-file, 002-file, etc.. It has already been coded, and there is tests.
+15:46:38 <kennc> I understand you have to look at it from a different angle
+15:47:02 <kennc> So I won't press any further, just encourage other's to comment on it, if they see the need
+15:47:32 <bcoca> i would like to avoid clutter in core modules, specially of features that don't seem that useful or are easily available in other ways
+15:47:58 <bcoca> my main problem is that you want a sort, but are implementing a alternate sourcing as a way of controlling sort order
+15:48:02 <kennc> we have different opinions on easy :)
+15:48:10 <bcoca> which makes me think this is not the best way to do what you want
+15:48:36 <allanice001> kennc: with a jinja template, you can {% include ‘z’ %}.. {%include ‘a’ %} in any order you want / need
+15:48:47 <bcoca> kennc: that is always true, easy is subjective, let me say 'simple' which is more objective
+15:49:37 <bcoca> both file naming (prefix/symlink) and template includes are simple alternatives
+15:51:06 <kennc> I only ask you leave comments to reason for closing so people can chime in.
+15:52:02 <bcoca> i have not closed it, i'm still waiting for other opinions
+15:52:16 <bcoca> there might be a reason i'm missing or somethign that invalidates my argument
+15:52:26 <bcoca> otherwise i would have closed the ticket weeks ago
+15:53:03 <kennc> sorry, if it is closed
+15:53:25 <bcoca> most of what i've heard from others is 'i dont mind it'
+15:54:35 <alikins> having a mechanism to enforce an ordering seems useful
+15:55:27 <alikins> especially if the fragments can't be renamed for some reason
+15:56:30 <bcoca> i dont disagree on ordering, its making alternate sourcing as a way to achieve it
+15:56:42 <bcoca> seems like a backwards way to do it
+15:57:22 <bcoca> and as allanice001showed, the current implementation is trivial to create via a tempalte
+16:00:12 <alikins> puppets concat allows providing a rank ('order') for fragments, but that would need new args as well
+16:00:50 <alikins> but should probably get to other things on the agenda, if there is anything else
+16:01:08 <bcoca> again, i would be fine if the feature was an actual sort
+16:01:32 <bcoca> but it is not, the sorting is an effect of passing a list of files as a source
+16:01:40 <mattclay> If the needed ordering is arbitrary (instead of just a different sort method), I don't think there's another way to do it, except to provide an alternate source which is already manually sorted, assuming you want to use assemble.
+16:01:42 <kennc> let's take that out of the talk for here
+16:01:52 <kennc> doing a sort does not help this use case
+16:04:26 <bcoca> no, but the other 2 alternatives provided do, w/o the need of new code
+16:07:58 <allanice001> if going the jinja route, you can acheive a crapload with exceptions and filters
+16:08:12 <allanice001> http://jinja.pocoo.org/docs/dev/api/#exceptions
+16:08:50 <gundalow> OK, that's 30 minutes on this topic.
+16:09:02 <gundalow> What are the next steps
+16:10:21 <gundalow> We can continue for another 50 minutes (till the next meeting) Just want to make sure we are progressing :)
+16:10:41 <allanice001> might need to drag the laptop to dinner then :D
+16:11:10 <kennc> I don't have anything else to add
+16:11:54 <allanice001> personally, i’m with bcoca on this, alternatives exists without additional code requirements
+16:12:48 <bcoca> for me an ordered list of files is the same as a directory with symlinks, i dont see this as adding much featurewise for the cost of extra code maintenance
+16:13:40 <bcoca> teh argument about file names changing ... affects both lists
+16:14:33 <bcoca> im reticent to reject it, but i'm still waiting for a compelling use case
+16:21:05 <allanice001> how many would use this, where either of the alternatives presented are already existing in their current usages?
+16:22:22 <kennc> not really sure I understand. Why have the module at all? Just user jinja and sort the directory alphabetically?
+16:22:36 <kennc> allanice001: ^^
+16:22:42 <allanice001> right
+16:22:46 <bcoca> kennc: as i said, module initially was made to operate remotely, which templates cannot do
+16:22:54 <kennc> again, I don't want to derail
+16:23:14 <bcoca> and i agree, the local feature is an overlap, which i disagree with
+16:24:12 <allanice001> also, kennc if im currently using jinja / alpha sort of directory, why would i shift to this feature
+16:24:40 <kennc> we are going in circles :)
+16:25:02 <kennc> seriously I don't want to derail this meeting, more than  I already have
+16:25:23 <kennc> To me the argument holds up for both, or none.
+16:26:15 <kennc> I do not foresee changing your minds, I think I have a use case that is compelling, you don't.
+16:26:19 <kennc> I'm ok with that
+16:27:01 <gundalow> kennc: Don't worry about it. We get stuck on one topic fairly often
+16:27:19 * abadger1999 wakes up and looks in
+16:27:51 <allanice001> kennc, dont get me wrong, i get your point too.
+16:27:59 <kennc> I know you do :)
+16:28:18 <kennc> and I understand you have to look at a larger picture
+16:29:39 <gundalow> I'm gona call the end of the meeting in 15 minutes. I know we have a few other items on the agenda from mattclay, however we've chatted and we will push them to the next meeting. Does anyone else have anything for today?
+16:29:55 <gundalow> If not we've got 15 minutes to continue on assemble & multiple sources
+16:30:36 <allanice001> gundalow: i got nothing
+16:32:02 <bcoca> kennc: i have same argument for both, we have plenty of features in existing code that i disagree with
+16:32:18 <bcoca> *cough* copy content *cough*
+16:43:47 <gundalow> OK
+16:43:49 <gundalow> Gona call it
+16:43:58 <gundalow> Thanks for your time everyone
+16:44:25 <gundalow> As always add discussion points onto https://github.com/ansible/community/issues/148
+16:44:52 <gundalow> PR for removing/updating mentions of git submodule is out for review https://github.com/ansible/ansible/pull/19941
+16:44:55 <gundalow> #endmeeting

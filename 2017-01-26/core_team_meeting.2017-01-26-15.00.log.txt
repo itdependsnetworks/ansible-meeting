@@ -1,0 +1,205 @@
+15:00:03 <gundalow> #startmeeting Core Team Meeting
+15:00:03 <zodbot> Meeting started Thu Jan 26 15:00:03 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:00:03 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:00:03 <zodbot> The meeting name has been set to 'core_team_meeting'
+15:00:14 * jtyr is here ;o)
+15:00:29 <gundalow> #chair abadger1999 allanice001 bcoca jimi|ansible jtyr mattclay nitzmahone Qalthos rcarrillocruz
+15:00:29 <zodbot> Current chairs: Qalthos abadger1999 allanice001 bcoca gundalow jimi|ansible jtyr mattclay nitzmahone rcarrillocruz
+15:00:33 <gundalow> jtyr: Hello
+15:00:42 <gundalow> oh, did we have something on the agenda for you
+15:00:45 * gundalow looks
+15:00:55 <jtyr> yeah, ... the hosts module
+15:01:05 <jtyr> nicely PEP8 compliant ... ;o)
+15:01:18 <alikins> bloop
+15:01:24 <gundalow> Sounds like a good place to start
+15:01:27 <gundalow> morning alikins
+15:01:35 <gundalow> #topic Adding etc_hosts module #19283
+15:01:40 * nitzmahone lurks
+15:01:41 <gundalow> https://github.com/ansible/ansible/pull/19283
+15:02:10 <gundalow> nitzmahone: good very early morning to you :)
+15:02:14 * allanice001 waves
+15:02:44 <nitzmahone> :)
+15:03:55 <gundalow> jtyr: I couldn't see mentioned is why this module v template or lineinfile?
+15:04:51 <jtyr> gundalow: it's the same like yum_repository module ... everything could be done by templates or inline ...
+15:06:41 <bcoca> yeah ... wish i could remove that module
+15:08:04 <jtyr> if you want some arguments, here they are: it unifies formatting, it assures the columns contain the right values (common mistake of users to swap alias and domain) ...
+15:08:43 <bcoca> a hosts_file role would ensure same things
+15:09:17 <jtyr> yumrepo role would do the same as yum_repository module ...
+15:09:22 <jtyr> that's not an argument ...
+15:09:36 <jtyr> you can not force users to use primitives all the time ...
+15:09:52 <jtyr> this is why modules are out there ... they make user's life easier ...
+15:10:22 <jtyr> instead of having 1000 roles doing the same, you have one module doing it for everybody in the same way ...
+15:10:29 <gundalow> jtyr: Nor do we want to force everyone to do everything with just a dozzen modules, though we want to ensure that we aren't adding in modules for the sake of it
+15:10:50 <gundalow> You've made a very good point there
+15:11:24 <bcoca> jtyr: yes it is, i have the same issues with yum_repo
+15:11:26 <gundalow> jtyr: I assume it works fine with IPv6 addresses, might be worth just adding an example in for that
+15:12:00 <jtyr> in this case IP4 is the same like IP6 ...
+15:12:15 <jtyr> people who use IPv6 know that ... no need to add such example ...
+15:12:17 <bcoca> it does not verify that they are valid IP?
+15:12:39 <jtyr> bcoca: I can add that ...
+15:12:59 <jtyr> using some python library which does that ...
+15:13:07 <jtyr> do you know about some?
+15:13:19 <bcoca> or ... you can use existing ip filters in a role ...
+15:13:44 <jtyr> ;o)
+15:13:52 <allanice001> jtyr, python validate does have it
+15:14:31 <gundalow> Is that it built in module?
+15:15:10 <allanice001> gundalow, i doubt it
+15:15:18 <alikins> I'd like to see a etc hosts module that took a list/tuple of entries.  I'd lean towards making that a separate module though just to keep the args and state logic sane.
+15:15:32 <jtyr> allanice001: I was more thinking about something like this: import ipaddress; ipaddress.ip_address('999.1.1.1')
+15:15:42 <jtyr> seems to be standard part of Py
+15:16:48 <jtyr> ah ... 2.7+ ... ;o(
+15:17:17 <gundalow> For the purpose of keeping this meeting moving I'm going to move onto another topic in 10 minutes
+15:17:43 <allanice001> jtyr, here is what i use - https://validators.readthedocs.io/en/latest/
+15:17:58 <allanice001> but, it is a seperate requirement
+15:18:10 <jtyr> exactly ... ;o(
+15:18:31 <jtyr> it would be nice if it wouldn't build another dependency ...
+15:18:56 <allanice001> agree
+15:21:16 <jtanner> sorry, i've been on different screens and didn't even realize this was going on
+15:21:45 <gundalow> -1 to adding extra dependencies
+15:22:13 <jtanner> we had a hosts module in the past, but it caused a lot of issues due to the numerous types of schemas have in the file https://github.com/ansible/ansible/issues/5748
+15:22:20 <bcoca> a role can do it w/o the extra deps ...
+15:22:31 <jtanner> therefore dehaan removed the module.
+15:27:13 <alikins> jtanner: that module was for setting hostname not manipulating /etc/hosts
+15:27:24 <alikins> and the hostname module still exists
+15:27:38 <jtyr> bcoca: let's remove all modules from Ansible and replace them by roles ... ;o)
+15:27:59 <jtyr> bcoca: we already had the discussion that roles are not that convenient like modules ....
+15:28:12 <jtyr> role != task ...
+15:28:14 <jtanner> alikins: true, but that's just an example of how people have different views about the content of /etc/hosts
+15:28:19 <bcoca> not all, but many
+15:28:33 <bcoca> jtyr: that was before include_role
+15:29:47 <jtyr> bcoca: ugly ...
+15:30:27 <bcoca> pushes the maintenance burden outside the repo, makes customization easy for non programmers
+15:30:36 <bcoca> imo
+15:31:12 <jtyr> bcoca: but that doesn't reduce the fragmentation ... IMHO the biggest problem the Ansible community has ...
+15:31:35 <jtyr> bcoca: like 1000 roles for nginx configuration in Galaxy ...
+15:32:00 <bcoca> and as soon as we merge all modules prposed, we have the same issue but in anisble/ansible
+15:32:15 <bcoca> which is why i want to push 'non core modules' to galaxy
+15:32:22 <bcoca> but that is diff discussion
+15:32:45 <jtanner> we can't keep up with the modules we already have, so i'm never going to default to "more modules == good"
+15:33:20 <bcoca> modules that do stuff we dont already cover ... yes i can see the point of accepting those
+15:33:23 <jtanner> http://jctanner.mynetgear.com:5000/modulestats
+15:33:29 <jtyr> bcoca: I got one nginx role which is possible to use for any purpose (https://github.com/jtyr/ansible-nginx) ... using the config_encoder_config filters ... do you remember? ... the thing you don't want to have in Ansible ...  ;o)
+15:33:31 <bcoca> modules that have overlap ... im inclined to say no
+15:34:06 <bcoca> jtyr: for the same reasons as i dont want modules that overlap, i dont want filters that do same
+15:34:14 <bcoca> ^ s/modules/any plugin/
+15:35:08 <jtyr> bcoca: modules in roles in Galaxy ... sounds good ... this is what I'm currently doing with the config_encoder_filters .... https://github.com/jtyr/ansible-config_encoder_filters
+15:35:31 <jtyr> bcoca: distributing it as a role dependency ... that works ...
+15:35:39 <gundalow> ..............................................
+15:35:39 <gundalow> ..............................................
+15:35:40 <gundalow> ..............................................
+15:35:41 <gundalow> OK
+15:35:42 <bcoca> and i'm fine with that, that is what sharing is for
+15:35:45 <gundalow> I'm moving us on now
+15:35:45 <jtyr> bcoca: I can imagine to do the same for any other module ...
+15:35:57 <gundalow> (I gave 10 minutes notice 20 minutes ago_
+15:36:00 <gundalow> )
+15:36:03 <bcoca> i just dont want to be overwhelemd more in ansible/ansible as most expect us to then maintain and deal with the issues of this code
+15:36:12 * jtyr shuts his mouth up ;o)
+15:36:25 <bcoca> jtyr: and galaxy is not currently best place to share, i agree
+15:36:33 <gundalow> jtyr: Lets fall back to the standard process here, which is get two shipits and we can discuss again
+15:36:35 <bcoca> ^ better tools are needed to share/install plugins
+15:36:38 <alikins> whats the next topic?
+15:36:59 <gundalow> #topic module_utils/basic.py: Support logical or condition in required_if #20220
+15:37:04 <gundalow> https://github.com/ansible/ansible/pull/20220
+15:37:57 <gundalow> I think this would be really useful. Since mentioning it on #ansible-devel yesterday, someone else said "that would be good for my modules as well"
+15:38:32 <bcoca> i like the idea, have not looked at code
+15:41:09 <gundalow> code looks fairly simple. I'll document it as part of developing_modules refactoring
+15:41:52 <gundalow> It's a change to basic.py, so I'd like someone apart from me to look at it
+15:42:56 * gundalow assumes the quietness is people looking at the code :)
+15:44:11 <gundalow> ANy offers for review?
+15:44:17 <gundalow> please add yourself, thanks
+15:44:31 <gundalow> #topic
+15:44:31 <gundalow> ￼Edit
+15:44:31 <gundalow> Refurbish developing modules content - stage 1 #20673
+15:44:41 <gundalow> #topic Refurbish developing modules content - stage 1 #20673
+15:44:50 <gundalow> https://github.com/ansible/ansible/pull/20673
+15:45:07 <gundalow> This is the initial stage of a refurbishment of the module development documentation that Scott and I have been working on
+15:45:48 <gundalow> basically dev_guide/developing_modules.html is now chopped into multiple pieces, so it's easier to update
+15:45:59 * abadger1999 waves good morning
+15:46:01 <gundalow> I'll be updating module checklist first (separate PR)
+15:46:06 <gundalow> hey abadger1999
+15:46:32 <gundalow> allanice001: ^ first cut of improving docs
+15:46:39 <gundalow> no functional change, just moves the sections around
+15:47:02 <allanice001> will look at it
+15:47:25 <gundalow> allanice001: Thanks
+15:47:32 <jtanner> would a module init script help with some of what that guide attempts to do?
+15:47:43 <jtanner> ansible-module-init
+15:47:54 <jtanner> makes a libarary dir with a stub module in it
+15:48:00 <gundalow> jtyr: You mean something that generates a boiler plate, I like that idea
+15:48:01 <jhawkesworth> hey.  just read a little and might be worth directing readers to windows module writing section as its rather different from python modules (no zip, separate .py documentation etc)
+15:48:38 <gundalow> jhawkesworth: Do you know where that is, I saw an into_windows, though that seemed to be user facingm rather than module developer facing
+15:49:24 <gundalow> jhawkesworth: The windows stuff is here at the moment https://github.com/ansible/ansible/pull/20673/files#diff-284ac9a0338a9f568dab8b2269818418R135
+15:49:25 <jhawkesworth> gundalow: I'll take a look iirc there's not much more than a windows module checklist
+15:50:09 <gundalow> jtanner: I like that idea, lets ponder it a bit more
+15:50:25 <jtanner> gundalow: another aspect of boilerplate generator is that we can evolve it into a tui that asks questions and fills in the blanks
+15:50:49 <jtanner> we/community
+15:50:56 <gundalow> jhawkesworth: I was considering having a separate developing_modules_windows page with the how to & specific checklist, how does that sounds
+15:51:02 <gundalow> jtanner: +1
+15:51:21 <jtanner> maybe have it create a role dir though instead of library, then we can use it to encourage include_role + galaxy
+15:51:41 <bcoca> there will be repeats , i would have 'common' and then specific rules for each
+15:51:43 <jhawkesworth> gundalow: sounds like a good idea to have separate windows page
+15:51:50 <bcoca> the common are mostly interface/naming/scope related
+15:52:46 <gundalow> So my current plan is
+15:52:59 <gundalow> Into (which is there) Should this be a module
+15:53:04 <gundalow> PAGE: General developing
+15:53:13 <gundalow> PAGE: Developing AWS modules
+15:53:18 <gundalow> PAGE: Developing Network modules
+15:53:23 <gundalow> PAGE: Developing Windows modules
+15:53:43 <gundalow> PAGE: Checklist (& coding guidelines)
+15:53:51 <gundalow> PAGE: Python 3
+15:53:59 <gundalow> PAGE: How to debug a module (not just for module authors)
+15:54:16 <gundalow> PAGE: How to add and extends tests
+15:55:18 <gundalow> So if you were developing a WIndows module you've read "General" + "Developing Windows modules" + "Checklist" + "How to add and extends tests"
+15:55:40 <jhawkesworth> sounds good although windows module debugging probably different from python modules
+15:56:02 <jhawkesworth> ... to do no ansibalz and powershell ISE
+15:56:13 <gundalow> ah, good point
+15:57:13 <jhawkesworth> also recent discussion maybe some adv topic for windows such as sensible way to call external programs (if you must), calling .net code and embedding c# code.
+15:57:27 <jhawkesworth> but probably fit all that on windows modules page
+15:57:28 * gundalow adds that to his notes
+15:58:31 <jtanner> gundalow: created https://github.com/ansible/proposals/issues/49
+15:58:32 <gundalow> jhawkesworth: Thanks
+15:58:49 <gundalow> jtanner: Ace :)
+15:59:03 <gundalow> For a first cut are people happy with https://github.com/ansible/ansible/pull/20673
+15:59:29 <gundalow> In particular the new developing_modules.html page https://github.com/dharmabumstead/ansible/blob/fba6bfc2ea21ee47e9090ea900d386c1b35073e0/docs/docsite/rst/dev_guide/developing_modules.rst
+16:01:27 <jhawkesworth> gundalow: also some chat about a 'model' module for windows devs demonstrating module param processing here https://github.com/ansible/ansible/issues/20505.
+16:01:27 <bcoca> gundalow: will read, have not had time until now, can we reschedule for next meeting before approving?
+16:02:18 <allanice001> i'm guessing no meetings next week due to ansible installs paris ?
+16:02:22 <gundalow> bcoca: It's the same content, just moved round a little bit, Most is going to get rewritten
+16:02:36 <gundalow> allanice001: only myself jimi|ansible and rcarrillocruz will be in Paris from the Core Team
+16:02:37 <abadger1999> gundalow: developing_modules_general.rst  isn't really... general.
+16:02:44 <abadger1999> It's more tutorial,
+16:02:50 <gundalow> abadger1999: it's SHIT
+16:02:56 <abadger1999> heh :-)
+16:02:57 <gundalow> and that's why it's going to be rewritten
+16:03:23 <gundalow> All the above PR does it chop stuff into pieces so it's easier to improve
+16:04:03 <gundalow> apart from correcting spelling mistakes I don't believe their are many actual changes in the PR, apart from moving stuff around and the intro page
+16:04:09 <abadger1999> It's not a bad page to me but it's for a different audience.
+16:04:42 <jtanner> https://github.com/ansible/proposals/issues/49 would reduce the reliance on that doc, imo.
+16:05:32 <abadger1999> I'd probably move the content back into the main docs when you rewrite general.
+16:05:50 <abadger1999> Until we split out a "tutorial" type introp to ansible from more referencey docs.
+16:05:59 <abadger1999> *intro to
+16:06:05 <gundalow> abadger1999: yup, I want to get a much clearer separation between user facing and dev_guide
+16:06:38 <gundalow> did we want a different directory for docs for people with commit access
+16:06:53 <abadger1999> copntributor rather than committer.
+16:07:11 <abadger1999> I think it will end up being distinct... but I'm not sure if there's consensus.
+16:07:44 <abadger1999> For instance, the module checklist is for contributors rather than for people writing their own custom modules.
+16:08:07 * gundalow views the checklist as been good for everyone
+16:08:12 <abadger1999> We could split it later after we see what it's like.
+16:08:16 <gundalow> (that writes modules)
+16:08:20 <allanice001> also, what prevents a galaxy like solution for distributing custom modules
+16:08:26 <gundalow> +1 to making it a problem for the future
+16:08:40 <abadger1999> allanice001: You can currently use galaxy for distributing modules.
+16:08:54 <abadger1999> We should write a section about that and stick it in the main guide.
+16:09:22 <bcoca> having module-init does not mean docs should not exist either
+16:09:34 <bcoca> docs need to exist, then module-init can use them as rules to make life easier
+16:09:44 <abadger1999> (Looked for it the other day and found the individual pieces but had to stitch it together from reading a cou0ple different pieces of the docs)
+16:11:57 <abadger1999> yeah, module-init should follow the documented standards rather than the other way around.
+16:13:13 <gundalow> I hope to get a first cut of new checklist done by the end of next week
+16:13:59 <gundalow> Then realistically, the rest will have to wait till post 2.3
+16:14:57 <gundalow> Anythine else
+16:15:02 <gundalow> Anyone else got anything?
+16:16:07 <allanice001> at last got back to pr#19421
+16:16:12 <allanice001> and added your feedback
+16:16:16 <allanice001> gundalow, ^
+16:17:38 <gundalow> Thanks
+16:17:41 <gundalow> #endmeeting

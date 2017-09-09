@@ -1,0 +1,662 @@
+19:07:13 <abadger1999> #startmeeting Ansible Public Meeting
+19:07:13 <zodbot> Meeting started Tue Apr 19 19:07:13 2016 UTC.  The chair is abadger1999. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:07:13 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:07:13 <zodbot> The meeting name has been set to 'ansible_public_meeting'
+19:07:24 <abadger1999> #chair jimi|ansible sivel
+19:07:24 <zodbot> Current chairs: abadger1999 jimi|ansible sivel
+19:07:31 <abadger1999> Who else is around?
+19:07:52 <svg> o/
+19:07:58 <resmo> hi
+19:08:01 <Shrews> here-ish
+19:08:04 <rbergeron> oh whew
+19:08:15 * rbergeron is here
+19:08:21 <abadger1999> bcoca, jtanner, alikins, Qalthos, nitzmahone, ryansb meeting time
+19:08:30 <abadger1999> #chair svg resmo Shrews rbergeron
+19:08:30 <zodbot> Current chairs: Shrews abadger1999 jimi|ansible rbergeron resmo sivel svg
+19:08:31 <jtanner> here
+19:08:33 <nitzmahone> yo
+19:08:39 <abadger1999> #chair nitzmahone jtanner
+19:08:39 <zodbot> Current chairs: Shrews abadger1999 jimi|ansible jtanner nitzmahone rbergeron resmo sivel svg
+19:08:40 <ryansb> hi!
+19:08:42 <thaumos> hola
+19:08:52 <abadger1999> #chair ryansb thaumos
+19:08:52 <zodbot> Current chairs: Shrews abadger1999 jimi|ansible jtanner nitzmahone rbergeron resmo ryansb sivel svg thaumos
+19:08:55 <Qalthos> hello
+19:09:01 <abadger1999> #chair Qalthos
+19:09:01 <zodbot> Current chairs: Qalthos Shrews abadger1999 jimi|ansible jtanner nitzmahone rbergeron resmo ryansb sivel svg thaumos
+19:09:12 <abadger1999> Cool.
+19:09:36 <abadger1999> jimi|ansible, gregdek: Did we decide to make this the proposals meeting or the next one?
+19:10:06 <rbergeron> abadger1999: i think gregdek is not around -- my understanding was that it was goign to be this one, unless folks object or need more time or etc.
+19:10:12 <rbergeron> but
+19:10:22 <rbergeron> (well this is where greg would use his shruggie macro)
+19:11:03 <thaumos> I say let’s do it, and ask for forgiveness later.
+19:11:18 <abadger1999> Alrighty then.
+19:11:25 <abadger1999> #topic Proposals
+19:11:25 <alikins_> howdy
+19:11:26 <gregdek> This one. :-)
+19:11:39 <abadger1999> #chair alikins_ gregdek
+19:11:39 <zodbot> Current chairs: Qalthos Shrews abadger1999 alikins_ gregdek jimi|ansible jtanner nitzmahone rbergeron resmo ryansb sivel svg thaumos
+19:11:40 * gregdek lurks from phone.
+19:11:55 <bcoca> is this a meta meeting or a meeting on the proposals?
+19:11:56 <abadger1999> Take it away gregdek ;-)
+19:12:03 <gregdek> Lol!
+19:12:17 <abadger1999> bcoca: I think we're going to discuss actual proposals
+19:12:28 <bcoca> ^ no, serisouslly, is it about the proposal on proposals or the others
+19:12:44 <rbergeron> I think we're discussing the actual proposals at this point.
+19:12:48 <gregdek> I will defer. But really, is there a proposer here who wants to lead?
+19:13:00 <gregdek> Yes. Actual proposals.
+19:13:48 <abadger1999> #info Five open proposals here: https://github.com/ansible/proposals/issues?utf8=%E2%9C%93&q=+is%3Aopen+
+19:13:54 <jtanner> those are the things currently in ansible/proposals ?
+19:14:02 <jtanner> nvm
+19:14:11 <abadger1999> resmo or bcoca, I see both of you have proposals open and are here.
+19:14:22 <bcoca> https://github.com/ansible/proposals/issues?q=is%3Aopen+sort%3Acreated-asc <= by order
+19:15:07 <abadger1999> #topic https://github.com/ansible/proposals/pull/4  Roles revamp Proposal
+19:15:19 * gregdek back in lurk mode
+19:15:19 <jimi|ansible> abadger1999: this was going to be the proposals meeting yes
+19:15:34 * jimi|ansible sees that was answered already
+19:15:50 <abadger1999> bcoca: Okay then -- going in order, bcoca what's the status and what do you need to move forward?
+19:15:51 <bcoca> anyone not clear on what the roles revamp wants to accomplish?
+19:16:02 <jtanner> ELI5 please
+19:16:07 <bcoca> abadger1999: acceptance ... and probably a name/interface taht people don't want to yac shave
+19:16:29 <bcoca> there is one guy trying to expand the proposal into 'roles are programming libraries' but i dont think we need to go that far
+19:18:11 <jtanner> so it's primarily a way to include the contents of a role into a play, but not necessarily execute it?
+19:18:22 * resmo sees the point of #4, but didn't have any need to use it in this way
+19:18:38 <bcoca> jtanner: more controlled execution, not at 'role inclusion time' but 'anytime in play'
+19:18:50 <bcoca> even from within the middle of another role
+19:19:09 <abadger1999> bcoca: I saw tima had left this comment: "Essentially packaging task files not named main.yml would have the same effect."
+19:19:12 <bcoca> so roles CAN work more like import statements, 'add these resources to play'
+19:19:15 <abadger1999> Is there a difference?
+19:19:32 <bcoca> abadger1999: yes, include does not currently run in 'role context'
+19:20:01 <resmo> bcoca: so defaults and vars would also work?
+19:20:04 <bcoca> so defaults/vars nor base_path are applied now the same when running from roles: when using include:
+19:20:12 <bcoca> resmo: that is the point
+19:20:14 <thaumos> I think this proposal is a great idea… I also second the changing of the name role to “something else.”
+19:20:39 <bcoca> thaumos: thoght of making 'alias' resources: which then defaults to 'not run tasks/main.yml on import'
+19:20:55 <thaumos> resources is a good name imo
+19:21:01 <abadger1999> bcoca: Could the includes in role_context portion be done entirely with the new syntax for includes?
+19:21:11 <bcoca> abadger1999: that was my proposal
+19:21:19 <bcoca> though some do not like the overload of include
+19:21:34 <bcoca> ^ im open to names other than 'role/roles' as i think that would add to the confusion
+19:21:40 <abadger1999> I guess what I'm wondering is -- do we need exec_main: yes|no?
+19:22:12 <bcoca> abadger1999: to stop tasks/main.yml from running when role is imported, done this for 'backwards compat' and not forcing people to rewrite roles, but no, not really mandatory
+19:22:18 <abadger1999> or just the - includes: { role: myrole, tasks: other.yml }
+19:22:23 <nitzmahone> Without it (or something like it), a mistakenly built role would silently noop, right?
+19:22:43 <nitzmahone> eg, "mayn.yml"
+19:22:46 <bcoca> no, w/o it it would ALWAYS run main.yml
+19:23:01 <bcoca> toshio is just saying, leave that as is and use this to expose other non main.yml files
+19:23:10 <abadger1999> <nod>
+19:23:12 <nitzmahone> Ah, thought you were saying "make main optional"
+19:23:12 <alikins_> kind of parallels python __main__ vs module, but thats probably not a particular good role model, no pun intended
+19:23:22 <bcoca> nitzmahone: that is MY idea
+19:23:25 <nitzmahone> (without an explicit request)
+19:23:34 <bcoca> no, it should be explicit
+19:23:44 <bcoca> to be backwards compat
+19:23:47 <jimi|ansible> i am not in favor of anything other than main.yml
+19:23:48 <nitzmahone> yeah, agreed
+19:23:56 <nitzmahone> ^-- w/ bcoca
+19:23:57 <jimi|ansible> it should be that and nothing else, because that is how roles work today
+19:24:06 <bcoca> jimi|ansible: ?
+19:24:14 <bcoca> for the include: @role?
+19:24:20 <bcoca> why not allow for other tasks lists?
+19:24:46 <ryansb> jimi|ansible: so you're saying allow inclusion anywhere, but only to invoke main.yml?
+19:24:50 <abadger1999> I guess it is "call time" vs "definition time"... author of a role might put main.yml in but the user of the role might not want to run that main.yml?
+19:24:52 <jimi|ansible> ryansb: yes
+19:24:53 <bcoca> role is already a 'resource package', exposes vars, templates, handlers, etc, why not add tasks?
+19:25:24 <jimi|ansible> bcoca: i'm saying it should work like roles do now, only inserted in the task stream where it's defined
+19:26:06 <bcoca> then i would push that we don't declare them in 'roles' at all ... but that creates other issues, specially with vars, handlers and scopes
+19:26:18 <bcoca> did not want to go that deep
+19:26:35 <bcoca> i think my proposal offers most flexibility for the least ammount of change
+19:26:49 <jimi|ansible> why not declare them roles? they should basically act like super includes
+19:27:00 <bcoca> then you are calling role x2?
+19:27:04 <bcoca> not sure i follow
+19:27:39 <jimi|ansible> - include_role: foo
+19:28:16 <bcoca> i thought of that initially, the problem with making it a task is that it has both dynamic and non dynamic parts (think play includes)
+19:28:22 <bcoca> ^ really don't want to go down that mess
+19:28:45 <bcoca> so keeping include: as a 'task list' but being able to specify in a 'role context' seemed a lot simpler and less confusing
+19:29:09 <bcoca> ^ it also mirrors current use of poeople doing - include: {{roles_paht}}/rolename/tasks/file.yml
+19:29:27 <bcoca> ^ and removes the complaint that the include does not run in role context, but play context
+19:29:46 <jimi|ansible> i'm reading, i see the proposal has changed since we last talked about this
+19:30:11 <bcoca> a bit, gone thorugh several iterations, trying for flexibility w/o incurring in too much cost
+19:30:22 <bcoca> i might just be too optimistic
+19:30:55 <bcoca> if you read the bjne comments, he just wants programable libraries
+19:33:04 <jimi|ansible> reading the updates, i think you're basically accomplishing the same thing but in a more round-about way
+19:33:14 <bcoca> same as?
+19:33:30 <jimi|ansible> the benefit i see of doing it your way in that things like defaults/vars/handlers would be read in and available ahead of time
+19:33:39 <jimi|ansible> same as the in-place role include
+19:33:43 <bcoca> yes, roles already act as a resource
+19:33:47 <bcoca> did not want to change that
+19:34:24 <jimi|ansible> rather than overload include with a role context, i'd just create a new language feature to indicate you want to run role foo at that point in the tasks
+19:34:27 <bcoca> well, the 'in place' can be confusing as a task, as play includes are now, peopel assume that it will 'work as a task' when it does not
+19:34:30 <jimi|ansible> and disallow things like loops on it
+19:34:35 <abadger1999> We're at 15 minutes on this topic (30m into meeting), should we continue discussion of this  elsewhere and come back to it next week?
+19:34:48 <bcoca> include_role_tasks: ?
+19:34:57 <abadger1999> or should we discuss until we're finished?
+19:35:08 <jimi|ansible> bcoca: i was thinking more like `- run_role: foo`
+19:35:26 <jimi|ansible> abadger1999: we're not at a log jam, no need to table this
+19:35:33 <bcoca> jimi|ansible: i think that might be confusing as handlers and vars and other stuff does not 'run', would like it to be 'task specific'
+19:35:45 <abadger1999> <nod>  it's just a question of whether we want to get to other proposals today or not :-)
+19:36:15 <bcoca> do we all agree on the proposed functionality?
+19:36:27 <bcoca> ^ seems like naming is the only caveat, we can table that
+19:36:27 <thaumos> agreed
+19:36:41 <jimi|ansible> bcoca: yes
+19:37:07 <resmo> bcoca: yes
+19:37:26 <abadger1999> I understand the functionality now and don't see it conflicting with ansible's design... I don't know the use case for it (but I'm not a heavy user).  So I have no objection to the functionality.
+19:37:51 <bcoca> abadger1999: mostly people would like fine grained control of when role tasks execute
+19:38:19 <bcoca> right now only role order and dependencies allow them for poor control, they use - include to work aroudn it but as i mentioned, it does not run in 'role context'
+19:38:43 <bcoca> think of having to run all os.path tests in one block instead of sparesed through the code
+19:38:50 <resmo> I would say I am a heavy user and to me I didn't have a need to fine grade execute a role
+19:39:06 <abadger1999> #info Consensus seems to be that we're okay with the proposed functionality but still need to look at what the syntax of using it in playbooks should look like.
+19:39:13 <resmo> but I can image others would do
+19:39:41 <bcoca> resmo: same with me, but i've heard teh request and the workarounds soo much, i though we needed this, people are doing many wierd things to work around that limitation
+19:39:42 <jtanner> maybe one of those things you never knew you needed until someone else tells you
+19:39:51 <thaumos> yeah, I have heard it a lot myself @resmo.
+19:39:57 <resmo> bcoca: agreed
+19:40:19 <bcoca> when soo many are hitting the same walls ... we might want a doorway
+19:40:42 <thaumos> <insert Kool-aid man here>
+19:40:45 <bcoca> ok, next
+19:40:49 <abadger1999> jimi|ansible, bcoca: Should I put you guys down to discuss this out of meeting and bring the revised proposal next meeting?
+19:41:07 <bcoca> i'll accept/merge it and make note about nameing
+19:42:17 <abadger1999> rbergeron: ^ Does that sound like the workflow you want for proposals?  We've accepted the idea but we haven't decided on user-visible implementation details yet.
+19:42:53 <bcoca> i would argue about which details, in this case it seems its just 'naming'
+19:42:54 <jimi|ansible> abadger1999: +1
+19:43:07 <abadger1999> rbergeron: I mean -- what bcoca said about merging now.  I don't care... just want to make sure we're doing things the right way for everyone to know what's going on.
+19:43:20 <thaumos> abadger1999: Isn’t bcoca’s PR the original implementation before the issue workflow?
+19:43:36 <abadger1999> idk
+19:44:06 <alikins_> would like to see some examples in the proposals of the problems they could solve, I don't have much feel for why that is needed or what it would gain me
+19:44:09 <abadger1999> Okay, lack of input means, we'll do it that way until told different :-)
+19:44:29 <thaumos> ^ agreed
+19:44:38 <bcoca> ok
+19:44:56 <bcoca> alikins_: i have tones, but lets do that later and go to next proposal for now
+19:45:01 <abadger1999> #action Proposal accepted, bcoca to merge proposal to repo.
+19:45:08 <abadger1999> #action bcoca and jimi|ansible to nail down details of user-visible implementation and update the proposal.
+19:45:15 <thaumos> I think we can/should revisit the workflow when rbergeron is back around.
+19:45:23 <ryansb> bcoca: I think proposals should probably be required to have an example of what the problem solves
+19:45:26 <abadger1999> bcoca: If you're willing to add examples, I'll just make that an action item for you too?
+19:45:35 <bcoca> ^ that is why i asked if this was 'meta meeitng' cause we don't know the workflow ...
+19:45:38 <ryansb> they do it that way in openstack and I find it worked pretty well
+19:45:40 <alikins_> bcoca: yup
+19:45:50 <bcoca> there is a porposal in proposals that needs to be discussed for that
+19:45:54 <thaumos> I agree with ryansb and alikins_ examples shoul dbe a part of it
+19:45:59 <bcoca> abadger1999: fine
+19:46:01 <abadger1999> #action bcoca to add example use cases to the proposal.
+19:46:05 <thaumos> agreed bcoca… I think that still needs to be tackled.
+19:46:24 <abadger1999> #topic https://github.com/ansible/proposals/issues/1 Docker Modules
+19:46:26 <abadger1999> #chair chouse
+19:46:26 <zodbot> Current chairs: Qalthos Shrews abadger1999 alikins_ chouse gregdek jimi|ansible jtanner nitzmahone rbergeron resmo ryansb sivel svg thaumos
+19:46:33 <bcoca> thaumos: i thought that THIs was that meeting
+19:47:05 <jtanner> i believe i'm tagged in for chouse on the docker revision
+19:47:08 <rbergeron> abadger1999: I think that sounds fine. I think the detail missing here is the "moving it all to issues" rather than the merging stuff. But i think we can tackle that discussion elsewhere -- i think this is fine for now.
+19:47:08 <abadger1999> chouse is here now.  So take it away!  What's the status, what do you need?
+19:47:13 <rbergeron> issues vs. PRs
+19:47:34 <abadger1999> jtanner: okay,  go!
+19:47:36 <chouse> the docker stuff is in flight. i don't really need anything.
+19:47:41 <bcoca> i think we 'mostly' accepted the proposal, there are many details to work out, but im not sure if the proposal vs the imlementation should be where that is done
+19:47:59 <rbergeron> abadger1999: but .. I think the appropriate sentiment is here and we can move on and sort out the process stuff in the laundry for the moment :) it's gonna be a work in progress to figure out what makes sense for a bit.
+19:48:05 <bcoca> the main thing was 'making new modules' and 'this is how we are going to partition them'
+19:48:07 <abadger1999> <nod>
+19:48:07 <jimi|ansible> yeah these are all being worked on, so a bit late to change the proposals?
+19:48:23 <thaumos> chouse, there is a kickoff discussion being had with Docker this week.. If we get anything from them, I will let you know.
+19:48:26 <jimi|ansible> unless as bcoca noted, there's still disagreement on how we've sliced/diced things
+19:48:44 <jtanner> current status: I've finished up a simple lamp/nginx stack integration test and have it working. I'm moving the files into proper PRs. I'm also adding a check for the docker lib/api version
+19:48:57 <bcoca> let me check, cause this one is all over, started in ansible/ansible, came here, but readme is in ansible/docker ...
+19:49:00 <abadger1999> Should we just say, Docker proposal has been accepted?
+19:49:03 <bcoca> not sure where discussions ended up
+19:49:11 <bcoca> abadger1999: tempted
+19:49:17 <jimi|ansible> abadger1999: i'm +1 for that
+19:49:33 <chouse> we never had a docker discussion. it was just, 'build it and get i done already.'
+19:49:38 <abadger1999> #info https://github.com/ansible/proposals/tree/master/docker
+19:49:56 <bcoca> chouse: was never meant to be that, sorry it took so long to get here
+19:50:19 <chouse> i'm about to submit a PR for updated docker inventory .
+19:50:39 <chouse> i left questions in ansible-devel, but have not seen answers yet.
+19:50:40 <rbergeron> I think the only question I have here is around what is the deprecation process like for the existing docker modules (if doing that at all)
+19:50:53 <bcoca> so +1 to consider this 'done', though also as a reminder we cannot let this lag too much
+19:51:06 <bcoca> chouse: irc or mailing list?
+19:51:16 <chouse> @bcoca - irc
+19:51:17 <jimi|ansible> chouse: we did, it was just an internal one, so not really something we did in public
+19:51:28 <jimi|ansible> we did it before we had the proposals idea nailed down
+19:51:35 <bcoca> chouse: have not seen thouse, was in this meeting
+19:51:38 <abadger1999> #info We consider the docker proposals to have already been accepted.
+19:51:42 <jimi|ansible> so it was a bit of an afterthought in this case
+19:51:52 <chouse> my 2cents -  i don't think we should deprecate anything until we get feedback from the community.
+19:52:05 <rbergeron> chouse: ack on that, indeed
+19:52:36 <chouse> docker_container is intended to replace docker, so no conflict there.
+19:52:36 <jtanner> if i rename the current docker_image to docker_image_v1, they can all happily coexist
+19:52:40 <bcoca> chouse: agreed
+19:52:57 <chouse> i'm calling the new inventory script docker_inventory
+19:52:59 <ryansb> I imagine that'd break a lot of existing playbooks
+19:53:01 <chouse> so it can coexist
+19:53:06 <bcoca> docker_image and docker_login are the ones that conflict, need to get that resolved
+19:53:21 <abadger1999> I think we talked about something like that?  Make the new docker_image into docker_image2 ?
+19:53:29 <bcoca> chouse: no need, as inventory is not 'picked up automatically' yet
+19:53:40 <bcoca> people need to copy/point at it on purpose
+19:53:51 <jtanner> i don't see a docker_login in devel
+19:53:57 <jtanner> just docker and docker_image
+19:54:04 <abadger1999> jtanner: the old one is in extras
+19:54:07 <jtanner> oh
+19:54:09 <jtanner> crud
+19:54:23 <bcoca> ansible-doc -l is your friend!
+19:54:24 <chouse> docker_login exists in extras
+19:54:41 <bcoca> ^ should add a way to note extras/custom in that listing
+19:55:01 <jtanner> so should the new docker_login and docker_image be renamed to -v2 / _v2 / ?
+19:55:07 <jimi|ansible> chouse: if we're not deprecating docker_image (and it's not 100% param compliant), then the new one would have to have a new name
+19:55:33 <jimi|ansible> and yeah abadger1999 i believe docker_image2 is what we discussed (or something similar)
+19:55:44 * nitzmahone ptui
+19:55:53 <jtanner> and docker_login2 ?
+19:56:14 <bcoca> i hate hte 2 ... but have no real good solution unless we make the new ones backwards compatible
+19:56:25 * nitzmahone comes from Microsoft-land where you have things like IFrequentlyVersionedInterface47
+19:56:30 <abadger1999> jtanner: last I heard we were going to see if the new docker_login was really so different from what was in extras.  If they're compatible, no need for a new version.
+19:56:35 <bcoca> nitzmahone: exactly!!
+19:56:44 <jimi|ansible> after we deprecate the old ones, we can rename them
+19:56:52 <jimi|ansible> bcoca: we can maintain module aliases can't we?
+19:56:54 <abadger1999> jimi|ansible: I don't think so.
+19:56:54 <bcoca> then that is not a deprecation
+19:57:02 <bcoca> cannot have 2 modules with same name
+19:57:03 <abadger1999> jimi|ansible: deprecation, still have to have the old name
+19:57:09 <bcoca> 'there will be only 1'
+19:57:16 <abadger1999> jimi|ansible: once we get rid of the old one, then we can reuse its name
+19:57:32 <bcoca> which is a replacement, which we should avoid doing in backward incompatible ways
+19:57:33 <alikins_> docker_remote_* ?
+19:57:50 <jtanner> alikins_: not following
+19:57:54 <thaumos> Yeah, but how long will it take to get the feedback?  I think we should deprecate them in devel, and that is part of the process.  The already released versions have a working version…
+19:57:55 <bcoca> docker_images
+19:58:15 <bcoca> ^ actually we seem to use docker_files, but docker_container/image ... should standarize on plurality
+19:58:21 <bcoca> ?
+19:58:45 <bcoca> might need rule for all modules there ...
+19:58:45 <jimi|ansible> abadger1999: right, but if we have people using docker_image2 and then rename it to docker_image (after deprecating the old one) playbooks using docker_image2 won't work
+19:58:49 <abadger1999> Singular is probably a better standard for non-english speaker
+19:58:57 <abadger1999> as plurarl rules are all over the place.
+19:58:57 <alikins_> I was thinking the modules use (a) docker python module that refers to them as for the 'Docker Remote API'  https://docs.docker.com/engine/reference/api/docker_remote_api/
+19:58:58 <bcoca> jimi|ansible: but that is where alias does work
+19:59:11 <jimi|ansible> ok that's what i thought, i thought we could do an alias
+19:59:13 <alikins_> jtanner: so just a different name that has at least some upstream meaning
+19:59:19 <nitzmahone> docker_image_2016
+19:59:29 * nitzmahone ducks
+19:59:34 <bcoca> docker_image_manager
+19:59:54 <bcoca> ^ nvmd, hate it too
+19:59:57 <jtanner> docker_images ... (s) ?
+19:59:59 <abadger1999> nitzmahone: 1995 is calling to get its naming convention back.
+20:00:11 <nitzmahone> abadger1999: docker_image_xp
+20:00:15 <bcoca> nitzmahone: stop trying to windowize us!
+20:00:21 <nitzmahone> :P
+20:00:24 <thaumos> lol
+20:00:48 <nitzmahone> (note that I'm advocating *against* the way Microsoft does things in this case) ;)
+20:00:49 <bcoca> ^ unlike roles naming issue, this one has repercussions and we need it soon
+20:01:07 <bcoca> nitzmahone: that is just the base norm of common sense
+20:01:40 <jimi|ansible> it should match the sub command of docker
+20:01:42 <bcoca> so accepted the docker proposal
+20:01:58 <jimi|ansible> so docker_images would be my vote
+20:02:04 <bcoca> we can figure out naming issues later, lets finish proposals meeting
+20:02:06 <nitzmahone> While I hate the idea of numbering successive module replacements, I really can't think of anything else that's generally-applicable- sometimes you can come up with a new name, but often you can't, and we really should have a policy for how to handle this.
+20:02:18 <nitzmahone> bcoca: yep, not now
+20:02:35 <bcoca> naming discussions can take longer than reimplementing ansible in haskell
+20:02:48 <bcoca> while learning haskell
+20:03:13 <abadger1999> Okay, who wants to talk through the naming issues out-of-meeting?
+20:03:37 <jtanner> how does that get decided in "out of meeting" ?
+20:03:44 <bcoca> lets try to meet thrusday to see if we can reslove? gives us some time to also thing kaobut it more
+20:03:51 <nitzmahone> (in another meeting)
+20:03:51 <jtanner> does it come back for a followup proposal here?
+20:04:04 <abadger1999> Or should we just say, chouse  here's the things to standardize, make whatever standard you like?
+20:04:07 <bcoca> no, i think proposal is done, this is imlementation detail and how to migrate from current
+20:04:25 <thaumos> I say let’s have it as an item for discussion on Thurs’ meeting for sure.
+20:04:32 <jtanner> k ... will await further instruction
+20:04:33 <thaumos> I agree with bcoca, give a day to think.
+20:04:37 <bcoca> abadger1999: i would suggest that we also select a plural/singular standard for most modules, i think its confusing
+20:04:38 <jimi|ansible> i'm not opposed to making our meetings longer either
+20:04:42 <jimi|ansible> not sure if that works out for tohers
+20:04:50 <jimi|ansible> but 1.5 hours instead of 1 might help
+20:04:56 <bcoca> 2h
+20:05:05 <abadger1999> jimi|ansible: <nod>  At least until we get through backlog.
+20:05:17 <bcoca> but lets not get stuck on naming, this proposal is done, we do have implemetation/merge problems but not germain to this meeting
+20:05:36 <abadger1999> #info Docker proposals accepted as-is
+20:06:33 <abadger1999> #action chouse to seek feedback from community and update proposal/let "us" know if there's significant changes
+20:07:02 <chouse> how do i *seek feedback*?
+20:07:26 <thaumos> mailing list?
+20:07:32 <nitzmahone> chouse: I usually just do an ML post to #ansible/#ansible-devel
+20:07:34 <abadger1999> rbergeron: should I sign you up to move the proposals to a final location?
+20:07:38 <bcoca> chouse: thinking irc meeting on thursday, send email to mailing list
+20:08:03 <nitzmahone> usually get at least one or two people with an opinion to weigh in
+20:08:04 <chouse> what am I seeking feedback on?
+20:08:05 <abadger1999> chouse: How you've done is fine with me... I was trying to capture what you thought was required (getting feedback fro mthe community)
+20:08:21 <bcoca> chouse: mostly we are looking at the issues with integrating the modules with same name
+20:08:31 <chouse> o
+20:08:37 <chouse> i thought we decided this
+20:08:41 <abadger1999> #undo
+20:08:41 <zodbot> Removing item from minutes: ACTION by abadger1999 at 20:06:33 : chouse to seek feedback from community and update proposal/let "us" know if there's significant changes
+20:09:04 <bcoca> abadger1999: yeah, proposal feedback is too late, at this point its integration/module review
+20:09:36 <abadger1999> chouse: Okay, I must have been reading too much into your comments from earlier.  Sorry.
+20:10:38 <abadger1999> It was the <chouse> i left questions in ansible-devel, but have not seen answers yet.      and <chouse> my 2cents -  i don't think we should deprecate anything until we get feedback from the community.
+20:10:49 <abadger1999> chouse: what would you like me to write up for those?
+20:11:13 <abadger1999> rbergeron: Can I put you on the hook for moving the proposals to their final location?
+20:11:17 <chouse> o. those were questions about docker inventory script.
+20:11:20 <bcoca> ^ that is my proposed docker integration meeting on thrusday?
+20:11:23 <abadger1999> ahh.. okay.
+20:11:41 <bcoca> chouse: responded to some in ansible-devel, no need to rename, but not sure about duplicity with facts module
+20:12:05 <abadger1999> #action rbergeron to move current docker proposals to final location and close ticket.
+20:12:14 <bcoca> i closed already
+20:12:26 * bcoca stops jumping gun
+20:12:51 <abadger1999> okay, anything I'm missing?
+20:12:54 <abadger1999> Naming ?
+20:13:13 <abadger1999> Do we have a consensus that we want a global plural versus singular naming convention?
+20:13:29 <bcoca> ^ i dont care which but we should standarize on one
+20:13:46 <bcoca> or we WILL have docker_container and docker_containers
+20:14:03 <jtanner> i suggested docker_images because the docker subcommand is "images"
+20:14:05 <bcoca> until now i think most have been singular and consistent
+20:14:16 <jtanner> i didn't consider it as a global rule
+20:14:25 <abadger1999> We are talking about globally, still though?  (Not just docker but all new modules)?
+20:14:41 <bcoca> yes, globally
+20:14:53 <bcoca> otherwise it gets confusing docker_images, ami_image
+20:15:01 <bcoca> ami vs amis .. woudl be propoer
+20:15:06 <abadger1999> I'll write a proposal for next meeting/week proposal global singular.
+20:15:18 <bcoca> naming convention in general might be nice
+20:15:19 <abadger1999> *proposing global singular.
+20:15:26 <bcoca> +1
+20:15:29 <abadger1999> Think about it and we can discuss it then.
+20:15:41 <jimi|ansible> jtanner: i had the same thought, but the module doesn't map directly to that command either
+20:15:47 <bcoca> 2/5
+20:15:47 <jimi|ansible> so I'm +1 for global singular
+20:15:56 <abadger1999> #action abadger1999 to write up a proposal for using singular for module names everywhere.
+20:16:05 <thaumos> ^ +1
+20:16:15 <bcoca> i think we might have a few exceptions, but i can live with those if we are 'forward consistent'
+20:16:17 <rbergeron> abadger1999: yeah
+20:16:18 <abadger1999> Any other actions that should come out of this?
+20:16:24 * bcoca is fine making aliases for those
+20:16:54 <abadger1999> resmo: you still here?
+20:16:56 <rbergeron> abadger1999: thanks :)
+20:17:08 <resmo> yes
+20:17:20 <abadger1999> #topic https://github.com/ansible/proposals/issues/8  Publish / Subscribe for Handlers
+20:17:45 <resmo> ok first of all this is about syntax sugar only
+20:17:45 <bcoca> ^ made enough comments in tickets
+20:19:00 <resmo> I like to have a integrated way for handlers to subscribe to an even or "published" tasks result
+20:19:10 <resmo> s/even/event
+20:19:46 <bcoca> ^ actually thought about it more after irc discussion, open to a non-unique 'handle: ' addition to handlers as a '2nd form of execution vs name:'
+20:20:04 <bcoca> which is not sytnax sugar but actually new feature
+20:20:58 <resmo> syntax sugar in a way as this can be done currently in an "hacky" way
+20:21:00 <alikins_> to stick with the naming theme, I don't like 'publish/subscribe' as a name because of too many message queue connotations
+20:21:07 <bcoca> resmo: never fixed the example in proposal, they still imply handlers are global across plays (or events are)
+20:21:14 <jimi|ansible> resmo: how is this different than notifications? right now you'd have a file/copy task with a notify for your ssl certs
+20:21:36 <bcoca> alikins_: its already there 'publish == notify', 'subscribe == handler_name'
+20:22:21 <resmo> jimi|ansible: exactly, it don't call explictiy the handlers (so no need to know their name). in the handlers I "subscribe" to an event
+20:22:21 <jimi|ansible> let me rephrase, i see how it's different (it's flipping the way handlers work), but how is it better?
+20:22:52 <bcoca> jimi|ansible: not really, as it still is matching on the handler side the text from the task side
+20:23:08 <resmo> jimi|ansible: it is not "better" but it solves a common problem
+20:23:11 <jimi|ansible> how would the subscribed handlers know which hosts to operate on? part of the way notify works is we know which hosts the task succeeded on, so we have a list of hosts to notify the handler with
+20:23:40 <resmo> jimi|ansible: how to react of an event
+20:23:45 <jimi|ansible> restarting services after a file change is the common use case, so i'm unclear what the common problem is?
+20:23:50 <bcoca> jimi|ansible: exact same way as now, even publishes host
+20:23:53 <jimi|ansible> can you describe it a bit better?
+20:24:04 <bcoca> s/even/event/
+20:24:05 <abadger1999> resmo, jimi|ansible: To relate it to relational databases... seems like currrently we have N events :: 1 handler and what you want to do here is enable 1 event :: N handlers.
+20:24:10 <abadger1999> is that accurate?
+20:24:21 <resmo> abadger1999: yes
+20:24:23 <jimi|ansible> abadger1999: notify can be a list actually
+20:24:30 <bcoca> abadger1999: no, discussed that last night, i think the examples in proposal are misleading
+20:24:36 <resmo> jimi|ansible: but you have to name the handlers
+20:24:55 <jimi|ansible> _notify               = FieldAttribute(isa='list')
+20:25:04 <abadger1999> yeah, I think not having to name the handlers is essential to understanding this.
+20:25:09 <bcoca> resmo: as i said before changing name: to subscribe: really does not change the way it works at all, its just syntax sugar
+20:25:32 <jimi|ansible> ok, i see, you don't want to know handlers ahead of time
+20:25:36 <bcoca> abadger1999: basically its moving subscribe from being name: to it's own proporty
+20:25:55 <bcoca> jimi|ansible: which we currently don't (since dynamic includes make it imposssible)
+20:26:21 <bcoca> the only big change is not erroring out at end of play when we cannot find matching handler
+20:26:23 <jimi|ansible> bcoca: yes, this would be useful in that situation, however static includes do address that to a large degree
+20:26:39 <bcoca> jimi|ansible: but we still cannot validate they exist
+20:27:11 <bcoca> ^ and i would make that non-error a toggle
+20:27:17 <bcoca> default to yes (as it should be now)
+20:27:29 <jimi|ansible> now that we have static includes yes we can
+20:27:49 <bcoca> jimi|ansible: you still CAN have a dyanmic handler include
+20:28:00 <bcoca> which makes it impossilbe to know a priori
+20:28:09 <jimi|ansible> so i see the usefullness here, it's essentially an anonymous target for tasks to notify, and handlers could also specify they want to be notified if anything hits that target
+20:28:24 <resmo> jimi|ansible: exactly
+20:28:27 <jimi|ansible> bcoca: we can discuss that later, but it's not difficult
+20:28:38 <jimi|ansible> resmo: ok, +1
+20:28:52 <bcoca> ^ again, we almost have this, but i dont like to add new keywords for this that work in parallel to the current
+20:29:00 <bcoca> just need to 'not error on missing handler'
+20:29:03 <resmo> (naming can be discussed as always)
+20:29:05 <abadger1999> I think traditionally, this idoim wouldn't error if nothing exists... it's just like our callback plugins, we're emitting events (I completed a task) and then if the callback handler for the handler exists, it runs.  If it doesn't exist, you just go on.
+20:29:16 <bcoca> resmo: not naming, addition of directives, bigger issue
+20:29:44 <jimi|ansible> we already have a Handler class, it's one new field on that object and a trivial bit of code in the notification portions of the code to also look for subscribed targets
+20:29:47 <bcoca> abadger1999: pre 2.0 we verified handler existed on notify
+20:29:50 <jimi|ansible> which we'd read from known handlers
+20:30:21 <bcoca> in 2.0 we stopped verifying due to dynamic includes, now it fails when handlers run and none match
+20:30:22 <alikins_> currently, can handlers control how the event get propagated?  could a default handler stop propagation if there were no defined handlers?  (ala gobject event handlers, etc)
+20:30:47 <bcoca> alikins_: no, handler would have to match and they are currently unique
+20:31:32 <jimi|ansible> bcoca / alikins_: we can figure out the details later, but for now any objections to the proposal?
+20:31:51 <abadger1999> +1 to proposal.
+20:31:54 <alikins_> (dont like the name, but that aside, no...)
+20:32:37 <bcoca> i think the proposal needs rephrasing, its very misleading, also we already have it working as is 90% w/o new directives
+20:33:23 <bcoca> the feature is just 'don't error on missing handler'
+20:33:41 <abadger1999> bcoca: can we currently have multiple handlers with the same name?
+20:33:53 <bcoca> no, but that was not asked for
+20:33:57 <abadger1999> yes it is.
+20:34:03 <bcoca> ^ that is why i suggested 'handle:'
+20:34:21 <bcoca> no, resmo, you explicitly clarified this was not multiple handlers issue
+20:34:35 <bcoca> also multiple handlers can ALREADY be done several ways
+20:34:38 <jimi|ansible> bcoca: that's not the feature as i understood it, the main thing here is to have a notification target which multiple handlers will receive when a task sends a notify
+20:34:45 <bcoca> through notify: lists and through include
+20:34:47 <jimi|ansible> and also without needing to know handler names
+20:35:01 <resmo> jimi|ansible: exactly
+20:35:04 <bcoca> jimi|ansible: you STILL need the 'queue name'
+20:35:17 <bcoca> which is currently handler name: we are just MOVING the property from name
+20:35:21 <jimi|ansible> though technically yes this would work if your handler was an include statement, you'd just notify that and all tasks in the include would be run as handlers
+20:35:32 <bcoca> or chained handlers
+20:35:47 <bcoca> really not solving anything except the case where handler does not exist
+20:35:52 <jimi|ansible> that does cover 90% of it, except for the "not knowing the handler name" part
+20:35:57 <jimi|ansible> or not caring
+20:36:08 <bcoca> exactly, and i think that can be sovled better witha  toggle
+20:36:13 <bcoca> to ignore handler missing errors
+20:36:21 <abadger1999> bcoca: that's not the problem being solved.
+20:36:33 <jimi|ansible> bcoca that's not the same thing, you'd still have to know the handler name, whether it actually exists or not isn't the problem
+20:36:36 <jimi|ansible> it's knowing it in the first place
+20:36:38 <bcoca> abadger1999: went with resmo through every use case yesterday, it is
+20:36:51 <abadger1999> you can do more than that and perhaps it enhances handlers to take over this use case.  But it is more than that.
+20:36:59 <bcoca> jimi|ansible: you still need to know subscribe name?you always NEED a name
+20:37:14 <abadger1999> bcoca: resmo is currently disagreeing with you.
+20:37:26 <bcoca> resmo: ?
+20:37:28 <jimi|ansible> sure, but it can be a generic name, and you can add more handlers to it without needing to update the list of handlers you notify
+20:37:49 <bcoca> jimi|ansible: yes, another way of calling multiple handlers, but don't think we need 2 new keywords for that
+20:37:49 <resmo> handlers need the name of the "event" or "target"
+20:37:51 <jimi|ansible> which again is kind of mostly covered by notifying an include task
+20:37:56 <resmo> not other way around
+20:38:26 <bcoca> resmo: both handler and task need to agree on A NAME, how you abscribe it to one or the other is just perception, in the end its the COMMON LABEL
+20:38:32 <jimi|ansible> so with this proposal, you could do `notify: ssl_cert_updated` and any handler with `subscribe: ssl_cert_updated` would be triggered
+20:38:53 <resmo> jimi|ansible: yes
+20:39:16 <bcoca> easier to make handler names non-unique
+20:39:32 <jimi|ansible> bcoca, but then you have to potentially update lists of handlers in multiple places
+20:39:33 <bcoca> ^ if you really want multiple notifications with SINGLE name
+20:39:54 <bcoca> jimi|ansible: i dont see how you dont do that in this case either, when they want to subscribe to an event
+20:39:58 <abadger1999> bcoca: The common label, I agree with you.  But you need to pluralize those handlers and tasks  (in resmo's example use case, its handlers and task but  I think it's easy to see use cases where they'd both need to be plural)
+20:40:02 <jimi|ansible> and if you're using 3rd party roles, you may not know if they've added or removed something
+20:40:24 <alikins_> for multiple handler cases, how is the priority/order determined?
+20:40:32 <jimi|ansible> alikins_: in the order they're parsed
+20:40:35 <bcoca> alikins_: definition order
+20:41:00 <resmo> ack
+20:41:12 <alikins_> front to back or back to front?
+20:41:13 <bcoca> -1 in currnt form of the proposal, it think we can implement extensino of current notify w/o introducing 2 new keywords
+20:41:19 <jimi|ansible> alikins_: front to back
+20:41:49 <bcoca> much less a new module for a task feature
+20:42:09 <jimi|ansible> any other +1/-1's to give?
+20:42:26 <jtanner> no opinion
+20:42:26 <jimi|ansible> right now it's +2 to -1 i think?
+20:42:49 <bcoca> also, examples have events/handlers being cross play, that is also a thing we discussed last night but never got a sense what exactly did you want resmo
+20:43:01 <bcoca> ^ currently events/handlers are play scope
+20:43:11 <resmo> this would be across play
+20:43:21 <jimi|ansible> across play is a different proposal
+20:43:27 <jimi|ansible> and much more difficult to implement
+20:43:34 <abadger1999> I think approach 2 is doable by enhancing current hadnlers.  But approach 1 is not.
+20:43:42 <jimi|ansible> so i believe that's off the table for this proposal resmo
+20:44:36 <bcoca> abadger1999: what is diff between publish and notify?
+20:44:39 <abadger1999> approach 1 gives poewr to person who writes the handler.  they're able to be notified even if the author of the task which is the event didn't anticipate people wanting to know when it happened.
+20:44:43 <bcoca> ^ actually perfer form 1
+20:45:14 <bcoca> ah, 1 relies on task name, yeah, would ammend to rely on notify
+20:45:46 <bcoca> notify/listen as 'extra' way of using handlers?
+20:46:00 <bcoca> notify can match handler name or listen list
+20:46:02 <jimi|ansible> here's how i see it working: basically adding one field (subscribe) to Handler, when we load handlers don't just build a mapping of their names but also build one of their subscriptions, then when we send a notify if we don't find the notification string in the name mapping look in the subscriptions mapping
+20:46:10 <abadger1999> approach 2 (and enhancing current notify to handle this use case) would mean that you can only listen for events from tasks which allow it.
+20:46:22 <jimi|ansible> ^ bcoca you're handler not found case would be triggered if it was found in neither mapping
+20:46:34 <jimi|ansible> s/you're/your/
+20:46:36 <bcoca> jimi|ansible: i prposed a separate toggle for taht
+20:46:56 <bcoca> on_missing_handler: error|warn
+20:46:59 <jimi|ansible> correct, but that's inconsequential to how this would work, but it's something we should put back in outside of this discussion
+20:47:13 <bcoca> well, its related
+20:47:15 <jimi|ansible> same for tags/skip_tags
+20:47:21 <bcoca> yep
+20:47:23 <jimi|ansible> it's related, but not to pub/sub
+20:47:33 <bcoca> well, we hafe a 'error/warnings/deprecations' conversation we need
+20:48:03 <bcoca> jimi|ansible: we have pub/sub now, just 1 to 1 and errors when missing
+20:48:16 <jimi|ansible> not really sub, it's more of a broadcast
+20:48:21 <bcoca> we can expand that rationally, or we can create parallel way (which is this proposal)
+20:48:27 <jimi|ansible> if nothing receives the broadcast we don't care right now
+20:48:49 <bcoca> last i checked we error if there are unhandled notifies ...
+20:49:06 <bcoca> we don't verify ON notify anymore, but saw errors if handler was missing at end
+20:49:08 <jimi|ansible> i believe soyes
+20:49:10 <abadger1999> +1 to proposal.  I think (1) probably makes more sense in a world where people can use roles they have not written so I'm leaning towards that being the better model to look at as well.
+20:49:35 <resmo> abadger1999: makes sense to me
+20:49:39 <jimi|ansible> so the way i'm saying we'd do the proposal i believe aligns with approach 1, and does not require a large change
+20:49:52 <jimi|ansible> it mainly uses the mechanisms we have in place but with a little extra added on
+20:49:56 <bcoca> wel, but not based on task name
+20:49:59 <jimi|ansible> no major architectural change required
+20:50:13 <bcoca> ^ that was my point, we can get most of it w/o major changes
+20:50:26 <jimi|ansible> correct, the task would still use notify
+20:50:44 <jimi|ansible> it's not a reverse, as that's not useful to me, you'd still have to know the name of a task on one end or the other
+20:51:19 <bcoca> its tight coupling no matter what
+20:51:25 <bcoca> the label MUST be common
+20:52:02 <abadger1999> jimi|ansible: if the task generating the event has to use notify, then it's more like 2.
+20:52:09 <jimi|ansible> sure, but i see this being most useful for roles, especially galaxy roles, in which case part of the documentation would be to list the common subscriptions the handlers listen for
+20:52:20 <bcoca> abadger1999: 2 uses task name
+20:52:36 <bcoca> jimi|ansible: or tasks emit
+20:52:44 <abadger1999> jimi|ansible: because the task has to explicitly say that someone is allowed to handle it.
+20:52:58 <bcoca> i think this is over complicated
+20:53:08 <bcoca> ^ to try to auto publish tasks on change
+20:53:13 <abadger1999> but I'm also +1 to this...  I just don't know if it satisfies the use cases.
+20:53:34 <bcoca> that is one thing i asked last night, use cases not already covered
+20:53:36 <jimi|ansible> abadger1999: it's kind of a mash-up, because we're not adding anything on the sending task side, only the receiving
+20:53:38 <alikins_> to some degree, I think events with no handler would propagate up to the parent... tasks/role/play, so eventually only a root default handler would need to error or not, but I don't no the current impl well
+20:54:14 <bcoca> alikins_: not through handler, but the code that matchines notification to handlers, does that already
+20:54:23 <jimi|ansible> alikins_: no need to be that complex about it, we'd just raise an error depending on config as bcoca said
+20:54:33 * resmo will rework proposal for use cases (roles)
+20:54:42 <bcoca> ^ proposed to change to make it configurable non-error
+20:55:05 <jimi|ansible> right now we only check after the handler tries to run, whereas in 1.x we checked before the notify was registered
+20:55:08 <bcoca> resmo: the one thing we do seem to agree, play scoped
+20:55:18 <resmo> ack
+20:55:33 <alikins_> jimi|ansible: and that config is for the task?
+20:56:01 <bcoca> alikins_: does not exist yet, was thinking ansible.cfg/play level directive
+20:56:07 <jimi|ansible> alikins_: it'd be an ansible.cfg option to raise an error if a `notify: <some string>` didn't match any known handlers
+20:56:16 <jimi|ansible> could be play
+20:56:53 * resmo has to leave in 5
+20:56:57 <abadger1999> <nod>
+20:56:59 <jimi|ansible> me too
+20:57:02 <abadger1999> We're at the end of our 2nd hour.
+20:57:04 <alikins_> if it's ansible.cfg, but later let it be overridden lower, thats more or less the same
+20:57:04 <jimi|ansible> actually i need to release 2.0.2...
+20:57:08 <bcoca> abadger1999: i see the 'arbitrary subscribe to changed tasks' as a problem as it requries a lot of bookeeping
+20:57:09 <alikins_> agreed
+20:58:37 <abadger1999> bcoca: idk... I'm just looking at it in terms of use cases.... If we don't need arbitrary subscribe to satisfy the use cases then no need to add it.  If we do need arbitrary subscribe then we have to figure out the extra complexity.
+20:58:59 <alikins_> (frightening thought, playbooks == dom, modules == js)
+20:59:15 <bcoca> agreed, but i really don't see the use case, ansible is currently too tightly coupled for this to work as an xmlprc discovery system ...
+20:59:20 <jimi|ansible> i believe we're accepting this proposal, unless there are no other objections? if we end up not liking the implementation after the fact we do always have the option of not merging it if everyone finds it problematic
+20:59:49 <bcoca> i say no, let resmo reformulate as current proposal i think does not clearly state what it wants
+21:00:07 <abadger1999> #action proposal accepted.  jimi|ansible has an implementation in mind to make it happen.
+21:00:08 <jimi|ansible> i say yes, to be pared down to the method i posted above
+21:00:08 <bcoca> also really not for handlers/events outside of play scope
+21:00:22 <jimi|ansible> and yes, remove the out of play scope bits
+21:00:37 <bcoca> so what method in end?
+21:00:43 <abadger1999> I'm not sure if we want to record votes or who we'd count if we did so.
+21:00:49 <jimi|ansible> ^ resmo, can you make those changes and update the proposal?
+21:00:57 <bcoca> i added note in proposal
+21:01:01 <resmo> yes, rework the proposal
+21:01:23 <bcoca> ^ so i would wait for rework before we approve
+21:01:28 <abadger1999> #action resmo to rework the proposal to reflect just what's going to be implemented.
+21:01:48 <bcoca> which i might have missed, is exactly what?
+21:02:00 <abadger1999> Does anyone want to change their vote to wait for proposal to be updated?
+21:02:16 <jimi|ansible> bcoca: i'm leaving a comment
+21:02:23 <bcoca> right now i'm not sure what im voting on
+21:02:26 <abadger1999> [13:46:01] <jimi|ansible> here's how i see it working: basically adding one field (subscribe) to Handler, when we load handlers don't just build a mapping of their names but also build one of their subscriptions, then when we send a notify if we don't find the notification string in the name mapping look in the subscriptions mapping
+21:02:50 <bcoca> so the 'handle/listen' thing i proposed above?
+21:03:41 <jimi|ansible> https://github.com/ansible/proposals/issues/8#issuecomment-212128606
+21:03:45 <abadger1999> Okay, I don't think anyone's changing their votes so the proposal is still accepted.
+21:03:55 <bcoca> i see, yep, that is what i was thinking, +1 to taht
+21:04:08 <bcoca> though i might revise my rights to bikeshed on name
+21:04:16 <jimi|ansible> :)
+21:04:35 <abadger1999> heh :-)
+21:04:37 <bcoca> subscribe makes me look for publish, since we have notify 'listen' seems like better partner
+21:04:39 <jimi|ansible> subscribe/listen/meditate/channel
+21:05:04 <jimi|ansible> i'd be fine with listen
+21:05:08 <abadger1999> "Force Suggestion"
+21:05:12 <resmo> listen is fine to me as well
+21:05:26 <jimi|ansible> updated comment
+21:05:28 <bcoca> +1 now
+21:05:29 <abadger1999> (tm) Lucas Arts, Inc, all Rights reserved
+21:05:43 <abadger1999> #topic Open floor
+21:05:55 <abadger1999> Alright Any burning thoughts before we end the meeting?
+21:05:55 <bcoca> abadger1999: do you send them a check or do they just take royalty payment from your account?
+21:06:07 <resmo> bye and thanks!
+21:06:11 <jimi|ansible> 2.0.2...
+21:06:19 <abadger1999> #topic 2.0.2 release
+21:06:20 <nitzmahone> yes, have some
+21:06:30 <jimi|ansible> that didn't need to be a topic, just what i'm doing next :)
+21:06:39 <bcoca> 2 more proposals, will need to wait
+21:06:45 <abadger1999> #info jimi|ansible releasing 2.0.2 final as we speak
+21:06:48 <bcoca> to next meeting?
+21:07:02 <jimi|ansible> open floor topic - extend meetings to at least 1.5 hours and update people
+21:07:17 <abadger1999> bcoca: probably next week?  I think that's what we tentatively decided last week.
+21:07:26 <abadger1999> #topic Extend meetings to 1.5 hours
+21:07:30 <bcoca> ok with me
+21:07:32 <abadger1999> I'm +1 t that.
+21:07:33 <jtanner> +1
+21:07:39 <thaumos> +1
+21:07:50 <jimi|ansible> so let it be written so let it be done
+21:08:04 * thaumos bows
+21:08:08 * bcoca just had flashback to james dressed up as pharoh
+21:08:37 * jimi|ansible walks like an Egyptian
+21:08:37 <abadger1999> #info Core Pulbic meetings extended to 1.5 hours (at least as long as people keep bringing us more work ;-)
+21:08:46 <abadger1999> nitzmahone: You had a few things?
+21:09:05 <nitzmahone> No sorry, my comment was around 2.0.2: "yes, have some"
+21:09:19 <abadger1999> hehe :-)
+21:09:19 <thaumos> reminder for me to bring up something in Thurs meeting
+21:09:19 <nitzmahone> (obscure Ghostbusters quote)
+21:09:23 <abadger1999> #topic Open floor
+21:09:29 <jimi|ansible> for Thursday, I don't believe anyone's reviewed my k8s module
+21:09:39 <bcoca> did you push PR?
+21:09:40 <jimi|ansible> or rather, my updates to erjohnso's module
+21:09:50 <bcoca> update .. rewrite ...
+21:09:52 <jimi|ansible> i may have just pushed a branch
+21:09:56 <thaumos> Do you want me to poke erjohnso to look?
+21:10:10 <abadger1999> #info Agenda item for Thursday, k8s module PR
+21:10:25 <jimi|ansible> https://github.com/ansible/ansible-modules-extras/compare/erjohnso-google-kubernetes
+21:10:30 <jimi|ansible> thaumos: yes please
+21:10:35 <thaumos> kk
+21:10:41 <abadger1999> #info remaining Proposals will be back on the agenda for next Tuesday's meeting.
+21:10:52 <jimi|ansible> i keep checking irc to see if he's ever on, but he doesn't seem to be on Freenode
+21:10:56 <thaumos> I have 2 open issues to discuss on thurs
+21:11:05 <bcoca> jimi|ansible: he was at one time
+21:11:06 <jimi|ansible> unless he's using a name i don't know (or have forgotten, totally possible)
+21:11:15 <jimi|ansible> bcoca: yeah that's what i thought
+21:11:16 <bcoca> it was not erno
+21:11:22 <bcoca> i forget what his handle was
+21:11:39 <abadger1999> thaumos: Okay, want to mention them here?  for people to (maybe ;-) take a look at beforehand?
+21:11:45 <thaumos> looks like a merged PR fixes these two issues.  Can we have a quick agenda item for that?
+21:11:46 <thaumos> Sure!
+21:11:49 <jimi|ansible> so yeah, i want to get some eyes on that and hopefully get it merged for 2.1
+21:11:53 <thaumos> https://github.com/ansible/ansible-modules-core/issues/3123
+21:12:07 <thaumos> https://github.com/ansible/ansible-modules-core/issues/2930
+21:12:25 <thaumos> fix merged in https://github.com/ansible/ansible-modules-core/pull/2931
+21:13:02 <thaumos> Basically, wondering if we should close the issues.
+21:13:13 <jimi|ansible> if they're fixed and you verified it, then yes
+21:13:38 <thaumos> Tested and verified.
+21:13:40 <jimi|ansible> close with a note mentioning the fix will be in 2.1
+21:14:01 <jimi|ansible> we have a standard template response for closing fixed issues, if you want to use that
+21:14:04 <abadger1999> thaumos: Cool.  If you've tested, I'll close them both as fixed right now.
+21:14:34 <abadger1999> (unless you have commit privs to close them and I'm not associating your github id with irc nick)
+21:14:53 <thaumos> I don’t have close privs
+21:15:26 <jimi|ansible> thaumos: do you have commit?
+21:15:29 <jimi|ansible> i thought you did
+21:15:30 <thaumos> GH username and irc username are one in the same just to clarify :-)
+21:15:33 <thaumos> No, I do not
+21:15:36 <thaumos> never have
+21:15:43 <jimi|ansible> ahh, thought you did
+21:16:01 <thaumos> No sir
+21:16:34 <thaumos> thx for closing them abadger1999
+21:16:46 <abadger1999> No problem.  Thanks for bringing it up.
+21:17:01 <abadger1999> Okay,  ending meeting in 60s
+21:17:05 <thaumos> thanks for adding in the bit about 2.1
+21:18:18 <abadger1999> #endmeeting

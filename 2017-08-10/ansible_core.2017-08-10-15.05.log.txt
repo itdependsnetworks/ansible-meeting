@@ -1,0 +1,167 @@
+15:05:15 <bcoca> #startmeeting ansible core
+15:05:15 <zodbot> Meeting started Thu Aug 10 15:05:15 2017 UTC.  The chair is bcoca. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:05:15 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:05:15 <zodbot> The meeting name has been set to 'ansible_core'
+15:05:36 <jtanner> now #chair me
+15:06:04 <bcoca> #topic https://github.com/ansible/ansible/issues/14380
+15:06:16 <bcoca> ^ abadger1999 you brought this one up
+15:06:28 <jtanner> chair us
+15:06:38 <samdoran> That sounds painful
+15:06:46 <jtanner> it's the microsoft way
+15:06:47 <bcoca> #chair jtanner abadger1999 jtyr
+15:06:47 <zodbot> Current chairs: abadger1999 bcoca jtanner jtyr
+15:06:56 <jtanner> #chair sdoran
+15:06:56 <zodbot> Current chairs: abadger1999 bcoca jtanner jtyr sdoran
+15:07:25 * jtyr is chaired
+15:08:29 <abadger1999> so who do we have here today?
+15:08:37 <alikins> blorp
+15:08:42 <abadger1999> bcoca and I but jimi|ansible is still out right?
+15:08:46 <bcoca> from my recolection of PR only real reason si to make escaping easier , the security implications are not really gone
+15:08:58 <bcoca> abadger1999: so table?
+15:09:05 <abadger1999> yeah, let's do it next week.
+15:09:14 <abadger1999> I want to discuss once and get it over with.
+15:09:17 <bcoca> ok, tabling topic till we get the 'right quorum'
+15:10:05 <bcoca> #topic https://github.com/ansible/ansible/issues/27779 'file module encodings'
+15:10:12 <jtanner> quorum of solace
+15:10:26 <bcoca> ^ using PR for replace, but discussion is really a generic one about encodings and modules that modify files
+15:10:51 <jtanner> i suggested that one for the contributor summit, iirc
+15:11:12 <bcoca> complaint is that replace was changed to not be encoding neutral .. which imo is a misperception, that it did things automatically and silently w/o errors is not same thing as 'working with all encodings'
+15:11:35 <bcoca> abadger1999: want to table for contrib summit? more quorum?
+15:11:35 <abadger1999> bcoca: yeah, unless you have a view, I told the issue submitter that it won't change for 2.4 and we'll make a proposal or two and discuss in feb.
+15:11:59 <bcoca> ok, so going to remove from ticket then, my view mostly aligns with yours
+15:12:18 <abadger1999> bcoca: the only reason not to table is if we think we probably will change the strategy and backwards compat is going to be a problem
+15:12:25 <abadger1999> Cool.
+15:12:48 <abadger1999> #info https://github.com/ansible/ansible/issues/27779 'file module encodings' tabled until contributor summit in September
+15:13:23 <bcoca> abadger1999: next is cyberark lookup plugin, but you are in middle of reviewing process with that one?
+15:13:28 <bcoca> should we talk/skip?
+15:13:39 <abadger1999> bcoca: Yep, go ahead skip.. it's almost done.
+15:14:04 <abadger1999> bcoca: we can remove it and they can put it back on the agenda if I drop the ball at some point
+15:14:14 <bcoca> #info skipping https://github.com/ansible/ansible/pull/21857 as its still in progress
+15:14:50 <bcoca> #topic https://github.com/ansible/ansible/issues/27897
+15:15:01 <bcoca> ^ not sure this one needs much discussion, more thought maybe
+15:15:07 <bcoca> also would need jimi|ansible to weigh in
+15:15:29 <jtanner> seems legit
+15:15:40 <abadger1999> I like it
+15:15:47 <bcoca> mostly people have 'expectations' with certain keywords  that dont make sense to us, but we dont warn them about it
+15:15:55 <bcoca> include/async is good exampel (delegate_to also)
+15:16:05 <abadger1999> Could even be an error.
+15:16:11 <bcoca> probably should be
+15:16:19 <jtanner> i suspect someone from the community will do it, if advertised
+15:16:26 <bcoca> right now we ignore w/o message, i think least intrusive chagne is warning
+15:16:47 <sdoran> I like it also. Makes Ansible more helpful.
+15:17:01 <bcoca> less misleading, was my objective
+15:17:26 <bcoca> this mostly affects include/meta and some action plugins
+15:17:42 <alikins> +1
+15:18:12 <bcoca> not sure how to implement except in each fo those blocks of codes that implement the features (also new import_X will have issues too)
+15:19:00 <bcoca> #info seems to be agreement on feature, need to figure out implementation
+15:19:27 <bcoca> is 'mikedir' here?
+15:19:47 <jtanner> mikedlr ?
+15:20:02 <bcoca> github name, have 12 aws PRs in community ticket he wants to discuss
+15:20:17 <bcoca> ryansb, shertel ?
+15:20:26 <bcoca> if none here i'll just skip
+15:20:34 * shertel is in another meeting
+15:20:42 * ryansb is here, but we've been covering that on #ansible-aws
+15:20:57 <bcoca> ryansb: so i can remove it from our list?
+15:21:08 <ryansb> yeah, don't think we need it covered here
+15:21:08 <abadger1999> ryansb: From last meeting we wanted to know if a slip or exceptin to the freeze would be needed.
+15:21:21 <abadger1999> ryansb: but you all can tell us that next week.
+15:21:23 <ryansb> ah, I don't believe so
+15:21:27 <abadger1999> Cool.
+15:21:32 <abadger1999> bcoca: Yeah, then we can remove.
+15:21:35 <ryansb> err, don't believe a freeze extension will be needed
+15:21:42 <ryansb> since we already get the later modules freeze
+15:22:01 <bcoca> ok, skipping that
+15:22:15 <bcoca> #topic https://github.com/ansible/ansible/pull/24967 yum_repository fixes
+15:22:17 <abadger1999> ryansb: k. mikedlr said it would be a bit tight last week and I know you and shertel are going to be at conferences and meetings this month
+15:22:31 <bcoca> @jtyr i asked for someone with yum experience to review earlier
+15:22:35 <abadger1999> So jsut let us know to kick it up the chain if that changes.
+15:22:46 <jtyr> bcoca: ok
+15:22:59 <abadger1999> I don't know but the functionality but the implementation is actually *much* simpler.
+15:23:01 <sdoran> I'm going to review that one today.
+15:23:01 <bcoca> sdoran offered, but if anyone else wants to look at it also ...
+15:23:13 <abadger1999> Make type='list' and also keep the docs changes.
+15:23:16 <sdoran> Seems very straightforward. Just want to test it a couple times.
+15:23:20 <bcoca> code lgtm also, but i did not feel im right person to merge
+15:23:20 <abadger1999> The rest of it isn't needed.
+15:23:36 <bcoca> ^ abadger1999 i would add that to PR
+15:23:52 <abadger1999> jtyr: well.. and some variant of line 728
+15:24:06 <bcoca> on separate note, jtyr being author ... do we really need this module as 'core'? can it be 'community'?
+15:24:25 <abadger1999> thaumos: ^
+15:24:28 <bcoca> i dont recall why this ended up being core
+15:24:37 <abadger1999> Did we make apt-repository core?
+15:24:51 <bcoca> i'll table that, thaumos is busy (why im running meeting today)
+15:24:55 <abadger1999> It might have been made core because we should provide similar functionality on our two main platforms.
+15:25:13 <jtyr> it's in the core because it is pep8 compatible ;o)
+15:25:19 <abadger1999> haha :-)
+15:25:22 <bcoca> just want to make sure we NEED to be in jtyr's path for updates
+15:25:29 <alikins> a string arg can be replaced with a list arg and backwards compat is okay?
+15:25:36 <bcoca> alikins: yes
+15:25:54 <bcoca> as 'a,b,c' will autoconvert into ['a','b','c']
+15:26:19 <bcoca> jtyr: if that is why you used 'raw', 'list' is probably better and you have less code specific to the module
+15:26:34 <bcoca> but that said, rest of review should happen in PR itself
+15:26:46 <jtyr> I can use list ... that's not a problem ... it makes it simpler ...
+15:26:49 <bcoca> #info got several core members reviewing PR
+15:27:00 <bcoca> # topic open floor
+15:27:03 <bcoca> #topic open floor
+15:27:13 <bcoca> anyone have something to bring up?
+15:27:29 <bcoca> do we want to revisit any of the tabled topics?
+15:27:42 <alikins> ah, AnsibleModule._check_type_list listify a string
+15:28:13 <bcoca> alikins: yes, mostly cause early on most modules used ', concat string as list' .. so we ended making 'list type' flexible in that manner
+15:28:15 <jtanner> nothing from me
+15:28:25 <bcoca> will close in 5 if nothing comes up
+15:30:46 <Pilou> some feedback on #23127 ?
+15:31:53 <bcoca> packet is cloud?
+15:32:34 <abadger1999> #topic 23217 https://github.com/ansible/ansible/pull/23127  Improvements to packet_device module
+15:32:52 <bcoca> anyone up for reviewing that one?
+15:33:03 <abadger1999> Pilou: Is there a specific question that's different than normal review?
+15:33:06 <Pilou> yes
+15:33:51 <bcoca> the return doc could be better, its limited number of known keys in each list object
+15:35:34 <Pilou> there is no maintainer, so changes will have to be reviewed by the core team
+15:36:01 <bcoca> not true
+15:36:21 <bcoca> if file has not maintainer, we look at 'upper folders' and/or 'neighbours' .. core team is last resort
+15:36:29 <jtanner> there are authors, but they didn't inlcude their github nicks
+15:36:37 <abadger1999> Pilou: k.  So you just need another reviewer, not any conflicts resolved.
+15:36:38 <bcoca> swell ....
+15:36:47 <bcoca> jtanner: i'll try to fix that
+15:36:48 <Pilou> the module is flagged with needs_maintainer
+15:37:02 <jtanner> yep, because they didn't put their nicks in there
+15:37:04 <bcoca> part of review is making sure authors add github nics
+15:37:14 <jtanner> author: Tomas Karasek <tom.to.the.k@gmail.com>, Matt Baldwin <baldwin@stackpointcloud.com>, Thibaud Morel l'Horset <teebes@gmail.com>
+15:37:15 <bcoca> so that was missed in initial review
+15:38:21 <jtanner> the bot is already scraping the www blame pages on the modules, so it might have the mapping for those emails
+15:38:31 <bcoca> he .. Pr author is owner ...
+15:38:32 <jtanner> it's just not being correlated yet
+15:39:10 <bcoca> updating module now with github info
+15:39:17 <jtanner> youdaman
+15:39:52 <jtanner> #action jtanner to add https://github.com/ansible/ansible/pull/23127 as an issue for ansibullbot to followup on authors line parsing
+15:41:14 <abadger1999> bcoca: How do we want to handle backwards incompatibilities for status: 'preview'   modules?
+15:41:56 <abadger1999> bcoca: We've not made any conscious decisions on that yet and this one makes several backwards incompatible changes
+15:42:17 <bcoca> i believe that will be a 'community' decision
+15:42:50 <bcoca> jtanner: only original author has commits,  github not helping with other 2, so i'll update that for now
+15:42:58 <abadger1999> does community == maintainer or community == group of module authors discusses and decides?
+15:43:20 <abadger1999> I think at the very least, the backwards incompatibilities need to be documented.
+15:43:33 <jtanner> bcoca: perhaps due to repomerge? and history rewrite?
+15:43:48 <bcoca> no, modules are post merge
+15:43:50 <jtanner> abadger1999: to the bot, "community" is namespace maintainers
+15:44:21 <bcoca> ok, 'owner' shoudl be clear now at least when t0mk updates
+15:44:24 <jtanner> anyone else maintaining modules in the same folder or the folder it's self
+15:44:59 <jtanner> other subject matter experts ideally
+15:45:46 <jtanner> anyone else is flagged as "other" for shipits and can push the vote over the edge if only 1 so far
+15:46:25 <abadger1999> okay.
+15:46:53 <abadger1999> I'm not sure if that's the best way to handle something that affects all modules.
+15:46:59 <jtanner> sorry if that sounds complicated ... Pilou has been helping out with the doc, but we still ahve some work to do
+15:47:16 <abadger1999> But I would go along with the crowd.
+15:47:22 <abadger1999> <nod>
+15:47:42 <bcoca> modules were added in 2.3, are changes backwards incpat with 2.3 or with changes in 2.4?
+15:48:05 <bcoca> ^ big diff, also even if you make backward incompat chagnes, they should be clearly documented in module
+15:48:33 <abadger1999> according to the module documentation, they were in 2.3
+15:48:43 <abadger1999> but the docs could be wrong, I didn't look in git history
+15:49:42 <bcoca> git history only shows metadata/pep8 changes since jan
+15:49:47 <abadger1999> bcoca: they're there in 2.3.
+15:49:48 <bcoca> so looks like breaking 2.3
+15:49:51 <abadger1999> yep
+15:51:17 <bcoca> ok, so we got a few people looking at that PR .. if no other subject Im goign to close this meeting in 5
+15:52:37 <jtanner> 4
+15:54:13 <jtanner> 2
+15:55:22 <jtanner> 1
+15:55:47 <bcoca> #endmeeting

@@ -1,0 +1,162 @@
+19:31:23 <rbergeron> #startmeeting Ansible Community Working Group
+19:31:23 <zodbot> Meeting started Tue Mar  1 19:31:23 2016 UTC.  The chair is rbergeron. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:31:23 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:31:23 <zodbot> The meeting name has been set to 'ansible_community_working_group'
+19:31:38 <rbergeron> #addchair gregdek
+19:31:53 <rbergeron> #topic Today's agenda
+19:32:24 <rbergeron> #info today's agenda brought to you by github and waffle
+19:32:50 <rbergeron> #link https://github.com/ansible/community/issues
+19:33:09 <rbergeron> #link https://waffle.io/ansible/community
+19:33:32 <gregdek> i am chairy
+19:35:24 <rbergeron> #link Things in Needs Review Column
+19:35:28 <rbergeron> #undo
+19:35:28 <zodbot> Removing item from minutes: <MeetBot.items.Link object at 0x2dd30f90>
+19:35:34 <rbergeron> #topic Things in Needs Review Column
+19:35:49 <rbergeron> gregdek: waiting on you to merge PR #20 :)
+19:35:55 <rbergeron> Which fixes most things in this colum.
+19:35:58 <rbergeron> column.
+19:37:05 <gregdek> merged.
+19:37:06 * rbergeron watches gregdek wave the magic merge wand
+19:38:29 <rbergeron> #action rbergero to close remaining issues relating to PR #20
+19:39:04 <rbergeron> #topic What order do we go in?
+19:39:13 <gregdek> Seems like we should go through:
+19:39:14 <rbergeron> Do we want to do backlog, in progress, ??
+19:39:28 <gregdek> * Needs review, in progress, ready, backlog in that order
+19:39:33 <gregdek> my $0.02
+19:39:46 <gregdek> Even if it's just a cursory "no movey today"
+19:39:55 <gregdek> (Which a lot of it will be today)
+19:39:58 <rbergeron> Okay.
+19:40:04 <gregdek> (since I can't seem to get my **** together)
+19:40:36 <rbergeron> #agreed We will do needs review, in-progress, ready, backlog in that order for community wg meetings
+19:41:38 <rbergeron> #topic Committers Guidelines
+19:41:42 <rbergeron> #link https://github.com/ansible/community/issues/3
+19:43:05 <rbergeron> #info still undergoing internal review
+19:43:36 <rbergeron> #topic create the testing working group
+19:43:40 <rbergeron> #link https://github.com/ansible/community/issues/9
+19:44:21 <gregdek> #info no progress in testing working group today
+19:44:26 <rbergeron> :)
+19:44:54 <gregdek> #topic meetup expenses
+19:45:07 <gregdek> #link https://github.com/ansible/community/issues/18
+19:45:19 <gregdek> internal red hat expense issues, no progress :)
+19:45:45 <gregdek> #topic docs proposals
+19:45:51 <gregdek> #link https://github.com/ansible/community/issues/23
+19:45:52 <mordred> o/
+19:45:59 <gregdek> mordred! yes?
+19:46:07 <mordred> 19:44:37    devananda | hrm. ansible has announced switch support and posted docs. but it's not actually released yet
+19:46:12 <rbergeron> :)
+19:46:17 <mordred> seems like a good meeting topic :)
+19:46:25 <rbergeron> is this ... like...
+19:46:28 <rbergeron> the networking stuff?
+19:46:32 <gregdek> I'm sure.
+19:46:41 <gregdek> Got a link?
+19:46:48 <gregdek> Because a bunch of stuff has been announced...
+19:46:58 <gregdek> ...and is in core modules, even...
+19:47:02 * rbergeron nods
+19:47:05 * gregdek looks
+19:47:14 <mordred> http://docs.ansible.com/ansible/junos_command_module.html
+19:47:16 <mordred> gregdek: ^^
+19:47:27 <rbergeron> #topic Random Meeting Topic: Networking Stuff :)
+19:47:28 <mordred> gregdek: meet devananda
+19:47:30 <devananda> I'm wondering where I go to consume that. maybe I'm just missing it
+19:47:43 <gregdek> It's in core.
+19:47:52 <gregdek> That documentation is auto-generated.
+19:48:06 <gregdek> If it's in that documentation, it means that it's coming from a module that's released. (I think.)
+19:48:32 <gregdek> Oh, wait... right.
+19:48:39 <gregdek> No, this is all earmarked for 2.1 release.
+19:48:54 <devananda> it's listed as being in 2.1, and in origin/devel, all that 'git grep junos' turns up is the roadmap
+19:48:58 <rbergeron> https://github.com/ansible/ansible-modules-core/blob/devel/network/junos/junos_command.py <-- note "version added"
+19:49:03 <gregdek> Yep, that's right
+19:49:13 <gregdek> So that means you get it by pulling devel.
+19:49:14 * rbergeron notes that this is a confusing thing for humans who see documentation and expect that something is there
+19:49:24 <rbergeron> in terms of code :)
+19:49:30 <gregdek> Yeah, that's an issue we should be tracking somewhere. We know it's a problem.
+19:49:39 <devananda> well, i've pulled devel, but I don't see it
+19:49:45 <devananda> but maybe I'm doing something wrong
+19:50:01 <gregdek> Pull ansible-modules-core and ansible-modules-extras as well
+19:50:10 <gregdek> There are three repos
+19:50:11 <rbergeron> though i guess documentation does say what version, but i sort of have this user expectation that things written are already working :)
+19:50:56 <devananda> rbergeron: if it said "version TBD" or "next release" or something, that might help :)
+19:51:03 <rbergeron> devananda: and after that probably #ansible-devel might be better if it's not working still -- but we will make a ticket to like... maybe see about fixing that weirdness :)
+19:51:09 <gregdek> #action gregdek will add a todo for a documentation working group
+19:51:11 <devananda> thanks
+19:51:35 * rbergeron notes this is just "meeting of community-organizatino stuff and not the general ansible developerish irc meeting
+19:51:38 <rbergeron> "
+19:51:43 <rbergeron> devananda: thanks, and @mordred too
+19:52:29 <mordred> \o/
+19:52:32 * mordred helpful
+19:52:59 <gregdek> devananda: you should be able to get these by fetching all ansible submodules btw
+19:53:35 <gregdek> (git clone --recursive I guess)
+19:54:22 <devananda> yep, got it
+19:54:31 <rbergeron> #topic Proposal for proposals.
+19:54:45 <devananda> I think the issue was that I switched from 2.0.0.1 to devel, but didn't update submodules
+19:56:20 <rbergeron> #link https://github.com/ansible/community/issues/23
+19:56:28 <rbergeron> Okay, update is:
+19:56:43 <rbergeron> #info Started working this and hope to god to post something today or early tomorrow morning.
+19:56:58 <rbergeron> got sidetracked putting the community/readme.md and whatnot in.
+19:57:01 <rbergeron> wrapped up.
+19:57:10 <rbergeron> So basically: NO PROGGIE
+19:57:55 <rbergeron> #topic maintainers for ceph modules
+19:57:57 <rbergeron> #link https://github.com/ansible/community/issues/3
+19:58:08 <rbergeron> #undo
+19:58:08 <zodbot> Removing item from minutes: <MeetBot.items.Link object at 0x3110d3d0>
+19:58:12 <rbergeron> #link https://github.com/ansible/community/issues/16
+19:58:25 <gregdek> undo still works. thanks zodbot :)
+19:58:26 <rbergeron> Update: shan sent a mail saying he'd take a look at teh modules.
+19:58:35 <rbergeron> zodbot <33333333
+19:58:43 <rbergeron> gregdek: shall we close this?
+19:58:48 <gregdek> yespls
+19:58:51 * gregdek goes to close
+19:58:58 <rbergeron> since we didn't need to ... actually find a aintainer for ceph modules since they aren't ceph modules per se :)
+19:59:01 <rbergeron> thanks :)
+19:59:04 <rbergeron> #action gregdek to close #16
+19:59:22 <rbergeron> #topic Schedule an ansible durham meetup
+19:59:35 <rbergeron> #link https://github.com/ansible/community/issues/15
+19:59:37 <rbergeron> #undo
+19:59:38 <zodbot> Removing item from minutes: <MeetBot.items.Link object at 0x2dd37350>
+19:59:41 <rbergeron> #link https://github.com/ansible/community/issues/14
+19:59:54 <gregdek> I just sent another note to the RH facilities person, if I don't hear back within a few days I'll just schedule one in Durham instead
+20:00:13 <rbergeron> ack.
+20:00:16 <rbergeron> So still in progress
+20:00:32 <gregdek> yup
+20:00:53 <rbergeron> My theme song today is brought to you by Genesis
+20:00:57 <rbergeron> "iiiiii can't type"
+20:01:05 <rbergeron> #topic Open Source Galaxy
+20:01:21 <rbergeron> #link https://github.com/ansible/community/issues/11
+20:01:38 <rbergeron> #info robyn is pulling together requirements list
+20:01:46 <gregdek> eta?
+20:01:59 <rbergeron> still in progress :)
+20:02:17 <gregdek> will set end of week as eta for requirements list
+20:02:29 <rbergeron> okay!
+20:02:31 <gregdek> #agreed eta for requirements: end of week
+20:02:35 <rbergeron> :)
+20:02:44 * rbergeron dances at our meetbot skillz
+20:03:00 <rbergeron> #topic Next up: Things in the Ready Column
+20:04:41 <rbergeron> #topic Schedule a community meeting (not this one, lol)
+20:05:01 <rbergeron> #link https://github.com/ansible/community/issues/10
+20:05:28 <rbergeron> #info I lied, it is this meeting. I didn't read the issue
+20:05:38 <rbergeron> #info we are already doing this now.
+20:05:42 <rbergeron> #action gregdek to close #10
+20:06:04 <rbergeron> #action gregdek open one for the weekly core meeting to poke at :)
+20:06:12 <rbergeron> #topic Promote Best Tools
+20:06:36 <rbergeron> #link https://github.com/ansible/community/issues/5
+20:06:39 <rbergeron> Still waiting for love!
+20:07:08 <rbergeron> #topic New Things!
+20:07:34 <rbergeron> #info things in the "backlog" column
+20:07:42 <rbergeron> Open question: what do we need to move things to ready?
+20:09:09 <gregdek> Nothing right this minute, but we can go through the ready stuff.
+20:09:11 <rbergeron> so: backlog is stuff that's probably not ready to ... review status on, because ... kanban & workflow and yada yada.
+20:09:26 <gregdek> I need to get off my behind and do some stuff tonight. :)
+20:10:08 <rbergeron> well, you merged my PR and that means YAY for me :)
+20:10:13 <gregdek> YAY
+20:10:19 <rbergeron> #topic open items / open floor
+20:10:24 <gregdek> progress, if halting, is still progress ;)
+20:12:50 <rbergeron> okay, we'll leave this open a few minutes in case anyone has anything to say
+20:12:56 <rbergeron> or objections to greg going and getting his hair cut
+20:13:20 <rbergeron> which is what he is doing after this
+20:14:32 <bcoca> i object
+20:14:46 <rbergeron> me too.
+20:15:24 <bcoca> went over shipit yesterday, did not get full list, i seem to be only one doing it and last week i did not do triage cause of presentation
+20:15:57 <bcoca> will finish off tonight, just cause it just seems like we are trying to make people cranky
+20:16:09 <rbergeron> bcoca: ack. thanks :)
+20:16:56 <gregdek> #endmeeting
+20:17:13 <rbergeron> #endmeeting

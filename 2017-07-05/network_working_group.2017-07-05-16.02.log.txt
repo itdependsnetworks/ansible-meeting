@@ -1,0 +1,238 @@
+16:02:31 <gundalow> #startmeeting Network Working Group
+16:02:31 <zodbot> Meeting started Wed Jul  5 16:02:31 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:02:31 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:02:31 <zodbot> The meeting name has been set to 'network_working_group'
+16:03:03 <gundalow> #cahir funzo ganeshrn Qalthos trishnag davidn
+16:03:08 <gundalow> #chair funzo ganeshrn Qalthos trishnag davidn
+16:03:08 <zodbot> Current chairs: Qalthos davidn funzo ganeshrn gundalow trishnag
+16:03:35 <Qalthos> hiya
+16:03:41 <funzo> o/
+16:03:50 <gundalow> #link agenda https://github.com/ansible/community/issues/110
+16:03:55 <trishnag> hi
+16:04:20 <gundalow> #topic NXOS changes
+16:04:29 <gundalow> #info https://github.com/ansible/ansible/pull/26156
+16:04:47 <gundalow> Qalthos: Looks like this has been updated based on your review
+16:05:26 <Qalthos> +1, merging
+16:05:33 <gundalow> Thanks
+16:07:18 <gundalow> Qalthos: and https://github.com/ansible/ansible/pull/26142
+16:07:23 * gundalow has asked for a rebase
+16:08:07 <Qalthos> yup, waiting on that to merge
+16:10:04 <gundalow> cool
+16:10:07 <gundalow> Thanks
+16:10:35 <gundalow> Everything else on the agenda appears to be waiting on the maintainer
+16:11:21 * gundalow wonders if it would be worth going through the recent label:networking issues & PRs
+16:12:55 <gundalow> thoughts?
+16:14:26 <gundalow> #chair
+16:14:26 <zodbot> Current chairs: Qalthos davidn funzo ganeshrn gundalow trishnag
+16:16:20 <gundalow> Or we can close the meeting now
+16:23:04 <ganeshrn> i wanted to discuss about increasing the default timeout value
+16:23:15 <ganeshrn> from 10 sec to say 30 sec
+16:24:14 <gundalow> #topic Changing timeout
+16:24:22 <gundalow> ganeshrn: floor is all yours
+16:24:22 <gundalow> akasurde: hi
+16:24:33 <gundalow> #chair rcarrillocruz
+16:24:33 <zodbot> Current chairs: Qalthos davidn funzo ganeshrn gundalow rcarrillocruz trishnag
+16:24:35 <akasurde> gundalow, hi
+16:24:38 <gundalow> #chair akasurde
+16:24:38 <zodbot> Current chairs: Qalthos akasurde davidn funzo ganeshrn gundalow rcarrillocruz trishnag
+16:26:18 <ganeshrn> fetching the timeout issue
+16:26:54 <ganeshrn> https://github.com/ansible/ansible/issues/25175
+16:27:29 <ganeshrn> so for junos if config on device is large it results in timeout while running a simple playbook
+16:28:02 <ganeshrn> wanted to take feedback if people are facing similar issues
+16:28:27 <ganeshrn> and are forced to increase timeout value in playbook
+16:29:11 * gundalow hasn't done much with Junos for a while
+16:29:11 <ganeshrn> persistent connection default idle timeout value is 30 sec
+16:29:32 <gundalow> What's the downside of increasing this timeout?
+16:29:38 <ganeshrn> so i see no issues on increasing the command idle timeout to 30 sec
+16:30:36 <ganeshrn> nothing  that i know of, if the response is received within timeout value the timer reset's
+16:31:27 <ganeshrn> gundalow, provider timeout is applicable for all supported platforms
+16:31:41 <jmighion> is this meeting still active? i have a pr i'd like to bring up if there's still time. forgot to add it to the community page before hand
+16:32:03 <gundalow> jmighion: Sure, add it to the agenda and we can look at it after this topic
+16:33:05 <gundalow> ganeshrn: to clarify you are talking about provider: timeout 10 -> 30
+16:33:11 <ganeshrn> yes
+16:34:44 <gundalow> Possible that some failure cases may take an extra 20 seconds to show and issues, though I think increasing the chances of the playbook running first time is a good thing
+16:34:50 <gundalow> +1 from me
+16:34:59 <gundalow> Qalthos: funzo Can you see any downsides?
+16:36:28 <akasurde> If there is advantage of successful PB then +1
+16:37:21 <gundalow> #action ganeshrn to increase & document change in default timeout (remember it's in multiple docs_fragments). Final review needed by privateip
+16:37:27 <gundalow> ganeshrn: anything else?
+16:37:35 <ganeshrn> gundalow, ack
+16:37:37 <funzo> that was the only downside, the failure case taking longer
+16:38:26 <gundalow> funzo: only downside I can think of
+16:38:59 <ganeshrn> funzo, depends on the failure
+16:39:13 <gundalow> #chair jmighion skg-net
+16:39:13 <zodbot> Current chairs: Qalthos akasurde davidn funzo ganeshrn gundalow jmighion rcarrillocruz skg-net trishnag
+16:39:23 <ganeshrn> if the failure response it received immediately no need to wait
+16:39:52 <ganeshrn> if response is taking longer it will wait till timeout
+16:40:14 <ganeshrn> gundalow, that's all i had
+16:41:06 <gundalow> #topic Make iosxr check_args call module_util/iosxr check_args #26261
+16:41:13 <gundalow> #link https://github.com/ansible/ansible/pull/26261
+16:41:55 <gundalow> jmighion: Hi
+16:42:40 <gundalow> ganeshrn: does https://github.com/ansible/ansible/pull/26261/files look correct
+16:42:50 <jmighion> hey
+16:42:59 <gundalow> You've done more with check_args stuff
+16:43:08 <ganeshrn> checking
+16:43:48 <gundalow> #chair caphrim007
+16:43:48 <zodbot> Current chairs: Qalthos akasurde caphrim007 davidn funzo ganeshrn gundalow jmighion rcarrillocruz skg-net trishnag
+16:44:58 <ganeshrn> looks good to me
+16:45:03 <gundalow> cool
+16:45:37 <gundalow> ganeshrn: could you please merge & cherry pick into 2.3
+16:45:45 <ganeshrn> gundalow, ack
+16:45:51 <gundalow> Thanks :)
+16:45:56 <gundalow> #info Good to merge
+16:45:59 <gundalow> #topic Open Floor
+16:46:05 <gundalow> skg-net: caphrim007 anything from you too?
+16:47:02 <gundalow> skg-net: caphrim007 So I can tell you that we've nearly completed the internal Proof of Concept for the Distributed Testing framework which we will be able to use to run tests within your local test labs
+16:47:11 <caphrim007> not this week
+16:47:16 <skg-net> Sorry I joined late.. did we discuss anything on vendor neutral models?
+16:47:25 <gundalow> skg-net: nop
+16:47:41 <gundalow> not yet
+16:48:05 <gundalow> caphrim007: skg-net In your internal labs how do you create test network devices?
+16:48:10 <skg-net> We talked about having a BJ meeting last week.. Can we setup one?
+16:48:33 <gundalow> skg-net: yup, Peter has only just got back after AnsibleFest & being offsite for meetings
+16:48:48 <caphrim007> gundalow: i personally test on virtual editions that i book on VMWare openstack
+16:49:02 <caphrim007> but we also have metal instances that we can reserve
+16:49:06 <caphrim007> i dont test on those atm
+16:49:43 <caphrim007> i create the VE's with Heat templates
+16:50:02 <gundalow> caphrim007: interesting. For out POC we have some instances running on Nodepool, so hopefully you'd be able to take what we have and tweak it for your setup fairly easily
+16:50:42 <skg-net> okay.. can we post the list modules we plan to support. So that other vendors can start working on that
+16:51:21 <caphrim007> gundalow: maybe? i am not familiar with it. jlk is my openstack resource
+16:51:42 <gundalow> caphrim007: hah, cool
+16:51:44 <gundalow> Should be good
+16:52:07 <jlk> ohai
+16:52:10 <gundalow> We know jlk :)
+16:52:13 <gundalow> Hello you :)
+16:52:24 <gundalow> jlk: Just talking about distributed-ci.io
+16:53:11 <jlk> (waiting for the link to load)
+16:53:25 <gundalow> oh, don't think you can see anything without the login
+16:53:26 <davidn> use www. distributed-ci.io
+16:53:34 <davidn> www.distributed-ci.io
+16:53:42 <jlk> that worked better
+16:54:08 <gundalow> caphrim007: anyway, it's progressing. Not sure what order we will be getting Partners on board
+16:54:09 <jlk> oh I'm familiar with earlier iterations of this
+16:55:01 <gundalow> jlk: We have a Proof of Concept setup to allow us to run Network Tests for Ansible. The idea being that we can test against the equipment that vendors have
+16:55:07 <gundalow> in their own labs
+16:55:15 <gundalow> which is a great fit for DCI
+16:55:20 <jlk> yup, a la 3rd party CI in OpenStack
+16:56:02 <davidn> how many network vendors already do 3rd party CI for OpenStack?
+16:57:58 <rcarrillocruz> a ton
+16:58:04 <rcarrillocruz> all the majors
+16:58:58 <rcarrillocruz> caphrim007: https://github.com/rcarrillocruz/openstack-ci
+16:59:05 <rcarrillocruz> that's what is used in the backend
+16:59:09 <rcarrillocruz> DCI is reporting mechanism
+16:59:21 <rcarrillocruz> but the mechanism that spawns nodes for CI runs
+16:59:26 <rcarrillocruz> it's openstack + nodepool
+16:59:32 <rcarrillocruz> if you clonse that in a xenial box
+16:59:34 <rcarrillocruz> and run
+16:59:41 <rcarrillocruz> bash -x deploy_openstack_ci.sh
+16:59:52 <rcarrillocruz> it will deploy everything with zero intervention
+17:00:09 <rcarrillocruz> make sure you have a machine with 8G or more
+17:00:12 <rcarrillocruz> ideally 16GB
+17:00:17 <rcarrillocruz> in case you want to start poking at it
+17:01:58 <rcarrillocruz> davidn: https://wiki.openstack.org/wiki/Neutron_Plugins_and_Drivers#Existing_Plugin_and_Drivers
+17:02:48 <davidn> rcarrillocruz: is the reason that we have a separate VM for nodepool that the dci-agent requires CentOS and nodepool requires Xenial?
+17:03:22 <rcarrillocruz> no, it's just the role i use to roll-out zookeeper doesn't install it from source, and cos centos has no package and ubuntu does
+17:03:27 <rcarrillocruz> it's easier to have it on xenial
+17:05:39 <skg-net_> gundalow: can we publish the list of modules we plan to support for vendor neutral models? So that other vendors can start working on it?
+17:06:17 <gundalow> skg-net_: I need to get that list from Peter
+17:06:23 <gundalow> Who's not online at the moment
+17:06:47 <skg-net_> okay, I will wait for Peter's response
+17:06:53 <skg-net_> How to schedule ansible playbook automatically based on an event,  the event being a new switch install? One way is to download a script as part of ZTP process, which will then invoke playbook execution. Is there a typical way its followed around the industry?
+17:06:56 <gundalow> To check you want to know the list net_* modules which we are working on?
+17:07:24 <gundalow> skg-net_: Maybe provisioning callbacks with Ansible Tower
+17:07:37 <gundalow> Tower hash an API
+17:07:59 <gundalow> has*
+17:08:24 <skg-net_> hmm.. Thanks
+17:08:29 <itdependsnetwork> I thought the vendor neutral models were not modules, as in they were going to be roles?
+17:10:35 <gundalow> itdependsnetwork: https://github.com/ansible/ansible/tree/devel/lib/ansible/modules/network have a look at the subdirectories interface, layer2, layer3, routing
+17:10:42 <gundalow> they are vendor netral modules
+17:11:52 <itdependsnetwork> got it, thanks. Had just heard it mentioned once on a ask an engineer or something and that was my (wrong) understanding
+17:13:00 <rcarrillocruz> itdependsnetwork: well, in a way that's true
+17:13:07 <skg-net_> thats is the way its currently supported
+17:13:11 <rcarrillocruz> the vendor neutral modules will not be standalone modules
+17:13:13 <rcarrillocruz> but action plugins
+17:13:26 <itdependsnetwork> ok, and the world is right again :)
+17:13:30 <rcarrillocruz> which invoke the pertaining platform specific module after discovery or by reading it on inventory
+17:13:58 <rcarrillocruz> meaning if you run net_system against machine01
+17:14:10 <rcarrillocruz> and you have on the inventory for machine01 ansible_network_os=ios
+17:14:17 <rcarrillocruz> then ansible will invoke ios_system
+17:14:38 <rcarrillocruz> there's no net_system module itself accounting all different platforms, we just route to pertinent modules
+17:15:05 <itdependsnetwork> that makes sense.
+17:17:53 <itdependsnetwork> any working code for this? While it conceptually makes sense, I don't know how you are using action plugins to switch to different modules. Only way I have done something similar is with includes.
+17:17:59 <rcarrillocruz> sure
+17:18:01 <rcarrillocruz> let me link
+17:18:41 <gundalow> skg-net_: http://docs.ansible.com/ansible-tower/latest/html/userguide/job_templates.html#provisioning-callbacks
+17:18:58 <gundalow> skg-net_: The idea behind provisioning callbacks is a node comes up and tells Tower "Please run this Job Template against me".
+17:18:59 <rcarrillocruz> https://github.com/ansible/ansible/blob/devel/lib/ansible/plugins/action/net_system.py
+17:19:10 <skg-net_> How do we pass on the comments to those modules?
+17:19:10 <rcarrillocruz> all vendor neutral action plugins pretty much look the same
+17:19:15 <rcarrillocruz> they inherit from net_base
+17:19:18 <rcarrillocruz> which has all the meat
+17:19:39 <skg-net_> gundalow:Thanks
+17:19:43 <rcarrillocruz> itdependsnetwork: ^
+17:20:03 <rcarrillocruz> and there's a corresponding modules/net_system.py
+17:20:07 <rcarrillocruz> which just contains docstrings
+17:20:11 <rcarrillocruz> detailing the module
+17:20:40 <gundalow> skg-net_: skg-net_ that's how it works for general Linux devices, I believe the same should work for network devices. Something we can chat about with Peter
+17:21:59 <skg-net_> for example in link aggregation, you can have a static or dynamic using LACP..which is missing in net_linkagg
+17:22:27 <rcarrillocruz> yah, so state 'on' will be for static, 'active/passive' for lacp
+17:23:28 <skg-net_> rcarrillocruz: Thanks !!
+17:23:37 <rcarrillocruz> np
+17:23:45 <rcarrillocruz> i should push vyos_linkagg today
+17:23:54 <rcarrillocruz> so we can at least test vendor neutral net_linkagg with it
+17:24:04 <skg-net_> that will help..
+17:24:14 <skg-net_> Thanks for the above explanation as well..
+17:24:29 <rcarrillocruz> sure
+17:30:28 <itdependsnetwork> https://github.com/rcarrillocruz/ansible/blob/bdd73bcb7e75f13c8405bb66142d2baa8096c89c/lib/ansible/plugins/action/net_platform_agnostic.py
+17:30:42 <itdependsnetwork> Is that where it chooses the module to use?
+17:31:39 <gundalow> skg-net_: https://www.ansible.com/provisioning-cisco-nexus-9000-switches-using-poap-and-ansible
+17:31:48 <rcarrillocruz> https://github.com/ansible/ansible/blob/devel/lib/ansible/plugins/action/net_base.py#L72
+17:31:51 <rcarrillocruz> itdependsnetwork: ^
+17:32:25 <itdependsnetwork> Ohh I thought i included link for that line, I guess I didn't :)
+17:32:35 <itdependsnetwork> I see the name has been updated too
+17:32:46 <rcarrillocruz> yah, that's from a previous POC i did on my repo
+17:32:53 <rcarrillocruz> the thing is landed, so you can check on ansible/ansible
+17:33:01 <rcarrillocruz> for CLI we decided to not do discovery
+17:33:13 <rcarrillocruz> so we require to set that up on inventory the ansible_network_os
+17:33:18 <itdependsnetwork> agreed
+17:33:21 <rcarrillocruz> for netconf, i believe ganesh has put some discovery
+17:33:29 <skg-net_> gundalow:Thanks !!
+17:33:30 <rcarrillocruz> which we will put into there as time permits
+17:33:38 <itdependsnetwork> It would not work enough of the times to be worth it
+17:33:42 <rcarrillocruz> we also cache it to make it future proof
+17:33:44 <rcarrillocruz> like
+17:33:48 <rcarrillocruz> if you do netconf discovery
+17:33:54 <rcarrillocruz> it will put that platform as a fact in the cache
+17:33:56 <rcarrillocruz> so next time
+17:34:01 <rcarrillocruz> we check the cache and use it
+17:34:06 <rcarrillocruz> instead of doing discovery on each task
+17:34:33 <rcarrillocruz> that logic is https://github.com/ansible/ansible/blob/devel/lib/ansible/plugins/action/net_base.py#L72
+17:34:41 <rcarrillocruz> erm
+17:34:44 <rcarrillocruz> https://github.com/ansible/ansible/blob/devel/lib/ansible/plugins/action/net_base.py#L122
+17:37:10 <skg-net_> does it have to be CLI or netconf? For Openswitch we use their CPS API..
+17:38:11 <rcarrillocruz> we do have EAPI for EOS and NXAPI for NXOS, so we don't block connection protocols to just CLI or netconf
+17:38:19 <rcarrillocruz> i'd psersonally be cool having that implementation
+17:38:53 <skg-net_> we are working on that ...
+17:39:10 <skg-net_> does EAPI and NXAPI under CLI then?
+17:39:48 <skg-net_> https://github.com/ansible/ansible/blob/devel/lib/ansible/plugins/action/net_base.py#L54
+17:41:42 <rcarrillocruz> that's not yet put on the vendor neutral modules
+17:41:47 <rcarrillocruz> i believe we would need to move logic from https://github.com/ansible/ansible/blob/devel/lib/ansible/plugins/action/eos.py
+17:41:49 <rcarrillocruz> to net_base
+17:41:57 <rcarrillocruz> and account when network_os is eos
+17:42:03 <rcarrillocruz> what kind of connection we are dealing with
+17:42:04 <rcarrillocruz> if cli
+17:42:08 <rcarrillocruz> or eapi
+17:42:12 <rcarrillocruz> what's CPS API tho
+17:42:20 <rcarrillocruz> is that something just used by openswitch
+17:42:29 <rcarrillocruz> or a standard that is meant to be used by other vendor implementations
+17:42:30 <rcarrillocruz> ?
+17:44:06 <skg-net_> its only for openswitch and Dell OS10
+17:46:40 <skg-net_> sometime back sonic used it.. I am not sure if they use it now..
+17:51:42 <skg-net_> Thanks again rcarrillocruz and gundalow for your support.. we will wait for the meeting with Peter
+17:51:50 <rcarrillocruz> ++
+17:52:26 <gundalow> skg-net_: You are welcome, glad me managed to cover some of it today
+17:53:09 <skg-net_> signing off for now.. need to head to another meeting..
+17:53:38 <gundalow> :)
+17:53:40 <gundalow> cool
+17:53:46 <gundalow> Guess we are done then
+17:53:48 <gundalow> #endmeeting

@@ -1,0 +1,105 @@
+17:00:01 <gundalow> #startmeeting Testing Working Group
+17:00:01 <zodbot> Meeting started Thu May 18 17:00:01 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+17:00:01 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+17:00:01 <zodbot> The meeting name has been set to 'testing_working_group'
+17:00:11 <gundalow> #chair mattclay sivel sdodson
+17:00:11 <zodbot> Current chairs: gundalow mattclay sdodson sivel
+17:00:14 <gundalow> sdodson: Hi :)
+17:00:19 <sdodson> gundalow: Hello
+17:00:53 * mattclay waves
+17:01:53 <gundalow> #chair caphrim007
+17:01:53 <zodbot> Current chairs: caphrim007 gundalow mattclay sdodson sivel
+17:01:54 <gundalow> Hi
+17:02:02 <gundalow> caphrim007: did you want to talk about your PR?
+17:02:02 <caphrim007> oh hey
+17:02:09 <caphrim007> yeah actually
+17:02:29 <caphrim007> one question i had was this 2.6 support for the f5 modules
+17:02:35 <caphrim007> we were exempted from that in the past
+17:02:43 <caphrim007> but the test runner still considers it for us
+17:02:55 <gundalow> Ansible 2.4+ ONLY supports 2.+ 3.5+
+17:03:08 <gundalow> Ansible 2.4+ ONLY supports 2.6+ 3.5+
+17:03:22 <gundalow> what does the f5 sdk need again?
+17:03:29 <caphrim007> it needs 2.7+
+17:04:01 <mattclay> In that case we can add it to the skip list for python 2.6 compile tests.
+17:04:10 <gundalow> #topic bigip_user + tests 24753
+17:04:20 <gundalow> #info https://github.com/ansible/ansible/pull/24753
+17:04:23 <caphrim007> ok. it was on a previous skip list, but i dont think it was part of test runner
+17:04:49 * mattclay looks at PR
+17:05:10 <caphrim007> with the exception of that i think i need to make sure my 3.5 and 3.6 ducks are in a row
+17:05:24 <caphrim007> i didnt have 3.5 installed on my dev box the other day and hadnt had time to test
+17:05:35 <caphrim007> those were the other 2 errors from shippable i think
+17:05:53 <caphrim007> oh one other question about coding style
+17:06:11 <caphrim007> do the devs prefer "from blah import foo" for every import
+17:06:15 <mattclay> OK, so it's not a python 2.6 syntax issue, it's the unit tests.
+17:06:40 <caphrim007> or is there tolerance from "from foo import (bar, baz)"
+17:06:49 <caphrim007> for*
+17:07:11 <caphrim007> i havent seen the import tuple thing anywhere so i was going to go fix my code to not use it
+17:07:35 <gundalow> mattclay: where is the skip list certain python versions for unit tests?
+17:07:59 <mattclay> https://docs.pytest.org/en/latest/skipping.html#id1
+17:08:25 <gundalow> ah, it's a marker in the unit test itself, coo
+17:08:26 <gundalow> l
+17:08:30 <caphrim007> oh you want me to just skip like that mattclay?
+17:08:30 <mattclay> You can mark the unit tests to be skipped based on python version.
+17:08:34 <caphrim007> i can do that too
+17:08:36 <mattclay> caphrim007: Yeah.
+17:08:40 <caphrim007> ok let me do that
+17:08:50 <caphrim007> i thought it was some global exclude list in ansible-test
+17:08:56 <mattclay> No need to have ansible-test do what pytest can do for us.
+17:09:03 <caphrim007> roger that
+17:09:14 <mattclay> There is for compile checks for syntax issues, but since this is a unit test, we'll let pytest deal with that.
+17:09:46 <caphrim007> are the compile tests run for modules?
+17:09:58 <mattclay> Yes
+17:10:15 <caphrim007> so do i need to exempt myself from those?
+17:10:19 <mattclay> If you use syntax that only compiles on python 2.7+ it will fail unless it's on the compile skip list.
+17:10:24 <mattclay> Not if it's passing. :)
+17:10:45 <caphrim007> ahh here's a question that just came to mind
+17:10:58 <caphrim007> where's the test that shippable is running?
+17:11:18 <mattclay> Which test? We have many different kinds of tests.
+17:11:28 <gundalow> directory/OS?
+17:11:33 <caphrim007> i guess that's my question
+17:11:43 <caphrim007> for the f5 modules that i'm interested in
+17:11:56 <caphrim007> if i wanted to check things before i pushed them?
+17:12:14 <mattclay> Shippable runs all the tests though `test/runner/ansible-test`. That will be in your path if you're running from a GH fork and are using `hacking/env-setup`.
+17:12:14 <caphrim007> is that even a good question to ask?
+17:14:09 <mattclay> http://docs.ansible.com/ansible/dev_guide/testing.html
+17:14:11 <gundalow> ansible-test units --tox --python X.Y modulename
+17:14:14 <mattclay> That should help some.
+17:14:18 <caphrim007> ok
+17:14:30 <mattclay> Are there integration tests for the f5 modules?
+17:14:33 <mattclay> Or will there be?
+17:14:49 <gundalow> mattclay: We don't currently have f5 VMs, so caphrim007 is running those himself
+17:14:52 <caphrim007> there are but they require a number of different bigip versions and licenses for them
+17:15:16 <mattclay> gundalow: Ah, OK. Just checking.
+17:15:23 <caphrim007> mattclay: here https://github.com/F5Networks/f5-ansible/tree/devel/test/integration/targets/bigip_user/tasks
+17:15:25 <gundalow> Was a good question :)
+17:15:54 <caphrim007> and i note what versions i tested on here https://github.com/F5Networks/f5-ansible/blob/devel/test/integration/bigip_user.yaml#L23
+17:16:52 <caphrim007> ok lemme address these 2.6 and 3.x things and then i'll coordinate with gundalow
+17:16:53 <mattclay> Is there a possibility of having a EC2 AMI or a docker container that provides a virtual F5 appliance that we could test against in the future?
+17:17:04 <mattclay> Or some kind of F5 simulator...
+17:17:13 <caphrim007> you can boot f5's in aws or azure
+17:17:21 <caphrim007> but the problem is the license part
+17:17:36 <caphrim007> we need to talk offline about redhat's partnership with f5
+17:17:37 <mattclay> You need a license to use on first boot?
+17:17:51 <caphrim007> you need a license to test stuff on the box
+17:18:06 <mattclay> OK, I'll leave that with the networking folks to discuss then.
+17:18:25 <caphrim007> my bizdev team is in contact with your bizdev teams
+17:18:32 <caphrim007> so we'll arrange something
+17:18:43 <mattclay> Excellent.
+17:19:30 <caphrim007> no other questions on my end. i'll go plug away at the remaining shippable errors
+17:20:29 <gundalow> caphrim007: Great stuff as always. Looking like you will be the first new none-Ansible module in 2.4 with tests :)
+17:20:38 <gundalow> #topic Contributors Summit
+17:20:47 <gundalow> #info https://public.etherpad-mozilla.org/p/ansible-summit-june-2017
+17:20:55 <gundalow> caphrim007: thanks for your comments on this
+17:21:03 <gundalow> samdoran: Not sure if you've seen/heard about https://public.etherpad-mozilla.org/p/ansible-summit-june-2017
+17:21:13 <gundalow> The day before AnsibleFest we have a Contirbutor Summit
+17:21:22 <caphrim007> yeah i'm interested in particular about the details of the new persistence thing
+17:21:40 <caphrim007> gundalow and privateip had some email exchange
+17:21:52 <caphrim007> but i was distracted by other work things and didnt get it fully working
+17:21:52 <samdoran> gundalow: Thanks! I had not heard of that.
+17:23:29 <gundalow> caphrim007: ack, Still got to do docs on that. Might be worth us having a call at somepoint
+17:24:18 <gundalow> #topic Open Floor
+17:25:44 <gundalow> Anyone got anything else?
+17:25:45 <gundalow> sivel: ?
+17:25:57 <sivel> nothing from me
+17:26:34 <gundalow> cool, will close shortly then
+17:30:22 <gundalow> #endmeeting

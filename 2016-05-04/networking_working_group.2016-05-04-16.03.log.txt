@@ -1,0 +1,247 @@
+16:03:52 <privateip> #startmeeting Networking Working Group
+16:03:52 <zodbot> Meeting started Wed May  4 16:03:52 2016 UTC.  The chair is privateip. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:03:52 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:03:52 <zodbot> The meeting name has been set to 'networking_working_group'
+16:03:55 <privateip> hi all
+16:04:00 <privateip> whos in?
+16:04:07 * gundalow waves
+16:04:13 <caphrim007> me
+16:04:48 <privateip> welcome, welcome
+16:04:59 <privateip> agenda items for today
+16:05:00 * rbergeron is observing but multitasking, since i'm super organized
+16:05:01 <rbergeron> :)
+16:05:10 <privateip> lol
+16:05:18 <privateip> Review AIs from last week
+16:05:20 <privateip> Testing
+16:05:27 * resmo is just watching
+16:05:39 <privateip> Module Ownership
+16:05:50 <mhite> Me
+16:05:50 <privateip> anybody have additional items to add?
+16:06:20 <mhite> (The 'me' was not in reference to having additional items.)
+16:06:44 <privateip> #topic Review AIs from last week
+16:07:04 <privateip> AI: file feature request for handling ssh keys
+16:07:40 <caphrim007> privateip: per the testing topic, is there anything that can be done by maintainers internally that can be published externally?
+16:07:43 <privateip> i see ogenstad filed the issue
+16:07:52 <privateip> https://github.com/ansible/ansible/issues/15702
+16:08:07 <caphrim007> i have internal resources that i can test against, but cannot make them external :-/
+16:08:23 <privateip> @caphrim007 yes, lets hold that until we get there (but i love your energy :)
+16:08:27 <caphrim007> kk
+16:08:55 <privateip> for those interested  please take a look at the issue and provide thumbs up / down
+16:09:05 <gundalow> I see (and agree) that https://github.com/ansible/ansible/issues/15702 is marked as a security issue
+16:09:59 <privateip> AI: start proposal with list of identified platforms to support
+16:10:02 <mhite> Thumbs provided.
+16:10:08 <privateip> thanks !!
+16:10:14 <privateip> my bad on the proposal ... i didn't get there
+16:10:16 <privateip> :(
+16:10:41 <privateip> to refresh everyone... this is the list of supported platforms we believe should be in ansible
+16:10:53 <caphrim007> +1 from me
+16:11:10 <privateip> AI collect list of network modules in extras and present for next week discussion to move to core where applicable
+16:11:31 <privateip> i took at look at the list and think it makes sense to consider moving F5 into core based on feedback
+16:12:18 <privateip> need to reachout to all maintainers though and see if they are interested
+16:12:31 <privateip> any disagreements?
+16:12:50 <mhite> Nope, at the very least @caphrim007 and myself are here to continue supporting and developing the F5 modules.
+16:13:10 <caphrim007> @privateip i would be interested, there is ongoing work to standardize on the code across the f5 modules
+16:13:22 <gundalow> no thoughts either way. I assume it in practice will be the same set of people reviewing PRs for F5, so no real impact
+16:13:49 <caphrim007> atm its happening in a side-band repo in f5networks until they are mature enough to be upstreamed
+16:14:04 <gundalow> ah, OK
+16:14:11 <privateip> @mhite, @caphrim007 can you help cattle herd this?
+16:14:25 <mhite> absolutely
+16:14:29 <caphrim007> yeah
+16:14:29 <privateip> we can work towards moving this in 2.2
+16:14:37 <privateip> lets get it added to the roadmap
+16:14:53 <privateip> #action add F5 migration to core for 2.2
+16:15:35 <privateip> thats all AIs from last week (except testing which is next topic)
+16:15:37 <mhite> This is slightly sidebar, but related. Right now module imports for shared stuff sits in the ansible repo whereas modules are separate repos. will there ever be a way to have shared imports from the same repo?
+16:16:39 <privateip> i think there is a plan to get there at some point ... need to check off with core team
+16:17:01 <mhite> ok, thanks.
+16:17:21 <privateip> is there a motivating reason to need this soon?
+16:18:04 <mhite> No, but it makes refactoring a lot easier to coordinate when you make changes that require modifications to shared imports and the modules themselves.
+16:18:15 <privateip> okay makes sense
+16:18:18 <alikins> iiuc, that is one of the goals of ziploader, but someone more familar ( abadger1999, etc) would need to verify
+16:18:35 * abadger1999 reads up
+16:18:53 <mhite> Not familiar with ziploader myself, any pointers to this?
+16:19:52 <bcoca> there will be in the future, but that still does not solve the 2 commit problem when you have modules on several repos that depend on them
+16:20:16 <bcoca> amazon and module_utils/ec2.py being a prime example
+16:20:16 <abadger1999> mhite, alikins: ziploader gives us the first step to getting there.  Next step wouold be integrating module_utils with PluginLoader so that we can find module_utils in differing paths.
+16:20:36 * jtanner|t420 did not know that was a plan ^
+16:20:41 <jtanner|t420> nice
+16:21:06 <bcoca> jtanner|t420: many public discussions about it, but not in any roadmap yet
+16:21:25 <bcoca> we decided to wait for ziploader, which made this easy
+16:21:39 <jtanner|t420> all hail ziploader
+16:22:03 <bcoca> otherwise explaining 'this is not a real import' would have been our full time job
+16:22:18 <caphrim007> i, for one, welcome out new ziploader overlord
+16:22:35 <privateip> and with that .. on to the next topic
+16:22:39 <privateip> :)
+16:22:41 <abadger1999> probably will end up with PluginLoader integration to enable custom module_utils locations as the next step.  After that, finguring out how to to module_utils in repo out of that.  Note that I do not know if core team will have time to work on the next step as part of 2.2
+16:22:48 <jtanner|t420> mhite, my introduction to ziploader was by looking at the files module sent to the remote by 2.1.x/devel
+16:23:03 <privateip> #topic Testing
+16:23:05 <abadger1999> I'll put it on the wishlist, though, and we'll see how the priorities shake out.
+16:23:19 <mhite> Ah, is this where the transferred module itself contains a blog that it unpacks on the remote?
+16:23:26 <jtanner|t420> yes
+16:23:29 <mhite> s/blog/blob/
+16:23:30 <bcoca> blob
+16:23:31 <mhite> Ok, thanks.
+16:23:41 <privateip> @caphrim007 to your question
+16:23:43 * bcoca would be scared if modules started writing blogs
+16:23:48 <mhite> lol
+16:23:55 <caphrim007> there's a role for that
+16:24:14 <caphrim007> yeah about testing
+16:24:22 <privateip> what are you looking for?
+16:24:32 <privateip> a way to bubble up testing status?
+16:24:35 <caphrim007> i have a lot of internal resources that i can test f5 modules against, but i cant expose them externally
+16:24:47 <caphrim007> so i was wondering what i could do to test them and report back if something fails
+16:25:21 <gundalow> Is it ~.
+16:25:23 <gundalow> ~
+16:25:23 <privateip> is there anything you can publish publicly?
+16:25:30 <privateip> test playbooks?
+16:25:32 <privateip> test cases?
+16:25:33 <mhite> I've got test playbooks for all the F5 modules in -extras here: https://github.com/mhite/mhite-f5-ansible
+16:25:37 <privateip> something more than pass or fail?
+16:25:44 <gundalow> sorry
+16:25:46 <caphrim007> yeah mhite has the ones he mentioned
+16:25:48 <mhite> everytime someone submits a change, i copy the module to library/ and run against my own f5s
+16:25:57 <mhite> to at least see if there is a regression.
+16:26:05 <gundalow> is it worth documenting somewhere what test equipment people have access to?
+16:26:05 <caphrim007> and i have the other ones that i am collecting here https://github.com/F5Networks/f5-ansible
+16:26:06 <mhite> i then branch and create new tests
+16:26:16 <mhite> to try whatever new functionality the PR adds
+16:26:20 <mhite> But this is manual and a PITA
+16:26:22 <mhite> ;)
+16:26:45 <caphrim007> so i have bare metal and VE editions of every bigip release
+16:27:07 <caphrim007> and i can hook our jenkins tools up to pull from remote things and test
+16:27:16 <privateip> so i wonder if we don't publish a "dashboard" in the network-test repo that you could push commits to
+16:27:20 <caphrim007> but have nowhere to report messages back to
+16:27:53 <privateip> we really need a distributed test env like (cant believe im going to say this) zuul
+16:27:58 * privateip ducks under table now
+16:29:14 * bcoca is fan of zuul
+16:29:14 <privateip> #action start proposal for handling test case reporting
+16:29:26 <gundalow> 1) How often do we want to be testing on network hw/virtual. Per commit/once a day/week/ad-hock
+16:29:33 <jtanner|t420> i would argue that you really need mocked endpoints if you want coverage
+16:29:55 <privateip> mocking is only going to get us half way there
+16:30:31 <bcoca> ^ at one point we need 'real network' testing, not only for network modules, but to deal with connection plugin issues
+16:30:41 <rbergeron> zuuuuuul all the things
+16:30:44 <bcoca> network modules have additional 'special hardware endpoint' reqes
+16:30:59 <jtanner|t420> as do cloud modules
+16:31:01 <bcoca> ^ but most companies now release VM images that can be used for that
+16:31:26 <bcoca> jtanner|t420: clouds are a bit easier, if you got the money, our tests now do run if you supply credentials
+16:31:30 <privateip> yeah there are still some features that aren't avail in VMs or respond differently based on whether VM or hw
+16:31:33 <bcoca> network appliances are a bit harder
+16:31:47 <bcoca> ^ what he said
+16:32:05 <privateip> i will get a proposal started and share via ansible-devel ML
+16:32:07 <jtanner|t420> also not sure how effective real hardware is going to be when you only have 1 to test against and you don't want to break it to perform negative testing
+16:32:11 <mordred> bcoca: btw - we've got a new zuul version we'll be wanting to talk to you about this week or next that is in a state to start talking about actually running for you
+16:32:25 <bcoca> WOOT!
+16:32:42 <mordred> probably next week - tons of travel for key folks this week
+16:33:00 <bcoca> he, im on road next week, but plenty of the core team avaialble
+16:33:00 <gundalow> Do we need some QA analysis on a) what we can meaningfully test on virtual v physical. b) what physical test kit exists (within Ansible or in the community c) (b) but virtual
+16:33:19 <mordred> gundalow: a) would be _super_ helpful
+16:33:24 <mordred> because virtual is super easy to get
+16:33:31 <rbergeron> mordred: aren't the opnfv or some other networking-acronym-foundation folks now talking with you all about doing networking things in zuul?
+16:33:34 <mordred> getting physical scales really poorly
+16:33:38 <mordred> rbergeron: yup
+16:33:53 <mordred> but the stuff gundalow is talking about in a is really important info for that discussion
+16:33:54 <rbergeron> privateip: are you in on / aware of those magical things? i assume yes but :)
+16:34:00 <gundalow> mordred: cool
+16:34:07 <mhite> it's the licensing that is a killer for virtual. destroying/restoring VMs may require strange magical licensing incantations each time.
+16:34:17 <privateip> rbergeron: yep
+16:34:25 <rbergeron> privateip: excellentay
+16:34:36 <caphrim007> @mhite this is where i can specifically help with f5 testing
+16:34:36 <gundalow> Between us we may have contacts at various companies to get better licensing
+16:34:45 * privateip channels my inner harry potter to solve this problem
+16:35:00 <mhite> @caphrim007 @gundalow - excellent
+16:35:29 <privateip> ok nothing we can solve in a day here .... i will start the proposal but please contribute thoughts and ideas and lets flush this out
+16:35:31 <gundalow> In what github repo can I document this stuff?
+16:35:49 <bcoca> ansible/proposals ?
+16:35:53 <gundalow> cool
+16:36:00 <gundalow> #chair gundalow
+16:36:07 <gundalow> oh, that will not work
+16:36:44 <gundalow> #action gundalow to do (A) (initially) from a) what we can meaningfully test on virtual v physical. b) what physical test kit exists (within Ansible or in the community c) (b) but virtual
+16:37:16 <gundalow> If people could ping me directly what kit they have access to and know about that would be great
+16:37:34 <caphrim007> @gundalow will do
+16:37:47 <gundalow> cool. I need to ditch for 15 minutes
+16:38:24 <privateip> thanks gundalow
+16:38:33 <privateip> any other testing topics top of mind?
+16:38:59 <privateip> moving on then...
+16:39:03 <mhite> Is it okay if I submit a README.md to the extras/networking/f5 directory telling people about the testing repos @caphrim007 and I have available?
+16:39:32 <privateip> sure
+16:39:36 <mhite> thanks
+16:40:02 <privateip> #topic Module ownership
+16:40:41 <privateip> going to submit some proposals around module ideas for networking
+16:40:46 <privateip> as we discussed last week
+16:41:04 <privateip> looking for owners / maintainers / comments / feedback
+16:41:29 <privateip> we have had a couple of new owners jump in recently (although not here today)
+16:42:08 <privateip> ask is for anything that you see a need / want for , please contribute to proposals so we can try to find maintainers for
+16:42:12 <privateip> or better yet
+16:42:18 <privateip> commit to being the maintainer
+16:42:20 <privateip> :)
+16:42:29 <caphrim007> what was the original model? did the core team maintain the modules in core?
+16:42:31 <kei> is proposals under github?
+16:42:42 <privateip> https://github.com/ansible/proposals
+16:42:58 <privateip> caphrim007 anyone can maintain any module anywhere
+16:43:04 <caphrim007> ahh
+16:43:37 <caphrim007> when they go into core though, what does that imply? vs extras
+16:43:42 <kei> privateip: sorry but which file? ;)
+16:44:55 <privateip> caphrim007: that you will be an active member of the  community and maintaining your module(s)
+16:45:08 <caphrim007> ok
+16:45:41 <privateip> rbergeron: do we have a proposals process documented?
+16:47:25 <privateip> #action follow up on process for submitting module proposals
+16:47:38 <rbergeron> privateip: https://github.com/ansible/proposals/issues/new
+16:47:54 <privateip> YAY action item done
+16:47:59 <privateip> thanks
+16:48:05 <privateip> kei: ^^
+16:48:18 <rbergeron> privateip: also, like, i assume this is not just a standard module you are talking about
+16:49:11 <privateip> in most cases thats a safe assumption
+16:49:14 <rbergeron> i mean if it's "module for vendor thingy" .... new module process. consider proposals for like, more insane things. o
+16:49:54 <rbergeron> if that makes sense. or maybe do a partial proposal and just submit it with "from what you see so far, does this really need to be a proposal?"
+16:49:58 <privateip> hmm good point ... do we have a place to capture just run of mill would be nice to have module xyz thingy?
+16:50:22 <privateip> or is that just an issues submission to ansible/ansible?
+16:50:35 <rbergeron> well, i mean, "nice to have" would probably just be a feature idea filed in an issue
+16:50:42 <rbergeron> probably to extras though
+16:50:49 * kei is completely new here and don't know what we're talking about... ;)
+16:50:49 <privateip> ok that makes sense
+16:51:11 <rbergeron> though once we have a bot we may be just pointing folks elsewhere for "ideas" -- because we want the issue bot to mostly deal with "things that exist"
+16:51:13 <rbergeron> because we can wish for all the things but :)
+16:51:41 <rbergeron> anyway. i mean: if it's a "does this seem like an idea? would others be interested?" you could make an issue in ansible/ansible or wherever and just.. mail the list for feedback
+16:52:09 <rbergeron> but without an actionable way to ... take a wishlist for a non-existing module and decide that someone should do that... the issue will sit forever, unless someone magically finds it and can act on it.
+16:52:36 <privateip> okay to summarize ... if there is a module request please file issue at https://github.com/ansible/ansible-modules-extras and email the ansible ML ... did i paraphrase right?
+16:52:38 <rbergeron> i am not up to date on the things you mentioned above that you talked about last week (i was at openstack summit and still catching up) so... sorry if i am being less helpful than i could be
+16:52:54 <gundalow> back
+16:53:18 <rbergeron> privateip: yeah, for a new module. unless the person is just intending to write the actual module. then, um, just write it and submit a PR :)
+16:53:38 <privateip> ok great thats helpful
+16:53:50 <privateip> kei: does that help?
+16:54:12 <rbergeron> happy to hear more details if you want. kei -- happy to be pinged outside of meeting if you want more guidance or want to fill me in more, always happy to ... route all the things :)
+16:54:21 <rbergeron> just consider me "networking for humans" and robyn.py module
+16:54:23 <rbergeron> or something
+16:54:29 * privateip needs to build a firewall :)
+16:54:37 <kei> rbergeron: cool.  here, #ansible, or somewhere?
+16:54:57 <kei> prefer here, as #ansible is super high traffic, which I don't think manage...
+16:55:10 <rbergeron> kei: ansible or #ansible-devel is fine -- -devel is way less higher traffic
+16:55:16 * kei wishes to be like bcoca... :)
+16:55:30 <rbergeron> and more eyes from the people who can help to make the magic happen
+16:55:44 <kei> rbergeron: cool.  I'll ping on #ansible-devel once i go over last week's log.
+16:56:04 <kei> by the way, i need to touch one PR before wrapping this meeting up
+16:56:04 <rbergeron> that said: i am tied up for the next 30m or so, so -- may have to be patient :)
+16:56:17 <privateip> ok one final note ... im on PTO next week and will be gulping funny named drinks at this time next week
+16:56:22 <rbergeron> or we can set up separate time (no idea what tz you are in and i hate to assume everyone is near me)
+16:56:26 <rbergeron> privateip: TAKE ME WITH YOU
+16:56:27 <rbergeron> lol
+16:56:29 <privateip> lol
+16:56:34 <kei> privateip: nice!
+16:56:40 <rbergeron> not really. but enjoy those funny named drinks
+16:56:47 <kei> privateip: before your PTO
+16:56:50 <kei> here is the PR
+16:56:51 <kei> https://github.com/ansible/ansible/pull/15134
+16:57:09 <kei> template search path quick fix in net_template.py
+16:57:12 <privateip> thanks for the send off gift kei:
+16:57:17 <rbergeron> kei: also, thanks for your continued presence and dedication :) it's super appreciated :)
+16:57:32 <rbergeron> (gundalow too, btw, as long as i'm doling out thanks)
+16:57:33 <kei> rbergeron: privateip: thanks!
+16:57:47 <kei> as bcoca put a comment in the end
+16:57:49 <rbergeron> (whoever i forgot, it's not because i don't care, i also appreciate you too!)
+16:57:52 <gundalow> rbergeron: pleasure as always :)
+16:57:53 <privateip> #action assigns https://github.com/ansible/ansible/pull/15134 to qalthos
+16:58:22 <kei> rbergeron: privateip: same here, all! :)
+16:58:24 * rbergeron hugs all the humans and has to scurry off to a meeting -- kei, will look for a ping from you later on :)
+16:58:37 <privateip> thanks all .... no meeting next week
+16:58:41 <privateip> see you in two weeks!
+16:58:44 <privateip> #endmeeting

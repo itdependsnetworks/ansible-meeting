@@ -1,0 +1,135 @@
+17:02:34 <mattclay> #startmeeting Testing Working Group
+17:02:34 <zodbot> Meeting started Thu Jul 13 17:02:34 2017 UTC.  The chair is mattclay. Information about MeetBot at http://wiki.debian.org/MeetBot.
+17:02:34 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+17:02:34 <zodbot> The meeting name has been set to 'testing_working_group'
+17:02:52 <mattclay> #chair gundalow
+17:02:52 <zodbot> Current chairs: gundalow mattclay
+17:02:59 * mattclay waves
+17:03:01 * Pilou waves
+17:03:06 <mattclay> #chair Pilou
+17:03:06 <zodbot> Current chairs: Pilou gundalow mattclay
+17:03:46 * mattclay skims https://github.com/ansible/community/issues/114 for open items to discuss
+17:04:23 * spredzy waves
+17:04:35 <mattclay> #chair spredzy
+17:04:35 <zodbot> Current chairs: Pilou gundalow mattclay spredzy
+17:04:47 <mattclay> A few updates before we get started:
+17:05:08 <mattclay> We have a new "import" sanity test in ansible-test / CI now.
+17:05:13 <gundalow> #info :)
+17:05:22 <mattclay> gundalow: Thanks
+17:05:28 <gundalow> For all the people that look at the logs *cough*
+17:06:02 <mattclay> #info We have a new "import" sanity test in ansible-test and CI now. It will detect imports of python modules not in the standard library in either modules or module_utils which are not protected by a try/except block.
+17:06:29 <mattclay> #info We will be extending this test to cover plugins as well.
+17:07:00 <mattclay> #info We will be dropping testing of Fedora 24 and 25 with python 2 on Shippable and adding Fedora 25 and 26 with python 3.
+17:07:34 <mattclay> gundalow: Do you have anything?
+17:08:49 <gundalow> nopt
+17:08:54 * gundalow -> afk
+17:09:06 <mattclay> #topic Replacing pep8 with pycodestyle (https://github.com/ansible/ansible/pull/25947)
+17:09:24 <mattclay> This has been on the agenda for a while, but hasn't been discussed yet.
+17:09:52 <mattclay> Pilou: This one's yours. :)
+17:10:03 <Pilou> yep :)
+17:11:07 <mattclay> The changes look good. I'm OK with keeping the test named pep8 even though the tool running the test is pycodestyle, especially since it's ultimately enforcing PEP 8 rules.
+17:11:22 <mattclay> So +1 from me
+17:11:40 <mattclay> Does anyone else have comments?
+17:11:51 <Pilou> we might want to fix E741
+17:12:00 <Pilou> which is "ambiguous variable name"
+17:13:06 <Pilou> there isn't many occurrence of this error in the current code
+17:13:23 <mattclay> That's the biggest change with moving to pycodestyle. Using pep8 has been stable since it's no longer updated. Using pycodestyle is going to give us a moving target as more rules are added.
+17:13:36 <mattclay> Which will periodically break CI until we either fix or ignore the issues.
+17:14:01 <mattclay> If it gets to be a problem we can switch to a whitelist of rules to enforce instead of a blacklist.
+17:14:21 <mattclay> Pilou: Once it's merged you can submit a separate PR to fix all the E741 issues at once.
+17:14:34 <Pilou> ok
+17:14:42 <mattclay> How many are there anyways?
+17:14:43 <Pilou> hum, the version of pycodestyle package should be enforced
+17:15:04 <spredzy> For the migration to be seemless you can also make test fail only is they are more failures on current commit then previous
+17:15:24 <spredzy> This way one doesn't get penalized by a -1 unless is code is doing something wrong
+17:15:26 <mattclay> spredzy: We've got that covered already with our ignore list.
+17:15:45 <spredzy> ack
+17:16:07 <mattclay> Pilou: We typically only require specific version when they're either 1) broken or 2) older versions lack features we require
+17:16:22 <mattclay> Shippable will always run with the latest version.
+17:16:31 <mattclay> Users are free to use whatever they want locally.
+17:16:38 <Pilou> but new version of pycodestyle could break the CI
+17:16:42 <mattclay> Obviously that can lead to differences between local testing and CI.
+17:17:09 <mattclay> Yes, which makes it obvious we have something to address. We can either decide to ignore or fix.
+17:17:39 <mattclay> If it becomes a frequent occurrence we'll change our approach.
+17:17:58 <Pilou> ok
+17:18:22 <mattclay> If we pin the version then new issues that could be detected will go unnoticed.
+17:18:45 <mattclay> Until someone runs locally with a newer version and doesn't use our requirements file.
+17:19:18 <mattclay> Are there any objections on merging this PR then?
+17:20:05 <spredzy> nop
+17:21:07 <mattclay> I'm re-running CI on the PR now.
+17:21:15 <mattclay> #action mattclay to merge PR once CI passes
+17:22:11 <mattclay> #topic Community Wiki (https://github.com/ansible/community/issues/114#issuecomment-310875236)
+17:22:22 <mattclay> I don't believe we've discussed the community wiki here yet.
+17:23:07 <mattclay> Does anyone have anything to add to the testing group page here? https://github.com/ansible/community/tree/master/group-testing
+17:23:42 <mattclay> Or the wiki page here? https://github.com/ansible/community/wiki
+17:24:11 <mattclay> Sorry, testing specific link for the wiki: https://github.com/ansible/community/wiki/Testing
+17:24:17 <gundalow> back
+17:24:41 * mattclay away for a minute
+17:25:51 <gundalow> #info Testing Wiki exists at https://github.com/ansible/community/wiki/Testing
+17:26:12 <gundalow> Thanks to those that have added stuff so far
+17:26:37 * mattclay is back
+17:26:39 <gundalow> Pilou: Do you have have edit permissions on the wiki?
+17:27:08 <gundalow> if not, would you like them?
+17:27:27 <Pilou> gundalow: yep, i have
+17:27:33 <gundalow> Great
+17:28:10 <mattclay> Speaking of things to put on the wiki. Does anyone want to volunteer to fix existing modules/module_utils which fail the new import sanity test?
+17:30:19 <gundalow> mattclay: Where is the test defined, e.g. how can people see the todo list?
+17:30:41 <mattclay> #info Existing files which don't pass the import sanity test: https://github.com/ansible/ansible/blob/devel/test/sanity/import/skip.txt
+17:31:09 <mattclay> They're pretty easy to fix, but there's a lot of them.
+17:31:21 * gundalow wonders if I should add that list to the wiki, feels like anyone that's comfortable with Python could chip away at the list
+17:31:29 * mattclay nods
+17:33:03 <gundalow> and it's: ansible-test sanity --test import
+17:34:36 <mattclay> #topic Open Floor
+17:35:06 <mattclay> One thing I forget in my earlier update. We now have our largest module with 100% code coverage: ping :)
+17:35:07 <mattclay> https://codecov.io/gh/ansible/ansible/src/devel/lib/ansible/modules/system/ping.py
+17:35:41 <gundalow> mattclay: for import/skip are we specifically lookin for module_utils, or any/all to be fixed?
+17:35:47 <mattclay> This is a side-effect of the new import sanity test, as it covers the other half of the `if __name__ == '__main__'` branch not hit during normal module execution.
+17:36:03 <mattclay> gundalow: module_utils and modules both
+17:36:10 <gundalow> ack
+17:36:30 <mattclay> Plugins too, once the test is updated to include them.
+17:36:59 <gundalow> What's the point of `data: crash` in the ping module?
+17:37:37 <mattclay> I believe it's there for testing when you want a module to raise an unhandled exception.
+17:38:34 <gundalow> ah, OK
+17:38:59 <mattclay> Now that's it possible for modules to reach 100% code coverage, I'm hoping we'll start seeing some slightly more complex modules hitting that.
+17:39:16 <gundalow> https://github.com/ansible/community/wiki/Testing%3A-progress-tracker/_edit#fixing-broken-imports added
+17:39:24 <gundalow> :)
+17:39:38 <Pilou> about pycodestyle and E741, there are only 9 occurrences of this error
+17:40:19 <Pilou> #25798 : a test_pull_requests & stale_ci labele PR, reviews are welcome
+17:43:24 <mattclay> Pilou: Looks good. I've restarted CI on that one.
+17:44:47 <mattclay> Does anyone have anything else to discuss?
+17:44:49 <Pilou> about new 'import' test, i locally deleted 'lib/ansible/modules/cloud/amazon/cloudformation.py' from 'test/sanity/import/skip.txt' and 'ansible-test sanity --python 2.7 --tox --test import' fails with
+17:44:51 <Pilou> 'ERROR: lib/ansible/modules/cloud/amazon/cloudformation.py:259:0: ImportError: No module named utils.hashing'
+17:45:08 <Pilou> is that a false positive ?
+17:45:19 <mattclay> Pilou: No, it's importing something from outside module_utils.
+17:45:45 <mattclay> Pilou: That code needs to be copied to module_utils or the module itself.
+17:46:11 <Pilou> ok, thanks for the explanation :)
+17:46:40 <mattclay> It probably works for most people because they run the module on their local host where ansible is installed.
+17:46:49 <mattclay> If you ran the module on a remote host without ansible it would fail.
+17:47:31 <Pilou> when the code is copied to module_utils, is there a licence issue ?
+17:48:08 <mattclay> You'll need to look at the licenses in both places.
+17:48:28 <mattclay> It might be better to copy the code to the module, since there's only one usage.
+17:48:56 <Pilou> ok
+17:49:38 <Pilou> when the code should be moved to module_utils, what is the workflow to follow ? asking all authors of the file is they are ok ?
+17:50:08 <mattclay> abadger1999: ^ I believe you've had to deal with this before?
+17:50:38 * abadger1999 looks
+17:50:48 <abadger1999> Pilou: yeah :-(  that's the way to do it.
+17:51:01 <abadger1999> We can talk about alternatives if there's authors you can't find.
+17:51:21 <abadger1999> but that will involve real legal-knowledgable people
+17:52:09 <abadger1999> Pilou: email (with complete headers) is one way to get consent.  And we have started to use acceptance on a github ticket for that purpose as well.
+17:52:45 <gundalow> Pilou: start with the easy ones :)
+17:53:01 <Pilou> :)
+17:53:26 <gundalow> It's about reducing the list, doesn't matter what order that's done in
+17:53:36 <gundalow> And thanks in advance for your help with it :)
+17:53:50 <mattclay> Pilou: If you copy to the module it should be OK, they're both GPL 3.
+17:54:54 <jtanner> can i interject a testing question?
+17:55:02 <mattclay> jtanner: Sure
+17:55:18 <jtanner> is there a way to tell ansible-test not to tear down the containers at the end of the test?
+17:55:27 <jtanner> specifically for the vcsim container
+17:55:46 <mattclay> jtanner: Not currently.
+17:55:50 <jtanner> crud
+17:55:58 <jtanner> i guess i'll just do it manually
+17:56:02 <jtanner> first world problems
+17:56:02 <gundalow> We have --remote-terminate for AWS, don't seem to have the same for Docker
+17:57:31 <mattclay> OK, anything else? We're almost at the end of our scheduled meeting.
+17:57:40 <gundalow> Nothing else from me
+17:58:53 <mattclay> #endmeeting

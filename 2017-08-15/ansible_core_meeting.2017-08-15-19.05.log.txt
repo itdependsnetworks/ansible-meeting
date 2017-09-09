@@ -1,0 +1,236 @@
+19:05:15 <abadger1999> #startmeeting Ansible Core Meeting
+19:05:15 <zodbot> Meeting started Tue Aug 15 19:05:15 2017 UTC.  The chair is abadger1999. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:05:15 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:05:15 <zodbot> The meeting name has been set to 'ansible_core_meeting'
+19:05:21 <newswangerd> o/
+19:05:35 <abadger1999> #info Agenda: https://github.com/ansible/community/issues/220
+19:06:18 * mikedlr waves surreptitiously
+19:06:23 <abadger1999> #topic Allow implementing stdout/stdin params for command modules: https://github.com/ansible/community/issues/220#issuecomment-320049755
+19:06:54 * nitzmahone glances up from last-minute coding
+19:06:56 <abadger1999> #chair mikedlr newswangerd nitzmahone jimi|ansible bcoca jtanner dag
+19:06:56 <zodbot> Current chairs: abadger1999 bcoca dag jimi|ansible jtanner mikedlr newswangerd nitzmahone
+19:07:09 <jtanner> hello
+19:07:18 <abadger1999> So this one just needs a decision really, maybe some discussion.
+19:07:40 <abadger1999> There's a variety of reasons given i nthe linked PR as to why people want this.
+19:07:57 <abadger1999> Howver, bcoca says that the only one that is really relevant is quoting
+19:08:03 <abadger1999> The others are false arguments.
+19:08:09 <nitzmahone> I don't have a problem with it- have had a couple scenarios where it would've been useful for me too
+19:08:33 <jtanner> which pr?
+19:08:44 <nitzmahone> Is there a  PR, or just the RFE issue?
+19:08:49 <nitzmahone> (https://github.com/ansible/ansible/issues/14380)
+19:08:59 <abadger1999> jtanner: I believe this is the PR which has most of hte arguments on it: https://github.com/ansible/ansible/issues/14380
+19:09:58 <jtanner> someone is working on a PR https://github.com/rouge8/ansible/commit/19df49575664b15dcf85f5a677168ce505350905
+19:10:40 <jtanner> #info https://github.com/ansible/ansible/pull/27335
+19:11:44 <jtanner> i can't come up with a good reason not to accept
+19:12:25 <mikedlr> I understand that the solution would be 100% 8bit clean / unicode ignoring / binary data comes in and goes out to the command as it came in ?
+19:12:28 <nitzmahone> So long as nobody starts asking us to implement `expect` behavior on it
+19:12:30 <jimi|ansible> so i thought we already had stdout in the result, and the _lines value too which is the value split on \n
+19:13:02 <nitzmahone> This is for piping data *in*
+19:13:20 <abadger1999> bcoca: Looks like you never wrote down i nthe ticket why the security case was invalid... here's the argument in favour of that: https://github.com/ansible/ansible/issues/14380#issuecomment-219056707
+19:14:05 <abadger1999> jimi|ansible: yeah, this is to allow pseudo piping.
+19:14:25 <sdoran> Seems like a collection of edge cases, but there are several strong argument for including it.
+19:14:27 <jimi|ansible> oohhhhh, i read the strikethrough bit >_<
+19:14:41 <sdoran> Seems like it would break the "purity" of command not being used for piping data.
+19:14:50 <sdoran> Which may just be a docs change.
+19:15:15 <abadger1999> sdoran: sorta... but that's really so that the syntax specified in the playbook doesn't have to be sanitized for shell.
+19:15:25 <nitzmahone> Yeah, probably a simple wording change there, but doesn't change the underlying security benefits of command IMO
+19:15:35 <sdoran> Will this result in a bunch of issues with "OMG Ansible displayed the stdout in logs"? We won't be able to intelligently mask what they pass in if it's sensitive.
+19:15:37 <abadger1999> sdoran: ie   "- command: echo |;>  "  will just work
+19:15:55 <jimi|ansible> ok so yeah, i think the idea overall is fine
+19:16:01 <abadger1999> whereas "- shell: echo |;> "  will need the shell reognized characters quoted
+19:16:15 <abadger1999> okay cool.  I'm also +1 to the idea.
+19:16:36 <abadger1999> I think bcoca was like -0.5... Not 100% opposed but didn't see the point.
+19:17:19 <alikins> I lean towards allowing stdin just for practicality. To me main downside is it is kind of unstructured and platform specific, but that goes with the territory for command/shell
+19:17:21 <abadger1999> I'll let these people know that we've decided to accept the change but we have to figure out who is actually writing htat PR.  (I'll coordinate.)
+19:17:28 <nitzmahone> I think this provides a shell-agnostic way to do it vs needing to mess with levels of escaping and stuff to do via existing shell, so I'm +1
+19:17:46 * sdoran agrees
+19:17:48 <sdoran> +1
+19:17:49 <jimi|ansible> yep
+19:18:11 <sdoran> Less crazy shell escaping is always a way to make the world a better place.
+19:18:23 <abadger1999> #info jimi|ansible, nitzmahone, alikins, abadger1999, jtanner, sdoran: all basically for it, bcoca mildly opposed.  We've agreed to take a PR
+19:18:23 <jimi|ansible> for that one commit, to bikeshed the name i don't want it called stdin
+19:18:28 <alikins> nitzmahone: good point
+19:18:43 <abadger1999> #action abadger1999 to search for the outtanding PRs on this feature and coordinate until something is merged.
+19:18:49 <jimi|ansible> i liked "data" in the original proposal
+19:18:56 <jimi|ansible> it matches what we call it internally too
+19:19:14 <nitzmahone> `data` WFM
+19:19:26 <abadger1999> #info jimi|ansible requests that the parameter be named data rather than stdin.
+19:21:06 * sdoran runs away from naming related discussion
+19:21:10 <abadger1999> #topic Backwards incompatible policy for status=preview modules: https://github.com/ansible/community/issues/220#issuecomment-321596159
+19:22:01 <abadger1999> So we created status=preview so that modules labeled preview could make backwards incompatible changes to their parameters with less hassle than those labelled stableinterface.
+19:22:19 <abadger1999> This issue is basically "what do we define less hassle as?"
+19:23:15 <abadger1999> I threw a few ideas onto the ticket in the alternatives section.
+19:23:18 <jimi|ansible> less hassle == use at your own risk because params/functionality
+19:23:27 <jimi|ansible> * might change
+19:23:30 <nitzmahone> For community modules (really everything) I'd vote for "leave up to maintainers"- I don't think we want a  lot of bureaucracy around that
+19:23:40 <nitzmahone> +1 to what jimi said
+19:24:27 <abadger1999> #info Proposal For community modules marked status=preview, leave it up to the maintainer whether to change params, whether to have deprecation period, etc.
+19:24:44 <abadger1999> I don't care so +1 from me
+19:24:52 <mikedlr> declaration of interest; I think several aws modules I am involved in may end up changing interface and they are currently declared as preview or will be when committed.
+19:25:08 <alikins> backwards compat to what? ever? same minor release (2.4.*) ?
+19:25:14 <abadger1999> mikedlr: <nod>  Yeah, they would fall under what we decide here too.
+19:25:21 <jimi|ansible> alikins: generally ever
+19:25:25 <alikins> but generally, I'd say
+19:25:35 <mikedlr> I think that the crucial simplification sis that if someone comments in a PR "but that's a breaking change" I can answer "that's okay - it's a preview module"
+19:25:51 <abadger1999> alikins: Good point... I would still like there not to be backwards compatibilities in a minor release.
+19:25:57 <nitzmahone> Within same minor release *should* be a non-issue 99+% of the time
+19:26:14 <abadger1999> (so 2.4.x you're stuck with the params you have but those could all be changed for 2.5.x)
+19:26:27 <nitzmahone> Unless there's like a major security issue or something else that makes it completely useless without UI changes (*cough*docker*cough*)
+19:27:20 <abadger1999> #info Proposal For community modules marked status=preview, leave it up to the maintainer whether to change params, whether to have deprecation period, etc. But params must stay compatible within a minor release series (example: all 2.4.x releases).  Incompatible changes must be documented
+19:27:45 <alikins> 'preview' == this can change. Might as well say 'at any time for any reason'.  The larger fix is sorting out playbook <-> ansible version and module version compat so that becomes less of a policy question
+19:28:25 <abadger1999> idon't think I want us in that second area.
+19:28:57 <abadger1999> But regardless, we don't have that now so we need to make a policy for what we have now.
+19:29:38 <abadger1999> Anyone else have something they think we should add or subtract from a policy?
+19:30:21 <mikedlr> I'm not sure that I'm okay with the "same in minor release" in all cases; perhaps "same in minor release once it's been there for at least two"??
+19:31:08 <bcoca> minor releases dont accept feature changes already
+19:31:09 <abadger1999> mikedlr: I don't think we should be changing params incompatibly in what should be a bugfix release.
+19:31:10 <nitzmahone> I doubt we're going to budge much on that one
+19:31:14 <bcoca> abadger1999: -0 on stdin
+19:31:15 <misc> I think it would also help if the status of module was more visible. Right now, you have to explicitely verify it
+19:31:31 <mikedlr> we have a big interface problem in matching AWS CamelCase to Ansible snake_caseand there might be what is considered a "bug" there.
+19:31:40 <bcoca> jimi|ansible: keep stdin name as most cli utilities will refer to it as stdin option, data will confuse when looking to interoperate
+19:31:45 <misc> for example, maybe something that do warn on preview module usage ?
+19:32:05 <bcoca> abadger1999: security disclosure stil lhappens when data on stdin, that is why quoting is only real thing they 'bypass' there
+19:32:06 <nitzmahone> oy, that'd be warnings on like 2/3 of the modules out there now
+19:32:11 <misc> (or more visible in doc, like some color code instead of a blurb at the end of the page :/ )
+19:32:26 <misc> (end of the doc page)
+19:32:39 <abadger1999> misc: ah yeah... that was something I was supposed to work on for 2.4 but it slipped off of my radar... the main problem I have is what should the rules look like to configure that.
+19:32:42 <bcoca> more like 80% of modules
+19:32:53 <abadger1999> misc: I'll talk to you in #ansible-devel after the meeting about it if you have time.
+19:33:16 <misc> abadger1999: sure
+19:33:23 <misc> (time to talk, yesà
+19:33:40 <misc> nitzmahone, bcoca: but out of those, how many are used by lots of people ?
+19:33:40 <nitzmahone> Def +1 to more prominent notification of preview status in docs
+19:33:51 <bcoca> misc: most of em
+19:34:03 <bcoca> misc: starting by aws as mentioned above, most cloud modules are in preview
+19:34:29 <misc> fair enough, I do not use cloud much, except when I want to block my old arch enemy, the sun
+19:34:48 <bcoca> misc: or bsd specific ones ..., aslo in preview
+19:34:51 <abadger1999> nitzmahone: I'm touching docs for something else... make sure to mention that to me after the meeting and I'll make that change as well (move to the top of the doc and all caps or an explanation or something)
+19:35:40 <misc> so then, what percentage of preview would make it acceptable to have some warning option ?
+19:35:45 * nitzmahone will try to remember between this meeting an WWG
+19:36:04 <bcoca> misc: i prefer to just remove them from repo and people install from 3rd party location , then it is clear
+19:36:30 <nitzmahone> +10000
+19:36:42 <abadger1999> nitzmahone: between half of your attention and half of mine maybe we'll remember ;-)
+19:37:31 <misc> bcoca: I would see that as a bit painful
+19:37:55 <abadger1999> Okay, discussion is moving off center a bit... let's vote on the proposal as given and if there's not overwhelming support we can vote on it with the minor releases clause modified.
+19:38:01 <bcoca> misc: more than having us as bottleneck for every plugin?
+19:38:10 <abadger1999> Here's the proposal again:
+19:38:11 <abadger1999> ‎ #info Proposal For community modules marked status=preview, leave it up to the maintainer whether to change params, whether to have deprecation period, etc. But params must stay compatible within a minor release series (example: all 2.4.x releases).  Incompatible changes must be documented
+19:38:22 <abadger1999> +1
+19:38:37 <bcoca> ^ while the ansible project is held accountable, i say that at least 'clear documentation' is required in module
+19:38:50 <bcoca> cause even if community, we are still affected by it
+19:38:55 <bcoca> as is the project
+19:38:55 <nitzmahone> +1
+19:38:56 <abadger1999> bcoca: yep, that's in the proposal.
+19:39:06 <abadger1999> " Incompatible changes must be documented"
+19:39:34 <nitzmahone> I don't think it hurts to be intentionally vague about what form that might take, though- let's trust our maintainers to Do the Right THing
+19:39:54 * bcoca would point nitzmahone and plenty of bad examples ...
+19:40:11 <abadger1999> jtanner, jimi|ansible, sdoran, etc.. votes on this incompatible changes proposal?
+19:40:19 <bcoca> but afaik ... this is already "current state" .. proposal doesnt change that
+19:40:28 <jimi|ansible> +1
+19:40:39 <abadger1999> alikins: ^
+19:40:49 <mikedlr> +0.7
+19:40:51 <bcoca> ^ or is this just to write 'current state' into docs somewhere?
+19:41:04 <bcoca> +1 to that, if not alreayd documented
+19:41:36 <sdoran> +1 to documenting clearly
+19:41:46 <alikins> +1 up to maintainer
+19:41:58 <sdoran> So we don't get blamed for someone breaking the glittercloud module that we've never heard of
+19:42:32 <sdoran> (documenting and up to maintainer is what I meant)
+19:42:45 <bcoca> i was already operating as this was the case
+19:42:47 <abadger1999> Cool.  I see strong support and no objections so I'll record thi proposal as passed.
+19:43:02 <bcoca> abadger1999: i believe we already documented this .. i just cannot find it right now
+19:43:05 <abadger1999> #action abadger1999 to open a docs PR to get this documented.
+19:43:11 <abadger1999> #undo
+19:43:11 <zodbot> Removing item from minutes: ACTION by abadger1999 at 19:43:05 : abadger1999 to open a docs PR to get this documented.
+19:43:21 <abadger1999> #action abadger1999 to open a docs PR to get this documented in the module guidelines.
+19:44:08 <abadger1999> #topic Add more modules for command/shell  warning: https://github.com/ansible/ansible/pull/25089
+19:44:12 <abadger1999> dag: are you here?
+19:44:45 <abadger1999> This one is to add more cli commands that when used in command: and shell: issue a warning pointing at the module.
+19:44:50 <bcoca> http://docs.ansible.com/ansible/latest/dev_guide/developing_modules_documenting.html#fields <= is part, we just dont have it all in 1, we have 'no features in minor releases also'
+19:45:10 <bcoca> -1 those are annoy people to no end
+19:45:12 <abadger1999> I dislike that warning in general so I'm -1 to this.
+19:45:29 <bcoca> +1 if the warning was dynamically based on existing modules
+19:45:48 <bcoca> but additional hardcoding of lists ... seems wrong apporach, im of a mind of removing teh 'feature'
+19:46:24 <abadger1999> Anyone want to defend this PR?
+19:46:37 <bcoca> imho this is taking handholding too far, at this point we are using the 3 conches for them
+19:46:44 <kustodian> it would probably be better to remove some warnings, for example using `command: sudo ...` is really annoyting that Ansible constantly tells me to use `become: yes` and I know in that case is not possible
+19:47:03 <bcoca> ^ case in point
+19:47:04 <abadger1999> jimi|ansible: ^ I know you have prevented me from removing this feature in the past so maybe you want to weigh in as to whether to add more to it?  (to provide the counter to bcoca and I)
+19:47:36 <jimi|ansible> i did? i don't recall that but i don't hate it, if people don't find it useful though there's no point in expanding it
+19:47:44 <bcoca> or at least off by default and have config flag 'nany=No/Yes'
+19:48:34 <kustodian> it's a very useful feature for new people
+19:48:53 <kustodian> but it should warn you only if it's 100% sure it is correct to use the module
+19:49:09 <bcoca> kustodian: really cannot do that
+19:49:20 <kustodian> bcoca, why not?
+19:49:22 <abadger1999> #info Not in favor of expanding the list of commands that get a warning to use a module instead.
+19:49:42 <bcoca> modules would have to have mapping to every possible combination/options of cli and either declare supported or unsupported
+19:49:51 <bcoca> the ammount of work needed is ridiculous
+19:50:05 <nitzmahone> agreed, starts to feel very "Clippy" at some point... "It looks like you're trying to deploy an ELK stack..."
+19:50:11 <kustodian> bcoca, not asking to cover all combinations
+19:50:15 <kustodian> just the most used ones
+19:50:23 <kustodian> e.g. yum install ...
+19:50:27 <kustodian> use yum module
+19:50:27 <abadger1999> #info may talk about a config to toggle it or dynamically generating the list of (commands => modules) later.
+19:50:30 <bcoca> kustodian: which in the case of sudo alone is a few hundred permutations
+19:50:48 <kustodian> sudo just remove, has too many combinations
+19:50:53 <kustodian> but e.g. service doesn't
+19:51:09 <kustodian> it warns on service nginx configtest, even thought service doesn't support that param
+19:51:19 <bcoca> kustodian: it does
+19:51:23 <bcoca> arguments
+19:51:46 <kustodian> that's whay I'm saying, lower the number of warnings to those which are really good warnings/suggestions
+19:52:22 <kustodian> aha, you mean with arguments param it supports it
+19:52:30 <bcoca> kustodian: happy to take PR that does that for everyone, just not sure you understand what that entails given our user base
+19:53:17 <kustodian> bcoca, I did make a PR which fixes some of them, the list wasn't very big as far as I remember it
+19:53:19 <abadger1999> #topic Moving url documentation to doc fragments, removing some params from the url argspec: https://github.com/ansible/ansible/pull/27738
+19:53:22 <misc> wouldn't it make more sense to have this in ansible-lint ?
+19:53:36 <bcoca> misc: yes, and out of the main code
+19:54:19 <kustodian> not a bad idea :)
+19:54:31 <bcoca> ^ it was 'original
+19:54:42 <nitzmahone> +1000 to that
+19:54:48 <bcoca> placement for it, but back then our main dev wanted 'all linting' to be inline
+19:54:50 <nitzmahone> "cute" feature, doesn't scale
+19:55:07 <abadger1999> Cool.
+19:55:08 <bcoca> and 'cute' is very subjective in this case
+19:55:16 <abadger1999> Okay, so this url PR is the next one.
+19:55:25 <abadger1999> i don't think we can take it as is
+19:55:41 <abadger1999> as it removes things from the common url_argument_spec()
+19:55:49 <abadger1999> so it's backwards incompatible module_utils code.
+19:56:11 <bcoca> -1 ... if he wants that, needs to create new argspec to migrate to
+19:56:26 <abadger1999> dag's arguments for why it's a better argspec may make senes but we have to maintain backwards compat.
+19:57:05 <bcoca> aka, new argspec that is the 'reduced version' ... seems just -url and -force
+19:57:13 <abadger1999> I'm going to be asking for input on revamping basic.py at contributor summit.
+19:57:19 <bcoca> can even be used by 'current argspec' to build the backwards compat version
+19:57:22 <abadger1999> Perhaps new urls api is also a good idea?
+19:57:56 <bcoca> not sure, current one deals with sooooo much crap ... new one will probably miss a few hundred things that will then require bugfixing
+19:58:15 <abadger1999> yeah, thats' partially true.
+19:58:25 <abadger1999> I'm not at all eager to change the backend.
+19:58:49 <abadger1999> But I would like to change the frontend (how to call it and what return values you get)
+19:59:01 <bcoca> i would do here same as we've discussed for basic ... migrate/partition code, but still use it from old api to keep backwards compat
+19:59:08 <abadger1999> But it's lower on my priorities than basic.py
+19:59:39 <bcoca> basic.py is probably also easier to tackle, larger but less complicated
+19:59:54 <abadger1999> agreed
+20:00:08 <abadger1999> and more opportunity to do basic.py a piece at a time.
+20:00:14 <bcoca> so -1 to this in current form, +1 if adapted to what was discussed above
+20:00:29 <abadger1999> Same from me
+20:00:34 <abadger1999> anyone else?
+20:00:41 <bcoca> +5 if we make jimi|ansible do it ...
+20:00:53 <jimi|ansible> ;_;
+20:00:59 <abadger1999> bcoca: or sivel... he made the last few major changes ;-)
+20:01:14 <alikins> no opinion
+20:01:24 <bcoca> nah, jimi|ansible needs to get our of core engine a bit ... make him clean up module_utils
+20:01:31 <bcoca> ;-p
+20:02:20 <abadger1999> #info change can't be made as written due to compatibility.  Propose to dag that we discuss and implement a new urls apis or at the least a new, parallel url_arg_spec.
+20:03:03 <bcoca> and we should keep dupe code to min by reusing new from old
+20:03:17 <abadger1999> #topic Open floor
+20:03:32 <abadger1999> Announcement from gundalow
+20:03:36 <abadger1999> Ansible Contributor Summit 5 (Part of AnsibleFest 2017 San Francisco)
+20:03:37 <abadger1999> When: 2017-09-06:
+20:03:39 <abadger1999> Notes: https://public.etherpad-mozilla.org/p/ansible-summit-september-2017
+20:03:40 <abadger1999> Event will be in person + online (Video + IRC)
+20:03:42 <abadger1999> Agenda is open for topics for the next Contributors Summit
+20:03:43 <abadger1999> Please add (and vote +1) for any topics.
+20:04:05 <abadger1999> This will be a two day event, one day before ansiblefest and one day after it (wed, and friday)
+20:04:30 <abadger1999> Add and vote on the agenda and prepare to attend in person or via video if interested.
+20:04:33 <abadger1999> Anyone else?
+20:04:41 <abadger1999> If not, I'll close in 60 seconds
+20:06:03 <abadger1999> #endmeeting

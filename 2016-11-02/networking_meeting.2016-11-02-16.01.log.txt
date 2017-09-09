@@ -1,0 +1,58 @@
+16:01:12 <gundalow> #startmeeting Networking Meeting
+16:01:12 <zodbot> Meeting started Wed Nov  2 16:01:12 2016 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:01:12 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:01:12 <zodbot> The meeting name has been set to 'networking_meeting'
+16:01:45 <gundalow> #info Agenda https://github.com/ansible/community/issues/110
+16:01:55 <gundalow> #chair Qalthos
+16:01:55 <zodbot> Current chairs: Qalthos gundalow
+16:02:15 <gundalow> #info 2.2 is out!
+16:03:04 <gundalow> Ansible 2.2 Networking blog post https://www.ansible.com/blog/ansible-network-updates
+16:03:15 <gundalow> #topic Open Floor
+16:05:14 <samdoran> Have we done much testing with the VyOS modules on Ubiquti's fork, EdgeOS?
+16:05:47 <samdoran> I've had minimal luck getting them to work. Just didn't know if that was something we were looking at.
+16:06:32 * gundalow hasn't used them yet
+16:07:15 <Qalthos> samdoran: I've been meaning to play around with that, but haven't yet
+16:07:44 <samdoran> I'll continue to them then and open issues/PRs if appropriate.
+16:07:46 <gundalow> Qalthos: Do we have any test machines?
+16:08:18 <samdoran> I'm just wondering if, since EdgeOS is technically a fork of VyOS and not VyOS proper, if it would warrant separate modules.
+16:08:19 <Qalthos> gundalow: no, but my gateway here is EdgeOS...
+16:08:50 <samdoran> My gut tells me no since they're so similar in regards to the command line interface.
+16:12:00 <samdoran> I think something is just slightly different with the output EdgeOS returns that's causing the vyos_config module to timeout.
+16:12:44 <gundalow> samdoran: Got a gist of ansible-playbook -vvv output showing where it's failing?
+16:14:15 <samdoran> One moment
+16:16:51 <samdoran> https://gist.github.com/samdoran/ef260857ea6caf7c285d9af724bcadb4
+16:17:10 <samdoran> vyos_facts works
+16:27:00 <gundalow> samdoran: general feedback is that pretty faithful to VyOS/Vyatta
+16:28:00 <Qalthos> I think this has to do with the paging the device does
+16:28:00 <samdoran> Very similar in the interface category, meaning the command line behaves the same on both. The major differences are in the commands you can run, but now how you run them/save them, etc.
+16:28:12 <samdoran> Qalthos: I agree.
+16:28:21 <gundalow> Qalthos: oh, did we see that else where?
+16:28:24 <Qalthos> vyos tries to run 'set terminal length 0', which Edge does not do
+16:28:44 <gundalow> Have we implemented timeout param for any of the cli modules?
+16:35:33 <bcoca> gundalow: we have several timeouts built into ansible, you need to be more specific
+16:35:54 <gundalow> bcoca: For the networing modules that go over CLI
+16:36:02 <gundalow> was more a question for Qalthos
+16:36:20 <Qalthos> samdoran: does 'show configuration commands | no-more' work for you?
+16:36:32 <gundalow> If it was over HTTP, we should just do something like https://github.com/ansible/ansible/commit/b7e6ace4eeaf931cd504b3d3e57360b3c2e0bd0a
+16:37:04 <samdoran> Qalthos: Yes, that works
+16:39:59 <Qalthos> samdoran: does that solve your problem, then? it looks like /proper/ support for EdgeOS will need new code, the two just don't act enough alike
+16:40:09 <Qalthos> and I have no expectation for them to get more similar in the future rather than less
+16:41:11 <samdoran> So separate modules it is.
+16:41:32 <Qalthos> gundalow: SSH timeout on CLI should be configurable across all modules, if that's what you're asking
+16:41:56 <gundalow> Qalthos: OK
+16:43:40 <samdoran> I was hoping it would be a minor change to account for EdgeOS differences. I guess nothing is ever that simple.
+16:45:20 <Qalthos> samdoran: Yeah. Things will probably work okay if you're careful, but I wouldn't /expect/ anything to work
+16:45:53 <samdoran> I should be able to take the existing VyOS modules and modify them to work with EdgeOS. That sound ok?
+16:46:23 <samdoran> Or is there a more efficient/better way to create new modules that have a good bit of overlap with existing ones?
+16:47:09 <Qalthos> samdoran: Please do! If you get something working well, send it back here and we'll talk about it and probably take it
+16:48:10 <Qalthos> samdoran: a lot of the modules are copy-pastes of one another, and I spent most of 2.1 fixing that
+16:48:18 <gundalow> samdoran: To start with I'd say modify the existing modules, otherwise there will be a lot of duplicated code
+16:50:13 <samdoran> I'll see what it takes to get them working, then assess the amount of differences.
+16:51:29 <Qalthos> There likely won't be a lot, as I say, the network modules we support are mostly the same, except where they're different
+16:51:53 <gundalow> lol
+16:51:57 <gundalow> well put Qalthos
+16:52:50 <Qalthos> Somewhat useless, yes, but look through the network modules and you'll see a lot of repeated code, with very small differences
+16:55:40 <Qalthos> I've spent almost my entire time at Ansible making sure those duplicated sections are as small as possible, but some of it is still going to be there
+17:00:40 <gundalow> cool
+17:02:21 <gundalow> samdoran: Thanks for the questions :)
+17:02:24 <gundalow> #endmeeting

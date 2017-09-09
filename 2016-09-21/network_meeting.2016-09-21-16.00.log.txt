@@ -1,0 +1,90 @@
+16:00:09 <gundalow> #startmeeting Network Meeting
+16:00:09 <zodbot> Meeting started Wed Sep 21 16:00:09 2016 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:00:09 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:00:09 <zodbot> The meeting name has been set to 'network_meeting'
+16:00:21 * gundalow waves
+16:00:25 <gundalow> Who is around today?
+16:00:44 <gundalow> agenda as always is https://github.com/ansible/community/issues/110
+16:00:47 * Qalthos 🌊
+16:00:57 <gundalow> hi caphrim007 and Qalthos
+16:01:01 <caphrim007> heyo
+16:01:01 <gundalow> #chair Qalthos
+16:01:01 <zodbot> Current chairs: Qalthos gundalow
+16:02:17 <gundalow> Does anyone have anything to discuss today?
+16:02:18 <mhite> Ayo
+16:02:42 <caphrim007> gundalow: there was an f5 pr that came through recently
+16:02:47 <caphrim007> but it was a feature req
+16:03:06 <caphrim007> is 2.2 branched yet so that we can merge that?
+16:03:11 <gundalow> not branched
+16:03:16 <gundalow> not branched yet
+16:03:26 <gundalow> Is the change to a module, or module_utils?
+16:03:31 <caphrim007> module
+16:04:17 <gundalow> Since it's isolated I'm happy to entertain the thought of it going into 2.2.
+16:05:37 <gundalow> caphrim007: Have you added tests for the feature and are happy with the PR?
+16:05:50 <caphrim007> not yet
+16:06:00 <caphrim007> i just saw the email this morning
+16:07:14 <gundalow> ACK
+16:07:24 <caphrim007> so i'm impartial on whether it goes in to 2.2
+16:07:47 <gundalow> We generally have 3-4 months between releases
+16:08:01 <caphrim007> mhite: thoughts?
+16:08:31 <mhite> Change looks pretty straightforward at a glance, so I see no issue
+16:08:50 <caphrim007> then i'm +1
+16:09:07 <gundalow> got a link, I can't see it in https://ansible.sivel.net/pr/byfile.html
+16:09:26 <caphrim007> https://github.com/ansible/ansible-modules-extras/pull/2988#issuecomment-248571667
+16:09:29 <gundalow> oh is it https://github.com/ansible/ansible-modules-extras/pull/2988
+16:09:36 <caphrim007> aye
+16:10:24 <gundalow> Well if you both give it shipits then I'm happy to merge
+16:10:35 <caphrim007> k
+16:10:44 <caphrim007> i'll add tests in the meantime
+16:12:24 <gundalow> a) merge then add tests
+16:12:29 <gundalow> b) add tests then merge
+16:13:25 <caphrim007> if something is broken then i'll consider it a bug and fix it in between the RC's
+16:13:30 <caphrim007> but i dont think it will break
+16:13:32 <gundalow> sounds good
+16:13:33 * gundalow merges
+16:14:39 <gundalow> merged
+16:14:44 <caphrim007> thx
+16:14:49 <gundalow> no problem
+16:14:54 <gundalow> Anyone got anything else?
+16:15:20 <phil-dileo> I have something
+16:15:26 <gundalow> phil-dileo: sure :)
+16:15:50 <phil-dileo> I’ve been working with some enterprise customers that need some more flexibility around —check mode.
+16:16:30 <gundalow> #topic --check
+16:17:09 <phil-dileo> Basically, they can’t run in —check mode because network config is based on external API calls that don’t get executed in check mode.  So, they’d like to be able to run in standard mode and execute the *_config or *_template module to see what commands would be run against the switch without actually sending them
+16:19:13 <gundalow> caphrim007: Do your modules run correctly in --check mode?
+16:19:41 <gundalow> I haven't look into that part of the code, or some much runs in --check mode, though I believe most modules are idempotent
+16:19:43 <caphrim007> they should, but i cannot verify as i have not added tests for that
+16:20:18 <gundalow> phil-dileo: the _template modules may not be idempotent. Use the _config modules instead
+16:20:35 <gundalow> phil-dileo: Do you know which modules your customers are having issues with
+16:21:19 <phil-dileo> I understand *_config is the module of choice going forward, but the concept applies to both _template and _config.
+16:22:13 <gundalow> I *believe* if you use _config and the version of the software running on the Network Device supports diff then you *should* be able to run correctly in --check mode
+16:22:27 <gundalow> privateip would know more, however he's not here today
+16:22:42 <phil-dileo> It’s not a bug, we might need to add an enhancement; a new argument that let’s the module gather the current running config, generate the new config from the jinja template and then log which commands would be run
+16:23:08 <phil-dileo> Ah, I didn’t realize he isn’t here.  I did run this past him.  Wanted to see if anyone else saw this as valuable
+16:23:32 <gundalow> He normally is here, just not today
+16:24:45 <phil-dileo> No worries, I’ll follow up with him
+16:25:16 <gundalow> I think one way foward would be to raise an issue at https://github.com/ansible/ansible/issues and then add it to https://github.com/ansible/community/issues/110 so we can discuss it next week
+16:25:28 <phil-dileo> Will do
+16:25:31 <gundalow> Thanks :)
+16:25:31 <phil-dileo> Thanks
+16:25:37 <gundalow> #topic Open Floor
+16:26:18 <gundalow> work continues on testing networking for 2.2, We are feature complete as shown on https://github.com/ansible/ansible/blob/devel/docsite/rst/roadmap/ROADMAP_2_2.rst (search for "networking")
+16:26:25 <gundalow> lots of testing an bug fixing remains
+16:27:05 <phil-dileo> Did you need a hand still on the test cases for banner login and banner motd?
+16:28:00 <gundalow> phil-dileo: oh that would be great if you have some spare time. It's on my list, though after adding in the tests for all the new modules/functionality added in 2.2
+16:28:34 <phil-dileo> K, I’ll take a look. I still haven’t played much with the testing infra in that repo.
+16:30:06 <gundalow> All you need to do is drop a testcase in roles/test_eos_config/tests/cli/ then run with ansible-playbook all.yaml -e "limit_to=eos_config"
+16:30:29 <gundalow> (just using eos as an example)
+16:30:57 <gundalow> oh, and put something like
+16:31:03 <gundalow> [eos]
+16:31:14 <gundalow> eos01
+16:31:24 <gundalow> ^^^ in your inventory file
+16:31:52 <gundalow> feel free to message me directly on IRC, or add comments onto the existing issue you created if you need anything
+16:32:18 <gundalow> FYI I'm in the UK, so you may not get a response straight away :)
+16:33:18 <phil-dileo> Great! thanks!
+16:33:21 <gundalow> Anyone got anything else?
+16:33:52 <gundalow> phil-dileo: You are most welcome, thanks for the offer of help
+16:36:04 <gundalow> Cool
+16:36:11 <gundalow> thanks for your time everybody
+16:36:33 <gundalow> As always add your thoughts and ideas to https://github.com/ansible/community/issues/110
+16:36:39 <gundalow> #endmeeting

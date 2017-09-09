@@ -1,0 +1,162 @@
+15:01:03 <thaumos> #startmeeting ansible meeting
+15:01:03 <zodbot> Meeting started Thu Jul 20 15:01:03 2017 UTC.  The chair is thaumos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:01:03 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:01:03 <zodbot> The meeting name has been set to 'ansible_meeting'
+15:01:34 * samdoran waves
+15:01:40 * mkrizek lurks
+15:02:17 <thaumos> #chair samdoran mkrizek
+15:02:17 <zodbot> Current chairs: mkrizek samdoran thaumos
+15:03:04 <chillysurfer> hey, all!
+15:03:19 <samdoran> Hello
+15:03:43 <thaumos> #chair chillysurfer
+15:03:43 <zodbot> Current chairs: chillysurfer mkrizek samdoran thaumos
+15:03:48 <thaumos> hey @chillysurfer
+15:04:37 * Pilou waves
+15:05:04 <thaumos> #chair Pilou
+15:05:04 <zodbot> Current chairs: Pilou chillysurfer mkrizek samdoran thaumos
+15:05:33 <thaumos> @pilou did you still want to discuss your item, I see it was merged by bcoca
+15:05:49 <Pilou> oh, great :)
+15:06:02 <thaumos> heh
+15:06:12 <thaumos> so no, you don't 😉
+15:06:13 <thaumos> ?
+15:06:38 <bcoca> dwim stuff?
+15:06:41 <thaumos> yeah
+15:06:43 <thaumos> #chair bcoca
+15:06:43 <zodbot> Current chairs: Pilou bcoca chillysurfer mkrizek samdoran thaumos
+15:06:47 <bcoca> ^ rearranging and commenting, order was wrong
+15:06:50 <Pilou> i don't :) we could discuss about #26684 instead ;)
+15:07:11 * newswangerd sneaks in
+15:07:17 <thaumos> wasn't on the issue list before I started 😛 j/k
+15:07:28 <thaumos> #chair newswangerd
+15:07:28 <zodbot> Current chairs: Pilou bcoca chillysurfer mkrizek newswangerd samdoran thaumos
+15:08:05 <thaumos> I just picture newswangerd sneaking into a room with a book held up high and sliding into a chair
+15:08:55 <newswangerd> I was hoping nobody would notice I was late :)
+15:08:59 <thaumos> heh
+15:09:39 <thaumos> @bcoca, your item that you raised, do you feel there's enough people to comment on it?
+15:10:42 <bcoca> only if you want to make a decision on it
+15:11:01 <bcoca> not sure this meeting is worth having if mkrizek and i are only core devs here
+15:11:43 <thaumos> that's what I figured.  In my mind, tags only hit what's tagged.
+15:11:48 <thaumos> not deps
+15:11:56 <bcoca> agreed, but did not want to make that decision alone
+15:11:58 <thaumos> that's how it's always been
+15:12:02 <bcoca> hence .. agenda!
+15:12:04 <abadger1999> Morning
+15:12:08 <thaumos> #chair abadger1999
+15:12:08 <zodbot> Current chairs: Pilou abadger1999 bcoca chillysurfer mkrizek newswangerd samdoran thaumos
+15:12:09 <bcoca> ^ starting to get there
+15:12:15 <thaumos> yep
+15:12:32 <bcoca> samdoran: missed you were here cause i was looking for sdoran ... SYNC YOUR ALIASES!!!
+15:12:33 <thaumos> @pilou, 26684 is being covered in the testing meeting...
+15:12:44 <samdoran> Sorry sorry.
+15:12:48 <thaumos> abadger1999 sync your aliases!
+15:12:56 <bcoca> ^ i gave up on that guy
+15:12:59 <thaumos> LOL
+15:13:15 <thaumos> he thought about it last night
+15:13:50 <thaumos> #topic Open Floor
+15:13:57 <thaumos> we really don't have anything to cover atm...
+15:14:13 <bcoca> abadger1999: thoughts on the tag issue?
+15:16:51 <samdoran> Unless the tags are in the dependent role, or that role is tagged in meta/main.yml, it should be skipped.
+15:17:06 <samdoran> Tags shouldn't be applied automatically to dependent roles.
+15:17:17 <thaumos> I think everyone will agree on this matter
+15:17:22 <samdoran> My 2¢
+15:17:31 <thaumos> which are worth a lot more my friend
+15:18:30 <abadger1999> I don't use tags enough to have an opinion
+15:18:41 * samdoran is a prolific user of tags
+15:18:49 * thaumos was too
+15:18:59 <thaumos> perfect for app upgrades
+15:19:31 <jhawkesworth_> off topic, but would love to know how others use tags.  I have avoided for fear of confusion when sharing playbooks etc with others
+15:19:47 <thaumos> 👍
+15:19:57 <samdoran> jhawkesworth_: I can show you how I use them later.
+15:19:59 <thaumos> @bcoca, we should sick jimi|ansible on the thread.
+15:20:01 <samdoran> (after meeting)
+15:20:16 * jimi|ansible raises head
+15:20:19 <thaumos> LOL
+15:20:39 <thaumos> #topic ansible/ansible#20119
+15:20:40 <jhawkesworth_> thanks samdoran would be cool
+15:20:51 <thaumos> #link https://github.com/ansible/ansible/issues/20119
+15:20:55 <thaumos> ^^ jimi|ansible
+15:21:17 <thaumos> we all agree that tags are targeted to only what's tagged. I figured you probably feel the same
+15:22:18 <jimi|ansible> seems like that's correct, though the comment from xmj might need some looking into
+15:23:22 <thaumos> agreed, jimi|ansible.  we can ask xmj to open another issue on that
+15:24:00 <bcoca> jimi|ansible: im assuming roles - roleA, tags: x ... which would be inherited and result in what he is describing
+15:24:11 <jhawkesworth_> I think http://docs.ansible.com/ansible/latest/playbooks_tags.html#tag-inheritance not modified for a long time.  Adding a sentence there would head off future confusion
+15:24:22 <jimi|ansible> bcoca: i agree
+15:24:36 <jimi|ansible> but tags probably aren't following the dep chain, resulting in what xmj is seeing
+15:24:39 <thaumos> agreed @jhawkesworth_
+15:24:43 <bcoca> jimi|ansible: there might be an issue if dependant role sigs are same bug tags should change sig afaik
+15:25:08 <bcoca> jimi|ansible: but it sounds it SHOULD work as he sees it
+15:25:27 <bcoca> if tags DONT affect sig
+15:25:35 <bcoca> ^ easy to correct
+15:25:40 <bcoca> but diff issue than ticket
+15:25:55 <thaumos> agreed @bcoca
+15:26:19 <thaumos> so shall we close the issue as expected behaviour with an action item to update docs?
+15:26:33 <bcoca> +1
+15:26:48 <samdoran> +1
+15:26:50 <thaumos> and of course have xmj open another issue
+15:27:03 <jhawkesworth_> +1
+15:27:04 <jimi|ansible> yeah it's a different issue, so that ^
+15:27:21 <thaumos> I'll comment to xmj
+15:27:47 <thaumos> bcoca do you wanna close it out?
+15:28:27 <bcoca> i was making comment for xmj
+15:29:25 <samdoran> So we want to add a line to docs stating tags aren't applied to dependent roles?
+15:29:33 <samdoran> I can take that as action.
+15:29:43 <thaumos> cool, thanks @samdoran!
+15:30:05 <thaumos> #action samdoran to add tags+dependencies expected behaviour to docs
+15:30:20 <jimi|ansible> samdoran: wait, i thought it was the opposite of that?
+15:30:21 <bcoca> https://github.com/ansible/ansible/issues/20119#issuecomment-316740363
+15:30:37 <bcoca> samdoran: tags ARE applied, that is the issue
+15:30:40 <jimi|ansible> right
+15:30:59 <bcoca> he is taggin tasks in role, dependant role is not tagged, when he runs with --tags x, dependant is not being executed due to lack of tags
+15:31:07 <bcoca> ^ he though dependency > tagging
+15:31:11 <bcoca> reverse is true
+15:31:15 <samdoran> Ok.
+15:31:31 <bcoca> xmj's issue does not seem about tag inheritance, but of 'role caching' not taking tags into account
+15:31:34 <jimi|ansible> and i thought we had some language about that somewhere, but it's always good to make it clearer
+15:31:42 <bcoca> jimi|ansible: idem
+15:32:07 <thaumos> I think @samdoran wasn't referring to xmj's issue
+15:32:54 <jimi|ansible> thaumos: neither were we
+15:33:09 <thaumos> okay, I guess I am confused then.
+15:33:32 <thaumos> bcoca's comment threw me off
+15:34:39 <thaumos> either way, are we cool to move on?
+15:34:56 <bcoca> i already have ...
+15:35:12 <samdoran> Yes
+15:35:49 <thaumos> #topic Open Floor
+15:36:14 <thaumos> you moved on a long time ago
+15:36:32 <bcoca> if role_include.tags is not None:
+15:36:33 <bcoca> params['tags'] = role_include.tags
+15:36:40 <bcoca> ^ jimi|ansible looks like this should not be an issue
+15:36:54 <bcoca> in hash_params
+15:37:26 <abadger1999> #info Copy module rewrite has been merged.  Should handle symlinks and directories more predictably and be much faster than 2.3.x on recursive copies.
+15:37:33 <abadger1999> Please test :-)
+15:38:19 <bcoca> copy: src=/dev/random fails!
+15:38:24 <thaumos> @abadger1999 did you ping the project list about it?
+15:38:39 <jimi|ansible> hrm, playing with things it does not seem to be an issue
+15:38:50 <bcoca> thaumos: its copy .. we'll hear soon enough if it is broken
+15:38:59 <abadger1999> thaumos: I didn't.  I can if that's desired.
+15:39:15 <jimi|ansible> bcoca i'm doing a diamond pattern, role a has deps {b, c}, and both of those list d as a dep
+15:39:18 <thaumos> you have lots of faith bcoca
+15:39:39 <bcoca> if you modify do_vpn_firewall .. you might not hear if there are issues anytime soon .. copy ... you hear RIGHT AWAY
+15:39:44 <thaumos> I don't know if I am just more jaded than you
+15:39:52 <jimi|ansible> b and c are tagged "b" and "c", and when i run with --tags=b i see it run tasks from {b, d}, which is what i'd expect, and --tags=c => {c,d}
+15:39:55 <abadger1999> Something like.... "for anyone wanting to test the code that will be in 2.4.0, [....]"?
+15:39:57 <jimi|ansible> the tags are not inherted up
+15:40:04 <thaumos> no worries abadger1999
+15:40:09 <bcoca> thaumos: im jaded, i know people will complain!
+15:40:10 <thaumos> bcoca has a point :-)
+15:40:14 <jimi|ansible> if you do --tags=a, it runs {d, b, c, a} which is what i expect
+15:40:58 <thaumos> bcoca: I just dream of being a Sith and using Force lightning on everyone whilst force pushing them aside
+15:40:59 <bcoca> jimi|ansible: code supports what you are seeing, lets wait to see if xmj has actual case
+15:41:28 <thaumos> any other topics?
+15:41:55 <bcoca> thaumos: too slow, force strom or force black hole are more efficient
+15:43:06 <thaumos> I like to inflict torture though
+15:43:15 <bcoca> force chain lightning
+15:43:49 <thaumos> ^^ good for some cases.
+15:44:07 <abadger1999> force magic missile?
+15:44:22 <thaumos> I call that Arcane Missile
+15:44:38 <bcoca> abadger1999: no such power i know of (officially anyways)
+15:44:42 <thaumos> we're moving into WoW territory now.
+15:45:02 <bcoca> thaumos: more D&D .. wow borrowed a lot
+15:45:18 <thaumos> a lot of stuff is less official now... I think force chain lightning was retconned out.
+15:45:28 <bcoca> its 'legends' now
+15:45:34 <thaumos> alright since no more topics for today, I'll end the meeting
+15:45:40 <thaumos> #endmeeting

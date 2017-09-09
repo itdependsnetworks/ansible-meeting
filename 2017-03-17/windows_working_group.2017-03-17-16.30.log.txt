@@ -1,0 +1,115 @@
+16:30:31 <nitzmahone> #startmeeting Windows Working Group
+16:30:31 <zodbot> Meeting started Fri Mar 17 16:30:31 2017 UTC.  The chair is nitzmahone. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:30:31 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:30:31 <zodbot> The meeting name has been set to 'windows_working_group'
+16:31:11 <daBONDi> hi
+16:31:21 <daBONDi> i could make it but i'm still @ work :D
+16:31:24 <nitzmahone> #info agenda https://github.com/ansible/community/issues/153
+16:31:44 <nitzmahone> daBONDi: sneaky bugger ;)
+16:32:54 <daBONDi> @nitzmahon will try my best not to get catched :D
+16:32:56 * gundalow waves
+16:33:25 <nitzmahone> #chair gundalow
+16:33:25 <zodbot> Current chairs: gundalow nitzmahone
+16:33:42 <gundalow> Just idling, feel free to ping if there is anything
+16:33:53 <gundalow> Good work on getting this running :)
+16:34:37 <gundalow> #info 2.3 RC1 is releases, please test it :) https://groups.google.com/forum/#!topic/ansible-devel/V2ESSQqLnS0
+16:34:44 <gundalow> that's all I had :)
+16:34:45 <nitzmahone> https://github.com/ansible/community/issues/153#issuecomment-283631500 has been merged
+16:34:58 <daBONDi> @gundalow running on it currently in production :-)
+16:35:04 <gundalow> daBONDi: woot
+16:35:59 * daBONDi Living on the bleeding edge, and get constantly cut in half
+16:36:25 <nitzmahone> daBONDi: that's gutsy- any new issues yet?
+16:36:33 <nitzmahone> (and how's the performance?)
+16:36:53 <daBONDi> currently not, i run devel before so no new changes on winrm performance :D
+16:37:30 <daBONDi> found only 1 bug, but need to search for it before i will whine an issue :-) since change to pipelinemode win_reboot fail
+16:37:57 <nitzmahone> I've only got one more "known" rabbit to pull out on performance (reusing WinRM shell between tasks, another ~15-20% boost)
+16:38:05 <nitzmahone> That'll probably be 2.4
+16:38:07 <daBONDi> yeah that would be awesome
+16:38:19 <daBONDi> makes quite a bumb with my cascade roles and playbooks
+16:38:31 <nitzmahone> Hrm, interesting- we're using win_reboot in CI now, so I'd be surprised
+16:38:51 <daBONDi> prbly its on my fault somewhere :D
+16:39:00 * nitzmahone fingers crossed ;)
+16:39:26 <daBONDi> the stuff to get alle 5 ps  outputs would be awesome
+16:40:00 <daBONDi> searched for a problem 5 days long with a psdsc plugin, and if i could catch the outputs easiler i would found it faster :D
+16:40:12 <nitzmahone> Yeah, I'm actually going to be playing with a prototype of that soon to help debug some PS code that I can only run under WinRM (eg, not under a debugger)
+16:40:27 <nitzmahone> It'd be released with 2.4 at the earliest though
+16:40:43 <nitzmahone> Are you using trond's win_dsc stuff?
+16:40:56 <daBONDi> yeah nearly 70% of my usage is on win_dsc5
+16:41:16 <nitzmahone> Cool- when we get further into 2.4 planning I may want to pick your brain about how that's been going.
+16:41:34 <nitzmahone> Gotta decide what our "official" DSC story wil be
+16:41:44 <nitzmahone> sup dag
+16:41:49 <daBONDi> need to make some commits to his module but got some bugfixes for him
+16:41:49 <nitzmahone> #chair dag
+16:41:49 <zodbot> Current chairs: dag gundalow nitzmahone
+16:42:01 * mattclay waves
+16:42:08 * daBONDi waves
+16:42:08 <nitzmahone> #chair mattclat
+16:42:08 <zodbot> Current chairs: dag gundalow mattclat nitzmahone
+16:42:16 <nitzmahone> #chair mattclay
+16:42:16 <zodbot> Current chairs: dag gundalow mattclat mattclay nitzmahone
+16:43:24 <nitzmahone> dag: anything burning you want to discuss? We can pluck a couple things off the old backlog
+16:44:32 <nitzmahone> #topic 2.3 status
+16:44:54 <nitzmahone> RC1 has shipped, and there will definitely be an RC2, probably mid-late next week
+16:45:04 <bcoca> https://github.com/bcoca/ansible/tree/doc2args <= @privateip, based on your 'compiler' but for 'runtime'
+16:45:23 <nitzmahone> bcoca: wrong channel?
+16:45:24 <bcoca> MT, wrong channel
+16:45:35 * bcoca is really suffering w/o coffeee
+16:46:12 <nitzmahone> I've got 2 remaining "known issues" on RC1 that should hopefully be squared for RC2 (environment keyword issues, become breaks under ntlm/kerb)
+16:46:59 <nitzmahone> Will definitely have tests to catch the first, and will try to get some tests in for the second, but tests can dribble in anytime
+16:47:28 <daBONDi> You got Issue Numbers for the 2 ?
+16:48:56 <nitzmahone> Remaining bugfix merging for 2.3.0 is in "conservative" mode, so the wider ranging the change, the less likely it is to get merged.
+16:49:03 <nitzmahone> daBONDi: https://github.com/ansible/ansible/issues?utf8=%E2%9C%93&q=is%3Aopen%20label%3AP2%20label%3Awindows
+16:49:17 <nitzmahone> P2 is usually considered a release-blocking issue
+16:50:19 <nitzmahone> #topic open floor
+16:50:43 <daBONDi> #22218 i think that would not be possible withtout killing the Winrm Connection and Reconnect
+16:50:47 <daBONDi> because of the Kerberos Ticket
+16:51:18 <daBONDi> and then you got a problem with other hosts and a differnet kerberos ticket
+16:51:49 <nitzmahone> Nah, this is "fancier" than that- we open a new logon session under the existing WinRM session
+16:52:15 <nitzmahone> I think it's getting hung up on the WinRM job object when we're using NTLM/kerb
+16:53:02 <nitzmahone> I'm hoping I can adapt the same technique I use to make async work, but I'm flying blind because none of the auditing I've enabled shows me which object it's getting Access is Denied from when I call CreateProcessWithLogonW
+16:53:04 <daBONDi> think UAC blocks you on
+16:53:16 <nitzmahone> Fails the same with with or without.
+16:53:26 <nitzmahone> And it works on the same user with CredSSP or Basic auth
+16:53:50 <daBONDi> that are different auth mechanism
+16:53:51 <nitzmahone> Pretty sure it's just an overly restrictive ACL on an inherited handle
+16:54:28 <nitzmahone> But this is an underlying system call to CreateProcessWithLogonW- it shouldn't matter how I auth'd initially.
+16:54:45 <daBONDi> you using local accounts or Domain accounts ?
+16:54:56 <nitzmahone> Same behavior either way
+16:55:28 <daBONDi> so the "LocalAccountTokenFilterPolicy" is disabled, mhh
+16:55:55 <daBONDi> will try to make a PoC on weekend maybe i find something :-) a other set of eyes works wonders :-)
+16:56:24 <nitzmahone> Yeah, it's not a matter of missing admin privs- I have everything I need, but CreateProcessWithLogonW internally calls a number of other Win32 APIs, one of which is saying "nuh-uh"
+16:57:14 <nitzmahone> I'm about 80% sure I know a way to fix it, but I have to write a bunch more p/invoke defs and convert some stuff from using .NET Process class to naked Win32 APIs like async does.
+16:57:49 <nitzmahone> Anyway- last chance for other topics- going once...
+16:58:13 <mattclay> win_chocolatey test failures
+16:58:43 <nitzmahone> That's another one I think we'll have to run an internal endpoint to make reliable.
+16:58:57 <nitzmahone> (NuGet server)
+16:59:02 <mattclay> It's been failing installing sysinternals with "Error installing sysinternals"
+16:59:33 <mattclay> I haven't done that before, how much work is involved?
+16:59:38 <nitzmahone> I've been hitting that a lot locally as well- I think there are some bad state assumptions in those tests as well
+17:00:16 <nitzmahone> It's been a long time for me too, but I think there's an option similar to repomd where you can just use a static file HTTP server
+17:01:13 <nitzmahone> It'd probably be good if we used a smaller package for that process too, like procmon or procexp.
+17:01:14 <daBONDi> i think you can have local feeds if you the test runs in a windows vm
+17:01:44 <nitzmahone> Yeah, we'd have to override the endpoints, but that's easy.
+17:02:17 <nitzmahone> mattclay: something to put on the list...
+17:02:28 <nitzmahone> For now, leaving the failing tests disabled is ok IMO
+17:02:33 <mattclay> OK
+17:03:13 <daBONDi> i have 1 question
+17:03:27 <nitzmahone> mattclay: Getting the local choco endpoint setup would be a good thing, and once that's there, we can reenable, but I think you've got higher priority stuff right now IIRC
+17:03:33 <nitzmahone> daBONDi: shot
+17:03:34 <nitzmahone> shoot
+17:03:47 <daBONDi> when i test an PR and it is ok what should i respond to him as non main dev
+17:04:25 <nitzmahone> mattclay: do you remember what the bot likes for that? was it "works_for_me" or what?
+17:04:39 <mattclay> I'd have to look it up.
+17:05:05 <mattclay> https://github.com/ansible/ansibullbot/blob/master/ISSUE_HELP.md
+17:05:48 <daBONDi> @mattclay THX
+17:05:52 <daBONDi> so i can help a bit :-)
+17:06:21 <daBONDi> will look @ #22730 this weekend, prbly something my fault :-) was my commit
+17:06:28 <nitzmahone> Actually it doesn't look like the bot is counting those yet, but I'll definitely see them, so just "tested: works for me" or whatever is fine
+17:06:46 <nitzmahone> thanks!
+17:07:19 <nitzmahone> ok, wrapping up in 5...
+17:07:34 <nitzmahone> 4..
+17:07:43 <nitzmahone> 3..
+17:07:45 <nitzmahone> 2..
+17:07:48 <nitzmahone> 1..
+17:08:07 <nitzmahone> OK, next meeting is Mon/Tue in 2 weeks- thanks all!
+17:08:14 <nitzmahone> #endmeeting

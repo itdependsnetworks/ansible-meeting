@@ -1,0 +1,83 @@
+18:59:42 <abadger1999> #startmeeting Ansible Core Meeting
+18:59:42 <zodbot> Meeting started Tue Apr 18 18:59:42 2017 UTC.  The chair is abadger1999. Information about MeetBot at http://wiki.debian.org/MeetBot.
+18:59:42 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+18:59:42 <zodbot> The meeting name has been set to 'ansible_core_meeting'
+19:00:30 <abadger1999> #chair alikins bcoca jimi|ansible sivel funzo gundalow jtanner mattclay nitzmahone Qalthos ryansb shertel agaffney
+19:00:30 <zodbot> Current chairs: Qalthos abadger1999 agaffney alikins bcoca funzo gundalow jimi|ansible jtanner mattclay nitzmahone ryansb shertel sivel
+19:00:48 <abadger1999> Good day everyone.
+19:01:00 * nitzmahone lurks while eating
+19:01:02 <abadger1999> #info agenda: https://github.com/ansible/community/issues/159
+19:01:15 <shertel> hello
+19:01:27 <sivel> I am here-ish. This conflicts with my teams daily stand up for a few
+19:01:54 <abadger1999> #topic Extend module workflow to non-modules
+19:01:56 <abadger1999> https://github.com/ansible/community/issues/159#issuecomment-291567077
+19:02:32 <abadger1999> sivel: Cool.  No worries.  We'll ping you after the meeting if there's anything we think is blocking on you.
+19:02:43 <abadger1999> Looks like jtanner hada question.
+19:02:45 <sivel> :)
+19:03:27 <abadger1999> I assumed that "Nothing new to discuss while we wait on module metadata to be reworked." meant the final draft of metadata version1.
+19:03:34 <abadger1999> That's done and modules have that metadata.
+19:03:51 <bcoca> abadger1999: its about other plugins having it also
+19:04:04 <abadger1999> I'll record that in the ticket.
+19:04:05 <abadger1999> <nod>
+19:04:29 <abadger1999> But I don't see that as a blocker in the comment's history of past dicsussions?
+19:04:31 <bcoca> you are looking at old discussion that was already put to bed
+19:05:01 <abadger1999> bcoca: If it's done, then we need to cross it off the list.
+19:05:20 <bcoca> Metadata rework is done. <= not sure how to make clearer
+19:08:43 <abadger1999> okay, updated ticket.  And left note for jtanner that it looks like everything is approved.  When he's back he can tell us if he needs more decisions made
+19:08:47 <abadger1999> #topic  Fix for wildcards inside of a path for fileglob lookup
+19:08:52 <abadger1999> https://github.com/ansible/community/issues/159#issuecomment-291567721
+19:09:06 <abadger1999> So I wrote up the pros and cons just before the meeting.
+19:09:35 <abadger1999> #info https://gist.github.com/abadger/7f9466272d84fad9ab7c4207a65a67fd <== pros and cons for wildcards in path portion of fileglob.
+19:09:48 <abadger1999> bcoca and I had a chance to discuss it a bit.
+19:10:07 <abadger1999> We're leaning towards an error if there's a wildcard in a relative path.
+19:10:37 <abadger1999> It's just ambiguous what the user intended to happen in that case.
+19:11:07 <abadger1999> Anyone else have ideas?
+19:12:47 <abadger1999> Okay.  Moving on.
+19:12:52 <bcoca> the other option i was toying with is ^ default to above and allow extra flag to determine behaviour (but also need to code it)
+19:13:01 <bcoca> +1 to making it an error for now
+19:13:05 <abadger1999> <nod>
+19:13:10 <bcoca> other options can come in later
+19:13:13 <abadger1999> I'd be okay with a flag to change behaviour.
+19:13:17 <abadger1999> Cool.
+19:13:20 <abadger1999> #topic Define and document proposals process
+19:13:32 <abadger1999> https://github.com/ansible/community/issues/159#issuecomment-291567969
+19:14:06 <abadger1999> allanice001 doesn't seem to be here and the proposal hasn't been updated with the comments yet.
+19:14:09 <abadger1999> So moving on
+19:14:28 <abadger1999> #topic relative paths in ansible.cfg
+19:14:29 <abadger1999> https://github.com/ansible/community/issues/159#issuecomment-291568339
+19:15:03 <abadger1999> bcoca, alikins: So we are kinda in limbo of thinking we may have a solution but haven't thought it out enough.
+19:15:42 <abadger1999> Do we want to leave this on the agenda or say that making placeholders is the plan unless we come up with a problem when implementing it?
+19:15:42 <bcoca> we have a couple of them, just seems we are busy with other stuff and this is lower priority, though i think it is something we shoud 'rule on'
+19:15:49 <alikins> time for a prototype/testcases?
+19:16:19 <bcoca> not sure its worth it as ansible config would make it obsolete soon enough
+19:17:17 <abadger1999> we want to take it off the agenda and put it back on when we're ready to work on it?
+19:17:37 * abadger1999 just looking for options to keep the agenda for thigns we're able to move forward on.
+19:19:12 <alikins> sounds reasonable
+19:19:22 <alikins> (removing from agenda for now)
+19:19:58 <abadger1999> Okay cool.  I'll strike it as deferred.  Feel free to put it back on once we're ready to code/decide
+19:20:44 <bcoca> in that order!
+19:21:21 <abadger1999> #topic expand doc fileds
+19:21:22 <abadger1999> https://github.com/ansible/community/issues/159#issuecomment-291568454
+19:21:26 <abadger1999> #undo
+19:21:26 <zodbot> Removing item from minutes: <MeetBot.items.Link object at 0x8d5bb1d0>
+19:21:31 <abadger1999> #topic expand doc fields
+19:21:48 <abadger1999> So, bcoca, nitzmahone, and I all +1'd this.
+19:22:05 <abadger1999> it's been a week.  anyone else want to vote/discuss?
+19:22:21 <abadger1999> Otherwise I'd say it's approved, feel free to implement.
+19:25:10 <abadger1999> #info Expand doc fields proposal approved
+19:25:52 <abadger1999> #topic Enforcing docs for all new plugins
+19:25:53 <abadger1999> https://github.com/ansible/community/issues/159#issuecomment-291569609
+19:26:13 <abadger1999> I think this one is basically "Approved once CI is able to test it"
+19:27:21 <abadger1999> Let's keep this on the agenda for next week to make sure mattclay is aware of it and then we can remove it from the meeting.
+19:28:19 <abadger1999> #topi Open Floor
+19:28:24 <abadger1999> #topic Open Floor
+19:28:33 <bcoca> not all plugins .. 'all plugins that support docs'
+19:28:37 <abadger1999> Anyone else have something for today?
+19:28:45 <bcoca> ^ sadly some don't yet
+19:29:04 <abadger1999> bcoca: Ah.  Want to enumerate those in the comment?
+19:29:27 <abadger1999> bcoca: that way we have the list of what mattclay needs to add tests for in one place.
+19:29:31 <bcoca> it might change, ansible-doc -h for 'current list'
+19:29:48 <abadger1999> k.  I'll note to use ansible-doc -h to figure out what plugins need testing
+19:30:37 <abadger1999> Anything else today?
+19:30:45 <abadger1999> If not, I'll close in 60 seconds
+19:31:48 <abadger1999> #endmeeting

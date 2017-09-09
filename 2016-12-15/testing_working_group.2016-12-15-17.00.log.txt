@@ -1,0 +1,106 @@
+17:00:17 <gundalow> #startmeeting Testing Working Group
+17:00:17 <zodbot> Meeting started Thu Dec 15 17:00:17 2016 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+17:00:17 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+17:00:17 <zodbot> The meeting name has been set to 'testing_working_group'
+17:00:23 <gundalow> #chair gundalow mattclay
+17:00:23 <zodbot> Current chairs: gundalow mattclay
+17:00:29 <gundalow> #topic Roll call
+17:00:37 <gundalow> Agenda as always is https://github.com/ansible/community/issues/114 feel free to add items
+17:00:43 <gundalow> Who is around today?
+17:00:47 * mattclay waves
+17:02:27 * mattclay wonders if everyone is already on holiday
+17:03:10 <gundalow> allanice001: Hi :)
+17:03:20 <allanice001> heya
+17:03:37 * raktajino is just here to lurk
+17:03:54 <allanice001> raktajino - we dont bite (hard)
+17:03:57 <allanice001> :P
+17:04:10 * allanice001 is a noob here too
+17:04:12 <raktajino> carefully, i bite back (eventually)
+17:04:17 <raktajino> s/ly//
+17:04:22 <gundalow> mattclay: FYI allanice001 = Dragonmaster on networktocode
+17:04:48 <gundalow> hey raktajino, would you like to introduce yourself?
+17:04:49 * allanice001 smiles and waves
+17:04:57 <gundalow> raktajino: Or are you lurk only?
+17:05:25 * MichaelBaydoun is lurking
+17:05:29 <raktajino> I can introduce myself I guess. I'm Ally, I hang out in #ansible and I've been trying to contribute more than snarky words of late. Just trying to get a feel for what's going on in the community
+17:06:07 <gundalow> Cool, welcome
+17:06:10 <raktajino> thanks!
+17:06:16 <gundalow> #topic Core Updates
+17:07:15 <gundalow> #info 2.2.1 RC2 was released yesterday. We expect one more RC before release, so if there is anything else you think needs to get in please shout out in #ansible-devel
+17:07:38 <gundalow> #info devel (2.3) branches have been merged!
+17:08:13 <gundalow> So now it's possible to submit a single PR that adds/extends module (or other) functionality and include/update the tests in *single* PR
+17:08:24 <gundalow> We've already seen a few people doing that, which is great
+17:08:32 * mattclay cheers
+17:08:53 <gundalow> Previously you'd need to wait for the module to be added, then wait for Git submodules to be updated, *then* finally raise a PR for the tests
+17:09:56 <gundalow> So now that's done we can get on doing much more interesting stuff
+17:10:20 <allanice001> i guess it also removes the need to do recursive clone from git? or not completly ?
+17:10:32 <mattclay> Yes it does.
+17:10:39 <gundalow> hey Perl_Is_Not_Dead :)
+17:10:44 <Perl_Is_Not_Dead> gundalow Hey :)
+17:11:13 <allanice001> nice
+17:11:14 <gundalow> So on the networking side we are starting on the 2.3 work and have two threads of testing
+17:11:28 <mattclay> Recursive cloning and submodule ref updates are only needed for stable-2.2 and earlier.
+17:11:36 <gundalow> 1) Adding in unit tests for the new modules, with mocked out data
+17:12:22 <gundalow> 2) Looking at adding in network VMs into AWS for Shippable (our CI pipeline in GitHub) so we can have functional tests there the same as we do for Windows, Ubuntu, Fedora, BSD, etc
+17:12:42 <gundalow> I'm starting with VYOS
+17:13:30 <gundalow> If you want to see what Integration tests we have have a look at https://github.com/ansible/ansible/blob/devel/test/integration/README.md#network-tests
+17:13:43 <gundalow> directory per modules (not just networking) are in https://github.com/ansible/ansible/tree/devel/test/integration/targets
+17:13:45 * allanice001 is ex aws person - let me now if you get stuck
+17:13:55 <gundalow> allanice001: That's great to know, thanks
+17:15:07 <gundalow> We are still early on in development on the Unit Tests, once we've got the first one ready I'll add it onto the agenda (You may want to hit subscribe on https://github.com/ansible/community/issues/114 )
+17:15:37 <gundalow> mattclay: Anything you'd like to add on the core side, before we open up to questions
+17:17:05 <mattclay> The new ansible-test infrastructure was deployed to Shippable the week before repo merge. It's been working well through the repo merge, with tests being run which are dependent on the changes made in a given PR.
+17:17:37 <mattclay> Documentation is forthcoming on how to use ansible-test locally during development and testing, so you don't have to rely on just CI.
+17:18:03 <allanice001> +1 on that mattclay
+17:18:22 <allanice001> especially with the osx conversation we had in the core meeting earlier
+17:19:32 <mattclay> Once the documentation is out, I'll be removing the old make based test infra, so we don't have to maintain two sets of test runners.
+17:20:41 <mattclay> The integration tests which haven't been migrated to ansible-test (those we can't run on Shippable yet) will still be executed via make. I hope to be able to migrate more of those in the future, particularly the cs_* ones.
+17:21:50 <mattclay> As gundalow already mentioned, we're looking at running the network integration tests on Shippable, starting with VYOS.
+17:22:54 <mattclay> That's it from me.
+17:23:29 <gundalow> cool, thanks
+17:24:06 <gundalow> I hope you all get a chance to play with ansible-test. If you install the commandline completer (see --help for details) it's really usable
+17:24:09 <gundalow> #topic Open Floor
+17:24:24 <raktajino> Thanks for the info about ansible-test, I look forward to playing with it
+17:24:36 <gundalow> Nothing else on the agenda so I look to allanice001 raktajino Perl_Is_Not_Dead for comments
+17:24:48 <raktajino> i got nothin' else. Thanks for the transparency!
+17:24:51 * allanice001 raises hand
+17:25:12 <Perl_Is_Not_Dead> gundalow new here, will give it a go!
+17:25:21 <allanice001> from the contribs / inventory - would you guys be enfocing testing there too?
+17:25:23 <gundalow> raktajino: Glad you find it useful, we do try to be
+17:25:46 <gundalow> #topic contribs/inventory testing
+17:25:50 <mattclay> We'll gladly accept tests for that.
+17:26:14 <allanice001> a lot of that seems to be stale / old
+17:27:06 <mattclay> I believe one of the existing vmware inventory scripts in there has some unit tests, although I think we skip them on CI currently.
+17:28:13 <mattclay> General sanity checks are run on everything, including contrib/
+17:30:05 <allanice001> so, would the tests be added to ansible-test?
+17:30:46 <allanice001> or would these become self-sustaining packages with embedded tests?
+17:31:08 <gundalow> All tests will be invoked via ansible-test
+17:31:32 <allanice001> kk
+17:31:37 <allanice001> noted
+17:31:55 <gundalow> allanice001: Is this for NSOT (Network Source Of Truth)?
+17:31:58 <mattclay> Are you thinking of writing unit tests or integration tests?
+17:32:26 <allanice001> gundalow: that and netbox, which are 2 we;re looking at internally
+17:32:49 <gundalow> cool
+17:32:50 <allanice001> mattclay: i guess starting with unit, and extending it to integration
+17:33:13 <gundalow> For the unit tests is your plan to mock out the data that NSOT would return?
+17:33:26 <allanice001> yes
+17:33:31 <mattclay> The unit tests for contrib are under `test/units/contrib`
+17:33:32 * gundalow is just wanting to check the split between unit and integration tests
+17:33:48 <mattclay> The integration tests would go alongside others in `test/integration/targets`
+17:34:45 <gundalow> right, I need to run now, so I'll hand over to mattclay
+17:34:50 <mattclay> Module unit tests are in `test/units/modules`
+17:34:59 <allanice001> ack, njoy
+17:35:08 <gundalow> Thanks :)
+17:36:23 <mattclay> Are there any more questions about contrib/inventory?
+17:36:41 <allanice001> so, just to make sure i understand definition of integration test
+17:37:07 <allanice001> would that be nsot integration to ec2 as example?
+17:37:12 <allanice001> s/ec2/aws
+17:38:16 <mattclay> Yes, if you're testing against external resources such as AWS, that would be an integration test.
+17:38:31 <allanice001> ack, noted
+17:38:33 <mattclay> If you're just mocking it, that's going to be a unit test.
+17:38:44 <allanice001> gotcha
+17:39:22 <mattclay> Generally our integration tests are run using playbooks and sometimes shell scripts. Unit tests are run using pytest.
+17:41:11 <mattclay> Any other questions on contrib? Any other topics?
+17:43:50 <mattclay> If there are no other questions or topics to discuss I'll end the meeting in two minutes.
+17:46:28 <mattclay> Thanks for coming everyone. If you have anything to discuss for the next meeting, please put it on the agenda: https://github.com/ansible/community/issues/114
+17:46:31 <mattclay> #endmeeting

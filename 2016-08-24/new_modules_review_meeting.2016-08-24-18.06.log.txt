@@ -1,0 +1,93 @@
+18:06:30 <ryansb> #startmeeting New Modules Review Meeting
+18:06:30 <zodbot> Meeting started Wed Aug 24 18:06:30 2016 UTC.  The chair is ryansb. Information about MeetBot at http://wiki.debian.org/MeetBot.
+18:06:30 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+18:06:30 <zodbot> The meeting name has been set to 'new_modules_review_meeting'
+18:06:39 <abadger1999> Óla
+18:06:46 <bcoca> Hola
+18:06:52 <ryansb> #agenda https://github.com/ansible/community/issues/92
+18:07:00 <ryansb> (maybe #agenda is a command?)
+18:07:10 <ryansb> #chair abadger1999 bcoca jimi|ansible
+18:07:10 <zodbot> Current chairs: abadger1999 bcoca jimi|ansible ryansb
+18:07:47 <bcoca> argh ... state=list ...
+18:08:06 <bcoca> he, ryansb beat me to it
+18:08:24 <ryansb> going to assume you found https://github.com/ansible/ansible-modules-extras/pull/2305
+18:08:29 <tima> I just got in. Is this the EFS module?
+18:08:35 <ryansb> #link https://github.com/ansible/ansible-modules-extras/pull/2305 EFS module
+18:08:39 <ryansb> tima: yup
+18:08:40 <bcoca> tima: yep
+18:09:11 <ryansb> I tested it and it does work (so that's good) but it has "state=list" as an option, which is really strange
+18:09:12 <tima> I agree.
+18:09:22 <bcoca> i agree with ryansb comments, nothing else looks too bad
+18:09:22 <ryansb> and that functionality should be a _facts module or similar
+18:09:49 <ryansb> bcoca: it returns CamelCase stuff
+18:09:53 <ryansb> so :( on that
+18:10:02 <bcoca> yeah, but you already made comment
+18:10:09 <ryansb> k
+18:10:13 <tima> @ryansb Not if you know the company that's coming from ;)
+18:10:17 <bcoca> ^ [14:09] <bcoca> i agree with ryansb comments
+18:10:35 <bcoca> tima: bw ?
+18:10:51 <ryansb> Any additional comments re: EFS module?
+18:10:52 <tima> @bcoca: yup.
+18:11:17 <tima> Just the ones you beat me too ryansb.
+18:11:26 <bcoca> +1 once already commented issues are addressed, but really should not be on this agenda when it has open issues
+18:11:44 <ryansb> It went in before I opened those issues
+18:12:08 <tima> true. I was confused by ryansb's shipit then feedback to make changes though.
+18:12:09 <ryansb> do we just delete comments on that standing agenda to remove stuff?
+18:12:10 <bcoca> so lets 'auto skip' when open issues
+18:12:26 <ryansb> tima: I tested it and was like "woo, awesome"
+18:12:30 <bcoca> ryansb: or 'mark out'
+18:12:31 <MichaelBaydoun> Would it be a good or bad idea to modify module.exit_json to always camel_dict_to_snake_dict?
+18:12:35 <ryansb> then read the code and was like "oh, hold up"
+18:13:05 <tima> could i ask one question -- i'm lost if there are any open issues with the atomic_* modules we were looking at here.
+18:13:38 <tima> The comments and feedback have gotten so extensive I'm not sure the contributor can tell if there is anything left to do there.
+18:13:43 <abadger1999> tima: Give a link and we can check.
+18:13:44 <ryansb> Link?
+18:13:59 <ryansb> hold on: any other comments re: EFS module?
+18:14:50 <tima> forget me. i just realized that module got merged by abadger1999. not sure how i missed that notification.
+18:15:18 <ryansb> #link  https://github.com/ansible/ansible-modules-extras/pull/1902 (atomic PR) has been merged
+18:15:49 <ryansb> next order of business: datadog downtime
+18:15:50 <abadger1999> excellent
+18:15:57 <ryansb> #link https://github.com/ansible/ansible-modules-extras/pull/2381 (datadog_downtime)
+18:16:07 <MichaelBaydoun> nevermind, existing modules that return CamelCase would start returning snake_case, and that would cause problems.
+18:16:09 <bcoca> ryansb: those should not really be in system/, sounds llike cloud/atomic is proper place
+18:16:20 <bcoca> ^ that is where we have docker/lxc/lxd and similar
+18:16:50 <bcoca> MichaelBaydoun: module_utils has function to 'fix' that already that boto3 modules should be using
+18:17:26 <ryansb> bcoca: what he's proposing is to make that "fix" automatic for any exit_json (but has now vetoed his own idea)
+18:17:52 <abadger1999> bcoca: Agreed -- I'll write a note in the (merged) PR and then just move them
+18:18:04 <bcoca> no, cause in other places it makes sense to do camel case, the issue with aws is to keep backwards compat with existing plays/templates
+18:18:33 <ryansb> #action abadger1999 move atomic modules to `cloud/atomic`
+18:18:38 <ryansb> Looks like datadog_downtime is in needs_revision, so nothing to discuss in this meeting
+18:18:44 <bcoca> if we ever get to auth_plugins, we might make it an option there
+18:21:06 <ryansb> Next module on the list (that's not already needs_revision): cloudformation_facts
+18:21:16 <ryansb> #link https://github.com/ansible/ansible-modules-extras/pull/2329 cloudformation_facts
+18:27:09 <ryansb> It looks solid to me - I'll need to test it, but no issues jump out at me
+18:27:12 <ryansb> any comments?
+18:28:15 <abadger1999> s/dependencies/requirements/ in the docs
+18:28:54 <tima> phew. fact modules are a booming.
+18:31:28 <tima> @abadger1999 you may want to clarify that a new PR should be opened rather than tack and changes on to PR #1902 (atomic*) modules one.
+18:31:56 <ryansb> righto
+18:32:07 <abadger1999> tima: god point.
+18:32:10 <abadger1999> will od
+18:32:39 * ryansb commented to that effect
+18:32:47 <ryansb> (on the _fact
+18:32:50 <ryansb> module)
+18:33:00 <tima> got it.
+18:33:12 <ryansb> alright, that's the last module on the list that isn't already in needs_revision
+18:33:24 <ryansb> so is there anything else people would like to plug?
+18:33:43 <abadger1999> What's the format for returning facts?
+18:34:09 <abadger1999> Looking at cloudformation_facts, I don't think it's returning in the way that we'll pick it up as facts.
+18:34:09 <linuxdynasty> ryansb: from the conversation yesterday of include_vars_dir
+18:34:15 <linuxdynasty> i refactored it into incldue_vars
+18:34:15 <linuxdynasty> https://github.com/ansible/ansible/pull/17207
+18:34:35 <jtanner|t420> i think a key in the results of 'ansible_facts' is all that's required
+18:37:35 <ryansb> #link not actually a module but... https://github.com/ansible/ansible/pull/17207
+18:38:11 <linuxdynasty> sorry you are right, that == action plugin. Sorry about that
+18:39:48 <abadger1999> thanks jtanner.  I mentioned that in the PR too.
+18:39:59 <abadger1999> if we don't have other new modules, it's fine :-)
+18:40:42 <ryansb> oh, I still have https://github.com/ansible/ansible-modules-extras/pull/2558
+18:40:57 <ryansb> addressed everything from last meeting, so should be good to go
+18:42:19 <tima> @ryansb: are those from or supplement that other AWS lambda modules project we found?
+18:44:33 <abadger1999> ryansb: With everything addressed, good to go.
+18:45:06 <ryansb> tima: separate module I wrote
+19:01:47 <ryansb> alright, closing up the meeting
+19:01:52 <ryansb> #endmeeting

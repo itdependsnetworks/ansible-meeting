@@ -1,0 +1,117 @@
+16:00:58 <akasurde> #startmeeting Ansible VMware Working Group Meeting
+16:00:58 <zodbot> Meeting started Mon Jul 31 16:00:58 2017 UTC.  The chair is akasurde. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:00:58 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:00:58 <zodbot> The meeting name has been set to 'ansible_vmware_working_group_meeting'
+16:01:58 <DMarby> akasurde: Hi :)
+16:02:06 <akasurde> #chair DMarby
+16:02:06 <zodbot> Current chairs: DMarby akasurde
+16:02:11 <akasurde> DMarby, Hi :)
+16:02:21 <akasurde> #chair jtanner
+16:02:21 <zodbot> Current chairs: DMarby akasurde jtanner
+16:03:41 <dericcrago> hi akasurde
+16:03:46 <akasurde> Let us wait for other people to join in
+16:03:51 <akasurde> dericcrago, hi
+16:03:55 <akasurde> #chair dericcrago
+16:03:55 <zodbot> Current chairs: DMarby akasurde dericcrago jtanner
+16:05:14 <akasurde> whatz up everyone ?
+16:05:48 <DMarby> akasurde: Want to start by going over the PRs?
+16:05:59 <akasurde> DMarby, sure.
+16:06:13 <akasurde> #topic Module needs review
+16:06:20 <akasurde> #link https://github.com/ansible/community/issues/206#issuecomment-318256386
+16:07:44 <DMarby> #24841 seems fine since the reverted the import changes I think?
+16:08:41 <akasurde> jtanner, wants to have test included to ensure change doesn't break anything
+16:09:42 <DMarby> Fair enough
+16:10:08 <akasurde> let us move to next one then
+16:10:33 <akasurde> #link https://github.com/ansible/ansible/pull/25944
+16:10:49 <DMarby> LGTM
+16:11:01 * jtanner is here now
+16:11:40 <akasurde> jtanner, hi
+16:13:36 <akasurde> DMarby, can you add your shipit there?
+16:13:45 <DMarby> Sure
+16:13:57 <jtanner> won't help if you don't fix the description
+16:14:49 <jtanner> bad description -> needs_template -> !shipit + !automerge
+16:14:55 <DMarby> Ah, I see
+16:15:19 <akasurde> Ohk
+16:16:08 <akasurde> #action akasurde Add note in PR for correct description
+16:16:16 <akasurde> next PR
+16:16:18 <jtanner> bot has already mentioned it
+16:16:26 <DMarby> Alright, #25857, I tested this since I needed it yesterday, and it works great on 6.5.
+16:16:57 <akasurde> #link https://github.com/ansible/ansible/pull/25857
+16:17:04 <akasurde> DMarby, Cool
+16:19:01 <akasurde> Shall we move on to next PR ?
+16:19:17 <jtanner> well ..
+16:19:31 <jtanner> the two maintainers pinged in that PR are absent, iirc
+16:19:40 <jtanner> so i don't know who is going to review it
+16:21:22 <akasurde> jtanner, there is very little active from these two maintainers, what can we related to this ?
+16:21:55 <jtanner> i don't know what is "related", but the implication is that they are never going to review and or shipit
+16:23:37 <akasurde> can't we just consider community review ?
+16:24:01 <akasurde> like DMarby used it and found PR working
+16:24:25 <jtanner> possibly, but there's not shipits in the PR
+16:24:41 <akasurde> OK
+16:24:44 <jtanner> so the bot can't begin to expand the scope
+16:25:30 <akasurde> Ok
+16:26:14 <akasurde> Let us wait for community shipit then
+16:26:44 <akasurde> Let us move on to next PR then
+16:28:08 <akasurde> #link https://github.com/ansible/ansible/pull/26323
+16:33:00 <akasurde> I am getting Service Outage message from Github
+16:33:08 <jtanner> yeah, it's having a rough time right now
+16:35:32 <akasurde> Let us give them some time to recover
+16:39:14 <jtanner> akasurde: you should move on to higher level topics
+16:39:32 <akasurde> Ok
+16:39:45 <jtanner> github is probably not going recover before meeting is over
+16:40:10 <akasurde> jtanner, Let us discuss about vmware_guest state and powerstate then
+16:40:28 <akasurde> #topic vmware_guest state and powerstate
+16:41:19 <akasurde> For everyone else in meeting, vmware_guest does not differentiate between state of VM and powerstate
+16:41:28 <jtanner> problem: vmware_guest tries to encapsulate and infer too many things from the "state" parameter
+16:42:43 <akasurde> jtanner, exactly, so to solve this problem we need to have additional parameter to make vmware_guest understand differences
+16:42:45 <jtanner> does anyone have thoughts about ways to fix that?
+16:42:54 <DMarby> Right, with how it only changes configuration on "present" and not on poweredon/etc, for example?
+16:43:37 <jtanner> yes, a good example
+16:44:13 <akasurde> for example, if user wants to poweroff a machine and accidently uses incorrect machine name which does not exists then vmware_guests tries to deploy it
+16:44:19 <jtanner> my personal belief is that there should be separate modules for each part of the state
+16:44:53 <akasurde> same here
+16:45:03 <jtanner> i suggested this morning that a stopgap could be to add a parameter to vmware_guest to clarify the intent
+16:45:07 <jtanner> clone: true/false
+16:45:29 <dericcrago> I'd like to see that too, but in the short term I think just adding a powerstate parameter would help
+16:45:34 <jtanner> action: clone|power|etc
+16:45:49 <DMarby> How does the AWS module handle it?
+16:46:16 <jtanner> theoretically, you destroy and build new in a real cloud
+16:46:29 <akasurde> OK
+16:46:36 <jtanner> vmware however is usually pets instead of cattle
+16:47:11 <DMarby> I guess I have two thoughts: I agree that things should be turned more into separate modules, say for example configuration of nic's, disks, etc
+16:47:24 <DMarby> But I don't neccesarily think that there should be another action parameter
+16:48:38 <jtanner> not seeing exact examples for reconfig in ec2.py docs
+16:49:08 <DMarby> I don't have access to an aws environment anymore, and I don't recall exactly what we used
+16:50:06 <DMarby> But I think you're right jtanner, usually you'd just create a new machine
+16:50:37 <DMarby> Hm, and there are indeed too many edgecases where powerstate can become weird unless you can tell your intent
+16:50:38 <akasurde> DMarby, but what about idempotency of existing machine ?
+16:51:42 <DMarby> Never mind, I thought that state would be enough if you changed a few behaviours of existing ones, but you are right, there are too many cornercases
+16:52:11 <DMarby> So something like action: clone|power|etc seems reasonable
+16:52:19 <jtanner> solution is to delete all vmware modules and refer to shell: govc ... >=]
+16:52:49 <akasurde> thats the last resort
+16:52:52 <jtanner> heh
+16:53:01 <jtanner> so that's +2 on action: ... ?
+16:53:17 <akasurde> +1 for action
+16:53:18 <jtanner> it doesn't have to be that name, was only a sugggestion
+16:53:57 <akasurde> how about clone as argument name ?
+16:54:03 <akasurde> clone: yes|no
+16:54:11 <jtanner> was kinda leaning towards being more generic
+16:54:13 <akasurde> like you said above
+16:54:22 <jtanner> action: clone|power|reconfig
+16:54:50 <akasurde> Looks good to me
+16:54:55 <jtanner> clone: true|false could be enough for now, but i see that kicking the can further down the road
+16:55:20 <jtanner> people will have issues where clone: false wasn't supposed to reconfigure
+16:55:45 <akasurde> yes, correct
+16:57:50 <akasurde> Ok I will raise PR and let us have broad discussion there
+16:58:00 <jtanner> cool
+16:58:27 <akasurde> #action akasurde Raise PR for action in vmware_guest
+16:58:38 <akasurde> #topic open floor
+16:59:02 <akasurde> Anything else we would like to discuss
+16:59:14 <jtanner> nope, not me
+16:59:19 <jtanner> time's up anyway =)
+16:59:33 <akasurde> Ok
+16:59:46 <akasurde> Will wait for 5 min and then close the meeting
+17:00:31 <akasurde> jtanner, I have two backports, Can you please take look at them ? https://github.com/ansible/community/issues/206#issuecomment-318875917
+17:00:54 <jtanner> sigh, angry unicorns
+17:02:55 <akasurde> OK. See you people in next meeting
+17:02:58 <akasurde> #endmeeting

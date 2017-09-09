@@ -1,0 +1,321 @@
+18:00:22 <gregdek> #startmeeting new-module-review
+18:00:22 <zodbot> Meeting started Wed Apr 13 18:00:22 2016 UTC.  The chair is gregdek. Information about MeetBot at http://wiki.debian.org/MeetBot.
+18:00:22 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+18:00:22 <zodbot> The meeting name has been set to 'new-module-review'
+18:00:32 <gundalow> If people send me a private message with their various alias s + timezone I'll create something
+18:00:36 * gundalow waves
+18:00:47 <abadger1999> olá
+18:01:29 <bcoca> we needs google map with location pins
+18:01:40 <kamsz> :D
+18:01:41 * MichaelBaydoun waves back
+18:01:49 <kamsz> ohai
+18:02:42 <gregdek> ok, let's see... /me rummages around for an agenda
+18:03:50 <gundalow> I added a rough one to MEETINGS.md
+18:04:32 <gregdek> Looks good to me. Let's do it!
+18:04:39 <gregdek> #topic Review of actions from previous meeting
+18:05:18 <gregdek> https://meetbot.fedoraproject.org/ansible-meeting/2016-04-06/new-modules.2016-04-06-18.02.html
+18:06:21 <gregdek> Hmm... not looking so good on some of these, I'm afraid.
+18:06:24 * gregdek gregdek to create notes on standing meeting and how to show up to get help with your new module
+18:06:32 <gregdek> I didn't do this.
+18:06:59 <gregdek> So I'll re-action it.
+18:07:22 <gregdek> Actually, I'm not sure from context what was promised there.
+18:07:59 <gregdek> I *think* what I meant there was to put this into the weekly meeting email.
+18:08:03 <gundalow> gregdek: https://meetbot.fedoraproject.org/ansible-meeting/2016-04-06/new-modules.2016-04-06-18.02.log.html
+18:08:21 <gundalow> 18:12?
+18:09:28 <gregdek> Yeah.
+18:09:29 <gregdek> https://github.com/ansible/community/issues/51
+18:10:02 <gregdek> I've added this to 51. The clear intention was to add this to the weekly notes we send out to the list: "come get help with your module review at the new modules meeting."
+18:10:08 <gregdek> I've now added that to the ticket.
+18:10:14 <gregdek> Next:
+18:10:27 * gregdek gregdek will close extras/1337 as dup of extras/1868 (gregdek, 18:20:15)
+18:12:19 <gregdek> Looks like klj613 actually responded.
+18:12:27 <gregdek> Which means maybe we should hold off on that. MichaelBaydoun?
+18:12:41 <MichaelBaydoun> agreed
+18:13:03 <gregdek> So will leave this one open for now.
+18:13:17 <gregdek> With luck, he'll close it himself and get behind yours; let's give him that chance.
+18:14:11 <gregdek> Next: ACTION: gundalow and thaumos will test extras/1868 within the next week (gregdek, 18:22:24)
+18:14:15 <gregdek> thaumos: you around?
+18:14:35 <thaumos> yes sir
+18:14:49 <gundalow> Done lots of reviewing, MichaelBaydoun has been great at responding to stuff. It's looking close, but not quiet there yet
+18:14:56 <thaumos> There is still dev work being done on the above
+18:15:01 <MichaelBaydoun> have one more bug to squash
+18:15:02 <thaumos> ^^ I echo gundalow
+18:15:05 <gregdek> Looks like gundalow tested, made some comments, and MichaelBaydoun has also been responding. I assume you're waiting on that?
+18:15:09 <gregdek> OK, so it's ongoing.
+18:15:24 <gundalow> In the previous meeting there was some discusion about renaming it. Though we've decided it is correct to be ec2_...
+18:15:29 <gregdek> Given the amount of work we're doing here, I think it probably makes sense to close 1337 anyway.
+18:15:46 <gregdek> If there's broad agreement that 1868 is close. It's certainly received more attention.
+18:16:46 <gregdek> No one seems to be in a hurry to do that, though, so I guess we'll wait. :)
+18:16:49 <gregdek> Moving on:
+18:17:00 * gregdek gregdek to write up new new module guidelines before next meeting (gregdek, 18:49:30)
+18:17:08 <gregdek> I also did not do this. Sigh. Let's see if I have a ticket:
+18:17:48 <MichaelBaydoun> (half_joking_action) write bot to create tickets based on meeting actions
+18:17:57 <kamsz> ;)
+18:18:26 <gregdek> Not the worst idea tbh.
+18:18:29 <gregdek> But in the meantime:
+18:18:32 <gundalow> :D
+18:20:06 <bcoca> as long as it is not against ansible/ansible ....
+18:20:13 <gregdek> It's not. :)
+18:20:29 <gregdek> https://github.com/ansible/community/issues/78
+18:20:52 <gregdek> That's going to be a sweeping change that will require bot changes too, so it could take a while.
+18:21:00 <gregdek> And will require some coordination.
+18:22:12 <gregdek> OK, moving on:
+18:22:17 * gregdek gregdek will propose current_release placeholder
+18:23:09 <gregdek> So in discussing this, there was a bit of pushback. Our current systems are not set up to do this.
+18:23:22 <gregdek> So it will require a full proposal in ansible/proposals, which is not what I was hoping for.
+18:24:18 <gregdek> (sorry, afk, can someone else lead?)
+18:24:34 <gregdek> #chair gundalow
+18:24:34 <zodbot> Current chairs: gregdek gundalow
+18:24:42 <gundalow> OK
+18:24:46 <gregdek> (back in 5 i hope, sorry)
+18:24:55 <gundalow> :)
+18:25:31 <gundalow> Any new modules?
+18:25:42 <kamsz> yup, extras/2015
+18:25:45 <kamsz> simple one
+18:25:59 <gundalow> #topic Next Module
+18:26:37 <kamsz> basic create/destroy database in influxdb
+18:26:56 <kamsz> since influx is gaining alot of attention lately
+18:26:57 <gundalow> #info New module https://github.com/ansible/ansible-modules-extras/pull/2015 InfluxDB database module
+18:27:20 <gundalow> Just having read :)
+18:28:10 <gundalow> kamsz: How easy is to get get influxdb installed, I've never used it before?
+18:28:15 <gundalow> Thinking about how we get it tested
+18:28:27 <kamsz> gundalow: you can get it in docker if you want it asap
+18:28:39 <kamsz> https://github.com/tutumcloud/influxdb
+18:29:05 <kamsz> just docker run it and it's ready to go with the defaults
+18:29:32 <gundalow> cool, added a comment to the PR
+18:29:37 * gregdek is back :)
+18:29:54 <kamsz> i've a module that'll allow writing points to the influxdb, but it's wip
+18:30:18 <kamsz> and i was thinking about moving influxdb_argument_spec into module_utils
+18:30:29 <gundalow> bcoca: ^
+18:30:39 <gregdek> I wonder if that's premature...
+18:30:51 <kamsz> that's why i did it in the module
+18:31:22 <kamsz> later on it'll be easy to move it elsewhere
+18:31:26 <gregdek> Yep. +1.
+18:31:44 <abadger1999> <nod>
+18:31:56 <kamsz> abadger1999: except xxx as y doesn't work on python 2.4 thus fails in travis
+18:31:59 <kamsz> :p
+18:32:37 <sivel> if you have a dep on py>=2.6 then you can add the module to the 2.4 exclude list for travis
+18:32:42 <bcoca> not premature
+18:32:47 <abadger1999> kamsz: We'd need to change the blacklist in .travis.yml as well.
+18:32:57 <kamsz> och, okay
+18:32:59 <kamsz> didn't know that
+18:33:18 <abadger1999> No problem -- just adding to the group knowledge ;-)
+18:33:38 <sivel> I know there is no agreement, and perhaps still opposite to my feelings, but I still feel modules in -extras should not have code in ansible itself
+18:33:50 <gregdek> ^^^
+18:34:04 <MichaelBaydoun> sounds reasonable
+18:34:18 <sivel> which may indicate a need for us to move some of that logic capabilities into the module repos themselves, so that it need not live in ansible proper
+18:34:32 <gregdek> We've discussed extras/module-utils.
+18:34:38 <bcoca> sivel: module_utils/ec2.py
+18:34:45 <bcoca> ^ not really doable
+18:35:04 <gregdek> In that case, no. In many other cases, yes.
+18:35:10 <sivel> yeah, we would need to think about it, but I feel that if we put code into ansible to support a module, it should become a -core module
+18:35:21 <bcoca> very few, all modules in extras also depend on basic.py
+18:35:31 <sivel> well, that is a bit different, in that core do aslo
+18:35:44 <sivel> if a core module requires it, having it in ansible seems reasonable
+18:35:45 <gregdek> I agree with sivel here. Having code in utils is a much higher burden, and from my perspective requires greater commitment. Kind of not what extras is for.
+18:35:46 <bcoca> i understand the want, i just don't think it is feasable
+18:35:56 <kamsz> +1
+18:36:12 <sivel> my feelings are if it is only in -extras, it should not have accopanying action or utils in ansible proper
+18:36:17 <abadger1999> sivel: I don't think there's a way to avoid that with current ansible... (otherwise you just have to abandon having shared code).  But for 2.2 someone could work on adding other directories for module_utils.
+18:36:36 <abadger1999> Have to decide how it's presented to the module writer, though.
+18:36:43 <sivel> yeah, not saying it is currently feasible, just saying, we should
+18:36:56 <gundalow> From a testing & maintance point it's going to be a PITA having code split between two individualy versioned and released repos
+18:36:57 <sivel> otherwise the line is very blured between extras and core
+18:37:00 <gregdek> <heavy_honesty_time>I think we're placing far too high a burden on accepting modules into ansible-extras. The point was to be a lightweight place for proving new modules, and it's not that at all currently.</heavy_honesty_time>
+18:37:12 <kamsz> :P
+18:37:23 <bcoca> which becomes totally obsolete the seconds 1 module is accepted to core that shares code with modules in extras
+18:37:38 <sivel> I think if there is a dep to have code in ansible, we should require the module to go into core, which has more stringent requirements for being accepted
+18:37:47 <gundalow> gregdek: noted
+18:37:52 <bcoca> then no modules in extras ?
+18:38:10 <sivel> again, I am only saying pure extras modules.  I eralize everything requires basic
+18:38:47 <bcoca> i think that makes it that every fringe module associated with a group that shares code now needs to be in core
+18:38:51 <sivel> such as I want to have an action plugin for the expect, module, but because it is in extras, I fundamentally disagree with adding it to ansible
+18:39:00 <bcoca> ec2_vpc_left_side_private_mananger.py is now a core module?
+18:39:30 <sivel> does it require changes to the shared code?  if so, then probably yes
+18:39:44 <sivel> or we find a better way to place code outside of the core repo
+18:39:52 <bcoca> i think core/extras division does not have to be on code organization, it is a logical distinction on what we commit to support and what we support 'when we can'
+18:39:52 <sivel> again, just my feelings here
+18:39:53 <abadger1999> I think we should sovle this in a core meeting.
+18:40:03 <gregdek> How about -- "anything in module_utils must be used by at least one module in core".
+18:40:05 <sivel> yeah agreed
+18:40:26 <bcoca> cloudstack is now core?
+18:40:30 <sivel> but if we put code in ansible and the module in extras, we have effectively just agreed that part of the code is core and will be treated with higher priority potentially
+18:40:31 <abadger1999> identify: what's the problems?  Then we can code ansible core to make solution for those.
+18:40:39 <abadger1999> gregdek: -1
+18:40:48 <abadger1999> and yeah, cloudstack is a prime example of that.
+18:40:56 <gundalow> #action abadger1999 discussion between the code split between core, modules & extra in the next Core meeting
+18:40:58 <bcoca> sivel: i'm fine treating shared code with higher priority
+18:41:01 <gundalow> abadger1999: Thanks :)
+18:41:44 <kamsz> going back to the exceptions if i may
+18:41:57 <kamsz> yesterday we had a discussion about handling it
+18:42:14 <kamsz> someone suggested to use get_exception() (sorry, i don't recall the name)
+18:42:19 <kamsz> due to python3 compatibility
+18:42:21 <gundalow> #topic exceptions
+18:42:23 <bcoca> sounds right, function in basic.py
+18:42:40 <sivel> that was me I believe, in association with bcoca
+18:42:59 <kamsz> since i'm slighly confused now which way i should go
+18:43:00 <sivel> it is the compat function to handle exceptions across py2 and py3
+18:43:15 <sivel> it is perfectly fine to continue using, and probably even recommended
+18:43:24 <kamsz> except xxx as yyy or get_exception() - which one is more preferable?
+18:43:47 <sivel> +1 on get_exception() that way we are following a standard
+18:44:44 <abadger1999> I think "except as e" when it will only run on python2.6 and above.
+18:45:05 <bcoca> yes , is for 2.4, as e for 3, 2.6 and 2.7 work with both
+18:45:07 <abadger1999> The get_excetion() way is ugly to me.
+18:45:16 <bcoca> so get_exception i think is the only real way to go forward
+18:45:19 <abadger1999> but the only thing we can do when python-2.4 compat is needed.
+18:45:37 <sivel> it is kinda ugly, but at least it is something we can call a standard, and then there is no confusion how to handle it
+18:46:12 <bcoca> ^ least ugly solution
+18:46:17 * gundalow -> AFK for 5. Could someone please #info #action as needed so we have a record of the "solution"
+18:46:18 <bcoca> there is no good one
+18:46:19 <abadger1999> I would say it's never wrong to use get_exception()
+18:46:33 <sivel> and then we can have fewer exemptions to the syntax checks also
+18:46:38 <abadger1999> But I don't really want to require it if some can point at the module needing pyhton-2.6+ already
+18:46:55 <abadger1999> Same with ternaries, imports of stdlib items from alternate locations, etc.
+18:46:58 <sivel> I think "not required, but recommended" is still a good approach
+18:47:03 <bcoca> im fine requireing it, makes it uniform
+18:47:17 <bcoca> easier to debug and not have to remember if module is already 2.6+
+18:47:19 <sivel> but I prefer standardization
+18:47:47 <abadger1999> I think it makes our porting to python3 burden less i nthe long term if we have a smaller list of modules that need to use pyhton-2.4 idioms and everything else can use the python2.6+ idioms.
+18:47:55 <abadger1999> and exceptions are one of those things.
+18:48:27 <kamsz> so, get_exception() is the way to go?
+18:48:38 <gregdek> And we'll add to the guidelines?
+18:48:40 <abadger1999> Not for me, but I may be outvoted.
+18:48:57 <kamsz> (personally i find as x less ugly too and more human like :p)
+18:50:10 <bcoca> i dont feel strongly about this one, but i do prefer it
+18:50:19 <sivel> the downsides of handling such a variety of py versions.  I do the same in a project that supports py2.4-py3.5
+18:50:28 <bcoca> more of a stylistic annoyance, which is not something i'll fight for, i can adapt
+18:50:30 <sivel> but don't have a fancy helper
+18:50:50 <bcoca> sivel: wait till py4 compatibility is an issue
+18:51:23 <sivel> just going to find a job fishing or something
+18:51:44 <kamsz> street fruit market is a good idea
+18:52:05 * gregdek is still hoping for an answer that enough people can say yes to...
+18:52:27 <sivel> I think the answer is to use get_exception() from basic.py
+18:52:40 <sivel> bcoca: ?
+18:52:44 <kamsz> my heart says as x, but my mind says get_exception()
+18:53:00 <bcoca> im fine either way, do prefer it, but not sure we need to mandate it
+18:53:10 <abadger1999> I think we shouldn't use get_exception() in python-2.6+ only code but would be willing to accept it as okay.
+18:53:22 <sivel> they are module guidelines right?
+18:53:34 <sivel> :)
+18:53:35 <gregdek> Can we make it mandatory in 2.4 and not mandatory for 2.6+?
+18:53:49 <abadger1999> More and more non-essential modules are python2.6+ because their libraries depend on it.
+18:53:51 <sivel> my concern is the confusion that could create
+18:54:05 <gregdek> Worse confusion if there's no rule and no answer.
+18:54:25 <abadger1999> If we're going to get people to port those to python3, the less barriers and ansible-only stuff we throw at them the better.
+18:54:29 <gregdek> And we continue to say arbitrarily "bcoca prefers x" or "abadger1999 prefers y" depending on who looks at it.
+18:54:31 <bcoca> we'll have confusion either way, justnot about exceptions (with ...)
+18:54:33 <sivel> if you use `as ` you must list py>=2.6 as a requirement, and actually have a reason for it
+18:54:36 <sivel> I am fine with that
+18:54:46 <abadger1999> bcoca: yep, that's another one.
+18:54:51 <sivel> not just, I didn't want to write it to work for py24
+18:54:54 <bcoca> abadger1999: long list
+18:55:00 <kamsz> sivel: :D
+18:55:02 <gregdek> Any rule we can point to and say "this is the rule" is a good rule. :)
+18:55:06 <bcoca> dict comprehensions, ternary inline ifs
+18:55:06 <abadger1999> with, ternary, set comprehensions, .... exceptions are just one of them.
+18:55:09 <bcoca> etc
+18:55:18 <abadger1999> sivel: +1
+18:55:26 <gregdek> Or maybe new modules should be 2.6+ only!
+18:55:32 <gregdek> Rip the band-aid off. :)
+18:55:34 <bcoca> HA!
+18:55:34 <kamsz> i'm good with sivel suggestion
+18:55:38 <sivel> I think the module guidelines already documented you can use py2.6+ features if the underlying python module requires it
+18:55:39 <bcoca> gregdek: +100
+18:55:44 <sivel> but you must list it, and have a valid reason
+18:55:49 <sivel> or at least they did
+18:55:54 <sivel> because I made gregdek add that :)
+18:56:06 <abadger1999> gregdek: Don't be a tease ;-)
+18:56:14 <gregdek> So... maybe srs?
+18:56:17 <bcoca> actually ... most extras shoudl be fine being 2.6+ unless they deal with system things instead of just 'applications/apis'
+18:56:32 <gregdek> New things are new things. Right?
+18:56:39 <abadger1999> gregdek: if you can sell that to whoever should make that decision, I'd be all for it.
+18:56:44 <gregdek> New modules for AWS as of X date: boto3.
+18:56:54 <gregdek> New modules for ANsible as of X date: python 2.6.
+18:56:57 <bcoca> so new module to manage selinux, needs to be 2.4, new one to manage trendycloud2.0.io ... might as well by py4
+18:57:14 <bcoca> gregdek: not as simple as date
+18:57:20 <gregdek> Fair enough.
+18:57:29 <sivel> so, you can use python2.6 syntax, if the underlying python modules require py2.6+.  But it must be documented as requiring py2.6+ with a valid reason, and .travis.yml will need to have the exclusion extended
+18:57:33 <rbergeron> oh god trendycloud is that merged yet! i saw that on hackeroverstackflow. must switch everything
+18:57:51 <abadger1999> sivel: +1  Sounds good.
+18:57:51 <gregdek> But maybe it's time to start looking at what those parameters could be.
+18:57:58 <bcoca> rbergeron: i do have hackernews module ....
+18:58:09 <gregdek> anyway.
+18:58:12 <sivel> gregdek: there ya go, I got a +1 from abadger1999.
+18:58:18 <bcoca> ^ also have task that browsers hacker news jobs while async task installing packages runs
+18:58:20 * gundalow returns
+18:58:25 <gundalow> did we agree anything?
+18:58:27 <gregdek> in the absence of deprecating 2.4, can someone restate the rule so we can make it a rule? :)
+18:58:45 <gregdek> sivel> so, you can use python2.6 syntax, if the underlying python modules require py2.6+.  But it must be documented as requiring py2.6+ with a valid reason, and .travis.yml will need to have the exclusion extended
+18:58:47 <gregdek> Is that the rule?
+18:59:01 <bcoca> modules that deal with traditional systems and tools should still be 2.4, modules that deal with 'newer' services and APIs can be 2.6+
+18:59:01 <sivel> yes.  it doesn't state get_exception() specifically though
+18:59:15 <sivel> so extend as needed :)
+18:59:18 <bcoca> sivel: 2 rules
+18:59:19 <gregdek> Well, it's a rule that covers many sub-cases, which we can enumerate.
+18:59:35 <gregdek> (Or at least I imagine it to be. I don't actually know what I'm talking about, of course.)
+19:00:08 <bcoca> ^ that covers python version, next rule: if module is not already 2.6+ it MUST use get_exception, else you SHOULD use `as e` or get_exception (never `, e`)
+19:02:02 <gregdek> OK.
+19:02:42 <gregdek> https://github.com/ansible/community/issues/79
+19:02:53 <gregdek> We'll make a PR to the guidelines.
+19:03:09 <bcoca> do we all agree on py2.4? abadger1999?
+19:03:31 <bcoca> or do we leave it on case by case?
+19:03:32 <abadger1999> yes, agreed.
+19:03:48 <bcoca> jimi|ansible?
+19:04:10 <abadger1999> if there's corenercases in the future, we can revisit then but this looks like it should cover reasonable people doing reasonable things.
+19:04:15 <bcoca> anyone know how much longer rhel5 is supported?
+19:04:47 <MichaelBaydoun> March 2017
+19:04:48 <bcoca> abadger1999: agreed, just want to make sure we have no oposition, as this can be a pain
+19:05:02 <bcoca> and extended support?
+19:05:19 <abadger1999> https://access.redhat.com/support/policy/updates/errata
+19:05:30 <gregdek> (Want to wrap up in 5 if we can so we can move onto community meeting)
+19:05:32 <rbergeron> bcoca: for further illusrations of how this works, please see how many times windows xp had an EOL date that got extended :)
+19:05:34 <abadger1999> For rhel4 we did end of production 3 I think.
+19:05:49 <abadger1999> So march 31, 2017 if we do the same
+19:06:29 <MichaelBaydoun> extended support 3 years beyond
+19:06:32 <abadger1999> extended lifecycle support is 2020 but I'm going to pretend that no one will ask us for that.
+19:06:32 <bcoca> rbergeron: life = (number of people not upgraded * whining coeficient ) ^ number of bugs
+19:06:36 <abadger1999> https://access.redhat.com/support/policy/updates/errata
+19:07:06 <MichaelBaydoun> errr, 10 years beyond, yikes
+19:07:09 <bcoca> ok, so i'm fine then with limiting 2.4 support from now on
+19:07:25 * bcoca starts writing virus to kill any OS running 2.4 by end of 2017
+19:08:07 <kamsz> :D
+19:08:33 * jimi|ansible reads back
+19:09:06 <jimi|ansible> +1
+19:09:36 <gregdek> LOL
+19:09:39 <gregdek> To the whole thing?
+19:09:46 <kamsz> fast and clean response
+19:09:54 <jimi|ansible> to the rule regarding py2.4 syntax
+19:09:55 <kamsz> jimi|ansible: you're a fast reader
+19:09:58 <jimi|ansible> was there further discussion?
+19:10:17 <bcoca> nope, last 20 lines shold be enough
+19:10:25 <gregdek> No, that was the gist. :)
+19:10:31 <gregdek> Took a while to get there though.
+19:10:52 <gregdek> Anyway. kamsz hope that clarified things a little bit.
+19:10:55 <bcoca> jimi|ansible: greg really wanted us to extend suport to rhel4 and py2.3 but we didnt want to
+19:11:01 <jimi|ansible> o_O
+19:11:02 <kamsz> gregdek: yeah
+19:11:02 <gregdek> staaaahp
+19:11:12 <kamsz> thanks guys, again i've managed to start fiercy discussion
+19:11:12 <bcoca> also php4 ...
+19:11:16 <gregdek> jimi|ansible: I wanted to kill 2.4 support for all new modules. :)
+19:11:33 <gregdek> (Actually, I still want that. But perhaps not ready.)
+19:11:37 <jimi|ansible> i once started up a RHEL 4 vm to diagnose a bug and then was like waaiiittttt....
+19:11:48 <jimi|ansible> but yeah, too soon
+19:12:04 <jimi|ansible> maybe once EL5 is EOL, regardless of whether it's in extended support, so 2017
+19:12:21 <bcoca> i think this is good rule to start 'phasing out'
+19:12:31 <bcoca> most new apps/clouds don't work with 2.4 systems anyways
+19:12:55 <abadger1999> +1 to "phasing out"  currrent modules and core sysadmin functions continue to work but we chip away at the periphery
+19:13:36 <abadger1999> gregdek: I think the idea's approved.
+19:13:43 <bcoca> ok, i think we are all on same page and happy to see the beginging of the end of 2.4 support!
+19:14:21 <jimi|ansible> the only thing i'd also say is that any modules that don't work on py2.4 should have a big prominent note
+19:14:39 <gregdek> Easily achieved with docs building changes, yes?
+19:14:45 <jimi|ansible> yep
+19:14:56 <gregdek> Something to consult with docschick on maybe.
+19:15:22 <bcoca> already needs a `requriements` entry
+19:15:24 <gregdek> Page is crimson red if 2.4 support. >:-)
+19:15:39 <kamsz> with flashing banner 'WARNING'
+19:15:44 <bcoca> gregdek: i was going for 'catacomb black'
+19:15:57 <gregdek> ANYWAY our li'l community meeting is now 15m late, so imma call this meeting done.
+19:16:10 <kamsz> thanks guys!
+19:16:13 <gregdek> Already captured this proposal in a github issue, so that's that.
+19:16:16 <gregdek> Thanks kamsz!
+19:16:19 <gregdek> #endmeeting

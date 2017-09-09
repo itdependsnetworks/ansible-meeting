@@ -1,0 +1,197 @@
+15:03:48 <gundalow> #startmeeting Ansible Core Meeting
+15:03:48 <zodbot> Meeting started Thu Feb  2 15:03:48 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:03:48 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:03:48 <zodbot> The meeting name has been set to 'ansible_core_meeting'
+15:04:27 <gundalow> #chair bcoca jtanner mattclay ryansb
+15:04:27 <zodbot> Current chairs: bcoca gundalow jtanner mattclay ryansb
+15:05:16 <also_alikins> bloop
+15:06:06 <gundalow> #chair also_alikins
+15:06:06 <zodbot> Current chairs: also_alikins bcoca gundalow jtanner mattclay ryansb
+15:06:23 <ryansb> good morning, ansiblites
+15:06:27 <gundalow> #info Ansibot is down at the moment, not sure when it will be back
+15:06:41 <gundalow> Greetings from Paris
+15:06:57 <gundalow> Dates for AnsibleFest London have been announced
+15:07:35 <abadger1999> bonjour!
+15:07:39 <gundalow> jtyr: over to you
+15:07:48 <jtyr> https://github.com/ansible/ansible/pull/19283\
+15:07:54 <jtyr> https://github.com/ansible/ansible/pull/19283
+15:08:14 <gundalow> #topic etc_hosts module #19283
+15:08:24 <jtyr> I have added the IP verification and some more functionality how to search for the right records ...
+15:08:51 <jtyr> now it should definitely have better value over the lineinfile or template ... ;o)
+15:09:53 <gundalow> also_alikins: bcoca I believe you two have been reviewing this
+15:10:44 <bcoca> still has several open review issues
+15:11:01 <abadger1999> sivel's comment hasn't been addressed yet.
+15:11:14 <bcoca> nor yours
+15:11:16 <gundalow> can someone please take over now please
+15:11:28 <also_alikins> I have no serious objections
+15:12:14 <bcoca> imports still in wrong spot
+15:12:18 * jtanner finally sits down at desk
+15:12:42 <jtyr> bcoca: imports should be on the top of the file
+15:12:55 <jtyr> any variables should be after imports
+15:12:58 <bcoca> jtyr: you are violating pep8
+15:13:03 <jtyr> nop
+15:13:11 <jtyr> you are by moving it under the variables
+15:13:19 <bcoca> yes .. you are ignoring project style
+15:13:42 <jtyr> there was no project style documented by the time of creation of the module
+15:13:44 <bcoca> which pep8 clearly states is MORE imporant than the details in pep8
+15:13:58 <jtyr> the project style was created to make my mode unmergable ... ;o)
+15:14:39 <bcoca> yes .. we live to do style changes to make youre modules incompatible </sarcasm>
+15:14:43 <abadger1999> It was not.  It was created because it makes sense.
+15:15:05 <jtyr> bcoca: you don't have to read imports all the time ... you put them in once and then you never look at them again ... so the can stay at the top of the file as where they should be by good programming practice ...
+15:15:39 <jtyr> abadger1999: it doesn't make sense ... it's the same like includes in C must be on the top of the file as well ...
+15:15:53 <bcoca> jtyr: bring it up in meeting about style guide, the style is what it is, this meeting is not to discuss the style guide
+15:15:54 <abadger1999> jtyr: But you don't have then at the top of hte file either.
+15:16:07 <abadger1999> you have them at line 22.
+15:16:17 <jtyr> comments don't count as code ...
+15:16:24 <abadger1999> Exactly.
+15:16:37 <jtyr> first comments, then imports then anything else ...
+15:16:51 <abadger1999> And for the purposes of hte module, ANSIBLE_METADATA, DOCUMENTATION, RETURNNS, and EXAMPLES are comments.
+15:16:52 <jtyr> my module is exactly according to Python standard
+15:17:09 <jtyr> abadger1999: no, they are not comments ... they are variables ...
+15:17:40 <abadger1999> "For the purposes of"
+15:17:47 <bcoca> again, not for discussion now, this is a mute point
+15:17:55 <jtanner> "moot" point
+15:17:57 <levis_> I think the reality is here that we aren't changing that guideline.  So you are fighting a battle that you won't win.  So I suggest following direction or closing your PR
+15:18:01 <jtyr> if you turn the variables into comments, then there is no problem to move the imports below .. but you decided to make them as variables and therefor the imports must be above them ...
+15:18:08 <bcoca> jtanner: no, as in im going to mute both of them ....
+15:18:15 <jtanner> very well
+15:18:49 <jtyr> so any other comments than imports?
+15:19:00 <abadger1999> jtyr: I gave one in the ticket.
+15:19:11 <abadger1999> easyfix
+15:19:17 <jtyr> abadger1999: object is the default inheritance, no?
+15:19:25 <abadger1999> jtyr: no.  Only in python3.
+15:19:40 <abadger1999> jtyr: in python2, inheriting from object explicitly makes it a new-style class.
+15:19:48 <abadger1999> Otherwise it's an old-style class.
+15:20:10 <jtyr> eh? ... what's old-style class?
+15:20:26 <abadger1999> jtyr: I can't even remember... Probably best to just google it.
+15:20:28 <abadger1999> :-)
+15:20:54 <levis_> The irony here is not lost on me
+15:20:58 <abadger1999> :-)
+15:21:16 <abadger1999> Anyhow... I don't think there's anything else we can do with this module via this meeting...
+15:21:32 <abadger1999> We've all reviewed it... it's the best it can be bt it doesn't comply with project coding style.
+15:21:33 <jtyr> abadger1999: LOL ... http://stackoverflow.com/questions/4906014/python-default-inheritance#comment5462586_4906014
+15:21:51 <jtyr> "in most cases, it doesn't matter" ... ;o)
+15:23:00 <abadger1999> ah, properties is a big one.
+15:23:24 <abadger1999> anyhow... so I guess we take this off the agenda and close the PR?
+15:23:34 <abadger1999> you can push the module to galaxy in a role?
+15:23:55 <jtyr> merge & close, please ;o)
+15:24:22 <abadger1999> Or we can discuss style guidelines some more later in the meeting.
+15:25:13 <abadger1999> In either case, I think we should move on from this item.
+15:26:33 <albertom> speaking of style.. first import python modules then custome ones (ansible)
+15:26:34 * albertom hides
+15:27:01 <akasivel> One step at a time there
+15:27:08 <bcoca> ^ dont know if we ever said that officially, but that is what i've always follwooed
+15:27:57 <abadger1999> <nod>  Isn't that one in pep8?
+15:28:23 <abadger1999> stdlib<blankline>3rd party<blank line>project-specific
+15:28:39 <akasivel> Yes also not enforced by the pep8 tool.  There is a flake8-import-order plugin that does it
+15:28:54 <akasivel> Although* not enforced
+15:29:13 <abadger1999> <nod>
+15:29:18 <abadger1999> Okay moving on:
+15:29:38 <albertom> thats why i like go
+15:29:39 <abadger1999> #topic Fix for mysql user: https://github.com/ansible/ansible/pull/19016
+15:30:02 <abadger1999> Looks like jmainguy was asking for other opinions at the end of hte comments.
+15:31:01 <Jmainguy> im here now
+15:33:37 <abadger1999> Jmainguy: So it looks like you just needed to know if others thought that a warning in the documentaiton if an incorrect privilege string is given was sufficient.
+15:34:22 <abadger1999> I'd prefer it to error but I suppose documentation could be sufficient for now..
+15:34:44 <Jmainguy> yeah I would prefer an error, but I am pretty lazy, and the OP doesnt seem to want to do it either
+15:35:18 <Jmainguy> I wasnt even aware mysql supported privs per column, so thats pretty cool
+15:35:20 <abadger1999> hehe :-)
+15:35:27 <Jmainguy> adding that in is gonna be good for folk
+15:35:52 <Jmainguy> ok I will respond and ask OP to add that that warning into the documentation
+15:36:01 <Jmainguy> then thumbs up it when he/she does
+15:36:02 <abadger1999> yeah.
+15:36:11 <Jmainguy> ty ty
+15:36:32 <abadger1999> I take it that the PR makes the situation better than it currently is any how so I think incremental improvement is good.
+15:36:40 <Jmainguy> yup, exactly
+15:36:56 <Jmainguy> atm ansible wont work with per column privs, and this PR fixes that
+15:37:03 <abadger1999> #action Suggestion to add documentation is fine... incrementatl improvment works for us
+15:38:14 <abadger1999> #topic https://github.com/ansible/ansible/pull/19500  Changing assemble to allow alternate sources of files
+15:38:46 <abadger1999> So I think this one we discussed pros and cons for a while last time.
+15:38:57 <abadger1999> At some point we just have to make a decision.
+15:39:06 <bcoca> -1
+15:41:52 <abadger1999> bcoca: does template includes work for the examples given in the PR? https://github.com/ansible/ansible/pull/19500/files#diff-fc33cf0f7621e5463eaef7993046ec2eR124
+15:42:19 <abadger1999> If so, I guess I don't see a reason to duplicate functionality either.
+15:43:24 <bcoca> if not, i can easly add one
+15:44:34 <abadger1999> Okay, -1 from me as well.
+15:46:05 <abadger1999> also_alikins, ryansb, akasivel, any other committers: If you want to vote on accepting or rejecting "Changing assemble to allow alternate sources of files", now's the time
+15:46:23 <jtyr> bcoca: how can you use template to achieve the same like in the example?
+15:47:16 <jtyr> I quite like the src_files feature ... not that I would ever use it but if somebody does then it might be nice to have it in Ansible ...
+15:47:23 * abadger1999 waits to see results of this
+15:47:27 <ryansb> I'm ambivalent, so abstain
+15:47:39 <also_alikins> +1 from me
+15:48:15 <jtyr> +1 from em as well ... it ads more possibilities how to use the module ...
+15:49:22 <bcoca> {% for myfile in include_files %} {% include myfile %}{%endfor%}
+15:49:24 <jtanner> i abstain, novote
+15:49:31 <jtyr> ... like to use one task to get list of files I would like to concatenate and then pass the list to the assemble module which will do it ...
+15:49:59 <jtyr> bcoca: ok ... but you have to create template instead of using just a module ...
+15:50:01 <bcoca> i even find the assemble module as overlapping with tempalte
+15:50:47 <jtyr> bcoca: almost every other module can be replaced by shell and template modules ... ;o)
+15:51:44 <jtyr> bcoca: the point of other modules is to make user's life easier ... and this src_files is one of the features which can make the life easier ...
+15:52:38 <bcoca> template yes, shell no, shell is there as a fallback
+15:52:58 <bcoca> jtyr: at one point adding too many modules that overlap with trivial options makes things harder
+15:53:27 <bcoca> i prefer to use roles that encapsulate these things vs module proliferation
+15:53:41 <bcoca> roles are easier for user to customize vs module code
+15:53:56 <bcoca> and with include_role we dont have the previous limitations of ordering and reuse
+15:54:34 <abadger1999> Okay,  current vote is +1:1,  0:2,  -1:2.I'd like to have a more solid yay or nay than that.  I think I'll record the current vote and reasoning in the ticket.  We'll look for more votes next week when people are back from  AnsibleAutoMates
+15:55:18 <jtyr> bcoca: but you fragment the way how people use ansible ... if there is one module in the core, all people will use it ... if there is 1000 roles, which one will you use?
+15:55:31 <abadger1999> #info current votes Accept:1, Reject:2, Abstain:2.  Will wait for next week to see how other committers vote on the issue.
+15:55:32 <jtyr> I rather use modules than roles ...
+15:56:08 <abadger1999> #action abadger1999 to record current votes and rationale in the community ticket for continuing next week.
+15:56:44 <jtyr> abadger1999: there was two +1s ...
+15:56:50 <abadger1999> jtyr: I think bcoca's thrust is that if there's two modules in the core, half will use one and half will use the other.
+15:56:57 <jtyr> one from me and one from also_alikins
+15:56:58 <abadger1999> jtyr: Are you a committer?
+15:57:20 <abadger1999> I apologize if I missed that.
+15:57:35 <jtyr> ah ... I don't count then ... ;o) ... I should do some quick PEP8 commit on that module to get the right to vote ... ;o)
+15:57:40 <abadger1999> :-)
+15:57:53 <bcoca> maintainer != commiter
+15:58:02 <bcoca> all commiters are maintainers, but not all maintainers are commiters
+15:58:20 <bcoca> ^ we were trying to use bot to enable them to commit but ... someone reported bot
+15:58:47 <jtanner> easiest way to define "committer" is those who can press the green merge button
+15:59:23 <jtanner> until there's some other form of rbac, but that would probably have to be through the bot, but ...
+16:00:50 <abadger1999> bcoca: https://github.com/ansible/ansible/issues/20440  <=== This is on the agenda and not crossed off but ticket is closed.  Does it need discussion or is it done?
+16:03:50 <jtyr> jtanner: I would like to be able to press the merge button ... I got couple of PRs still open which would be worth having in Ansible by default ... ;o)
+16:04:28 <jtyr> jtanner: If I would have that power, Ansible would become PEP8 compliant over the night ... ;o)))
+16:04:31 <jtanner> there's very few people who can do that, who aren't employed by ansible
+16:05:14 <bcoca> used to be more .. but we hired them ....
+16:06:21 <abadger1999> We need to grow that number.  But, to make sure all cards are on the table, people who do pep8 changes without consensus would not likely get in.
+16:07:00 <abadger1999> bcoca: do you need us to discuss 20440?  or is it done?
+16:07:52 <bcoca> nope, user seemed happy with my explanation
+16:08:01 <abadger1999> k
+16:08:18 <abadger1999> podlesh's item we'll talk about on tuesday.
+16:08:21 <bcoca> ah, but not ticket to discuss
+16:08:24 <bcoca> was about inheritance
+16:08:25 <jtyr> abadger1999: you either follow PEP8 or you don't ;o) ... if all code would be PEP8 compliant it would be significantly better than if it's not compliant ...
+16:08:32 <bcoca> what is inherited and what should be
+16:08:41 <abadger1999> jtyr: well... the answer to that is.  we don't.
+16:08:55 <bcoca> jtyr: i disagree, but not going to discuss that now
+16:10:12 <abadger1999> #topic Make fileglob work with globbed path components: https://github.com/ansible/ansible/pull/19297
+16:10:17 <bcoca> abadger1999: but lets wait till after fest, need more quorum
+16:11:56 <abadger1999> IIRC, this was briefly discussed at a previous meeting but no one wrote up results/next actions.
+16:12:11 <abadger1999> Anyone care to fill me in on that?  (I wasn't here for that meeting)
+16:12:44 * bcoca draws blank
+16:13:20 <abadger1999> Alright.. I'll crawl the meeting logs to find out the status and we can discuss it next time.
+16:13:41 <bcoca> ^ i need to update the 'inheritance' issue since ticket was closed
+16:13:46 <abadger1999> #topic Open Floor
+16:13:57 <abadger1999> bcoca: Cool :-)  That would be great.
+16:14:06 <bcoca> new ticket for feb?
+16:14:26 <abadger1999> yeah, we need one.  this one is getting cluttered.
+16:15:26 <abadger1999> bcoca: Go ahead and update the inheritance item in this ticket.  I'll go through the items and migrate all the ones that are not crossed off after the meeting.
+16:15:57 <abadger1999> #topic Default value of Poll: https://github.com/ansible/ansible/issues/20869
+16:16:08 <abadger1999> Here's one that I found yesterday.
+16:16:14 <abadger1999> async: + poll:
+16:16:22 <abadger1999> In 1.x the default value of poll was 10
+16:16:26 <abadger1999> In 2.x it's 0.
+16:16:41 <abadger1999> (None, but in the code, None equates to 0 in this case)
+16:16:58 <bcoca> abadger1999: ah, i fixed that in my async ticket
+16:17:08 <bcoca> set poll to default to 10, otherwise many async cases break
+16:17:18 <abadger1999> bcoca: okay, cool.
+16:17:26 <bcoca> i'll make note in changelog
+16:17:45 <abadger1999> If you want to point that ticket to the async fix and close it that would be great.
+16:18:25 <bcoca> done
+16:18:38 <abadger1999> bcoca: He also has a feature idea for async: https://github.com/ansible/ansible/issues/20877  Not sure if that's something that would be controversial or if we should just mark it as needs_contributor.
+16:18:43 <abadger1999> Thanks
+16:22:30 <abadger1999> #topic Open floor
+16:22:34 <abadger1999> Okay, anything else?
+16:23:34 <abadger1999> If not I'll close in 60s
+16:29:10 <ryansb> #endmeeting

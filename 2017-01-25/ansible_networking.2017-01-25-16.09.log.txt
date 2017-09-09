@@ -1,0 +1,108 @@
+16:09:30 <privateip> #startmeeting ansible networking
+16:09:30 <zodbot> Meeting started Wed Jan 25 16:09:30 2017 UTC.  The chair is privateip. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:09:30 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:09:30 <zodbot> The meeting name has been set to 'ansible_networking'
+16:09:38 <privateip> sorry for the delay all
+16:09:40 <privateip> good morning
+16:09:56 <privateip> gundalow is tied up so i will moderate today
+16:10:48 <resmo> hi
+16:11:18 <st8less> fyi, I'm @djustice on NTC
+16:11:25 * bcoca goes to basement to untie gundalow
+16:11:45 <privateip> #topic open floor
+16:11:57 <privateip> open floor today
+16:12:26 <privateip> please not everyone at once though
+16:12:29 <privateip> ;)
+16:13:17 <st8less> My first meeting, but I'm game.  PR 20262
+16:13:25 <privateip> cool
+16:13:31 <privateip> do you have the link handy?
+16:13:38 <st8less> https://github.com/ansible/ansible/pull/20262
+16:13:44 <privateip> thx
+16:14:54 <gundalow> hello
+16:15:03 <gundalow> sorry, got tied up in another meeting
+16:15:03 <privateip> not sure why the need for the setters
+16:15:20 <privateip> hi gundalow
+16:15:27 <privateip> we heard bcoca untied you :)
+16:15:55 <st8less> nxos_vxlan_vtep_vni inherits a CommandLine object and tries to modify private properties.
+16:16:40 <privateip> i dont see that in the code ... do you have th elinum handy?
+16:16:51 <privateip> wow ... how about the linenum handy?
+16:17:02 <st8less> I may have quoted the wrong class, just a sec.  Looking
+16:17:25 <privateip> sure
+16:17:27 <st8less> Sorry, ConfigLine class.  line 222
+16:18:13 <privateip> in netcfg?
+16:18:28 <st8less> No nxos_vlan_vtep_vni
+16:18:35 <privateip> oops
+16:20:13 <privateip> is this the place?
+16:20:27 <privateip> https://github.com/ansible/ansible/blob/devel/lib/ansible/modules/network/nxos/nxos_vxlan_vtep_vni.py#L222
+16:22:21 <st8less> In that file, the instance is created on line 217.  But on line 231, it tries to access self.indent and there is not getter for that property in netcfg
+16:22:48 <st8less> Another instance is created on 248
+16:23:34 <st8less> On lines 235 and 250, the module tries to set parents which has no setter method in netcfg.
+16:23:56 <privateip> oh i see whats going on here
+16:24:08 <st8less> There is absolutely no way that module worked out of the box, no offense.
+16:24:19 <privateip> netcfg has changed since 2.2 was released
+16:24:24 <privateip> your right this is broke
+16:24:38 <privateip> i dont think adding the setters is the right change though
+16:24:50 <privateip> i think we need to update nxos_vxlan_vtep_vni
+16:25:10 <privateip> is ggabriele around?
+16:25:37 <st8less> There were other bugs I fixed in the module as well, the netcfg stuff is just local to the 'add' method.  I'm open to suggestions on fixing it.
+16:25:38 <gundalow> privateip: nop, he was on networktocode earlier, he said he could'nt make IRC today
+16:26:03 <gundalow> though if you @mention him in issues he will repond
+16:26:43 <privateip> ok i think the right path forward is to get the nxos_ modules off this common block of code from 2.1
+16:27:22 <privateip> lets hold the PR until ggabriele can weigh in
+16:27:39 <privateip> agreed?
+16:27:48 <gundalow> +1
+16:28:50 <privateip> okay updated PR with comments
+16:29:42 <privateip> other PRs there are questions about?
+16:29:59 * gundalow added a few bits on the agenda
+16:30:33 <gundalow> most were PRs, there was a question about .updates
+16:30:49 <privateip> lets tackle the updates one
+16:30:54 <privateip> #topic return key updates
+16:31:32 <privateip> there is a discrepancy between return keys when we merged template into config
+16:32:12 <privateip> for cli based modules i'm recommending that all cli based modules return a commands key wich is the list of commands sent to the device if a change is necessary
+16:32:13 <gundalow> https://github.com/ansible/ansible/issues/19382
+16:32:28 <privateip> this effectively means updates = commands moving forward for consistency
+16:32:32 <privateip> for all network modules
+16:32:43 <privateip> especially as we get into declarative modules
+16:32:57 <bcoca> privateip: make prposal, not just network, we have diff modules with 'action', 'details', 'logs', etc we need unified way for this
+16:33:09 <privateip> point taken
+16:33:19 <bcoca> ^ would be nice to have 'one way'
+16:33:23 <privateip> agreed
+16:33:25 <privateip> will take that action
+16:34:18 <privateip> #action privateip to write up proposal on standardizing return keys
+16:34:53 <bcoca> http://docs.ansible.com/ansible/common_return_values.html <= here is where we keep the documented stdrds on return
+16:35:34 * privateip should RTFM more often
+16:36:46 <bcoca> ^ it used to be in my head until recently
+16:36:58 <bcoca> wrote it down for ... scale
+16:37:16 * privateip doesn't want to read bcoca's head, its dark and cold and scary
+16:37:26 <bcoca> youknowit!
+16:38:07 <privateip> light day today ... other topics for discussion?
+16:38:12 <privateip> #topic open floor
+16:38:34 <ganeshnalawade> I had one issue to discuss
+16:38:43 <ganeshnalawade> https://github.com/ansible/ansible/issues/19107
+16:38:44 <privateip> hi ganeshnalawde
+16:39:24 <ganeshnalawade> Hi privateip
+16:40:58 <privateip> hmm i thought this was fixed
+16:42:05 <privateip> if im reading this right the issue is a delete statement is trying to execute when there is no corresponding section to delete
+16:42:15 <privateip> is that how you are reading it ganeshnalawade?
+16:42:20 <ganeshnalawade> yes
+16:42:49 <ganeshnalawade> if statment in not found on junos device it throws a warning and continues execution
+16:43:06 <ganeshnalawade> i think with Ansible also need to have same beahviour
+16:43:32 <ganeshnalawade> because of this issue user need add dummy configuration in playbook
+16:43:52 <privateip> got it
+16:44:13 <ganeshnalawade> need to check the error severity  in <rpc-reply>..if it it 'warning'  need to continue Ansible run
+16:44:43 <privateip> also do you know if once the error is hit does the system stop processing any further statements?
+16:45:21 <ganeshnalawade> if error severity is 'error' it stops execution
+16:45:47 <privateip> ok i need to test this as well to understand the behavior
+16:45:56 <ganeshnalawade> ok
+16:46:18 <ganeshnalawade> Netconf protocol defines different levels of error severity
+16:46:27 <privateip> yep
+16:46:53 <privateip> currently writing a netconf connection plugin that will solve lots of these nagging issues
+16:47:10 <ganeshnalawade> ok
+16:47:11 <privateip> in fact just committed the first bits this morning
+16:47:53 <privateip> just committed in the issue
+16:48:30 <ganeshnalawade> got it...I think we need to parse rpc-reply and add a check of <error-severity> tag
+16:48:46 <ganeshnalawade> that's all i had
+16:48:51 <privateip> thanks
+16:48:59 <privateip> last call for topics for today
+16:50:00 <privateip> going twice
+16:52:04 <privateip> thanks all see you next week
+16:52:07 <privateip> #endmeeting

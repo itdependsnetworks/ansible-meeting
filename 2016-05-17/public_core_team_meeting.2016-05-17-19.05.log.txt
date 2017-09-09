@@ -1,0 +1,318 @@
+19:05:01 <nitzmahone> #startmeeting Public Core Team Meeting
+19:05:01 <zodbot> Meeting started Tue May 17 19:05:01 2016 UTC.  The chair is nitzmahone. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:05:01 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:05:01 <zodbot> The meeting name has been set to 'public_core_team_meeting'
+19:05:17 <abadger1999> greetings
+19:05:30 * bcoca waves
+19:05:32 <alikins> howdy
+19:05:37 <ryansb> hi team
+19:05:51 <nitzmahone> #chair abadger1999 alikins bcoca ryansb
+19:05:51 <zodbot> Current chairs: abadger1999 alikins bcoca nitzmahone ryansb
+19:06:17 <kamsz> hihooo
+19:06:41 <nitzmahone> I don't think we had any specific agenda today... RC2 is in the wild.
+19:06:44 <Qalthos> hiya
+19:07:30 <bcoca> one item ... what tags to use
+19:07:36 <jtanner|t420> hi, just got back
+19:07:44 <bcoca> s/tags/comments people leave for tagbot to set shipit tag/
+19:07:48 <nitzmahone> #chair Qalthos jtanner|t420
+19:07:48 <zodbot> Current chairs: Qalthos abadger1999 alikins bcoca jtanner|t420 nitzmahone ryansb
+19:08:38 <nitzmahone> Did we write down a list of candidates last time?
+19:08:46 <ryansb> bcoca: tested_works_for_me is one I really liked
+19:09:50 <nitzmahone> Yeah, I like that as a more powerful +1 for community folks
+19:10:26 <bcoca> i propose either 'tested/works_for_me' and 'reviewed/meets_guidelines' <= either of each pair works for me
+19:10:27 <nitzmahone> Too bad GitHub hides the "how to merge this PR into your local stuff" instructions if you're not a committer. :(
+19:10:31 <jtanner|t420> should there be an opposite? tested_no_work
+19:10:44 <nitzmahone> tested/sad_trombone
+19:10:52 <jtanner|t420> +1 for sad_trombone
+19:10:52 <bcoca> jtanner|t420: no, i would say that any errors need to be posted
+19:11:12 <bcoca> not useful for user to get 'broken' tag w/o any feedback
+19:11:13 <jtanner|t420> the simple designator is more for the benefit of scripts/bots
+19:11:34 <jtanner|t420> i still agree that a full description of the problem is merited
+19:11:34 <bcoca> absence of works! would be considered non reviewed or broken
+19:11:38 <abadger1999> bcoca: +1
+19:11:47 <bcoca> abadger1999: thatiswhatimtryingtoavoid!!!
+19:11:52 <abadger1999> ;-)
+19:11:55 <bcoca> :-p
+19:11:56 <nitzmahone> In the presence of automerge, I'd want to see some kind of "Broken" thing the bot can look for
+19:12:04 <bcoca> no automerge
+19:12:09 <ryansb> maybe "broke_for_me"
+19:12:14 <MichaelBaydoun> The issue I believe we are discussing https://github.com/ansible/community/issues/95
+19:12:19 <ryansb> and "works_for_me"
+19:12:26 <MichaelBaydoun> hi btw
+19:12:39 <ryansb> seems easy to remember at least (as much as I like sad_trombone)
+19:12:43 <jtanner|t420> #chair MichaelBaydoun
+19:12:43 <zodbot> Current chairs: MichaelBaydoun Qalthos abadger1999 alikins bcoca jtanner|t420 nitzmahone ryansb
+19:12:48 <bcoca> passes_guidlines i like, i retiere teh other 2
+19:12:49 <alikins> former project just used ACK/NACK, but that may be a bit obtuse/non-friendly
+19:13:14 <nitzmahone> NO CARRIER
+19:13:23 <misc> ack is fine if we want to get thing reviewed by a tcp/ip stack, I guess
+19:13:30 <jtanner|t420> ENOMERGE
+19:13:35 <bcoca> DK ,= dont know
+19:13:52 <abadger1999> alikins: we have ack right now which is turning out to be not granular enough.
+19:14:04 <nitzmahone> ¯\_(ツ)_/¯
+19:14:25 <nitzmahone> ^-- bot should look for that, no problems with unicode anywhere, right
+19:14:25 * misc will not start about network joke such as pet shop boys hits: "it's a SYN"
+19:14:30 <bcoca> i think we can all agree 'shipit' should ONLY be the label used by bot, as a comment it is mostly useless
+19:14:52 <jtanner|t420> specifically it's not clear if the ack was "i tested and it's good" or "i agree with the sentiment here"
+19:14:54 <bcoca> misc: not sure if you deserve a +10 or -10 for PSB ref
+19:15:28 <nitzmahone> agreed- the text needs to be clear it was tested, even works_for_me could be misconstrued
+19:15:41 <nitzmahone> (assuming we care about the distinction, which I think we do)
+19:15:45 <MichaelBaydoun> tested_working
+19:15:51 <nitzmahone> ^-- like that
+19:15:52 <bcoca> misc: and to show how weird my brain works .. now i have 'la sagarada familia' from alan parsons running on loop in my head
+19:16:09 <abadger1999> tested_working/meets_guidelines ?
+19:16:17 <MichaelBaydoun> +1
+19:16:19 <bcoca> +1
+19:16:23 <misc> +1
+19:16:26 <bcoca> ^ those 2 work for me
+19:16:31 <nitzmahone> yep
+19:16:36 <ryansb> +1
+19:16:48 <bcoca> make it so?
+19:16:50 <Qalthos> abadger1999: +1
+19:16:52 <jtanner|t420> if only we could put a survey box in the github css with predefined answers
+19:17:02 <bcoca> ^ i think we need community or 'resmo' to add this to bot
+19:17:20 <jtanner|t420> i think we're limited to markdown in that regard
+19:18:12 <abadger1999> gregdek: ^ If you needed our 2 cents, we think "tested_working" and "meets_guidelines" would be great replacements for "shipit"
+19:18:18 <nitzmahone> #accepted - we will use tested_working and meets_guidelines as comment tags
+19:20:34 <newtMcKerr> well, I’m too late, but +1 haha
+19:21:38 <jtanner|t420> next topic?
+19:22:25 <abadger1999> What to do about required in documentation.
+19:22:30 <nitzmahone> OH YEAH
+19:22:37 <bcoca> its required!
+19:22:43 <jtanner|t420> which documentation?
+19:22:49 <nitzmahone> module docs
+19:22:49 <abadger1999> #topic Required for parameters in module docs
+19:22:59 <jtanner|t420> for pylibs?
+19:23:01 <bcoca> to bring everyone up to speed
+19:23:09 <nitzmahone> Most (if not all) the plumbing ignores it missing
+19:23:11 <abadger1999> module documentation parameters have a field, required:   which can be set to true or false.
+19:23:12 <bcoca> required was always a 'required' field in module options
+19:23:20 <bcoca> ^ but never enforced except via review
+19:23:21 <jtanner|t420> oh, for params, ok
+19:23:23 <nitzmahone> (by convention, not by implementation)
+19:23:44 <jtanner|t420> iirc, it was necessary for webdoc builds
+19:23:46 <bcoca> last week nitzmahone brought it up and i updated the tools to enforce this in software (docs already said this)
+19:24:33 <nitzmahone> jtanner|t420 - I'm not sure it is anymore, which brings me back to "do we actually want to make it required or assume missing == not-required"
+19:24:51 <bcoca> nitzmahone: it is again now
+19:25:03 <abadger1999> yep, and it broke the world.  So the question is do we spend time fixing it (by researching modules andding required: to parameters that lack it) or change it so that we default to True or False if it's not present.
+19:25:05 <jtanner|t420> forcing it ensures no ambiguity from module dev
+19:25:12 <jtanner|t420> not forcing it makes less typing
+19:25:28 <bcoca> but leaves ambigious docs
+19:25:33 <nitzmahone> Except that there *is* still ambiguity in many cases (conditional requires, many of which can't be expressed by new required_if, etc)
+19:25:46 <jtanner|t420> didn't know about required_if
+19:25:50 <nitzmahone> new in 2.0
+19:25:52 <bcoca> nitzmahone: conditionals are 'required: false' as in not requied in EVERY case
+19:26:02 <bcoca> not in description should point at it
+19:26:08 <bcoca> ^ required_if?
+19:26:23 <bcoca> hmm, cannot find it in any docs
+19:26:44 <nitzmahone> required_together/required_if/required_one_of in basic.py
+19:26:56 <bcoca> ah, that is not documentation, that is module spec fucntions
+19:27:00 <nitzmahone> Don't know if anyone ever doc'd it
+19:27:00 <bcoca> diff issues
+19:27:16 <bcoca> talking about doc fields, not about arg spec
+19:27:48 <abadger1999> using those means the doc field should be required: False and the description note in what instances it is required.
+19:27:54 * nitzmahone circles around for 10th time through this argument
+19:29:30 <nitzmahone> ... or that required in docs could be something besides true/false (IIRC, it is for webdocs, but not for ansible-doc)
+19:29:51 <nitzmahone> ansible-doc coerces to true using Python's notion
+19:31:20 <nitzmahone> Can't remember if we already nailed this one down, but related issue was when default: is required
+19:31:33 <sivel> I am for if missing, assume false
+19:31:38 <nitzmahone> +1
+19:31:51 <bcoca> default is requied when required is false
+19:31:52 <sivel> or, whatever we denote as the default
+19:31:56 <nitzmahone> Artificial requirements in the docs are just noise IMHO
+19:31:56 <jtanner> +1
+19:32:16 <abadger1999> That would mimic the defaults in the actual arg_spec as well.
+19:32:26 <jtanner> i don't want to overengineer docstrings when the argspec is more capable
+19:32:35 <sivel> as of now, docs don't build, and that will require more work than I think it is worth, to ensure that `required` is there, and correct
+19:32:57 <sivel> I am +1000 for having the docs mimic arg_spec
+19:33:15 <bcoca> nothing requied?
+19:33:17 <jimi|ansible> sivel: i've wanted that for a while too
+19:33:20 <nitzmahone> I'm +1000 for having the docs *be* the arg_spec, but that's a different discussion
+19:33:24 <bcoca> argspec does not require anything
+19:33:28 <jimi|ansible> ^ well, what nitzmahone said
+19:33:39 <sivel> as of now, only `description` is required
+19:33:43 <bcoca> nitzmahone: me too, but that is much more invovled
+19:33:49 <bcoca> sivel: description and requied
+19:33:54 <bcoca> ^ current state
+19:34:01 <sivel> err, 'module'
+19:34:04 <nitzmahone> correct, argspec doesn't require either (default is None if required is missing/False, IIRC)
+19:34:15 <sivel> wait, I am confusing myself
+19:34:20 <sivel> came at it too fast :)
+19:34:29 <jtanner> would be nice if argspec could work like argparse/optparse and just produce the docstrings via --help or whatever
+19:34:46 <bcoca> jtanner: we all dream that dream
+19:34:50 <nitzmahone> jtanner: non-python modules
+19:34:56 <bcoca> or have docs generate argspec ... either ay
+19:34:58 <nitzmahone> You'd have to have it out-of-band
+19:34:59 <bcoca> either way
+19:35:02 <jtanner> i know, there's always a gotcha
+19:35:05 <sivel> I am for making the docs work like arg_spec
+19:35:31 <sivel> I can probably build the docs from arg spec, but we would have to add more like the description to the arg_spec
+19:35:55 <sivel> I've got code in ansible-testing that can get the arg_spec, as passed to AnsibleModule
+19:36:08 <nitzmahone> plus have a non-python modules solution (stub file alongside like current docs or something)
+19:36:17 <sivel> non-python is hard :)
+19:36:19 <bcoca> argspec is missing things for docs, the opposite is not true
+19:36:30 <nitzmahone> false
+19:36:49 <nitzmahone> the new 2.0 values aren't represented in docs (required_if et al)
+19:36:51 <bcoca> nitzmahone: everything we ddo in argspec SHOULD be reflected in docs
+19:37:02 <bcoca> nitzmahone: no field, but you MUST state that in description/notes
+19:37:06 <gregdek> abadger1999: for new modules only or for all modules?
+19:37:10 <abadger1999> but we do not want to parse the docs to create an argspec.  That would require more libraries on the remote nodes.
+19:37:28 <nitzmahone> unless you validate argspec on control side. :)
+19:37:34 <nitzmahone> *win*
+19:37:34 <bcoca> abadger1999: no, could be done on 'ziploader construction' but i think we are getting off target here
+19:37:41 <abadger1999> gregdek: You refering to the current discussion or the earlier one?
+19:38:01 <abadger1999> bcoca: I think you mean ansiballz
+19:38:03 <nitzmahone> I'd assume those same comments apply to existing module PRs as well
+19:38:07 <abadger1999> ;-)
+19:38:08 <bcoca> abadger1999: i sit correzted
+19:38:32 <bcoca> ^ yes, the new 'user tags' for all existing/future PRs
+19:39:30 <abadger1999> okay, I think bcoca is right htat we should push off unifying argspec and documentation for now and just solve the issue before us.
+19:39:44 <sivel> do we have sort of concensus here?  Is it that we relax `required` and not make it required for docs?
+19:39:59 <nitzmahone> A lot of +1s there, and I didn't see any strenuous objection
+19:40:06 <nitzmahone> speak now or forever etc
+19:40:07 <abadger1999> Sounds like most are in agreement that we should use the same default value for required (and possibly default) as the argspec uses.
+19:40:30 <bcoca> just need to go over docs, utilities to make sure this is reflected everywhere
+19:40:36 <abadger1999> <nod>
+19:40:45 <nitzmahone> #agreed we should use the same default value for required (and possibly default) as the argspec use
+19:40:49 <bcoca> ^ i prefer explicit requried but not something i'm going to force if in minority
+19:41:06 * bcoca changes argspec to require required to be specified
+19:41:10 <nitzmahone> Are we all agreed on both required + default ?
+19:41:38 * nitzmahone mails bcoca a dead fish
+19:41:44 <bcoca> yum!
+19:42:15 <nitzmahone> ... and then?
+19:42:20 <abadger1999> +1
+19:42:33 <sivel> I hope to add functionality to ansible-testing soonish to ensure that args with `required` don't have `default`, and error with a message
+19:42:56 <sivel> only problem is that code is slow, so I want to only do it for the files that have changed in a PR
+19:43:10 <nitzmahone> Do we want to bake some/all of that stuff into ansible-doc so it's something people have readily available when dev'ing modules?
+19:43:25 <sivel> from an arg_spec perspective, but it can be extended to also checking that docs and arg_spec are in alignment
+19:43:27 <nitzmahone> It's a tiny cost relative to parsing the docstrings
+19:44:02 <nitzmahone> We already have some stuff in ansible-doc, might be the best place to codify it (drop warnings + nonzero exit code or something on -l)
+19:44:20 <gregdek> abadger1999: sorry, I was referring to the earlier discussion when you pinged me
+19:44:21 <sivel> I am doing some black magic to get a fully populated arg_spec, as passed to AnsibleModule.  Not sure we want that in ansible-doc
+19:44:37 <nitzmahone> sivel: no, definitely not (plus aforementioned non-python issues)
+19:44:41 <abadger1999> gregdek: <nod>  : [12:38:31] <bcoca> ^ yes, the new 'user tags' for all existing/future PRs
+19:44:52 <nitzmahone> I was talking more about internal consistency, rules around default + required, etc
+19:44:56 <bcoca> you do realize that now we will require either requied or default
+19:45:16 <nitzmahone> Not if we stay consistent to arg_spec
+19:45:31 <nitzmahone> arg_spec is happy with neither
+19:45:39 <bcoca> yes, but users won't be
+19:46:14 <nitzmahone> Users are usually reading hydrated docs, not docstrings- rendered docs can still display the effective value
+19:46:15 <abadger1999> Users will see one or the other unless they open the module in a text editor...
+19:46:23 <nitzmahone> abadger1999 jinx
+19:47:10 <bcoca> ok, but now when you review docs you need to double check the argspec for every option
+19:47:18 <bcoca> ^ that is going to be a pain
+19:47:23 <nitzmahone> how does that differ from before?
+19:47:43 <nitzmahone> we weren't compariong previously (and sivel may soon have a solution for that as well, sounds like)
+19:47:46 <bcoca> if you had required/default, author had had to have gone through it, now when you have nothing required
+19:47:47 <bcoca> ...
+19:47:51 <bcoca> authors won't go through them
+19:48:36 <nitzmahone> I guess I don't see that as any better/worse than the current case of "they can be different"
+19:49:40 <gregdek> I think it's time for me to hand off triage.py to you guys. :)
+19:49:43 <bcoca> well, i've noticed (might just be incidental) that if author took time to set required/default .. it normally matches argspec well
+19:50:47 <bcoca> its my 'green m&m'
+19:50:55 <nitzmahone> :)
+19:51:18 <jtanner> if the argspec is set, i see fixing the docstrings as low hanging fruit that can be done by bots
+19:51:22 <jtanner> so i don't really care
+19:51:52 <sivel> might be worthwhile to use my arg_spec code, and "fix" documentation for modules, and then we can drop argspec in favor of just docs that get built into the arg_spec a module builder time
+19:52:47 <nitzmahone> sivel: Not sure we want to get down that rabbithole right now, but I had a slightly different direction in mind that would solve other problems too
+19:53:15 <sivel> just future thinking.  but correcting the docs with arg_spec may be interesting at some point
+19:54:06 <nitzmahone> OK, I think we've beaten that one to death- what's next?
+19:54:10 <nitzmahone> :)
+19:54:23 * bcoca looks for dead horse
+19:54:24 <jtanner> queue next horse
+19:54:25 <nitzmahone> (sivel: agreed!)
+19:56:27 <abadger1999> Informational -- python3 module porting is getting started in devel (thanks largely to misc).
+19:57:15 <abadger1999> you can ping me if you want to help out with that.
+19:57:35 <jtanner> i would if vmware+vault weren't on my plate
+19:58:06 <abadger1999> Also informational -- we'll be having a sprint at pycon in portland oregon.  Come if you want to help out with something, get one of your PRs merged, etc.
+19:58:27 <bcoca> ^ or want to dropoff beer
+19:58:35 <nitzmahone> Which day are we doing that?
+19:58:45 <bcoca> we take beer any day
+19:58:58 <abadger1999> nitzmahone: I'll be there every sprint day.
+19:59:06 * abadger1999 looks up the pycon schedule
+19:59:35 <abadger1999> Thursday through Sunday, June 2–5, 2016
+19:59:41 <sivel> I will unfortunately not be at pycon this year.
+20:00:01 <abadger1999> sivel: :-(  was nice to meet you last year.
+20:00:25 <nitzmahone> abadger1999: we should probably get ourselves listed on https://us.pycon.org/2016/community/sprints/
+20:01:03 <alikins> do modules have anyway to indicate what python version they require? in DOCUMENTATION or otherwise?
+20:01:16 <abadger1999> nitzmahone: I'll do so now.
+20:01:25 <nitzmahone> alikins: no structured way to do so ATM
+20:01:26 <abadger1999> alikins: In documentation there's the requirements: section.
+20:01:46 <nitzmahone> (ie, only human-readable)
+20:01:55 <abadger1999> nitzmahone: To access it programmatically, I was contemplating whether we wanted to add that into the shebang or would need something more involved.
+20:01:58 <abadger1999> err...
+20:02:00 <abadger1999> alikins: ^
+20:02:32 <nitzmahone> I'd vote for something a little more extensible
+20:02:54 <abadger1999> If we only need to know whether a module runs on python2, python3, or either then shebang can work and doesn't invovle much new code.
+20:03:18 <abadger1999> more extensible can do more things but it's likely to be a lot more work.
+20:03:32 <bcoca> if it only runs python3 it should have that in the shebang
+20:03:37 <bcoca> #/usr/bin/python3
+20:03:47 <abadger1999> I think we'd want to start by asking what problems we want to solve and then decide if we need to go down the more extensible route or not.
+20:03:53 <bcoca> sadly python2 is not that easy
+20:04:28 <abadger1999> bcoca: <nod>  yep.  we can use the shebang to list the requirement but we'll have to have code to translate #!/usr/bin/python2 into the ansible_python_interpreter value.
+20:04:39 <nitzmahone> I'm assuming this is something we need to know on the control side though, which kinda brings us back to (singsongy) module metadata!
+20:04:46 <bcoca> abadger1999: no, ansible_python2_interpreter
+20:04:51 <bcoca> ^ the variable is variable
+20:05:02 <bcoca> ansible_<shebang basename>_interpreter
+20:05:10 <abadger1999> bcoca: well -- if set, then ansible_python2_interpreter... if that's not set, then fallback to ansible_python_interpreter.
+20:05:12 <bcoca> that ALREADY works
+20:05:26 <abadger1999> bcoca: right, that does already work btu it's not sufficient for our needs.
+20:05:36 <bcoca> well, if user is setting python2 on purpose, he should know to use python2 in var
+20:05:42 <bcoca> ^ we shoudl NOT be doing that
+20:05:46 <abadger1999> bcoca: it's not the user.  It's our module.
+20:05:49 <bcoca> nor accepting modules in core with it
+20:05:50 <nitzmahone> This would have to be in both the wrapper and the top-level module, though, right?
+20:05:51 <abadger1999> bcoca: we have to some times.
+20:06:08 <abadger1999> bcoca: When a module can never work with the other version of python.
+20:06:30 <bcoca> abadger1999: ah, then shebang is not good way to signify that
+20:06:45 <bcoca> as those modules will normally execute in environments that don't even have python2 as symlink
+20:07:16 <abadger1999> I suppose we could go the same route as our usage of third party libraries -- but hten we'd have to update code even though it will never run on python3.
+20:07:19 <bcoca> do we KNOW of any modules that have that issue now?
+20:07:31 <abadger1999> yum will never be ported to python3.
+20:07:55 <abadger1999> As time goes on, there will be more of that going the other way (modules that run on python3 but not on python2)
+20:08:23 <bcoca> not sure we can solve that thorugh shebang
+20:08:29 <nitzmahone> (or only on 2.7+- we already have that one now, though not sure if we want to try and catch it)
+20:08:31 <abadger1999> bcoca: we can.
+20:08:45 <abadger1999> bcoca: but it's a little bit of a hack.
+20:08:51 <bcoca> not when you consider that python / python2 is not a 'enforced standard'
+20:09:08 <bcoca> how?
+20:09:15 <nitzmahone> and just because you have a python2/3 on path doesn't mean it's functional
+20:09:18 <abadger1999> bcoca: If we're not going to add any other metadata then I can definitely make it work with just shebang but if we want to add more module metadata then it would fit into that scheme better.
+20:09:57 <nitzmahone> I guess I'd ask "how long do we keep trying to hack around lack of module metadata?"
+20:10:13 <abadger1999> nitzmahone: until we have a usecase that requires something different.
+20:10:30 <bcoca> we already have 'module metadata', we just use it for docs
+20:10:48 <bcoca> and even external 'module metadata', the squash list in config
+20:10:53 <nitzmahone> no_log, squashing, ... off the top of my head
+20:10:55 <bcoca> ^ really want to kill that
+20:11:06 <bcoca> nitzmahone: no_log is not module dependant
+20:11:23 <nitzmahone> arg-specific no_log is
+20:11:25 <bcoca> and squashing we can phase out
+20:11:41 <bcoca> nitzmahone: option specific, not module, and its already in the argspec
+20:12:14 <nitzmahone> right, but doesn't work control-side, which causes lots of issues. Would be better if we could catch it earlier
+20:12:41 <bcoca> how so?
+20:12:45 <alikins> I kind of want a 'data loader manifest' that I could use to find or specify the  modules/plugins that run on a platform/version/dep/env.  But that's just a variation of module metadata
+20:12:49 <bcoca> control side never gets to see those
+20:13:01 <nitzmahone> that's the problem
+20:13:23 <bcoca> nitzmahone: so the problem is that no_log works?
+20:13:25 <nitzmahone> You're talking syslog, I'm talking callbacks, local log, debug, etc
+20:13:42 <bcoca> nitzmahone: callbacks dont get no_log fields, they are cleaned before returning to master
+20:13:46 <bcoca> same with debug
+20:13:49 <bcoca> local log, etc
+20:13:50 <nitzmahone> sensitive arg logging keeps creeping back in
+20:13:54 <bcoca> where?
+20:14:10 <nitzmahone> I've fixed it at least 3 times, others have as well
+20:14:22 <bcoca> that is a bug, only thing ive seen was azure/docker adding their 'own paralel data channel'
+20:14:50 <bcoca> no_log was fully implemented in 2.x before that it was really not a full solution
+20:15:17 <bcoca> if you use basic.py correctly, no_log should never allow the data to come back
+20:15:35 <bcoca> if you add your own log processing to modules ...well ... icannot help you
+20:16:02 <sivel> would be awesome if we had a way of tagging data is sensitive from the beginning to the end.  Like any var coming from a vault encrypted file will never be displayed.
+20:16:19 <bcoca> sivel: look at !vault PR, would do just that
+20:16:34 <bcoca> ^ aside from allowing having encrypted/clear text vars in same file
+20:16:55 <bcoca> creates similar object to unsafe and keeps it from being printed/logged
+20:17:05 <bcoca> one of the features i want for 2.2
+20:17:14 <sivel> cool, I had looked for !vault at one time, and the PR didn't exist, haven't gone back to look
+20:17:41 <bcoca> implementation might be pasted/linked in PR ... need to review that again
+20:18:05 <bcoca> and it needed lots of work still, but was good start
+20:22:11 <nitzmahone> Anything else to discuss, or should we call it?
+20:23:44 <nitzmahone> OK- I guess that's a wrap... Module meeting tomorrow!
+20:23:48 <nitzmahone> #endmeeting

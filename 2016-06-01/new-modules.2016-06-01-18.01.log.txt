@@ -1,0 +1,115 @@
+18:01:41 <gregdek> #startmeeting new-modules
+18:01:41 <zodbot> Meeting started Wed Jun  1 18:01:41 2016 UTC.  The chair is gregdek. Information about MeetBot at http://wiki.debian.org/MeetBot.
+18:01:41 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+18:01:41 <zodbot> The meeting name has been set to 'new-modules'
+18:01:44 <gregdek> Take two!
+18:01:47 <gregdek> #topic Roll Call
+18:01:48 * MichaelBaydoun lurking
+18:02:44 * ttom present
+18:03:23 <gregdek> #topic Open Floor
+18:03:30 <alikins> here
+18:03:32 <gregdek> Any particular modules anyone wants to discuss?
+18:03:50 * MichaelBaydoun shakes head no
+18:05:13 <gregdek> Since most of our core team is at PyCon, we'll keep it short... will wait to see if there are any particular modules anyone wants to discuss.
+18:05:18 * gundalow waves
+18:05:44 <sivel> ttom: module_utils are BSD, to allow people writing non GPL modules to still use the module_utils code, without having to license their module as GPL also
+18:05:58 <sivel> sorry for the interruption, just wanted to respond that right quick :)
+18:06:03 <gundalow> everything I've looked at I've pushed back to the author with revision_needed, so nothing from me
+18:06:07 <gundalow> hey sivel :)
+18:06:38 <gregdek> Ah, thx sivel
+18:06:42 <ttom> sivel: thanks. so this means that modules (and stuff related to them) can be BSD, but rest of ansible core is GPL, correct?
+18:06:49 <gregdek> we should have that somewhere in the contributor guidelines then
+18:06:56 <sivel> ttom: modules submitted to ansible must be GPL
+18:07:05 <sivel> ttom: but it allows 3rd party modules to not require GPL licenses
+18:07:43 <ttom> sivel: sorry, not quite getting the difference. 3rd party modules? can you give an example?
+18:07:46 <sivel> since the way that python works, importing a module that is GPL, means that your code must be licensed similarly
+18:07:59 <sivel> ttom: a module that someone puts on their own github repo, that is not part of ansible
+18:08:06 <sivel> you can download and use it under their license
+18:08:25 <sivel> licensing moudle_utils to BSD allows a person to not have to inherit the GPL in their module
+18:08:49 <ttom> so someone might put the module in his github repo, but the part in module utils they do submit to ansible's repo?
+18:09:15 <jtanner> why do i feel like that interpretation of gpl+python is just one of the many versions you'd get from lawyers? =)
+18:09:33 <sivel> ttom: not exactly, I am saying that for example you create a module that you don't want to license as GPL, but you still want to use ansible.module_utils.basic
+18:09:35 <jtanner> jaded i suppose
+18:10:02 <sivel> the way the GPL  works, means if you import ansible.module_utils.basic and it were GPL, your code must be licensed GPL
+18:10:19 <sivel> so we make module_utils BSD, so that you are not forced to also license your modules as GPL
+18:10:26 <sivel> licensing is complicated :)
+18:10:40 <sivel> however, we require that if you submit a module to ansible, that it is GPL
+18:10:53 <sivel> the only place in ansible not GPL, are moudle_utils, for the reasons described above
+18:11:05 <sivel> so ansible is dual licensed with respect to location of code
+18:11:11 <sivel> and usage intent
+18:11:27 <sivel> that boundary just happens to be module_utils for now
+18:12:01 <sivel> this is probably important, but sorry for the interruption in the current scheduled meeting :)
+18:12:15 <gregdek> No interruption. Actually quite useful.
+18:12:24 <gregdek> And we don't have an agenda today anyway. :)
+18:12:31 <gregdek> Except Open Floor.
+18:12:51 <ttom> sivel: I think I got it (I hope...)
+18:12:55 <tima> Could I request a final look at this vendors modules?
+18:12:55 <tima> https://github.com/ansible/ansible-modules-extras/pull/1441
+18:13:04 <sivel> ttom: there is a description at http://blog.devork.be/2009/11/python-modules-and-gpl-i-still-dont-get.html that might help
+18:13:09 <sivel> talk about derivative works
+18:13:30 <sivel> also, why we must be careful about what python libraries we make as dependencies of the application
+18:13:38 <tima> it got two shipit labels but a minor doc commit separates the two.
+18:13:42 <sivel> but I'll ignore that for now :)
+18:13:47 <ttom> thanks guys, you cleared it up for me. Sorry for interrupting
+18:14:01 <gundalow> ttom: It's a useful discussion :)
+18:14:50 <gregdek> tima: done
+18:14:56 <gregdek> (the doc change was trivial)
+18:15:20 <gundalow> Do we need "version_added" on every param since it's a new module?
+18:15:27 <tima> thanks @gregdk. yeah that was what i was thinking.
+18:15:31 <sivel> gundalow: nope
+18:15:50 <sivel> I'm looking at the code in 1441 now
+18:15:53 <sivel> I have a few concerns
+18:15:59 <sivel> the try/except for imports is hugely broad
+18:16:24 <gundalow> sivel: I didn't think so
+18:17:18 <sivel> I have a "question" around the  `Service` class (kinda duplicated functionality between facts.py and service modules)
+18:17:25 <sivel> also use of popen, instead of run_command
+18:17:46 <jtanner> where?
+18:17:58 <sivel> none of the imported libraries requier python2.6, but there is python 2.6 specific code there, that could be made to work with py24
+18:18:03 <sivel> jtanner: https://github.com/ansible/ansible-modules-extras/pull/1441/files
+18:18:27 <jtanner> yeah, no popen
+18:18:29 <jtanner> run_command only
+18:18:43 <sivel> because the try/except is so broad, we have a fail_json that isn't really helpful
+18:18:48 <sivel> module.fail_json(msg="Unable to import required libraries")
+18:19:07 <sivel> 12 modules from standard lib
+18:19:17 <sivel> also, it uses urllib2, and should use module_utils.urls
+18:19:40 <gregdek> sivel: module_utils is documented -- does anything else violate explicit guidelines at present?
+18:19:51 <sivel> gregdek: yes, pretty much all of those things I mention
+18:20:13 <jtanner> most of those imports don't need try/except
+18:20:16 <sivel> use of urllib2 directly, it duplicates functionaly that could be used from module_utils.facts
+18:20:16 <jtanner> they're stdlib
+18:20:34 <tima> yeah. seeing what sivel means.
+18:20:50 * dag- would like to get "closure" on some pull-requests from $EXCUSTOMER, https://github.com/ansible/ansible-modules-extras/pull/2221 https://github.com/ansible/ansible/pull/14332 https://github.com/ansible/ansible/pull/14978 https://github.com/ansible/ansible/pull/15938
+18:20:52 <gregdek> Ah yes. "avoid catchall exceptions".
+18:21:39 <tima> i was only bringing 1441 up because they reached out over what they saw as a stalled code review.
+18:21:54 <tima> This is all good feedback we need to give them.
+18:22:48 <gregdek> dag: this is new-modules meeting, can't really speak to the prs in ansible/ansible
+18:23:07 * alikins ponders a sys.excepthook in module_utils for importErrors
+18:23:22 <gregdek> And looks like 2221 is waiting for more reviews
+18:28:00 <sivel> tima: I updated that PR
+18:28:03 <ttom> sivel: will changing that broad try/except to except ImportError be considered enough?
+18:28:17 <sivel> ttom: no, I think I listed 8 or so things that need changed
+18:28:26 <gregdek> Thanks sivel :)
+18:28:37 <ttom> sivel: sorry, in reference to only that comment. no argument about the others
+18:28:41 <jtanner> ttom: s/Popen/run_command
+18:30:02 <jtanner> sivel: do any of your linters look for subprocess or os.call ?
+18:30:20 <sivel> jtanner: not currently, although I should
+18:30:27 <jtanner> yeah, would be good
+18:31:00 <gregdek> Yes. We will be leaning ever more heavily on the linter. :)
+18:31:47 <jtanner> btw, are we calling it "the linters" or is there a different name for the tools?
+18:32:12 <sivel> haha, ansible-testing is the current name, the command is "ansible-validate-modules"
+18:32:34 <jtanner> AVM
+18:32:50 <jtanner> need logo, stat
+18:32:53 <sivel> I started adding code to blacklist importing `*` from module_utils at the request of toshio
+18:33:46 <sivel> jtanner: issue created for subprocess/etc...
+18:34:07 <sivel> after pycon, I need to work on migrating that to the ansible org, now that I have legal approval to do so
+18:35:15 <tima> thanks @sivel. i appreciate it.
+18:36:14 <sivel> took a while to get legal approval that granted me copyrights and the ability to make decisions on licensing and ownership, etc...
+18:36:29 <sivel> yay for corporate IP restrictions :)
+18:36:49 <gregdek> Heh
+18:36:53 <gregdek> Nice one!
+18:38:34 <sivel> that is it for me, unless I can answer any more questions :)
+18:39:15 <gregdek> I think you've answered plenty. Thanks dude :)
+18:39:41 <ttom> sivel: many thanks dude. Really appreciating the effort
+18:41:27 <gundalow> :)
+18:44:20 <gregdek> OK, wrapping this one up. community working group starts in 15. Thanks y'all.
+18:44:23 <gregdek> #endmeeting

@@ -1,0 +1,200 @@
+19:04:34 <jimi|ansible> #startmeeting Ansible Public Core Meeting
+19:04:34 <zodbot> Meeting started Tue Aug 16 19:04:34 2016 UTC.  The chair is jimi|ansible. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:04:34 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:04:34 <zodbot> The meeting name has been set to 'ansible_public_core_meeting'
+19:04:40 <jimi|ansible> ^ abadger1999
+19:04:45 <newtMcKerr> here
+19:04:47 <nitzmahone> Yo
+19:04:58 <abadger1999> jimi|ansible: actually -- i think that's the first time we've used that name :-)
+19:05:09 <jimi|ansible> not when i've been starting it
+19:05:11 <abadger1999> Last time was Ansible Core Public Meeting ;-)
+19:05:20 <bcoca> slight variations on theme
+19:05:34 <jimi|ansible> ahh well, whatever gets us there :)
+19:05:39 <bcoca> next: meeting core public ansible
+19:06:02 <jimi|ansible> C.A.P. Meeting
+19:06:42 <abadger1999> jimi|ansible: I just bring it up because they become different meetings in the archive.
+19:06:58 <abadger1999> But it looks like we already have 5+ archives so what's one more ;-)
+19:07:08 <alikins_> Yo
+19:07:24 <jimi|ansible> looks like no agenda was created for today's meeting, so floor is open
+19:07:25 <abadger1999> jimi|ansible: Want to chair the rest of us?
+19:08:06 <bcoca> so i got a few items: possible 2.1.2?
+19:08:14 <jimi|ansible> #chair abadger1999 bcoca nitzmahone mattclay alikins_ gundalow jtanner|t420 newtMcKerr Qalthos shertel Shrews mordred
+19:08:14 <zodbot> Current chairs: Qalthos Shrews abadger1999 alikins_ bcoca gundalow jimi|ansible jtanner|t420 mattclay mordred newtMcKerr nitzmahone shertel
+19:08:16 <bcoca> module facility for 'actions'
+19:08:34 <jimi|ansible> #topic 2.1.2
+19:09:00 <jimi|ansible> to start off, I have not created any plans for 2.1.2, i've been focused on 2.2.0
+19:09:27 <bcoca> i know, but enough problems with 2.1.1 that i think it merrits a 2.1.2, most stuff should already be in stable-2.1
+19:09:42 <jimi|ansible> a lot of the things i have been fixing have hinged around performance and won't easily CP to the stable-2.1 branch
+19:09:43 <bcoca> i have 1 more thing i think belongs there, i think some of the include fixes also need to go there
+19:09:58 <bcoca> jimi|ansible: was not thinking about performance
+19:10:11 <bcoca> taht will probably make some other patches not easy to apply
+19:10:21 <jimi|ansible> bcoca: right, but a lot of the include fixes are impacted by that, because the performance stuff touched on includes a LOT
+19:10:26 <jimi|ansible> yeah
+19:10:51 <bcoca> localhost alone i think merrits it
+19:11:06 <jimi|ansible> is that fix related to this? https://twitter.com/garthk/status/765331403890319360
+19:11:11 <jimi|ansible> ^ meant to bring that up earlier
+19:11:42 <bcoca> that is one of many symptoms due to the localhost being forced to always be in inventory
+19:11:51 <bcoca> we have 4-6 tickets about it
+19:11:59 <bcoca> was not even aware of tweet
+19:12:05 <nitzmahone> At least
+19:12:47 <jimi|ansible> ok
+19:12:59 <nitzmahone> Do we have regression tests for the localhost stuff yet?
+19:13:09 <bcoca> i just want to add json fix for s3_bucket
+19:13:13 <bcoca> no, need to write em
+19:15:19 <jimi|ansible> if everyone is ok with it then, lets aim to get 2.1.2 rc1 out by next Monday, meaning get fixes into stable-2.1 asap
+19:15:54 <bcoca> ok, will do
+19:17:12 <jimi|ansible> #agreed 2.1.2rc1 next Monday, Aug 22
+19:17:27 <jimi|ansible> or should that be #action...
+19:17:47 <ryansb> bcoca: let me know when you have a draft of the s3_bucket bit
+19:17:50 <ryansb> I can review/test
+19:19:41 <jimi|ansible> bcoca: anything else?
+19:19:58 <bcoca> ryansb: Pr is up
+19:20:06 <bcoca> jimi|ansible: the 'action's facility
+19:20:10 <ryansb> cool
+19:20:32 <bcoca> https://github.com/ansible/ansible-modules-extras/pull/2735
+19:20:36 <jimi|ansible> #topic actions facility
+19:20:39 <ryansb> cool, thanks
+19:20:45 <jimi|ansible> bcoca: what is that exactly?
+19:21:05 <bcoca> something nitzmahone and chouseknecht added to azure/docker modules, basically a list of 'actions attempted' during module run
+19:21:43 <jimi|ansible> ok, i was unaware of that but it sounds cool, looking to generalize that?
+19:21:46 <bcoca> instead of having each module implement their own, looking for unified way to do this and under which conditions it returns
+19:21:50 <bcoca> yep
+19:21:59 <nitzmahone> CHECK MODE
+19:22:05 <bcoca> very useful for debug, also overlaps with diff and check mode
+19:22:14 <jimi|ansible> ok, sounds like something we need to put on the 2.3 road map
+19:22:27 <bcoca> nitzmahone: want to create a proposal?
+19:22:28 <nitzmahone> wfm
+19:22:34 <nitzmahone> Sure
+19:22:57 <bcoca> nitzmahone: i would return normally during debug or check mode (to show what would have happened)
+19:22:57 <jimi|ansible> #action nitzmahone to create a proposal for the module action facility
+19:23:06 <nitzmahone> Exactly
+19:23:15 <linuxdynasty> i'm just curious can we add an option like a test mode. since I have been using the check_mode option as a test mode
+19:23:22 <nitzmahone> I don't think it needs to be opt in either
+19:23:22 <linuxdynasty> especially with cloud modules
+19:23:43 <bcoca> linuxdynasty: can you define how you see check_mode then?
+19:23:45 <jimi|ansible> nitzmahone: well we could intercept anything sent to run_command or file stuff easily enough
+19:23:52 <jimi|ansible> however any api calls would have to be opt-in
+19:24:15 <bcoca> run_command already intercepts for debug/logging, so easy to add there
+19:24:17 <linuxdynasty> For me diff mode, is what would change and the difference and check mode, is a dry run of the module itself
+19:24:18 <jimi|ansible> but we can bikeshed hat later
+19:24:23 <jimi|ansible> that
+19:24:25 <nitzmahone> I just meant that it didn't need to be a separate mode like check/diff
+19:24:38 <jimi|ansible> nitzmahone: right, it's more like auto debugging
+19:24:43 <nitzmahone> Obviously most modules will need to as support
+19:24:48 <bcoca> nitzmahone: agreed, i think it should happen when debug and/or check_mode
+19:24:50 <nitzmahone> *add
+19:25:13 <bcoca> well, like we did with debug, starting in run_command takes care of a lot
+19:25:24 <linuxdynasty> so for me in the aws modules, I want to be able to run an integration test, which would be in check mode and not actually run the boto3 commands but validate against a static tests in the module itsel
+19:25:25 * resmo waves
+19:25:32 <nitzmahone> Certainly for core mods
+19:25:47 <bcoca> linuxdynasty: that seems something more for the testing framework than built into module facilities
+19:26:01 <ryansb> linuxdynasty: therre's a lib that lets you run tests like that
+19:26:05 <ryansb> it's called "placebo"
+19:26:10 <ryansb> (boto3 only, no boto)
+19:26:20 <bcoca> ^ another reason to port to boto3
+19:26:28 <jimi|ansible> also moto
+19:26:50 <linuxdynasty> I am fine with using placebo as long as we could include placebo with  shippable
+19:27:09 <bcoca> @mattclay ?
+19:27:13 <linuxdynasty> and the recorded calls included (do not include private data obviously)
+19:27:28 <bcoca> linuxdynasty: there is testing meeting group, probably should shift that there
+19:27:36 <linuxdynasty> kk
+19:27:37 <nitzmahone> Could be a decent stopgap for cloud module integration tests
+19:27:58 <bcoca> depends on every cloud having one
+19:28:16 <ryansb> for clouds that don't there's always manual mocking
+19:28:21 <nitzmahone> >0 better than 0
+19:28:30 <ryansb> but tbh with some cloud modules as small as they are, mocking sorta defeats the purpose
+19:28:33 <linuxdynasty> would it be to soon to include this https://github.com/ansible/ansible/pull/17039 bcoca
+19:28:40 <nitzmahone> Ugh manual mocking
+19:28:46 <linuxdynasty> I have been manually mocking
+19:28:53 <linuxdynasty> on all of my modules :(
+19:29:02 <bcoca> ^ that was my 3rd item before we got distracted into cloud testing
+19:29:12 <linuxdynasty> my bad for taking us on a tangent
+19:29:48 <bcoca> abadger1999, was looking for good way for generalizing that and using api.py's retry also, can we have derived classes in diff files in module_utils? ec2.py have AWSRetry and main retry in cloud.py or api.py?
+19:30:11 <abadger1999> bcoca: yes.  With ansiballz that will work
+19:30:38 <abadger1999> note -- api.py seems like a bad name but it's already in module_utils so....
+19:30:52 <bcoca> ^ i asked, no one had better name
+19:31:04 <bcoca> its generic functions/decorators for anyone using a remote api with a module
+19:31:28 <bcoca> retry/backoff, etc, this PR is a much more featurefull version and adds aws specific one
+19:31:28 <abadger1999> timeout.py retry.py, etc.
+19:31:29 <mattclay> linuxdynasty: Including placebo on Shippable should be fine.
+19:31:40 <abadger1999> If itss shipped, then its too late to do something different, though.
+19:31:54 <linuxdynasty> mattclay: sweet
+19:31:55 <bcoca> abadger1999: added it in 2.1, not sure if anyone/anything uses it
+19:32:02 <abadger1999> <nod>
+19:32:14 <bcoca> abadger1999: want to take this offline and go into detail?
+19:32:19 <abadger1999> bcoca: sure.
+19:32:20 <bcoca> linuxdynasty: we'll keep you in loop
+19:32:23 <linuxdynasty> ty
+19:32:39 <bcoca> linuxdynasty: btw, really liked what you did, just trying to get something that works for most modules
+19:33:13 <linuxdynasty> bcoca: makes sense, especially for cloud modules. Would love to see someone add rackspace/openstack to it
+19:33:30 <linuxdynasty> but since i do not even know if racksapce or openstack or google implements the same time of rate limiting
+19:33:30 <resmo> .oO(cloudstack)
+19:33:43 <linuxdynasty> but the framework is there for anyone to use
+19:34:26 <bcoca> linuxdynasty: some probably do, just probably not as many people hit it as with aws
+19:34:48 <bcoca> mordred, Shrews  see PR above
+19:36:48 <jimi|ansible> #topic open floor
+19:36:52 <jimi|ansible> (since we were doing it anyway)
+19:37:39 <resmo> https://github.com/ansible/ansible/pull/16492
+19:38:41 <bcoca> my comments are already in ticket, to me it seem to solve a purposfully created problem
+19:40:55 <resmo> it is a small change and would be big improvement in the usability of vars, can't see any downside
+19:41:15 <jimi|ansible> yeah i have concerns about that, because it doesn't distinguish between being set and not set
+19:41:49 <resmo> set or not set? vars are always set, defaulted
+19:41:51 <abadger1999> Couldn't hte example you give at the end be done by comparing against None instead of the default value?
+19:42:04 <jimi|ansible> i'd rather see that handled via a different filter which would set None to Undefined
+19:42:17 <bcoca> |undefined?
+19:42:33 <jimi|ansible> resmo: if i remember correctly, those methods check the params sent in, not the overall view of the module params
+19:42:36 <jimi|ansible> this blurs that line
+19:42:47 <jimi|ansible> since it is still "set" but now ignored
+19:42:55 <resmo> jimi|ansible: correctly
+19:43:22 <resmo> jimi|ansible: but if you pass the param with the "default" value it will be handled
+19:43:38 <resmo> if not passed, it has the same value
+19:43:44 <resmo> that feels strange
+19:44:47 <jimi|ansible> but these methods aren't looking at the param as it would be internally, it's looking at it as they are passed in, just because it has some value doesn't mean anything internally (unless you're really butchering module writing)
+19:47:08 <jimi|ansible> well, hrm maybe i'm misunderstanding how things are done in those methods, tracing it down (been a while since I looked...)
+19:51:01 <abadger1999> I like the idea of a filter that unsets a var much better than this strategy -- but I'm not sure if that's easily achievable.
+19:51:26 <jimi|ansible> ahh so yeah, this is why we have _set_defaults(pre=False) after the check, so that nothing is actually set
+19:51:28 <bcoca> filter cannot really unset var as vars are not in jinja2
+19:51:42 <jimi|ansible> it can make it appear unset though
+19:51:48 <bcoca> var2: "{{|undefined}}"
+19:52:05 <nitzmahone> Urg filter side effects
+19:52:23 <jimi|ansible> well, maybe, i think jinja2 actually handles that via exceptions
+19:52:38 <bcoca> it does, but vars are defined in yaml, then in ansible/python
+19:52:58 <bcoca> vars have 'template as value', no real way to undefine them through a tempalte
+19:53:14 <bcoca> can pass None, but python does not have 'undefined' value like perl/php
+19:53:36 <bcoca> inside a template, it would work, but not in a play
+19:55:23 <bcoca> that is why we have the 'magical' omit token
+20:01:47 <jimi|ansible> well, wait you can actually do this with default(omit, True), which will omit if the passed in value fails as a boolean, which None should
+20:05:01 <jimi|ansible> $ ansible -m debug -a "msg='this should be 'foo' => {{None|default('foo', True)}}'" localhost
+20:05:35 <jimi|ansible> or, with omit:
+20:05:37 <jimi|ansible> $ ansible -m debug -a "msg='{{None|default(omit, True)}}'" localhost
+20:05:39 <jimi|ansible> localhost | SUCCESS => {
+20:05:40 <jimi|ansible> "msg": "Hello world!"
+20:05:42 <jimi|ansible> }
+20:05:48 <jimi|ansible> ^ resmo
+20:06:38 <jimi|ansible> so, based on that, I really don't think we need to add in this work around
+20:10:55 <resmo> so, you set a variable in group vars and you want to unset it in host_vars, what would the exmaple look like?
+20:11:14 <bcoca> not for all cases, but you can alway  msg='{{ var22 is defined|ternary(omit, var1)}}'
+20:11:14 <resmo> imho this doesn't solve my the use case
+20:12:37 <jimi|ansible> using your example from the PR, you override it with a nil and it would be omitted via the above syntax i gave
+20:13:01 <resmo> I see
+20:13:03 <bcoca> or you can check if the other value is not null/none/defined
+20:13:17 <bcoca> either way, should work already
+20:15:17 <resmo> yeah, doesn't look simple anymore to me to be honest
+20:15:57 <jimi|ansible> {{some_var|default(omit, True)}} isn't simple?
+20:18:15 <resmo> simple for us but not for the majority of users
+20:19:29 <resmo> hmm if you pass nil to a required var, my patch would complain e.g.
+20:20:05 <resmo> s/required var/required param/
+20:20:42 <jimi|ansible> so would the above, it would be omitted and the module would complain
+20:21:16 <jimi|ansible> it's not being set to None, it's being properly omitted
+20:21:26 <bcoca> no other user has even brought anything like this up, most use 'omit' when they want to make an option conditional
+20:21:39 <resmo> jimi|ansible: true
+20:21:53 <resmo> bcoca: most users would make 2 task and using when
+20:22:09 <jimi|ansible> i would recommend adding an example here: http://docs.ansible.com/ansible/playbooks_filters.html#defaulting-undefined-variables
+20:22:30 <jimi|ansible> ^ we do not have that optional boolean param documented (which to be fair is really in the jinja2 docs, but it'd be nice to include in ours i think)
+20:22:43 <resmo> ack
+20:22:48 <jimi|ansible> thus me always forgetting about it until i look at the jinja2 docs...
+20:22:50 <resmo> taking care
+20:23:03 <jimi|ansible> cool
+20:23:04 <resmo> of the docs update
+20:23:56 <jimi|ansible> since we're past time, i'll wrap this up and we can head back to #ansible-devel
+20:23:59 <jimi|ansible> #endmeeting

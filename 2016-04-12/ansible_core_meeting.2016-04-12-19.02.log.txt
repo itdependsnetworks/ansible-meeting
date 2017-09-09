@@ -1,0 +1,377 @@
+19:02:50 <abadger1999> #startmeeting Ansible Core Meeting
+19:02:50 <zodbot> Meeting started Tue Apr 12 19:02:50 2016 UTC.  The chair is abadger1999. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:02:50 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:02:50 <zodbot> The meeting name has been set to 'ansible_core_meeting'
+19:03:14 <gundalow> action 1: Agree the agenda https://github.com/ansible/community/pull/76
+19:03:16 <abadger1999> #chair jimi|ansible bcoca nitzmahone gundalow
+19:03:16 <zodbot> Current chairs: abadger1999 bcoca gundalow jimi|ansible nitzmahone
+19:04:20 <abadger1999> Shrews, gregdek, Qalthos, newtMcKerr, sivel, et al... anyone else here for the core meeting?
+19:04:28 <Shrews> hi
+19:04:42 <Qalthos> hallo
+19:04:42 * Shrews toggling between two different irc meetings
+19:04:44 <kamsz> if i can attend :p
+19:05:15 <newtMcKerr> I’m here
+19:05:41 <abadger1999> #chair Shrews Qalthos newtMcKerr
+19:05:41 <zodbot> Current chairs: Qalthos Shrews abadger1999 bcoca gundalow jimi|ansible newtMcKerr nitzmahone
+19:06:03 <abadger1999> #topic  Agree to the general Agenda: https://github.com/ansible/community/pull/76
+19:06:59 <gundalow> So I put a rough agenda together and fleshed out that page a bit. I know we are early on, but I thought it would be helpful to at least outline the differences between the meetings
+19:07:15 <abadger1999> Seems good to me, +1
+19:07:19 <gundalow> \o/
+19:07:33 <abadger1999> It's this section here: https://github.com/ansible/community/pull/76/files#diff-5aea81da571c7805614c028947fe5ecfR45
+19:08:14 <jimi|ansible> +1
+19:08:36 <gundalow> oh, so apparently I have rights to merge that in, but maybe I shouldn't
+19:09:11 <abadger1999> #info abadger1999 and jimi|ansible approve of the general agenda/purpose.
+19:09:14 <abadger1999> Anyone else?  If not let's move on to doing those things ;-)
+19:09:27 <gundalow> abadger1999: you happy for me to Merge that PR?
+19:09:36 <abadger1999> gundalow: if gregdek's happy, I'm happy.
+19:09:58 <Shrews> content is good. formatting for Thursday headline is off
+19:10:08 <gundalow> Shrews: good spot, I'll fix that now
+19:10:14 <gundalow> NEXT ITEM!
+19:10:27 <abadger1999> #action gundalow will get gregdek's blessing and merge
+19:10:43 <abadger1999> #topic PR and Issue review
+19:11:01 <abadger1999> Alright -- Anyone here who has PRs and issues they'd like us to discuss?
+19:11:15 <gundalow> I have a few, but only if no one else does
+19:11:22 <jimi|ansible> go for it
+19:11:40 <gundalow> https://github.com/ansible/ansible/pull/15304 Travis to defend "make deb"
+19:12:15 <gundalow> I noticed recently that make deb (and make rpm) were failing due to https://github.com/ansible/ansible-modules-extras/pull/1935
+19:12:35 <sivel> I am here
+19:13:08 <gundalow> So I thought we should really defend that. I can't for some reason get "make rpm" to work in Travis, but this gives us a lot more. It's a little suboptimal if someone checkes out ansible devel and can't do "make"
+19:13:09 <bcoca> we have nightly builds in internal jenkins
+19:13:12 <gundalow> hey Shrews
+19:13:20 <gundalow> erm, also hello sivel
+19:13:38 <abadger1999> #chair sivel
+19:13:38 <zodbot> Current chairs: Qalthos Shrews abadger1999 bcoca gundalow jimi|ansible newtMcKerr nitzmahone sivel
+19:13:47 <abadger1999> #topic https://github.com/ansible/ansible/pull/15304 Travis to defend "make deb"
+19:14:00 <jimi|ansible> gundalow: why not do that inside a docker container and do it for both rpm and deb
+19:14:01 <bcoca> dont see how that change breaks make deb/rpm?
+19:14:42 <jimi|ansible> travis runs on ubuntu, so i don't think rpm is available, i would not want to install the rpm tools under ubuntu to try and make that work
+19:14:55 <jimi|ansible> i know there there, just don't want to tackle it
+19:14:56 <sivel> +1 for doing it in the containers
+19:14:59 <jimi|ansible> easier to do it in the container
+19:15:36 <kamsz> containers are the way to go...
+19:16:26 <gundalow> OK, so I should change it to use the existing centos7 and ubuntu1404 containers
+19:16:50 <gundalow> well, fresh instances, but the ones that ansible provides on dockerhub
+19:16:50 <sivel> might as well just ahve it built for each container
+19:16:54 <bcoca> we still keep nightly  builds?
+19:17:22 * gregdek will be at kbd in 15m
+19:17:31 <sivel> gundalow: I'd just look at run_tests.sh and add `make deb` and `make rpm`
+19:17:39 <bcoca> meeting ends in 14mins
+19:17:42 <sivel> potentially via specifying that in the matrix
+19:18:07 <gundalow> https://github.com/ansible/ansible/pull/15304/files
+19:18:26 <bcoca> make && make deb/rpm as appropos
+19:19:15 <abadger1999> #action gundalow to update 15304 to build in the containers.
+19:19:31 <abadger1999> Anything else for this?
+19:19:32 <sivel> I wanted to also to bring up binary modules, and whether we have any plans.  My PR no longer applies after the ZipModule stuffs
+19:19:44 <gundalow> OK, so I'll remove the dedicated TARGET=builds, and put it in with the existing !sanity
+19:20:11 <nitzmahone> sivel: it's something I've got an interest in as well
+19:20:17 <abadger1999> #topic Binary modules
+19:20:27 <abadger1999> sivel: what's the current status?
+19:20:27 <nitzmahone> (for Windows, but similar issues abound)
+19:20:33 <sivel> I can rebase of course, if it still the current direction we want to take
+19:20:39 <sivel> https://github.com/ansible/ansible/pull/13771
+19:20:58 <sivel> that is all really, do we still like the approach, and if so, I can rebase
+19:20:58 <bcoca> iirc, all looked good to me
+19:21:15 <sivel> I know jimi|ansible and abadger1999 had some thoughts
+19:21:37 <sivel> some of it around the restructure of handling modules that I think was related to zipmodule stuff
+19:21:41 <nitzmahone> IIRC, same- been awhile since I gave it a good look, but I'd love to see it in devel first thing after 2.1 is cut
+19:21:56 <jimi|ansible> the conflicts are probably simple to resolve, just the same place in the same file
+19:22:18 <jimi|ansible> ^ but yeah what nitzmahone said, probably needs to wait until after 2.1 is out
+19:22:18 <sivel> ok, I can go back and rebase, and then we can wait for 2.1 to get cut
+19:22:19 <abadger1999> #info Current PR https://github.com/ansible/ansible/pull/13771
+19:22:49 <sivel> I'll also bump the milestone to `next`
+19:23:08 <sivel> I've removed 2.1 for now
+19:23:50 <sivel> #action sivel to rebase 13771 but wait for 2.1 release for merge
+19:24:01 <sivel> next?
+19:24:12 <gundalow> https://github.com/ansible/ansible-modules-core/pull/3342
+19:24:41 <gundalow> that's part of getting ansible-validate-modules working on modules-core
+19:25:01 <gundalow> ditto for https://github.com/ansible/ansible-modules-core/pull/3352
+19:25:07 <sivel> I am +1 on 3342
+19:25:13 <abadger1999> #topic https://github.com/ansible/ansible-modules-core/pull/3342 Corrections to documentation
+19:25:27 <gundalow> sivel: Thanks
+19:25:49 <abadger1999> Looks good to  me too.
+19:25:52 <nitzmahone> +1 also, want me to merge
+19:25:58 <nitzmahone> (3342 and 3352)
+19:25:58 <abadger1999> nitzmahone: go ahead
+19:26:01 <sivel> good on 3352 also, assuming that the attribution is indeed correct and jlaska is ok with the license
+19:26:02 <gundalow> Thanks
+19:26:11 <gundalow> I've not heard anything from jlaska
+19:26:40 <sivel> My assumption is he should be, but maybe one of the ansible folks can poke him
+19:27:07 <abadger1999> 3352... adding a license header I think has been okay'd copyright would be something different though.
+19:27:21 <jimi|ansible> i'm pretty sure jlaska is ok with that
+19:27:25 <nitzmahone> whoops, already merged 3352 also, so hope he's cool with it. :)
+19:27:32 <sivel> so then +1 on both
+19:27:37 <gundalow> Sounds sensible to me, but I can't make the call
+19:27:38 <jimi|ansible> if he's not, i'll throw something at him in the office tomorrow ;)
+19:27:38 <gundalow> Thanks
+19:27:40 <nitzmahone> (retroactive)
+19:28:37 <gundalow> Right, I'll get ansible-validate-modules enabled on ansible-core when the submodules are next updated - How often is that done, or is that lower down the priority list after the next releases
+19:28:57 <kamsz> can i propose something if you guys are done?
+19:29:01 <abadger1999> gundalow: I try to do it most mornings.  But I can do it anytime.
+19:29:13 <abadger1999> gundalow: ping me after meeting and I'll get it done.
+19:29:17 <bcoca> it  happens several times a week, don't think we need to force more
+19:29:23 <gundalow> abadger1999: cool, I'm away for a week, so no rush
+19:29:26 <bcoca> ^ though we had a couple of weeks in chiehc it did not happen
+19:29:26 <abadger1999> k
+19:29:38 <abadger1999> kamsz: What's your topic?
+19:29:55 <kamsz> i'd like to discuss module 'tested on' documentation part
+19:30:05 <kamsz> i find it very useful, some folks around here also
+19:30:12 <abadger1999> #info 3352 and 3342 merged.  gundalow to work on ansible-validate-modules next.
+19:30:28 <kamsz> since we often hit a wall with some modules not working on particular versions
+19:30:45 <abadger1999> #topic module 'tested on' documentation part
+19:30:47 <kamsz> it'd be nice to know on which version particular module was tested
+19:31:15 <kamsz> ex. vmware extra modules got it
+19:31:16 <bcoca> should always be tested on the version it is merged (/devel)
+19:31:17 <abadger1999> I'm not sure that really belongs in module documentation.
+19:31:38 <kamsz> i mean - requirements version
+19:31:51 <kamsz> like tested on vmware 5.5
+19:31:55 <kamsz> not ansible version
+19:32:15 <kamsz> or shade version
+19:32:24 <gregdek> gundalow: I will merge your PR shortly, thx
+19:32:44 <gundalow> gregdek: Thanks :)
+19:32:45 <bcoca> kamsz that is normally in the notes/requriements section
+19:33:03 <kamsz> bcoca: i mostly see python version, rest of the requirements are missing versions :(
+19:33:17 <abadger1999> I don't think tested on is good to express in the documentation because it updates at a different frequency than ansible.  If we want to tshow tested on I think it would be better as a separate document/testing application.
+19:33:18 <bcoca> with vmware it was specially confusing as the API for exi standalone and vsphere overlap a lot aslo between 5.x and 5.5
+19:33:24 <bcoca> but they don't match perfectly
+19:33:41 <bcoca> kamsz: look, plenty of modules specify specific versions of libs
+19:33:57 <abadger1999> We can have more versions added to the requirements sections bt those are more -- "designed to work with" rather than "tested on".
+19:34:13 <gundalow> kamsz: Has there been a specific modules that you've had issues/pain with because API/etc versioning?
+19:34:33 <gundalow> abadger1999: "designed" is a good term there, +1
+19:34:35 <gregdek> Yeah. The end result of this discussion would be a full compat matrix for every module. Which is probably more than is reasonable to maintain.
+19:34:42 <kamsz> cannot recall specific versions, but i've encountered issues with docker, vmware and openstack modules
+19:34:55 <gregdek> Not coincidentally. :)
+19:35:01 <jimi|ansible> well, docker there you go...
+19:35:05 <gregdek> docker and openstack in particular.
+19:35:05 <kamsz> abadger1999: suggestion works for me
+19:35:50 <kamsz> just my thoughts :) as docs are the first place people are usually looking for help
+19:35:56 <kamsz> perhaps that's overkill
+19:35:58 <nitzmahone> works for lots of other things too!
+19:36:04 <bcoca> openstack should have good docs on requirements now, docker .... well, ... its docker ....
+19:36:16 <kamsz> yeah, docker's kinda broken
+19:36:16 <Shrews> well, for the openstack modules, we always suggest "latest shade" b/c it evolves SOOOO quickly
+19:36:21 <bcoca> ^ like trying to get an epileptic cat to stay still in a boiling pot of water
+19:36:46 <abadger1999> For docker module we have in the requirements:
+19:36:47 <abadger1999> - "docker-py >= 0.3.0"
+19:36:47 <abadger1999> - "The docker server >= 0.10.0"
+19:37:02 <bcoca> ^ but also 'each feature' has its requirements and 'complains' if not met
+19:37:04 <abadger1999> And in the docs of individual params we note separate minimum requirements
+19:37:16 <bcoca> docker is 'special'
+19:37:16 <abadger1999> <nod>
+19:37:20 <kamsz> yeah, what bcoca said
+19:37:30 <kamsz> docker module complains a lot
+19:37:52 <kamsz> we basically stopped using it and switched to command/shell module
+19:37:54 <bcoca> kamsz: so do i
+19:38:04 <jimi|ansible> while i'm not totally opposed to the idea, i don't think it means much unless the module is continuously tested on any specified platforms, and that would not be the case here
+19:38:06 <gregdek> An aside: chouseknecht needs eyeballs on new Docker module design.
+19:38:24 <abadger1999> jimi|ansible: +1
+19:38:40 <bcoca> ^ those modules will be 'nicer/better' and also docker and docker.py are less 'heisenburgy' now
+19:38:41 <kamsz> what i'm suggesting - the way module is documented as abadger1999 pasted is cool for me
+19:38:56 <gundalow> aye, with my QA hat on it's a pain unless we can add in automated regression tests at each of the major API versions
+19:38:58 <bcoca> kamsz: that already is the case
+19:38:59 <abadger1999> kamsz: Right -- but that's no different than what we have now...
+19:39:11 <jimi|ansible> right, that was just showing what we do today
+19:39:20 <kamsz> just not all of the modules have it :p
+19:39:24 <abadger1999> Just make a PR to add a version requirement to any module where it's important and doesn't have it.
+19:39:29 <bcoca> most modules don't NEED it
+19:39:31 <Shrews> having the "tested on shade X.Y.Z" is never going to be relevant b/c that version of shade may not work on certain cloud providers, so it can be misleading (as an example of where it's not useful)
+19:39:48 <kamsz> alright
+19:39:56 <abadger1999> kamsz: but this would likely not improve, for instance, docker -- because the minimums are documented, btu they vary depending on which params are given.
+19:39:56 <kamsz> that's clear
+19:40:17 <kamsz> sorry :p
+19:40:21 <bcoca> boto/boto3 will be 'fun' like that
+19:40:31 <gundalow> When we review new modules it's something we should remember to check
+19:40:39 <bcoca> ^ already started adding boto3 dependant functionality to modules that mainly use boto
+19:40:54 <gundalow> +botocore for the exception
+19:40:55 <abadger1999> <nod>  "Is there a minimum version of these libraries that are needed?"
+19:41:02 <bcoca> gundalow: we always do, if you add a feature taht brings up the requirements, it MUST be documented
+19:41:29 <gundalow> "Requirements should be documented, using the requirements=[] field
+19:41:30 <gundalow> "
+19:41:46 <gundalow> from module-checklist
+19:42:01 <bcoca> not always, sometimes it goes int he options description as moving up the requirement for the whole module is not fair to those whom cannot easily upgrade
+19:43:25 <bcoca> ^ which shows in our docker module
+19:43:39 <abadger1999> Okay, so -- sounds like we currently want to keep doing what we do now but add more of it.
+19:43:50 <bcoca> are we adding more?
+19:44:04 <gundalow> I'll keep it in mind when doing module reviews
+19:44:49 <abadger1999> I think vmware modules could do with some... shade sounds like it's currently hard to fit into this.
+19:45:05 <ryansb> bcoca: at least boto/boto3 are namespaced
+19:45:12 <abadger1999> But maybe we could add something like (suggest installing latest shade from XXX)
+19:45:27 <kamsz> i'm fine with shade as it's developing so fast
+19:45:43 <bcoca> abadger1999: i believe that is already the suggestion, at least till shade stableizes
+19:45:46 <kamsz> it'd be hard to keep reasonable documentation with so many version changes
+19:45:52 <abadger1999> <nod>
+19:46:01 <Shrews> well, the dev speed is driven by adding support for new cloud providers... but that's an aside
+19:46:14 <bcoca> kamsz: we can ,but then we would not support anything that has not been stable for a year
+19:46:26 <kamsz> :)
+19:46:43 <abadger1999> #actoin people can propose PRs with versions for requirements where it makes sense and we'll evaluate them as they come in.
+19:46:44 <kamsz> then just ignore my point :p
+19:46:45 <bcoca> Shrews: not blaming you guys, it is what it is, just need to figure out if there are better ways we can adapt/reflect it
+19:46:50 <abadger1999> #action people can propose PRs with versions for requirements where it makes sense and we'll evaluate them as they come in.
+19:47:02 <Shrews> bcoca: totally
+19:47:12 <gundalow> abadger1999: sounds sensible
+19:47:17 <bcoca> Shrews: and you guys respond/fix promptly, no where near the problems we've had with docker/docker.py
+19:47:17 <gundalow> (to the action)
+19:47:28 <abadger1999> Cool.  I think we've covered this topic for this meeting at least...
+19:47:39 <abadger1999> Anyone have a new topic to discuss?
+19:47:55 <gundalow> Nothing from me, anything the Core Team want to say?
+19:48:15 <bcoca> i need to try to get some vault features in ...keep forgetting
+19:48:43 <bcoca> https://github.com/ansible/ansible/pull/14079
+19:48:45 <jimi|ansible> if anyone didn't see the announcement, the 18th is the feature freeze date for 2.1, so if you have anything you want to get in, do it ASAP
+19:48:50 <abadger1999> i have thoughts on ziplaoder and module locales... neither need to be here but can be if others are interested.
+19:49:38 <bcoca> abadger1999: my solution is everyone speaks american english and restricts themselves to ascii from now on (also everyone on UTC timezone)
+19:49:56 <gundalow> :)
+19:50:12 <jimi|ansible> abadger1999: are we going to support any encoding other than utf-8? i saw you have that string somewhat variable-ized in your ziploader PR, but it doesn't look like it's configurable nor does it pull the existing encoding out of the module if it exists
+19:50:39 <abadger1999> jimi|ansible: My answer would be no.
+19:50:53 * bcoca waves at CJK
+19:51:17 <jimi|ansible> i didn't think so either, that's why i was curious why you did it that way
+19:51:27 <abadger1999> (This is for the encoding of modules themselves I'm thinking).
+19:51:36 <abadger1999> jimi|ansible: comment stripping.
+19:51:46 * mordred waves, having missed the fnu shade talking
+19:52:04 * bcoca waves
+19:52:06 <abadger1999> jimi|ansible: rather than telling the comment stripper not to remove the coding string, I just had it substitute the coding string in after stripping the comments out.
+19:52:08 <Shrews> mordred: tis all good
+19:52:26 <jimi|ansible> abadger1999: ahh
+19:53:23 <abadger1999> #topic open floor
+19:53:37 <abadger1999> #info  the 18th is the feature freeze date for 2.1, so if you have anything you want to get in, do it ASAP
+19:53:44 <abadger1999> #topic ziploader
+19:53:48 * gundalow found this useful, not just because I got some of my PRs moving
+19:54:09 <abadger1999> #info modules themselves should be encoded in utf-8.
+19:54:16 <gundalow> so ziploaded is going to be released in 2.1?
+19:54:22 <abadger1999> yes.
+19:54:29 <abadger1999> #info ziploader definitely will be in 2.1
+19:54:35 <gundalow> abadger1999: :)
+19:54:44 <pedahzur> So, open floor. Does that mean I can bring up bugs? It's not an open bug yet, just wanted to get feedback before I opened the bug.
+19:54:44 <abadger1999> I have one PR merged already and a second is just waiting for review. *hint*hint*
+19:54:50 <abadger1999> #info https://github.com/ansible/ansible/pull/15344
+19:55:09 <jimi|ansible> pedahzur: yep
+19:55:40 <pedahzur> Bug detailed here: https://groups.google.com/forum/#!msg/ansible-project/HdD1FD-lG4A/WrGXN7rFAQAJ  Docs don't say you *have* to use a string, but fails when an integer is used.
+19:55:41 <bcoca> pedahzur: no need to wait for this meeting though, normally can ask in #ansible or #ansible-devel
+19:55:43 <abadger1999> That gets us enough to call it a new feature.  Would like to get one or two more things in (python package support and relative imports) but those could be done for 2.2 instead.
+19:56:02 <abadger1999> #topic Bug:  Docs don't say you *have* to use a string, but fails when an integer is used
+19:56:06 <jimi|ansible> bcoca: the point of this meeting is to get focus on things immediately though right? otherwise why have it
+19:56:12 <abadger1999> #info https://groups.google.com/forum/#!msg/ansible-project/HdD1FD-lG4A/WrGXN7rFAQAJ
+19:56:35 <bcoca> jimi|ansible: said 'no need to wait' not "don't bring it up here"
+19:56:59 <gregdek> Because here people are unable to avoid the question :)
+19:57:06 <abadger1999> pedahzur: yeah, I think that's a bug.
+19:57:16 <pedahzur> abadger1999: OK, I'll open a bug. Thanks!
+19:57:21 <gregdek> (though personally I think ansible/proposals should be the priority for either this meeting or the Thursday meeting)
+19:57:24 <bcoca> gregdek: well, many ways to avoid
+19:57:30 <gregdek> LOL
+19:57:40 <pedahzur> We now return to our regularly scheduled open floor. :)
+19:57:42 <willusher> Hi guys, I'd love to get https://github.com/ansible/ansible-modules-core/pull/2744 in to 2.1
+19:57:45 <abadger1999> pedahzur: We should be doing the equivalent of param = str(param) when we receive the variables and then try to operate on them afterwards.
+19:57:59 <pedahzur> abadger1999: That makes sense.
+19:58:06 <pedahzur> I might even do a PR if I get brave. :)
+19:58:07 <bcoca> abadger1999: not sure tha tis correct, what if you get list/dict?
+19:58:21 <gregdek> Ah, yum!
+19:58:31 <gundalow> gregdek: maybe proposals should be added to agenda?
+19:58:33 <jimi|ansible> pedahzur: guessing that param is not marked properly as being an int
+19:58:36 <gundalow> gregdek: want me to add?
+19:58:36 <abadger1999> bcoca: Well.. but should I guess I'm saying -- IIRC, the current code is doing X.
+19:58:42 <abadger1999> s/but/by
+19:58:44 * jimi|ansible checks real fast
+19:58:48 <gregdek> gundalow: not until someone agrees with me :)
+19:59:04 <abadger1999> But obviously somewhere we're doing it differently than that.
+19:59:21 <jimi|ansible> passno = dict(default=None),
+19:59:25 <jimi|ansible> ^ pedahzur
+19:59:32 <jimi|ansible> so definite bug
+19:59:39 <jimi|ansible> easy fix though
+19:59:43 <pedahzur> Yup!
+19:59:51 <jimi|ansible> send the pr and we can merge it right in now
+20:00:29 <bcoca> def _check_type_str(self, value):
+20:00:31 <bcoca> if isinstance(value, basestring):
+20:00:32 <bcoca> return value
+20:00:34 <bcoca> # Note: This could throw a unicode error if value's __str__() method
+20:00:35 <bcoca> # returns non-ascii.  Have to port utils.to_bytes() if that happens
+20:00:37 <bcoca> return str(value)
+20:00:38 <bcoca> ^ abadger1999
+20:01:10 <abadger1999> bcoca: <nod> that's what I was thinking of
+20:01:27 <abadger1999> #topic https://github.com/ansible/ansible-modules-core/pull/2744 yum support for downgrading packages
+20:01:46 <bcoca> already there, just need to specify type in module, the 'raw' behaviour is probalby what he is hitting
+20:02:00 <abadger1999> willusher: So what's the history on this?
+20:02:37 <willusher> Support was removed in an earlier version because of a bug.
+20:02:59 <jimi|ansible> bcoca: yeah it's the raw behavior
+20:03:00 <willusher> Module was then refactored, so I couldn't just fix the bug. This adds that functionality back in.
+20:04:08 <abadger1999> willusher: ido you know what hte bug was?
+20:04:41 <willusher> The bug in the original code was the splitFilename() function returning unexpected results in certain scenarios.
+20:06:34 <gregdek> yay reboots
+20:06:49 <jimi|ansible> willusher: so now you're using the builtin method to compare the EVR?
+20:07:02 <pedahzur> PR for passno fix. I think that's the right way.
+20:07:04 <pedahzur> https://github.com/ansible/ansible-modules-core/compare/devel...jkugler:patch-1
+20:08:36 <pedahzur> Sorry, the actual PR: https://github.com/ansible/ansible-modules-core/compare/devel...jkugler:patch-1
+20:08:42 <jimi|ansible> pedahzur: no need to do that, just do `type='int'` for the param in the argument spec
+20:09:04 <jimi|ansible> or if it really needs to be a string, do `type='str'`
+20:09:10 <pedahzur> Oh!
+20:09:20 <jimi|ansible> AnsibleModule will handle all of the conversion for you :)
+20:09:21 <pedahzur> (still learning about ansible) :)
+20:09:44 <jimi|ansible> no worries, just force-push to update your branch and you won't need to resubmit
+20:10:35 <willusher> jimi|ansible: I'm using splitFilename() in a way that doesn't hit the original bug.
+20:12:06 <abadger1999> willusher: is that by making sure that spec conforms to certain formating before passing to splitFIlename()?
+20:12:17 <abadger1999> willusher: If so, where is that being done?
+20:12:34 <willusher> my memory is a little faded (I submitted this PR late last year), but I commented this here: https://github.com/ansible/ansible-modules-core/pull/2744/files#diff-50dbb2224ca8ab1fc7b6b693f9be32faR711
+20:13:37 <gregdek> I was sincerely hoping never to be party to a NEVRA conversation again, lol (sigh)
+20:14:35 <jimi|ansible> gregdek: hah
+20:16:05 <pedahzur> jimi|ansible: OK, better this time. https://github.com/ansible/ansible-modules-core/pull/3413
+20:16:18 <abadger1999> willusher: https://gist.github.com/abadger/c673b5c02f15c775603ddeca8bbdd348
+20:17:24 <abadger1999> willusher: I haven't tried to break this code in a while but I think those may all be valid values for spec.. some of them don't seem to work with the logic for downgrade.
+20:20:20 <jimi|ansible> pedahzur: and you tested that, and it resolves the error for you?
+20:20:37 <jimi|ansible> just want to make sure it's not something in the module code that's relying on it being a string
+20:21:02 <abadger1999> Alright... we've gone over time for the meeting by a little.
+20:21:30 <abadger1999> willusher and pedahzur: We can continue discussing stuff in #ansible-devel
+20:21:50 <jimi|ansible> pedahzur: it looks like it's not the module code, so if you've tested it i'll merge it
+20:22:02 <abadger1999> I'm going to let other participants go home if they want, though ;-)
+20:22:09 <abadger1999> #topic Open floor
+20:22:25 <abadger1999> Any burning comments?  Otherwise I'll close the meeting in 60s
+20:22:54 <gundalow> offtopic: If anyone has any recomendations for a decent monitor (highres maybe even 4k) please let me know offchannel
+20:23:03 <abadger1999> 30s
+20:23:12 <gregdek> WAIT
+20:23:18 <gregdek> srsly, wait :)
+20:23:19 <gundalow> GREG!
+20:23:26 <gundalow> proposals?
+20:23:37 <gregdek> I'd like to amend one of these meetings to cover ansible/proposals in particular.
+20:23:45 <abadger1999> #topic Proposals
+20:23:52 <abadger1999> Go ahead gregdek
+20:24:03 <gregdek> Well, that's it, LOL. (Mostly.)
+20:24:08 <abadger1999> hah
+20:24:22 <gregdek> Is this the right meeting for those discussions, and if not, where is the right place?
+20:24:28 <gregdek> Because we currently have:
+20:24:47 <gregdek> * Docker modules;
+20:25:06 <gregdek> * Auto-install of roles;
+20:25:28 <gregdek> * Publish.subscribe of handlers;
+20:25:48 <gregdek> ...and a few others.
+20:26:02 <jimi|ansible> well docker modules are being done, right?
+20:26:04 <gregdek> We can, of course, just rely upon the issues themselves, but I'm concerned that most of them will rot.
+20:26:15 <jimi|ansible> should we close that proposal or what's the status with chouseknecht working on them?
+20:26:28 <abadger1999> <nod> We definitely should cover them sometime I think.
+20:26:36 <gregdek> jimi|ansible: they are, but there's been very little feedback. If the assumption is "chouse has got this an we agree with everything he's doing," then that's ok, but we should, y'know, say that. :)
+20:26:55 <abadger1999> If we devote a whole meeting to them, though, then that takes away the reason that we have the meetings at different times of day.
+20:26:58 <gregdek> (And fwiw, chouse has asked for feedback and hasn't gotten much yet.)
+20:27:05 <gregdek> abadger1999: true enough.
+20:27:23 <bcoca> i gave some, but have been meaning to get back to it, keep getting distracted by bugs
+20:27:27 <gregdek> Just want a way to make sure we're addressing them on a semi-regular basis.
+20:27:43 <abadger1999> Maybe we should cordon off a specific amount of time for proposals (and expand the meeting time if we feel we don't have time to do both things justice?)
+20:27:43 <jimi|ansible> i'm fine putting it on the agenda, Issues/PRs/Proposals
+20:28:04 <gregdek> I'm ok with that. We may need to have a way for people to ask for time on the agenda.
+20:28:06 <jimi|ansible> new business, old business
+20:28:28 <gregdek> For now, I'll say "hey proposals is part of the purpose of this meeting" if we agree to that, and we can work out details.
+20:28:53 <jimi|ansible> and we do not discuss new business until next quarter!
+20:28:53 <gregdek> Good enough for now?
+20:28:56 <abadger1999> gregdek: +1
+20:28:58 <gregdek> LOL
+20:29:05 <bcoca> +0.325
+20:29:15 <jimi|ansible> (https://www.youtube.com/watch?v=DZtEsJyTwdA for those who don't get the reference)
+20:29:52 <gregdek> LOL
+20:29:59 <gregdek> What is that from? An Addams movie?
+20:30:03 <bcoca> yep
+20:30:04 <jimi|ansible> yeah, the first one
+20:30:05 <gregdek> Man, Raul Julia was a bad ass.
+20:30:28 <gregdek> anyway. thanks, I'll make the change in the meeting description.
+20:30:32 <gregdek> I'm done now. :)
+20:30:44 <jimi|ansible> cool, and i'll ping house to let him know to update the proposal when the modules drop
+20:30:51 <abadger1999> #action gregdek to put proposals onto the charter for the meeting.  We'll spend some time on them each meeting -- make it more formal if we find we're not giving them enough time.
+20:31:07 <jimi|ansible> well, chouse ^^^
+20:31:14 <abadger1999> okay then.
+20:31:15 <jimi|ansible> consider him pinged
+20:31:16 <jimi|ansible> :)
+20:31:27 <abadger1999> Ending meeting in 5
+20:31:40 <jimi|ansible> i tried autocompleting chousekn... and when it didn't complete i assumed he wasn't in here
+20:31:48 <abadger1999> #endmeeting

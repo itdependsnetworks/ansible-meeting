@@ -1,0 +1,438 @@
+15:11:05 <abadger1999> #startmeeting Ansible Core Public Meeting
+15:11:05 <zodbot> Meeting started Thu May  5 15:11:05 2016 UTC.  The chair is abadger1999. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:11:05 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:11:05 <zodbot> The meeting name has been set to 'ansible_core_public_meeting'
+15:11:16 <abadger1999> #topic Roll call
+15:11:21 <abadger1999> Who all is here?
+15:12:26 <abadger1999> bcoca, jimi|ansible, jtanner|t420, sivel, nitzmahone, gregdek, Qalthos, ryansb, alikins, anyone else who cares to join!  Meeting time.
+15:12:44 <alikins> bloop
+15:12:51 <Qalthos> hallo
+15:12:52 <nitzmahone> yo
+15:12:55 <sivel> in a meeting, but I will see if I can pay attention, should be done within 17 minutes
+15:13:09 <abadger1999> #chair alikins Qalthos nitzmahone sivel ttom
+15:13:09 <zodbot> Current chairs: Qalthos abadger1999 alikins nitzmahone sivel ttom
+15:13:10 * ryansb is here
+15:13:13 <jtanner> hello
+15:13:18 <abadger1999> #chair ryansb jtanner
+15:13:18 <zodbot> Current chairs: Qalthos abadger1999 alikins jtanner nitzmahone ryansb sivel ttom
+15:14:50 <abadger1999> Okay, we have the followup on the modules SLAs to look at
+15:15:18 <jtanner> ignore my added topic in #87
+15:15:54 <abadger1999> ah okay.
+15:16:31 <abadger1999> #topic SLAs
+15:16:56 <bcoca> https://github.com/ansible/ansible/commit/fb7940fc50cc9f5dd5e794e6c8149f89084cfe05
+15:17:40 <abadger1999> #topic jimi|ansible gave a +1 to the current proposal for automerge in extras after 2 weeks.  bcoca opposes (wants autoclose) -- discussion around objections are in the ticket.
+15:17:45 <abadger1999> #topic SLAs
+15:17:52 <abadger1999> #info jimi|ansible gave a +1 to the current proposal for automerge in extras after 2 weeks.  bcoca opposes (wants autoclose) -- discussion around objections are in the ticket.
+15:18:07 <bcoca> i think greg's proposal of 'no auto' is better
+15:19:01 <abadger1999> #info will discuss more at bot discussion next week
+15:19:30 <abadger1999> bcoca: I don't see a 'no auto' proposal from gregdek?
+15:19:38 <abadger1999> Which comment are you looking at?
+15:20:33 <abadger1999> Anyhow... sounds like the main event is next week.
+15:20:40 <abadger1999> #topic Open Floor
+15:20:59 <abadger1999> Anyone have PR's to look at?  ttom? (since you asked about the meeting happening)
+15:21:31 <bcoca> i think it was 'out of ticket' discussion
+15:21:36 <abadger1999> We also didn't get to proposals on Tuesday so I'd like to make sure we get to those at least in our last half hour.
+15:21:56 <ttom> hi. Don't have a PR yet. working towards one (or more). Had several discussions this week on #ansible-devel regarding integration testing.
+15:21:57 <bcoca> https://github.com/ansible/community/issues/80#issuecomment-216857568 <= loosly implied
+15:23:00 <abadger1999> bcoca, gregdek: okay -- if you guys have alternate SLA proposals, please make sure that it gets listed in or linked to the ticket eventually.
+15:23:17 <abadger1999> ttom: Cool.  Do you have everything you need to continue?
+15:23:33 <gregdek> I will update community/80 appropriately.
+15:23:33 <ttom> from my point of view (developing modules) we had a question regarding tests.
+15:24:22 <ttom> Say I submitted a PR and it was accepted. Sometime later someone changes something in ansible the breaks my module. Without testing I wouldn't know about it till it hit me in the face in production.
+15:24:38 <ttom> So I started working on adding integration tests to test/integration.
+15:25:00 <ttom> I managed to do that, but have a couple of issues/questions.
+15:25:21 <bcoca> ttom: you can normally bring those in ansible-devel, but continue now
+15:25:50 <ttom> A. I don't want to run all the integration tests when I'm testing my work locally (module development usually doesn't affect anything else in ansible).
+15:26:16 <ttom> Running test/util/run_tests.sh runs make with no arguments - so it runs the default make target (all).
+15:26:46 <ttom> Adding TEST_FLAGS=' --tags=some_tag' doesn't do much as many of the targets in the Makefile don't filter on tags.
+15:26:49 <bcoca> ^ we were just discussing adding TEST_FLAGS to that, which the underlying makefile already supports
+15:27:15 <bcoca> ttom: we might need 2nd options 'make target' that defaults to all/empty
+15:27:18 <ttom> What I've done locally in the mean time is add ${TEST:-all} after 'make' and pass my target (which I've added to the Makefile)
+15:28:11 <bcoca> utf-8 make ${MAKE_TARGET:-''})"
+15:28:11 <ttom> bcoca: TEST_FLAGS is used to pass stuff, like extra vars, to ansible-playbook throughout the Makefile. How can it also pass the make target?
+15:28:14 <bcoca> ^ ?
+15:28:27 <ttom> oh, I see. bcoca +1
+15:28:33 <bcoca> ok, checking taht in
+15:28:39 <ttom> cool.
+15:28:52 <ttom> Next question then.
+15:29:29 <ttom> When I use a playbook (with underlying roles or not, doesn't matter) for testing, it usually has pairs of tasks.
+15:29:42 <ttom> the first - the actual thing you want to test, with register and ignore_errors=true.
+15:30:00 <ttom> the second one is an assert task, that checked the output of the previous task.
+15:30:11 <ttom> The assert task doesn't have ignore_errors=true.
+15:30:18 <bcoca> ^ not always, sometimes the failed task is enough, sometimes the assert covers multiple tasks
+15:30:36 <ttom> bcoca: correct, but I'm getting to my point in a sec...
+15:31:14 <ttom> with assert not having ignore_errors=true, the play stops on the first failed test. so you can't have a full view of you tests.
+15:31:53 <ttom> with ignore_errors=true, the play recap at the end doesn't count the assert tasks as it does with ignore_error=true, so you don't have a summary at all (everything results in either ok/changed)
+15:32:10 <jtanner> ttom: yes, it's not a comprehensive unit test-like framework
+15:32:17 <jtanner> if one fails, it halts completely
+15:32:30 <ttom> Actually, having ansible halt on the first error makes it almost impossible to run the 'all' target for all integration tests on 'devel'. it fails.
+15:33:01 <jtanner> a workaround is to register a whole list of pass+fail and then a single fail: task at the end, but i haven't seen that pattern yet
+15:33:10 <nitzmahone> Yeah, that's one of my (many) gripes with the way we're doing integration testing as well.
+15:34:13 <ttom> Currently, with the local change I made that allows executing a specific target, I can at least test my module(s). But there's nothing in place to make sure that whenever changes are made to ansible's core my module won't break. correct?
+15:34:15 <abadger1999> nitzmahone: +1
+15:34:18 <nitzmahone> The underlying problem is that we're currently relying on non-zero exit codes to stop make and signal an error... It seems like maybe we should develop a callback or something to record test outputs to s atructured format, then scan them afterward.
+15:34:24 <bcoca> strategy: continue_on_fail
+15:34:42 <nitzmahone> ... and do somethign like thst ^--
+15:34:45 <bcoca> ^ 2 issues, the make one is easy to solve, the ansible one not as easy
+15:35:12 <bcoca> should pass another var to make to make it 'fail on first' or 'run all and report failures'
+15:35:15 <ttom> If you think that a callback plugin might be not to hard to write (in combination of having all asserts changed to ignore_errors, or having a way to control that globally) than I'd tackle that.
+15:35:22 <jtanner> i think it's inevitable that we'll make it do that
+15:36:06 <jtanner> seems like a lengthy proposal to make
+15:36:13 <bcoca> callback wont solve it, needs to be strategy
+15:36:21 <bcoca> callback cannot 'continue play'
+15:36:52 <nitzmahone> The callback's not about that, the callback is about recording the test outputs in something better than stdout format
+15:36:59 <jtanner> and not all test roles were written to handle continuing after fail ... so there's going to be some refactoring if we set a continue on fail strategy
+15:37:05 <abadger1999> yeah, strategy to make the play continue; callback to record the errors and return them at the end of the run.
+15:37:32 * nitzmahone taps nose
+15:37:43 <jtanner> can continue on fail work at an entire role level?
+15:37:51 <nitzmahone> Don't think so
+15:37:54 <abadger1999> I know this is heresy but we could also look at a different framework.
+15:37:55 <nitzmahone> (currently)
+15:37:59 <bcoca> nitzmahone: that should be easy callback
+15:38:01 <jtanner> i think it would have to, to make this work right
+15:38:05 <nitzmahone> my thoughts exactly
+15:38:37 <jtanner> abadger1999: you missed out on the discussions when it was initially decided ... but that doesn't mean you are wrong
+15:38:42 <bcoca> i think those are not mutually exclusive options
+15:38:43 <nitzmahone> abadger1999: tough call there. I bet mattclay will have piles on input on this. :)
+15:38:47 <abadger1999> run ansible many times from $external_framework instead of running it once via itself.
+15:39:11 <bcoca> abadger1999: technically we area already doing that .. make ...
+15:39:14 <abadger1999> <nod>
+15:39:19 <jtanner> very true
+15:39:31 <nitzmahone> Right, but make is horrible at evaluating output- you need something else in the middle for a lot of those cases
+15:39:32 * bcoca punts to zuul
+15:39:34 <ryansb> there are probably better test runners than make out there
+15:39:41 <jtanner> nose ?
+15:39:50 <bcoca> we already use nose for some tests
+15:39:51 <nitzmahone> No problem with make as "top of the chain" but the way we;'re hacking stuff in between is pretty awful in some cases
+15:39:56 <abadger1999> hehe -- true... but to make that better, we'd have to write Makefiles that record errors and summarize at the end.
+15:40:04 <jtanner> ... nose ...
+15:40:16 <bcoca> #action setup meeting to discuss testing revamp
+15:40:22 <nitzmahone> abadger1999: exactly
+15:40:23 <abadger1999> perhaps the only thing more frustrating to write than portable bourne shell code, portable make, code.
+15:40:42 <bcoca> abadger1999: HA! ... sooo true
+15:40:42 <nitzmahone> (or have an ansible callback do it for us and have make run another thing that evaluates)
+15:40:44 <abadger1999> #chair bcoca
+15:40:44 <zodbot> Current chairs: Qalthos abadger1999 alikins bcoca jtanner nitzmahone ryansb sivel ttom
+15:40:47 <jtanner> i don't like looking at makefiles anyway
+15:40:53 <bcoca> #action setup meeting to discuss testing revamp
+15:41:22 <bcoca> so i think we have many things to explore, we should setup proposal/meeting as this is a 'deep' subject
+15:41:22 <nitzmahone> (and probably do it after May 18 when mattclay can be there)
+15:41:23 <ryansb> The optimal would probably be a test harness, which (I don't think) nose is
+15:41:32 <ryansb> (and yeah, better as a proposal
+15:41:34 <ryansb> )
+15:41:42 <jtanner> not sure what a "test harness" is
+15:42:07 <ryansb> so there's test frameworks where you would write, say, unit test by inheriting from some magic class and using asserts
+15:42:27 <ryansb> a harness is a tool that runs some set of defined actions, and parsing some kind of output
+15:42:30 <jtanner> "a test harness or automated test framework is a collection of software and test data configured to test a program unit by running it under varying conditions and monitoring its behavior and outputs." ... sounds like nose to me
+15:42:50 <jtanner> unless you are suggesting keywords or something
+15:43:13 <abadger1999> Alright -- I think we all agree that this is a problem.  But we need discussion to figure out the proper solution.
+15:43:22 <bcoca> lets separate unit tests and integration (former are using nose/mock)
+15:43:25 <ryansb> so it's a harness for running stuff, without attached stuff for language-level testing, that will run all our integration test plays and collect the passes/fails/warns
+15:44:00 <abadger1999> Perhaps we should kick this one down the road to a dedicated meeting.
+15:44:03 <jtanner> yes
+15:44:06 <nitzmahone> second
+15:44:24 <ttom> +1
+15:45:25 <abadger1999> #info bcoca took the action to setup a meeting about revamping testing in the future.  Will probably be after May 18th.
+15:45:38 <abadger1999> ttom: okay, next question/problem with current testing?
+15:46:03 <ttom> sorry, these were two. the issue with the Makefile and the issue with halting on first assert.
+15:46:17 <jtanner> i have one
+15:46:25 <jtanner> test roles live in ansible/ansible
+15:46:39 <ttom> I have another issue entirely, that regards the structure of the project requiring that you do two PRs for module development (module_utils is in core)
+15:47:21 <bcoca> ttom: been discussed many times, I don't see that going away as long as we have multiple repos
+15:47:50 <bcoca> even iwth configurable module_utils, we have modules that use same file in both core and extras
+15:47:52 <jtanner> why can't we have test_roles dir in core+extras?
+15:47:57 <bcoca> ^ and that is comming
+15:48:07 <abadger1999> jtanner: that is doable, module_utils is much harder.
+15:48:09 <bcoca> jtanner: test/integration/roles ?
+15:48:10 <ttom> bcoca: ok. just to make sure - no way to share code between two modules in extra other than putting amodule in module_utls?
+15:48:37 <jtanner> that's a separate topic from testing
+15:48:42 <bcoca> ttom: not currently, there WILL BE, but probably will still go in ansible/ansible
+15:49:15 <nitzmahone> ttom is hitting all the core team controversial topics today >.> <.<
+15:49:41 <jtanner> bcoca: yeah ... does that work already?
+15:49:46 <ttom> I guess that's what you get for being a newbie... Sorry
+15:49:48 <bcoca> well, this time they'll be logged so we can just point at that vs having the discussion over and over
+15:49:49 <jtanner> i see a unit test dir in core
+15:50:07 <jtanner> sorry, i think i'm on the wrong topic
+15:50:09 <bcoca> jtanner: not sure what you are asking
+15:50:22 <jtanner> "test/integration/roles" in core+extras
+15:50:29 <abadger1999> jtanner: and by doable, I mean someone has to enhance our current Makefiles/nose invocation/travis setup/etc to do it.  But there's no architectural considerations blocking that work.
+15:50:46 <abadger1999> jtanner: ^  I think that answers your question although I was replying to something you said earlier.
+15:50:59 <ttom> jtanner - I'm all for seprating the module tests from core, but for the sole reason of allowing module developers to test their modules and not the entire project. The other way around must still be doable (someone changing core should check that nothing is broken even for modules in extra)
+15:51:05 * jtanner lets ttom continue talking
+15:51:42 <bcoca> jtanner: we already commited to that, just need time to create the framework to run those
+15:51:59 <bcoca> ^ was part of 'developer summit'
+15:52:22 <jtanner> very well
+15:54:13 <bcoca> the idea is that those tests are runnable both localy (just module repo) and from ansible/ansible
+15:54:27 <bcoca> part of it was also moving many of current tests to each repo
+15:55:05 <bcoca> i tried to a few times, but most tests either rely on action_plugins or in the case of aws, modules are split across both repos
+15:55:09 <nitzmahone> ... and so that travis could run tests for a single module with current tests in the same PR- preventing us from merging things that don't pass.
+15:55:13 <bcoca> openstack/cloudstack were the easy ones
+15:55:28 <nitzmahone> (targeted runs on module PRs)
+15:55:30 <bcoca> nitzmahone: that should already be possible
+15:55:39 <nitzmahone> not if you have to change the tests first
+15:55:50 <bcoca> true dat
+15:55:51 <nitzmahone> (eg, new module + tests or test updates)
+15:58:02 <gundalow> Hi, just got home. Please keep me in the loop about testing stuff :)
+15:58:18 <gundalow> and I'll help out where I can
+15:58:43 <abadger1999> #info Okay.  So a few ideas on how to move tests to the modules repos.  nothing blocking work from getting done but no one is assigned to do the work.
+15:59:32 <abadger1999> And that brings us up to the hour mark.  So if there's nothing else here, let's move on to Proposals for the last half hour.
+15:59:42 <bcoca> <= i was assigned at dev summit
+15:59:45 <bcoca> but ... time ...
+15:59:52 <gundalow> abadger1999: spliting out ansible/ansible/tests/integration into modules-extras?
+16:00:07 <abadger1999> gundalow: yeah -- to modules-extras and modules-core.
+16:00:19 <gundalow> bcoca: If you think that's something I could get help with...
+16:00:35 <abadger1999> gundalow: and probably unittests as well (there's only two unittests testing things in modules right now but they can be useful as well)
+16:00:37 <gundalow> isn't modules-core moving into ansible/ansible
+16:00:52 <jtanner> first i've heard
+16:01:10 <abadger1999> gundalow: that's.... possible :-)  Gotta figure out the logistics... like moving issues in github.
+16:01:11 <gundalow> oh, maybe I miss understood comments about modules-extra being split out
+16:01:12 <bcoca> jtanner: its been a dream of some
+16:01:30 <nitzmahone> since about 10s after the initial split got done. ;)
+16:01:38 <gundalow> lol
+16:01:47 <bcoca> ^ so the issue is moving the test to extras, making them executable locally there while still being able to execute them from ansible/asnible
+16:01:59 <bcoca> then depending on core merge or not, repeat
+16:02:05 <abadger1999> I guess we have several longer-term goals that interact... but we don't want to block someone interested in working on one of them with very hard problems in the others.
+16:02:16 <nitzmahone> One of the original intents was to give more people commit access to just the module repos, but it didn't really work out that way...
+16:02:24 <bcoca> nitzmahone: a whole 10s???
+16:02:32 <nitzmahone> bcoca++
+16:02:39 <gundalow> if someone wants to brain dump what thoughts have been has so far I can help out
+16:02:40 <bcoca> nitzmahone: actually, we did
+16:03:09 <bcoca> gundalow: this meeting's log probably has everything
+16:03:12 <bcoca> no details really
+16:03:12 <nitzmahone> didn't *really* work out that way (yes, a handful, but not the way it was originally talked up IIRC)
+16:03:24 <abadger1999> also we gave people commit everywhere instead of only to the extras repo.
+16:03:30 <nitzmahone> zactly
+16:03:31 <bcoca> nitzmahone: and the activity was not as extensive as expected
+16:03:40 <bcoca> abadger1999: that was LOT more recent
+16:04:11 <abadger1999> Alright... so I'm going to move us on to proposals now.  There's only two so we can come back to this at the end if there's time and people have more to discuss.
+16:04:25 <gundalow> cool. thanks for the details
+16:04:28 <bcoca> people always have more ...
+16:04:28 <abadger1999> #topic task notify / handler listen on keyword  https://github.com/ansible/proposals/issues/11
+16:04:39 <abadger1999> resmo: ping
+16:04:39 <zodbot> abadger1999: Ping with data, please: https://fedoraproject.org/wiki/No_naked_pings
+16:05:13 <bcoca> ^ proposal mentions replacing instead of 'in addition to'
+16:05:22 <abadger1999> I think this was just a finalization of what we talked about last time in https://github.com/ansible/proposals/issues/8
+16:05:29 <bcoca> i thought the consensus was as an additional method, not  as only
+16:06:52 <bcoca> and of course, that included a toggle of 'missing handler == error or warning'
+16:08:32 <abadger1999> Ambiguous wording but I see what you mean.
+16:08:47 <abadger1999> Since resmo doesn't appear to be here, probably just ask for clarification of those few sentences.
+16:09:05 <abadger1999> Something like:
+16:09:07 <abadger1999> -This proposal extends the current notify handlers functionality by decoupling the <handler_name> of the notify replacing it by a <keyword>.
+16:09:31 <ttom> why not have all handlers support notify: <their name> and handlers that also have the listen directive support these. this way you get backwards compatibility
+16:09:56 <bcoca> ttom: that was what we originally discussed
+16:10:09 <bcoca> ^ my whole point that this proposal deviates from that
+16:10:18 <abadger1999> +This proposal extends the current notify handlers functionality by making it possible for handlers to listen for an event to happen instead of events notifying specific handlers.
+16:10:41 <abadger1999> I don't htink it necessarily deviates from it.
+16:11:06 <abadger1999> It's showing how the example use case changes.  Not necessarily whether the old behaviour is removed or kept.
+16:11:29 <abadger1999> So I think a few tweaks of wording will make it clear that you can still do things the old way.
+16:11:50 <ttom> what do you generaly do about backwards compatibility? This might break a lot of existing playbooks.
+16:11:58 <bcoca> "This proposal extends the current notify handlers functionality by decoupling the <handler_name> of the notify replacing it by a <keyword>"
+16:12:06 <bcoca> ^ replacing it
+16:12:07 <ttom> s/might/will ...
+16:12:31 <bcoca> that is pretty specific to me
+16:12:33 <abadger1999> bcoca: right -- and I specifically said that was a sentence that could be updated above.
+16:12:57 <bcoca> its also missing teh toggle from 'error to warning'
+16:13:08 <bcoca> he just assumes its not an error anymore
+16:13:41 <abadger1999> Actually, he doesn't assume that either.
+16:13:42 <bcoca> if we ammend both those things, +1 , but otherwise it breaks backwards compat
+16:14:01 <bcoca> Problems section bascially points that out
+16:14:02 <abadger1999> It can work whether it's toggled or not.
+16:14:19 <bcoca> part of his use case is 'we can ignore missing handlers'
+16:14:53 <bcoca> let me rephrase then, -1 cause proposal is unclear
+16:15:22 <bcoca> as we both seem to infer differnt things
+16:16:20 <abadger1999> yeah, that could be implied by:"This would work but remember, the ssl role is a common role and may be on galaxy. Not a good idea as you can not know in which roles users use the ssl role as dependency and how they named their handlers."
+16:16:46 <abadger1999> ttom: backwards compatibility is important.
+16:16:48 <bcoca> so many unlcear issues there
+16:17:13 <bcoca> which i think are crucial to this feature being accepted
+16:17:16 <abadger1999> bcoca: -1 isn't very helpful at this point... we need really to know what changes to make to make it satisfactory.
+16:17:32 <abadger1999> Which I think so far is:
+16:17:40 <bcoca> a) not a replacment, but a additional method b) must be accompanied by error/warning toggle on 'unhandled events'
+16:17:42 <abadger1999> * Update wording to make it clear that the old way still works
+16:18:01 <abadger1999> * deal with undefined handlers.
+16:18:20 <abadger1999> Looking over the latter problem... I think it makes more sense to not reuse notify...
+16:18:42 <abadger1999> Instead of a task saying:
+16:19:06 <abadger1999> - copy: dest=cert_path
+16:19:11 <abadger1999> notify: keyword
+16:19:21 <abadger1999> It might be better to do:
+16:19:28 <abadger1999> - copy: dest=cert_path
+16:19:34 <abadger1999> emit_event: keyword
+16:19:43 <bcoca> ^ we discussed that last ime
+16:19:54 <abadger1999> <nod>  yes it was discussed.
+16:19:58 <bcoca> having 2 parallel ways of doing same thing
+16:20:09 <abadger1999> They're different things though.
+16:20:32 <bcoca> not really, you are expanding functionality from emit => verified recieve single subscriber
+16:20:42 <bcoca> to allow for emit => non verified multipooe subscribers
+16:21:05 <abadger1999> bcoca: well then, toggling would have to be per-notify rather than an ansible.cfg option.
+16:21:20 <bcoca> never said ti was config only
+16:21:26 <abadger1999> Because undefined is not a global option here.
+16:21:36 <bcoca> iirc i said it should be at 'every level'
+16:21:55 <abadger1999> I was also thinking that the old way of doing handlers is also already redundant.
+16:22:12 <abadger1999> It looks like you can just use include for the old way.
+16:22:35 <bcoca> ^ i brought taht up initially, you guys didnt like
+16:22:49 <abadger1999> So... if redundancy is the problem... we should deprecate the old way of doing handlers
+16:22:53 <bcoca> but that is emit=> verified multiple handlers
+16:23:18 <abadger1999> and create the new way as the replacement for what people usually want. (and include as the replacement for what people have now)
+16:24:44 <bcoca> ^ wasn't that the conclusion of the last discussion? that we would make them 'both work' for a time
+16:24:51 <bcoca> ?
+16:25:07 <abadger1999> I don't know -- the last discussion I couldn't follow (and said so).
+16:25:44 <abadger1999> I think having three alternative proposals made it really hard to know what was currently implemented and what the proposal each person was advocating was.
+16:26:07 <abadger1999> This proposal is a whole lot easier to read in that regard.
+16:26:15 <bcoca> this proposal is closer to what we finally agreed on, but missing backwards compat and the toggle
+16:26:47 <bcoca> and yes, previous proposal was too complicated and did not express very well what was being asked for
+16:27:03 <bcoca> then there were many 'offline' discussions and even things changed between those and official meeting
+16:27:07 <bcoca> so it was messy
+16:27:15 <abadger1999> So one more hting to add -- deprecate current handler behaviour.
+16:27:40 <bcoca> we did not all agree on that, so punted to 'later'
+16:27:57 <abadger1999> Do you recall who was against it?
+16:28:46 <bcoca> im on fence, i think james and others were against, I don't remember you declaring pref
+16:29:12 <bcoca> resmo clearly against current method, so was someone else ... need to lfind long
+16:29:13 <bcoca> logs
+16:29:21 <abadger1999> yeah, like I said, I couldn't follow the last discussion so was +1 to the basic idea of needing handlers to listen but abstained from any of the implementation.
+16:29:34 <abadger1999> k
+16:29:39 <abadger1999> can be added down the road, though.
+16:29:55 <bcoca> agreed
+16:30:09 <abadger1999> So I'll add a note about clarifying/adding those two points to the proposal. (old behaviour still available and toggle for verifying that the handler name exists)
+16:30:23 <abadger1999> and that should be enough for that proposal.
+16:30:35 <abadger1999> Next proposal:
+16:30:45 <abadger1999> #topic https://github.com/ansible/proposals/issues/13 Proposal: Deprecation procedure for module_utils code
+16:31:43 <abadger1999> as requested, I wrote up something about backwards compatibility, deprecation, and module_utils code.
+16:32:27 <abadger1999> this is my attempt at doing that.
+16:32:39 <abadger1999> We're also at the end of our meeting time.
+16:33:04 <abadger1999> So if people want to change a lot of things, we can consider this a strawman and start with it next week.
+16:33:13 <bcoca> whe
+16:33:41 <bcoca> my only issue, is that many changes, even bug fixes, will break modules but not really should follow this process
+16:33:57 <bcoca> ^ damn, i cannot parse my own sentence
+16:34:07 <abadger1999> heh :-)
+16:34:14 <bcoca> butyouknowwhatimeant
+16:34:39 <abadger1999> <nod>  Something like "this does not guarantee bug-for-bug compatibility"
+16:34:39 <ttom> the proposal's good, IMHO, except that it says nothing about how you can even tell you're about to break someone's custom module, which takes us back to the issue we started on - testing.
+16:35:04 <bcoca> ttom: even harder, you cannot test modules you don't have access to
+16:35:16 <bcoca> ^ aka custom modules people have not pushed to core/extras
+16:35:46 <alikins> could there be multiple module_utils apis available to module? and a way for modules to specify?
+16:35:48 <abadger1999> Also -- public API vs internal API probably needs some explanation.
+16:35:53 <ttom> that's true for anything. If I branch and work on something that relies on something that you change in your branch we get to the same conflict, even if we both branched the core repo
+16:36:00 <bcoca> abadger1999: i think we should declare when changing/removing interfaces, most other changes ...
+16:36:49 <bcoca> ttom: diff level, this is 'code to use in plugins' vs internal interdependencies
+16:37:27 <abadger1999> (Thinking about things like how we get variables passed from the controller  as internal API vs what non-underscore methods are available in AnsibleModule.)
+16:37:56 <alikins> something like 'module foo wants the python@2.2 api'  treating different api levels almost at the level of python vs powershell
+16:39:29 <alikins> for public api's at least...
+16:39:54 <bcoca> module_utils is really the only 'public api' we have
+16:39:58 <abadger1999> alikins: I would be against that at the moment for two reasons (1) we have only one piece of module metadata available to the controller, the shebang line which specifies the interpreter.
+16:40:22 <bcoca> abadger1999: want_json?
+16:40:25 <abadger1999> (2) it's a language feature we're adding on top of python.
+16:40:34 <abadger1999> rather than working with what python gives us.
+16:40:44 <abadger1999> That said, there's nothing that inherently stops us from having:
+16:41:09 <abadger1999> from ansible.module_utils.urls3 import fetch_url
+16:41:18 <abadger1999> and doing versioning that way.
+16:41:19 <alikins> not sure I understand 2...
+16:41:35 <alikins> right... we already do magic to point at the right set of modules
+16:41:52 <alikins> python modules, that is
+16:41:55 <bcoca> alikins: the whole point of ziploader was removing that kind of magic
+16:42:23 <alikins> but it just moves the magic to the construction of the zip
+16:42:31 <abadger1999> alikins: ziploader finally gets us to the point where we don't have to mess with rewriting the module to make ansible modules work remotely.  I don't want to go back to those days.
+16:42:39 <abadger1999> Less magic is good magic.
+16:43:27 <ttom> +1 for urls3
+16:44:03 <alikins> it could decide to include a specific version of module_utils
+16:44:30 <abadger1999> butthen we have to maintain alternate versions of all of module_utils.
+16:44:47 <abadger1999> we want to reduce the maintainance burden, not increase it.
+16:45:25 <ttom> then deprecation could mean that for the next major version you fix only major bugs. the one after that only security bugs, and then you don't support it anymore. by that time, nobody's using it.
+16:45:26 <bcoca> ^ i think this  is damned if we do/don't scenario, go with path of least maintenance
+16:46:00 <bcoca> ttom: i'll tell that to the people still on 1.4
+16:46:14 <ttom> LOL. my bad.
+16:46:29 <bcoca> ttom: in a perfet wolrd ....
+16:47:19 <ttom> the problem with making the change inplace you might do harm if the module suddenly causes a different action on the host.
+16:47:46 <ttom> when fetch_url stopped rounding HTTP status codes, stuff broke.
+16:48:48 <alikins> maintaining a v2.2 and a v2.1 is likely no more difficult than attempting to make v2.2 backwards compat with v2.1. And it gives you a chance to make more significant changes without breaking existing modules
+16:51:19 <alikins> that will all be easier when/if module_utils is self-contained, without anything 'core' using it directly
+16:51:34 <abadger1999> alikins: that's the opposite of what we're strving for.
+16:51:47 <abadger1999> more things in core are going to use module_utils code, not less.
+16:52:08 <abadger1999> otherwise, again, we have to maintain multiple copies of things.
+16:54:51 <alikins> so controller code has to meet the same minimal deps as remote code?  ie 2.4?
+16:56:35 <abadger1999> alikins: we could ship a snapshot of mutliple versions of module_utils in a release and import them via from ansible.module_utilsXX.  But there's several things we'd have to work out: Would we do any bugfixes to the old snapshots? Do we support a default version?  Does this really help users or does it just make module_utils like docker-py?
+16:56:36 <bcoca> no, only module_utils code that is used in general
+16:56:48 <bcoca> stuff that depends on specific libs (cloud mostly) does not
+16:58:35 <abadger1999> Are the old versions of module_utils just for custom modules or do we let official modules use the versioned libs?
+16:59:41 <bcoca> i think this point is mute once we 'pluginize' module_utils
+16:59:53 <bcoca> users will be able to override and keep 'local old copies'  if needed
+17:00:28 <abadger1999> Hmm... I thought we all agreed that users can't overrid official module_utils?
+17:00:29 <alikins> I think it would help users, because it would give them a chance to user newer versions without breaking existing modules. The rest are the same decisions that need to be made when attempting to be back/forward compatible and/or stable releases
+17:01:57 <bcoca> abadger1999: we did? i missed that, i don't agree
+17:02:02 <abadger1999> alikins: I don't think so.  The modules still break.  It's just defered by a couple releases (when we remove the old version of module_utils).  Users also don't know as easily when their module has silent errors (most noticably, security holes).
+17:02:20 <alikins> re official modules... in theory, official stuff would only use the newest module_utils. In practice, there would likely always be official modules that don't get ported as fast.  Which also makes the official modules easier to maintain.
+17:02:44 <abadger1999> alikins: We also run the risk as I said of becoming like docker-py.... every release we feel free to make changes to the API which makes it harder for users to update their modules when they have to.
+17:02:48 <alikins> abadger1999: explain the silent errors?
+17:03:01 <abadger1999> bcoca: You were the primary person to push for that ;-)
+17:03:22 <bcoca> er .. nope, if we customize module_utils to be plugin, it should override
+17:03:35 <bcoca> ^ i really do not remember makign any case otherwise
+17:03:49 <bcoca> if we making them plugins
+17:03:55 <abadger1999> you were definitely all about a separate namespace for user's module_utils code.
+17:04:06 <bcoca> yes, but that was diff
+17:04:08 <nitzmahone> Yeah, as was I, IIRC.
+17:04:10 <bcoca> when they were not 'plugins'
+17:04:23 <bcoca> and mostly for ziploader
+17:04:29 <alikins> abadger1999: how fast you change the latest api is independent of having the ability to change it.
+17:04:31 <nitzmahone> I think we were talking about not allowing granular "composition" of overridden + our module utils
+17:05:14 <nitzmahone> + requiring a separate namespace (so it was clear someone was using theirs instead of ours)
+17:06:51 <bcoca> the feature was much diff then, only for 'private' modules that were not to be shared but requried shared 'copy+paste' function
+17:06:56 <bcoca> its evolved a lot from then
+17:07:06 <bcoca> in current form, i don't see why we should restrict override
+17:07:53 <nitzmahone> (so we don't have to debug why random core module is failing because user borked module_utils)
+17:08:01 <abadger1999> <nod>
+17:08:08 <nitzmahone> If they want to override MU, change the namespace
+17:08:21 <nitzmahone> from my_hacked_mu import *
+17:08:55 <bcoca> once ansible-config is working, that is less of an issue
+17:09:08 <bcoca> ^ will dump all info, including customazed module_utils
+17:09:24 <bcoca> but we have that issue NOW with library/copy
+17:09:26 <bcoca> for example
+17:09:27 <nitzmahone> hrm, still -1 from me on that
+17:09:39 <bcoca> or action_plugins/normal
+17:09:51 <bcoca> this is just the same as we already do
+17:09:55 <nitzmahone> Right- silent module overrides. I have that as an early 2.2 task for me to add warnings
+17:10:06 <bcoca> and i disagree they should be warnings
+17:10:25 <bcoca> what we should do is add 'module path' to -vvv or somesuch
+17:10:42 <bcoca> mainly because it is almost impossible to figure out 'which copy is the correct one'
+17:11:07 <bcoca> ^ ansible modules are not installed in same place, depends on packaging
+17:11:10 <nitzmahone> Problem is around the way we do module resolution for "don't care" connection/shell plugins (eg, ssh/paramiko). I can't think of a cleaner way to do it when we have those catchall types
+17:11:28 <nitzmahone> Current code can't tell the difference between copy.ps1 and copy.py
+17:11:56 <nitzmahone> (and silently royally hoses things up when someone drops a conflicting module like that in their library)
+17:12:32 <bcoca> most of the time people count on being able to override shipped modules, otherwise they would not be so patient waiting for us to merge
+17:12:45 <bcoca> i have seen VERY few errors caused by that
+17:12:47 <nitzmahone> Goes back to the mapping thing
+17:13:00 <bcoca> iirc 2 in last 3yrs
+17:13:03 <nitzmahone> You haven't been looking very hard then- it shows up on ML and issues every month or so
+17:13:18 <bcoca> of people dropping modules with same name as core?
+17:13:27 <nitzmahone> (and in the real world- I've gotten customer pings on multiple occasions)
+17:13:51 <nitzmahone> Yes, and accidentally in some cases. Drop a copy.ps1 in your library sometime and it will royally hose the works
+17:13:57 <nitzmahone> (for Linux!)
+17:14:10 <bcoca> is this mostly windoes related?
+17:14:20 <nitzmahone> (no)
+17:14:24 <bcoca> ^ cause many users rely on being able to override copy
+17:14:46 <nitzmahone> If we're going to be language independent for modules, we need stronger assurances that we're loading the right stuff
+17:14:50 <bcoca> i have seen many more cases of people 'downloading and overriding' newer copies or PRs to use so they did not have to upgrade ansible nor wait
+17:15:11 <bcoca> nitzmahone: .ps1 is diff problem in my book, as those should be windows only
+17:15:18 <nitzmahone> sure- that's why I was for the mapping thing, so you can be explicit that you're doing that (though abadger1999 objected IIRC)
+17:15:25 <bcoca> copy <= in any language, should be able to override
+17:15:39 <nitzmahone> .ps1 is just the simplest example because we ship in the box, but you'll have the same problem with anything
+17:15:42 <bcoca> nitzmahone: putting copy in library/ IS and explicit override
+17:16:08 <bcoca> nitzmahone: on purpose, we want people to be able to do this w/o getting spurious warnings
+17:16:10 <nitzmahone> But people don't understand that and it fails in a non-obvious way.
+17:16:35 <nitzmahone> There isn't a clean way to make it behave properly the way we do module resolution today
+17:16:36 <bcoca> then we need to document it better, cause when this has broken in past, MANY users protested
+17:17:34 <nitzmahone> I'd call a builtin module override a "warning" case always anyway- it's something we need to support, but it needs some caution tape around it
+17:18:00 <nitzmahone> (because it's easy to bork stuff up, and often people don't realize that's what's happened)
+17:18:17 <bcoca> i disagree, it will probably create tons of work for us as people that have been using it will now be suprised by warning messages
+17:18:27 <alikins> (also, supporting a v2.2 and a v2.1 api doesn't necessarily mean including a snapshot of both, just providing a way for the module to specify which version of the api it needs. A snapshot is one way, but it could also be the same code with runtime logic. Whichever works.)
+17:18:28 <bcoca> ^ i'm all for adding the info when verbosity goes up
+17:18:51 <bcoca> alikins: still maintenance of 2 branches of same code
+17:18:58 <nitzmahone> bcoca: def agreed on "where did I find this module?" in a high-ish verbosity level too
+17:19:20 <alikins> bcoca: git branches or instruction branches?
+17:19:23 <bcoca> nitzmahone: lets do that then, not hard to add display.vvv(task.action_path)
+17:19:43 <bcoca> alikins: instruction, since it needs to be available at run time
+17:20:05 <alikins> right, but thats also true for attempting to be compatible with multiple versions
+17:20:17 <alikins> except you have to do it in many many places
+17:20:39 <bcoca> well, but that pushes the complexity out of OUR code
+17:26:05 * bcoca grabs lunch
+17:26:12 <abadger1999> okay, I'm going to end the meeting.
+17:26:21 <abadger1999> I think we ended up on several tangents.
+17:26:34 <abadger1999> but we can discusss those or the proposal itself next meeting.
+17:26:37 <abadger1999> #endmeeting

@@ -1,0 +1,142 @@
+16:00:33 <gundalow> #startmeeting Ansible Networking
+16:00:33 <zodbot> Meeting started Wed Feb  8 16:00:33 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:00:33 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:00:33 <zodbot> The meeting name has been set to 'ansible_networking'
+16:00:37 <rcarrillocruz> o/
+16:00:44 <gundalow> #chair andriusb rcarrillocruz Qalthos
+16:00:44 <zodbot> Current chairs: Qalthos andriusb gundalow rcarrillocruz
+16:01:00 * gundalow waits a few moments for people to appear
+16:02:55 <gundalow> #topic Core Update
+16:03:08 <gundalow> #info work on updating the modules continues
+16:03:36 <dgarros> Hi
+16:04:09 <gundalow> #info we will be doing a blog post on the improvements to the networking modules shortly (thanks to andriusb for putting that together) it will get announced on https://github.com/ansible/community/issues/110
+16:04:34 <gundalow> #info Partner submission deadline for Ansible 2.3 for Networking changes is 14th Feb
+16:04:46 <gundalow> dgarros: Hi, you got something you've like to bring up?
+16:05:05 <gundalow> hey allanice001_
+16:05:14 <dkasberg> Hi
+16:05:16 <allanice001_> heya
+16:06:04 <gundalow> #topic Open Floor
+16:06:08 <dgarros> not especially, I'm interested to understand how to get modules in 2.3
+16:06:26 <gundalow> dgarros: Sure, Do you have an open PR already?
+16:06:35 <andriusb> dgarros: http://docs.ansible.com/ansible/dev_guide/developing_modules.html
+16:06:53 <andriusb> there is a section called "Contributing your module to Ansible"
+16:06:58 <dgarros> Yes https://github.com/ansible/ansible/pull/21044
+16:07:23 <dgarros> I'm waiting for this one to get accepted to open more
+16:07:32 <dgarros> just wanted to check what else is missing
+16:07:32 <gundalow> #topic Apstra aos_* modules
+16:07:46 <gundalow> dgarros: ah, cool. Glad you made it to one of the meetings
+16:08:04 * gundalow reviews
+16:08:42 <gundalow> What's outstanding the delegate_to? anything else?
+16:09:28 <dgarros> I refactor some things to work better with delegate_to
+16:09:58 <gundalow> What what I've looked at I believe you've addressed all of my review comments.
+16:10:22 <allanice001_> Could I suggest you @mention the contributors for the module
+16:10:27 <dgarros> cool, do you think I can open PR for the remaining modules or should i wait a little more
+16:10:47 <gundalow> allanice001_: How do you mean?
+16:11:26 <gundalow> dgarros: We need to get the first one merged so that the __init__.py and module_utils are available for the remaining modules
+16:11:51 <allanice001_> in the docs section of the module, perhaps ad github / irc nics
+16:11:57 <gundalow> privateip: Hi, we are just talking about https://github.com/ansible/ansible/pull/21044/files
+16:12:25 <gundalow> allanice001_: It's got "author: Damien Garros (@dgarros)"
+16:12:40 * allanice001_ must have missed that :P
+16:13:29 <gundalow> allanice001_: oh, module utils was the first file, maybe it was that
+16:14:04 * allanice001_ looking at https://github.com/Apstra/ansible/blob/de3b0db9ba6112ad3440ffb4d09b6f6c725223a5/lib/ansible/module_utils/aos.py specifically
+16:15:05 <gundalow> dgarros: How have you been testing these modules so far?
+16:15:17 <dgarros> I created some integration tests for them
+16:16:04 <gundalow> https://github.com/ansible/ansible/blob/devel/test/integration/README.md#network-tests
+16:16:06 <dgarros> https://github.com/Apstra/aos-ansible/blob/integration_tests/tests/pb.aos_ip_pool.yaml
+16:16:39 <dgarros> it needs a specific server so I'm not sure if I can submit them, would be happy to if I can
+16:16:51 <gundalow> ah, was going to ask about that
+16:17:02 <gundalow> So it would be good to get some idempotent test in their
+16:17:16 <gundalow> setup —> test —> assert —> test again (idempotent) —> assert —> -teardown (if needed) -> done
+16:17:22 <dgarros> Working on it but I won't have these for 2.3
+16:17:35 <dgarros> the integration tests are solid so far
+16:17:36 <gundalow> cool, just as long as it's something you are aware of
+16:17:48 <gundalow> It's somewhere were we've found bugs occur
+16:17:51 <gundalow> Excellent
+16:19:21 <gundalow> dgarros: Are you happy with the delegate_to stuff now?
+16:19:38 <dgarros> I think I'm good now, after the latest changes
+16:20:12 <gundalow> excellent
+16:20:18 <privateip> did the yaml issue get resolved?
+16:20:19 <gundalow> Just need to check if privateip is now happy
+16:20:25 <dgarros> :)
+16:21:19 <privateip> oops just saw bcoca's review
+16:22:21 <dgarros> ok will take care of that
+16:22:56 <allanice001_> also, is aos.py missing it's shebang ?
+16:23:04 <gundalow> dgarros: The following is WIP, though should answer some of your other questions regarding the process https://github.com/ansible/ansible/pull/20794/files
+16:23:39 <privateip> allanice001_: shebang not needed in module_utils code
+16:24:01 <gundalow> dgarros: Also better guide on how to document your modules https://github.com/ansible/ansible/pull/21021/files
+16:24:49 <dgarros> Thanks will check that, hopefully we can get this one merged soon
+16:24:57 <gundalow> dgarros: Basically after the first one gets in, one module per PR. We've found raising five PRs at once (therefore 5 modules) works well
+16:25:11 <gundalow> dgarros: Yup, I think that module is fairly close
+16:25:39 <dgarros> ok, it's just that time is running out for 2.3, I have about 11 more to submit
+16:26:02 <gundalow> dgarros: Could you please let me know the GitHub IDs of some other people that will look after these modules, they will get notified if issues & PRs get raised against your modules.
+16:26:31 <dgarros> @jeremyschulman
+16:26:47 <dgarros> Should I put that inside the module itself ?
+16:27:07 <gundalow> nop, it's else where I'll sort that. Thanks
+16:27:32 <dgarros> ok thanks
+16:28:46 <gundalow> done https://github.com/ansible/ansibullbot/pull/342/files
+16:29:38 <dgarros> there is a type: aos not aso :)
+16:29:48 <gundalow> lol
+16:29:51 <gundalow> Thanks
+16:30:15 <gundalow> not helping that I loooked at "asa" on the line above
+16:30:51 <gundalow> fixed
+16:31:15 <gundalow> so as soon as Brian's comments get address we can merge it, then you can raise 5 new PRs with five modukes
+16:31:19 <gundalow> modules*
+16:32:28 <gundalow> dgarros: Anything else?
+16:32:37 <dgarros> no perfect, thanks for your help
+16:32:53 <gundalow> Feel free to poke in #ansible-devel for any general developer questions
+16:33:34 <gundalow> #topic Open Floor
+16:33:40 <gundalow> Anyone got anything else?
+16:34:00 <allanice001_> nothing from me
+16:34:09 <enunez-cyberark> Hi
+16:34:14 <gundalow> enunez-cyberark: Hi :)
+16:34:28 <enunez-cyberark> :-) I have general questions
+16:34:40 <enunez-cyberark> I am working on the modules for CyberArk
+16:34:47 <gundalow> AnsibleFest London is 22nd June https://www.ansible.com/ansiblefest Hope to see you there
+16:34:54 <gundalow> #topic CyberArk modules
+16:35:00 <gundalow> enunez-cyberark: Got a link to the PR?
+16:35:11 <enunez-cyberark> not yet... that's why it was very generic
+16:35:26 <gundalow> Sure :)
+16:35:43 <enunez-cyberark> CyberArk is in the business of privileged account security.. basically credentials/passwords for high privileged users within systems/devices
+16:36:03 <enunez-cyberark> I wanted to understand where does it fit... in the category of networking
+16:36:18 <enunez-cyberark> I see you guys have cloud, database, files, etc...
+16:36:35 <agaffney> for future reference, that kind of question can be asked at pretty much any time in #ansible-devel
+16:36:56 <enunez-cyberark> okay... good to know
+16:37:44 <gundalow> enunez-cyberark: https://github.com/ansible/ansible/pull/20794/files (work in progress) has a few notes about naming conventions. Also some details that may be useful if you are going to be submitting multiple modules
+16:38:08 <enunez-cyberark> I will post the question in #ansible-devel
+16:38:15 <gundalow> cool
+16:38:26 <gundalow> #info will ask in #ansible-devel
+16:38:29 <gundalow> #topic Open Floor
+16:39:49 <gundalow> I'll end the meeting shortly if there isn't anything else
+16:39:59 <dkasberg> wanted to mention to you that I have created a PR for our first module to support CNOS network switches
+16:40:10 <gundalow> dgarros: You may wish to subscribe to https://github.com/ansible/community/issues/110
+16:40:17 <gundalow> Feel free to add items to that
+16:40:20 <gundalow> dkasberg: cool, link?
+16:40:38 <dkasberg> https://github.com/ansible/ansible/pull/21107
+16:40:46 <dgarros> @gundalow, already on it, forgot to add the topic this time, my bad
+16:41:35 <gundalow> dgarros: We generally have time for openfloor, having stuff on the agenda is just useful as it sometimes allows people to look in advance of the meeting. Not a problem at all :)
+16:41:36 <dkasberg> fixing the issue reported, but will start creating PRs for the rest of the CNOS modules in the next day or two
+16:42:35 <gundalow> cool
+16:43:16 <dkasberg> last question, a dumb one.  What version of Python should we be testing with?
+16:43:42 <gundalow> For Ansible 2.3 modules must work with py2.4+ and py3.5+
+16:43:50 <gundalow> For Ansible 2.4 modules must work with py2.6+ and py3.5+
+16:44:03 <dkasberg> thx
+16:44:15 <dkasberg> nothing else from me
+16:44:18 <gundalow> cool
+16:44:22 <bcoca> For Ansible 2.5 modules must work with haskell
+16:44:51 <gundalow> oh, I thought that was the brainfuck release, did that get moved to Ansible 2.6?
+16:45:03 <bcoca> no, 2.7, 2.6 os Oook
+16:45:10 <gundalow> ah, OK
+16:45:20 <gundalow> So that feels like a good note to end on
+16:45:27 <gundalow> so as a reminder
+16:45:38 <gundalow> Partner submission deadline for Ansible 2.3 for Networking changes is 14th Feb
+16:45:55 <gundalow> AnsibleFest London is 22nd June https://www.ansible.com/ansiblefest Hope to see you there
+16:46:20 <allanice001_> gundalow, perhaps #info the notes
+16:46:23 <gundalow> Subscribe to https://github.com/ansible/community/issues/110 to follow what's going on
+16:46:46 <gundalow> #info AnsibleFest London is 22nd June https://www.ansible.com/ansiblefest Hope to see you there
+16:46:49 <gundalow> #info Subscribe to https://github.com/ansible/community/issues/110 to follow what's going on
+16:46:53 <gundalow> allanice001_: Thanks :)
+16:46:58 <gundalow> I did the others before
+16:47:12 <gundalow> Closing in a minute if there isn't anything else
+16:47:23 <gundalow> Thanks to everyone that joined in today
+16:47:36 <allanice001_> thnx all
+16:48:44 <gundalow> #endmeeting

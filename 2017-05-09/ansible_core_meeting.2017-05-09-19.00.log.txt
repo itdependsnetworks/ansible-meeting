@@ -1,0 +1,195 @@
+19:00:26 <thaumos> #startmeeting Ansible Core Meeting
+19:00:26 <zodbot> Meeting started Tue May  9 19:00:26 2017 UTC.  The chair is thaumos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:00:26 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:00:26 <zodbot> The meeting name has been set to 'ansible_core_meeting'
+19:00:34 <thaumos> #chair thaumos
+19:00:34 <zodbot> Current chairs: thaumos
+19:01:33 * jtanner wakes up
+19:01:35 <shertel> hi
+19:01:45 <thaumos> #chair shertel jtanner
+19:01:45 <zodbot> Current chairs: jtanner shertel thaumos
+19:01:53 <thaumos> herro
+19:01:57 * mattclay waves
+19:01:59 <alikins> bloop
+19:02:11 <thaumos> #chair mattclay alikins
+19:02:11 <zodbot> Current chairs: alikins jtanner mattclay shertel thaumos
+19:04:22 <sivel> howdy
+19:04:42 <thaumos> #chair sivel
+19:04:42 <zodbot> Current chairs: alikins jtanner mattclay shertel sivel thaumos
+19:04:45 <thaumos> hola sivel
+19:05:16 <abadger1999> Hello
+19:05:20 <thaumos> Does anyone know if azaghal's comment was covered on Thursday?
+19:05:26 <thaumos> #chair abadger1999
+19:05:26 <zodbot> Current chairs: abadger1999 alikins jtanner mattclay shertel sivel thaumos
+19:05:52 <thaumos> #topic Comment for feedback on dconf module
+19:05:56 <thaumos> #link https://github.com/ansible/community/issues/159#issuecomment-299302625
+19:06:10 <abadger1999> thaumos: azaghal's has not.
+19:06:16 <thaumos> Okay :-)
+19:06:27 <abadger1999> Note that azaghal said he wouldn't be here for today's meeting but can make it thursday.
+19:06:31 <thaumos> Okay!
+19:06:44 <thaumos> #action Revisit topic for Thursday!
+19:06:46 <abadger1999> If we're okay saying yes, he'd probably be fine if we discuss it today.
+19:06:53 <abadger1999> Otherwise we should wait until thursday.
+19:06:58 <thaumos> Yep, let's wait.
+19:07:00 <thaumos> No biggie.
+19:07:36 <thaumos> #topic PR ansible/ansible#22929
+19:07:43 <thaumos> #link https://github.com/ansible/ansible/pull/22929
+19:08:02 <thaumos> @sivel, I poked the bears (@chouseknecht  and @ryansb
+19:08:22 <thaumos> @chouseknecht says it looks reasonable, needs testing for idem
+19:08:23 <sivel> thaumos: thanks, that's all I really need
+19:08:30 <thaumos> Anytime!
+19:08:38 <sivel> we are using the modified version in our deployments right now
+19:09:01 <thaumos> do you have results that show it's "idempotent"
+19:09:03 <sivel> our use case, is 24 hour dev environment, that auto nukes
+19:09:11 <sivel> thaumos: not immediately off hand
+19:09:19 <thaumos> alright
+19:09:26 <sivel> but I'll see if I can do it in a bit
+19:09:35 <thaumos> Cool!  Could help quicken the merge.
+19:10:24 <thaumos> @chouseknecht says he will test soon™ as well
+19:10:50 <thaumos> #action Sivel to possibly provide test results in a day or so.
+19:10:59 <thaumos> #action chouseknecht to test also
+19:11:34 <thaumos> #topic Open Floor
+19:12:05 <thaumos> #Follow up on Proposal process from thaumos
+19:12:10 <thaumos> #topic Follow up on Proposal process from thaumos
+19:12:42 <thaumos> So, I am still mulling over this.  Trying to get time with @rbergeron and @gregdek still.
+19:13:23 <jtanner> re: that proposed process on github, or for making your own version?
+19:14:01 <alikins> just snuck in an additional agenda item...  (gist is I'm planning on trying to merge the facts update soonish https://github.com/ansible/ansible/pull/23012 )
+19:14:05 <gregdek> thaumos: calendar is open :)
+19:14:23 <thaumos> re: the proposed @jctanner 😃
+19:14:26 <gregdek> (rbergeron is at openstack summit this week, so next week would work)
+19:14:38 <thaumos> @gregdek 👍
+19:14:59 <thaumos> #action Thaumos to schedule something with @gregdek and @rbergeron for next week
+19:15:16 <thaumos> #topic Open Floor
+19:15:30 <jtanner> i don't understand why it's so hard for the submitter to respond to my question in the PR
+19:15:40 <jtanner> i'm tempted to "close: reporter timeout"
+19:15:44 <thaumos> #topic ansible/ansible#23012
+19:15:48 <thaumos> lol, @jtanner
+19:15:58 <thaumos> I did that a lot back in the day
+19:16:10 <jtanner> i've been waiting for response since march
+19:16:17 <thaumos> I was close to making it an auto timeout in Jira
+19:16:55 <thaumos> @alikins you have the floor sir!
+19:17:47 <alikins> heads up that devel/ will probably get https://github.com/ansible/ansible/pull/23012 merged soon, assuming no major issues
+19:18:21 <alikins> thats a facts update for the 'facts refreshening' part of the 2.4 roadmap https://github.com/ansible/ansible/blob/devel/docs/docsite/rst/roadmap/ROADMAP_2_4.rst
+19:18:29 <thaumos> @alikins, has someone been pegged to update the project list?
+19:18:40 <alikins> thaumos: I will
+19:19:05 <thaumos> #action @alikins to update the project list regarding #23012
+19:19:11 <thaumos> #link https://github.com/ansible/ansible/pull/23012
+19:19:45 <alikins> It should be mostly transparent hopefully ;->
+19:19:53 <abadger1999> Hmm... taking a look now and I see some problems.
+19:21:48 <abadger1999> alikins: maybe we should sit down and review together?
+19:21:53 <abadger1999> Do you have time after meeting?
+19:22:18 <alikins> yup
+19:22:26 <thaumos> #action alikins and abadger1999 to peer review together
+19:22:28 <alikins> what are you seeing?
+19:22:31 <abadger1999> cool
+19:23:05 <thaumos> heffalumps and woozles
+19:23:13 <alikins> though, probably next agenda item better ;->
+19:23:15 <abadger1999> alikins: It's such a large patch there's a wide variety of things.
+19:23:25 <abadger1999> And some are probably just me not seeing the whole picture.
+19:23:32 <abadger1999> Let's go over it after the meeting.
+19:23:37 * bcoca hides inv_plugins
+19:23:51 <thaumos> lol
+19:23:54 <thaumos> #chair bcoca
+19:23:54 <zodbot> Current chairs: abadger1999 alikins bcoca jtanner mattclay shertel sivel thaumos
+19:24:07 <thaumos> #topic Open Floor
+19:24:43 <jtanner> no updates on jinja native types PR
+19:25:07 <thaumos> what's the PR link, @jtanner
+19:25:32 <jtanner> https://github.com/pallets/jinja/pull/708 and https://github.com/ansible/ansible/pull/23943
+19:26:15 <thaumos> #Topic Jinja natives types PR ansible/ansible#23943
+19:26:25 <thaumos> #link https://github.com/ansible/ansible/pull/23943
+19:26:32 <thaumos> #link https://github.com/pallets/jinja/pull/708
+19:26:56 <thaumos> why does this sound familiar to me?
+19:27:07 <jtanner> i brought it up in our showntell
+19:27:10 <bcoca> its been a problem for long time
+19:27:19 <bcoca> ^ jtanner was just brave enough to tackle it
+19:27:27 <thaumos> +1
+19:27:41 <jtanner> had to learn jinja somehow
+19:27:55 <thaumos> So you're a "jinja" now, @jtanner?
+19:28:03 <bcoca> jinja internals, diff than learning jinja
+19:28:04 <jtanner> could say that, to a degree
+19:28:24 <jtanner> on the contrary, the internals taught me the language way better than the docs did
+19:28:25 <thaumos> to know jinja, you must first know jinja internals
+19:28:41 * thaumos says above in very old man voice
+19:29:05 <bcoca> most people would pass on jinja then
+19:29:25 <bcoca> or any templating system for that matter
+19:29:26 <thaumos> So, @jtanner, are you just waiting on an approval for merge?
+19:29:53 <jtanner> yeah ... it needs to get established upstream first, so that we don't play cat n mouse on the api downstream
+19:30:32 <jtanner> we'll still have to vendor code for older jinjas, but i want to keep it clean
+19:30:58 <thaumos> What's the impact of this merge?
+19:31:03 <jtanner> which?
+19:31:28 <sivel> removing safe_eval, and not having to eval a string representing python data structures
+19:31:37 <sivel> more flexible, and geting an easier way to maintain data types
+19:31:52 <jtanner> less specialized knowledge about our internal templating abstractions
+19:31:57 <jtanner> easier for users to deal with
+19:31:58 <bcoca> but we need toggle as most playbooks will 'work' with existing 'strigify by default'
+19:32:05 <thaumos> sorry, #23943
+19:32:18 <jtanner> yes, i will rewrite the ansible PR once the upstream is accepted
+19:32:26 <jtanner> and it will be a toggled non-default
+19:33:17 <thaumos> does anyone know anyone on the jinja side to poke at in good faith?
+19:33:37 <thaumos> maybe jag?
+19:33:44 <jtanner> abadger1999 knows the creator
+19:34:06 <thaumos> @abadger1999, can you put in a favor request?
+19:34:10 <jtanner> i don't know how involved he is with ongoing maintenance
+19:34:19 * thaumos sighs
+19:34:27 <abadger1999> <nod>
+19:34:40 <jtanner> 2 of the committers have been pretty responsive so far
+19:35:03 <abadger1999> yeah, I can as kmitsuhiko what he thinks but I don't know who's active in the project at the moment.
+19:35:09 <jtanner> we're just in that limbo phase right now where a PR has all changes requested but the maintainers aren't sure its time to merge yet
+19:35:19 <thaumos> is it worth it then, @abadger1999?
+19:35:33 <sivel> I woudl think it is worth while to ping him
+19:35:49 <abadger1999> <nod>  It's a big change outside of jinja's normal scope... all the things they've asked for are done but they aren't sure if they want to expand the scope or not.
+19:35:49 <thaumos> @jtanner why are they not sure?
+19:35:57 <abadger1999> they ned a bdfl pronouncement
+19:36:01 <jtanner> ^
+19:36:10 <abadger1999> need a bfdl
+19:36:21 <abadger1999> nope bdfl was right.
+19:36:23 <jtanner> just like we do sometimes
+19:36:29 <abadger1999> abadger cannot acronym
+19:36:43 <thaumos> lol
+19:37:16 <thaumos> and the creator isn't that any longer?
+19:37:24 <abadger1999> we just don't know.
+19:37:34 <thaumos> okay, sorry for playing 20 questions
+19:37:38 <bcoca> they have a 'sloooow' dev pace
+19:37:38 <abadger1999> I'll try to get in touch with him and see if he wants to weigh in.
+19:37:51 <jtanner> he appears to be doing the releases still
+19:37:51 <thaumos> okay, thx @abadger1999
+19:37:53 <bcoca> ^ they make us look like we have warp tech
+19:37:58 <jtanner> and davidism is merging PRs
+19:38:10 <jtanner> + thiefmaster
+19:38:20 <thaumos> #action abadger1999 to reach out to jinja creator for guidance on upstream PR by jtanner
+19:38:49 <thaumos> do we all want to revisit this on Thursday?
+19:38:56 <jtanner> i'd give it more time
+19:39:02 <thaumos> so tuesday?
+19:39:06 <jtanner> esp with pycon being next week
+19:39:15 <thaumos> ok, so week following then
+19:39:23 <jtanner> at the earliest
+19:39:32 <thaumos> #action Thaumos to checkpoint on Thurs for his own sanity
+19:40:03 <thaumos> #action Thaumos to add follow up topic on this for Tues 23-May
+19:40:17 <thaumos> #topic Open Floor
+19:41:56 <thaumos> @bcoca wanna chat about inv changes for a sec?
+19:43:04 <thaumos> either afk or ignoring
+19:43:11 <bcoca> mostly that im merging soon and that we need to send email before i do
+19:43:16 <bcoca> announce/devel
+19:44:05 <thaumos> 23001, correct?
+19:44:28 <bcoca> yep
+19:44:43 <thaumos> okay :-)
+19:44:58 <thaumos> do we tend not to alert the project list either?
+19:46:15 <bcoca> we dont tend to alert
+19:46:24 <bcoca> its devel, but this is big enough change i think we should
+19:46:43 <thaumos> do you want to, or would you like someone to assist?
+19:47:09 <thaumos> i.e., I am happy to help if you'd like.
+19:47:33 <bcoca> just need to get tests passing first
+19:48:07 <thaumos> okay, sounds good.  Just let me know if there's anything I can assist with in terms of reaching out on project list and/or other forms of messaging
+19:49:01 <thaumos> I can even write a blog post on ansible.com if needs be.  some people only follow that.
+19:49:32 <bcoca> probably will need an introduction to 'new inventory plugins'
+19:52:02 <thaumos> 👍
+19:52:38 <thaumos> any other items for today?  If not, I'll end it.
+19:52:59 <jtanner> don't do it ... you have so much to live for
+19:53:27 * ryansb facepalm
+19:54:00 <thaumos> wherever you can jtanner
+19:54:09 <thaumos> I'm going to buy that sigil as a wax seal for you
+19:54:17 <jtanner> nice
+19:54:51 <thaumos> alrighty!
+19:54:52 <jtanner> i feel especially compelled lately because i've been starting into the depths of vmware hell
+19:55:09 <thaumos> i am curious as to why you subjected yourself to that level of hell
+19:55:12 <thaumos> #endmeeting

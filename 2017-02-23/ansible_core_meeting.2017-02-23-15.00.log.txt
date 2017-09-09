@@ -1,0 +1,540 @@
+15:00:03 <gundalow> #startmeeting Ansible Core Meeting
+15:00:04 <zodbot> Meeting started Thu Feb 23 15:00:03 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:00:04 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:00:04 <zodbot> The meeting name has been set to 'ansible_core_meeting'
+15:00:11 * jtanner waves
+15:00:26 <allanice001> O/
+15:00:39 <bjolivot> hello o/
+15:00:49 <gundalow> #chair abadger1999 alikins funzo jimi|ansible jtanner mattclay nitzmahone Qalthos rcarrillocruz shertel
+15:00:49 <zodbot> Current chairs: Qalthos abadger1999 alikins funzo gundalow jimi|ansible jtanner mattclay nitzmahone rcarrillocruz shertel
+15:00:52 * jhawkesworth waves
+15:01:05 <shertel> hello
+15:01:06 * nitzmahone blinks
+15:01:13 <rcarrillocruz> o/
+15:01:27 <gundalow> #topic Proposal workflow ansible/proposals#50
+15:01:40 <gundalow> #link oh, that's not right
+15:01:42 <akasivel> I'm here-ish
+15:01:49 <allanice001> #info https://github.com/allanice001/ansible-template-for-proposals/blob/master/Proposal.md
+15:01:49 <gundalow> #topic Proposal workflow
+15:01:55 <gundalow> #chair allanice001
+15:01:55 <zodbot> Current chairs: Qalthos abadger1999 alikins allanice001 funzo gundalow jimi|ansible jtanner mattclay nitzmahone rcarrillocruz shertel
+15:02:05 <gundalow> allanice001: you might need to do that again
+15:02:08 * gundalow hands over to allanice001
+15:02:08 <jtanner> #chair akasivel
+15:02:08 <zodbot> Current chairs: Qalthos abadger1999 akasivel alikins allanice001 funzo gundalow jimi|ansible jtanner mattclay nitzmahone rcarrillocruz shertel
+15:02:12 <allanice001> #info https://github.com/allanice001/ansible-template-for-proposals/blob/master/Proposal.md
+15:02:24 * mattclay waves
+15:02:45 <allanice001> Short version is I've tried to break it down into different stages
+15:03:26 <jtanner> we write EMCAScript standards?
+15:03:27 <allanice001> And we elect a committee to maintain a table of active / complete / rejected proposals
+15:03:35 <allanice001> Dammit :P
+15:04:00 <abadger1999> Hello
+15:04:06 <allanice001> I took a lot a bunch of stuff from their proposal docs
+15:04:08 <jtanner> everyone is doing typescript these days man, get with the times ... =P
+15:04:09 <grastogi23> hello
+15:04:40 <jtanner> #chair grastogi23
+15:04:40 <zodbot> Current chairs: Qalthos abadger1999 akasivel alikins allanice001 funzo grastogi23 gundalow jimi|ansible jtanner mattclay nitzmahone rcarrillocruz shertel
+15:04:52 <allanice001> And we keep it up to date in a table like this:
+15:04:56 <allanice001> #info https://github.com/allanice001/ansible-template-for-proposals/blob/master/stage-0.md
+15:05:12 <abadger1999> Right now we have an oligarchy.  I'm not sure that we're ready for an elected body to replace it.
+15:05:31 <abadger1999> But that might be something we should look at shooting for in the future.
+15:05:42 <abadger1999> (I don't think that changes the main pooints of the proposal though)
+15:06:28 <allanice001> its a goal to work towards
+15:06:52 <jtanner> i think we would need to get an outiside party such as the linux foundation to help us make a real democratic system with elected board members
+15:06:56 <abadger1999> s/Changes to the language/Far reaching changes to Ansible's behaviour/
+15:06:57 <jtanner> we don't have time to do that on our own
+15:07:50 <jtanner> and don't expect that to speed anything up ... if anything, stuff will sit in the pipeline longer
+15:07:52 <allanice001> Except for jtanner , who's vote is worth double, I thought this is fairly democratic :P
+15:07:57 <bcoca> x10 longer
+15:08:20 <gundalow> So for the purpose of this topic lets focus on the proposal workflow, rather than voting rights
+15:08:38 <allanice001> Well, there are existing proposals that most likely been missed
+15:08:40 <bcoca> very similar to what we dont do now
+15:08:50 <bcoca> submit/approve/inprogress/done
+15:08:59 <abadger1999> allanice001:  Stage 1, entrance criteria: need to define "champion"
+15:09:09 <gundalow> allanice001: did you have an example proposal
+15:09:20 <allanice001> One sec
+15:09:59 <allanice001> I thought of something like this - https://github.com/allanice001/proposals/issues/3
+15:10:11 <allanice001> gundalow has made some suggestions
+15:10:14 <gundalow> ah, that's it
+15:10:15 <abadger1999> Is it: committer who will champion, community member willing to code the solution, or one of those two classes but not necessarily going to code the solution?
+15:10:21 <bcoca> since we dont do the current version, which is a paired down version of this, when will we find the time to do the extra work this process entails?
+15:11:08 <gundalow> So I think all the data should go onto proposal/issue/N, e.g. we edit the page and add each time it's got reviewed and votes
+15:11:14 <allanice001> the driving of the proposal should come from the community / member who wants it implemented,
+15:11:37 <allanice001> and use this forum to table it
+15:11:48 <allanice001> Thats the general idea
+15:11:51 <bcoca> ^ that was my main change to the 'current' process
+15:11:52 <abadger1999> allanice001: Also needs a column that states who is responsible for pushing the proposal to the next stage.
+15:12:03 <mikedlr> hi;
+15:12:08 <gundalow> So the issue template should had headings for the voting and discussion sections that get completed, such as "discussion #1 (YYYY-MMM-DD) record of thoughts", etc
+15:12:26 <bcoca> gundalow: comments will sufice for that
+15:12:36 <gundalow> bcoca: I think they will get lost
+15:12:39 <allanice001> Yes, and we should be able to add / edit that quite easily
+15:13:05 <gundalow> I think https://github.com/ansible/community/issues/150#issuecomment-277025899 works well
+15:13:26 <bcoca> ^ didnt you just contradict yourself?
+15:13:51 <gundalow> bcoca: me?
+15:14:06 <gundalow> I like on https://github.com/ansible/community/issues/150#issuecomment-277025899 that we edit and add a new heading for each time it's been discussed
+15:14:21 <bcoca> <gundalow> bcoca: I think they will get lost <gundalow> I think https://github.com/ansible/community/issues/150#issuecomment-277025899 works well
+15:14:43 * abadger1999 finds out that hte table is scrolled off the right hand side...
+15:14:52 <allanice001> We should be able to edit the main proposal, instead of linking to a specific comment
+15:15:01 <jtanner> abadger1999: i'm used to a single RACI model for large proposals, where the responsible party is on the hook for the whole process
+15:15:02 <gundalow> bcoca: I think comments (as in add comment) will get lost
+15:15:20 <bcoca> github looses comments?
+15:15:22 <gundalow> I think the main issue (the rather than the text box) should be a rolling record of status
+15:15:38 <gundalow> bcoca: having to scroll through lots of discussion to find the current status is a pita
+15:15:41 <bcoca> aren't labels better to reflect status?
+15:15:49 <bjolivot> allanice001: I don't understand the problem you want to solve
+15:15:56 <ryansb> not literally lost, just buried in other comments
+15:16:02 <gundalow> ryansb: yup
+15:16:12 <gundalow> labels for state
+15:16:33 <bcoca> i find comments better reflect the timeline
+15:16:37 <gundalow> hum
+15:16:38 <bcoca> but that might just be me
+15:16:39 <allanice001> bjolivot, trying to add some form of structure to proposals
+15:16:52 <gundalow> Do we need to roll back a bit and agree what the actual problems are?
+15:17:00 <jtanner> allanice001: but why?
+15:17:02 <abadger1999> jtanner: There's two responsibilities thatI've brought up... who the champion is and who pushes it from stage to stage... the latter might well change as we have to accept that we're ready to discuss this thing now.
+15:17:03 <bcoca> allanice001: i find existing structure enough .. if we followed it
+15:17:09 <abadger1999> or that we're ready to vote on it.
+15:17:11 <abadger1999> etc
+15:17:13 <bcoca> adding more that is harder to follow ...
+15:17:31 <jtanner> gundalow: yes, let's state the "problem(s)"
+15:17:35 <jtanner> allanice001: ^
+15:17:53 <bjolivot> allanice001: why ?
+15:18:01 <abadger1999> +1 for summaries in the proposal
+15:18:13 <allanice001> jtanner, bcoca the existing stuff clearly doesn't get followed / implemented / anyone knows who to ask
+15:18:16 <abadger1999> Like the summaries of discussion/discarded alternaitves in PEPs
+15:18:20 <allanice001> For feedback
+15:18:35 <gundalow> 1) It isn't clear how many times a proposal has been discussed
+15:18:45 <gundalow> 1) It isn't clear who has voted for a proposal
+15:18:48 <gundalow> 2) It isn't clear who has voted for a proposal
+15:18:53 <gundalow> (counting is hard)
+15:18:59 <bcoca> 0) off by one erors
+15:19:06 <gundalow> timing
+15:19:13 <allanice001> 30 it isn't clear who's driving the proposal
+15:19:14 <abadger1999> I think we should combine stage 2 and 3
+15:19:27 <allanice001> Or 4) time expected to complete
+15:19:37 <allanice001> S/30/3)
+15:19:54 <bcoca> 4) <= complete proposal process or the feature?
+15:19:56 <gundalow> 5) Proposals get created but don't seem to progress
+15:19:59 <bcoca> cause one is simple, the other is not
+15:20:05 <abadger1999> Hmm... or maybe combine 1 and 2
+15:20:22 <alikins> from a doc management perspective, I think my preference would be for proposals to be doc files in the repo, and a editable pr for  tracking. Status could be tracked via git commit and/or a changelog file or item.
+15:20:26 <bcoca> gundalow: my main fix for that was putting the onus on the 'proposer', right now the onus is on us
+15:20:32 <bcoca> ^ and we dont have time to push them
+15:20:52 <bcoca> alikins: we tried that and it got abandoned quickly
+15:20:53 <allanice001> Bcoca - thats what I'm trying to achieve by introducing a "champion"
+15:20:55 <bcoca> see initial proposals
+15:20:58 <alikins> potentially even branching from say '2.4-proposals', so they could be rebased to '2.5-proposals' if it rolls around
+15:21:09 <bcoca> allanice001: i dont disagree with that point, its with the extra steps
+15:21:12 <gundalow> Do we all agree the onus is on the proposer to drive the proposal through the workfow?
+15:21:14 <jtanner> that's one more thing we'd have to manage pullrequests on
+15:21:17 <jtanner> no time.
+15:21:37 <bcoca> gundalow: i think that is only thing we can strive for as clearly we won't be doing it
+15:21:52 <alikins> nothing to manage about the pull request except a final merge
+15:22:02 <jtanner> gundalow: unless they proposer finds someone in our chain of command and can convince them it absolutely needs  to be on roadmap
+15:22:20 <bcoca> alikins:  in perfect world I would agree, we tried that method and it made it almost impossible to track what went where, people just opend 'discussion ticket'
+15:22:21 <alikins> bcoca: we've tried a lot of things that failed the first time.
+15:22:25 <gundalow> #agreed It's the responsibility of the proposer to drive the proposal through the process
+15:22:31 <abadger1999> gundalow: as long as there's a matching onus on us to react when the champion neds us to do the next step.
+15:22:56 <allanice001> In my eyes proposer can == champion
+15:22:58 <abadger1999> ie: Champion says: "This is ready for the committee to give feedback on"
+15:23:03 <gundalow> abadger1999: nod
+15:23:04 <abadger1999> Then we need to give feedback.
+15:23:14 <abadger1999> Champion says "This is ready for votes"
+15:23:16 <bcoca> abadger1999: we do respond better to cow proding
+15:23:19 <abadger1999> then we need to vote on it.
+15:23:24 <abadger1999> yep.
+15:23:31 <allanice001> But they need to be here to discuss the proposal / stage etc etc
+15:23:49 <abadger1999> I'm concerned about having concrete channels of communication listed in there.
+15:23:53 <bcoca> allanice001: not needed, but probably recommended if they want it to pass
+15:24:09 <jtanner> as the proposals pile up, the problem is just going to shift to us being unable to prioritize which ones to look at
+15:24:10 <abadger1999> ie: When champion thinks this is ready for discussion stage 3, Champion adds it to the meeting agenda
+15:24:27 <gundalow> 6) Time needs to be allocated in Core Meetings to review proposals
+15:24:42 <gundalow> (that's a solution, rather than a problem)
+15:24:54 <allanice001> we dropped the Wednesday Community meeting
+15:24:58 <alikins> though proposal process is mostly bureaucracy bike shedding unless we are willing to act on the proposals
+15:25:07 <allanice001> Could we use like 30 - 45 minutes there,
+15:25:22 <allanice001> Or 30 minutes at the end of a short networking meeting ?
+15:25:24 <gundalow> alikins: Community Meetings were more community events/metups/etc
+15:25:24 <jtanner> are we going to act on a proposal that isn't on our roadmap?
+15:25:37 <gundalow> We = Core, no
+15:25:41 <allanice001> jtanner, no
+15:25:41 <gundalow> Community = Maybe
+15:25:46 <bcoca> accepting the prposal does NOT mean we are coding it
+15:25:50 <allanice001> communi
+15:26:03 <bcoca> ^ it CAN be, but it is not a mandate
+15:26:12 <jtanner> so, what holds the community back from doing something on their own instead of waiting on proposal?
+15:26:14 <allanice001> Bcoca, +1
+15:26:18 <abadger1999> allanice001: yes, or have it be like any other agenda item... mostly first come first serve.
+15:26:22 <bcoca> this allows other people to code it with the expectation that their work wont be in vain
+15:26:31 <allanice001> abadger1999, yes
+15:26:36 <bcoca> we encourage the proposal before they make the effort
+15:26:43 <abadger1999> allanice001: or integrate it into the release process... first month of meetings in a cycle are devoted to proposals.
+15:26:49 <jtanner> how do we ensure it won't be in "vain"
+15:26:54 <allanice001> agreed
+15:27:02 <gundalow> I'm going to move onto the next topic at xx:30, we can loop back round to this at the end
+15:27:11 <bcoca> jtanner: that is what the proposal process is for, so we reject big ideas before dev codes them
+15:27:31 <alikins> of the existing 40 proposals, 3 are 'agreed' and 'completed' (not counting a proposal proposal).
+15:27:41 <mikedlr> also get early feedback about who can give us feedback on our code and comments about better ways to do it.. which has been invaluable for me.
+15:27:41 <bcoca> once the 'idea' is accepted, implementation is the issue, but that is not part of this process
+15:27:49 <jtanner> bcoca: we'd never have gotten fact caching if that were the process
+15:28:08 <jtanner> i know .. times have changed, but still
+15:28:16 <bcoca> jtanner:  i did propose it and it got 'accepted'
+15:28:24 <jtanner> not intially
+15:28:26 <bcoca> i just did not finish the implementation, someone else did
+15:28:43 <jtanner> sorry, i'm derailing topic
+15:28:44 <bcoca> jtanner: MPD accepted the 'idea' , he just tried diff impelmentation
+15:28:54 <gundalow> moving on in a minute
+15:28:58 <bcoca> a thrid person finally came with final implementation
+15:29:30 <bcoca> jtanner: also, not EVERYTHING needs to be proposal
+15:29:31 <abadger1999> allanice001: There's also some cleanup of the proposal-proposal needed... some things like two implementations in the final stage don't apply to us
+15:29:47 <bcoca> its mostly for things that either require a lot of effort or are a fundamental design change/consideration
+15:29:56 <abadger1999> allanice001: That's another thing needed... what is proposal worthy.
+15:29:59 <jtanner> allanice001: side question ... what PR/topic drove you to want this formalized process?
+15:30:13 <abadger1999> or what is not proposal worthy.  Or who to ask if this needs to be a proposal
+15:30:16 <alikins> bcoca: To some degree, having a firm def of what needs a proposal is probably more useful than the proposal process itself.
+15:30:16 <akasivel> jtanner: ++
+15:30:17 <bcoca> jtanner: previous meeting in which i brought it up
+15:30:23 <allanice001> A discussion that was started here 2 weeks back :P
+15:30:28 <bcoca> alikins, abadger1999 we all agree on that
+15:31:09 <allanice001> abadger1999, I know it needs work, please feel free to propose changes :D
+15:31:21 <bcoca> jtanner: there was a 'retroactive proposal' and I did not want the process to be a rubber stamp of things already decided, so I tried to reform ... ended up in nothing decided
+15:31:23 <abadger1999> <nod>  These are my proposedchanges ;-)
+15:31:30 <abadger1999> throughout this meeting.
+15:31:50 <gundalow> OK, I think we should move onto the next topic
+15:31:55 <gundalow> We can loop back round this later
+15:32:10 <funzo> perhaps just having a disclaimer of "If you code a feature without a proposal, it's at risk of not being merged (It's on you to collaborate with the community, not doing so is at your own risk"
+15:32:11 <allanice001> will reveiw afterwards and revisit
+15:32:22 <abadger1999> <nod>  can also give allanice001 a chance to incorporate the changes from this meeting and then we can take another look next meeting
+15:32:24 <gundalow> I've thrown some thought thoughts on https://public.etherpad-mozilla.org/p/ansible-proposal-workflow
+15:32:32 <funzo> and leave it up to to committer as to whether a proposal is something they want to mitigate risk with
+15:33:08 <jtanner> perhaps the end result could be "proposal_approved" label on feature pull requests?
+15:33:30 <jtanner> precursor to shipit
+15:33:39 <jtanner> #chair dag
+15:33:39 <zodbot> Current chairs: Qalthos abadger1999 akasivel alikins allanice001 dag funzo grastogi23 gundalow jimi|ansible jtanner mattclay nitzmahone rcarrillocruz shertel
+15:34:00 <bcoca> PR being from proposal does not really expedite it in the review process, it just takes the 'idea of it'  to a pre discussion
+15:34:41 <abadger1999> gundalow: yes please, let's move on and then discuss this more after the ideas have had a chance to percolate
+15:34:41 <jtanner> my sense is that "expediting" PRs is the real desire
+15:35:03 <bcoca> not mine
+15:35:07 <grastogi23> How will proposal_approved different from PR of proposal approved?
+15:35:08 <gundalow> #info people can throw other ideas into https://public.etherpad-mozilla.org/p/ansible-proposal-workflow
+15:35:10 <abadger1999> jtanner: not from my standpoint... from my standpoint it's "having to say no less often"
+15:35:12 <bcoca> that is orthogonal to this dicussion imo
+15:35:12 <gundalow> .......................................
+15:35:13 <gundalow> .......................................
+15:35:13 <gundalow> .......................................
+15:35:13 <gundalow> .......................................
+15:35:16 <gundalow> NEXT
+15:35:21 <jtanner> =P
+15:35:42 <gundalow> are nitzmahone and jhawkesworth here?
+15:35:48 <allanice001> One sec..
+15:35:49 <jhawkesworth> I'm here
+15:35:53 <bcoca> its early for nitzmahone
+15:35:56 <nitzmahone> Ya
+15:35:56 <jtanner> nitzmahone blinked earlier
+15:35:56 <gundalow> aye
+15:35:58 <allanice001> #info <gundalow> I've thrown some thought thoughts on https://public.etherpad-mozilla.org/p/ansible-proposal-workflow
+15:36:07 <allanice001> Go for it gundalow
+15:36:12 <allanice001> Back to you
+15:36:17 <jtanner> #chair jhawkesworth
+15:36:17 <zodbot> Current chairs: Qalthos abadger1999 akasivel alikins allanice001 dag funzo grastogi23 gundalow jhawkesworth jimi|ansible jtanner mattclay nitzmahone rcarrillocruz shertel
+15:36:21 <gundalow> #topic win_copy: Add force parameter and check-mode support #20405
+15:36:24 <gundalow> allanice001: Thanks
+15:36:36 <gundalow> #link https://github.com/ansible/ansible/pull/20405
+15:36:42 <jhawkesworth> Thanks.
+15:36:43 <nitzmahone> Will be reviewing that today
+15:36:48 <jhawkesworth> just want to unblock it
+15:36:50 <gundalow> 1) reach an agreement about the copy action plugin behavior.
+15:36:57 <gundalow> 2) Would adding an optional 'check_method' parameter be acceptable?
+15:37:05 <gundalow> 3) Or is there a better way to solve this problem?
+15:37:10 <jtanner> dag: ^
+15:37:20 <gundalow> nitzmahone: jhawkesworth cool, anything else do do here?
+15:37:29 * dag is eager to find out :)
+15:37:38 <jhawkesworth> that's about it.
+15:38:05 <gundalow> #action nitzmahone to have a look at https://github.com/ansible/ansible/pull/20405
+15:38:11 <gundalow> cool, so next?
+15:38:11 <dag> nitzmahone already reviewed it and was fine with it IIRC, it was bcoca who raised new issues
+15:38:33 <bcoca> you were optimizing local reading vs remote reading, the normal case would be the opposite
+15:38:51 <jhawkesworth> dag's PR really.  Selfishly I want to get the other functionality merged, but dag after some direction about what if anything to change
+15:38:56 <dag> bcoca: if `force: no` is specified, we first need to know if the remote file exists
+15:39:17 <bcoca> we always need to know if local file exists
+15:39:31 <dag> bcoca; look at the PR, that concern is no longer there
+15:40:02 <bcoca> you are skipping the local stat
+15:40:34 <dag> that concern wasn't there in the first place as `self._loader.get_real_file(source_full)` would trigger an exception if the file didn't exist
+15:40:37 <bcoca> you are optimizing the case in which the remote file does not exist, most of the time that is not the thing you need to optimize
+15:40:52 <dag> bcoca: *only* if force: no, which is the exact purpose
+15:41:11 <dag> I can repeat what I stated in the PR
+15:41:21 <dag> and you're doing the same, so...
+15:41:55 <nitzmahone> Yeah, don't need to discuss here- I'll mess around with it and probably make the call today
+15:42:20 <dag> # If the local file does not exist, get_real_file() raises AnsibleFileNotFound
+15:42:20 <dag> https://github.com/ansible/ansible/pull/20405/files#diff-2ae7ee3819390895333fe91e1df8e365R157
+15:43:14 <bcoca> you are hitting the local file and extra time in this case, when all you want to do is avoid the checksum, just do that instead
+15:43:42 <bcoca> which then optimizes the force case also
+15:44:37 <dag> bcoca: sure, fine by me, I actually proposed that, nitzmahone want me to use force: for this
+15:45:02 <dag> in fact I started with implementing creates: for win_copy
+15:45:07 <bcoca> i'll add to my list to rereview this, but really dont want to change the normal behaviour of the common action plugin
+15:45:13 * nitzmahone was mainly going for consistency with existing copy args
+15:45:20 <bcoca> creates?
+15:45:28 <dag> bcoca: the behaviour now is much better, especially when force: no
+15:45:37 <bcoca> we disagree on that
+15:45:53 <dag> bcoca: I think you repeat old arguments that are no longer valid
+15:46:01 <bcoca> its better for a single use case, which you have, not for most others
+15:46:11 <bcoca> how so?
+15:46:30 <dag> (04:39:17 PM) bcoca: we always need to know if local file exists
+15:46:30 <dag> (04:39:31 PM) dag: bcoca; look at the PR, that concern is no longer there
+15:46:42 * nitzmahone suggests this discussion move elsewhere
+15:46:53 <gundalow> OK
+15:46:54 <dag> if you forget that I want to avoid doing the checksum, the implementation still makes sense
+15:47:16 <bcoca> stating same file x2 still seems a waste
+15:47:29 <gundalow> nitzmahone: Should we move onto the next topic?
+15:47:33 <gundalow> which is ryansb's
+15:47:36 <nitzmahone> Please
+15:47:44 <gundalow> #topic ansible/proposals#14 Proposal: Module Rename Lifecycle
+15:47:48 <gundalow> ryansb: over to you
+15:47:57 <gundalow> #link https://github.com/ansible/proposals/issues/14
+15:48:30 <bcoca> ^ doesnt that overlap with the 'singular' one
+15:48:31 <bcoca> ?
+15:49:02 <bcoca> ryansb: also, that is why we created aliases (first thing i had to do when hired)
+15:49:48 <bcoca> and didnt we just push deprecations to be a 4 release cycle?
+15:49:50 <gundalow> #info https://github.com/ansible/proposals/issues/10 Proposal: Module names should be singular #10
+15:50:21 <bcoca> we already agreed to deprecation section in release also
+15:50:37 <bcoca> ^ this seems to overlap with many existing already agreed upon things
+15:51:11 <bcoca> ah, proposal is may 2016 ... that makes senes now
+15:51:54 <abadger1999> I think this supplements the singular one.  We can have both
+15:51:59 <bcoca> +1 to most of it (as we already have agreed to those things), -1 to 2 cycle deprecation, 4 cycle is what we last agreed on
+15:52:15 <bcoca> abadger1999: the singular one is a particular case of this
+15:52:19 <abadger1999> Think the number of cycles should be updated to agree with the deprecation cycle proposal but otherwise this is fine.
+15:52:22 <abadger1999> bcoca: Yep.
+15:52:36 <bcoca> 90% of this proposal are things already done/agreed on
+15:53:36 <gundalow> So that proposal needs reviewing and ensuring everything that's been discussed has been documented
+15:53:45 <bcoca> ryansb: sorry, had not read this one,  funny enough i just implemented deprecation messages for modules so now you can add check for name used for alias and warn user
+15:53:56 <ryansb> bcoca: yeah, it's old, but I want to either a) finish it or b) modify to reflect current state
+15:53:59 <abadger1999> Hmm... examples and the deprecation cycle make me think a little more clarity is needed
+15:54:08 <ryansb> right now it's in-progress, which is only sort of true
+15:54:17 <bcoca> ryansb: modifying the 2/4 cycle and versions (starting 2.3) shoudl be enough
+15:54:19 <abadger1999> 1. In 2.2-2.5 release, warn users and make new name available (as was done for become/sudo)
+15:54:33 <abadger1999> that would match with the 4 releases of deprecation.
+15:54:49 <bcoca> abadger1999: 2.3 .. 2.2 is gone ...
+15:55:04 <abadger1999> then shift the 2. and 3. appropriately.
+15:55:26 <abadger1999> bcoca: sure... but the proposal will always get out of date in that respect... this is just the example section.
+15:55:27 <bcoca> ryansb: module.deprecate(msg='', version=2.6)  to deprecate anything  in 2.3
+15:55:39 <bcoca> abadger1999: agreed
+15:55:40 <abadger1999> note....
+15:55:43 <abadger1999> it's not that easy.
+15:55:48 <abadger1999> for module renames.
+15:55:51 <bcoca> ryansb: na alias is just a symlink with leading _
+15:55:56 <abadger1999> We'd want to implement via a sym link
+15:56:03 <bcoca> we already have that
+15:56:07 <abadger1999> so the module needs to check how it was invoked.
+15:56:09 <bcoca> first thing i implemented when i was hired
+15:56:15 <abadger1999> befoe doing module.deprecate()
+15:56:16 <bcoca> yes, __file__ will give you that info
+15:56:21 <ryansb> #action ryansb update the cycle to a 4-release deprectaion cycle
+15:56:30 <bcoca> actually, invocation will also give you that info
+15:56:46 <abadger1999> yeah, +1 to get it from invocation
+15:56:57 <nitzmahone> Yeah, was going to suggest invocation also (PS will have to do it that way)
+15:57:02 <bcoca> all the parts are there already, just need to 'just do it'
+15:58:00 <ryansb> is the invocation something you snag off the module?
+15:58:12 <bcoca> its part of module input
+15:58:12 <nitzmahone> Yeah, standard arg
+15:58:24 <nitzmahone> (supplied by infra)
+15:58:37 <ryansb> ok, I'll find that and add an example to the proposal
+15:59:13 <ryansb> so the process would be: symlink to alias it, check invocation and conditionally do `module.deprecate`, and then after 4 cycles get rid of the old location
+16:00:04 <bcoca> module names with _ are either deprecated (if file) or alias (if symlink)
+16:00:15 <bcoca> i believe we currenlty only have deprecated in repo right now
+16:00:31 <bcoca> but you can test with any module by just creating symlink
+16:00:40 <bcoca> ln -s file.py _files.py
+16:01:07 <ryansb> yeah, no symlinks in lib/ansible/modules at the moment
+16:01:24 <bcoca> we had docker as one for a bit, but now its just deprecatd
+16:01:43 <alikins> _module for aliases is just a particular concretion of module name spacing. A slight more abstract module name space support would allow deprecating  (via say a 'deprecated' or '_' namespace) as well as provide a mechanism for resolving other name conflict issues
+16:02:28 <bcoca> alikins:  _ is also how we deprecate already
+16:02:50 <bcoca> the distinction being the type of file with _, symlink = alias, file = deprecated module
+16:03:21 <abadger1999> alikins: I brought that up once but people were cool on the idea (not w/respect to deprecation... just w/respect to module namespaces... Someone could write a proposal and make a case, though)
+16:03:24 <nitzmahone> Except the deprecation warning will have to be manually implemented, so _ as symlink is probably gilding the lily
+16:03:54 <bcoca> nitzmahone: well, we didnt have a 'deprecate alias' in mind when doing teh alias/deprecated module
+16:04:11 <abadger1999> We could do this controllerside.
+16:04:15 <bcoca> but it is basically 1/2 lines in module itself
+16:04:32 <nitzmahone> abadger1999: was thinking similarly
+16:04:53 <bcoca> i prefer it being in module or we need hardcoded lists, by doing it 'in module' it allows for custom module authors to use same mechs
+16:05:14 <nitzmahone> *cough*metadata*cough*
+16:05:26 <bcoca> would still do it 'in module'
+16:05:39 <abadger1999> for the rename case, we have all info controllerside
+16:05:57 <nitzmahone> ... and means we don't have to have more than one version of it
+16:05:59 <abadger1999> (_module is deprecated, use target-of-symlink instead)
+16:06:07 <abadger1999> for general deprecation we don't.
+16:06:26 <nitzmahone> We don't have the "removed in version"yet control side
+16:06:28 <abadger1999> (that information is currently i nthe DOCUMENTATION value)
+16:06:37 <abadger1999> yeah, that's true.
+16:06:40 <bcoca> that implementation requires changing the controller, mine only requires a if per module that deprecates an alias
+16:06:58 <abadger1999> right.  clear win for controllerside ;-)
+16:07:06 <ryansb> Also, if I'm deprecating `module.py` should I, at the time I deprecate, git move it to `module_newname.py` and add the `_module.py` symlink?
+16:07:14 <bcoca> i would argue, mine works NOW, yours needs major change on how we deal with modules
+16:07:21 <ryansb> or should it start with _module_newname.py as the link?
+16:07:31 <abadger1999> (I'm looking at it from the standpoint of having to modify a large number of modules for the singular name proposal)
+16:07:41 <bcoca> ryansb: currently, that wont matter as both will work
+16:07:44 <nitzmahone> Had to be old name or it won't find the action
+16:08:07 <abadger1999> bcoca: minor change except that nitzmahone threw the version info spanner into my plan.
+16:08:13 <bcoca> nitzmahone: for running no, for deprecating ... depends on how you implement it
+16:08:21 <alikins> having to update code to mark it as 'no longer updated' seems odd to me
+16:08:26 <ryansb> I know either will  work
+16:08:38 <nitzmahone> OIC. Assume you'd want to move to new name and patch old to minimize work on removal
+16:08:47 <ryansb> I'm wondering which we want to do, since either way `log --follow` works fine
+16:08:55 <bcoca> ^ yes, eventually move has to happen
+16:08:58 <ryansb> and I want to put it in the proposal so we have something written
+16:09:14 <bcoca> i would move and symlink to old
+16:09:23 <nitzmahone> +1
+16:09:25 <ryansb> +1
+16:09:28 <abadger1999> ryansb: I'd do the move and make _module.py the symlink
+16:09:32 <bcoca> then on 'deprecation day' you just remove symlink
+16:09:39 <nitzmahone> Exactly
+16:09:53 <ryansb> #action ryansb outline move/symlink process to happen at deprecation time, not after the 4 deprecation cycles
+16:10:05 <bcoca> not that its hard to do reverse, just seems less accident prone
+16:10:46 <nitzmahone> ... and minimizing final action makes it more likely to happen ;)
+16:11:08 <ryansb> Great, so we've covered: how to deprecate/remove (in VCS), how many cycles, how to decide when to send `module.deprecate`
+16:11:15 <bcoca> alikins, abadger1999, fyi you can already 'namepace modules' w/o having ansible to do anything namespace.module.py
+16:11:17 <ryansb> was there anything else that needed to change?
+16:11:22 <nitzmahone> One other note: if it were control side with metadata, we could automate the removal (or at least enforce it)
+16:11:54 <bcoca> nitzmahone: i think that is very low priority, tons of other stuff we should fix first
+16:12:04 <nitzmahone> "All in module"essentially makes the deprecation a runtime thing
+16:12:19 <abadger1999> bcoca: I don't htink that works.
+16:12:23 <alikins> or add a deprecated_in_2_4/  module dir to library path, mv _module there, and remove the deprecated_in_2_4 from library in 2.5
+16:12:33 <nitzmahone> (eg, difficult to discover)
+16:12:56 <abadger1999> bcoca: because ansible looks up modules via python's import mechanism... I'm pretty sure the "." in the name will confuse it.
+16:12:57 <nitzmahone> alikins: interesting hybrid, I like it
+16:13:57 <abadger1999> alikins: breaks the documentation builds.
+16:14:00 <bcoca> abadger1999: ah ... i have not tried that since ansiballz ... it did work before ...
+16:14:04 <abadger1999> But maybe that's desirable
+16:14:22 <abadger1999> bcoca: k... I think it would break in pluginloader but that's been rewritten for 2.0 as well.
+16:14:33 <nitzmahone> We could also exclude those from doc builds
+16:14:34 <bcoca> it worked in 2.0
+16:14:40 <abadger1999> k
+16:14:48 * abadger1999 tries it from the python shell
+16:15:19 <bcoca> +1 for the 'deprecated_in' directory
+16:15:30 <bcoca> ^ we need to move docs builds to 'tags' vs directories anyways
+16:16:12 <nitzmahone> It's already partially there
+16:16:41 <nitzmahone> Dirs are used as tag sources, could add others from metadata, etc
+16:16:52 <abadger1999> bcoca: yeah, current pluginloader fails to find a module in "system/mine.pingo.py"
+16:17:04 <nitzmahone> Bummer
+16:17:24 <abadger1999> oh wait... was testing from wwrong directory.
+16:18:02 <bcoca> abadger1999: will still fail import (or fall back to module replacer?)
+16:18:22 <bcoca> nitzmahone: my point is departing from dirs
+16:18:38 <alikins> re '.' in module name, https://github.com/ansible/ansible/pull/17885 has one approach for that.  (though this is just more stuff that falls into the plugin_loader redesign bucket)
+16:19:09 <nitzmahone> bcoca: yep- just saying that should be easy to retarget to metadata
+16:19:24 <abadger1999> bcoca: I'm figuring that out now.
+16:19:30 <nitzmahone> (since the build is internally tag-based already)
+16:19:50 <abadger1999> pluginloader ... the finder portions will work... the loader portions will not (modules only use the finder portion)
+16:20:11 <abadger1999> anyhow... I'll update you outside of hte meeting
+16:20:23 <bcoca> so our current namespacing is _ based ...
+16:21:55 <bcoca> yeah, sorry for tangent, i just remember using that form a while back
+16:24:11 <ryansb> ok, I think we're good to move on then
+16:24:53 <allanice001> anything there worth #info'ing ?
+16:25:56 <ryansb> mostly it's # actions for me, I think
+16:26:45 <ryansb> #info Much of Proposal #14 has been implemented already, but it has an incorrect deprecation cycle length and needed specific "how to deprecate" implementation details
+16:28:08 <allanice001> thnx ryansb
+16:28:20 <ryansb> alright, what's up next
+16:28:21 <allanice001> gundalow, you still with us ?
+16:28:50 <allanice001> We're already 30 minutes over
+16:29:07 <allanice001> Should we wrap up for tonight / today ?
+16:29:15 <ryansb> #topic Mike's open PRs
+16:29:38 <ryansb> #info discussed with him in #ansible-devel about status, so nothing new since an hour ago when that happened
+16:29:48 <ryansb> #link https://github.com/ansible/community/issues/150#issuecomment-282033552
+16:30:10 <ryansb> I think we should wrap up, unless dag is about for the topic he submitted
+16:30:27 <ryansb> #topic Dag discussion about inactive/unresponsive maintainers
+16:30:28 <dag> Maybe there is documentation already ?
+16:30:35 <ryansb> #link https://github.com/ansible/community/issues/150#issuecomment-282036027
+16:30:53 <dag> I have a dozen PR's for (older) Windows modules with no feedback from maintainers
+16:30:58 <gundalow> allanice001: I'm here
+16:31:04 <mikedlr> general question for my PRs is about support and advice for fixing AWS stuff more widely.  I have it working locally for my needs but with quite a bit of hacking
+16:31:21 * jtanner perks up
+16:31:27 <mikedlr> I guess this is the right forum to get more attention and agreement to it?
+16:31:45 <jtanner> willthames took a more active role in ec2 dev again, so you can bounce that stuff off him
+16:32:04 <mikedlr> I noticed that there's a set of lambda modules which seem more complete than current ansible lambda support.  how realistic is it to merge most of that
+16:32:06 <ryansb> mikedlr: we can discuss in #ansible-devel w/ me/willthames/shertel
+16:32:10 <mikedlr> possibly even replacing the currently lambda.
+16:32:11 <mikedlr> yes.
+16:32:19 <nitzmahone> dag: feedback coming today
+16:32:34 <gundalow> willthames is in Australia, so timezones may be fun, depending where you are
+16:32:52 <dag> nitzmahone: thanks :-)
+16:32:53 <jtanner> gundalow: we're around the globe ec2 dev
+16:33:04 <mikedlr> only thing I guess I need from here is knowledge that everybody who needs consulted/ warned etc will get info from ansible-dev discussion
+16:33:15 <ryansb> Right on
+16:33:41 <gundalow> mikedlr: If you think https://github.com/ansible/ansible/blob/devel/lib/ansible/modules/cloud/amazon/GUIDELINES.md needs any updates feel free to update that
+16:33:41 <jtanner> willthames is pinged in aws related issues, so he'll see things there that he didn't see on #ansible-devel
+16:33:56 <gundalow> He doesn't have an IRC bouncer :(
+16:33:57 <dag> still I wonder what to do with modules with inactive maintainers, replacing them by nitzmahone doesn't scale :p
+16:34:09 <jtanner> dag: we have to measure that first
+16:34:18 <jtanner> then decide what "inactive" means
+16:34:24 <dag> jtanner: agreed, my changes are not that old
+16:34:55 <jtanner> there was a time not too long ago, that PRs not merged after the first day, would on average take another month before activity
+16:35:03 <jtanner> then ~4 months, then 1 year
+16:35:17 <jtanner> i don't have recent metrics
+16:35:40 <dag> right, but having more than one maintainer would be nice, or maybe better rules for maintainers (so expectations are set right)
+16:35:51 <dag> or a distinction between author and maintainer
+16:35:52 <jtanner> i try to collect more maintainers where i can
+16:35:58 <jtanner> pinging the namespace was the start
+16:36:06 <dag> yes, I like that :)
+16:36:14 <dag> (but not everyone does)
+16:36:21 <jtanner> *shrug*
+16:36:45 <nitzmahone> Eventually "Windows" as a namespace will break down (well on the way ;) )
+16:36:56 <dag> :-)
+16:37:01 <jhawkesworth> I think not so many contributors get the notion of being a maintainer.
+16:37:16 <nitzmahone> "Here's a thing I made"
+16:37:17 <bcoca> not all are
+16:37:19 <dag> so I get that there are no rules today, could be something to discuss some future meeting
+16:37:29 <jtanner> if we need democracy on shipits, we're going to have to factor that into new module pull requests ... module must have 2+ potential maintainers before merge
+16:37:32 <jhawkesworth> people change jobs and loose access to windows gear is a windows-specific issue too
+16:37:50 <bcoca> jtanner: we'll be down to <200 moduels then?
+16:37:54 <dag> jhawkesworth: definitely, I am not comfortable to be the author for windows modules, because that's just a current mission
+16:38:00 <jtanner> then there's the problem with people disappearing over time, which is fine and expected
+16:38:16 <jtanner> and that has led us to talk more recently about an "orphaning" process
+16:38:27 <dag> ok
+16:38:36 <jtanner> but again, i think we need to measure
+16:38:40 <jhawkesworth> maybe a page somewhere about 'here's what being a maintainer' looks like might help
+16:38:42 <jtanner> i just haven't gotten there
+16:38:46 <jhawkesworth> +1 for measuring
+16:38:52 <dag> jhawkesworth: +1
+16:39:04 <allanice001> +1 for MAINTAINER.md
+16:39:06 <jtanner> jhawkesworth: i think most projects have that written in a CLA
+16:39:43 <jhawkesworth> ... but don't make it sound too arduous otherwise contributors might not bother
+16:39:50 <bcoca> module guildlines have some info on maitnainers
+16:39:54 <dag> on the one hand it shouldn't scare new contributors off, I prefer new contributions where the author states "I may not be able to maintain it, maintainers welcome"
+16:40:07 <bcoca> i dont tink anyone reads that though
+16:40:11 <jtanner> other projects have demonstrated growth even with a CLA
+16:40:19 <bcoca> dag: the question is scale
+16:40:35 <bcoca> how long until we cannot support the modules (i think we passed that already)
+16:40:37 <dag> could be part of the ANSIBLE_METADATA
+16:40:53 <jtanner> i'd rather not have anything "variable" in the metadata
+16:41:02 <abadger1999> in my experience. CLAs ae just legal matters (PSF, FSF, and fedora)
+16:41:11 <abadger1999> oh, and canonical too.
+16:41:14 <allanice001> bcoca, jtanner - alley "champion" from proposal process
+16:41:21 <dag> abadger1999: you are legally bind to maintain this module :)
+16:41:23 <bcoca> jtanner: too late, everything already in there is 'variable'
+16:41:38 <abadger1999> dag: We should sneak that in to a EULA ;-)
+16:41:47 <jtanner> nah, they're just committe driven semi-constants =P
+16:42:00 <bcoca> since we are sneaking things in, i need a new case of beer delivered
+16:42:12 <jhawkesworth> been fun.  gotta go.
+16:42:18 * jhawkesworth waves
+16:42:20 <jtanner> bye
+16:42:26 <allanice001> I'll take a bottle of hennessy
+16:42:36 <allanice001> While you're sneaking thing in
+16:42:57 <jtanner> so what were we actually talking about ?
+16:43:01 <bcoca> im still 1/2 down my  lagavulin, next shipment maybe
+16:43:44 * gundalow is reseting the meeting in 15 minutes for Testing Working Group
+16:44:40 <gundalow> Did we agree we need a separate document on what it means to be a maintainer?
+16:45:00 <jtanner> i agree, but i don't know that anyone else in core explicitly voted
+16:45:14 <allanice001> I +1'd the idea
+16:45:21 <bcoca> https://github.com/ansible/ansible/blob/devel/MODULE_GUIDELINES.md <= or just update existing one?
+16:45:26 <jtanner> technically i have most of it documented in ansible/ansibullbot/ISSUE_HELP.md
+16:45:46 <bcoca> "When you contribute a new module to the ansible/ansible repository, you become the maintainer for that module once it has been merged"
+16:46:23 <bcoca> im all for documenting .. but when people redocument docs that are not read .... feels a bit useless
+16:46:49 <gundalow> #info We have some documentation in https://github.com/ansible/ansible/blob/devel/MODULE_GUIDELINES.md and https://github.com/ansible/ansibullbot/blob/master/ISSUE_HELP.md
+16:47:56 <gundalow> #topic Dag discussion about inactive/unresponsive maintainers
+16:48:05 <gundalow> #info We have some documentation in https://github.com/ansible/ansible/blob/devel/MODULE_GUIDELINES.md and https://github.com/ansible/ansibullbot/blob/master/ISSUE_HELP.md
+16:48:42 <gundalow> bcoca: I agree, though as you know I've been documenting stuff recently and I know people have been reading it
+16:49:31 <bcoca> in this case i know some peopel have read it, but most seem to ignore it
+16:50:00 <gundalow> nod
+16:50:36 <gundalow> #info https://github.com/ansible/community/blob/master/PR-FLOW.md needs reviewing and most likely deleting, any references to that page should be replaced with a link to https://github.com/ansible/ansibullbot/blob/master/ISSUE_HELP.md
+16:50:56 <gundalow> aaaaaaaaaaaaaaand we are done
+16:51:07 <allanice001> thnx all
+16:51:22 <jtanner> gundalow thanks for running it again
+16:51:25 <gundalow> #endmeeting

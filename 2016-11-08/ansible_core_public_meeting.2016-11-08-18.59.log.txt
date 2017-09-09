@@ -1,0 +1,459 @@
+18:59:27 <abadger1999> #startmeeting Ansible Core Public Meeting
+18:59:27 <zodbot> Meeting started Tue Nov  8 18:59:27 2016 UTC.  The chair is abadger1999. Information about MeetBot at http://wiki.debian.org/MeetBot.
+18:59:27 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+18:59:27 <zodbot> The meeting name has been set to 'ansible_core_public_meeting'
+18:59:36 <abadger1999> #topic Roll Call
+18:59:41 <abadger1999> Who all is here?
+18:59:49 * Qalthos waves
+18:59:58 * skuznets raises hand
+19:00:27 <skuznets> Quite the crows
+19:00:31 <skuznets> Crowd**
+19:01:05 * jimi|ansible here
+19:01:11 * bcoca waves
+19:01:17 <abadger1999> #chair Qalthos skuznets jimi|ansible bcoca jlk
+19:01:17 <zodbot> Current chairs: Qalthos abadger1999 bcoca jimi|ansible jlk skuznets
+19:01:31 <jlk> oh, I get a chair?
+19:01:35 * jlk sits
+19:01:40 * bcoca wants sofa
+19:01:51 <jimi|ansible> jlk: you get a stationary bike
+19:01:58 <jlk> YASSS
+19:02:08 <jimi|ansible> :)
+19:02:10 * bcoca will settle for cheslon
+19:02:13 <abadger1999> #topic discuss publishing versioned documentation -- skuznets
+19:02:22 <dminca> hi
+19:02:30 * bcoca waves
+19:02:51 <skuznets> Last time we passed on this as we were missing the dev who was implementing it --- but I can't remember who that was. Are they here now?
+19:03:09 <jimi|ansible> we asked him to join
+19:03:15 <abadger1999> dharmabumstead -- I've jsut pinged him to see if he'll drop in.
+19:04:29 <jimi|ansible> is he on irc at all? don't see him in any channel (unless he's using a nick i can't guess)
+19:06:02 <dminca> weird :0
+19:06:09 <skuznets> Well, if not -- the reason I brought this up was that I had run into some situations where the documentation on the publically-facing domain was misleading since it was generated from devel.
+19:06:22 <abadger1999> He can get on (was on for the docsprint) but he hasn't been joining the #ansible channels.
+19:06:28 <abadger1999> regularly.
+19:06:31 <skuznets> Last I understood there is an undertaking to publish versioned documentation from release tags
+19:06:49 <jlk> I recall such a conversation
+19:06:55 <skuznets> I'm not sure there's a huge amount to talk about, unless there is uncertainty re: implementation
+19:06:55 <bcoca> skuznets: i proposed a while ago a simple division /devel and teh default being current stable
+19:07:05 <bcoca> ^ having every version becomes a maintenance nightmare
+19:07:05 <skuznets> bcoca: that seems perfectly reasonable
+19:07:18 <skuznets> bcoca: due to drift in the generation scripts?
+19:07:35 <bcoca> all features have version_Added (if not, its a bug)
+19:07:36 <jimi|ansible> due to drift in text, having to backport fixes, etc.
+19:07:51 <bcoca> skuznets: no, cause a fix to a fundamental doc then needs to be cherry picked to 20 versions/branches
+19:07:51 <skuznets> bcoca: Are the pages static? If so, won't the version of the doc generation script at the checkout you use generate a stable static content for the docs domain>
+19:08:01 <skuznets> bcoca: aaah ack
+19:08:08 <abadger1999> dharmabumstead started making some proposals at our last internal meeting (earlier today).  He does have versioned docs on there but not much information.
+19:08:09 <jlk> bcoca: they do have version added, however that's not very clear to new folks
+19:08:10 <abadger1999> Challenges:
+19:08:10 <abadger1999> - Versioned docs?
+19:08:16 <jlk> they don't expect to have to look at it
+19:08:24 <jimi|ansible> it doesn't have to be that crazy, we can say X number of previous versions are updated
+19:08:33 <skuznets> I mean, ideally the commit that brings in a change to some core functionality also contains the doc changes there ,right?
+19:08:41 * resmo waves
+19:08:47 <bcoca> skuznets: sometimes, not always
+19:08:49 <skuznets> Since you're cherry-picking that fix commit, you then also get the docs for free?
+19:08:52 <abadger1999> #chair resmo
+19:08:52 <zodbot> Current chairs: Qalthos abadger1999 bcoca jimi|ansible jlk resmo skuznets
+19:08:54 <skuznets> bcoca: seems easy to enforce
+19:09:09 <jimi|ansible> skuznets: consider someone reorganizing developer docs for 2.3 - are we backporting that major revision in the docs to 2.2 and 2.1 docs too?
+19:09:09 <bcoca> skuznets: not always, specially with 3 repos
+19:09:14 <bcoca> will be easier when 1 repo
+19:09:35 <abadger1999> skuznets: Looking at some of the other things that dharmabumstead wants to do... it may be easier for docs to be separate PRs from code changes.
+19:09:54 <bcoca> skuznets: also sometimes we 'backport a fix' but dont release it, cause it is 'nice to have' but not important enought to merrit a release (it is there jic we do release due to something else)
+19:09:57 <skuznets> abadger1999: will they continue to be inline doc in the module? or in a separate repo?
+19:10:15 <abadger1999> He wants docs review of documentation changes.... We could figure some compromise there, though...
+19:10:18 <bcoca> ^ i REALLY dont want separate repos
+19:10:19 <abadger1999> skuznets: Oh god, no.
+19:10:25 <jimi|ansible> no separate repos
+19:10:37 <jimi|ansible> but maybe different files - instead of having module docs be a docstring in the module
+19:10:38 <jlk> Please no.
+19:10:42 <bcoca> jimi|ansible, abadger1999 please comment on the doc, as that is one thing that is prposed
+19:10:45 <jlk> (to separate repos)
+19:10:50 <skuznets> Maintenance cost of many versions is clear -- maybe devel, last two stable releases? What's the support statement for old releases?
+19:10:52 <abadger1999> bcoca: <nod>  yeah.
+19:11:20 <dminca> what doc ?
+19:11:39 <bcoca> skuznets: then there is also google ...
+19:11:51 <abadger1999> #chair dminca
+19:11:51 <zodbot> Current chairs: Qalthos abadger1999 bcoca dminca jimi|ansible jlk resmo skuznets
+19:11:52 <skuznets> bcoca: sorry, could you be more clear?
+19:12:04 <dminca> aww thx man
+19:12:05 <bcoca> when we change/move things (which having limited versions would require) we loose "searchability"
+19:12:25 * dminca finally sits on chair
+19:12:29 <abadger1999> dminca: He asked internally for feedback... it should get posted externally in the next few weeks as well.
+19:13:03 <abadger1999> I can't promise exactly when... just that "it's coming" :-)
+19:13:17 <dminca> I see
+19:13:45 <skuznets> bcoca: I don't quite understand the searchability issue
+19:14:12 <abadger1999> Oh hey!
+19:14:15 <abadger1999> #chair dharmabumstead
+19:14:15 <zodbot> Current chairs: Qalthos abadger1999 bcoca dharmabumstead dminca jimi|ansible jlk resmo skuznets
+19:14:23 <dharmabumstead> Someone rang?
+19:14:30 <skuznets> bcoca: you mean if there isn't a stable URL for i.e. the "file" module?
+19:14:31 <abadger1999> dharmabumstead: Meet skuznets and dminca.
+19:14:38 <dharmabumstead> Hi!
+19:14:40 * skuznets waves
+19:14:47 <bcoca> skuznets: that is only part of it, we update plenty of docs per version outside modules
+19:15:10 * bcoca moves to table the tabling
+19:15:14 <abadger1999> dharmabumstead: skuznets added versioned docs to this week's agenda.
+19:15:23 <dharmabumstead> I see.
+19:15:25 * dminca wave
+19:16:06 <dharmabumstead> That's something we need to figure out.
+19:16:40 <dminca> versioned docs as in auto-generated from git repo releases ?
+19:16:55 <skuznets> Yes
+19:17:03 <dminca> that could be interesting
+19:17:09 <bcoca> i proposed alternate / <= stable and /devel
+19:17:27 <bcoca> as maintaining backwards versions can be very cumbersome
+19:17:37 <skuznets> To be specific, the issues that I ran into that lead to this topic were API incompatibilities between what was listed on the docs domain (since it is from devel) and what I had installed on my machine
+19:17:37 <dminca> why not keep `master` as stable
+19:17:39 <nitzmahone> +1 (though I know we'll get pushback)
+19:17:42 <dharmabumstead> Do we keep older / historical versions of Ansible around?
+19:18:02 <bcoca> dharmabumstead: technically, all of them ... its git
+19:18:04 <nitzmahone> dminca: that's not the way Ansible itself works
+19:18:05 <abadger1999> dharmabumstead: The tarballs remain on releases.ansible.com and the releases are tagged in git
+19:18:08 <skuznets> ^^ do you guys have explicit support statements for your GA releases?
+19:18:17 <abadger1999> dharmabumstead: we don't push people to using older releases, though.
+19:18:18 <nitzmahone> skuznets: we're getting there
+19:18:26 <dminca> nitzmahone it's the way git works :)
+19:18:28 <bcoca> dminca: we dont have master branch, we have stable-X.y
+19:18:40 <bcoca> ^ at one point we only have tags
+19:18:44 <nitzmahone> dminca: only if that's your workflow. It's not ours
+19:18:46 <skuznets> nitzmahone: Once official support statements hit I would expect the versioned docs for those releases that are currently supported to exist and be kept up to date, yes?
+19:18:50 <dminca> bcoca I thought that's why Releases are for
+19:18:52 <dharmabumstead> We might want to start archiving the HTML docs
+19:18:58 <bcoca> dminca: nope
+19:19:20 <dminca> nitzmahone not arguing, just saying
+19:19:32 <bcoca> dminca: master is convention in git, you can use any branch as master, github deals with relases, but not git, which is why we use branches + tags
+19:19:33 <dharmabumstead> The problem is that maintaining multiple versions of the docs is not practical
+19:19:54 <bcoca> dharmabumstead: three is no archiving as we dont currently have dupes, but we have 'history'
+19:19:59 <bcoca> ^ its what VCS does
+19:20:00 <dharmabumstead> From a workload perspective.
+19:20:04 <dminca> bcoca I understand now
+19:20:24 <skuznets> What are the pros/cons of requiring for example core module changes to be accompanied with doc updates (either in the PR or in the commit), so when the cherry-pick happens for older release branches, a nightly rebuild of the static docs for that release can occur and pick the changes up?
+19:20:29 <nitzmahone> I'd be more supportive of "static archive" and "maintained current stable + devel"
+19:20:41 <dminca> dharmabumstead multiple versions of docs = multiple versions of old software available => backwards compatbility required
+19:20:41 <dharmabumstead> I know for module docs we've got some version added and deprecated indicators.
+19:20:52 <skuznets> I'm also not _super_ knowlegeable here -- how much of the documentation isn't auto-generated?
+19:21:03 <nitzmahone> Rarely should updates to released versions require doc changes, since we don't backport features, just bugfixes.
+19:21:23 <bcoca> skuznets:  docsites/rst  has most of the 'static' docs
+19:21:28 <dharmabumstead> Sure. Archiving the old docs versions with their corresponding software is not a huge deal. Actively maintaining that stuff is.
+19:21:30 <bcoca> docsite/rst
+19:21:47 <dminca> don't be like docker
+19:21:47 <bcoca> s/archiving/deleting from site/
+19:21:53 * resmo likes to have versioned module web docs (all modules in version ansible 2.1, 2.2), but keeping other docsite pages as is
+19:22:01 <dminca> update & throw old versions away
+19:22:15 <abadger1999> dharmabumstead: People don't find those (deprecated/version_added) to be sufficient.  I'm not sure precisely why. Can someone say what makes separate versions better than the tags?
+19:22:24 <nitzmahone> resmo: you sorta get that for free as-is with ansible-dolc
+19:22:28 <nitzmahone> s/doic/doc
+19:22:40 <resmo> nitzmahone: speaking about web
+19:22:44 <bcoca> abadger1999: diff way of not reading
+19:23:22 <bcoca> abadger1999: almost reintroduced 'marquee' tag to docs to show version added
+19:23:34 <nitzmahone> abadger: Usually what I've seen with those kinds of things is a big stripe across the top on archived versions of docs saying "this is not the most current, nor maintained version of these docs" with a link to the current version.
+19:23:49 <skuznets> While I agree that trying to maintain non-generated documentation for multiple versions has a higher cost than not doing it ... how can that be avoided when there are multiple live versions that have active support statements?
+19:23:57 * gundalow waves, Boarding flight in a bit
+19:24:08 <abadger1999> #chair gundalow nitzmahone
+19:24:08 <zodbot> Current chairs: Qalthos abadger1999 bcoca dharmabumstead dminca gundalow jimi|ansible jlk nitzmahone resmo skuznets
+19:24:12 * dminca waves to gundalow
+19:24:14 <bcoca> skuznets: this is where ansible-doc is consistent with what is hsipped
+19:24:16 <bcoca> shipped
+19:24:18 <nitzmahone> skuznets: The support statements thing is still WIP
+19:24:26 <dminca> have a good flight
+19:24:48 <skuznets> bcoca: ansible-doc?
+19:24:51 * bcoca would be happy to remove most docs from website ... but suspects huge resistance
+19:24:56 <skuznets> oh
+19:24:57 <dminca> you guys want to separate docs from code?
+19:24:59 <bcoca> skuznets: when you install ansbile, you get ansible-doc
+19:25:03 * nitzmahone reiterates that docs changes to released versions should be a very rare (if ever) occurrence
+19:25:08 <bcoca> ansible-doc modulename <= docs for the moudle YOU HAVE
+19:25:12 <skuznets> Yeah I don't think that's going to be the first place most people look for documentation
+19:25:15 <bcoca> ansible-doc -l <= lists modules YOU HAVE
+19:25:38 * dharmabumstead agrees fervently with @nitzmahome
+19:25:43 <bcoca> nitzmahone: our history disagrees with you
+19:25:45 <nitzmahone> man for ansible (sans all the cruft that man has)
+19:26:01 <nitzmahone> bcoca: it does?
+19:26:15 <bcoca> dharmabumstead: sadly we correct 'old docs' all the time, since a lot of them were made ... w/o much quality control
+19:26:19 <abadger1999> nitzmahone: Currently, we only make docs changes to the modules.  But that's mostly because bugfixes to the module docs actually show up via ansible-doc.  If we had versioned docs we probably would push a few changes to docsite back to previous versions too.
+19:26:41 <dharmabumstead> We should also try to differentiate between module docs and docsite/rst docs
+19:26:45 <sivel> maintaining versioned docs is really not complicated either. I have a 22 line script that does it currently. although I forgot to tell it to start making stable-2.2 currently
+19:26:48 <bcoca> last 2 months i've stopped making many doc changes, but before that i've corrected a LOT of stuff
+19:26:49 <dharmabumstead> In this discussion
+19:26:57 <bcoca> we even had docs for features we never had/added
+19:27:03 <bcoca> ^ those are fun
+19:27:08 <dharmabumstead> Yeah. That's a windmill I am still tilting at
+19:27:10 <abadger1999> But I don't see us really ever pushing docsite-only changes to more than last stable + devel.
+19:27:12 <dminca> bcoca: ansible-doc ; thanks, never knew about that
+19:27:24 <nitzmahone> abadger1999: that's what I was getting at
+19:27:30 <abadger1999> <nod>
+19:27:32 <bcoca> abadger1999: and i'm fine with that, i just dont want 1.3 docs
+19:27:51 <bcoca> there is stable/devel, which i think is reasonable, then there is 'every version'
+19:27:53 <skuznets> What sort of changes are both large enough to require changes to the core docsite pages and also be small enough to be backports?
+19:28:11 <skuznets> Why not just version the documentation that _is_ generated from a specific version of the code?
+19:28:21 <nitzmahone> bcoca: Generally I'd agree, but keeping static archived versions of those docs around once a new stable exists is fairly trivial.
+19:28:28 <skuznets> ^^
+19:28:39 <sivel> skuznets: that is what I am doing at https://ansible.sivel.net/docs/
+19:28:40 <dharmabumstead> Yeah. Archiving is easy. Active maintenance is not.
+19:28:57 <abadger1999> sivel: So build script-wise, it should be simple, yeah... I think people are thinking of it in terms of correcting docs for older versions.
+19:29:17 <alikins> worry about that later
+19:29:18 <dharmabumstead> Adding a version tag to a set of generated docs is trivial.
+19:29:25 <skuznets> Right, I guess the argument is that something that is large enough to impact something in the core docsite/rst docs is not also something that's going to get cherry-picked into older releases
+19:29:33 <skuznets> Ergo, the _actual_ maintenance cost will be small
+19:29:34 <bcoca> nitzmahone: my point is that those might be wrong and that when you update latest you'll still get complaints aobut the old ones
+19:29:36 <sivel> I am meh on correcting it.  from my POV stable and devel are the only places I would care to target
+19:29:46 <abadger1999> "If we support the code with bugfixes, do we also have to support the docs with bugfixes?"  I think we're saying that they can have two different support cycles.
+19:29:47 <skuznets> bcoca: I see what you mean
+19:29:51 <jlk> Im not thinking/asking for maintained docs for old versions
+19:29:56 <dharmabumstead> Ok
+19:29:57 <nitzmahone> sivel++
+19:30:10 <jlk> all I want is the default docs to be of the current stable version, and an option to view docs for devel
+19:30:17 <alikins> yes
+19:30:19 <skuznets> jlk ++
+19:30:22 <alikins> ++
+19:30:23 <dharmabumstead> That seems reasonable
+19:30:26 <bcoca> jlk: i agree with that one, its the 'more versions' im against
+19:30:38 <bcoca> and it makes sense to 'maintain stable' docs also
+19:31:00 <skuznets> Would it make sense to _only_ have versioned docs for auto-genned thigns?
+19:31:00 <nitzmahone> That'd be my ideal as well, just saying I'm sure we'll get pushback (we are in here already) about not keeping static archives.
+19:31:17 <nitzmahone> skuznets: I don't think so
+19:31:28 <gundalow> +1 to stable & devel only
+19:31:30 <bcoca> skuznets: not really as many features are version dependant and 'statically' added, like lookup plugins
+19:31:35 <nitzmahone> There are a lot of missing/incomplete/outdated docs
+19:31:39 <resmo> +1 stable and devel
+19:31:43 <skuznets> bcoca: I see
+19:31:52 <alikins> old versions should get archived as well. If it's too hard, we'll stop.
+19:31:54 <dharmabumstead> I have no problem with taking a docset and setting it in amber and throwing it in an archive somewhere
+19:31:57 <bcoca> nitzmahone: not static, we should generate / and /devel same way, jsut diff branch
+19:32:10 <skuznets> The only issue I would have with stable+devel is when Ansible (inc?) is officially supporting more than one stable release ...
+19:32:13 <nitzmahone> stable + devel solves the biggest problem ("why doesn't feature X added in devel work on stable?")
+19:32:15 <abadger1999> #info the high value here is docs for latest stable and devel with a way to switch between them.
+19:32:16 <bcoca> ^ current deploy script needs very little to affect this change
+19:32:17 <mattclay> +1 stable and devel, we can always expand on that later if there's enough demand and resources to support it
+19:32:21 <skuznets> I don't see stable+devel flying in that situation
+19:32:37 <bcoca> we just need to add a way to navigate stable <=> devel
+19:32:37 <nitzmahone> especially if docs.ansible.com defaults to stable
+19:32:38 <resmo> oldstable? sound like debian :)
+19:32:44 <bcoca> nitzmahone: agreed
+19:32:48 <dharmabumstead> This is how we handled it at eucalyptus: https://docs.eucalyptus.com/eucalyptus/4.3.0/#shared/doc_archive.html
+19:33:32 <bcoca> dharmabumstead: and errors that were present in 3.2 but fixed in 4.3 do not percolate back?
+19:33:49 <alikins> https://robpol86.github.io/sphinxcontrib-versioning/
+19:34:27 <nitzmahone> Static warning/switcher example: https://msdn.microsoft.com/en-us/library/system.diagnostics.process(v=vs.100).aspx
+19:34:37 <dharmabumstead> @bcoca: no.
+19:35:00 <bcoca> dharmabumstead: which is a big painpoint when you 'older' docs are very inaccurate sometimes
+19:35:14 <dharmabumstead> Yep. I believe we put a disclaimer header at the top
+19:35:18 <skuznets> From the Microsoft website: ""
+19:35:20 <skuznets> This documentation is archived and is not being maintained""
+19:35:24 <nitzmahone> Yep, the euca docs had a (smallish) header.
+19:35:26 <skuznets> Seems perfect
+19:35:28 <bcoca> alikins: we had user try to implement that once, iirc we had to rewrite our docs to accomodate the versioning
+19:36:14 <dharmabumstead> At Euca we had a current branch and an equivalent of a devel branch for work on upcoming releases
+19:36:24 <bcoca> we currently have labels about which version something was added, people dont read those either
+19:36:49 <skuznets> bcoca: only sometimes**
+19:36:54 <nitzmahone> TBF. those are also much less noticeable in the sea of text than a big yellow banner.
+19:37:00 <gundalow> bold/italic The version_added fields may be a simple improvement
+19:37:22 <bcoca> gundalow: i raised it to be biggest font outside headers
+19:37:31 <bcoca> also moved in options to under option name
+19:37:39 <skuznets> I also feel like keeping all the version_added stuff in the current doc (and pruning that as the versions get old) seems like a lot more work ...
+19:37:43 <bcoca> ^ tempted to add marquee tag back ...
+19:37:58 <dharmabumstead> (Apologies for delayed responses - tending to another sick kid home from school today. Little Petri dishes)
+19:37:58 <bcoca> skuznets: we dont prune, script does it
+19:38:00 <nitzmahone> blink tag FTW
+19:38:10 <bcoca> we keep the version_added info in docs indefinetly
+19:38:14 <skuznets> bcoca: ack
+19:38:18 <abadger1999> dharmabumstead: Hopefully you aren't the petri dish ;-)
+19:38:28 <bcoca> skuznets: its just a setting we change in the generator
+19:38:32 <nitzmahone> version_added for modules in particular (which is the most problematic) are enforced by CI
+19:38:37 <bcoca> 'ignore < 1.7'
+19:38:54 <skuznets> In any case while some of these are clearly contentious ... getting the default page to be from stable and not devel, and at least having those two clearly delineated would be a 1000x improvement
+19:38:55 <dharmabumstead> Ha! Nope. I'm thinking of stocking up on surgical scrubs to wear around them though.
+19:39:04 <nitzmahone> Module PRs that are missing version_added will bomb
+19:39:07 <bcoca> agreed on 'stable' by default
+19:39:13 <bcoca> ^ i think we are all fine with that
+19:39:28 <dharmabumstead> skuznets: that seems reasonable to me
+19:39:42 <bcoca> having devel is even optional at that point
+19:39:51 <bcoca> ^ though i like having it for 'preview'
+19:40:02 <nitzmahone> devel.docs.ansible.com
+19:40:04 <bcoca> and since plugins are mostly downloadable, allows people to use them right away
+19:40:27 <abadger1999> #info Make default page latest stable with the ability to switch to the devel version.
+19:40:28 <bcoca> nitzmahone:  might need docs.ansible.com/ansible/devel as we share with tower
+19:41:10 <nitzmahone> Yeah, so long as those also get the "prerelease docs, may describe things you can't do yet, go HERE for released stuff"
+19:41:54 <abadger1999> Okay, I've tagged to ideas from this that seem to be broadly agreed upon.  Are there other things that we want to agree on here today?
+19:42:09 <abadger1999> *tagged two ideas
+19:42:17 <nitzmahone> "We're happy the US election is almost over and done with"
+19:42:29 * dharmabumstead applauds
+19:42:32 * bcoca moves to spain no matter what the outcome
+19:43:34 * dharmabumstead might have to marry his Scottish girlfriend so he can move.
+19:43:44 <bcoca> dharmabumstead: as for euca did not see the 'important archive not updated' till i backtracked, its only clear if you follow specific path
+19:43:47 <dminca> 0.0
+19:44:10 <abadger1999> skuznets: Anything else you need from this discussion?
+19:44:17 <bcoca> people that land on a page from google ... dont see that disclaimer
+19:44:29 * skuznets is satisfied
+19:44:32 <abadger1999> Cool.
+19:44:34 * gundalow -> offline
+19:44:34 <dharmabumstead> I've been gone from Euca for a while and I'm old, so I forgot exactly what we did
+19:44:43 <bcoca> abadger1999: so 1) stable becomes default for docs and 2)?
+19:44:54 <abadger1999> the high value here is docs for latest stable and devel with a way to switch between them.
+19:45:16 <bcoca> ah, so 2) add devel and navigation between them
+19:46:04 <dharmabumstead> Let's do a header at the top
+19:46:06 <abadger1999> yep.  don't worry about archival copies of any further back than that for now.... there's not a pain point for older versions.
+19:46:31 <abadger1999> dharmabumstead: Sounds good -- for devel?  Or for latest stable?
+19:46:31 <ryansb> yeah (similar to how django docs do it)
+19:46:42 <dharmabumstead> "You're looking at the most current stable release of the documentation. To see the devel version, click here"
+19:46:50 <abadger1999> gotcha
+19:46:51 <dharmabumstead> And vice versa
+19:47:04 <dharmabumstead> Sound workable?
+19:47:04 <ryansb> oh...they moved their selector to the footer. Same idea
+19:47:09 <abadger1999> #info banner on docs pages to point people from devel to latest stable and vice versa
+19:47:31 <bcoca> you are in <x> click <here> to go to <y>
+19:47:37 <dharmabumstead> We can do header & footer if we want. As long as it's easy to find
+19:47:41 <nitzmahone> Yeah, you gotta banner at least devel (thanks, Google). Bannering stable might be counterproductive
+19:47:51 <nitzmahone> (people get used to seeing the banner and don't actually read it)
+19:48:12 <nitzmahone> +1 to banner devel, -1 to stable
+19:48:22 <abadger1999> shaps: are you here?
+19:48:39 <bcoca> nitzmahone: change colors on banner
+19:48:47 <nitzmahone> Guessing 99+% of visitors to docs.ansible.com don't care about devel.
+19:48:49 <bcoca> devel is red, stable is black
+19:49:00 <nitzmahone> ^-- that might be ok
+19:49:14 <bcoca> nitzmahone: except when they search for specific module that only exists in devel, which is when we hear complaints
+19:49:19 <nitzmahone> (or not colored at all, just text on normal background for stable)
+19:49:25 <abadger1999> *cough*bikeshed. *cough*
+19:49:36 <bcoca> almost NEVER we hear the complaint for 'feature x in the docs', its 99% time for a module
+19:49:38 <nitzmahone> touche
+19:50:02 <bcoca> ok, not colored, but they should have green/red glow
+19:50:04 <skuznets> I actually have a list of very specific fonts I would like to see this banner written in
+19:50:07 <skuznets> Is that possible?
+19:50:23 <skuznets> I'm thinking Comic Sans, Windings, you know
+19:50:25 <bcoca> skuznets:  you can specify the list, but as with all OSS, depends on who implements it
+19:50:25 <skuznets> ;)
+19:50:36 <skuznets> bcoca: I'm ribbing the bike-shedding comment you made
+19:50:56 <nitzmahone> skuznets: sorry, noto sans for all content ever going forward. ;)
+19:50:58 <abadger1999> Okay, moving on.
+19:51:08 <abadger1999> I think gundalow needs to be present for the file discussion.
+19:51:48 <dharmabumstead> Good discussion. Thanks!
+19:51:50 <abadger1999> ControlPath directory from shaps was merged already
+19:52:10 <abadger1999> dharmabumstead: Thanks for being here to contribute!  Made this productive :-)
+19:52:24 <dharmabumstead> :)
+19:52:59 <abadger1999> Jmainguy evaluated the mysql issue... We can revisit that one again next week if he and the reporter look into it more.
+19:53:16 <abadger1999> #topic Open floor
+19:53:16 <Jmainguy> tis true
+19:53:20 <bcoca> once split we might want to add note to 'devel' side "these are things in flight,b ut you might be able to use if you really need them if you download the plugin <link to plugin loading>"
+19:53:32 <skuznets> Discussion around how to more correctly use the Ansible `Display`
+19:53:51 <abadger1999> #topic Using ansible Display - skuznets
+19:53:58 <abadger1999> Go ahead skuznets
+19:54:00 <skuznets> Source here: https://github.com/ansible/community/issues/132#issuecomment-257011653
+19:54:10 <skuznets> Basically, the current way of getting a global singleton is a little hackey
+19:54:23 <skuznets> The __main__ namespace won't be around for py3 anyway
+19:54:40 <bcoca> 'little'? .... i thought it was VERY
+19:54:48 <skuznets> And futhermore the `try: from __main__ import display` blocks that exist at the top of every file are completely and utterly broken
+19:55:03 <skuznets> Like as in they try to get a global singleton but if one doesn't exist .. they jsut all make a copy local to the file
+19:55:11 <bcoca> skuznets: that had to do with changes of the forking, most shoudl be irrelevant now
+19:55:18 <skuznets> I'm consuming Ansible through the API, not through your ABI
+19:55:30 <bcoca> ah .. then that will hurt you
+19:55:31 <skuznets> Which means I am playing __init__.py cold war with you guys
+19:55:38 <skuznets> And trying to shove a display into __main__ before you look for it
+19:55:40 <skuznets> This sucks
+19:55:52 <abadger1999> skuznets: I haven't seen any problems with using __main__ in python3.
+19:55:53 <bcoca> https://github.com/bcoca/ansible/tree/top_lvl_callback <= my vision of future, currently relying on display global
+19:56:26 <skuznets> abadger1999: PyCharm tells me __main__ as a namespace is gone in 3.5
+19:56:42 <bcoca> im fine with removing the hackey import, just need to make display a global
+19:56:42 <abadger1999> Hmm... I just updated to py3.5 I'll take a look at that.
+19:57:10 <skuznets> So this also couples with my other point
+19:57:33 <skuznets> In the CLI it's basically broken into a couple steps -- one to gather options, then one to validate them, then one to use them to run something
+19:57:49 <skuznets> Unfortunately for whatever reason we've decided to change things like the display verbosity in the __first__ step
+19:58:20 <skuznets> Which means for an API consumer (of which there are few today but will be more soon) ... there's no action if I construct an options structure and pass it in
+19:58:38 <skuznets> Since an API consumer enters the workflow _after_ the CLI options would have been parsed
+19:58:40 <sivel> We use a Singleton metaclass for declaring singletons in an app, instead of globals
+19:58:51 <sivel> something like https://gist.github.com/sivel/469ea4fc3629179b1bec0a78a09a2a93
+19:58:53 <skuznets> Singleton is easier in py3 as well
+19:58:58 <bcoca> sivel:  2.6 friendly?
+19:59:12 <sivel> bcoca: we do all this in 2.7, I would assume that metaclass would work in 2.6
+19:59:25 <sivel> but I haven't explicitly tried it
+19:59:43 <bcoca> ^ i remember someone brought up issues with that ... just cannot remember what they were
+19:59:46 <sivel> and we just set `__metaclass__ = Singleton` on the class we want to be a singleton
+20:00:52 <skuznets> Why do we want a singleton so bad?
+20:00:53 <bcoca> it calls itself as super?
+20:01:18 <skuznets> There's one pretty clear flow of data from cli ---> executor, right?
+20:01:18 <bcoca> skuznets: avoid multple forks trying to output with diff settings
+20:01:32 <skuznets> Where does the fork occur?
+20:01:40 <bcoca> cli -> executor, yes, results-> cli ... not as much
+20:01:56 <bcoca> skuznets: task_queue_manager
+20:02:04 <skuznets> Well if CLI --> TQM/executor ... and the only display changes happen at cli option parse-time...
+20:02:06 <bcoca> which also emits most output events
+20:02:24 <skuznets> How is the TQM mutating the display state?
+20:02:29 <bcoca> skuznets: if diff objects, then you have to pass options everywhere
+20:02:40 <skuznets> bcoca: sorry, unclear
+20:02:45 <bcoca> callback plugins
+20:02:57 <skuznets> sorry, still not following
+20:02:59 <bcoca> also, nothing prevents custom plugins from doing so
+20:03:07 <skuznets> Something should :)
+20:03:20 <skuznets> I would not be happy if a plugin changed the verbosity level that I as a user asked for
+20:03:22 <bcoca> not having plugins? once you execute code in process ....
+20:03:23 <skuznets> Seems silly
+20:03:35 <skuznets> I think you've lost me
+20:04:05 <skuznets> What you're saying is some Display object that encapsulates display options will be mutated after being passed to a plugin?
+20:04:11 <sivel> So, this may not be a popular comment, but why are we spending this much time talking about this?  Seeing as though for one, we don't encourage or support the use of the internal API?
+20:04:12 <skuznets> And this is why we want a global singleton?
+20:04:21 <bcoca> no, meant about display in general, but that can ALSO happen
+20:04:33 <skuznets> sivel: I see it as a health of the code-base sort of thing
+20:04:41 <skuznets> Mutable global singletons don't usually lead to anything nice
+20:04:44 <sivel> sure, but it works as is
+20:04:58 <skuznets> I mean
+20:04:59 <skuznets> Sure
+20:05:18 <skuznets> But poor code health impedes refactors and feature generation down the road
+20:05:28 <bcoca> https://github.com/bcoca/ansible/tree/top_lvl_callback <= planning changes here to filter more things through callbacks, relying on current display/main, i'm open to better way
+20:05:44 <skuznets> bcoca: I'll take a look at your diff there
+20:06:08 <skuznets> Let's table this for now with the understanding that the current impl is a massive hack and would be nice if we could improve it
+20:06:10 <bcoca> WIP, early draft of intentions
+20:06:16 <skuznets> bcoca: ack
+20:06:16 <sivel> I do however agree, that callbacks should be how things get displayed, and my pref would be that all output does happen only via callbacks
+20:06:23 <skuznets> sivel: ++
+20:06:29 <bcoca> sivel:  look at my branch
+20:06:50 <abadger1999> I'd modify that a tiny bit -- all display to stdout should go through callbacks.
+20:07:00 <bcoca> ^ moving display to be the 'callback holder' and from cli, then we can move all output to filter through that
+20:07:06 <sivel> abadger1999: yeah, I'd be fine with that
+20:07:10 <abadger1999> I think there's room to output errors to stderr still.
+20:07:25 <alikins> ideally, only MainProcess/MainThread would be writing to stderr/stdout directly, mp workers etc would queue to it so main can output it via a display callback plugin
+20:07:28 <bcoca> errors alrady go to stderr
+20:07:59 <skuznets> Yeah, we had some of this conversation last week
+20:08:09 <skuznets> Seems like we haven't much changed our minds since then :)
+20:08:26 <bcoca> alikins: that is currently the case (except for -v or debug), the issue is prefork proccesses that emit messages before callbacks are loaded
+20:09:10 <bcoca> ^ my branch loads callbacks 'early' so now we can change those to send_callback() and avoid using display directly
+20:10:03 <bcoca> biggest issue is 'loading' new callbacks as plays/roles introduce them, need to figure that out
+20:11:01 <abadger1999> bcoca: <nod> I guess I'm more meaning...  callbacks output to stdout and everything else goes to stderr (including debug and verbosity output from outside of callbacks).
+20:11:33 <abadger1999> So... What do we need to get from this?
+20:11:49 <bcoca> abadger1999: no, -v goes to stdout curently
+20:11:54 <bcoca> unless you specify stderr
+20:12:02 <bcoca> errors/warnings go to stderr by default
+20:12:15 <skuznets> abadger1999: fine with calling this "fixed" and keeping an eye on bcoca branch
+20:12:16 <abadger1999> bcoca: right... I mean in the future.
+20:12:36 <abadger1999> skuznets, bcoca: Maybe a review of bcoca's branch?
+20:12:41 <bcoca> abadger1999: easy to chagne, but i would set toggle
+20:12:57 <bcoca> my branch is FAR from working, but should give you good idea on where i'm going
+20:14:22 <bcoca> ^ totally open on new ways of enabling all code to access 'send_callback' and other display functions, global/singleton/etc
+20:14:32 <abadger1999> Cool.
+20:14:49 <abadger1999> #topic Changes to core meeting schedule
+20:15:03 <bcoca> i really dislike current display hack
+20:15:07 <abadger1999> Just an FYI... we're going to change the core meetings a bit.
+20:15:09 <bcoca> but dont have anything 'better'
+20:15:53 <abadger1999> probably merge the new module meeting in with the tuesday and thursday meeting.  Designate either a set amount of time in those meetings or one or the other as being Proposals and New modules.
+20:16:14 <abadger1999> #topic Open floor
+20:16:24 <abadger1999> Anything else people wnat to bring up?
+20:16:30 <skuznets> abadger1999: how to subscribe to those changes to keep up to date?
+20:17:21 <abadger1999> skuznets: the meeting changes?  We'll update the meeting page and the ics file:   https://github.com/ansible/community/blob/master/MEETINGS.md    https://github.com/ansible/community/blob/master/ansible_community_meetings.ics
+20:17:55 <skuznets> abadger1999: before the next meeting? or announce the changes in a meeting? should I just poll the ics file for changes? :)
+20:17:57 <abadger1999> skuznets: Note that the ics file may lag behind MEETINGS.md  a little since not everyone knows how to format ics.
+20:18:51 <abadger1999> skuznets: yes, as soon as we've decided we'll announce.... mailing list post and updating those files.
+20:19:30 <skuznets> ack
+20:19:36 <abadger1999> Cool.
+20:19:51 <abadger1999> Anyone else have anything else?  If not I'll close in 60s
+20:20:30 <bcoca> https://github.com/ansible/community/issues/139 < = seems people are adding tickets but not to agenda
+20:20:36 <bcoca> also we did not rotate agendat ticket
+20:21:51 <abadger1999> bcoca: Were we going to do that every release?  (or every month?)
+20:23:03 <bcoca> i thought every month
+20:23:04 <abadger1999> I'll ask gundalow about rotation of agenda tickets.
+20:23:08 <abadger1999> bcoca: ah okay.
+20:23:12 <abadger1999> I'll rotate it then.
+20:23:13 <bcoca> nitzmahone:  https://github.com/ansible/community/issues/95 <= we accepted this but never did anything?
+20:23:29 * bcoca is reading community for first time in looong time
+20:23:38 <abadger1999> All issues on te current ticket are resolved so it's a good time anyhow.
+20:24:01 <bcoca> not all, some of the comments have multiple issues and only partial resolution
+20:24:08 <bcoca> but they did not appear today ....
+20:24:10 <bcoca> authors
+20:26:41 <abadger1999> Ah... yeah.  I forgot the ones that were there.. I'll move those over.
+20:26:45 <abadger1999> #endmeeting

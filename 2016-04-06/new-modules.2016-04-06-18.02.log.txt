@@ -1,0 +1,269 @@
+18:02:34 <gregdek> #startmeeting new-modules
+18:02:34 <zodbot> Meeting started Wed Apr  6 18:02:34 2016 UTC.  The chair is gregdek. Information about MeetBot at http://wiki.debian.org/MeetBot.
+18:02:34 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+18:02:34 <zodbot> The meeting name has been set to 'new-modules'
+18:02:43 <gregdek> ping bcoca jimi|ansible
+18:03:33 <gregdek> So I think we have one to argue about straight off the bat. :)
+18:03:38 <rbergeron> lol
+18:03:40 <gregdek> #topic Kubernetes module
+18:03:46 <gregdek> #chair rbergeron
+18:03:46 <zodbot> Current chairs: gregdek rbergeron
+18:03:49 <gregdek> https://github.com/ansible/ansible-modules-extras/pull/1264
+18:04:37 * gregdek will wait for jimi|ansible to show, since we really need his input on this one
+18:05:14 <gregdek> While we wait... :)
+18:05:21 <jimi|ansible> yo
+18:05:25 <gregdek> Ah!
+18:05:26 <svg> Let's have a dance.
+18:05:29 <svg> oh
+18:05:29 <gregdek> OK, so. :)
+18:05:33 <MichaelBaydoun> Side note:  When we started last week we had 101 pull requests that needed our attention.  I might be nice to track stats, number at start of meeting, number at end of meeting, burn rate.
+18:05:54 <gregdek> MichaelBaydoun: I would be satisfied if we could get one new module reviewed a week, frankly.
+18:06:04 <gregdek> Still seems like we're wrestling with process.
+18:06:08 <jimi|ansible> so since Eric is the GCE maintainer and he has addressed the issues, i believe that 1264 is a 'shipit'
+18:06:18 <MichaelBaydoun> That would be a start, though it would take 2 years to get to my module
+18:06:59 <rbergeron> jimi|ansible: GCE and kubernetes... aren't the same thing?
+18:07:20 <rbergeron> or is this just only kubernetes in GCE
+18:07:39 <jimi|ansible> rbergeron: if so yeah i think it'd be k8s in gce, akin to ECS being docker in EC2
+18:08:57 <jimi|ansible> https://cloud.google.com/container-engine/docs/clusters/operations
+18:09:19 <gregdek> jimi|ansible: what about bcoca's comments, which could be interpreted as -1?
+18:09:30 <gregdek> Which brings me to the larger question:
+18:09:37 <gregdek> And, I think, the critical question:
+18:09:41 <rbergeron> yeah, okay. i think my brain defaulted to thinking this was just the straight-up kube module
+18:09:55 <jimi|ansible> i thought eric addressed the concerns here? https://github.com/ansible/ansible-modules-extras/pull/1264#issuecomment-181563692
+18:09:55 <gregdek> Is it ok to give -1 in the absence of specific guidelines saying "this is bad so don't do it"?
+18:10:12 <gregdek> Ah, you're right.
+18:10:17 <gregdek> I missed that he ripped that out.
+18:10:19 <thaumos> there is a straight up kube module rbergeron
+18:10:22 <gregdek> OK, so shipit it is!
+18:10:42 <jimi|ansible> i'll do a quick scan on it and merge if it looks sane
+18:11:15 <gregdek> Sounds good.
+18:11:26 <jimi|ansible> that's funny they call it GKE (google cluster engine)
+18:11:40 <rbergeron> it is indeed :)
+18:12:00 <gregdek> Kluster!
+18:12:05 <gregdek> So.
+18:12:15 <gregdek> Here's a thing I'd like to propose:
+18:12:50 <gregdek> Someone who shows up to this meeting to say "please review my module" gets preference.
+18:13:01 <rbergeron> for the *new module* meeting, to be specific?
+18:13:10 <gregdek> That may, at some point, mean that dozens of people show up saying "review my new module!"
+18:13:13 <gregdek> (rbergeron yes)
+18:13:18 <rbergeron> unless they have something old and festering and they come to the old module meeting :)
+18:13:21 <gregdek> But I'm ok with that class of problem.
+18:13:29 <jimi|ansible> gregdek: +100
+18:13:29 <gundalow> Good problem to have
+18:13:34 <gregdek> We have a bot to deal with old modules, LOL
+18:13:35 <MichaelBaydoun> (abstaining) since I'm one of those people
+18:13:59 <gregdek> Well, jimi|ansible gave it +100, and in the absence of a countervailing -100, I think we'll go with that. :)
+18:14:24 <gregdek> #action gregdek to create notes on standing meeting and how to show up to get help with your new module
+18:14:59 <MichaelBaydoun> I have two #1868 and #1907
+18:15:33 <gregdek> OK, that's now an issue: https://github.com/ansible/community/issues/68
+18:15:36 <gregdek> Let's turn to MichaelBaydoun.
+18:15:43 <gregdek> Which one would you like to discuss first?
+18:15:48 <MichaelBaydoun> 1868
+18:15:55 <sivel> links are nice :)
+18:16:02 <MichaelBaydoun> https://github.com/ansible/ansible-modules-extras/pull/1868
+18:16:07 <sivel> ;)
+18:16:54 <MichaelBaydoun> No response from author of duplicate module btw
+18:17:18 <gregdek> And that one is 1337
+18:17:42 <MichaelBaydoun> correct, duplicate is 1337 (leet) and written in boto2
+18:17:43 <gregdek> Yep, I see no response on that one.
+18:17:50 <gregdek> And it's boto2, correct.
+18:17:51 <gregdek> So.
+18:18:29 <gregdek> Given no response there *and* it's in boto2, I say we close that one with a nice "thank you sorry" and focus on 1868. Any objection?
+18:18:31 <gundalow> the other module write doesn't seem to be very active (11 commits over 12 months), so I don'tthink they are in the shortlist
+18:19:07 * gregdek waits a moment in case anyone objects, in the meantime people can start looking at 1868
+18:20:15 <gregdek> #action gregdek will close extras/1337 as dup of extras/1868
+18:20:19 <gregdek> OK.
+18:20:33 <gregdek> So: testing 1868.
+18:20:51 <gregdek> The biggest bottleneck we have is that we want someone besides the module submitter to test.
+18:21:04 <thaumos> @gregdek, should we at least link the other two prs linked to 1868, since they are still relevant?
+18:21:06 <gregdek> Are we committing to testing this module right now?
+18:21:13 <thaumos> I can help with testing :-)
+18:21:19 <gregdek> Other *two* PRs? I only see the one...?
+18:21:28 <MichaelBaydoun> @gundalow volunteered to help test (I believe)
+18:21:51 <gundalow> sure :)
+18:21:56 <gregdek> OK, so thaumos and gundalow can you both commit to testing extras/1868 within the next week?
+18:22:00 <thaumos> Second comment on 1337 reference https://github.com/ansible/ansible-modules-extras/pull/1338 and https://github.com/ansible/ansible-modules-extras/issues/1339
+18:22:06 <gundalow> gregdek: yup :)
+18:22:06 * gregdek looks
+18:22:07 <thaumos> I can
+18:22:24 <gregdek> #action gundalow and thaumos will test extras/1868 within the next week
+18:22:43 <gregdek> Hooray, progress. We'll see next week whether that actually worked. :)
+18:22:52 <gundalow> no presure!
+18:22:53 <gundalow> :)
+18:22:57 <MichaelBaydoun> My second pr is https://github.com/ansible/ansible-modules-extras/pull/1907
+18:23:01 <gundalow> wait
+18:23:05 <gundalow> are we happy with the code
+18:23:12 <thaumos> @MichaelBaydoun, can we hit you up for any questions offline?
+18:23:17 <gundalow> from a line-by-line review?
+18:23:19 <MichaelBaydoun> certainly
+18:23:53 <gregdek> gundalow: do we want to do a code review now or test it first? A bit of chicken/egg, or one could do code review and the other could do testing...?
+18:24:08 <gregdek> This really is kind of a hole in our process, tbh
+18:24:10 <jimi|ansible> can we rename that amazon_vpg maybe?
+18:24:15 <jimi|ansible> that is quite a lot to type
+18:24:46 <MichaelBaydoun> I started with ec2_vpg, but read module guidelines that said don't invent new acroynms
+18:24:49 <gregdek> thaumos: it seems that 1338 and 1339 are related but not dependent...?
+18:24:51 <gundalow> gregdek: I'd suggest someone that's happy with Python spends upto 5 minutes looking at it then we I'll do some manual testing
+18:25:05 <jimi|ansible> MichaelBaydoun: is that not what it's called in AWS?
+18:25:29 <MichaelBaydoun> logging in
+18:25:38 <thaumos> correct @gregdek, but I figured to have them at least referenced to show interest still.  Since that’s what the original maintainer did as well.
+18:26:20 <MichaelBaydoun> It;s called a "Customer Gateway", in the VPC Dashboard
+18:26:23 <gregdek> Looks like 1338 and 1339 are both boto2 also...? If so, we should put them in needs_revision and say "new modules should be written in boto3"?
+18:26:37 <thaumos> +1 to boto3
+18:26:55 <gundalow> does that need to go into the guidelines?
+18:27:07 <jimi|ansible> how about amazon_vpc_gateway?
+18:27:41 <MichaelBaydoun> that could be confused with virtual private gatway (my other pull request)
+18:27:42 <rbergeron> it already is in the guidelines
+18:27:47 <rbergeron> https://github.com/ansible/ansible-modules-extras/blob/devel/cloud/amazon/GUIDELINES.md
+18:27:56 <rbergeron> and VPC is already spelled out in the guidelines as well.
+18:28:01 <rbergeron> https://github.com/ansible/ansible-modules-extras/blob/devel/cloud/amazon/GUIDELINES.md
+18:28:09 <rbergeron> "vpc, elb, etc. are fine."
+18:28:26 <jimi|ansible> ok we'll keep that name then
+18:28:28 <rbergeron> the question is whether or not people are reading the amazon modules guidelines
+18:28:43 <rbergeron> "Since Ansible 2.0, it is a requirement that all new AWS modules are written to use boto3.
+18:28:46 <gregdek> It's a good question.
+18:28:46 <rbergeron> "
+18:29:22 <MichaelBaydoun> I did read the guidelines, but it was my first module.  I can see someone that wrote previous modules not reading them again
+18:29:49 <rbergeron> MichaelBaydoun: did you read the amazon guidelines, or just the regular guidelines?
+18:29:56 <rbergeron> just curious if you knew they existed or not
+18:30:12 <rbergeron> that way we know if we need to more prominently show that information somewhere
+18:30:23 <MichaelBaydoun> Module guidelines first, then stumbled on the cloud/amazon guidelines by accident
+18:30:28 <gregdek> I commented in 1338 and 1339 and put them into needs_revision
+18:30:34 <gregdek> Yeah, that's a problem. :)
+18:30:39 <rbergeron> MichaelBaydoun: awesome, thanks for that -- useful to know.
+18:31:30 <gregdek> #action gregdek will file a ticket to make AWS guidelines more prominent
+18:31:39 <rbergeron> #undo
+18:31:39 <zodbot> Removing item from minutes: ACTION by gregdek at 18:31:30 : gregdek will file a ticket to make AWS guidelines more prominent
+18:31:49 <gregdek> Hm?
+18:31:54 <rbergeron> #info new ticket created to make AWS guidelines more prominent
+18:31:55 <rbergeron> #link https://github.com/ansible/community/issues/69
+18:31:59 <gregdek> Ah. :)
+18:32:08 <gregdek> ok!
+18:32:35 <gregdek> So.
+18:32:57 <gregdek> I'm also thinking that this meeting is a *good* place for syntax review, and a *bad* place for PR testing.
+18:33:21 <gregdek> The problem is that our current new_module review process doesn't make that distinction. We had it, then we ditched it. Maybe we should bring it back again.
+18:33:53 <gregdek> Maybe it's two labels that are unique to new modules: "passes_guidelines" and "worksforme" (which is, coincidentally, what we had last time.)
+18:34:17 <gregdek> I don't like this because it's different than the process for existing modules... but the process *is* different and needs more rigor.
+18:34:31 <gregdek> If we made that change...
+18:34:42 <thaumos> @gregdek, for clarification. Should we take the testing offline, and just report back and assign the testing?  Or are you suggesting the assigning / reporting is not meant for here.
+18:34:57 <gregdek> I think that's right. Testing can be time consuming, much more than syntax checking.
+18:35:07 <jimi|ansible> thaumos: yeah offline, leave a comment and we can merge it later
+18:35:17 <gundalow> I agree, this isn't the place for hands on testing.
+18:35:20 <jimi|ansible> assuming the testing went well of course
+18:35:22 <thaumos> roger that jimi
+18:35:26 <thaumos> agreed to testing offline
+18:35:30 <thaumos> makes more sense
+18:35:31 <gundalow> thaumos: comments and any issues go into Github issue/PR
+18:35:35 <thaumos> yep
+18:35:57 <gundalow> :)
+18:36:29 <gregdek> So if we made that process change, we could also have better reporting to the community. "Hey, these are the new modules that pass guidelines but need testing!"  "Hey, these are the new modules that were tested, but need to be checked for adherence to guidelines!"
+18:36:42 <gregdek> Which might encourage people to do the right things.
+18:36:42 <gregdek> Any thoughts on that?
+18:36:44 <gundalow> DO IT
+18:37:00 <rbergeron> gregdek: I thought we weren't asking for passes_guidelines remarks anymore?
+18:37:00 <gundalow> different people have different skills. And those skills depends on the module
+18:37:04 <gregdek> (i.e. we'd create labels and bot process to support that)
+18:37:10 <rbergeron> oh, you
+18:37:11 <gregdek> rbergeron: I know. I'm proposing going back to it.
+18:37:13 <rbergeron> already
+18:37:14 <rbergeron> yeah.
+18:37:15 <rbergeron> SOOOOORY
+18:37:18 <rbergeron> I missed that line
+18:37:19 <gregdek> :)
+18:37:20 <rbergeron> carry on
+18:37:31 <gregdek> So a +1 from gundalow... :)
+18:37:38 <gregdek> any other thoughts from anyone?
+18:37:54 <rbergeron> So - I know we had thought a bit about having automated testing for guidelines
+18:37:59 <gundalow> I like the idea of someone writing (or labeling) THIS_PASSES_GUIDELINES, I_LIKE_THE_CODE, I_HAVE_RAN_THIS_AND_IT_WORKED
+18:38:06 <gregdek> rbergeron: We have some of that.
+18:38:14 <gregdek> Travis already does some of that for us.
+18:38:32 <MichaelBaydoun> I like the idea of automation for basic guideline checks
+18:38:33 <gundalow> And I'm working on getting Travis to do more of that
+18:38:38 <rbergeron> I think some of the little corner cases may need help (esp. the "naming convention" type stuff) but that's a simple "sorry, needs revision"
+18:38:52 <MichaelBaydoun> RETURN is not null, etcetera
+18:39:03 <rbergeron> and it could probably check for "if boto2, just say no"
+18:39:37 <gundalow> rbergeron: oh, good point
+18:39:39 <rbergeron> but is there stuff that isn't covered by siel's linter?
+18:39:44 <gregdek> gundalow: we'd basically have "passes guidelines" gives "passes_guidelines" label, "worksforme" gives "worksforme" label, and "needs revision" would put it back into needs_revision. We'd need to work out details about how to take away passes_guidelines or worksforme labels.
+18:39:45 <gundalow> should I raise an issue in https://github.com/sivel/ansible-testing
+18:39:51 <gregdek> sivel's linter can be expanded.
+18:39:52 * gundalow hifives rbergeron
+18:40:32 <sivel> if there are ideas for new things to have the linter do, then submit issues
+18:40:43 <rbergeron> gregdek: i do like the idea of passes_guidelines as a "first contribution" type of thing, though
+18:40:44 <gundalow> hey sivel :)
+18:40:47 <gregdek> I think that's what gundalow is doing right now :)
+18:40:51 <gundalow> yup
+18:41:02 <sivel> I don't know what all of those things are :)
+18:41:11 <rbergeron> but i don't like the idea of providing any more confusing blockers
+18:41:16 <gregdek> I know.
+18:41:31 <sivel> and I am still working on getting ownership transferred, but still dealing with legal process
+18:41:33 <gregdek> I like the simplicity of "shipit", but for new modules, it's just not descriptive enough.
+18:41:53 <rbergeron> agreed
+18:42:12 <thaumos> agreed to that
+18:42:16 <gregdek> jimi|ansible: thoughts? Do you care? :)
+18:42:30 <gundalow> if shipit means I've personally checked everything (guidelines, syntax review, ran the module) I think it's a bit too wider label
+18:42:55 <gregdek> gundalow: that breadth is ok for modules that already exist, when there is a maintainer of record, and we can trust the maintainer to do that.
+18:43:05 <gregdek> But I think that breadth does not work for new modules.
+18:43:12 <gundalow> ah, yes for modules that already exist that's fine
+18:43:44 <jimi|ansible> so, what would be better?
+18:43:51 <gregdek> Good question.
+18:44:11 <jimi|ansible> multiple labels? passes_docs, passes_code_review.. etc?
+18:44:18 <gregdek> Maybe.
+18:44:33 <gregdek> It would allow us to see more granular progress.
+18:44:56 <rbergeron> Or be more obvious to people who want to come and do reviews of one type or another.
+18:44:58 <gundalow> Final review before merging is always done by a person (Final Reviewer), I think one of the questions is "How can they ensure that all the boxes have been ticked"
+18:45:00 <gregdek> Which would in turn encourage people. "Hey, this one is almost done! If you test it, the other works has been done and checks out!"
+18:45:24 <gundalow> yup
+18:45:35 <jimi|ansible> let it be written, let it be done
+18:45:43 <gundalow> jimi|ansible: :)
+18:45:48 <gregdek> Does that mean +1? :)
+18:45:51 <gundalow> Lets try it out for a bit and see how it works
+18:46:11 <gregdek> ok.
+18:46:24 <gregdek> I'll write this all up before next meeting.
+18:46:59 <gregdek> It will entail some pretty big bot changes, so it may be a while before all this takes full effect.
+18:47:35 <gundalow> sure, though if the labels exist people with powers can just add them manually
+18:47:52 <gregdek> gundalow and thaumos, thanks for agreeing to test MichaelBaydoun's module.
+18:47:53 <gundalow> ?
+18:47:58 <gregdek> gundalow: yes, that's true.
+18:48:11 <thaumos> You are welcome sir
+18:48:30 <gregdek> We need to make the bot more robust to detect when a PR has had its label changed and Do The Right Thing (tm).
+18:48:40 <gregdek> (notify, etc.)
+18:48:59 <gregdek> The current workflow, while better, is still quite brittle in places.
+18:49:10 <gregdek> Anyway.
+18:49:22 <gundalow> 11 minutes left
+18:49:30 <gregdek> #action gregdek to write up new new module guidelines before next meeting
+18:50:06 <gregdek> Shall we try our new process in the remaining 11 minutes and code review a new module PR?
+18:50:34 <MichaelBaydoun> I'm game
+18:51:04 <gregdek> How about this poor soul?
+18:51:05 <gregdek> https://github.com/ansible/ansible-modules-extras/pull/35
+18:51:50 <gregdek> version_added is clearly wrong (a very common problem and one we should consider)
+18:51:54 <jimi|ansible> (and yes that meant +1)
+18:52:04 <gundalow> oh, I know people at Couchbase, I think some of them have used Ansible. I'll poke it in there direction
+18:52:04 <gregdek> (since people cannot predict when their module will be merged)
+18:52:13 <gregdek> Great! Thanks gundalow
+18:52:19 <MichaelBaydoun> agreed, version added is just a guess
+18:52:34 <MichaelBaydoun> Then when it's not added, the docs are wrong, and someone tries to use it
+18:52:42 <MichaelBaydoun> Then a pull request comes in to fix the docs
+18:52:55 <gregdek> Yeah.
+18:53:14 <gregdek> This is a problem not only for new modules, but for new features in existing modules.
+18:53:21 <gregdek> And should probably be part of the build process.
+18:54:09 <gregdek> jimi|ansible: do we have any kind of mechanism to add {{current_release}} and have this data populated at release time?
+18:54:20 <gregdek> Might we want such a mechanism?
+18:54:51 <gregdek> Because we could just ask people to put in a placeholder, and Travis checks for the existence of the placeholder.
+18:55:47 <MichaelBaydoun> Release automation would need to do a one time variable substitution and merge into the code base
+18:56:23 <gundalow> aye, it's part of the merge in process
+18:56:40 <gregdek> gundalow: it is now?
+18:56:46 <gregdek> Or it should be?
+18:56:52 <gundalow> should be
+18:57:11 <gundalow> sorry, that was terrible english
+18:57:23 <gregdek> irc isn't always great for that lol
+18:57:45 <gundalow> As the British deligate, I feel like I should do better
+18:58:21 <gregdek> "delegate"
+18:58:24 <gregdek> LOL
+18:58:31 <gregdek> (sorry couldn't resist)
+18:58:41 <gregdek> anyway. we're out of time.
+18:58:52 <gundalow> when talking about spelling, always make at least one missstake
+18:58:54 <gundalow> anwyasy
+18:59:00 <gregdek> #action gregdek will propose current_release placeholder
+18:59:10 <gregdek> Some progress. This meeting's a tough one. :)
+18:59:12 <gregdek> Thanks all.
+18:59:17 <gregdek> #endmeeting

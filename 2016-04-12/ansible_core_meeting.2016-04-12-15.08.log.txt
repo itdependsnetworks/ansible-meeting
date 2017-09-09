@@ -1,0 +1,131 @@
+15:08:12 <abadger1999> #startmeeting Ansible Core Meeting
+15:08:12 <zodbot> Meeting started Tue Apr 12 15:08:12 2016 UTC.  The chair is abadger1999. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:08:12 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:08:12 <zodbot> The meeting name has been set to 'ansible_core_meeting'
+15:09:12 <abadger1999> jimi|ansible, gregdek, nitzmahone, rbergeron, newtMcKerr, Qalthos, etc.. Who all's here?
+15:09:25 * gregdek hullos
+15:09:45 * bcoca waves
+15:09:50 <abadger1999> #chair bcoca gregdek
+15:09:50 <zodbot> Current chairs: abadger1999 bcoca gregdek
+15:10:13 <abadger1999> resmo: I know you were interested in this one yesterday.
+15:11:50 <gregdek> Do we have a particular/standing agenda?
+15:12:12 * gregdek notes that this is probably a good meeting to review what's in ansible/proposals...
+15:12:17 <kamsz> morning guys
+15:12:27 <bcoca> gregdek: yes, start an agenda
+15:12:42 <bcoca> kamsz: hi
+15:12:59 <abadger1999> I've notified #ansible and #ansible-devel that meeting has started.
+15:13:26 <abadger1999> gregdek: Sounds like a good idea -- would you like to start us off?
+15:13:56 <abadger1999> You're chaired so go ahead and take the floor.
+15:14:05 <gregdek> LOL
+15:14:24 <gregdek> It's my meeting now, is it? :)
+15:14:35 <bcoca> first point of meeting, set correct dates times?
+15:14:51 <bcoca> seems like this time was not intended for today but for thrusday, today we have another at 3pm
+15:15:16 <gregdek> Right.
+15:15:17 <abadger1999> Alright, that works for me.
+15:15:20 <gregdek> https://github.com/ansible/community/blob/master/MEETINGS.md
+15:15:38 <gregdek> I believe the times there are correct, yes?
+15:15:45 <gregdek> 1900 UTC == 1500 EDT?
+15:15:49 <gregdek> For Tuesday?
+15:15:50 <jimi|ansible> times are correct, but this is not the right time
+15:15:53 <jimi|ansible> https://groups.google.com/forum/#!topic/ansible-project/fUrfZGgQ13I
+15:15:55 <gregdek> Okeydoke.
+15:15:58 <jimi|ansible> 3pm EST Tue
+15:16:02 <gregdek> THEN I GUESS WE'RE ADJOURNED!
+15:16:07 <abadger1999> :-)
+15:16:09 <bcoca> ^ that is what i went off of
+15:16:26 <bcoca> 1400 UTC <== 11am EST
+15:16:55 <daemoniz> my clock says it is 1516 UTC
+15:17:14 <daemoniz> is my clock broken oh god help
+15:17:31 <sivel> 1500EST, not UTC :)
+15:17:31 <jimi|ansible> lol
+15:17:33 <bcoca> edt/est problem?
+15:17:43 <bcoca> TIMEZONES!!!!
+15:17:44 <gregdek> Right. The 1400 meeting is me doing triage of old issues -- which I've been doing in the background. I'll be removing that meeting, since it's really just a cleanup task, no meeting required for it.
+15:17:56 <jimi|ansible> dangit, the meeting starts in 3 hours and 43 minutes
+15:18:00 <bcoca> confusgion
+15:18:05 <abadger1999> Right.
+15:18:11 <abadger1999> #topic Open floor
+15:18:13 <bcoca> so  ... remove the meeting from the MEETINGS?
+15:18:15 <jimi|ansible> i put EST/EDT in the announcement for a reason...
+15:18:17 <gregdek> Just did.
+15:18:18 <daemoniz> timezones are stupid everything in UTC forever
+15:18:22 <abadger1999> Anyone who showed up want to talk about something or shall we close down and meet back here in a little under 4 hours?
+15:18:28 <gregdek> daemoniz: plus all the ones
+15:18:32 <daemoniz> ♥
+15:18:33 <gundalow> bah, lrn2timezone
+15:18:33 <robinroth> I have 3 PRs that I would like to discuss; actually 1 to discuss and 2 to get merged :)
+15:18:39 <gundalow> (unless it's me that has it wrong)
+15:18:58 * jimi|ansible goes back to trying to announce 2.0.2 rc4...
+15:19:02 <robinroth> in 4h is not a good time for me (Europe)
+15:19:03 <bcoca> he
+15:19:17 <abadger1999> robinroth: Okay, go ahead... I can look at at least one of them now and we can get to the other later today or on thu.
+15:19:22 <robinroth> https://github.com/ansible/ansible-modules-core/pull/3254
+15:19:27 <robinroth> git depth
+15:19:48 <abadger1999> #topic git depth PR: https://github.com/ansible/ansible-modules-core/pull/3254
+15:20:08 <resmo> hi
+15:20:11 <gregdek> robinroth: for future reference, the thursday meeting will be at this time
+15:20:18 * gregdek wanders afk, ping if needed
+15:21:19 <bcoca> what does depth currently do then?
+15:22:06 <robinroth> currently the initial clone respects depth (pull only last N commits), but following updates don't and fetch the full history
+15:22:16 <robinroth> the bug for this is https://github.com/ansible/ansible/issues/14954
+15:22:47 <robinroth> depth is also used in ansible-pull to only fetch the last commit, but this bugs breaks this on the second run
+15:24:53 <resmo> hmm
+15:28:12 <robinroth> resmo: any concern?
+15:29:30 <abadger1999> robinroth: I thought there might be a closed bug that had to do with that but I'm not sure... I only see an open bug atm: https://github.com/ansible/ansible-modules-core/issues/527
+15:29:58 <abadger1999> open bug -- so I have no idea if it would be affected by changes to that code.
+15:30:40 <abadger1999> robinroth: Do you have integration tests for this?  We probably want those so that if we do further work on tagging we don't cause this to regress.
+15:30:45 <resmo> robinroth: no
+15:31:38 <robinroth> abadger1999: for the depth option there are no tests yet, I can add those and also have a look at the issue you mentioned
+15:32:38 <abadger1999> robinroth: Cool.  If you make some integration tests I think this would be good to merge.
+15:32:53 <resmo> #3254 LGTM
+15:33:13 <abadger1999> We'll just need to be watchful for breakage in the way people use tags when we do.
+15:33:39 <jimi|ansible> sooo... are we having this meeting twice today then?
+15:33:40 <resmo> abadger1999: sure, we need integration tests for sure
+15:33:49 <gundalow> #chairs
+15:33:55 <gundalow> #chair
+15:34:00 <abadger1999> jimi|ansible: I am but no need for you to.
+15:34:37 <abadger1999> I jsut didn't want to leave contributors who showed up because I posted to the irc channel high and dry.
+15:34:39 <bcoca> jimi|ansible: this is a test run?
+15:34:52 <abadger1999> #chair gundalow resmo
+15:34:52 <zodbot> Current chairs: abadger1999 bcoca gregdek gundalow resmo
+15:35:17 <sivel> ALL THE CHAIRS!
+15:35:25 <gundalow> abadger1999: Thanks, I wanted to make sure that we added any links in
+15:35:37 <bcoca> im actually using a bench ...
+15:36:15 <abadger1999> robinroth: Cool.  I think there's time to look at one more and then we could look at your others on Thursday.
+15:36:40 <robinroth> custom ismount function in mount module: https://github.com/ansible/ansible-modules-core/pull/2737
+15:36:55 <abadger1999> #topic Custom ismount function https://github.com/ansible/ansible-modules-core/pull/2737
+15:36:59 <gundalow> #action robinroth to see if https://github.com/ansible/ansible-modules-core/pull/3254 effects https://github.com/ansible/ansible-modules-core/issues/527 is so add tests
+15:37:37 <robinroth> this is an issue in upstream python, that the ismount function unnecessarily fails with permission issues
+15:38:03 <robinroth> I submitted a patch to python, but they take forever to integrate and the fix should also be there for older versions
+15:38:34 <robinroth> the module_utils code is in 2.0.1 already, but it's not used, this is what this PR wants to change
+15:38:39 <jimi|ansible> just want to make sure we're doing it twice if we do it, since we advertised the later time, i have no objection to it
+15:38:51 <bcoca> well, we did merge the module_utils part, this does not look wrong
+15:39:18 <abadger1999> This looks good to me.
+15:39:19 <gundalow> jimi|ansible: I'll be available at the correct time. I agree it needs to be twice today
+15:39:27 <abadger1999> Do we want to cherry-pick it to stable-2.0 as well?
+15:39:50 <bcoca> abadger1999: for possible 2.0.3, yes, but need to wait for 2.0.2 to be out
+15:40:02 <abadger1999> k .
+15:40:37 <gundalow> Just need to remember to cherry-pick change to ansible *and* ansible-modules-core
+15:41:06 <abadger1999> gundalow: From my comments (a long time ago now...) I think the module_utils change is already cherry-picked
+15:41:35 <abadger1999> yep, module_utils/ismount.py is there already.
+15:41:56 <gundalow> cool
+15:42:18 <abadger1999> #action abadger1999 to merge this to devel now.  Will cherry-pick to stable-2.0 once 2.0.2 is out the door.
+15:42:45 <abadger1999> robinroth: If I should forget to cherry-pick, don't hesitate to ping me in #ansible-devel to remind me :-)
+15:43:07 <robinroth> abadger1999: sure
+15:43:11 <abadger1999> Thanks.
+15:43:36 <abadger1999> #topic Meeting end
+15:43:56 <abadger1999> Any burning comments that people have before we end?
+15:44:16 <robinroth> there is this third PR: https://github.com/ansible/ansible/pull/15221
+15:44:16 <robinroth> but I guess it can wait
+15:44:25 <robinroth> thanks for the comments/merge/...
+15:44:32 <gundalow> Is there a short description about the purpose of this meeting verses new modules?
+15:44:37 <abadger1999> <nod> Yeah - if it's okay to wait for Thursday, we'll get to it then.
+15:45:18 <gundalow> Is this the place to push up requests that require the Core Team's input?
+15:45:23 <abadger1999> gundalow: I think new modules are okay here if we have nothing else but we should concentrate first on:
+15:45:47 <abadger1999> issues and PRs that people who are willing to come to the meeting want to present.
+15:46:27 <abadger1999> Old PRs that need attention from us (as opposed to from the submitter)
+15:46:43 <abadger1999> gundalow: Yes -- definitely the place for getting Core team input.
+15:47:34 <gundalow> cool, I'll raise a PR to update https://github.com/ansible/community/blob/master/MEETINGS.md
+15:47:49 <abadger1999> Cool.
+15:47:56 <abadger1999> Alright see you all in a few hours.
+15:47:59 <abadger1999> #endmeeting

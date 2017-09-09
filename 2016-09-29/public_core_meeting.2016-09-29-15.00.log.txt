@@ -1,0 +1,273 @@
+15:00:06 <gundalow> #startmeeting Public Core Meeting
+15:00:06 <zodbot> Meeting started Thu Sep 29 15:00:06 2016 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:00:06 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:00:06 <zodbot> The meeting name has been set to 'public_core_meeting'
+15:00:06 <dminca> meeting ?
+15:00:26 <gundalow> #chair abadger1999 bcoca jtanner nitzmahone
+15:00:26 <zodbot> Current chairs: abadger1999 bcoca gundalow jtanner nitzmahone
+15:00:30 <dminca> and me
+15:00:36 <jtanner> hi
+15:00:49 <dminca> I've added a subject in there to discuss
+15:00:53 <gundalow> cool
+15:01:00 <gundalow> #Agenda is https://github.com/ansible/community/issues/126 feel free to add anything
+15:01:17 <gundalow> #topic setup_module: [Manjaro Linux] https://github.com/ansible/ansible-modules-core/issues/4996
+15:01:20 <gundalow> !link https://github.com/ansible/ansible-modules-core/issues/4996
+15:01:29 <gundalow> #link https://github.com/ansible/ansible-modules-core/issues/4996
+15:01:34 <bcoca> we are in freeze, so new features need to wait
+15:01:35 <gundalow> dminca: Over to you :)
+15:01:38 <dminca> yes
+15:01:51 <dminca> so I was having issues with the `setup` module on Manjaro 16
+15:02:30 <dminca> I've even tried running other playbooks that worked before and didn't require a specific OS
+15:02:59 <bcoca> have you tried with current devel? we did a lot of fixes for encoding issues
+15:03:24 <dminca> bcoca tbh I haven't tried with the devel version
+15:03:34 <dminca> does it have support for Arch distros ?
+15:03:40 <dminca> I mean it's fully compatible?
+15:04:03 <bcoca> arch has been 'supported' for along time, 'fully compatible' ... well, that depends on what you mean
+15:04:03 <Qalthos> dminca: I run Arch, and no problems here
+15:04:25 <dminca> Qalthos could you try running my playbook? I've listed it in the issue
+15:04:37 <dminca> I've also did a --syntax-check and it's valid
+15:05:07 <Qalthos> dminca: how did you install ansible? pacman or virtualenv, or ...?
+15:05:18 <dminca> Qalthos pacman
+15:05:24 <Qalthos> huh
+15:05:37 <dminca> pacman -S ansible
+15:05:55 <jtanner> is this about 4996?
+15:06:04 <dminca> jtanner yes
+15:06:48 <bcoca> what is version of  /usr/bin/python ?
+15:06:55 <dminca> 2.7
+15:07:15 <bcoca> @abadger1999 ?
+15:07:27 <jtanner> is ansible_python_interperter set?
+15:07:40 <dminca> it's has default configs
+15:07:47 <dminca> haven't changed anything after install
+15:08:10 <jtanner> has ansible ever worked on that box?
+15:09:01 <dminca> yes, if I ping via `ansible -m ping host` it works
+15:09:16 <dminca> problem is with `ansible-playbook`
+15:09:43 <jtanner> what do you get from ansible -m setup host ?
+15:10:04 <dminca> the JSON with Full data about OS, HDD, Processor etc...
+15:10:11 <dminca> IP's...
+15:10:55 <jtanner> ansible -m setup localhost
+15:11:01 <Qalthos> dminca: I've got it
+15:11:24 <dminca> jtanner yes, I've ran ansible localhost -m setup` and it printed the JSON
+15:11:38 <Qalthos> dminca: you're on Arch, so your /usr/bin/python is python3
+15:11:44 <dminca> aaaa
+15:11:51 <Qalthos> you need to set ansible_python_interpreter on localhost
+15:12:20 <dminca> Qalthos I see now. Ok got it. And could you please provide info on how to do that setup?
+15:12:30 <Qalthos> ansible is installed to python2, but calls python to do work
+15:12:35 <jtanner> so when you said /usr/bin/python was 2.7 ... where did you get that number from?
+15:12:48 <dminca> can't I just change the /usr/bin/python to point to /usr/bin/python2.7 ?
+15:12:55 <Qalthos> in your inventory file, just put ansible_python_interpreter==python2 at the end of the line
+15:12:58 <bcoca> actually, if you DONT create a localhost entry in your inventory, it should default to sys.executable, which should be python2.7
+15:13:01 <dminca> via `python --version`
+15:13:19 <Qalthos> sorry ,only one equal
+15:13:24 <bcoca> dminca: changing /usr/bin/python on arch will probably criple your system
+15:13:28 <Qalthos> keyboard got excited
+15:13:36 <jtanner> dminca: what is "which python" output?
+15:13:42 <Qalthos> dminca: yes, please don't do that
+15:13:56 <bcoca> check the shebang of the ansible executable
+15:14:00 <dminca> ok bcoca Qalthos, thanks for warning
+15:14:21 <dminca> jtanner `/usr/bin/python`
+15:14:26 <abadger1999> sorry -- was scrolled back without realizing it.
+15:15:14 <jtanner> ok, something doesn't match up then
+15:15:34 <dminca> ok, will try what you guys suggested and will print info on issue
+15:15:36 <jtanner> you agreed that /usr/bin/python was v3 on arch, but you've said that /usr/bin/python --version outputs 2.7
+15:15:55 <shaps> Hi guys, I'm here too
+15:16:47 <dminca> jtanner, yes it outputs 2.7
+15:17:47 <dminca> I didn't say it's version 3
+15:17:49 <jtanner> so in the ticket, i see the module is executed with /usr/bin/python ... so i doubt explicitly setting the interpreter for localhost to /usr/bin/python is going to change anything
+15:18:15 <jtanner> 11:11:38      Qalthos | dminca: you're on Arch, so your /usr/bin/python is python3
+15:18:19 <jtanner> 11:11:44       dminca | aaaa
+15:18:24 <jtanner> 11:11:51      Qalthos | you need to set ansible_python_interpreter on localhost
+15:18:30 <jtanner> 11:12:20       dminca | Qalthos I see now. Ok got it. And could you please provide info on how to do that setup?
+15:18:43 <jtanner> to me, that looks like you were agreeing that it is v3
+15:19:01 <jtanner> and the rest of the conversation from our side assumes the same
+15:19:05 <dminca> ok
+15:19:09 <bcoca> ^ pardon interruption, but htis is more #ansible pertinent talk, we should table for now and continue there later
+15:19:21 <dminca> I want to try what Qalthos said when I get home
+15:19:35 <dminca> I'm at work now
+15:20:03 <bcoca> this does not seem like a bug or merge we need to do, mostly looks like executing python3 when we dont support it
+15:20:45 <dminca> ok, you may continue with Agenda. Thank you guys, and sorry for misinterpretation
+15:20:55 <bcoca> np
+15:20:57 <gundalow> Thanks
+15:21:00 <gundalow> right, next is...
+15:21:14 <gundalow> crawler: You around?
+15:21:40 <bcoca> https://github.com/ansible/ansible/pull/17535
+15:21:50 <bcoca> ^ i agree with abadger1999, this is not something we want
+15:22:05 <gundalow> #topic https://github.com/ansible/ansible/pull/17535
+15:22:25 <crawler> Hi gundalow , yes im here
+15:23:14 <gundalow> crawler: cool, we'll do you item shortly
+15:23:32 <jtanner> skip_post_default_settings is a little bit unintuitive at first
+15:23:53 <bcoca> i see no reason for it, if you don't want None fields posted ... skip them?
+15:24:03 <bcoca> if you dont want None as a default, set a diff one
+15:24:26 <bcoca> this looks like a very intrusive change to accomodate a programming style external to the module
+15:25:03 <bcoca> that code is complicated enough, i would be very remiss to add stuff like this
+15:25:17 <jtanner> i think its' trying to prevent creating a default if it was given, right?
+15:25:18 <crawler> gundalow, sure i had a nice chat regarding my item last night with gregdek and jimi|ansible, so i believe everything is settled
+15:25:25 <jtanner> if it wasn't given
+15:25:40 <bcoca> jtanner: default default is None, yes, this is trying to avoid that
+15:25:55 <bcoca> because instead of looking at params he probably wants to just shove the whole thing into api call
+15:26:27 <jtanner> yeah
+15:26:49 <jtanner> would probably work better if agrument specs could have subparsers like argparse allows
+15:27:24 <jtanner> but when we lump ALL optional args into the same dict, it's hard to know what was needed and what wasn't
+15:27:28 <bcoca> its not hard to handle on module side, i would prefer to keep shared code simpler, its already very complicated and fragile
+15:27:47 <abadger1999> Maybe... but the question to me is need... There's no need so making the arg validation more complex doesn't seem like a good idea.
+15:27:53 <abadger1999> bcoca: +1
+15:27:57 <bcoca> agreed
+15:28:53 <jtanner> this is the first time i've seen someone ask for it
+15:30:02 <abadger1999> I've thought about it before but I've never run into a case where it was actually necessary.  (ie: what if someone wants to pass in None with a meaning?... but no one ever does).
+15:30:02 <bcoca> so -1 x2 and 1 maybe, anyone else?
+15:30:26 <bcoca> easy enough for anyone to create an 'omit' value and then filter that before api call
+15:30:38 <bcoca> ^ or just filter out None
+15:31:05 <jtanner> make the args raw, and put argparse in your module to process the raw =)
+15:31:32 <abadger1999> Yep.  I gave him some sample code that filters None based on a second schema.
+15:31:33 <bcoca> jtanner: that is already an option, they dont need to use the module args parsed
+15:31:41 <bcoca> its just that we require it for merging into repo
+15:31:54 <jtanner> yeah, it was kinda a jk
+15:32:53 * gundalow returns. Is there more to be discussed on https://github.com/ansible/ansible/pull/17535 ?
+15:33:00 <dminca> #agreed
+15:33:52 <abadger1999> I think we're leaning towards rejecting it.  Do we need an official vote or something?
+15:34:17 * gundalow votes 0 (as I don't have a view)
+15:34:27 <abadger1999> -1
+15:34:28 <bcoca> i closed it
+15:34:37 <gundalow> NEXT!
+15:34:39 <bcoca> my tally was -2 + 0
+15:34:42 <shaps> ^ that counts -5
+15:34:45 <abadger1999> hehe :-)  bcoca is much more efficient than I am ;-)
+15:34:48 <jtanner> -eleventy
+15:34:58 <dminca> lol
+15:35:09 <gundalow> #topic https://github.com/ansible/ansible/pull/17753 Ignore error when setting permissions fail due to EPERM #17753
+15:35:18 <gundalow> #info https://github.com/ansible/ansible/pull/17753
+15:35:57 <gundalow> privateip (Peter) just ping me about this before the meeting and said "really need this for 2.2", then went offline
+15:36:00 <bcoca> no, i would at most make that a swtich and still emit a warning
+15:36:26 <bcoca> cannot ignore an error like that in most cases
+15:36:39 <bcoca> user has to explicitly say 'its ok'
+15:37:12 <jtanner> a per host switch?
+15:37:31 <abadger1999> How are we even reaching that code?
+15:38:01 <bcoca> file does not exist
+15:38:32 <bcoca> also a reminder, we support POSIX systems, vfat .. not posix
+15:38:42 <abadger1999> Wait... if it's vfat... selinux isn't needed either..
+15:38:52 <abadger1999> Why can't the calling code just catch the exception?
+15:39:05 <bcoca> if the error is due to permissions?
+15:39:14 <bcoca> we ignore it and leave file with incorrect permissions?
+15:39:42 <abadger1999> we don't fail json there... we just let the OS's exception propogate up the call stack.
+15:39:55 <abadger1999> So the module ought to be able to catch the exception and decide it's okay.
+15:40:14 <abadger1999> because the module knows that it is for a device which has a vfat filesystem.
+15:40:16 <bcoca> most modules dont expect an exception here
+15:40:32 <bcoca> but other parts of code do push it
+15:40:47 <bcoca> i would still make it an explicit option when calling atomic_move
+15:40:58 <bcoca> actually, atomic_move makes no sense on vfat
+15:41:05 <bcoca> as renames are not atomic either
+15:41:12 <bcoca> so if using vfat, dont even call this function
+15:41:34 <abadger1999> gundalow: are these modules specific to the device or generic modules?
+15:42:12 <bcoca> This obscures errors that might happen for other reasons, not just `vfat`, this should be an explicit option or just avoid calling atomic_move when dealing with `vfat` devices, as it is irrelevant in those contexts.
+15:42:27 <bcoca> ^ my current response to ticket
+15:42:28 <gundalow> abadger1999: I'm not sure
+15:42:31 <abadger1999> k
+15:42:51 <gundalow> It feels like there needs to be an "if vfat" in there
+15:42:58 <abadger1999> I guess we'll need more info from privateip as we don't understand why atomic_move() would be needed on these devices.
+15:43:10 <bcoca> its not, it wont work on vfat
+15:43:18 <bcoca> as there are no atomic moves in vfat
+15:44:32 <Qalthos> #action follow up with privateip about atomic moves
+15:44:56 <bcoca> i updated ticket to needs_revision
+15:45:09 <gundalow> Qalthos: Are you ok to discuss this with Peter?
+15:45:25 <dminca> may I go ?
+15:45:46 <gundalow> dminca: Thanks for attending :)
+15:45:54 <abadger1999> dminca: Sure.  If the intereseting parts of the meeting for you is over there's no need to stick around for the whole thing.
+15:46:02 <abadger1999> Bye!
+15:46:10 <dminca> thank you also for suggestions guys. Bye all, take care :)
+15:46:10 <Qalthos> gundalow: sure
+15:46:36 <gundalow> Qalthos: Thanks :) I'm on PTO tomorrow
+15:46:51 <gundalow> #topic Open Floor
+15:47:17 <abadger1999> gundalow: crawler's agenda item
+15:47:25 <crawler> Hi abadger1999
+15:47:32 <crawler> i think there is no need
+15:47:38 <abadger1999> ah okay.
+15:47:43 <crawler> since i spoke last night with jimi and gregdek about it
+15:47:45 <gundalow> abadger1999: Good pot :)
+15:47:49 <gundalow> abadger1999: Good spot :)
+15:47:55 <abadger1999> Cool.
+15:47:56 <crawler> but for the reference here is the chat log https://meetbot-raw.fedoraproject.org/ansible-meeting/2016-09-28/community_working_group.2016-09-28-19.02.log.html
+15:47:57 <gundalow> though we already discussed it
+15:47:57 <shaps> "good pot"
+15:48:12 <gundalow> meh, typing is hard
+15:48:20 <shaps> too late :)
+15:49:04 <shaps> anyway, I added the ansibot 'not a bug' item in the agenda
+15:49:07 <gundalow> Anyone got anything else?
+15:49:10 <shaps> if anyone cares to discuss it
+15:49:15 <bcoca> shaps: as in 'feature_idea'?
+15:49:16 <abadger1999> https://github.com/ansible/ansible/pull/17768
+15:49:24 <shaps> bcoca: yes
+15:49:28 <bcoca> shaps: its already there
+15:49:36 <shaps> is it?
+15:49:40 <abadger1999> Need to decide if we want to make that official.
+15:49:42 <bcoca> we allso have docs_ related
+15:50:02 <gundalow> #topic ansibot to label non-bug issues
+15:50:07 <shaps> bcoca: is there a kind of list of those things?
+15:50:22 <bcoca> abadger1999: last paragraph is the change in workflow
+15:50:31 <bcoca> shaps: its a dropdown on the tickets
+15:50:56 * gundalow needs to finish of this testing report, so if someone else can take over the remaining part of the meeting that would be great
+15:51:00 <gundalow> #chairs
+15:51:00 <gundalow> #chair
+15:51:00 <zodbot> Current chairs: abadger1999 bcoca gundalow jtanner nitzmahone
+15:51:07 <gundalow> Thanks :)
+15:51:08 <bcoca> shaps: https://github.com/ansible/ansible/labels
+15:51:19 <abadger1999> gundalow: will do.
+15:51:49 <shaps> So just adding the label in the comment makes ansibot add it?
+15:52:18 <bcoca> shaps: no, that only works for some, look at ansibot docs
+15:52:43 <bcoca> we also manually change them, the main labelling happens from bot depending on what the requester submitted as the issue type
+15:53:35 <bcoca> abadger1999: we should be cherry picking already (what we do now) before the RC gets cut, vs revisiting after
+15:54:43 <shaps> yeah, anyway this is really if that label would be useful to you guys. I do spend some time on issues and comment if believe it's not a bug
+15:55:20 <bcoca> @jtanner  a not_bug bot command?
+15:55:58 <bcoca> abadger1999: do we agree with the workflow? should we get more people do discuss? I think we should have more of core here to get 'quorum'
+15:56:48 <abadger1999> bcoca: yeah -- the docs PR doesn't go into what changes are candidates to receive the older release milestones.  So it's pretty much just adding a  review burden at the time we cut a release.
+15:57:26 <bcoca> and removing the explicit 'no new features in RC' for an implicit 'only bugs'
+15:58:14 <bcoca> abadger1999: im not against having a 'rereview of PRs', just think we need broad agreement to add it to process
+15:58:32 <bcoca> specially jimi|ansible as he does 90% of this work
+15:58:43 <abadger1999> yeah.  Esp.^U  You took the words out of my mouth.
+15:59:08 <abadger1999> So... leave the decision to jimi|ansible?
+16:00:50 <bcoca> he, no, also want to offload from him, but i do give hiim 'veto', i think we shoudl discuss among all of us
+16:01:48 <abadger1999> We'd need to add milestones for each of the minor releases instead of just milestone-2.1
+16:02:02 <bcoca> why?
+16:02:40 <abadger1999> otherwise when we get to 2.1.4 we'd be rereviewing the tickets that we'd already evaluated for 2.1.1 .2 and .3
+16:02:41 <bcoca> ah, if we take that 'review' process, we need bookeeping to know what is where
+16:02:45 <abadger1999> yeah
+16:03:21 <bcoca> ... really dislike that ....
+16:03:32 <bcoca> but dont see a way around it if we add that requirement
+16:03:53 <bcoca> abadger1999: problem, only 1 milestone per ticket
+16:04:05 <bcoca> so if in 2.2 and 2.1.2 ? backport label?
+16:04:16 <abadger1999> milestone probably ends up being "oldest applicable release"
+16:04:37 <abadger1999> it is a little funky thinking about 2.2.0 vs 2.1.3
+16:04:51 <abadger1999> but I think that would end up milestoned as 2.1.3
+16:05:01 <abadger1999> as we always assume things are in devel/latest
+16:05:07 <jimi|ansible> what am i deciding?
+16:05:10 <bcoca> hmm, not always
+16:05:21 <bcoca> jimi|ansible: https://github.com/ansible/ansible/pull/17768
+16:05:35 <bcoca> ^ workflow on RC, adding an extra 'review PRs to the process'
+16:06:01 <bcoca> which also requires adding minor milestones, 2.1.2
+16:06:29 <bcoca> my point is that since you do most of the work for relaese, we shoudl not decide w/o you
+16:07:46 <jimi|ansible> ok, i'm not sure what more good that does than the "affects_*" labels, since we're not fixing every bug that's there as-is, if this is limited to PRs maybe
+16:08:31 <abadger1999> affects is overbroad... like the mount bugs we just reverted.
+16:08:50 <abadger1999> they affect-2.1 but we're only going to fix them in 2.2.x
+16:09:01 <bcoca> teh current 'judgement calls' works well for us, but not very transparent to users
+16:09:49 <jimi|ansible> abadger1999: that's not entirely true of things which only affect 2.1 but were fixed in 2.2 already
+16:10:02 <jimi|ansible> and not always through something which can be backported
+16:10:42 <bcoca> so i would add a marking (milestone works as abadger1999 described) but not the process of reviewing eveyr PR (should have happened on merge to devel)
+16:11:02 <abadger1999> jimi|ansible: yes... although we would consider the issue being fixed in both 2.1 and 2.2... it only needed a new PR to fix it in 2.1 though.
+16:12:39 <bcoca> abadger1999: no need for new PR if we just update with minor milestone
+16:12:44 <bcoca> ^ either way works for me
+16:13:12 <bcoca> only issue i see is when we 'backport to stable-' but we dont do a release
+16:13:25 <bcoca> ^ our optimistic, jic backport
+16:16:06 <abadger1999> 2.1-next"" and rename that milestone to 2.1.3 when we actually make the release?
+16:17:31 <bcoca> +1
+16:17:46 <bcoca> 2.1.-possible ...
+16:17:51 <bcoca> 2.1-mebbe
+16:18:00 <bcoca> 2.1.-nopromisses
+16:18:33 <abadger1999> :-)
+16:18:39 <bcoca> ^ but that can be misleading since someone lookigng at 2.2 but sees 2.1.-next ... will not be sure if fix made it into 2.2
+16:19:23 <bcoca> so 'bakcport' + 2.2 , if 2.1.3, happens we look at 2.2 + backport and reassign to 2.1.3?
+16:20:00 <abadger1999> eh... I'd rather assign the milestone when it is merged... front-load some of the work.
+16:21:06 <bcoca> but if 2.1-next is never converted to 2.1.3?
+16:22:21 <abadger1999> then no big deal.  it's there if people want to run from a checkout.
+16:22:59 <abadger1999> I don't even mind a 2.1.3 milestone that never gets turned into a 2.1.3 release.
+16:23:11 <abadger1999> It mirrors our internal thought process about a release.
+16:26:01 <abadger1999> Anything else on this for now?  Do we want to ruminate on it and decide on tuesday?
+16:28:00 <abadger1999> Okay, I'll close the meeting in 60s
+16:29:09 <abadger1999> #endmeeting
