@@ -1,0 +1,458 @@
+16:00:14 <gundalow> #startmeeting Network Working Group
+16:00:14 <zodbot> Meeting started Wed Sep 13 16:00:14 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:00:14 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:00:14 <zodbot> The meeting name has been set to 'network_working_group'
+16:00:22 <jmcgill298_> he was trying to use a disguise
+16:00:48 <itdependsnetwork> ^^ I'm glad there will be no context of that on the meeting logs :)
+16:01:03 <gundalow> #cahir ganeshrn kedarX privateip rcarrillocruz trishnag itdependsnetwork jmcgill298_
+16:01:10 <gundalow> #chair ganeshrn kedarX privateip rcarrillocruz trishnag itdependsnetwork jmcgill298_
+16:01:10 <zodbot> Current chairs: ganeshrn gundalow itdependsnetwork jmcgill298_ kedarX privateip rcarrillocruz trishnag
+16:01:50 <gundalow> KeeranM: mcgonagle nahun pdellaert seansible stacywsmith swetha thaller You around?
+16:01:58 <mcgonagle> Yup, ready to go
+16:02:08 * stacywsmith waves
+16:02:20 <KeeranM> hola :)
+16:02:43 <rcarrillocruz> heya
+16:03:00 <rcarrillocruz> (typing from phone)
+16:03:05 * ganeshrn waves
+16:03:24 <gundalow> Just waiting for a few mins for people to join
+16:03:35 * Qalthos 🌊🌊
+16:03:45 * bearrito searches for coffee
+16:04:15 <kedarX> 👋
+16:04:28 <gundalow> #chair mcgonagle stacywsmith KeeranM rcarrillocruz Anil ogenstad ktbyers bearrito
+16:04:28 <zodbot> Current chairs: Anil KeeranM bearrito ganeshrn gundalow itdependsnetwork jmcgill298_ kedarX ktbyers mcgonagle ogenstad privateip rcarrillocruz stacywsmith trishnag
+16:04:29 <trishnag> hi
+16:04:33 <ktbyers> Hello.
+16:04:43 <ogenstad> Hi
+16:04:54 <Anil> hi
+16:04:56 <privateip> i think we are going to need a bigger room ;)
+16:04:56 <ktbyers> Hey, Patrick.
+16:04:56 <gundalow> Think we are just missing skg-net
+16:05:08 <ogenstad> Hi Kirk :)
+16:05:16 <z3nbr3w> Hello!
+16:06:24 <gundalow> #chair saichint mikewiebe z3nbr3w
+16:06:24 <zodbot> Current chairs: Anil KeeranM bearrito ganeshrn gundalow itdependsnetwork jmcgill298_ kedarX ktbyers mcgonagle mikewiebe ogenstad privateip rcarrillocruz saichint stacywsmith trishnag z3nbr3w
+16:06:28 <gundalow> OK
+16:06:36 <gundalow> #topic General Updates
+16:06:47 <gundalow> #chair skg-net
+16:06:47 <zodbot> Current chairs: Anil KeeranM bearrito ganeshrn gundalow itdependsnetwork jmcgill298_ kedarX ktbyers mcgonagle mikewiebe ogenstad privateip rcarrillocruz saichint skg-net stacywsmith trishnag z3nbr3w
+16:06:57 <gundalow> #info Agenda as always, https://github.com/ansible/community/issues/110
+16:07:23 <gundalow> #info We will create a fresh agenda after 2.4.0 has been released
+16:07:34 <gundalow> #info Great to see many at Contributor Summit and AnsibleFest people last week. Videos of presentations are being processed, will let you know when they are available online
+16:07:39 <gundalow> #info 2.4RC3 will be released today/tomorrow. Please take the time to test this. We are very close to releasing 2.4.0. We can only fix what we know is broken.
+16:07:46 <gundalow> Please test ^^^^^^^^^^
+16:07:48 <gundalow> :)
+16:08:21 <gundalow> #topic 2.5 Planning
+16:08:28 <gundalow> #info Draft Network roadmap https://github.com/ansible/community/wiki/Network:Core-roadmap-2.5
+16:08:34 <gundalow> #info The above will be moved to https://github.com/ansible/ansible/tree/devel/docs/docsite/rst/roadmap once created (likely this week).
+16:09:03 <gundalow> So if you look next week and wonder where Network:Core-roadmap-2.5 has gone check out docs/docsite/rst/roadmap
+16:09:07 <gundalow> #info Will stay in DRAFT status for a few weeks, we welcome your feedback in #ansible-network
+16:09:14 <gundalow> #action everybody please review the draft roadmap and give feedback via #ansible-network
+16:09:43 <gundalow> I know we want through some of the 2.5 features with people that joined us in person in San Francisco last week
+16:09:51 <gundalow> #info As discussed in Contributors Summit Proposals will be created for the large blocks of network work. This will form as a place to track the spec (including user interface) and provide a framework for discussion.
+16:09:55 <gundalow> #info Proposals haven't been created yet, they will be added as comments on to the meeting agenda (please ensure you've subscribed)
+16:10:18 <gundalow> So thank's for the suggestion of using Proposals, will help a lot
+16:10:39 <gundalow> and allow you all to have visability into what we are planning *before* we start coding
+16:10:45 <gundalow> #cahir rcarrillocruz-we
+16:10:52 <gundalow> #chair rcarrillocruz-we
+16:10:52 <zodbot> Current chairs: Anil KeeranM bearrito ganeshrn gundalow itdependsnetwork jmcgill298_ kedarX ktbyers mcgonagle mikewiebe ogenstad privateip rcarrillocruz rcarrillocruz-we saichint skg-net stacywsmith trishnag z3nbr3w
+16:11:00 <gundalow> Ok, any questions?
+16:11:21 <ktbyers> What is the expected release date on 2.4 (roughly)?
+16:11:29 <stacywsmith> Will the proposals and/or roadmap be updated with whose doing the coding on a specific feature?
+16:12:30 <gundalow> ktbyers: Assuming no more blocking bugs this rc3 may end up being the release
+16:13:18 <gundalow> stacywsmith: Once the proposals have been created we will link to them from the ROADMAP_2.5.rst *and* wiki. The proposal will say who's working on it
+16:13:26 <gundalow> if that's what you were asking
+16:13:56 <stacywsmith> Yes. Thanks. Just helpful to know who to go to if you have more specific questions on a specific feature/proposal.
+16:13:57 <mikewiebe> gundalow: We have a few more PR's coming today/tomorrow for bugs in nxos* modules.
+16:13:59 <gundalow> and for relevant parts we will link PRs from the proposal so you'll be able to follow the progress
+16:15:12 <gundalow> stacywsmith: Sure, was a good question. As a matter of house keeping I'd like to request that you don't message individuals directly, use comments in GitHub and #ansible-network will mean more people are in the loop and means someone else can provide feedback if someone is on holiday
+16:15:38 <gundalow> mikewiebe: nod. thanks for the heads up
+16:16:08 <gundalow> Qalthos: trishnag Please note the above from mikewiebe
+16:16:33 <trishnag> mikewiebe: ack.
+16:17:37 <gundalow> Any other questions on that?
+16:17:44 <ogenstad> A practical question, this might be obvious to those who attend meetings more often than I do. But I'm having trouble finding any type of agenda from https://github.com/ansible/community/issues/110. How do we decide what to talk about here? :)
+16:18:03 <ogenstad> The comments since the last meeting?
+16:18:16 <gundalow> ogenstad: Yup
+16:18:31 <gundalow> and I ~~strike though~~ stuff that's been done
+16:18:51 <gundalow> Once 2.4.0 hasbeen released I'll create a fresh agenda ticket
+16:18:59 <gundalow> Open to suggestions on how to improve that
+16:20:08 <ogenstad> Can't say that I have a solution of the top of my head, but something which was easily scanable would be good.
+16:20:16 <gundalow> nod
+16:20:47 <gundalow> Any other questions, otherwise I'll hand over to privateip
+16:21:59 <gundalow> #chair caphrim007
+16:21:59 <zodbot> Current chairs: Anil KeeranM bearrito caphrim007 ganeshrn gundalow itdependsnetwork jmcgill298_ kedarX ktbyers mcgonagle mikewiebe ogenstad privateip rcarrillocruz rcarrillocruz-we saichint skg-net stacywsmith trishnag z3nbr3w
+16:22:24 <gundalow> #topic Use of Proposals
+16:23:00 <gundalow> #info As stated earlier we (Core Network Team) will use proposals to capture spec & discussion for larger blocks for work for 2.5
+16:24:05 <gundalow> #info Ideas for larger blocks of what that the Community has can also be raised as Proposals for consideration for Ansible 2.6+. I'd suggest that before creating a proposal however you add it onto the meeting agenda so we can discuss it a bit first
+16:24:17 <gundalow> Does that sound reasonable to people?
+16:24:28 <Anil> yes
+16:24:40 * stacywsmith agree
+16:24:50 <ogenstad> Sounds good
+16:25:00 <skg-net> +1
+16:25:05 <mikewiebe> +1
+16:25:08 <gundalow> Means we are all following the same process, so should be easier for everyone
+16:25:11 <gundalow> woot
+16:25:54 <ktbyers> And there is going to be some sort of a monthly IRC conversation where we have more discussions about proposals?
+16:26:07 <privateip> ktbyers: it will be weekly
+16:26:10 <privateip> but yes
+16:26:17 <privateip> we will discuss them here every week
+16:26:26 <gundalow> #agreed Community will raise feature ideas in IRC meeting then after short discussion create in github.com/ansible/proposals/ and reference in meeting agenda
+16:26:58 <gundalow> #agreed Core Network Team will use Proposal process to allow discussion before coding starts
+16:27:30 <gundalow> #agreed Proposals will be discussed in weekly in IRC.
+16:28:54 <gundalow> How exactly (what proposal we talk about each week) is to be decided, depends how quickly they get raised and how long it takes to talk through them
+16:29:14 <gundalow> Any other questions on that?
+16:29:35 <privateip> just a couple of quick comments
+16:30:11 <gundalow> Sure
+16:30:14 <privateip> the goal is not to make proposals the long pole in the tent but to iterate and implement (even if we have to defer some more adv feature(s))
+16:30:45 <privateip> 2.5 will be a bit of an anomaly in that we will iterate and implement in the same cycle
+16:31:14 <privateip> but proposals should be ongong things used for and schedule into future releases
+16:31:22 <privateip> in other words, if you have an idea, dont wait
+16:31:30 <Anil> We plan to bring in support another range of switches (ENOS) into the Ansible suit. Should that be included in the proposal ?
+16:31:52 <privateip> Anil: what do you mean by support?
+16:32:14 <privateip> more modules?
+16:32:20 <Anil> I will bringin modules
+16:32:23 <gundalow> New platform?
+16:32:33 <Anil> yes new Network OS
+16:33:00 <privateip> no a proposal is not needed for that effort
+16:33:20 <privateip> proposals are designed to communicate features that are horizontal across modules and platforms
+16:33:36 <gundalow> Anil: http://docs.ansible.com/ansible/latest/dev_guide/developing_modules_in_groups.html though for network s/ansible-devel/ansible-network/g in that document
+16:33:36 <privateip> you are welcome to write a proposal for new modules if you want feedback
+16:33:52 <Anil> Ok..got it
+16:34:17 <gundalow> For new network modules speak to us *before* developing then we can help guide you in the right direction
+16:34:24 <gundalow> and hopefully save you a lot of effort
+16:34:38 <Anil> sure
+16:35:00 <gundalow> :)
+16:35:20 <privateip> fyi same goes true for proposed changes to things like argument additions, deletions, modifications, etc
+16:35:32 <privateip> no proposal needed, just drop onto the weekly irc agenda for discussion
+16:35:48 <Anil> sure
+16:35:54 <privateip> but for bigger features such as Session Tracing ... there will be a proposal
+16:36:20 <privateip> or declarative intent (we will back into that one a little as we do the common lib) but there will be a proposal written
+16:37:24 <pdellaert> gundalow: sorry, am at VMworld and had a meeting :s
+16:37:36 <gundalow> pdellaert: nps
+16:37:49 <gundalow> Meeting is logged :)
+16:37:52 <pdellaert> :)
+16:37:56 <ogenstad> I'd like to get a solution for better testing of the networking modules.. During the meeting I pulled down the latest version from Git and noticed that the modules for ASA was completely broken again.
+16:37:56 <pdellaert> checking it
+16:38:27 <ogenstad> Looks like it's just this line in the asa.py action plugin "from ansible.module_utils.aruba import asa_provider_spec
+16:39:00 <gundalow> ogenstad: We are making good progress with the Distributed CI work. If we can get an ASA appliance in AWS we could add that into Shippable
+16:39:05 <ogenstad> I'm guessing it's some editor autocomplete error..
+16:39:12 <gundalow> Which I couldn't get workign before
+16:39:51 <gundalow> urgh, yes that sounds like autocomplete fail
+16:40:28 <gundalow> We are working on getting pylint/pep8 stricter so it should help detect that type of issue
+16:40:29 <privateip> @ganeshrn: are you here?
+16:40:39 <ganeshrn> yup
+16:40:49 <ganeshrn> ah that's a typo
+16:40:54 <ganeshrn> i will fix it
+16:40:57 <privateip> yeah i think it was your last PR
+16:40:59 <ganeshrn> it is in devel 2.5
+16:41:04 <ganeshrn> yes
+16:41:25 <pdellaert> gundalow: i'll keep checking with my internal people to see if we can automate the spin up of a Nuage appliance for testing through an API (so an API to spin up our management appliance, so the nuage modules can be tested on the management appliance)
+16:41:48 <gundalow> pdellaert: Ace
+16:42:18 <pdellaert> currently, integration tests are using a Nuage API simulator, which has some basic functionalities (was fun writing that one ;))
+16:42:24 <ganeshrn> ogenstad: i will ping you after fix is in
+16:42:38 <privateip> any other comments / questions / concerns / suggestions / etc on proposals and what they are and how to use them?
+16:42:58 <rcarrillocruz> It would be awesome if you could do that, and get you on DCI pdellaert
+16:43:18 <Anil> I have one issue 29018 to discuss
+16:43:48 <rcarrillocruz> ogenstad, is that ASA appliance from VIRL?
+16:44:13 <pdellaert> gundalow: we still need to add the Nuage integration tests to be automated, i think, right? We had a discussion on this, and as in the aliases file it does not mention the right tags, it wasn't part of the automated tests when something changed on the module or on the base ansible part
+16:44:14 <ogenstad> I created PR #30293 to fix the typo.
+16:44:40 <ganeshrn> ogenstad: Thanks
+16:44:57 <ktbyers> I am a little bit concerned on the weekly meetings and not having a separate meeting that is more long-term oriented and specifically discusses proposals/long-term.
+16:44:59 <gundalow> Anil: Yup it's on the agenda, thanks for the reminder, are you around for another 30mins or so?
+16:45:10 <ogenstad> @rcarrillocruz, no I have physical ASAs at home and an ASAv under VMware. Not Virl.
+16:45:20 <gundalow> pdellaert: Sure, lets speak more about that once 2.4.0 is out the door
+16:45:33 <gundalow> ktbyers: That's a good point
+16:45:35 <pdellaert> gundalow: sure
+16:45:38 <ktbyers> Basically, I am worried we repeat where we repeat focus on near-term issues and lose site of anything happening on long-term.
+16:45:39 <ogenstad> I think @ktbyers concern could be addressed with better agendas for each meetings.
+16:45:42 <rcarrillocruz> ack, wondering if I could put that on DCI
+16:45:47 <Anil> gundalow: yes.. I can be..
+16:46:09 <gundalow> Ok, so lets discuss the forum for medium and long term
+16:46:21 <rcarrillocruz> Did you pull ASAv off VIRL or from Cisco site?
+16:46:27 <rcarrillocruz> Which version is
+16:46:38 <rcarrillocruz> ogenstad ^
+16:46:49 <gundalow> #topic Keeping track of Medium and long term goals
+16:47:12 <gundalow> #info So we've agreed on Proposals, though how would people to go through these
+16:47:38 <gundalow> We could, for example, say the first meeting every month is to discuss longer term plans
+16:47:55 <ktbyers> Yes, I would prefer something like that...
+16:47:55 <gundalow> ktbyers: You raise an important question
+16:48:17 <ogenstad> It's from Cisco's site. Not VIRL. I don't think the version matters though. The only issue with using virtual devices would be testing with context. But most parts should be easily testable.
+16:48:26 <gundalow> What type of things would you invision we go through in the monthly meeting?
+16:48:27 <ktbyers> I think it would be helpful to have this session once a month more oriented towards proposal discussion, proposal review.
+16:48:45 <rcarrillocruz> Asking as we have VIRL, not site access
+16:48:54 <rcarrillocruz> Will try putting that on DCI
+16:49:27 <privateip> i have a concern that once a month doesn't iterate fast enough if there is a large difference of opinions unless we agree to have more frequent break outs if/when that happens
+16:49:52 <gundalow> Weekly: Issues and proposals for the current release
+16:50:06 <gundalow> Monthly: Proposals and ideas for future releases
+16:50:54 <ktbyers> Yes, but if weekly means we don't discuss them, then it is just a repeat of what we just had...
+16:51:34 <gundalow> chipping away at $future_releases each month may allow us to start Ansible n+1 release with a set of proposals (and therefore specs) for that release. Rather than starting a release and only at that point starting to plan how the feartures wil work
+16:51:59 <privateip> yeah that is exactly were we need to get to
+16:52:16 <gundalow> So looking at 2.5
+16:53:31 <ktbyers> But maybe more will be captured in the proposal online (so it will be easier to see provide feedback in that forum also)...so in fairness have to see how that works also.
+16:53:37 <gundalow> weekly: Alternate through proposals for (dev: network libraries tidy up; Session tracing; loop/with_ for aggregates; ...)
+16:53:58 <privateip> works for me ... we can adjust in flight if we need to
+16:54:01 <gundalow> Monthly: Review proposals for ideas for 2.6-2.7
+16:54:09 <gundalow> Sure, and that's the important thing here
+16:54:18 <gundalow> we keep on adjusting it based on feedback
+16:54:58 <gundalow> I realise it's a bit difficult to plan how this will look when we've not got an example propsal for a networking item, nor have most of you been through the Proposal Process for any Core features before
+16:55:21 <ogenstad> >REQ: improve error handling / feedback to user (unable to open shell)
+16:55:25 <gundalow> ktbyers: You happy with the weekly/monthly split, give it a go and adjust
+16:55:29 <ogenstad> Perhaps that one? :)
+16:55:33 <rcarrillocruz> Heh
+16:55:42 <gundalow> Good, I'm glad people are reading the wiki
+16:56:04 <ktbyers> Yes, that sounds good.
+16:56:07 <gundalow> That will defo have a proposal. It will also be part of the connnection: {cli,eapi,nxapi} etc work
+16:56:10 <gundalow> cool
+16:56:40 <gundalow> #agreed Weekly IRC meetings will focus on issues & proposals for the current release
+16:57:04 <gundalow> #agreed Monthly meetigns will focus on reviewing proposals for future releases
+16:58:11 <gundalow> So examples of things for the monthly meetings would be creatign & discussing proposals for bgp declarative intent modules
+16:58:18 <gundalow> Any other questions on that
+16:59:36 <privateip> i will get the 2.5 proposals submitted by weeks end for the following
+16:59:40 <privateip> session tracing
+16:59:44 <privateip> common network lib
+16:59:48 <privateip> declarative intent lib
+17:00:57 <gundalow> One they are created I'll add the URLs to the above proposals onto the agenda ticket, so please ensure you have subscribed (button on right hand side) to https://github.com/ansible/community/issues/110
+17:01:40 <gundalow> Ok. so that's the top of the hour
+17:01:51 <gundalow> We have a few things left on the agenda:
+17:01:56 <gundalow> 1) Decide on Ansible version to remove top level credential arguments ansible/ansible#28984
+17:01:59 <gundalow> The decided version needs to be added in deprecation warning.
+17:02:02 <gundalow> 2) Connection issues https://github.com/ansible/ansible/issues/29018
+17:02:14 <gundalow> 3) Some nxos issues, we can do that in channel after the meeting has finished
+17:02:21 <gundalow> 4) Open floor for people that stuff have things
+17:02:34 * gundalow isn't sure how much time people have left
+17:03:20 <gundalow> Lots to go through today after last week, I expect normal meetings to involve less house keeping and more time on the technical aspects
+17:03:27 <gundalow> and less of me talking :)
+17:04:16 <gundalow> #topic deprecation of top level credentials & transport
+17:05:11 <gundalow> #info As most of you know use of username:, password:, transport:, timeout: at the top-level (i.e. not under `provider:`) will trigger a deprecation notice.
+17:05:28 <gundalow> #info We currently haven't told people when that will be removed
+17:05:34 <gundalow> Thoughts?
+17:05:51 <gundalow> This is an important topic as it effects how playbooks are written
+17:06:03 <gundalow> ganeshrn: privateip any more context you'd like to provide?
+17:06:18 <caphrim007> gundalow: is that something enforced in core for all modules?
+17:06:28 <ogenstad> So it will be possible to use username under a provider dictionary but not as a parameter by itself?
+17:06:35 <caphrim007> or something one needs to put in their argument_spec
+17:06:44 <privateip> ogenstad: yes thats right
+17:06:56 <stacywsmith> Is this change introduced in 2.4 or 2.5?
+17:07:02 <ogenstad> Ok, good. I thought it was going to be removed completely.
+17:07:12 <privateip> no provider is going nowhere
+17:07:24 <Anil_> All my my modules will be. So keep me posted because all my 17 modules have to be changed
+17:07:31 <gundalow> [WARNING]: argument username has been deprecated and will be removed in a future version
+17:07:31 <privateip> stacywsmith: we added provider in 2.2 or 2.3 i believe
+17:07:35 <gundalow> [WARNING]: argument transport has been deprecated and will be removed in a future version
+17:07:44 <gundalow> ^ Is what people will see in 2.4
+17:07:52 <ganeshrn> xxxx_command:
+17:07:52 <ganeshrn> commands: show version
+17:07:52 <ganeshrn> host: “{{ inventory_hostname }}”
+17:07:52 <ganeshrn> username: xxxx
+17:07:52 <ganeshrn> password: xxxx
+17:07:53 <stacywsmith> the warning is added in 2.4?
+17:08:03 <privateip> sorry yes
+17:08:05 <privateip> 2.4
+17:08:17 <privateip> normal deprecation cycle is four releases
+17:08:19 <ktbyers> I am pretty sure warning is in 2.3.
+17:08:25 <stacywsmith> I think last week it was mentioned that support would be maintained for 4 releases.
+17:08:26 <privateip> the question on the table is do we need longer
+17:08:26 <gundalow> ^ code from ganeshrn will cause the `[WARNING]:` lines from above when run in 2.4
+17:08:33 <gundalow> Some deprecations were added in 2.3
+17:08:39 <ktbyers> Okay...
+17:08:47 <gundalow> deprecation cycle is 4
+17:09:08 <privateip> we are currently committing to support through 2.8
+17:09:23 <privateip> question for this group is that long enough or do we need longer?
+17:09:24 <stacywsmith> I think that's sufficient.
+17:09:51 <ogenstad> When will 2.8 be released? :)
+17:09:52 <ktbyers> I think that is fine.
+17:09:58 <ogenstad> Two years?
+17:10:22 <privateip> roughly i suppose
+17:10:26 <rcarrillocruz> Y
+17:10:40 <gundalow> At least one, most likely two years
+17:10:42 <ogenstad> Seems long enough.
+17:10:58 <saichint> @gundalow just added 2 items to discuss for nxos PRs. I added them before, I dod not see them now. just added again
+17:11:21 <gundalow> Voting time. Are people happy that top-level credentials will be removed in 2.9?
+17:11:25 <gundalow> +`1
+17:11:29 <privateip> +1
+17:11:32 <ogenstad> Also it's quite a small change a playbook will break during the first run and it's easy to downgrade Ansible. It won't have any impact on the network and that's the important thing.
+17:11:38 <rcarrillocruz> +1
+17:11:41 * abadger1999 notes that he has to say something as release manager for 2.4 too.
+17:11:46 <skg-net> +1
+17:11:46 <ogenstad> +1
+17:11:48 <stacywsmith> +1
+17:11:51 <ktbyers> +1
+17:12:02 <Anil_> +1
+17:12:11 <gundalow> abadger1999: Yup :) FYI NXOS is mikewiebe saichint (and maybe others)
+17:12:19 <gundalow> #chair
+17:12:19 <zodbot> Current chairs: Anil KeeranM bearrito caphrim007 ganeshrn gundalow itdependsnetwork jmcgill298_ kedarX ktbyers mcgonagle mikewiebe ogenstad privateip rcarrillocruz rcarrillocruz-we saichint skg-net stacywsmith trishnag z3nbr3w
+17:12:25 <gundalow> Please be voting
+17:12:46 <bearrito> +1
+17:12:56 <saichint> +1
+17:13:01 <mikewiebe> +1
+17:13:07 <kedarX> +1
+17:13:56 <ganeshrn> +1
+17:14:00 <gundalow> #agreed top-level credentials will be supported untill 2.8 and deleted in 2.9
+17:14:22 <gundalow> #action ganeshrn to update deprecation message to add in removed version paramater
+17:14:28 <gundalow> Excellent, thanks
+17:14:33 <gundalow> #chair abadger1999
+17:14:33 <zodbot> Current chairs: Anil KeeranM abadger1999 bearrito caphrim007 ganeshrn gundalow itdependsnetwork jmcgill298_ kedarX ktbyers mcgonagle mikewiebe ogenstad privateip rcarrillocruz rcarrillocruz-we saichint skg-net stacywsmith trishnag z3nbr3w
+17:14:36 <gundalow> abadger1999: all yours
+17:14:39 <gundalow> feel free to #topic
+17:15:04 <abadger1999> #topic bugfix timeline for 2.4.0rc3 andf.4.0 final
+17:15:28 <KeeranM> +1
+17:15:29 <abadger1999> mikewiebe: So since you asked about it, but really for everyone.... I was plannning on rc3 being the potential last rc.
+17:15:34 <gundalow> mikewiebe saichint Qalthos trishnag this is important to you
+17:15:41 <gundalow> and anyone else planningbugfixes
+17:15:43 <gundalow> like skg-net
+17:16:04 <abadger1999> which should mean that I would not accept bugfixes beyond rc3 (unlesss there was a big enough regression that needed to be fixed)
+17:16:45 <abadger1999> But I want to figure out how I could accommodate you getting more bugs squashed if I can.
+17:17:01 <ogenstad> rc2 was the one that was just released?
+17:17:09 <mikewiebe> abadger1999: We have a list of issues we have been working through with Qalthos, trishnag and gundalow to get 100% pass rate.. as of now we are at 83%.. some PRs still to merge
+17:17:10 <gundalow> ogenstad: correct
+17:17:13 <abadger1999> What's your timeframe for getting the last bugfixes in?  I'd be willing to slip rc3 by up to 24 hours.
+17:17:32 <mikewiebe> Ideally we would be at 100% before 2.4 is official
+17:17:51 <abadger1999> ogenstad: It was released on Monday
+17:18:07 <mikewiebe> We have a few yet to open PR's for modules that are broken that are must fixes for 2.4
+17:18:15 <ogenstad> Ok, I just sent in a PR but if that's merged soonish it should be in rc3.
+17:18:31 <abadger1999> mikewiebe: yeah... this release is mostly timebased rather than feature/bugfix based.  So I can't base on 100% bugfixes.. I can give you more time, though.
+17:18:37 <gundalow> ogenstad: link, just so I can track it
+17:18:55 <ogenstad> https://github.com/ansible/ansible/pull/30293
+17:19:16 <gundalow> mikewiebe: If you are happy the integration tests pass for you we can ignore the test update PRs and just focus on reviewing the bug fix PRs
+17:19:27 <abadger1999> mikewiebe: possibilities are that I slip rc3 by up to 24 hours (tomorrow at noon US pacific TZ).  Or that I release an rc4, probably on Saturday.
+17:19:53 <mikewiebe> abadger1999:  I have always been told it was quality based not time based?
+17:20:12 <gundalow> mikewiebe: As a general rule what you've stated is true
+17:20:44 <abadger1999> mikewiebe: I was told a few days ago that this release we have a time based deadline :-(  (I had also been assuming that we would be doing a quality based release as per normal)
+17:21:32 <gundalow> https://github.com/ansible/ansible/pulls?utf8=%E2%9C%93&q=is%3Aopen%20is%3Apr%20label%3Anetworking%20milestone%3A2.4.0%20%20nxos
+17:21:40 <mikewiebe> abadger1999: We have a cisco/ansible meeting tomorrow morning... would you be willing to join to discuss?
+17:21:44 <gundalow> nxos + milesteon:2.4.0
+17:22:10 <mikewiebe> I planned to walk through the remaining issues
+17:22:51 <gundalow> If we can ensure that what mikewiebe considers to be release blocking has milestone:2.4.0 on that should help with visabilt
+17:23:10 <abadger1999> mikewiebe: drawback of using rc4 for your fixes are that you probably won't be able to get any fixes to the fixes in if they cause regressions.  drawback of slipping rc3 is that it doesn't give people much time to test, report, and fix if I need to release an rc4 for other bugs.
+17:23:27 <ganeshrn> ogenstad: PR 30293 is not required to backport to 2.4
+17:24:05 <abadger1999> mikewiebe: I probably can't... I'm seeing a dentist about a tooth.... We'd have to decide whether to slip rc3 or plan on your changes needing an rc4 today anyhow.
+17:24:12 <mikewiebe> gundalow: I will double check that list to make sure all remaining must-fixes are visible
+17:24:13 <dag> regarding top-level credentials disappearing, how does that affect other network-specific modules, like ACI
+17:24:27 <ogenstad> Em, I just worked from devel.
+17:24:33 <dag> (it probably doesn't, but what's the long-term view on other modules not in this sphere of current focus)
+17:26:18 <mikewiebe> abadger1999: I would prefer an rc4 if that gets us to Saturday... I don't thing we will get all must fixes in place in 24hours
+17:26:30 <abadger1999> mikewiebe: <nod> Okay col.
+17:26:48 <abadger1999> So my plan will be to release rc3 today (starting the process 1.5 hours from now)
+17:26:56 <gundalow> +1 to rc3 today
+17:26:59 <abadger1999> I'll plan on an rc4 on Saturday.
+17:27:10 <abadger1999> mikewiebe: Let me know if your fixes are complete earlier.
+17:27:15 <ogenstad> @ganeshrn, Ah I see what you mean.
+17:27:33 <gundalow> Getting RC3 out today will give more people time to get use it and report back any issues
+17:27:46 <abadger1999> mikewiebe: do you guys work weekends?  If not, I'll start the rc4 release in the morning, when I get up.
+17:27:48 <ganeshrn> ogenstad: https://github.com/ansible/ansible/blob/stable-2.4/lib/ansible/plugins/action/asa.py#L29
+17:27:54 <mikewiebe> gundalow and Qalthos: will you two be at the cisco/ansible meeting tomorrow?
+17:28:00 <ganeshrn> stable-2.4 doesn't have those changes
+17:28:33 <Qalthos> mikewiebe: yup
+17:28:53 <abadger1999> I'll also announce (via the rc3 announcement) that I am accepting bugfixes for an rc4 on Saturday but I'll be much stricter about which bugfixes I accept.
+17:29:11 <gundalow> mikewiebe: Yes
+17:29:40 <ogenstad> My bad, wrong branch. Will be needed in devel though.
+17:29:46 <mikewiebe> gundalow and Qalthos: ack - we can scrub remaining issue then and plan for rc4
+17:29:55 <abadger1999> mikewiebe: You guys can get your things in even though I'm being stricter just make sure I know that it's one of your PRs that is being requested to cherry-pick (I suppose that's something for Qalthos and gundalow to make sure they mention when they ping me the PR)
+17:30:00 <ganeshrn> ogenstad: yeah, i will merge it after CI is green
+17:30:32 <mikewiebe> abadger1999: ack
+17:30:36 <abadger1999> Excellent.
+17:30:40 * abadger1999 is happy to have a plan
+17:30:47 <gundalow> mikewiebe: +1, please freel free to keep on using this IRC channel after the meeting has finished. Once we agree on what needs milestone:2.4.0 that should help, and I can update that today
+17:31:07 <gundalow> #agreed RC3 will go out today as planned
+17:31:33 <gundalow> #agreed mikewiebe to provide #ansible-network with a list of other PR that need milestone:2.4.0 adding
+17:32:05 <gundalow> #agreed RC4 will be cut on Saturday which will include the next set of NXOS fixes
+17:32:08 <mikewiebe> I have to drop but will make sure add any remaining issues or PR's to the list.
+17:32:32 <kedarX> mikewiebe: please comment on #29620, if you think that should be in 2.4
+17:32:39 <rcarrillocruz-we> mikewiebe: at what time is that meeting for tomorrow? asking as I don't have it on my calendar and scheduled a CI meeting at 1PM UTC
+17:32:39 <gundalow> mikewiebe: cool, just don't assume we will see comments on GitHub (we get a lot of email) so feel free to ping teh list via email
+17:32:53 <mikewiebe> kedarX: it def should be.. will go through your comments today
+17:33:17 <rcarrillocruz-we> need to know if there's overlap to move my meeting
+17:33:40 <gundalow> rcarrillocruz-we: I think we can move your meeting much earlier, will discussin Slack
+17:33:50 <gundalow> #topic Open Floor
+17:34:08 <rcarrillocruz-we> gundalow: depends, i have also other things before, if there's no overlap let it be the time is set now
+17:34:15 <rcarrillocruz-we> if overlap, then we wil work it out
+17:34:22 <gundalow> rcarrillocruz-we: ack, just record the session
+17:35:14 <gundalow> Anil_: so I see https://github.com/ansible/ansible/issues/29018
+17:35:24 <Anil_> Hi
+17:35:25 <gundalow> Does anyone have anythign else?
+17:35:29 <saichint> yes
+17:35:40 <saichint> i have 2
+17:35:45 <gundalow> saichint: ah, appologies you added two
+17:35:51 <saichint> ansible/ansible#28682 ansible/ansible#29143
+17:36:04 <gundalow> #topic 29018 Issue with Persistent Connection for Enos_facts.py - Connection is NOT reliable. Succeeds only 1/4
+17:36:10 <gundalow> #link https://github.com/ansible/ansible/issues/29018
+17:36:28 <gundalow> ganeshrn: I believe you've looked into ths
+17:36:40 <ganeshrn> yes
+17:36:43 <Anil_> My issue is that socket path is coming as None
+17:37:12 <gundalow> <10.241.105.228> using connection plugin network_cli
+17:37:13 <gundalow> <10.241.105.228> socket_path: None
+17:37:26 <Anil_> yes
+17:37:57 <Anil_> in network_cli it stops at  data = self._shell.recv(256)
+17:38:02 <ganeshrn> Anil_: can you please share the code for which you are seeing this issue
+17:38:09 <ganeshrn> probably a Github link
+17:38:34 <ganeshrn> the current debug logs are not enough to isolate the issue
+17:38:40 <Anil_> I have not added this in github as I could not make it work..
+17:38:47 <gundalow> (away from keyboard)
+17:39:30 <ganeshrn> i will provide you a patch with extra debug logs added
+17:40:15 <Anil_> ok
+17:40:35 <ganeshrn> is there a way you can share your code?
+17:41:07 <Anil_> I could figure out that the :139 self.receive() is timing out and i the cause for issue
+17:41:18 <bearrito> Anil_: sounds like the terminal plugin doesnt have correct regex to determine if it's at a viable prompt
+17:42:09 <ganeshrn> yeah that might be one reason of failure
+17:42:15 <Anil_> bearrito: But it works 1 out of 4
+17:42:23 <bearrito> what's useful when i hit this same issue is printing out the window to see what's being returned. https://github.com/ansible/ansible/blob/devel/lib/ansible/plugins/connection/network_cli.py#L182
+17:43:19 <bearrito> hmm yeah. still, check what's being returned. if it doesnt find a prompt it wont make socket on the system and timeout with that message
+17:43:24 <gundalow> (back)
+17:43:36 <Anil_> bearrito: It waits at L176 and times out
+17:44:17 <bearrito> yes, the 2nd time around
+17:44:26 <gundalow> The prompt regex might be an issue if on the times the connection does work the prompt is being left at a different state
+17:44:44 <gundalow> Also between runs you may want to delete the socket
+17:44:59 <gundalow> which will be found in ~/.ansible/pc/
+17:45:01 <bearrito> sounds like there isnt a socket being made
+17:45:27 <gundalow> Removing the socket between runs may mean you can make it fail more than 1/4
+17:45:51 <bearrito> ah true, nvm. has to be if it works 1/4 of the time
+17:46:02 <Anil_> yes.. socket is not being made...
+17:47:43 <Anil_> To find out, i put a try catch around L139 self.receive()
+17:47:52 <gundalow> All, I have to head off now
+17:47:59 <bearrito> either way, when i hit socket issues like that, i tend to add `display.display("window : %s" % window)` in right after setting the window to see what's being returned.
+17:48:01 <Anil_> and then it proceeds.
+17:48:17 <Anil_> ok.. I wil try that tommoorw
+17:48:25 <gundalow> Qalthos: ganeshrn Would you please #endmeeting once we are done
+17:48:44 <ganeshrn> Qalthos: ack
+17:49:09 <gundalow> Thank you evryone for your time, really productive meeting. Glad this forum for visabiltiy and deciding is working
+17:49:16 * gundalow -> away
+17:49:28 <saichint> are we discussing my issue?
+17:49:35 <saichint> i am still waiting
+17:50:08 <gundalow> saichint: Yup trishnag and Qalthos  will talk about nxos after
+17:50:08 <ganeshrn> Qalthos: you around
+17:50:13 <Qalthos> saichint: we're getting there in the order they appear
+17:50:17 <Anil_> saichint: You may start
+17:50:19 <saichint> ok sorry
+17:50:27 <gundalow> #topic NXOS
+17:51:36 <Qalthos> So, https://github.com/ansible/ansible/pull/28682 has a +1 from privateip, so I don't see a problem with that
+17:51:50 <saichint> ok, you will merge it then?
+17:52:06 <Qalthos> (or it would, if he would put it on the PR somewhere d: )
+17:52:35 <Qalthos> saichint: that is what I was intending to do
+17:54:04 <Qalthos> As for https://github.com/ansible/ansible/pull/29143, the udld tests don't run on our test environment, so this won't be going in as-is, but that's less important than getting bugfixes in
+17:54:51 <saichint> but I have a question about that. if "feature udld" is not working on your vm (can you tell me what vm it is?) then how did it ever pass any test before?
+17:55:29 <Qalthos> saichint: it didn't... these are new tests
+17:55:51 <saichint> what I meanis, when the code was written long back, how was it tested?
+17:55:59 <Qalthos> and the same nxosv 7k we've been fighting with this whole release
+17:56:30 <Qalthos> saichint: as near as I can tell, none of it ever was, but that both predates me and was not done by Ansible
+17:57:10 <saichint> may be this 7k vm does not support it. how do I resolve it then? i am ok if you don't want to merge it now but even in future, as long as you use that vm, it will always be the case right?
+17:58:42 <Qalthos> saichint: we'll get to that after 2.4 is closed, and we will have a reasonable resolution. This isn't the first test we've had to work around the 7k from.
+17:59:03 <saichint> so i leave that pr open for now as it is?
+17:59:20 <Qalthos> Absolutely
+17:59:31 <saichint> ok. one last thing. any thing on https://github.com/ansible/ansible/pull/28933
+18:00:33 <Qalthos> Somehow I missed that one, but with the deadline, it is at the very very bottom of the priority list
+18:01:21 <Qalthos> I am workin under the assumption that your team is tracking those tests internally, so as long as they either pass or have issues marked against them, it's fine for the time being that the tests aren't in
+18:01:30 <saichint> ok sure. when you get to it, let me know if this is fine. and i still did not get your input on https://github.com/ansible/ansible/pull/28682.
+18:01:43 <saichint> will it be merged automatically or more review is needed?
+18:02:15 <Qalthos> saichint: it will get merged as soon as I am away from this meeting to do so.
+18:02:55 <saichint> thank you very much and sorry about asking the same thing, just wanted to confirm to give info to my boss
+18:03:09 <Qalthos> saichint: Anything else?
+18:03:24 <saichint> no that's it. thanks a lot for your ongoing help
+18:03:29 <Qalthos> #topic Open Floor: Last Call
+18:03:44 <Qalthos> Hah, I forgot I'm not a chair
+18:03:57 <gundalow> #chair Qalthos
+18:03:58 <zodbot> Current chairs: Anil KeeranM Qalthos abadger1999 bearrito caphrim007 ganeshrn gundalow itdependsnetwork jmcgill298_ kedarX ktbyers mcgonagle mikewiebe ogenstad privateip rcarrillocruz rcarrillocruz-we saichint skg-net stacywsmith trishnag z3nbr3w
+18:04:04 <Qalthos> gundalow: thx
+18:04:08 <Qalthos> #topic Open Floor: Last Call
+18:04:39 <gundalow> As long as issues and PRs have label:networking we will see them.
+18:04:58 <Qalthos> closing in ~60s, if no more takers
+18:05:27 <gundalow> Milestone:2.4.0 is the important this for 2.4.0. Once that's released we will use that milestone to track what's needs fixing for 2.4.1
+18:06:30 <Qalthos> #endmeeting
