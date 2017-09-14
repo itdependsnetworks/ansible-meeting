@@ -1,0 +1,83 @@
+19:00:07 <thaumos> #startmeeting Ansible Project Meeting
+19:00:07 <zodbot> Meeting started Tue Sep 12 19:00:07 2017 UTC.  The chair is thaumos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:00:07 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:00:07 <zodbot> The meeting name has been set to 'ansible_project_meeting'
+19:00:38 * gundalow waves
+19:00:47 <ryansb> \o
+19:01:30 <abadger1999> Óla
+19:02:46 <thaumos> #chair gundalow ryansb abadger1999
+19:02:46 <zodbot> Current chairs: abadger1999 gundalow ryansb thaumos
+19:02:50 <thaumos> talofa
+19:03:10 <shertel> hello
+19:03:25 <caphrim007> \o
+19:03:41 <thaumos> #chair shertel caphrim007
+19:03:41 <zodbot> Current chairs: abadger1999 caphrim007 gundalow ryansb shertel thaumos
+19:05:16 <thaumos> is either kustodian or albertomurillo (GH aliases) on?
+19:06:01 <thaumos> btw, thx for adding those labels @gundalow
+19:06:07 <gundalow> nps
+19:06:17 <thaumos> I can always rely on you having my back 😉
+19:06:39 * gundalow has no idea what utf8 char that was as I'm in a terminal
+19:06:47 <thaumos> ;-)
+19:06:59 <thaumos> and this one for the snarkiness :-P
+19:07:06 * jhawkesworth_ waves
+19:07:13 <thaumos> #chair jhawkesworth_
+19:07:13 <zodbot> Current chairs: abadger1999 caphrim007 gundalow jhawkesworth_ ryansb shertel thaumos
+19:07:20 <thaumos> #topic Open Floor
+19:07:29 <thaumos> Get your testing on folks!  rc2 is out today!
+19:07:41 * thaumos steals some of abadger1999's thunder
+19:08:38 * jhawkesworth_ needs extra hours in the day.  also trying to do automated (via ansible) deploy to QA at the moment
+19:08:49 <ryansb> just automate more things, then you'll have more time
+19:08:56 <jhawkesworth_> :-)
+19:09:09 <abadger1999> :-)
+19:09:22 <thaumos> jhawkesworth_: if you figure out how to add time to the day, let me know.  I am in need of more hours
+19:09:36 <jhawkesworth_> :-)
+19:09:41 <thaumos> @ryansb, if you have pointers on how to automate feeding a NB, I am all ears.
+19:10:30 <ryansb> ansible -m formula -a target=babby
+19:11:30 <thaumos> well...
+19:11:38 <thaumos> I guess no one has anything for the day.
+19:11:45 <thaumos> Please testy testy 2.4 rc2 folks
+19:11:53 <thaumos> abadger1999 would appreciate it.
+19:11:59 <abadger1999> Yes, yes I would
+19:12:03 <jhawkesworth_> gonna try.
+19:12:05 <thaumos> he has a trigger finger for one more rc
+19:12:13 <thaumos> jhawkesworth_ if you don't you fail.
+19:12:20 <thaumos> abadger1999 will never forgive you
+19:12:28 <thaumos> I, on the other hand, will think about it.
+19:12:41 <jhawkesworth_> can I ask if the bot is happy? I am getting a lot of email from it atm?
+19:12:58 <abadger1999> It's migrating issues from the modue repos to ansible/ansible atm.
+19:13:36 <jhawkesworth_> ah ok.  Gives me plenty email to delete
+19:14:46 <thaumos> that is your one question quota for the month
+19:15:03 <jhawkesworth_> Doh can I ask about docs?  I'm aware there's a latest/current split happening / has happened.  Is there a way for docs to update both
+19:15:13 <thaumos> lol
+19:15:18 <thaumos> you had only one :-P
+19:15:25 <thaumos> I kid
+19:15:32 <thaumos> What do you mean by updating both?
+19:15:56 <thaumos> the split, is split brain at the moment.  We needing to commandeer it for marketing.
+19:16:00 <jhawkesworth_> (i'm trying to update windows intro.  if/when I get it done, none of it is specific to 2.4 so would be applicable to both
+19:16:12 <thaumos> ah to 2.3 for instance?
+19:16:18 <jhawkesworth_> yeah.
+19:16:34 <thaumos> PR to devel then cherry pick to appropriate versions
+19:16:38 <abadger1999> currently latest points at 2.4 and devel points at (what will be) 2.5.  You should also be able to do things like http://docs.ansible.com/ansible/2.3/
+19:17:08 <jhawkesworth_> ok that answers me - it would be a cherry pick like a backport if appropriate then
+19:17:13 <abadger1999> <nod>  We'll take backports to the same branches as we would backport code to.
+19:17:17 <thaumos> yesh
+19:17:33 <abadger1999> Older releases are "archived" (we won't updatethem)
+19:17:34 <jhawkesworth_> cool, that's all my questions answered (for now)
+19:17:41 <thaumos> woot
+19:17:47 <thaumos> alright, anyone else?
+19:17:53 <thaumos> If not, I'll close for today.
+19:18:22 <jhawkesworth_> oh... just one more question
+19:18:27 <thaumos> shoot
+19:18:52 <jhawkesworth_> (adopts Columbo mode).  Any plans to put video / audio up from 'fest last week?
+19:20:09 <abadger1999> yes.  They should show up linked from here eventually: https://www.ansible.com/videos
+19:20:24 <thaumos> usually it comes in 2-3 wks or so.
+19:20:25 <jhawkesworth_> thanks, I'll keep an eye out there.
+19:20:33 <jhawkesworth_> ok
+19:20:50 <jhawkesworth_> I'll stop confusing everyone with 70s TV references and let you get on then!
+19:20:51 <thaumos> and follow on twitter, facebook, instagram, snapchat, etc...
+19:21:07 <jhawkesworth_> oh that would be social media, don't do that
+19:21:14 <jhawkesworth_> (not for me)
+19:21:14 <thaumos> colombo was great in Princess Diary ;-)
+19:21:34 <thaumos> alrighty then. anything else @folks
+19:21:37 <jhawkesworth_> :-)
+19:24:12 <thaumos> #endmeeting

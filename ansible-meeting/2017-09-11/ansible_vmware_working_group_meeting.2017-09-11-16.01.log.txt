@@ -1,0 +1,135 @@
+16:01:01 <akasurde> #startmeeting Ansible VMware Working Group Meeting
+16:01:01 <zodbot> Meeting started Mon Sep 11 16:01:01 2017 UTC.  The chair is akasurde. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:01:01 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:01:01 <zodbot> The meeting name has been set to 'ansible_vmware_working_group_meeting'
+16:01:37 <dahr-vmware> Hello everyone.
+16:01:38 <akasurde> #chair dahr-vmware
+16:01:38 <zodbot> Current chairs: akasurde dahr-vmware
+16:01:42 <akasurde> Hi dahr-vmware
+16:01:55 <dericcrago> hi
+16:02:01 <enrh> Hello
+16:02:20 <akasurde> #chair dericcrago
+16:02:20 <zodbot> Current chairs: akasurde dahr-vmware dericcrago
+16:02:26 <akasurde> #chair enrh
+16:02:26 <zodbot> Current chairs: akasurde dahr-vmware dericcrago enrh
+16:02:32 <akasurde> Hello everyone
+16:03:31 <akasurde> #link https://github.com/ansible/community/issues/233
+16:03:32 <dahr-vmware> It's been a while since I've been able to join.  I'm on an engagement in Toronto for the next few weeks...sorry about that.
+16:03:48 <akasurde> np
+16:04:31 <akasurde> We will wait for sometime for other people to join
+16:06:11 <akasurde> #topic General Discussion
+16:08:04 <akasurde> Does anyone has any topic discuss ?
+16:09:52 <enrh> Perhaps we could talk about the future of creating/managing VMs without vCenter assumed
+16:09:54 <akasurde> dahr-vmware, We have been struggling to get "magic" method to find VM in given infra,
+16:10:30 <akasurde> enrh, yes thats a good point
+16:11:47 <akasurde> dahr-vmware, do you have any pointers or documentation for this ?
+16:12:52 <akasurde> if anyone has any pointer to this, then it is most welcomed
+16:12:55 <dahr-vmware> akasurde, understood.  From a vCenter perspective, it is difficult to find the VM by the human-readable name.  I did some work last year with this.
+16:13:11 <dahr-vmware> I'm trying to remember exactly what I did.
+16:14:00 <akasurde> we have findbyuuid, findbyname and other but none of them works flawlessly
+16:14:30 <dahr-vmware> There's another ID in vCenter (vm-xxxx) you can find and then gather the rest of a meta-data using that ID.  Can you send me an email with your need and I will research?  dahr@vmware.com
+16:14:31 <dericcrago> if you can require enough inputs I like using FindByInventoryPath
+16:15:30 <akasurde> dahr-vmware, sure
+16:15:45 <dericcrago> you can also use FindByInventoryPath to get the datacenter, relative to the vcenter, then the vm relative to the datacenter, etc
+16:16:04 <akasurde> dericcrago, needs extra input like datacenter and folder which makes it error prone
+16:16:08 <dahr-vmware> In fact, any questions you guys have, just email them to me and I'll research if I do not know off-hand.
+16:16:16 <akasurde> FindbyInventoryPath
+16:16:45 <akasurde> dahr-vmware, Cool
+16:17:13 <akasurde> dahr-vmware, I will certainely need VMware Peoples help for development
+16:17:24 <dericcrago> error prone in that it needs to be exactly right or it won't work, but that's the kind of "error prone" that I like
+16:17:32 <dahr-vmware> I had a customer last year that was using vSphere replication with Site Recovery Manager.  Given a VM, they wanted to know what recovery plan it was in.  I had to perform a series of call to get the info.
+16:17:37 <dericcrago> helps keep me from accidently destroying the other VM by the same name ;)
+16:17:45 <dahr-vmware> I just can't remember what I did.  I've slept since then.
+16:17:51 <dahr-vmware> Memory dump.....
+16:18:11 <akasurde> dericcrago, agreed.
+16:18:22 <akasurde> dericcrago, hehehe
+16:19:07 <akasurde> dahr-vmware, no problem we can always discuss here once you remember :)
+16:19:30 <dahr-vmware> Just be sure to send to me so I don't lose visibility.
+16:19:44 <dahr-vmware> And that goes with any issues you have.
+16:19:57 <akasurde> FindByUUid is best method but people prefer name and folder combination more
+16:20:14 <akasurde> dahr-vmware, sure
+16:20:31 <dahr-vmware> I think the last time I was tracking, you guys were having a tough time getting a test environment up.  Full disclosure, we have the same problem.
+16:21:17 <akasurde> yes correct. We have govcsim but it has its own limitations
+16:21:21 <dahr-vmware> Some have purchased home labs which is too expensive.  We have virtual labs setup but they're slow.  If you guys need a lab setup, let me know and I can ask about licensing.
+16:21:22 <dericcrago> yeah, that was actually going to be my question for you dahr-vmware, what's your setup look like / could we offload some testing to your env?
+16:22:11 <dahr-vmware> What I meant to say is that if you guys want to set up a local lab, I can help with the licensing.  For us, we use "vpods" which are nested ESXi hosts in a cloud env.
+16:22:26 * bcoca keeps hearing 'darth-vmware'  in his head
+16:22:34 <akasurde> #chair bcoca
+16:22:34 <zodbot> Current chairs: akasurde bcoca dahr-vmware dericcrago enrh
+16:22:41 <dahr-vmware> Ha!
+16:22:46 <akasurde> hehehe
+16:22:53 <dahr-vmware> I like it!  That's the first time I've heard that!
+16:23:34 <dahr-vmware> At least you know how to pronounce.  Most just say, "d-aire".
+16:23:50 <akasurde> dahr-vmware, I will discuss with jtanner and few other members and mail you about that
+16:23:56 <dahr-vmware> Or, "Arrrrrr, matey!"
+16:24:38 <dahr-vmware> akasurde, no worries, let me know.  It's not easy for us either unless one is willing to spend $ on a home lab.
+16:24:51 <dahr-vmware> ...which I am not.
+16:25:11 <dahr-vmware> but it is a discussion on our side.
+16:25:26 <dahr-vmware> There's just no easy solution.
+16:25:27 <akasurde> dahr-vmware, what do you use for testing
+16:25:39 <akasurde> I mean VMware testing teams
+16:25:52 <enrh> What kind of hardware do we need for testing? More curious about quantity
+16:26:17 <dahr-vmware> So, I've been working with our "OneCloud" team to setup a "dedicated" nested env for us to dev Chaperone.
+16:26:50 <dahr-vmware> It's not ideal but it's better than using a shared env.
+16:27:15 <dahr-vmware> There are quite a few companies that manuf home labs.
+16:28:02 <enrh> There are plenty of small/cheap computers that will run ESXi. I have 8 hosts on various hardware platforms at home, and 10 hosts on more standard hardware at work
+16:28:25 <dahr-vmware> But, since you guys are enterprise, more/better hardware is probably desired.  We're starting to see a demand for our vSAN product so be sure that your hardware supports it.
+16:28:28 <enrh> Stuff that isn't in the WCL runs fine, like old laptops and whatnot.
+16:29:25 <enrh> There is a place in town that sells $150 Optiplex PCs I bet will run ESXi
+16:29:48 <dahr-vmware> In fact, I had a recent customer who wanted vSphere 6.5U1 with vCenter HA and vSAN in three datacenters with a 4-node management customer, 4-node Edge customer and 7-node compute cluster.
+16:29:52 <enrh> Also I have 4 with SSDs that I'm not doing anything with
+16:30:08 <enrh> dahr-vmware: A lab like that is never going to happen
+16:30:31 <enrh> Anything we get will stop working and no one will fix it because the initial novelty has worn off
+16:31:10 <dahr-vmware> Oh, I agree.  If we didn't have OneCloud, we'd be "screwed".
+16:31:37 <enrh> If we can get a OneCloud env then that would be option A
+16:31:41 <dahr-vmware> If you guys really want to partner with us, I can see if it's even remotely possible to get you guys tenancy in our OneCloud env.
+16:31:57 <dahr-vmware> But no promises.
+16:32:00 <enrh> Option B is a build 4 ESXi hosts out of the spare Dell OptiPlex PCs I have.
+16:32:23 <enrh> However I don't have a Windblows license for the vCenter
+16:32:33 <dericcrago> vcsa all the way
+16:32:34 <akasurde> dahr-vmware, We are in for that
+16:32:57 <dericcrago> windows vcenter is going away anyway enrh
+16:33:01 <enrh> dericcrago: Oh right
+16:34:28 <dahr-vmware> Okay, so for me to even run this up the flagpole, there needs to be benefit for VMware (and of course, you guys).  I just need a proposal to put forward on our side.  Any ideas?
+16:35:05 <akasurde> yes, for both Ansible and VMware is win-win position
+16:35:28 <dahr-vmware> Oh, I agree, I just need to convince the "suits" up-top.
+16:35:39 <akasurde> :)
+16:35:44 <enrh> One benefit is that people who use Ansible will be able to do more with VMware.
+16:35:49 <akasurde> I am sure you can do that
+16:36:16 <enrh> This could help with adoption, or if someone is deciding between VMware and Hyper-V or something like that.
+16:36:46 <akasurde> enrh, Correct and same with Other Configuration management and Ansible
+16:37:53 <dahr-vmware> Here's the deal, we're using Ansible more and more to deploy our products.  I get it, and I think VMware gets it.  If you guys don't mind, put together a proposal of the goals you guys want to achieve with us.  Yes, be selfish, but propose what it could benefit us as well.  I run it up the chain and see what happens.
+16:38:02 <enrh> Finally the immediate value I see is that Ansible is only getting more popular, and VMware having good support may give way to other opportunities and talking points with the customer.
+16:38:52 <akasurde> #action Akasurde Discuss jctanner and other Ansible Core team members about dahr-vmware's proposal
+16:39:36 <dahr-vmware> I have been asked how Ansible will help with NSX day-2 operations.  I've never thought about that but there's obviously some serious interest.  Since our OperStack offering is the responsibility of NetSec, we have their ears.
+16:39:46 <akasurde> dahr-vmware, current roadmap is to stablize existing modules
+16:40:14 <dahr-vmware> Okay, can you send me something "official"?
+16:40:16 <akasurde> NSX is also priority down the line
+16:40:16 <enrh> dahr-vmware: If one's infrastructure is 100% deployed and amanged by Ansible, reaction time is next to nothing
+16:40:28 <enrh> Yeah
+16:40:41 <akasurde> dahr-vmware, Ok
+16:40:58 <dahr-vmware> From what I can see, Ansible is the goto for us..
+16:41:18 <dahr-vmware> I don't mind running point on our side, I just need support from you guys.
+16:42:22 <akasurde> Definitely
+16:42:59 <dahr-vmware> We have a product called "vRealize Container Management" that is 100% deployed with Ansible.  I've seen a demo and said, "Hey, that's Ansible, we use that for VIO (OpenStack) deployment!"  So, we get it over here.
+16:43:31 <akasurde> Cool
+16:44:20 <dahr-vmware> I just need to push on our end.  A few weeks ago, we noticed that you guys were having issues with finding an env to test.  I may be able to help.
+16:45:16 <dahr-vmware> Send me over something quasi "official" and I'll push.
+16:45:49 <akasurde> Sure
+16:46:55 <dahr-vmware> You guys are Red Hat, no?
+16:47:15 <akasurde> I am in Red Hat but work for other team
+16:47:32 <akasurde> jctanner and bcoca are in core Ansible Team
+16:47:54 <dahr-vmware> Okay.  But the whole thing is under Red Hat?
+16:48:00 <akasurde> yepp
+16:48:48 <dahr-vmware> Cool.  I'll see what I can do.
+16:49:48 <akasurde> Thanks thats what we need right now
+16:49:59 <akasurde> to stablise and test existing ansible modules
+16:51:05 <dahr-vmware> I'll get started while you guys put something together.
+16:51:40 <akasurde> Sure.
+16:51:51 <akasurde> #topic open floor
+16:53:38 <akasurde> If we do not have anything, we can close the meeting for today
+16:54:18 <dahr-vmware> Thanks, everyone.  I'll do everything I can.
+16:54:46 <akasurde> dahr-vmware, Thanks to you as well
+16:55:52 <akasurde> Thanks for everyone to join, see you next week
+16:56:04 <akasurde> #closemeeting
+16:56:49 <akasurde> #endmeeting
