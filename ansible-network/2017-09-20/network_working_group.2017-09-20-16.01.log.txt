@@ -1,0 +1,251 @@
+16:01:08 <gundalow> #startmeeting Network Working Group
+16:01:08 <zodbot> Meeting started Wed Sep 20 16:01:08 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:01:08 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:01:08 <zodbot> The meeting name has been set to 'network_working_group'
+16:01:20 <bearrito> o/
+16:01:48 <Gelob> hi!
+16:02:00 <gundalow> #chairs funzo ganeshrn kedarX Qalthos trishnag bearrito dt-arista mikewiebe stacywsmith Gelob
+16:02:01 * Qalthos 🌊🌊
+16:02:05 <gundalow> #chair funzo ganeshrn kedarX Qalthos trishnag bearrito dt-arista mikewiebe stacywsmith Gelob
+16:02:05 <zodbot> Current chairs: Gelob Qalthos bearrito dt-arista funzo ganeshrn gundalow kedarX mikewiebe stacywsmith trishnag
+16:02:09 * ganeshrn waves
+16:02:16 * stacywsmith waves
+16:02:24 <gundalow> #info Agenda https://github.com/ansible/community/labels/network
+16:03:02 <gundalow> #info Agenda cycled as we've release 2.4.0
+16:03:07 <Qalthos> gundalow: ooh, fancy
+16:03:51 <gundalow> #info WE'VE RELEASED 2.4.0 YAY. 2.4.1 will be in ~month, so please test and report any issue promptly so any issues can be fixed
+16:05:11 <gundalow> OK, will quickly go through the non-Proposal items first
+16:05:19 * trishnag waves
+16:05:22 <mikewiebe> gundalow: quick question first?
+16:05:28 <gundalow> mikewiebe: sure
+16:05:53 <mikewiebe> gundalow: How do tag fixes that go into devel for 2.4.1?
+16:07:14 <gundalow> mikewiebe: milestone:2.4.0 (yes horrible)
+16:07:19 <gundalow> #chair ktbyers
+16:07:19 <zodbot> Current chairs: Gelob Qalthos bearrito dt-arista funzo ganeshrn gundalow kedarX ktbyers mikewiebe stacywsmith trishnag
+16:07:44 <gundalow> #topic  ansible/ansible#29143 Integration Tests only: nxos_udld, nxos_udld_interface
+16:07:52 <mikewiebe> gundalow: Thanks
+16:07:56 <gundalow> #info https://github.com/ansible/ansible/pull/29143
+16:08:21 <gundalow> mikewiebe: is saichint on here?
+16:08:25 <gundalow> #chair seansible
+16:08:25 <zodbot> Current chairs: Gelob Qalthos bearrito dt-arista funzo ganeshrn gundalow kedarX ktbyers mikewiebe seansible stacywsmith trishnag
+16:09:06 <mikewiebe> gundalow: I don't see him.  I just took a peek at the PR and Qalthos indicated it fails on the VM.  Can you provide details on the failure?
+16:09:15 <gundalow> #info PR currently failing against our setup with "feature udld fails with Invalid feature name on our VM.
+16:09:26 <Qalthos> Just as it says, invalid feature name
+16:09:31 <gundalow> #cahir itdependsnetwork
+16:09:40 <gundalow> #chair itdependsnetwork
+16:09:40 <zodbot> Current chairs: Gelob Qalthos bearrito dt-arista funzo ganeshrn gundalow itdependsnetwork kedarX ktbyers mikewiebe seansible stacywsmith trishnag
+16:09:51 <mikewiebe> Ah... I c.  Was it virtual n9k or virtual 7k?
+16:10:05 <Qalthos> 7k
+16:10:59 <dag1> o/
+16:11:01 <mikewiebe> Qalthos: We may have to skip it on virtual 7k since we have coverage for the physical platform.  Likely not supported on virtual, I will follow up with saichint
+16:11:22 <gundalow> #chair dag1
+16:11:22 <zodbot> Current chairs: Gelob Qalthos bearrito dag1 dt-arista funzo ganeshrn gundalow itdependsnetwork kedarX ktbyers mikewiebe seansible stacywsmith trishnag
+16:11:35 <Qalthos> mikewiebe: sounds reasonable
+16:12:25 <gundalow> #chair seanx820
+16:12:25 <zodbot> Current chairs: Gelob Qalthos bearrito dag1 dt-arista funzo ganeshrn gundalow itdependsnetwork kedarX ktbyers mikewiebe seansible seanx820 stacywsmith trishnag
+16:12:57 <gundalow> Anything else on this topic?
+16:13:10 <Qalthos> gundalow: I don't think so
+16:13:16 <mikewiebe> gundalow: nothing here
+16:13:23 <gundalow> #action mikewiebe to follow up with saichint regarding if it's supported on virtual
+16:13:26 <gundalow> Thanks
+16:13:42 <gundalow> #topic ansible/ansible#30250 Arista EOS module doesn't properly parse vrfs
+16:13:48 <gundalow> Gelob: All yours
+16:13:58 <gundalow> #info https://github.com/ansible/ansible/issues/30250
+16:14:25 <gundalow> #info Bug report for eos_vrf
+16:14:38 <Gelob> Hi all, i wanted to bring some attention to this issue, it would seem that parsing of VRFs names is completely broken. I tested it on 4.16, i saw it was written on 4.15 and I don't think anything has changed since then.
+16:14:49 <gundalow> ganeshrn: You around?
+16:15:01 <ganeshrn> yup
+16:15:20 <gundalow> Are there two issues her
+16:15:22 <gundalow> Are there two issues here
+16:15:46 <gundalow> The one reported + broken parsing of vrf's containing '-'?
+16:16:25 <privateip> looks like the output from the command changed
+16:16:30 <privateip> from 4.15 to 4.16
+16:16:32 <privateip> *sigh*
+16:16:36 <Gelob> I was wondering that, but i couldnt verify
+16:16:46 <gundalow> dt-arista: Hi
+16:16:49 <privateip> definitely a bug
+16:17:43 <Gelob> @privateip I was wondering if it has be asked of arista why show vrf | json isn't supported? I think it would make a lot of things easier and I can bring it up a as a FR with our rep and push on it.
+16:18:04 <privateip> yep that would be very helpful
+16:18:17 <dt-arista> yeah it would be helpful
+16:18:20 <privateip> in the meantime we can build a check into the module to work around this issue
+16:18:33 <dt-arista> arista does have an RFE opened for this
+16:19:57 <Gelob> awesome, if you can send me the RFE # (pm works) I can send off an email
+16:20:05 <dt-arista> will do
+16:20:34 <Gelob> I also was wondering why is the parsing code different in the eapi code and the vrf code? could that be made the same at some point?
+16:20:36 <privateip> i updated the issue with the same comment
+16:21:43 <privateip> sorry not following
+16:22:50 <Gelob> in eos_vrf.py line 176 there is a whole bunch of code to convert the show vrf to json. https://github.com/ansible/ansible/blob/340f52ae9646f605310345f875df7985ee978019/lib/ansible/modules/network/eos/eos_vrf.py#L176
+16:23:11 <privateip> ah
+16:23:12 <Gelob> in eos_api line 210 the validate_vrf code uses a regex to find the configured_vrf names. https://github.com/ansible/ansible/blob/d8b1cb9a634d0e828a7be39d4019a6215410e643/lib/ansible/modules/network/eos/eos_eapi.py#L210
+16:23:14 <ganeshrn> Gelob: if i understand it correctly eos_vrf is parsing the output of  `show vrf` correctly on the eos version that you have?
+16:23:34 <Gelob> @ganeshrn, it is *not*
+16:24:06 <ganeshrn> ok
+16:25:09 <Gelob> @privateip, i understand validate_vrf needs less info but that means depending on what your doing in your playbook, that information gets parsed out two different ways, two different pieces of code to maintain. follow?
+16:25:29 <privateip> Gelob: yes that is one of the big efforts in 2.5 is to clean up some of the technical debt we have accumulated
+16:25:46 <privateip> modules developed at different times by difference engs
+16:26:15 <privateip> we are going to implement a more consistent pattern across all modules
+16:27:20 <Gelob> ok cool, i figured that and just wanted to make sure that comment in the bug didn't get missed.  I agree about in the meantime building in a version check to work around it. I can test whenever thats ready.
+16:27:28 <Gelob> thats all i have. thanks!
+16:27:35 <st8less> Will there be any documentation provided as that is in-process so 3rd-party dev's will be able to attempt to say within best practices?
+16:28:17 <privateip> st8less: yes
+16:28:40 <privateip> i hope to have information up soon
+16:28:50 <st8less> Cool, thanks!
+16:28:58 <flatterlight> thanks
+16:29:29 <gundalow> Anything else on that one?
+16:29:40 <gundalow> #chair flatterlight
+16:29:41 <zodbot> Current chairs: Gelob Qalthos bearrito dag1 dt-arista flatterlight funzo ganeshrn gundalow itdependsnetwork kedarX ktbyers mikewiebe seansible seanx820 stacywsmith trishnag
+16:30:38 <Gelob> not from me
+16:31:13 <gundalow> #topic ansible/ansible#30577 This module allows users to manage partitions on a BIG-IP
+16:31:19 <gundalow> #action gundalow to review
+16:31:29 <gundalow> #topic Declarative Intent
+16:31:34 <gundalow> .--------------------------
+16:31:37 <gundalow> So
+16:31:44 * seanx820 rubs hands together
+16:31:52 <gundalow> #info https://github.com/ansible/proposals/issues/70
+16:32:04 <gundalow> #Info Thanks everyone that's already added comments
+16:33:08 <gundalow> So from reading it sounds like everyone has agreed this is a useful feature, just not decided if it should be implemented in module or as a collection of tasks/roles
+16:33:44 <gundalow> How would people like to progress?
+16:35:13 <gundalow> Should we collect pros + cons for in-module vs roles based?
+16:35:51 <gundalow> Or I could just pick what I want to do and we can implement that :)
+16:36:12 * gundalow looks at the tumbleweed
+16:36:24 * gundalow pokesGelob Qalthos bearrito dag1 dt-arista flatterlight funzo ganeshrn gundalow itdependsnetwork kedarX ktbyers mikewiebe seansible seanx820 stacywsmith trishnag
+16:36:26 <kedarX> +1 for modules and good to collect pros and cons too
+16:36:56 <flatterlight> if we do it in the module it is the same for all types
+16:37:11 <stacywsmith> I tend to prefer the tasks/roles approach.
+16:37:50 <flatterlight> in a task/role it's up to the one who writes them...
+16:37:56 <seanx820> i am trying to understand what the main complaint was, b/c unfortunately it just looks like semantics and I don't want to be that guy
+16:38:03 <bearrito> +1 for pro/con list to have a reference-able list
+16:38:12 <seanx820> +1 for pro/con list as well
+16:38:26 <gundalow> Ok, multiplayer notepad time https://public.etherpad-mozilla.org/p/ansible-proposal-70
+16:39:40 <gundalow> So if everyone can take a few minutes to add there thoughts to the lists starting on line 8 that would be great, then we can go through them here
+16:41:16 <mikewiebe> gundalow: I need to actually read the proposal and original PR that you put out before providing feedback.  I will hold off on providing thoughts until then.
+16:41:51 <gundalow> mikewiebe: Sure, feel free to pass it around the rest of your team, would be good to get more eyes on this
+16:41:54 <seanx820> i am trying to understand why people disagree with bcoca on issue 70
+16:42:35 <bcoca> s/issue.*/anything/
+16:42:48 <seanx820> haha
+16:42:53 <seanx820> i think i found the comment i was looking for
+16:43:02 <seanx820> https://github.com/ansible/proposals/issues/70#issuecomment-330801396
+16:44:40 <seanx820> is dagwieers here
+16:44:48 <gundalow> I've added `Questions` section under the two proposals as well
+16:44:54 <gundalow> dag1: You around?
+16:47:42 <gundalow> Thanks to people that have started adding comments in. I'm sure the rest of you have thoughts
+16:47:45 <privateip> @gundalow: can we set a date to have this resolved by?
+16:47:59 <privateip> we could go back and forth for a very long time on this
+16:48:03 <gundalow> privateip: Agreed
+16:48:07 <seanx820> yes^ and the issue submitter is not present
+16:48:09 <gundalow> Well, I'm not here next week
+16:48:14 * seanx820 gasp
+16:48:29 <privateip> two weeks then?
+16:48:37 <privateip> that should give folks ample time to read and weigh in
+16:48:38 <gundalow> Sound good
+16:49:32 <bearrito> 👍
+16:49:33 <stacywsmith> We now have two places for feedback. The proposal and the Etherpad. Can we at least add a link to the EhterPad in the proposal?
+16:51:46 <seanx820> i feel like... (i might comment in more detail in the issue) there is misunderstanding of what DI even is... my understanding of it being "i don't care how you do it, this is my end state" but it almost feels the want/need like we are using it a state checker, a way to validate not just if the command ran, and was accepted by the host node, but what it did with the command... which could be cool i just don't
+16:51:46 <seanx820> now if its the same problem (and it seems like many people are coming to the same conclusion in the github issue).  I really am trying to refrain from commenting since i need to absorb this more
+16:51:50 <gundalow> stacywsmith: good ,point, I'll link it from the top *and* a comment
+16:51:58 <stacywsmith> thanks
+16:53:10 <dag1> I am here somewhat, but leaving mostly :-/
+16:53:37 <gundalow> dag1: We are collecting pros/cons in https://public.etherpad-mozilla.org/p/ansible-proposal-70
+16:53:49 <gundalow> deadline for getting this agreed is 2 weeks from now
+16:54:23 <dag1> Yeah, I generally dislike etherpad because there's no stream of thought, people just send blobs
+16:54:36 <dag1> where would I go to point out the problem with each
+16:55:10 <dag1> I see that a wait_for solution is put on Etherpad, and we aren't even discussing that
+16:55:48 <gundalow> dag1: I'm open to suggestion on how to move this forward
+16:56:20 <dag1> we could add it to the discussion, but bcoca already said we have to limit to a single feature (which is impossible if you are redesigning something)
+16:56:41 <gundalow> What does "limit to a single feature" in this context mean?
+16:57:08 <dag1> the main problem is, as soon as you bring something forward, people start discussing that specific thing and no longer think out of the box
+16:57:09 <gundalow> Also, I'm not aware of any hard limits/things being off the cards at this stage
+16:58:19 <dag1> I was referring to this: https://github.com/ansible/proposals/issues/70#issuecomment-330865977
+16:58:40 <dag1> the thing is, I may not have a clear understanding of what people in the networking space need as well
+16:59:08 <dag1> I was only looking at the DI needs and looking for a solution to that (with some use-cases I have)
+16:59:24 <dag1> but if we look at validate or wait_for, maybe something better is possible that includes it too
+17:00:04 <dag1> then it's no longer related to DI, or Agreggates, but that's fine, if we introduce new concepts it's better to have a holistic view
+17:00:20 <dag1> and the out-of-the-box thinking does bring up things like: https://github.com/ansible/proposals/issues/74
+17:00:48 <dag1> the irony here is that during AnsibleFest SF I was always stating: We can do the same with roles already
+17:01:07 <bcoca> dag1: not what i meant, but we started discussing one feature and you kept adding other features on top
+17:01:08 <gundalow> As a network engineer running a Playbook , how can I ensure that at the end of a Playbook run my network is configured correctly. Given that my network contains things that Ansible can not configure, such as ensuing that a physical cable is plugged in and links to switches and that link is UP.
+17:01:08 <dag1> and now that I see what could be possible, it's bcoca who's saying: We can do the same with roles already :-)
+17:01:14 <bcoca> which were not directly related
+17:01:15 <dag1> bcoca: not true
+17:01:25 <dag1> bcoca: look at the original example, and what comes next
+17:01:56 <dag1> bcoca: I bring up an improvement of my first design to counter a new proposal of yourx
+17:04:05 <dag1> gundalow: that's my position as well
+17:04:52 <gundalow> dag1: sorry, you agreeing with my problem statement (As a network engineer...)?
+17:05:26 <dag1> gundalow: yes
+17:05:30 <gundalow> cool
+17:05:42 <dag1> gundalow: so not wait_for or validate (which are other things)
+17:05:50 <dag1> validate might be something similar though
+17:06:19 <gundalow> dag1: Why do you believe wait_for and validate don't meet the above problem statement
+17:06:21 <dag1> I guess it would be easier to have a discussion with the same people who were present in that meeting, since there was already a general consensus
+17:07:31 <dag1> well, if this goes nowhere, at least we'll have: https://github.com/ansible/proposals/issues/74 :-)
+17:08:56 <gundalow> OK,
+17:08:57 <gundalow> so how about
+17:09:01 <gundalow> Milestone 1: List all proposals
+17:09:04 <gundalow> Milestone 2: List pros + cons for all proposals
+17:09:09 <gundalow> Milestone 3: advisory vote from community
+17:09:10 <gundalow> ODNE
+17:09:12 <gundalow> DONE
+17:09:35 <dag1> that would not have brought us to the current ideas IMO
+17:09:46 <gundalow> Where Milestone 3 is 4th October (two weeks from today)
+17:09:57 <dag1> 1. there's no consensus over the problem we're fixing (which is fine)
+17:10:53 <dag1> 2. I need to run, had to be somewhere at 19h :-(
+17:11:35 <gundalow> OK
+17:11:43 <dag1> not sure if a deadline is a good idea
+17:12:01 <dag1> being able to go back and forward over ideas is required at this point
+17:12:20 <gundalow> I agree to be able to go back and forth
+17:12:47 <gundalow> I think a deadline is needed otherwise this will not reach a conclusion
+17:12:48 <dag1> if we want to introduce a new concept or design a new way of working (which DI and Aggregates is)
+17:13:07 <dag1> we need as many people voicing their ideas and examples
+17:13:30 <gundalow> hum, mabe Milestone 1&2 shouldn't actually be milestones, instead things that can happen upuntil 2 weeks today
+17:13:56 <dag1> maybe, sometimes let this sink in, and allow people to grasp new experiences with an idea in the back of their heads creates new insights
+17:14:31 <dag1> I am sure that if we would revisit in a few months, more people may have great improvements covering this too
+17:14:48 <dag1> but the current discussion is probably not helpful
+17:15:11 <gundalow> In a few months = too late to do stuff for 2.5
+17:15:28 <dag1> true
+17:15:47 <dag1> anyway, I need to run
+17:15:51 <gundalow> nod
+17:15:53 <gundalow> thanks for your time
+17:16:24 <gundalow> What do other people think?
+17:18:42 * bearrito needs to review the comments before commenting
+17:18:45 <stacywsmith> I'll write up some thoughts and add to the proposal, but in general I tend to agree that there's no consensus on the problem(s) we're fixing. There are multiple interacting issues being discussed.
+17:19:06 <gundalow> #topic DI: Defining the problem
+17:19:36 <gundalow> Ok, my idea is
+17:19:36 <gundalow> As a network engineer running a Playbook , how can I ensure that at the end of a Playbook run my network is configured correctly. Given that my network contains things that Ansible can not configure, such as ensuing that a physical cable is plugged in and links to switches and that link is UP.
+17:19:53 <gundalow> What do other people think the problem is (should be)
+17:20:39 <gundalow> Good to call out if people don't think we have a common problem statement
+17:20:46 <stacywsmith> there hasn't been a good definition/separation between configuration, configuration state, and operational state.
+17:21:03 <bcoca> for things ansible configures, the modules themselves should verify .. for things it does not, gather_fact + assert/fail seem the easiest way to solve
+17:21:26 <stacywsmith> if the physical cable isn't plugged in correctly, that's not a network device specific problem.
+17:21:49 <gundalow> stacywsmith: How do you mean?
+17:22:00 <flatterlight> An unified "interface" for f.e. interface configuration would be a good idea, so any vendor/device could use it. The "module" should check if the requested characteristics can be met.
+17:22:07 <stacywsmith> the same issue applies to systems/servers. Just because I "declared" that my web server should be running doesn't make it actually reachable (operational state).
+17:22:29 <stacywsmith> there is state that is controlled by configuration.
+17:22:45 <stacywsmith> and there is state that is (at least partially) controlled by external factors.
+17:23:01 <flatterlight> After execution it should report the current state of the f.e. interface.
+17:23:44 <stacywsmith> some aspects of the interface state are controlled by external factors. (cabling, negotiation of the other end of the link, etc.)
+17:24:27 <stacywsmith> IF you check this "external" state in the same module that configures the interface, then what's the correct action when some of this external state doesn't match your intention?
+17:24:44 <flatterlight> but we can report this back
+17:24:47 <gundalow> oh, "external factors" is a good term
+17:25:10 <stacywsmith> rolling back the configuration change might be the right choice in some cases and might not be the right choice in others.
+17:25:24 <flatterlight> .. from what the device gives us
+17:25:24 <gundalow> #info correct action - rollback?
+17:25:59 <stacywsmith> yes. the state could be reported back. Beware however that this state could change due to actions other than configuration of the local device.
+17:26:15 <flatterlight> "rollback if fail" ->additional option?
+17:27:42 <gundalow> Do we need to offer Playbook designers flexability if Ansible detects a cable isn't plugged in
+17:27:49 <gundalow> a) Ability to roll back
+17:27:52 <gundalow> b) Just fail
+17:27:53 <gundalow> etc
+17:28:16 <flatterlight> c) ignore
+17:28:28 <flatterlight> .. interface state
+17:29:30 <gundalow> ignore - don't list DI options, or use ignore_errors: yes (eww)
+17:31:55 <stacywsmith> As long as a module (doesn't have to be the same module that configures) provides a way of gathering state, the current playbook syntax provides all of these abilities and allows the playbook writer to choose the appropriate course for their situation.
+17:33:02 <stacywsmith> So it seems one of the things being discussed is if that's currently too cumbersome and needs to be simplified within a module.
+17:36:45 <kedarX> Failures identification & categorization (can be ignored or not); e.g. if cable isn't plugged, rolling back or ignoring will do no good
+17:49:55 <gundalow> #chair
+17:49:55 <zodbot> Current chairs: Gelob Qalthos bearrito dag1 dt-arista flatterlight funzo ganeshrn gundalow itdependsnetwork kedarX ktbyers mikewiebe seansible seanx820 stacywsmith trishnag
+17:50:30 <gundalow> If everyone could please add details of what they the problem is we are trying to solve as a comemnt on  https://github.com/ansible/proposals/issues/70 that would help a lot
+17:53:16 <flatterlight> the procedure with DI (Playbook in execution) 1. ansible "reads" should state from the playbook, 2. ansible gets the current state from the device, 3. ansible checks if should state is applyable (f.e. wrong interfacespeed, link down,... ), 4. depending on the playbook the single configuration node(s) would be applyed, or the error would be given to the user
+17:54:30 <gundalow> Closing meeting in a couple of minutes, though you are all welcome to stay :)
+17:55:23 <bearrito> gundalow: can you let me know what you need from either me or caphrim007 for https://github.com/ansible/ansible/pull/30391
+17:59:40 <gundalow> bearrito: Ensure caphrim007 is happy and it's tested
+17:59:43 <gundalow> #endmeeting

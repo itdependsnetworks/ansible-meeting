@@ -1,0 +1,212 @@
+16:01:20 <gundalow> #startmeeting Network Working Group
+16:01:20 <zodbot> Meeting started Wed Oct  4 16:01:20 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:01:20 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:01:20 <zodbot> The meeting name has been set to 'network_working_group'
+16:01:26 <gundalow> #info Agenda https://github.com/ansible/community/labels/network
+16:01:31 * Qalthos 🌊 🌊
+16:01:33 <privateip> lets get ready to ruummbbbleeeeee
+16:01:34 <gundalow> Who's here?
+16:01:47 <funzo> just us and the crickets
+16:01:57 <privateip> i like that band
+16:02:02 <gundalow> Rhyme in time to the rhythm of the track,
+16:02:10 <hbalaji> Hello John, Harish here. First meeting for me
+16:02:13 <rcarrillocruz> i am
+16:02:20 <bdudas_> im here
+16:02:21 <rcarrillocruz> yet my son may wake up soon
+16:02:26 * ganeshrn waves
+16:02:29 <gundalow> hbalaji: Glad you could make it
+16:02:29 <privateip> hi Harish ... welcome
+16:02:43 <rcarrillocruz> caphrim007: around?
+16:02:45 <dt-arista> dt is here
+16:02:49 <hbalaji> Thank you
+16:03:11 <gundalow> #chair funzo Qalthos privateip hbalaji dt-arista rcarrillocruz bdudas_ ogenstad
+16:03:11 <zodbot> Current chairs: Qalthos bdudas_ dt-arista funzo gundalow hbalaji ogenstad privateip rcarrillocruz
+16:03:32 <caphrim007> ahh yeah
+16:03:41 <gundalow> #chair caphrim007
+16:03:41 <zodbot> Current chairs: Qalthos bdudas_ caphrim007 dt-arista funzo gundalow hbalaji ogenstad privateip rcarrillocruz
+16:03:42 <caphrim007> i thought this was still in ansible-meeting
+16:03:57 <gundalow> caphrim007: Nah, moved here as we have bots in the Working Group channels now
+16:04:18 * trishnag waves
+16:04:34 <gundalow> Which has the bonus feature of allowing us to find minutes via https://meetbot.fedoraproject.org/sresults/?group_id=ansible-network&type=channel
+16:04:35 <caphrim007> yeah it was just brain fart on my part
+16:06:15 <gundalow> #chair bearrito skg-net jmcgill298 trishnag
+16:06:15 <zodbot> Current chairs: Qalthos bdudas_ bearrito caphrim007 dt-arista funzo gundalow hbalaji jmcgill298 ogenstad privateip rcarrillocruz skg-net trishnag
+16:06:21 <rcarrillocruz> caphrim007: i chatted with gundalow today and it seems you're interested on getting bigip integration tested, hoping we can chat about it
+16:06:59 <gundalow> Right, going to start at the end of https://github.com/ansible/community/issues/247 and quickly go through the non-proposal stuff first
+16:07:04 <caphrim007> rcarrillocruz: yeah we run integration tests in house right now, but i dont know how i need to change them for dist-io
+16:07:17 <gundalow> #topic ansible/ansible#31202 ansible_net_neighbors
+16:07:25 <gundalow> #link https://github.com/ansible/ansible/pull/31202
+16:07:35 <gundalow> Question: Should we add cdp information to the lldp fact, since it is basically the same. We could add an attribute source in ansible_net_neighbors with value cdp/lldp ?
+16:08:23 <gundalow> privateip: thoughts
+16:08:38 * gundalow isn't sure how we are using ansible_net_neighbors
+16:09:22 <privateip> +1
+16:09:27 <gundalow> Cool, thanks
+16:09:39 <seanx820> +1
+16:09:51 <gundalow> #agreed Yes, add this to ansible_net_neighbors
+16:10:27 <gundalow> #topic fortios_api
+16:10:34 <gundalow> #link https://github.com/ansible/ansible/pull/30767
+16:11:50 <gundalow> Would be good to get some eyes on this
+16:11:57 <gundalow> Anyone here use fortios?
+16:11:58 <Gesha24> Just to clarify - that pull request is for 1 module out of about 20. And most of them don't really do much, besides documentation and feeding API endpoints to the API class
+16:12:16 <gundalow> #chair Gesha24
+16:12:16 <zodbot> Current chairs: Gesha24 Qalthos bdudas_ bearrito caphrim007 dt-arista funzo gundalow hbalaji jmcgill298 ogenstad privateip rcarrillocruz skg-net trishnag
+16:12:23 <gundalow> Gesha24: Hi, glad you could make it
+16:12:56 <Gesha24> Hello. Sorry, I am very new to github and contributing code in general, so I am kind of not sure what/how to do
+16:13:37 <gundalow> #action gundalow to review https://github.com/ansible/ansible/pull/30767
+16:13:44 <gundalow> Other reviews welcome :)
+16:13:58 <gundalow> #topic F5 PRs
+16:14:47 <gundalow> #info Two new modules https://github.com/ansible/ansible/pull/31205/files https://github.com/ansible/ansible/pull/31207/files
+16:14:56 <gundalow> #info One big refactor https://github.com/ansible/ansible/pull/30998/files
+16:14:58 <caphrim007> o/
+16:15:11 <gundalow> caphrim007: Anything you need apart from us to review & merge?
+16:15:37 <caphrim007> i dont think so. i was going to make a proposal on my soapbox related to a review that was done on one of them
+16:15:53 <caphrim007> but maybe that's better left to a different audience
+16:16:02 <caphrim007> core or testing or someone
+16:16:11 <gundalow> regarding quotes in yaml?
+16:16:22 <caphrim007> regarding yaml formatting and "opinions
+16:16:36 <gundalow> Yup, that's a proposal, and not something that blocks this PR
+16:16:56 <caphrim007> k
+16:17:39 <gundalow> comment added to say it fine
+16:18:00 <gundalow> caphrim007: I think the otehr comments are valid, once those are fixed it can be merged
+16:18:13 <caphrim007> which pr was that?
+16:18:41 <gundalow> Copy right notices on 31205
+16:18:45 <gundalow> hum, they are not blocking
+16:18:53 <caphrim007> that was also what i wanted to be in the proposal
+16:19:05 <gundalow> 31205 merged
+16:19:10 <caphrim007> maybe i missed the meeting where that was made a new requirement in module checklist?
+16:19:12 <gundalow> I'll look at the others after
+16:19:24 <gundalow> caphrim007: if it's not in dev_guide it's not a requirment
+16:19:37 <gundalow> (or enforced by CI)
+16:19:47 <gundalow> ok, onto the fun stuff now
+16:19:56 <gundalow> privateip: Which would you like to attack first?
+16:19:57 * funzo grabs popcorn
+16:20:05 * seanx820 steals some popcorn
+16:21:03 <privateip> 76 i suppose
+16:21:12 <privateip> dag: you around?
+16:21:25 <gundalow> #topic Refactor common network shared code into package
+16:21:32 <gundalow> #link https://github.com/ansible/proposals/issues/76
+16:21:56 <privateip> just to update everyone
+16:22:13 <privateip> the proposal as been amended (about 30 min ago)
+16:22:48 <privateip> refactor to module_utils/network/common/ for common fuctions... module_utils/network/{{ platform }}/ for platform specific shared functions
+16:23:20 <caphrim007> does {{ platform }} include the case where that platform is a directory of other stuff?
+16:23:29 <caphrim007> or is that intended to be a single file
+16:23:33 <privateip> directory
+16:23:36 <caphrim007> k
+16:23:50 <privateip> any nay's?
+16:24:03 <privateip> dag commented in the proposal that he is good
+16:24:17 <privateip> if no futher objections lets accept it and move forward
+16:24:21 <caphrim007> so-long as there's not a networking company named "Common Networks"
+16:24:23 <caphrim007> :-D
+16:24:27 <privateip> LOL
+16:24:30 <gundalow> haha
+16:24:32 <rcarrillocruz> heh
+16:24:32 * bcoca starts new company
+16:24:51 <gundalow> too late, it already exists
+16:24:52 <caphrim007> bcoca: i want 50% for coming up with that name :-P
+16:24:58 <gundalow> though seems to just be an ISP
+16:25:02 <gundalow> (anyways)
+16:25:58 <gundalow> Will "ansible.module_utils.network" be a think, if so will it be empty?
+16:26:01 <privateip> i think we have consensus
+16:26:09 <privateip> gundalow: yes
+16:26:13 * gundalow remembers some discussion/concerns about empty namespace
+16:26:18 <gundalow> though I can't remember the detail
+16:26:20 <bcoca> caphrim007: how much is 1/2 of 0?
+16:26:27 <caphrim007> :p
+16:26:39 <gundalow> #chair bcoca ktbyers
+16:26:39 <zodbot> Current chairs: Gesha24 Qalthos bcoca bdudas_ bearrito caphrim007 dt-arista funzo gundalow hbalaji jmcgill298 ktbyers ogenstad privateip rcarrillocruz skg-net trishnag
+16:26:58 <gundalow> ktbyers: Welcome, we are just discussing https://github.com/ansible/proposals/issues/76 seems like we are in agreement on it
+16:27:12 <gundalow> privateip: my comments are not blocking, just checking it's not an issue
+16:27:25 <privateip> yep understood
+16:27:40 <gundalow> we voting?
+16:27:40 <gundalow> +!
+16:27:42 <gundalow> +1
+16:27:58 <dt-arista> +1
+16:28:02 <trishnag> +1
+16:28:03 <Qalthos> +1
+16:28:14 <skg-net> +1
+16:28:49 <gundalow> #chair andriusb
+16:28:49 <zodbot> Current chairs: Gesha24 Qalthos andriusb bcoca bdudas_ bearrito caphrim007 dt-arista funzo gundalow hbalaji jmcgill298 ktbyers ogenstad privateip rcarrillocruz skg-net trishnag
+16:29:37 <gundalow> #agreed Agreed ansible.module_utils.network.common - command shared functions
+16:29:49 <gundalow> #halp
+16:29:52 <gundalow> #help
+16:30:07 * gundalow forgets how to use the bot
+16:30:09 <Qalthos> there's no response for #agree
+16:30:13 <gundalow> ah, OK
+16:30:19 <gundalow> #agree ansible.module_utils.network.common - command shared functions
+16:30:28 <gundalow> #agree ansible.module_utils.network.{{ platform }} - where platform is platform specific shared functions
+16:30:32 <gundalow> privateip: Which is next?
+16:30:50 <privateip> 71?
+16:31:17 <Qalthos> #agreed ansible.module_utils.network.{{ platform }} - where platform is platform specific shared functions
+16:31:27 <Qalthos> (not #agree, sorry)
+16:31:35 <gundalow> #topic Aggregates (proposal#71)
+16:31:45 <gundalow> #info https://github.com/ansible/proposals/issues/71
+16:31:49 <gundalow> Qalthos: Thanks for fixing that
+16:33:08 <privateip> bcoca: for 71, is loop_control: optimize: yes|no part of 2.5 roadmap?  if not, can it be?
+16:36:25 <gundalow> I think bcoca has gone for lunch
+16:37:14 <privateip> ok
+16:37:24 <privateip> that is the current gating factor
+16:37:41 <privateip> if we get loop_control: optimize: yes|no then the aggregates discussion is done
+16:38:34 <privateip> the plan would be to refactor the "aggregates" to normal lists and use loop_control instead
+16:38:50 <gundalow> #chair
+16:38:51 <zodbot> Current chairs: Gesha24 Qalthos andriusb bcoca bdudas_ bearrito caphrim007 dt-arista funzo gundalow hbalaji jmcgill298 ktbyers ogenstad privateip rcarrillocruz skg-net trishnag
+16:38:54 <gundalow> Thoughts ^
+16:40:02 <jmcgill298> 71 generated a lot of discussion, I think it would be good to clearly lay out the proposed solution
+16:40:13 <itdependsnetwork> ^^ agreed
+16:40:26 <itdependsnetwork> I do not have a good handle on any these what people's position even is
+16:40:34 <privateip> what is yours?
+16:40:38 <privateip> position that is?
+16:41:05 <privateip> i see this coming down to loop_control: optimzie: yes|no .... if we get that feature then we dont need aggregates
+16:41:20 <privateip> if that ^^ is in 2.5 then we refactor aggregates in 2.6
+16:41:37 <privateip> if not, then aggregates need to stay and we bikeshed on argument name
+16:41:53 <ktbyers> My main question on this are what of mechanics on non-simple cases i.e. how aggregates is actually achieved.
+16:41:58 <itdependsnetwork> That we need to define states that are well understood, and that the operational state should be a different dict
+16:42:17 <ktbyers> For example, multiple levels of nesting or not a simple 'no'.
+16:42:34 <ktbyers> But that is a different issue than the structure/loop-format/naming question.
+16:42:43 <privateip> ktbyers: agreed
+16:43:09 <privateip> i dont think we can discuss that until we know how we are doing loops
+16:43:17 <ktbyers> Sounds good.
+16:43:18 <privateip> either from the playbook or from an aggregates argument
+16:43:49 <privateip> so as a status update, we are in holding pattern until we get the loop_control decision made
+16:44:01 <privateip> gundalow: can we add that to core team irc meeting
+16:44:12 <gundalow> sure
+16:44:13 <privateip> see if we can get movement on this
+16:44:16 <privateip> thanks
+16:44:58 <gundalow> done
+16:45:10 * gundalow and privateip have to leave in 15 minutes
+16:48:40 <gundalow> What else does it make sense to go through today?
+16:48:47 <itdependsnetwork> reading back through proposals, got them mixed up. Is purge on the table?
+16:49:51 <privateip> once we get loop_control answered
+16:50:49 <itdependsnetwork> So what is your complete proposal?
+16:51:50 <privateip> get core to commit to loop_control: optimize: yes|no and then have a discussion around the mechanics as ktbyers said (purge would be part of that)
+16:52:09 <privateip> its hard to discuss how we will purge until we understand how we will get the input
+16:52:16 <jmcgill298> what proposal number is loop_control?
+16:52:20 <privateip> 71
+16:52:24 <privateip> oh sorry
+16:52:47 <privateip> no proposal ... the PR is here --> https://github.com/ansible/ansible/pull/30464
+16:53:22 <privateip> jmcgill298: are you offering to write the proposal? :)
+16:54:18 <jmcgill298> I'm just trying to get a clearer picture of what the solution would look like assuming loop_control is accepted
+16:55:17 <privateip> need to undertand how the loop_control mechanims would work ... i have ideas but not fully vetted yet
+16:55:26 <privateip> i think we are saying the same thing
+16:55:44 <itdependsnetwork> that is what I am trying to understand, can you tell me your ideas in the world where you are the dictator
+16:56:13 <itdependsnetwork> even if not fully vetted
+16:57:11 <itdependsnetwork> Much easier for me to have the conversation where all sides are prescriptive in their intention, then can be broken into reasonable Y/N decision points
+16:57:31 * gundalow has to ditch shortly
+16:57:45 <privateip> normally yes but i have a hard stop in 3 minutes which isn't enough.... will try to compose my thoughts for next weeks meeting in a consumable format
+16:57:53 <privateip> fair?
+16:58:16 <itdependsnetwork> fair :)
+16:58:40 <rahushen> quick question before we end the meeting... what's the timeline for 2.4.1 ?
+16:58:53 <jmcgill298> agreed, would rather wait to have a fleshed out design
+16:59:20 <privateip> rahushen: beta1 this week, rc1 next week
+16:59:27 <privateip> current plan
+16:59:44 <hbalaji> have been following the meeting. was wondering how and where do i start contributing. any guidance would be great :)
+16:59:52 <rahushen> ok ...thanks for the info
+17:00:49 <privateip> hbalaji: here is a good place to start --> https://github.com/ansible/ansible/issues?utf8=%E2%9C%93&q=is%3Aissue%20is%3Aopen%20label%3Anetworking
+17:01:01 <privateip> tackle an issue or feature request
+17:01:09 <privateip> we are all out here to assist if you have questions
+17:01:27 <privateip> sorry all, i need to drop now ... thanks for your time today
+17:01:29 <hbalaji> awesome
+17:01:32 <hbalaji> Thank you
+17:01:43 <seanx820> thanks
+17:08:14 <Qalthos> Anything from anyone else before I close this meeting?
+17:15:56 <Qalthos> Righto
+17:16:01 <Qalthos> #endmeeting

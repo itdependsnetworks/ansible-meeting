@@ -1,0 +1,180 @@
+19:00:06 <thaumos> #startmeeting ansible project meeting
+19:00:06 <zodbot> Meeting started Tue Sep 19 19:00:06 2017 UTC.  The chair is thaumos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:00:06 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:00:06 <zodbot> The meeting name has been set to 'ansible_project_meeting'
+19:00:28 * shertel waves
+19:00:35 * gundalow waves
+19:01:15 <caphrim007> o/
+19:01:22 <thaumos> #chair shertel gundalow
+19:01:22 <zodbot> Current chairs: gundalow shertel thaumos
+19:01:27 <ryansb> heya
+19:01:50 * mikedlr waves
+19:02:11 <thaumos> #chair ryansb mikedlr
+19:02:11 <zodbot> Current chairs: gundalow mikedlr ryansb shertel thaumos
+19:03:11 <funzo> o/
+19:03:40 <thaumos> #chair funzo
+19:03:40 <zodbot> Current chairs: funzo gundalow mikedlr ryansb shertel thaumos
+19:05:07 <thaumos> so how's everyone doing?
+19:05:18 <thaumos> yay 2.4 release day!
+19:05:28 <thaumos> go forth and have fun with the new release all
+19:05:36 <funzo> \o/
+19:05:55 <thaumos> it was a funzo's labour of love and spite
+19:06:00 <abadger1999> hola
+19:06:07 <thaumos> #chair abadger1999
+19:06:07 <zodbot> Current chairs: abadger1999 funzo gundalow mikedlr ryansb shertel thaumos
+19:06:08 <funzo> amigo!
+19:06:25 <thaumos> aww, I am glad we're friends!@
+19:07:49 <thaumos> #topic open floor
+19:07:57 <thaumos> anyone have anything to discuss?
+19:08:15 <thaumos> I am assuming that ah
+19:08:17 <thaumos> ...
+19:08:23 <thaumos> gundalow is sneaky sneaky
+19:08:37 <thaumos> #topic Declarative Intent proposal
+19:08:46 <thaumos> #link https://github.com/ansible/proposals/issues/70
+19:09:45 <thaumos> sorry, I am reading the proposal
+19:10:16 <thaumos> @gundalow and @funzo, not sure if we have enough folks to really discuss this fully.  Thoughts?
+19:10:45 <funzo> thaumos: it would be nice then to at least ping people to get them to read the proposals
+19:11:05 <thaumos> +1
+19:11:06 <funzo> it's really important to our intiatives that we have a really good undrestanding of these across core and networking
+19:11:13 <funzo> and collaborate on the best solutions early on
+19:11:14 <thaumos> agreed
+19:11:30 <funzo> we are staging 2.5 roadmap items and it'll be imperitive to get that feedback really early
+19:12:32 <thaumos> #action thaumos to have applicable folks to read and possibly weigh in on the proposal.
+19:12:37 <funzo> please please
+19:12:45 <thaumos> #action thaumos to discuss with BU as well.
+19:12:53 <funzo> happy to have out of band impromptu meetings to dicuss as well
+19:13:03 <thaumos> be careful what you wish for 😉
+19:13:55 <thaumos> #topic Open Floor
+19:14:00 <abadger1999> funzo: lots of jargon in that proposal.
+19:14:01 * mikedlr thinks this looks like something I need to understand -  definite complaints from people switching to terraform that ansible is to imperitive;  can this help make cloud system opertations more declaritive?
+19:15:09 <thaumos> @mikedlr we are hearing that a lot as well.  I'd love your input on that topic too
+19:15:17 <mikedlr> imperative..
+19:15:24 <thaumos> heh
+19:15:52 <funzo> :)
+19:15:59 <thaumos> @gundalow same with your second proposal?  I can post it for review, and get people to weigh in
+19:16:24 <caphrim007> i had a question about release cadence
+19:16:27 <thaumos> I think both of these warrant separate discussions
+19:16:34 <thaumos> sure @caphrim007
+19:16:43 <caphrim007> ballpark estimate...what is the period of time between releases?
+19:16:50 <caphrim007> quarterly?
+19:16:52 <thaumos> roughly 3-4 months
+19:16:56 <caphrim007> ok
+19:17:12 <thaumos> next release is ballparked for 4ish
+19:17:30 <caphrim007> okie doke. somebody asked me about that at work and i didnt have a good answer
+19:17:47 <thaumos> not including the crazy period that is December.
+19:17:58 <caphrim007> yeah np
+19:18:05 <caphrim007> ballpark estimate is good enough
+19:19:19 <abadger1999> I'm not sure I understand declarative intent yet but I'm thinking I agree with dag... facilty for that shold be separate from task parameters.
+19:20:30 <sdoran> As I understand it, the main idea behind declarative intent is making network behave more like the rest of modules, and not having to know the OS specific commands to enter to get the device to the desired end state.
+19:20:51 <sdoran> *network modules behave...
+19:21:21 <sdoran> This also opens the door for vendor agnostic modules, like vlan or route.
+19:21:29 <sdoran> If my understanding is correct.
+19:21:43 <flatterlight> like interface this configuration
+19:22:24 <abadger1999> sdoran: from the ticket that doesn't seem to be the case.
+19:22:39 <abadger1999> sdoran: seems more like builtin checks as to the current state.
+19:23:26 <abadger1999> sdoran: I think what you're talking about is more like the net_* modules.
+19:23:45 <sdoran> Could be I conflated the ideas.
+19:23:52 <sdoran> Lots of churn in the network space.
+19:24:15 <caphrim007> i think the term sdoran is looking for is Resource Modules, as peter called them
+19:24:16 <abadger1999> funzo: ^ Does that help?
+19:24:31 <gundalow> thaumos: Back. Would be good for people to review and add comments
+19:28:32 <funzo> abadger1999: it's consistent feedback, so yeah
+19:28:43 <funzo> i like the democratic approach to making design decisions
+19:29:58 <funzo> i'd like to get more input after the team has a chance to read through and think about it a bit
+19:30:23 <funzo> thaumos: any chance we can set some sort a deadline so we can expect feedback within a certain time period
+19:31:02 <funzo> maybe by the end of the week get 3 or 4 folks to chime in about the spec, in the spec
+19:31:05 <thaumos> @funzo imo, we need to get opinions by our meeting next week
+19:31:16 <thaumos> and by meeting I mean the team meeting
+19:31:17 <funzo> that would be great
+19:31:28 <thaumos> because I want to get the roadmap out the door by end of week next week.
+19:31:31 <gundalow> +1
+19:31:34 <flatterlight> +1
+19:31:37 <funzo> i had sorta hoped for some healthy debate
+19:31:58 <funzo> pros/cons - suprise use cases, etc
+19:32:22 <mikedlr> looking at declarative intent my immediate thought is that it's a bit like libcloud - it's a great idea in principle, however _everybody_ ends up needing exceptions at some stage, normally near the end of their devlopment.
+19:33:09 <sdoran> Does seem to be overloading the module functionality a bit, which would lead to tons of people needing slight exceptions to the behavior.
+19:33:13 <mikedlr> the escape hatches are really important and whether they work won't be obvious and understood until you are really close to the details of some particular system it's configuring.
+19:33:15 <flatterlight> an abstraction of basic networking parameters like interfaces, hostnames, routing configuration would be good
+19:33:28 <abadger1999> I think I agree with bcoca nad dag's POV.  bcoca's idea is much more flexible but there could be cons (we don't ship roles yet.  What roels do we want to be responsible for shipping?  What are the performance costs to doing it in multiple tasks vs one?)
+19:33:30 <gundalow> declarative intent != Platform Agnostic
+19:33:51 <sdoran> +1
+19:33:56 <sdoran> My bad for conflating the two.
+19:34:20 <gundalow> declarative intent = Configure this network port and ensure that we've got a 10GB link (e.g. someone has plugged the cable in)
+19:34:45 <gundalow> sdoran: no problem, I think some of the DI examples use platform agnostic playbooks
+19:34:48 <abadger1999> dag's idea requires some new playbook syntax but separates the new feature out from the old feature in a more natural way.  It isn't as flexible as you can't compose arbitrary helpers together, the module author has to have anticipated the needs ahead of time.
+19:34:52 <sdoran> Ansible's approach historically has been to give the end user maximum flexibility. Which I believe is where the "too imperative" criticism comes from.
+19:35:56 <gundalow> See Lines 49 - 76 (GREEN) https://public.etherpad-mozilla.org/p/ansible-proposal-70
+19:36:26 <mikedlr> gundalow: how is that different from the way that many ansible modules are _supposed_ to work (declare wanted state - let ansible fix it) ?  there are many exceptions (like rds) but that seems a normal thing?
+19:36:44 <gundalow> mikedlr: It's difficult to write a module to plug a network cable in
+19:37:06 <gundalow> or rather in Declaritive Intent we are checking things that we can't fix
+19:38:47 <sdoran> Seems similar to the service module starting a service and then actually checking that a port is open if you don't trust the module or want to double check the operational state matches the declared state.
+19:39:14 <sdoran> Today we do that with additional tasks, such as assert or wait_for.
+19:39:18 <abadger1999> sdoran: yeah except you have to trust the module as the module handles the check as well.
+19:39:29 <abadger1999> (in declarative intent)
+19:39:52 <abadger1999> sdoran: with the addition that this is to check state of things that we can't change.
+19:40:19 <sdoran> Seems less flexible than what we have today with facts/wait_for/assert
+19:40:39 <sdoran> But the flexibility comes at a cost to the playbook author having to write the check.
+19:40:55 <sdoran> Hard to have it both ways.
+19:41:32 <abadger1999> funzo, gundalow: The documentation PR (may not be a representative sample) makes me think that you want an object pattern instead of a task pattern.
+19:41:39 <abadger1999> I'm not sure that's a good idea.
+19:41:40 <sdoran> I don't think network devices are unique in this desire to validate operational state after the module says it did its work.
+19:41:43 <gundalow> abadger1999: How do you mean?
+19:41:58 <gundalow> Feel free to add an example into the etherpad or maybe better, the Proposal
+19:43:39 <abadger1999> gundalow: It looks more lke
+19:43:40 <abadger1999> class NetworkInterface():
+19:43:55 <abadger1999> state = 'connected'
+19:44:13 <abadger1999> def do_enable(enable=[True|False])
+19:44:35 <abadger1999> def set_name(name)
+19:45:47 <abadger1999> Might just be a product of the declarative pattern while mixing both parameters that cause actions and parameters that cannot cause actions.
+19:46:09 <mikedlr> sdoran: an RDS database instance is created,  about ten minutes later you come back and check if it's working before you go on and create databases and tables in it.  Don't yet understand how this could help with that?
+19:46:33 <abadger1999> Okay... So yeah, I don't think that's a separate issue... it's the mixing of parameters that cause actions and parameters that assert state that is the problem jsut as dag said.
+19:46:45 <sdoran> Seems essentially like adding an assert to each task directly, to validate the config change made by a task resulted in a (specific) change to operating state of the device.
+19:47:12 <sdoran> state checking seems like fact modules
+19:48:35 <mikedlr> sdoran: "when the state becomes useful then start doing more operational tasks" is a very general thing which isn't brilliantly implemented in raw ansible.
+19:48:49 <sdoran> mikedlr: Coupling the check with the module is less work on the playbook author (they don't have to write a check), but it locks her/him into the way it behaves in the module.
+19:48:58 <mikedlr> running a fact module repeatedly until it reports the new state is ugly
+19:49:00 <abadger1999> sdoran: <nod>  That's what bcoca was driving at.... If we start shipping roles, we should ship a role that uses a module to set config, then uses a fact-gathering module to find out present state, and then assert that the state matches the user's request
+19:49:36 <abadger1999> but that depends on us shipping roles and coding that set of things into a playbook role rather than coding it into a module in python.
+19:50:39 <funzo> i don't think network operators are going to code modules to do anything
+19:50:48 <sdoran> One thing I have discouraged people from doing is writing validation tasks to check previous modules actually made config changes. "Trust the module", I say.
+19:50:55 <funzo> so surfacing this all through playbooks is probably a necessity
+19:51:01 <sdoran> But for certain things, you need to validate state before moving on.
+19:51:09 <sdoran> Comes up a lot in networking devices.
+19:51:59 <sdoran> So the question is: can we come up with a more elegant way to handle the state validation rather than requiring wait_for + loops, as mikedlr describes?
+19:52:02 <abadger1999> funzo: <nod>  But what I'm driving at is how it's available i nthe playbook.  It's already available in the playbook right now.  But the network operators have to put the pieces together.
+19:52:14 <sdoran> +1
+19:52:17 <sdoran> That's it exactly.
+19:52:21 <abadger1999> funzo: bcoca is suggesting we start shipping roles that compose that pre-compose that together for them.
+19:52:26 <sdoran> Ansible requires more effort up front.
+19:52:50 <abadger1999> funzo: and the initial proposal is saying that we can pre-code the variations inside of a single module.
+19:52:52 <funzo> abadger1999: i think that's consistent with what dag is suggesting, too. If I understand it correctly
+19:52:59 <sdoran> It's not "automagic"
+19:53:01 <funzo> not specificially how bcoca suggested
+19:53:10 <funzo> but similar idea
+19:53:18 <abadger1999> funzo: dag's suggestion is different.
+19:53:39 <sdoran> I think trying to precode all the checks would be an infinite game of whack-a-mole.
+19:53:59 <abadger1999> funzo: He's proposing new playbook syntax which makes the UI *much* better but he doesn't map that to a definite backend.
+19:54:19 <abadger1999> funzo: So we still would have to figure out how to implement that syntax.
+19:55:38 <abadger1999> Only modules that implement X,Y and Z can use the new syntax?  Some controller-level code that essentially handles the most common things that bcoca's role-based approach would?  Create a role on-the-fly and execute it?  Those could each be the way that dag's propposed UI is implemented
+19:56:08 <abadger1999> funzo: doesthat make sense?
+19:59:08 <funzo> there are probably some things about how that should be done, but yes at a high level
+19:59:47 <funzo> in interest of time, we'll follow up on the action item
+20:00:10 <funzo> unless there are some last words on this topic, we can open it up to any other items
+20:01:44 <funzo> abadger1999: sdoran thanks for the excellent feedback, and please leave your thoughts in comments on the spec
+20:01:59 <abadger1999> funzo: Link to spec pleasae?
+20:02:02 <sdoran> 👌
+20:02:11 <funzo> https://github.com/ansible/proposals/issues/70
+20:02:19 <funzo> #link https://github.com/ansible/proposals/issues/70
+20:02:34 <abadger1999> funzo: k... even though, that's just a proposal to change something else?
+20:02:49 <funzo> oh sorry
+20:02:51 <funzo> i read that wrong
+20:02:52 <funzo> sedc
+20:02:54 <funzo> sec
+20:03:17 <funzo> the actual spec is an internal google doc :
+20:03:19 <funzo> :/
+20:03:30 <funzo> shame shame shame
+20:03:54 <abadger1999> hehe :-)
+20:04:08 <funzo> ok, anything else before I pound end meeting
+20:04:09 <abadger1999> funzo: okay, I guess you'll need to post that externally when available.
+20:04:16 <funzo> true
+20:04:51 <funzo> #endmeeting

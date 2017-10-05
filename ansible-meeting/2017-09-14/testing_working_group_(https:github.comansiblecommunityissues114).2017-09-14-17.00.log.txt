@@ -1,0 +1,78 @@
+17:00:15 <mattclay> #startmeeting Testing Working Group (https://github.com/ansible/community/issues/114)
+17:00:15 <zodbot> Meeting started Thu Sep 14 17:00:15 2017 UTC.  The chair is mattclay. Information about MeetBot at http://wiki.debian.org/MeetBot.
+17:00:15 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+17:00:15 <zodbot> The meeting name has been set to 'testing_working_group_(https://github.com/ansible/community/issues/114)'
+17:00:18 <mattclay> #chair gundalow
+17:00:18 <zodbot> Current chairs: gundalow mattclay
+17:01:43 <mattclay> #info Legacy integration tests (those not using ansible-test) have been moved to the `test/legacy/` directory.
+17:04:03 * mattclay waits for people to show up
+17:08:03 <shaps> hey
+17:08:14 <mattclay> #chair shaps
+17:08:14 <zodbot> Current chairs: gundalow mattclay shaps
+17:08:17 <mattclay> #topic Open Floor
+17:11:00 <mattclay> shaps: Did you have anything you wanted to discuss?
+17:11:24 <shaps> no, just remembered there was a meeting :)
+17:11:48 <mattclay> It looks like it's going to be a short meeting today. Nothing on the agenda and you're the only other person here.
+17:12:01 <shaps> ah great, then yeah, short meeting
+17:12:22 <mattclay> I'll wait a few more minutes in case someone shows up late.
+17:14:54 <mattclay> #info Ansible 2.4.0 RC3 is ready for testing (https://groups.google.com/forum/#!topic/ansible-devel/PjBtOkwbt5I)
+17:15:05 * mikedlr waves hi
+17:15:11 <mattclay> #chair mikedlr
+17:15:11 <zodbot> Current chairs: gundalow mattclay mikedlr shaps
+17:15:21 <mattclay> mikedlr: Do you have anything you'd like to discuss?
+17:17:11 <mikedlr> mostly just listening.  wonder what the state of coverage tools is now;  there were some informal / part formal  ones; is there a publicised one now?
+17:18:16 <mikedlr> for the rds_instance module I need to make sure each major code path (at least) is covered by an integration test since I found that a bunch of inherited stuff just wasn't working.
+17:19:04 <mattclay> mikedlr: We have code coverage of tests already. You can see results from locally run tests, or from our nightly runs: https://codecov.io/gh/ansible/ansible
+17:19:58 <mattclay> For local testing, run with ansible-test with the `--coverage` option to collect coverage.
+17:20:48 <mattclay> Usually you'll want to do the following: 1) `ansible-test coverage erase` 2) run `ansible-test` test commands with `--coverage` 3) `ansible-test coverage html`
+17:20:52 <mikedlr> is there a way to get the codecov.io report on a PR?
+17:21:03 <mattclay> mikedlr: Unfortunately not at this time.
+17:22:05 <mikedlr> okay; it would really be a good thing to have, especially when reviewing new module PRs.
+17:22:10 <mattclay> I've discussed with the codecov.io team the features necessary for us to be able to do that. It's something they're working on, but I don't know what exactly will be available, or when.
+17:23:08 <mattclay> In the meantime you can always run the tests locally and get reports similar to what codecov.io produces.
+17:24:36 <mikedlr> right; which is helpful for my own things; but for example I just reviewed spotinst where I don't even have it installed.  Code coverage would allow quite a bit more feedback once tests get written.
+17:25:29 <mikedlr> anyway, if you already discussed with codecov then you know that, so please just tell when it's available.  It's a great thing you are doing !
+17:27:26 <mattclay> We might be able to report on more coverage data for PRs than we currently do, even without the changes from codecov.io. I'll have to look to see if we can report on coverage for a PR without getting the coverage deltas (which would often be wrong).
+17:28:37 <mikedlr> other topic to discuss is unit-testability of modules..
+17:29:01 <mattclay> It's much less useful without deltas, since you don't know if coverage is better or worse. It would mainly be useful for new tests, or looking at existing tests to see in general what areas are missing coverage.
+17:29:26 <mattclay> #topic Unit Testing of Modules
+17:29:34 <mikedlr> mattclay: that's precisesly what you need when doing a review.
+17:29:54 <mikedlr> I've been experimenting with very short main functions like so https://www.irccloud.com/pastebin/X8c6Zl9g/
+17:30:40 <mikedlr> even the module object is created in a setup_module_object function.  that means you can unit test it sensibly.
+17:31:35 <mikedlr> with this and some other techniques with simple mock objects I'm now convinced that all modules should have unit tests to supplement the integration tests.
+17:31:38 <mikedlr> discuss.
+17:34:08 <mattclay> Unit tests are good for covering scenarios that are difficult or impossible to hit with integration tests. However, as much as possible, we should stick to testing stable interfaces in code instead of unstable internals.
+17:35:16 <mattclay> Integration tests naturally test a stable interface (the module args), so they usually require little maintenance. You should be able to completely rewrite a module and still have it pass integration tests.
+17:36:08 <mikedlr> with that I agree; however there are some design issues that are actually clearer in unit tests and unit tests make it possible for people who don't have access to the environment (e.g no AWS account) to at least smoke test that they haven't broken things needlessly which massively eases refactoring.
+17:36:32 <mikedlr> I'm not proposing replacement, just suplement with a pretty low code coverage target.
+17:36:57 <mattclay> That depends on what the unit tests are testing. If they're testing against the module internals, instead of the module args, then it often times makes refactoring more difficult.
+17:38:34 <mikedlr> agreed; however look at test_await_should_wait_till_not_pending(): - in https://github.com/ansible/ansible/pull/29032/files
+17:39:34 <mikedlr> it's actually testing fully external functionality (more or less emulating the API) but several cases that it's impossible to guarantee will happen in any integration test
+17:40:54 <mikedlr> basically the test is "no matter which if the various possible state change trees (do we have the luck to see the moment of reboot) we go through, we should still wait till we get to a proper stable state"
+17:42:58 <mattclay> That's definitely a good use case for unit tests, since that's not something we can currently do with integration tests.
+17:44:22 <mikedlr> need to have some document which says what are good unit tests..
+17:45:56 <mattclay> mikedlr: Are you interested in working on providing documentation and/or examples of good unit tests?
+17:47:21 <Pilou> I wrote this one reusing existing unit tests: https://github.com/ansible/ansible/blob/devel/test/units/modules/packaging/os/test_rhn_register.py
+17:47:42 <Pilou> I guess we could have a common.py with helpers
+17:47:55 <mattclay> #chair Pilou
+17:47:55 <zodbot> Current chairs: Pilou gundalow mattclay mikedlr shaps
+17:48:38 <Pilou> a skeleton / template unit test would be very useful
+17:48:38 <mikedlr> Yes. Think so.
+17:49:44 <mikedlr> I will make it pretty minimal to start with but then it can develop is it gets interest
+17:51:12 <mattclay> When testing modules with unit tests, they often end up being closer to integration tests. When the tests require the module dependencies to be installed, we end up testing the interaction between the module and its dependencies (and then mocking what those dependencies need) instead of just testing the module.
+17:51:31 <Pilou> I wrote this in order to helper author of kafka module: https://paste.fedoraproject.org/paste/Cf3XuoattJZCapaxC3YuEw
+17:51:58 <mikedlr> Pilou: +1 on helpers: especially for things that are difficult like preparing the json for testing argument parsing
+17:56:32 <mattclay> We're getting close to the end of our scheduled time. Is there more to discuss on module unit testing / documentation / examples, or any other topics?
+17:56:55 <Pilou> Two pull requests fixing "broken import": #29116 (module_utils/avi.py, 2 approvals), #29115 (tower, maintainer approved), another which update unit tests of alternatives module: #28775.
+17:57:35 <Pilou> Approvals / merges wanted :)
+18:00:02 <Pilou> Unrelated: one label for test related pull requests should be selected (https://github.com/ansible/ansibullbot/issues/764).
+18:00:08 <mattclay> Pilou: 29116 merged, 29115 has a merge conflict now.
+18:02:34 <mattclay> Pilou: Is someone working on that bot issue?
+18:03:14 <Pilou> i am adding comment on the issue
+18:05:04 <Pilou> bot could easily updated in order to handle entry without values
+18:06:19 <Pilou> Then the bot will use "tests" label only. Is that ok ,
+18:06:21 <Pilou> ?
+18:06:49 <mattclay> Pilou: 28775 merged. Thanks for adding the test.
+18:10:13 <mattclay> I think we only need one label.
+18:13:42 <mattclay> OK, we're almost 15 minutes past our schedule time. Thanks for coming everyone.
+18:13:44 <mattclay> #endmeeting

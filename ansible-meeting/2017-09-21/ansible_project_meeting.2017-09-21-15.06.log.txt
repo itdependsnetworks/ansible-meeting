@@ -1,0 +1,176 @@
+15:06:14 <gundalow> #startmeeting Ansible Project Meeting
+15:06:14 <zodbot> Meeting started Thu Sep 21 15:06:14 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:06:14 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:06:14 <zodbot> The meeting name has been set to 'ansible_project_meeting'
+15:06:33 <alikins> blorp
+15:06:38 <gundalow> #chairs abadger1999 alikins bcoca jtyr maxamillion jhawkesworth_
+15:06:40 * sdoran waves
+15:06:42 <sivel> I really wish the calendar events had reminders/alerts on them
+15:06:47 * shaps waves
+15:06:49 <gundalow> I think everyone is catching up on sleep
+15:06:53 <sdoran> I get reminders.
+15:06:57 <gundalow> #chair sivel shaps sdoran
+15:06:57 <zodbot> Current chairs: gundalow sdoran shaps sivel
+15:06:58 <gundalow> ditto
+15:07:03 <bcoca> sleep? what is that?
+15:07:20 <shaps> weird mental state of the human race
+15:07:22 <jhawkesworth_> shell built in , isn't it?
+15:07:28 <sivel> hrm, weird, apple mail doesn't remind me
+15:07:31 <gundalow> #Info Agenda https://github.com/ansible/community/labels/core
+15:07:57 <jtyr> "Sleep is a naturally recurring state of mind and body, characterized by altered consciousness, relatively inhibited sensory activity, inhibition of nearly all voluntary muscles, and reduced interactions with surroundings."
+15:08:10 * resmo waves and sleeps
+15:08:40 <sivel> err, calendar, not mail.  I love this terrible lag, I can't even re-read and fix things
+15:08:41 <shaps> jtyr, that sounds me at any point in time during the day :D
+15:08:48 <jtyr> exactly ;o))))
+15:09:06 * gundalow sees two things on the agenada proposal#69 (file modules defaults) and 28292 redhat_repository module
+15:09:24 <gundalow> #info 2.4.0 FINAL is out. YAY. Great work everyone. Please test, tell your friends
+15:09:48 <maxamillion> +1
+15:09:50 <bcoca> jtyr: sounds more like drinking
+15:10:13 <jtyr> bcoca: or the state after drinking ... ;O)
+15:10:24 <abadger1999> hola
+15:10:36 <shaps> gundalow, I'd probably just add this: https://github.com/ansible/ansible/issues/30700 to the agenda
+15:10:53 <jtyr> I think Wikipedia adapt the change the definition to nowadays lifestyle ... ;o)
+15:11:08 <gundalow> #topic Proposal All file modules should have a sane default `follow` parameter
+15:11:10 <bcoca> +1 to 'consistent follow'
+15:11:17 <gundalow> #link https://github.com/ansible/proposals/issues/69
+15:11:29 <bcoca> jtyr: to have 'after' you need to stop at one point
+15:12:18 <jtyr> bcoca: I cannot drink gin all day long ... office policy doesn't allow it ... otherwise I would ... ;o)
+15:12:44 <gundalow> bcoca: Thanks for your feedback on this
+15:12:50 <gundalow> What do other people think?
+15:12:56 <shaps> yep +1 to consistency
+15:13:00 <abadger1999> I like the idea of consistent follow.  What's the best default, yes or no?
+15:13:43 <bcoca> jtyr: that is why i work from home
+15:13:58 <jtyr> bcoca: lucky you ...
+15:14:02 <maxamillion> +1 to consistent follow
+15:14:12 <abadger1999> (As a tangent, notes that copy has a local_follow parameter fetch and synchronize might want to grow that too)
+15:14:13 <bcoca> abadger1999:  majoirity is no
+15:14:20 <shaps> I'd say no is safest
+15:14:20 <bcoca> not sure which one makes 'more sense'
+15:14:44 <bcoca> abadger1999: local_follow makes more sense to default 'yes' imho
+15:14:46 <jhawkesworth_> no is easier to defend as a default for everything
+15:14:56 <shaps> yeah
+15:14:56 <bcoca> except for syncronize/recursive copy
+15:14:58 <abadger1999> lineinfile I think needs to always be follow=True
+15:15:14 <bcoca> on destination, most 'updates' should follow-yes
+15:15:21 <abadger1999> patch also doesn't make sense with follow=False
+15:15:29 <alikins> I like the idea.
+15:15:33 <abadger1999> Okay... so maybe the list of "file" modules needs to be trimmed.
+15:15:43 <bcoca> replace/line/block/patch
+15:16:06 <bcoca> there are 4 kinds of file modules
+15:16:16 <abadger1999> If we're operating solely on content then there should not be a follow argument... it should be hardcoded equivalent of true
+15:16:24 <alikins> Not sure the best way to deal with module param defaults changing though, but thats a more general issue.
+15:16:45 <bcoca> 1) replacers (copy, template, assemble ...) 2) editors (line/block/patch/...) 3) bulk syncronize/unarchive/copy recursive 4) modifiers (file, xattr/acl/etc)
+15:16:53 <bcoca> ^ each type might need a diff 'default'
+15:17:22 <bcoca> abadger1999: for 'replacers' ... i agree
+15:17:28 <bcoca> sorry, for editors
+15:17:32 <abadger1999> <nod>
+15:17:33 <bcoca> 2) follow=true always
+15:17:37 <bcoca> rest ... depends
+15:18:12 <abadger1999> Are there platforms where (or modifiers in which) the modifiers work on symlinks?
+15:18:12 <bcoca> 1) follow=no 2) follow hardcocded to yes 3) follow=no 4)follow=yes
+15:18:31 <bcoca> abadger1999: rarely, but yes, for those i would default to =yes and leave toggle to no
+15:18:37 <abadger1999> <nod>
+15:19:01 <alikins> so this is modules that dont use FILE_COMMON_ARGUMENTS?
+15:19:06 <bcoca> hard links are the more 'fun', specialy with how 'file' works ... but i think separating  into links and permissions modules is only solution there
+15:19:22 <abadger1999> alikins: eventually we have to split up file_common_arguments
+15:19:28 <bcoca> alikins: even thouse that do .. might not need same defaults
+15:19:34 <bcoca> ^ agreed with abadger1999
+15:19:46 <bcoca> file_permissions file_links file_....
+15:20:12 <alikins> agreed
+15:23:11 <abadger1999> definitions: replacers, replace a file on the remote system with a new one.  editors, take a file on the remote system and modify it.  bulk synchronizers: anything that can target a directory (therefore the directory can be a symlink that should have a default for follow)  modifiers Modify attributes of the file, not the file's contents
+15:23:42 <abadger1999> Okay, so next step, ask kustodian to break the list up into those categories?
+15:25:01 <abadger1999> I can add this info to the proposal ticket if we're agreed on that and have no other feedback at this time.
+15:25:34 <bcoca> abadger1999: sycnronizers can also have 'symlnks inside the directory'
+15:25:41 <bcoca> ^ they have 'multiple follow behaviours'
+15:25:46 <abadger1999> Hmm....
+15:25:50 <abadger1999> that is more complex.
+15:25:54 <bcoca> yes, it is
+15:25:56 <abadger1999> well, not just complex.
+15:26:01 <abadger1999> Possibly a different switch
+15:26:02 <bcoca> i would leave them out
+15:26:16 <bcoca> 'syncronize' is one of em
+15:27:06 <abadger1999> If I want to copy a directory tree, I probably want to follow a toplevel symlink to the directory it is in.  But I may or may not want to overwrite vs follow symlinks inside of the existing remote tree
+15:27:20 <abadger1999> +1 to leave those out
+15:27:39 <akasurde_> o/
+15:27:54 <abadger1999> (Just like copy's local_follow... I think it needs a different parameter)
+15:28:55 <bcoca> its part of rysnc options
+15:29:04 <abadger1999> #action abadger1999 to add category definitions to ticket comment and ask kustodian to categorize the modules.
+15:29:08 <abadger1999> yep.
+15:31:48 <abadger1999> gundalow: Okay, appears we've talked this one out for this week.  Can revisit next week with the next draft of the proposal
+15:32:03 <gundalow> Sounds good
+15:32:16 <alikins> I think I would start by making sure the intg tests have good test cases for each of the file modules operating on links (and possibly unit tests to cover race scenarios easier).
+15:32:42 <gundalow> #agreed Test coverage for the effected modules needs reviewing and updating
+15:32:47 <gundalow> alikins: Good point
+15:33:08 <gundalow> #topic Added redhat_repository module
+15:33:15 <gundalow> #link https://github.com/ansible/ansible/pull/28292
+15:33:55 * gundalow has to step away for a bit
+15:36:31 <alikins> there is also https://github.com/ansible/ansible/pull/19717
+15:39:02 <bcoca> didnt we have rh repo modules already (with some code really begging for redoing iirc)
+15:40:17 <alikins> may be thinking of rhn_channel
+15:41:30 <bcoca> i really dont know the diff
+15:42:10 <alikins> #23292 looks okay to me at first glance
+15:42:22 <abadger1999> jtyr: github's ui is bad for determining this.... was there a reason for state=[enabled|disabled] versus enabled=(True|False) ?
+15:42:51 <abadger1999> alikins: do you have a preference between 23292 and 19717?
+15:43:46 <jtyr> uh ... I must read the discussion again ... remember sh*t ...
+15:44:26 <alikins> I don't see anything particular bogus. If I were doing it from scratch, I think I'd prefer the arg list to be something like a list of desired repo states   [{'name': 'rhel-whatever', 'state': 'enabled'}, ...] (Or even just one repo and state)  but the API implemented there matches the cli
+15:45:10 <alikins> compating atm
+15:47:24 <bcoca> list option?
+15:47:42 * bcoca points at proposal trying to 'normalize' query/list/_facts
+15:47:45 <abadger1999> complex args should be avoided when possible.  They are unfriendly to ad hoc usage.
+15:48:05 <bcoca> ie. not usable in ansible nor ansible-console
+15:48:06 <abadger1999> sometimes there's just no other way but we shouldn't use them when it's avoidable
+15:48:11 <jtyr> abadger1999: do you refer to 19717?
+15:48:56 <abadger1999> jtyr: that comment was directed at alikins' [{'name': 'rehl-whatever', 'state': 'enabled'},[...]] comment
+15:50:06 <alikins> hmm, both look ok to me. They have diff API's, 19717 is more like I mentioned before, but only one repo at a time. The incremental flag is unusual, but I understand what it is for.  I'd have to test but suspect 19717 is more idempotent.
+15:50:14 <abadger1999> I do like that 23292 has less logic in main()
+15:51:01 <alikins> I would make the 'repo list' a seperate module myself, so the args dont have to intertwingle, but that isnt unusual
+15:51:03 <jtyr> abadger1999: I'm lost ... please could you send link to the exact comment?
+15:51:26 <bcoca> i made comment to that effect
+15:51:51 <bcoca> i would prefer a) you always return the info (as it is pertinent to 'what state i left it iin') or b) create _facts module
+15:53:08 <abadger1999> jtyr: ‎[08:44:26] ‎<‎alikins‎>‎ I don't see anything particular bogus. If I were doing it from scratch, I think I'd prefer the arg list to be something like a list of desired repo states   [{'name': 'rhel-whatever', 'state': 'enabled'}, ...] (Or even just one repo and state)  but the API implemented there matches the cli
+15:53:31 <jtyr> ah ... here in IRC ... I'm searching in the PR .. ;o)
+15:54:10 <alikins> I'll poke some of the RHSM guys and see if they have thoughts. Otherwise need to test them, but +1 for including one of them
+15:55:45 <alikins> or could merge both and 'let the viewers vote' in devel/ ;->
+15:55:49 <abadger1999> I'm inclined to say We like X slightly more because of Y.  CC the other contibutor on and ask if he can review the other's code for anything they want to add.
+15:55:58 <abadger1999> heh
+15:56:13 <abadger1999> We said modules should be singular so they should converge to the same name.
+15:57:17 <bcoca> +1 for thunderdome .. 1 man out gets his module merged
+15:59:37 <abadger1999> Would it be okay to say "we like 23292 slightly more than 19717 because there's less code in main() and it already complies with the singular name rule.  but if you two could work together that would be superb.  could @(contributor of 19717) review the PR and see if anything was left out?"
+16:00:11 <abadger1999> alikins, jtyr^
+16:01:16 <alikins> not sure I have a preference atm, but generally agree on comment
+16:01:24 <abadger1999> k
+16:01:36 <alikins> first one with test cases wins
+16:01:43 <abadger1999> I figure we can't move this along unless we assert an opinion.  So sometimes you just have to make a decision.
+16:02:08 <abadger1999> #action abadger1999 to comment on the PRs to try to get the two contributors to collaborate
+16:02:36 <alikins> should be good to move to next topic
+16:02:52 <abadger1999> #topic vars used in include_role or import_role are evaluated too early    https://github.com/ansible/ansible/issues/30700
+16:03:23 <abadger1999> jimi|ansible ^ Was this something you had already started to look at?  shaps added it to the meeting agenda
+16:04:19 <abadger1999> bcoca: ^ You might also know the answer to that as I vaguely recall you might have pinged him about it.
+16:05:34 <bcoca> yep, he is looking into it
+16:05:44 <shaps> some context around it. It works when there's no include in the role
+16:05:45 <bcoca> probalby 'bad behaviour' left over from when it had 'static=yes'
+16:05:56 <bcoca> shaps: is that in ticket?
+16:06:15 <shaps> and works correctly when the var is defined at play level
+16:06:21 <shaps> bcoca, going to add this now
+16:08:18 <shaps> added both info. I'm writing some tests for include/import role anyway, as I couldn't find any
+16:08:56 <shaps> Stopped since I didn't know if it was 'expected' not to work with nested includes or not
+16:09:08 <alikins> looks like a good intg test candidate
+16:09:14 <shaps> yep
+16:09:44 <abadger1999> Cool.
+16:09:50 <abadger1999> shaps: need anything else on this?
+16:10:13 <shaps> No, just needed to know if the ticket was ok or not really
+16:10:18 <abadger1999> #topic Open floor
+16:10:27 <abadger1999> Anyone have anything else to throw out there?
+16:10:36 <abadger1999> If not I'll close in 60 seconds
+16:12:12 <abadger1999> #endmeeting
+16:12:18 <abadger1999> Well shoot.
+16:12:47 <abadger1999> alikins or bcoca.... Looks like none  of my #actions or #nedmeetings will have effect.
+16:13:02 <abadger1999> alikins, bcoca: At the least, need someone to #endmeeting now
+16:13:26 <alikins> #action abadger1999 to comment on the PRs to try to get the two contributors to collaborate
+16:13:39 <alikins> #action abadger1999 to comment on the PRs to try to get the two contributors to collaborate
+16:13:51 <alikins> er
+16:15:12 <abadger1999> (zodbot doesn't give a visible response to #action)
+16:15:28 <alikins> ah
+16:15:32 <alikins> #endmeeting
+16:16:53 <gundalow> #action abadger1999 to comment on the PRs to try to get the two contributors to collaborate
+16:17:19 <gundalow> #endmeeting

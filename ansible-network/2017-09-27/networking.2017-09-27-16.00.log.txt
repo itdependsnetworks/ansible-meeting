@@ -1,0 +1,247 @@
+16:00:37 <Qalthos> #startmeeting Networking
+16:00:37 <zodbot> Meeting started Wed Sep 27 16:00:37 2017 UTC.  The chair is Qalthos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:00:37 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:00:37 <zodbot> The meeting name has been set to 'networking'
+16:01:00 <caphrim007> o/
+16:01:17 <seanx820> p/
+16:01:31 * funzo waves
+16:01:33 <Qalthos> #chair funzo gundalow kedarX privateip rcarrillocruz sdoran trishnag caphrim007 seanx820
+16:01:33 <zodbot> Current chairs: Qalthos caphrim007 funzo gundalow kedarX privateip rcarrillocruz sdoran seanx820 trishnag
+16:01:35 * bearrito wave
+16:01:46 * stacywsmith here
+16:01:53 * rcarrillocruz waves
+16:01:56 <privateip> hi
+16:01:59 <Qalthos> #chair bearrito stacywsmith
+16:01:59 <zodbot> Current chairs: Qalthos bearrito caphrim007 funzo gundalow kedarX privateip rcarrillocruz sdoran seanx820 stacywsmith trishnag
+16:02:57 <Qalthos> I could be missing something, but it looks like the only things on the agenda are proposals #70, 71, & 76
+16:03:37 <privateip> :bn
+16:03:41 <privateip> oops
+16:03:44 <privateip> wrong window ;)
+16:04:54 <Qalthos> Unless anyone wants to argue with me, I think we'll go through those from least to most contentious, starting with 76
+16:05:18 * stacywsmith agree
+16:05:32 <Qalthos> #topic common network code to package
+16:05:35 <privateip> kinda like easing into hot boiling magma
+16:05:36 <Qalthos> #link https://github.com/ansible/proposals/issues/76
+16:05:58 <Qalthos> privateip: all yours
+16:06:06 <privateip> this is the network package redesign proposal
+16:06:23 <privateip> i would like to move forward on it this week unless anyone has any objections
+16:08:20 <stacywsmith> I guess I missed the announcement of this one. Looking over it quickly now...
+16:08:26 <Qalthos> I haven't seen any negative comments about the proposal, and the thread seems to have devolved into meta-process discussion, so anyone with opinions on this, please say something
+16:08:51 <privateip> yeah i announced it in here friday before last
+16:09:05 <bearrito> +1 for 76
+16:10:53 <stacywsmith> +1
+16:11:00 <kedarX> +1
+16:11:05 <privateip> cool im marking it approved then
+16:11:08 <Qalthos> Right, then, I didn't think that was going to generate much discussion, and it hasn't
+16:11:19 <Qalthos> Moving on
+16:11:30 <stacywsmith> Do we want to discuss #74?
+16:12:02 <stacywsmith> It looks like there is general approval other than bikeshedding the name of the variable.
+16:12:18 <stacywsmith> However, I think that could influence discussion on #71 and #70.
+16:13:20 <privateip> just as a quick reminder to everyone ... we agreed 70 and 71 to come to consenus at next weeks irc meeting
+16:13:35 <privateip> we can discuss here if there are questions / comments / things folks want to talk about
+16:13:38 <dag> Regarding #76
+16:13:46 <privateip> but at next weeks meeting we move forward with a plan
+16:13:47 <dag> Why are other network-related libraries not part of this ?
+16:13:53 <rcarrillocruz> yeah, let's give some more time
+16:13:59 <dag> like avi.py or aci.py ?
+16:14:01 <rcarrillocruz> as more core people could/should chime in
+16:14:03 <privateip> the idea is to keep it completely platform agnostic
+16:14:09 <privateip> dag: ^^
+16:14:23 <privateip> these are more generalized functions not specific to any one platform
+16:14:27 <dag> people would expect the network stuff to be in network/
+16:14:36 <dag> nothing indicates that only the agnostic stuff is in network/
+16:15:12 <privateip> its in the proposal
+16:15:51 <dag> but nobody reads the proposal after it is approved
+16:16:11 <privateip> we can add the same comment to the docs
+16:16:30 <dag> well, if notes can be avoided, I think that's better
+16:16:39 <dag> so why is network/ only agnostic stuff ?
+16:16:48 <dag> and not other network stuff
+16:17:14 <privateip> keeps it clean ... to much interpretation for what is and what is not network-related stuff wrt shared code
+16:17:45 <Qalthos> dag: a common place for code that any network implementation can use, without having to figure out if it is tied to some specific implementation
+16:20:51 <dag> I don't think it makes sense as a structure
+16:20:59 <dag> if you have to explain it to people you are doing it wrong IMO
+16:21:06 <privateip> what doesn't make sense?
+16:21:07 <dag> but feel free to go ahead, minds have been made up it seems
+16:21:10 <stacywsmith> I agree there should be common vendor-independent code. The network/ folder seems a reasonable location. Whether vendor.py exists at top-level network/vendory.py or network/vendor/foo.py seems somewhat orthoganal.
+16:21:22 <dag> the module_utils/network is not for all network-related studd
+16:21:23 <dag> stuff
+16:22:11 <dag> stacywsmith: Now is the time to think about the best structure, if we have to reorganize some time later, we have to rewrite modules again
+16:22:26 <dag> I wish to avoid that
+16:23:31 <dag> I don't disagree that it is convenient to have independent network code to be separated
+16:23:46 <dag> I disagree with having to explain that network/ is not for all network-related libraries
+16:23:56 <dag> which anyone would assume it is
+16:25:42 <privateip> ok would everyone be more comfortable with ansible.module_utils.network_common
+16:25:49 <Qalthos> dag: so is this a problem with the contents of network/ or the package name?
+16:26:12 <rcarrillocruz> network is ok to me, network_common is more explicit
+16:26:17 <rcarrillocruz> i'm ok with network_common
+16:26:45 <privateip> dag: does that address your concern?
+16:27:48 <dag> I like common in the name
+16:27:59 <dag> network/common/ is also an option
+16:28:33 <dag> from module_utils.network.common.whatever import foobar
+16:29:12 <dag> you could also have network/common_whatever.py and prefix with common
+16:29:36 * privateip would like to avoid writing a book just to do import statements
+16:29:38 <dag> and over time we move aci.py avi.py etc to network/
+16:30:22 <dag> I understand, I am not forcing "common" on you though, I just want aci.py avi.py to move to network/ oer time
+16:30:23 <privateip> i dont like that plan
+16:30:31 <dag> why not ?
+16:30:36 <privateip> platform stuff should not be in this package
+16:31:22 <privateip> platform stuff should be in module_utlils or its own package
+16:31:41 <dag> why ?
+16:31:47 <privateip> the whole point of this is to create a common shared set of code for network modules that is well tested and remains completely stable
+16:31:59 <privateip> in addition, there is no agreement on what is and what is not network
+16:32:22 <dag> well, things that live in modules/network have been decided already
+16:32:32 <dag> there seems to agreement about that
+16:32:39 <dag> why would it be different ?
+16:33:04 <dag> Ideally I would like to see the same structure in module_utils/ like we have in modules/
+16:33:18 <privateip> thats an entirely different discussion
+16:33:30 <dag> no, it seems the right time to discuss that
+16:33:41 <dag> we don't have to wait until things are moved, to discuss changing it again
+16:33:49 <privateip> that discussion has to happen in the core meeting, not here
+16:34:07 <dag> right, so back to the drawing board then, sigh
+16:36:24 <privateip> best we can do is table this proposal for one more week to have a chance to bring this larger idea up in the core meeting
+16:36:50 <privateip> agreeable?
+16:36:51 <Qalthos> dag: I invite you to at least put your comments on the proposal, so that they will stay with the discussion
+16:37:00 <bcoca> network/shared ....
+16:37:11 * bcoca just cause he likes a blue bike shed
+16:37:14 <dag> Qalthos: already done
+16:37:33 <dag> bcoca: No, I want to avoid discussions in the future
+16:37:49 <bcoca> probaly impossible with naming things
+16:37:57 <Qalthos> Okay, On to the other proposals
+16:38:12 <Qalthos> #topic Aggregates
+16:38:21 <Qalthos> #link https://github.com/ansible/proposals/issues/71
+16:38:36 <Qalthos> Anyone have anything new they want to add to this?
+16:39:20 <privateip> i removed the agreed label and updated my comment .... will hold for one more week then we move foward with this propsal one way or another as it holds up a fair bit of 2.5 dev work
+16:41:00 <bcoca> well, as it stands, the majority seems to want it 'built in' instead of roles, but still 2 ways to implement it and its not clear where people are on that
+16:41:19 <bcoca> currently it seems into modules, but push for 'core feature', which is non trivial
+16:42:11 <bcoca> i understand the need/want .. i just think that the roles path might give us a better understanding in very quick turn around while we design the 'built in'
+16:44:38 <Qalthos> bcoca: Sorry, how is this solved with roles? I see that for 70, but I must be missing something for 71
+16:51:35 <Qalthos> Anyone else? Are we just arguing about names, or is there still something fundamental to discuss?
+16:52:05 <dag> I don't mind trying it with roles and see where it brings us, I prefer roles over a half-baked solution :-)
+16:52:20 <bcoca> well, 71 is basically a hold of all and lets redesign
+16:53:04 <dag> bcoca: indeed, it's because I don't think I have all the answers
+16:53:37 <dag> don't think comments or IRC are a good way to come to a consensus either ;-)
+16:53:49 <privateip> 71 is aggregates .. do you mean 70?
+16:54:00 <bcoca> dag:  +1 on closing us all off in bar
+16:54:30 <privateip> you cannot solve aggregates with roles
+16:54:34 <bcoca> privateip: i see both of them very related
+16:54:40 <privateip> totally agreed
+16:54:45 <bcoca> as aggregates is basically a way to implemente DI
+16:55:10 <bcoca> i would actually break out the features, as some we can have easily and built towards the end goal
+16:55:18 <privateip> 70 and 71 are independently related :)
+16:55:23 <bcoca> aggregates itself is also composed of many things
+16:55:56 <bcoca> i see DI as a goal, aggregates as the suggested solution to get to DI
+16:56:18 <privateip> yes thats accurate
+16:56:36 <Qalthos> Right then, since we've come here anyway, and no one seems to want to talk about 71
+16:56:38 <Qalthos> #topic Declarative Intent
+16:56:43 <dag> :-)
+16:56:50 <Qalthos> #link https://github.com/ansible/proposals/issues/70
+16:57:02 <bcoca> and aggregates itself is composed of several features, some already imlemented (suboptions) others kindof (squashing) and others exist but not 'clumped into tasks' (assertions)
+16:57:38 <privateip> my only point was regardless of using roles or writing module code, we need loop control to solve the problem ... that means either squashing or passing as a list
+16:57:38 <bcoca> Qalthos:  its very hard to talk aobut one w/o the other as they are cause/effect
+16:57:53 <privateip> we are basically saying the same thing here
+16:58:14 * dag thinks the aggregated data provided to a module should not be a parameter to the module, but rather a construct in the task (e.g. with_items or whatever new loop constructs we need)
+16:58:17 <bcoca> privateip: not really as you can do that internally in roles ... also conflicts with the 'removal of squashing' .. which even if it stayed did not serve your purpose as is
+16:58:19 <privateip> i think the real discussion is about loop control ... everything sorta falls into line once we get that figured out
+16:58:43 <dag> privateip: exactly
+16:58:47 <bcoca> more or less
+16:58:56 <Qalthos> bcoca: I'm not trying to control discussion, just organize it
+16:59:01 <dag> (and don't forget purge)
+16:59:25 <bcoca> i suggested the 'optimized'  option to loop control for this purpose  .. name negotiable
+16:59:37 <privateip> boca: +1
+16:59:45 <privateip> bcoca: +1 even
+17:00:16 <bcoca> but it is a basic divergence from how loops currently work .. squashing is a bad example of 'aggregation' as it is limited by nature AND requires specific implementations on the module level
+17:00:33 <bcoca> i dont think that is what anyone here wants
+17:00:42 <privateip> agreed
+17:01:02 <bcoca> but a 'transparent' aggregation, my first question would be ... does the module need to specifically support this?
+17:01:16 * dag has no clue what squashing means
+17:01:22 <dag> specifically here
+17:01:22 <bcoca> dag: apt/yum magic
+17:01:30 <bcoca> when used with_
+17:01:35 <dag> ah ok, no we don't want that :)
+17:01:36 <rcarrillocruz> getting a list
+17:01:41 <rcarrillocruz> passing it over as one arg
+17:01:48 <rcarrillocruz> to avoid doing a module task run each element
+17:01:50 <dag> it's more than a list
+17:02:06 <bcoca> rcarrillocruz: kindof .. but squashing does it in really bad non general ways, that is why i'm looking at 'new name/param'
+17:02:24 <rcarrillocruz> you asked about saquashing, list are the typical things that get squashed on yum/apt
+17:02:38 <rcarrillocruz> *squashing*
+17:02:40 <bcoca> you want 'all module args as listable dicts taht get unified/consistent execution'
+17:02:50 <rcarrillocruz> yup
+17:03:01 <bcoca> which squashign is far from
+17:03:11 <rcarrillocruz> not implying just lists, just saying the typical thing squashing addressed
+17:03:52 <bcoca> that requries one of 2 things, either modules themselves have a 'listed arguments mode' OR we make the controller add additional wrapper on top that takes care of the 'intermediate executions' and then adds to a unified/consistent state
+17:04:42 <rcarrillocruz> latter sounds more complex, more design phase
+17:04:56 <rcarrillocruz> module side means a pain for module writes, more changes  in more places
+17:05:01 <rcarrillocruz> how about rolifying things
+17:05:08 <rcarrillocruz> and we continue the design phase
+17:05:09 <bcoca> ^ this is for 'inline implementatios' i still think we shoudl try roles first (with fixes to import/include_role)
+17:05:27 <rcarrillocruz> i mean, i think we all agree they are not mutually exclusive
+17:05:32 <bcoca> rcarrillocruz: hehe,  exactly
+17:05:35 <rcarrillocruz> it's not 'use roles OR the other thing'
+17:05:40 <rcarrillocruz> right on
+17:05:47 * dag thinks modules advertise whether they are adapted to the new "aggregates" way of working
+17:06:12 <bcoca> well, even from 'speed to market' you can probably have reference roles in a week (then start perfecting them from feedback) .. the earliest we can have this in ansible itself is 4months
+17:06:21 <rcarrillocruz> i know
+17:06:27 <rcarrillocruz> it's just that to me
+17:06:34 <rcarrillocruz> looks like such a useful thing
+17:06:36 <bcoca> dag: that woudl be how we implement the 1st option
+17:06:36 <rcarrillocruz> it should be in modules
+17:06:38 <rcarrillocruz> sooner or later
+17:08:08 <rcarrillocruz> that also raises the topic of bundling roles with core
+17:08:11 <rcarrillocruz> is that on roadmap
+17:08:13 <rcarrillocruz> not
+17:08:15 <rcarrillocruz> ..
+17:08:17 <rcarrillocruz> ?
+17:08:44 <bcoca> well, some of you seem to lean into 'special modules that controller recognizes' ... closer to current squash .. others want it controller built in .. i see issues with both approaches, as well as advantages, not sure on which side i would fall
+17:08:53 <rcarrillocruz> i mean, we can put them on galaxy, but sounds meh to me 'oh, you want DI? go try to galaxy role FOO'
+17:09:09 <rcarrillocruz> most net engs are not role writers/users from what i know
+17:09:12 <ganeshrn> bcoca: in case of 'intermediate executions' how purge can be handled within module
+17:09:19 <bcoca> rcarrillocruz: bundling roles should be easy to do, the bigger question is 'do we want to' and 'who/how is it supported'
+17:09:48 <rcarrillocruz> bcoca: hah on 'supportability'
+17:09:55 <bcoca> ganeshrn: actually, rereading .. makes me say 'actoin plugin' can already do all that
+17:10:31 <bcoca> rcarrillocruz: well, any/all of these solutions need to be 'supported', i would argue that expeprtiese to support roles is easier than expertiese supporting the 'core feature'
+17:10:31 <rcarrillocruz> so bcoca , as we are now
+17:10:40 <rcarrillocruz> rolify and ask community to check out galaxy
+17:10:41 <rcarrillocruz> ?
+17:11:07 <bcoca> rcarrillocruz: one option, i'm all for 'shipping roles' ... i wanted to add a 'sumarize' optoin to include_X to make it report as 'single task'
+17:11:19 <bcoca> which ends up making roles 'kindof modules'
+17:11:39 <rcarrillocruz> if we opt for the roles + design propery in core route
+17:11:47 <rcarrillocruz> i'm more than happy to look at the roles
+17:12:05 <bcoca> https://github.com/bcoca/ansible-tidy <= example 'declarative intent' role
+17:12:24 <bcoca> ganeshrn: ^ it has the 'purge' optoin
+17:12:45 <ganeshrn> _checking_
+17:13:04 <bcoca> and yes, its files, much simpler than most of what you guys want, but gives you idea of what i mean with some thing you can actually 'see' and 'touch'
+17:14:04 <bcoca> i've been thinkgin about this for a long time, that is why i added include_role and pushed for import_role to try to make roles what they should be
+17:16:37 <dag> bcoca: one if my objections is that it is far from efficient, but that doesn't matter that much for modules that work mostly remotely anyway
+17:17:16 <dag> and it may not matter that much, inefficient from an architectural view
+17:17:24 * dag has to leave
+17:18:24 <Qalthos> That's fine, we're a bit long anyhow
+17:18:32 <rcarrillocruz> i think what bcoca  is after is getting breathing room, get this soon, get feedback, put it back into module design spec
+17:18:49 <dag> yes, that's why I am not happy with a deadline
+17:19:08 <bcoca> that is part of it, the other part is that im trying to make roles a lot more flexible/useful so we can keep core lean and mean and push a lot of this to 'user space'
+17:19:12 <dag> some things need time
+17:19:14 <bcoca> but that is tangential to this
+17:19:43 <rcarrillocruz> bcoca: another related topic is how to get curated and more eyes on galaxy, but yeah, another can of worms we don't have to talk now
+17:19:53 <bcoca> dag: the other thing i was looking for 'efficiencty' is the 'persistent' framework
+17:20:11 <bcoca> rcarrillocruz: yep, been thinking about that a lot
+17:20:15 <dag> even if we get ideas from others, we don't like first, over time may make more sense when applied to new experiences
+17:20:22 <bcoca> rcarrillocruz: since i also want to move 1200 modules to galaxy
+17:20:35 <rcarrillocruz> if you compare puppetforge to galaxy, well...the quality of stuff there is not the same
+17:20:47 <rcarrillocruz> but it's not really an eng problem
+17:20:51 <dag> bcoca: I don't know what the persistence framework looks like outside of network modules though
+17:21:02 <bcoca> galaxy is 'wild west' ... which is also why i've been reticent of doing same with asnible/ansible
+17:21:20 <rcarrillocruz> i don't think is used outside of network modules, the persistent stuff?
+17:21:23 <bcoca> dag: mostly the same 'persistent execution environment' .. woudl need to be a toggle
+17:21:39 <rcarrillocruz> i think the intent is to make persistent a first class citizen so other ansible things can use it
+17:21:41 <bcoca> but now shell: export MYVAR=1 would 'persist' across invocations
+17:21:53 <rcarrillocruz> ah, sorry, thought you meant persistent connection
+17:21:54 <bcoca> dag: thinkg controlpersist + accelerate daemon
+17:22:03 <dag> hmm, a daemon :)
+17:22:05 <bcoca> rcarrillocruz: yes .. taking it a bit further
+17:22:20 <bcoca> dag: temporary daemon for 'execution' that kills/removes itself ... ie async_wrapper
+17:22:29 * dag really needs to run
+17:22:47 <Qalthos> Right, I think that's been some healthy discussion. You're free to keep arguing here (and leaving comments on the proposals) but I'll be closing this meeting
+17:22:50 <bcoca> dag: also easy way to implement module.update_json for 'realtime feedback'
+17:23:08 <bcoca> Qalthos: sorry, i seem to have hijacked the direction a bit
+17:23:19 <Qalthos> bcoca: that's why we keep you
+17:23:37 <Qalthos> #endmeeting
