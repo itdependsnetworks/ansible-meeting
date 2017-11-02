@@ -1,0 +1,60 @@
+15:00:05 <thaumos> #startmeeting ansible core
+15:00:05 <zodbot> Meeting started Thu Oct 26 15:00:05 2017 UTC.  The chair is thaumos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:00:05 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:00:05 <zodbot> The meeting name has been set to 'ansible_core'
+15:00:14 <thaumos> #chair albertom
+15:00:14 <zodbot> Current chairs: albertom thaumos
+15:01:56 <albertom> I have a clashing meeting but I wanted you to look at this little fix
+15:01:58 <albertom> https://github.com/ansible/ansible/pull/31956
+15:02:04 <albertom> just 2 lines
+15:03:40 <thaumos> I'll see if someone can look at it.  There's most likely no one actively maintaining/contributing to this one.
+15:03:55 <shertel> hi
+15:03:59 <thaumos> oh hai
+15:04:03 <thaumos> #chair shertel
+15:04:03 <zodbot> Current chairs: albertom shertel thaumos
+15:04:27 <thaumos> if no one else joins by 8:15, I will cancel the meeting
+15:04:44 * gundalow waves
+15:05:36 * bcoca joins
+15:05:41 <sivel> I am here
+15:05:53 <thaumos> #chair gundalow sivel bcoca
+15:05:53 <zodbot> Current chairs: albertom bcoca gundalow shertel sivel thaumos
+15:05:59 <thaumos> @dag
+15:06:15 <thaumos> are you going to be able to join to talk about your proposal?
+15:07:53 <thaumos> #topic docker_image module update, fix idempotency of pull
+15:07:59 <thaumos> #link https://github.com/ansible/ansible/pull/31956
+15:08:17 <thaumos> #action thaumos to poke at chouseknecht to take a look if they have time
+15:08:21 <thaumos> #topic Open Floor
+15:10:05 <thaumos> well, does anyone have anything to chat about?
+15:10:44 <thaumos> any destiny 2 players this week, super mario odyssey and ac: origins tomorrow?
+15:10:51 <albertom> i play destiny 2
+15:10:52 <albertom> add me
+15:10:53 <albertom> @powerbsd
+15:10:55 <albertom> :)
+15:10:55 <gundalow> sivel: did you want to demo your template tool?
+15:11:13 <gundalow> thaumos: You know that thing I never wrote a proposal for, well sivel just made it
+15:11:20 <sivel> Dunno how much demoing I can do
+15:11:32 <sivel> but if anyone wants to go look at https://ansible.sivel.net/test/
+15:11:44 <sivel> It is a UI for testing templates via ansible
+15:12:09 <sivel> it doesn't have all deps for all things that can be done in templates right now, like jmespath
+15:12:26 <thaumos> nifty
+15:12:32 <albertom> (y)
+15:12:35 <sivel> and it does the work in a docker container, so if you really want to {{ lookup('pipe', 'rm -rf /') }}
+15:12:38 <sivel> feel free ;)
+15:12:52 <sivel> it's limited to a 3s execution and 96M of ram right now
+15:13:10 <sivel> code: https://github.com/sivel/ansible-template-ui
+15:13:11 <thaumos> #info if anyone would like to test out an Ansible Template/variable UI check out this link
+15:13:15 <thaumos> #link https://ansible.sivel.net/test/
+15:14:52 <gundalow> sivel: hum, is that only the standard templates, or does it know about the Ansible stuff?
+15:14:58 * gundalow doesn't see it using any Ansible code
+15:15:13 <sivel> gundalow: it creates a template, and a vars file, and actually runs ansible
+15:15:52 <gundalow> oh, that;s in server.py, gotcha
+15:15:57 <sivel> https://github.com/sivel/ansible-template-ui/tree/master/docker/devel
+15:16:07 <sivel> that is the Dockerfile, the cmd it executes and the playbook
+15:16:31 <gundalow> cool, was looking in the wrong place
+15:16:56 <sivel> yeah, server.py effectively has a single route, that lauches the docker container, and then grabs the stdout and stderr and relays back to the browser
+15:20:49 <thaumos> anything else to chat about folks?
+15:20:57 <thaumos> if not, seems like we should close this out for today.
+15:21:23 <gundalow> Nothing else from me
+15:26:48 <thaumos> alrighty then!
+15:26:54 <thaumos> have a great rest of the day folks
+15:26:57 <thaumos> #endmeeting

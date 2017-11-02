@@ -1,0 +1,121 @@
+17:01:09 <mattclay> #startmeeting Testing Working Group
+17:01:09 <zodbot> Meeting started Thu Oct 26 17:01:09 2017 UTC.  The chair is mattclay. Information about MeetBot at http://wiki.debian.org/MeetBot.
+17:01:09 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+17:01:09 <zodbot> The meeting name has been set to 'testing_working_group'
+17:01:11 <mattclay> #chair gundalow
+17:01:11 <zodbot> Current chairs: gundalow mattclay
+17:01:47 <mattclay> #info Agenda https://github.com/ansible/community/issues/248
+17:01:57 <sivel> hello
+17:02:00 <mattclay> #chair sivel
+17:02:00 <zodbot> Current chairs: gundalow mattclay sivel
+17:05:57 <sivel> pretty light on attendance :)
+17:06:41 <mattclay> #info We're now using our own Docker container on Shippable for tests where we previously used their standard build container.
+17:07:32 <mattclay> #info This container can be used locally as well with the `--docker default` option to `ansible-test`, such as `ansible-test sanity --docker default`.
+17:07:57 <sivel> Nice, I had seen the change, but hadn't tested that functionality locally
+17:08:33 <mattclay> #info The container supports Python versions 2.6, 2.7, 3.5 and 3.6 (by default) so you can also use the `--python` option.
+17:10:02 <mattclay> #info Docker images are now pinned so new versions must go through CI before being used. Previously a rebuild on Docker Hub would cause them to be used immediately.
+17:11:52 <mattclay> #info Handling of python and pip versions in ansible-test has been corrected for many scenarios where it did not previously work properly.
+17:13:10 <mattclay> #info The pylint tests are now split up to run on different parts of the codebase with different configs. Configs are now at `test/sanity/pylint/config/`.
+17:13:31 <mattclay> #info I'll be on PTO Friday and all next week. For testing related issues, see gundalow.
+17:13:41 <mattclay> That's it from me for updates.
+17:13:44 <mattclay> gundalow: Do you have anything?
+17:16:56 <mattclay> #topic requests_mock in unit tests: https://github.com/ansible/community/issues/248#issuecomment-338604885
+17:17:20 <mattclay> PR https://github.com/ansible/ansible/pull/30767 uses `requests_mock` for unit tests.
+17:18:14 <sivel> This is slightly nitpicky, but I'd prefer just using Mock or using responses which seems to be more common for mocking requests
+17:19:08 <mattclay> sivel: I haven't used either one. Why do you prefer responses over requests_mock?
+17:20:02 <sivel> They work roughly the same, I've just found it seems more people use responses.  responses basically does @responses.activate as a decorator and then responses.add, so it's a little less set up as well
+17:20:38 <mattclay> Is it pretty easy to switch between the two then?
+17:20:47 <sivel> I also tend to question when people use mock directly for requests anyway
+17:21:08 <sivel> I tend to find they are mocking too far down, instead of mocking calls to some place outside of the function
+17:21:26 <mattclay> Yes, that is definitely a problem I've seen with a lot of our "unit" tests.
+17:21:41 <sivel> The setup is different, and responses seems to be a bit more "specific"
+17:21:52 <mattclay> Instead of mocking what is being tested, tests will import a 3rd party library and try mocking that instead.
+17:22:30 <sivel> Again it's slightly nitpicky, in the end not sure it matters, I'd just guess more people have experience with responses
+17:22:41 * gundalow waves
+17:22:52 <gundalow> (appologies, in two meetings at once)
+17:22:53 <mattclay> Is there anyone else here lurking that has experience with either one?
+17:23:11 <sivel> Also, a question about pytest.  That specific PR uses unittest, which I know we have a bunch of throughout our tests, but are we trying to move to more "pure' pytest tests?
+17:23:29 <mattclay> Yes, new tests should use pytest instead of unittest.
+17:23:39 <sivel> that PR uses all unittest it seems
+17:24:40 <sivel> honeslty those tests are pretty ugly
+17:25:11 <sivel> setUp is over 100 lines long
+17:25:19 * mattclay hasn't looked at the PR
+17:25:24 * mattclay looks
+17:25:44 <sivel> the tests are in the very last file in the PR and you have to expand it
+17:27:05 <sivel> a lot of unsafe loading of fixtures too
+17:27:26 <sivel> weird line breaks...anyway
+17:32:20 <mattclay> sivel: Do you want to review that PR?
+17:32:59 <sivel> I can.  I'm afraid I have some things to brush up on with pytest, but I can review what is there, and should I ask to have the tests rewritten using pytest?
+17:33:23 <mattclay> Yes, I would. I can understand using unittest for extending existing tests, but new ones should use pytest.
+17:33:56 <mattclay> Adding more unittest tests will just give us more work later when we want to convert them to pytest.
+17:34:01 <sivel> ok, I'll look at doing that today
+17:34:05 <mattclay> Thanks.
+17:34:28 <mattclay> #action sivel to review https://github.com/ansible/ansible/pull/30767
+17:34:38 <mattclay> #topic Open Floor
+17:34:47 <mattclay> Does anyone have anything else they'd like to discuss?
+17:34:55 <mikedlr> @mattclay can I just confirm what you just said;  parts of my unit test for modules documentation were rewritten to use unit test style tests
+17:35:09 <mikedlr> should we be encouraging pytest style test for modules as well?
+17:35:20 <sivel> yes, all new tests should be pytest
+17:35:33 <mikedlr> @Pilou you around?
+17:36:10 <mikedlr> N.B. above ;  it guess also impacts the way that the common code should be set up.
+17:36:57 <mattclay> mikedlr: We should be using pytest for all new tests.
+17:38:12 <mattclay> mikedlr: Although pytest understands unittest style tests, I think it makes more sense to write them using pytest style.
+17:39:16 <mikedlr> there's a complete mixture throughout and there are definitely people who are converting pytest style flat / function tests into unittest style classes
+17:39:30 <mikedlr> I think that, if we think that's wrong, it needs to be explicitly and openly stated.
+17:39:50 <sivel> I believe the goal is to eventually convert them all and get rid of unittest
+17:40:00 <sivel> so if we keep doing it, it eventually gives us more work to do
+17:40:13 <mattclay> sivel: Yes, at some point we're going to want to get rid of unittest entirely.
+17:40:21 <mikedlr> I started the documentation showing examples of both, but in editing the pytest style code got replaced with unittest style.
+17:41:09 <sivel> sounds like that should change then
+17:41:25 <mikedlr> a relevant PR is https://github.com/ansible/ansible/pull/31456 which I will put a comment in now
+17:41:38 <mikedlr> it should be reviewed to make sure all unit test functionality is also provided in pytest style.
+17:43:27 <mattclay> Is there anything else?
+17:43:50 <mikedlr> has anyone been using python hypothesis for ansible testing?
+17:45:14 <mikedlr> it allows randomised data in (sort of fuzzing) and check that some assertion holds.  Tends to find bugs.
+17:45:58 <mikedlr> I will be interested in introducing some hypothesis tests, I am not sure if they should be part of the "unit" tests?
+17:46:19 <mikedlr> anyone else interested?
+17:46:31 <mattclay> Looks interesting. Is the fuzzing random at runtime, or is that done when the tests are created so it's the same from run to run?
+17:47:28 <mikedlr> random at runtime but if it finds a problem it outputs a reproducer
+17:47:29 <maxamillion> mikedlr: I'd be interested, I've read about it but never really had time to dive in ... I think it's appealing
+17:47:57 <maxamillion> not sure if my vote in favor of that really matters ... I'm new here in the Testing Community :)
+17:48:00 <sivel> mattclay: if you have the time, I'd like for you to look over https://github.com/ansible/ansible/pull/32079 , but it doesn't need to be done in the context of this meeting necessarily
+17:48:35 <mattclay> mikedlr: How much additional test runtime do you think it's going to add if we start using it?
+17:48:40 <mikedlr> this means it's possible, but quite rare, for a test to fail out in the real world on cases which never failed before locally .
+17:49:00 <abadger1999> mikedlr: I don't thnk it should be part of normal runs.
+17:49:01 <mikedlr> mattclay: a few python libraries; it's not too heavy from my memory.
+17:49:09 <mattclay> sivel: I probably won't have time to review it until I'm back from PTO.
+17:49:31 <mikedlr> maxamillion: if you write lots of hypothesis tests that find important bugs then your vote will be really really important :-)
+17:49:43 <abadger1999> But maybe nightly runs or something?  basically we need someone who's interested in testing for testing's sake to watch the output of those and generate bug reports from them.
+17:50:00 <Pilou> mikedlr: pong
+17:50:14 <mattclay> mikedlr: Since it can fail "at random" I don't think we'll want it in normal CI runs, but maybe part of nightly runs at abadger1999 suggests.
+17:50:21 <sivel> mattclay: no problem
+17:50:33 <mikedlr> Pilou: ^^ discussion about we should be using pytest instead of unittest style in unit tests.
+17:50:49 <maxamillion> mikedlr: :)
+17:52:22 <mattclay> mikedlr: I'm interested to know more about how it works. Have you used it to test the ansible codebase yet?
+17:52:52 <Pilou> what are the main differences between pytest and unittest style ?
+17:52:57 <mikedlr> mattclay: I haven't used it on ansible but I have used it on other code.  I found it really useful.  It tries corner cases really fast.
+17:53:34 <abadger1999> Pilou: pytest is usually function-based whereas unittest is always class based.
+17:53:34 <mikedlr> Pilou: with unittest style you write a class and then tests are functions within the class; you typically have a setup and a teardown function at the class level.
+17:53:41 <mattclay> mikedlr: I'm definitely interested, but I won't be able to look at it for a couple weeks. I'm out all next week on PTO.
+17:53:53 <abadger1999> unitest uses methods of the class to assert values, pytest uses bare assert
+17:54:00 <mikedlr> with pytest style you just write a function and name it test_<name  of test> and then pytest picks it up automatically.
+17:54:22 <mikedlr> there are also differences in the standard ways that you set up mocks and patching
+17:54:23 <abadger1999> pytest has flexible "fixtures" instead of a single setUp and tearDown method
+17:54:35 <Pilou> then ansible unit tests use unittest style isn't it ?
+17:54:41 <abadger1999> pytest has builtin parameterization tests.
+17:55:10 <abadger1999> Pilou: we think of the unittest style as legacy.  Until a year ago or so we were using unittest.
+17:55:17 <mikedlr> @Pilou both are in use for modules;  I think you work more in networking where there tends to be more unitttest style?
+17:55:39 <abadger1999> We've switched to requiring and using pytest but the old tests are mostly unported (I've ported a handful here and there)
+17:56:14 <Pilou> oh
+17:56:40 <Pilou> all ansible unit tests i have read are unported :)
+17:58:21 <Pilou> then i guess i should remove the doc updates from #31456
+18:00:12 <mattclay> We're almost to the scheduled end of the meeting. Does anyone have anything else to discuss?
+18:00:14 <Pilou> hum for #31456 should I close the whole PR ? I
+18:00:16 <mikedlr> Pilou: I put a review comment to that effect
+18:00:38 <abadger1999> Pilou: Here's a test that's been ported if you want to look at pytest style: test/units/module_utils/basic/test__symbolic_mode_to_octal.py
+18:01:12 <mikedlr> Pilou: don't think so;  a) we should do exactly the same changes and b) if we centralise code it will make the porting effort easier in any case (because there will be less to port)
+18:01:27 <Pilou> ok
+18:01:31 <mikedlr> a) -> same changes of centralising things for pytest
+18:03:14 <mattclay> If anyone has anything else to discuss, please add it to the agenda for next week: https://github.com/ansible/community/issues/248
+18:03:20 <mattclay> Thanks for coming everyone.
+18:03:29 <mattclay> #endmeeting

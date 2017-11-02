@@ -1,0 +1,168 @@
+17:01:27 <mattclay> #startmeeting Testing Working Group
+17:01:27 <zodbot> Meeting started Thu Oct 12 17:01:27 2017 UTC.  The chair is mattclay. Information about MeetBot at http://wiki.debian.org/MeetBot.
+17:01:27 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+17:01:27 <zodbot> The meeting name has been set to 'testing_working_group'
+17:01:46 <mattclay> #info Agenda: https://github.com/ansible/community/issues/248
+17:02:57 <mattclay> #info We're rolling out two new CI servers at MacStadium to replace the one we currently use. This should allow us to speed up the OS X tests in CI.
+17:03:17 <mattclay> There isn't anything new on the agenda.
+17:03:23 <mattclay> #topic Open Floor
+17:03:33 * mattclay waits for people to arrive
+17:07:24 * Pilou waves
+17:07:35 <mattclay> #chair Pilou
+17:07:35 <zodbot> Current chairs: Pilou mattclay
+17:07:50 <mattclay> Pilou: So far it's just the two of us here.
+17:08:01 <mattclay> Pilou: Do you have anything you'd like to discuss?
+17:09:47 <Pilou> #31456 needs a rebase but do you think theses changes are ok ?
+17:10:02 * mattclay looks
+17:11:42 <mattclay> Pilou: Did you see the CI failure in unit tests?
+17:12:11 <alikins> blorp
+17:13:03 <Pilou> i didn't check it, it seems an error easy to fix
+17:13:42 <mattclay> #chair alikins
+17:13:42 <zodbot> Current chairs: Pilou alikins mattclay
+17:14:01 * mattclay continues reviewing PR
+17:14:30 <maxamillion> hello all, sorry I'm late ... I joined the wrong irc channel and thought I was waiting for the meeting to start
+17:14:59 <maxamillion> I was reading the docs here and hit the bottom and it said to join up if I wanted to learn more https://docs.ansible.com/ansible/latest/dev_guide/testing.html
+17:15:53 <maxamillion> I was curious if there's any kind of infrastructure that's constantly running some group of playbooks/roles to deploy things with different versions of ansible to attempt to catch bugs and regressions ... or similar/other?
+17:15:58 <maxamillion> just hoping to learn more :)
+17:17:04 <Pilou> maxamillion: as far as i know, there isn't
+17:17:07 <maxamillion> rgr
+17:17:12 <mattclay> Pilou: Looks good. Thanks for the cleanup in the unit tests.
+17:17:29 <agaffney> maxamillion: that kind of question is probably better for #ansible-devel
+17:17:41 <maxamillion> agaffney: oh?
+17:17:56 <alikins> not really, there is CI which runs integration tests (playbooks and roles). But those tests are fixed to the version, not independent.
+17:17:57 <mattclay> mikedlr: Our CI system runs when PRs are opened and changes are merged for each branch.
+17:18:13 <mattclay> Sorry, bad auto complete.
+17:18:16 <mattclay> ^^ maxamillion
+17:18:28 <maxamillion> rgr
+17:18:32 <Pilou> #info #31456 WIP Unit tests: refactor: share common code
+17:19:47 <Pilou> about #31472, it seems there is no consensus :-/
+17:19:53 <alikins> (re CI across versions) at least not on externally/public CI. various rh groups run internal versions of that (awx, openshift, openstack, etc) though
+17:19:55 <mattclay> maxamillion: The only thing we run on a schedule is the nightly tests on the devel branch to collect code coverage. We don't do that for the other branches -- they only run on changes.
+17:20:34 <maxamillion> alikins: yeah, when working with openshift-ansible and in the Fedora Infrastructure Team we've run into issues between versions, which is what prompted the question
+17:20:49 <mattclay> maxamillion: Between major or minor releases?
+17:21:14 <maxamillion> depends on how you define major and minor, but if I understand Ansible versioning correctly, it's between major releases
+17:21:29 <maxamillion> is 2.3.0 -> 2.4.0 considered major?
+17:21:48 <mattclay> I'd consider that major, yes.
+17:21:59 <maxamillion> yeah, I thought Ansible defined it as such
+17:22:16 <agaffney> it isn't according to semantic versioning, but I think very few people adhere to that definition of "major" for their versioning
+17:22:20 <maxamillion> then yes, between major versions
+17:22:31 <bcoca> agaffney: yes, but we dont follow semantic versioning
+17:22:35 <mattclay> maxamillion: If there are regressions which can be reproduced with a playbook we would be happy to add those to our integration tests.
+17:22:40 <bcoca> we follow  .. java versioning ...
+17:22:57 <agaffney> bcoca: did that hurt to say?
+17:23:23 * bcoca cannot respond, he is currently showering in scalding water and frenetically scrubbing
+17:24:14 <maxamillion> mattclay: all the ones I know of have been fixed, but this happens every ansible release so we'll wait for 2.5.0 and see how it goes ... I was mostly just curious if there was some CI task that verifies a set of playbooks and roles across multiple supported versions of ansible and if the answer is "no" that's fine, but I wanted to ask
+17:24:39 <mattclay> I think regressions between major releases often go undetected due to insufficient test coverage. As we expand our integration tests in particular it should hopefully become a less frequent occurrence.
+17:24:52 <maxamillion> would testing like that be useful or desired? or is that outside the scope since major versions are going to have known non-compat changes?
+17:25:05 <maxamillion> mattclay: that could be
+17:25:09 <abadger1999> maxamillion: sorta
+17:25:11 <Pilou> with the current CI, is there an easy way to run a playbook with 2 versions of Ansible ?
+17:25:23 <abadger1999> maxamillion: a goal of 100% compat between major versions is out of scope
+17:25:27 <maxamillion> mattclay: does that include module testing?
+17:25:40 <bcoca> Pilou: ansible-doctor
+17:25:42 <abadger1999> maxamillion: but testing for unanticipated changes would be very very welcome
+17:25:47 <mattclay> I don't think we need to test multiple Ansible versions. Testing the HEAD of each branch is adequate, as we don't keep branches for each past release, just each major release.
+17:25:55 <bcoca> but it is not in CI
+17:26:03 <mattclay> maxamillion: Yes, most of the integration testing is for modules.
+17:26:14 <maxamillion> mattclay: +1 thanks
+17:27:17 <maxamillion> abadger1999: I wonder how difficult it would be to filter out the noise of "oh, that was a known change" and "oh crap, that shouldn't have broken" from a CI job run
+17:27:41 <mattclay> maxamillion: What noise are you referring to?
+17:29:04 <bcoca> one we dont have yet?
+17:29:45 <maxamillion> mattclay: this is hypothetical future where a playbook run is being tested between current stable and devel branches and there's a failure in the CI but it's known because something changed
+17:29:54 <alikins> a set of CI tests for 'run the 2.3 intg tests against 2.4' seems tractable
+17:30:19 <mattclay> We effectively already do that.
+17:30:22 <maxamillion> mattclay: or maybe even that would be useful to know what changes to communicate in the release docs?
+17:30:26 <maxamillion> mattclay: oh?
+17:30:26 <mattclay> The integration tests for 2.3 were carried over to 2.4.
+17:30:38 <maxamillion> ah, cool
+17:30:56 <maxamillion> they just don't run on both concurrently?
+17:30:59 <mattclay> Since the tests are in the repo, they keep growing as the codebase grows. Each release has more test coverage than the previous.
+17:31:07 <mattclay> What is there to run concurrently?
+17:31:08 <bcoca> but we do change the tests in 2.4 .. i.e im changing how callbacks get their info... i need to change the tests accordingly as what they expect is not true anymore
+17:31:31 <mattclay> If changes are not made to the code, it doesn't need to be re-tested (changes to dependencies aside).
+17:31:41 <bcoca> so the tests will cover same code, but will not be the same .. they will also be expected to fail across versions
+17:32:33 <mattclay> bcoca: Generally that is true only for unit tests.
+17:33:00 <bcoca> most likely, in rare cases we change actual behaviour which would also impact integration
+17:33:05 * mattclay nods
+17:33:21 <bcoca> but units alone would make 'rerunning past/future tests against mixed branches' a non starter
+17:33:26 <maxamillion> I'll have to learn more about the integration tests, but it sounds great. Thanks for the info :)
+17:33:54 <maxamillion> I read this page https://docs.ansible.com/ansible/latest/dev_guide/testing_integration.html
+17:34:05 <bcoca> maxamillion: you can alway run them locally against diff branches, but i dont think CI should, there are known and expected 'breakages' across versions
+17:34:16 <maxamillion> will just need to dig in a little (I literally read it an hour ago and then noticed there was a meeting today and thought I'd join and ask silly questions)
+17:34:39 <mattclay> maxamillion: Questions are good. We can use all the help we can get with testing. :)
+17:35:06 <maxamillion> bcoca: right, that was part of my question (maybe not well communicated) about if that would be useful to do or not and if you could filter out the "yeah, we know that'll break because it's expected" vs the "oh that shouldn't have broken"
+17:35:30 <maxamillion> mattclay: I'm a sucker for good tests and good docs, so I hope to help in those areas as I'm able :)
+17:36:00 <sivel> I think it would be hard to know in the past whether changes in the future would cause unexpected outcomes :)
+17:36:15 <maxamillion> mattclay: not that I think either are bad, but as with all things, I'm sure there's room for improvement and I hope to be helpful
+17:37:01 <mattclay> I think we effectively have the multiple version testing covered with integration tests. For the most part, integration tests in later versions are a superset of the tests for previous versions. So when changes are made to a version, the same tests are run that would be if those changes were made to a later version.
+17:37:17 <maxamillion> sivel: right, I'm curious if there's a way to have some metadata to mark integration tests as "this should work against all versions but these" and then when something known changes, you mark it
+17:38:01 <maxamillion> sivel: but that might also ruin the ability to have iteratively developed tests that are updated with the major version changes, might cause fracturing and duplication
+17:38:32 <mattclay> maxamillion: Since the test suite is part of the code base, instead of separate, I don't think it makes sense to try and run tests from branch A against branch B.
+17:38:45 <maxamillion> mattclay: right
+17:38:53 <maxamillion> that's fair
+17:38:55 <maxamillion> hrmmm
+17:39:22 <mattclay> maxamillion: Is there something testing wise you'd like to accomplish that you think the current test setup doesn't provide?
+17:40:22 <maxamillion> mattclay: I don't think I know enough about the current test setup just yet to provide an educated answer to that question, but hopefully I will before the next meeting
+17:40:54 <bcoca> https://github.com/ansible/ansible/pull/30464 <= things like this will be an exception, but it is rare
+17:41:02 <mattclay> maxamillion: Feel free to ask me questions any time.
+17:41:16 <bcoca> DSL change s/with_x/loop/
+17:41:47 * bcoca makes note of needing with_ + delegation test
+17:42:20 <maxamillion> mattclay: the only common complaint I hear from people often on irc and various online outlets is that things break between versions (that and debug output could be better), so this morning I started trying to think of how to help make that happen as little as possible and I figured I'd ask if there were mechanisms in place and just need help improving or if this is out of scope or $other
+17:42:59 <mattclay> maxamillion: The short answer: increase our test coverage. We have so much that simply isn't covered by tests at all.
+17:43:11 <maxamillion> mattclay: +1
+17:43:28 <mattclay> Increased test coverage will solve most of our undetected regression issues.
+17:44:04 <mattclay> maxamillion: You can see what kind of test coverage we're getting here: https://codecov.io/gh/ansible/ansible
+17:44:15 <maxamillion> mattclay: +1 - I'll look into things that aren't currently covered and see what I can help with
+17:44:37 <maxamillion> mattclay: that sunburst
+17:45:04 <maxamillion> awesome, well I appreciate the information and for everyone entertaining my silly questions :)
+17:45:06 <alikins> I know I'm kind of slack about turning bug reproducers into intg tests, including some compatibility related bugs. It seems like others are as well, so that might be something to try to improve
+17:45:52 <maxamillion> alikins: +1
+17:45:58 <mattclay> maxamillion: There's also a query tool you might want to look at in the repo (`hacking/report.py`). You can use it to, for example, find modules with a particular level of support and insufficient test coverage.
+17:46:05 <bcoca> https://github.com/ansible/ansible/projects/14 <= started this mostly for myself, was planning on removing it at end of week ... but does it make sense to use as a tracker of 'missing tets'?
+17:46:11 <alikins> esp for regressions folks run into in the wild
+17:46:39 <maxamillion> yeah
+17:46:50 <bcoca> ^ we could even link closed issues as 'we can make test case out of this'
+17:47:05 <mattclay> bcoca: Just as long as someone doesn't try filling it up with everything we don't cover since that would be a huge list.
+17:47:31 <bcoca> he .. i could see that hapepning
+17:47:45 <bcoca> not sure any user can add to projects, just commiters
+17:47:54 * bcoca needs to check taht
+17:48:11 <maxamillion> eh, if someone took the time to do that, I think I'd buy them a beer because then there's at least a backlog and filing all those tickets would take *forever*
+17:48:27 <mattclay> It's probably fine for tracking missing tests on significant core features, but I wouldn't list modules in there.
+17:48:32 <alikins> getting into the habit of link test cases to issue reports is very handy  (ie, comments #this test is based on github.com/ansible/ansible/issues/12345 in code and commit msgs)
+17:49:05 <mattclay> It's easy enough to see coverage (or lack thereof) for modules on codecov.io or with the reporting tool.
+17:50:08 <alikins> one issue that occasionally stymies me is what to do with intg or unit  tests that reproduce bugs that are not fixed yet
+17:50:33 <alikins> tend to end up in limbo
+17:50:48 <mattclay> alikins:  Put the test in a PR to make sure it fails, then fix the bug in the same PR so the failure goes away.
+17:50:50 <bcoca> ^ we should have a way to flag for 'autoskip' but still run for those that want to fix it
+17:51:09 <bcoca> mattclay: sometimes we have reproducer but no fix
+17:51:11 <mattclay> Just mark it as `WIP` until it's fixed.
+17:51:33 <alikins> pr with failed tests are pretty much invisible
+17:51:35 <mattclay> If you aren't going to work on a fix, we can add a label like `needs_fix`.
+17:51:44 <bcoca> ^mostly what i do now (really only 2 prs ever taht fell in that case)
+17:52:10 <maxamillion> I'm not seeing all the modules listed here https://codecov.io/gh/ansible/ansible/tree/devel/lib/ansible/modules/system
+17:52:22 <maxamillion> does it filter modules outs?
+17:52:23 <maxamillion> out*
+17:52:53 <mattclay> maxamillion: codecov.io has been having some issues lately, causing the reports to be incomplete at times.
+17:53:00 <maxamillion> mattclay: ah ok
+17:53:11 <maxamillion> mattclay: the file list is just flat out missing some files which confused me
+17:53:17 <mattclay> I need to ping them again to see if they've made any progress on fixing that.
+17:53:33 <bcoca> ping is only 93% .????
+17:54:54 <mattclay> bcoca: No, it's 100% -- the report is incomplete.
+17:55:15 <maxamillion> cool, well thanks again all ... this is great :)
+17:55:17 <bcoca> its the one module i would expect at 100
+17:55:18 <mattclay> There's a banner at the top of the report: `Reports are queued for processing... Please review report with caution, it may change.`
+17:55:54 <mattclay> There are a handful of modules with 100% coverage. I've fixed gaps in tests on a few modules to get them up to 100%.
+17:56:31 <bcoca> config/data.py will get big boost
+17:56:31 <mattclay> You can also run the tests locally to get coverage.
+17:56:51 <bcoca> i do .. but i cannot read xml direclty anymore ....
+17:57:02 <alikins> ansible-test coverage html
+17:57:26 <mattclay> bcoca: `ansible-test coverage html`
+17:57:28 <bcoca> ^ did not know that one ... i kept looking at the junit ....
+17:58:28 <mattclay> bcoca: That generates the report after collecting it with the `ansible-test` option `--coverage` when running tests. You'll probably want to use `ansible-test coverage erase` between test runs.
+17:59:00 <mattclay> The junit output doesn't give coverage reporting -- it just has test playbook output.
+18:00:02 * bcoca keeps complaining about the door not opening while slamming into the fridge
+18:00:26 <mattclay> For example, to get coverage on ping you could use: `ansible-test integration ping --coverage --requirements` (to run w/o docker and auto-install requirements)
+18:01:16 <mattclay> You can collect coverage from unit, integration and some sanity tests.
+18:02:30 <mattclay> We don't have code coverage for PowerShell modules yet, but that's something we'll be working on.
+18:03:35 <mattclay> We've reached the end of our scheduled meeting time. Does anyone have anything else before I end the meeting?
+18:05:17 <mattclay> #endmeeting

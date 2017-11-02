@@ -1,0 +1,149 @@
+15:00:08 <thaumos> #startmeeting ansible core
+15:00:08 <zodbot> Meeting started Thu Oct 12 15:00:08 2017 UTC.  The chair is thaumos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:00:08 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:00:08 <zodbot> The meeting name has been set to 'ansible_core'
+15:02:51 <alikins> blorp
+15:03:00 <shertel> \o
+15:03:18 <thaumos> #chair alikins shertel
+15:03:18 <zodbot> Current chairs: alikins shertel thaumos
+15:04:57 * gundalow waves
+15:05:21 * Qalthos o/
+15:05:22 <gundalow> Around for a bit before heading to run London Meetup
+15:06:15 <thaumos> #chair gundalow Qalthos
+15:06:15 <zodbot> Current chairs: Qalthos alikins gundalow shertel thaumos
+15:06:28 <thaumos> are you in London already?
+15:07:12 <thaumos> #topic Open Floor
+15:07:23 <gundalow> thaumos: yarp
+15:07:36 <thaumos> fun
+15:08:33 <thaumos> so how's everyone doing today?
+15:08:34 * gundalow has a topic
+15:08:43 <thaumos> \o/
+15:09:19 * mikedlr waves happily
+15:09:25 <thaumos> #chair mikedlr
+15:09:25 <zodbot> Current chairs: Qalthos alikins gundalow mikedlr shertel thaumos
+15:09:58 <abadger1999> Greetings
+15:10:03 <thaumos> #chair abadger1999
+15:10:03 <zodbot> Current chairs: Qalthos abadger1999 alikins gundalow mikedlr shertel thaumos
+15:10:07 * mkrizek lurks
+15:10:17 <thaumos> #chair mkrizek
+15:10:17 <zodbot> Current chairs: Qalthos abadger1999 alikins gundalow mikedlr mkrizek shertel thaumos
+15:10:27 <thaumos> gundalow: what's your topic?
+15:11:14 <sdoran> o/
+15:11:44 <gundalow> #topic Ansible hosted jinja2 tool
+15:11:46 <thaumos> #chair sdoran
+15:11:46 <zodbot> Current chairs: Qalthos abadger1999 alikins gundalow mikedlr mkrizek sdoran shertel thaumos
+15:11:55 <gundalow> someone pointed me at http://jinja2test.tk/
+15:12:25 <bcoca> which should really be linked from pocoo
+15:12:35 <gundalow> pocoo?
+15:12:35 <thaumos> #chair bcoca
+15:12:35 <zodbot> Current chairs: Qalthos abadger1999 alikins bcoca gundalow mikedlr mkrizek sdoran shertel thaumos
+15:12:56 <bcoca> http://jinja.pocoo.org
+15:13:07 <bcoca> ^ domain that hosts jinja docs
+15:13:16 <gundalow> bcoca: pointed out that rather than linking to that, we COULD host our own which would know about our lookups, filters and tests
+15:14:23 <gundalow> Before I create an issue, wondered what people thought
+15:14:58 <bcoca> fyi, that requires 'installing ansible' on the webserver and creating an app that will use it to templatize the input
+15:15:16 <abadger1999> We don't have a large infrastructure team and it wouldn't know about our builtin variables without some coding.
+15:15:18 <bcoca> mmm ... awx feature?
+15:15:21 <gundalow> #info in self-hosted soloution we'd need to include all dependencies, such as `netaddr`
+15:15:35 <abadger1999> but it could be useful to users.
+15:15:37 <thaumos> I was thinking the same about awx/tower
+15:15:58 <thaumos> there has been a similar ask of playbook validation there as well
+15:16:01 <abadger1999> Unofficially telling people about it might be better than officially.
+15:16:16 <abadger1999> even if we pay for the hosting
+15:16:29 <bcoca> agreed, but it is very limited usefulness since it wont include our 'expansions' to jinja2
+15:16:45 <bcoca> thaumos: playable?
+15:17:04 <bcoca> https://www.ansible-playable.com/
+15:17:31 <thaumos> no not that
+15:17:39 <Pilou> OSAS (ping misc) could host the website
+15:17:43 <bcoca> you mean ansible-lint?
+15:17:48 <thaumos> yeah like that
+15:18:09 <alikins> not sure I would trust user input to jinja on something I host
+15:18:10 <bcoca> i think these are all nice 'awx plugins'
+15:18:20 <bcoca> tiny hosted apps that are 'slappable' on top of awx
+15:18:27 <gundalow> alikins: aye, would need to be very isolated
+15:18:51 <bcoca> alikins: jinja2 already 'sandboxes' stuff, we should just also validate the input
+15:19:18 <bcoca> the 'do.ext' is the dangerous one and that is 'off by default'
+15:21:31 <thaumos> It's not a bad idea @gundalow.  how about this.  create a proposal and I will ask leadership their thoughts.  sound like a plan?
+15:21:56 <gundalow> thaumos: sure, proposal, rather than issue. WIll do
+15:22:30 <thaumos> yeah that way depending on which route it takes it'll be easier to "manage"
+15:22:44 <gundalow> #action gundalow to create a proposal for this (Hosted, AWX) Is this also like hosted ansible-lint type tool
+15:22:47 <gundalow> ack
+15:22:50 <gundalow> Thanks
+15:22:54 <gundalow> #topic Open Floor
+15:24:02 <thaumos> is sethp here?
+15:24:19 <sethp> \o
+15:24:30 <thaumos> hi there
+15:24:32 <thaumos> #chair sethp
+15:24:32 <zodbot> Current chairs: Qalthos abadger1999 alikins bcoca gundalow mikedlr mkrizek sdoran sethp shertel thaumos
+15:24:49 <thaumos> #topic treat wait_for as unready discussion
+15:24:58 <thaumos> #link https://github.com/ansible/ansible/pull/28839
+15:26:19 <bcoca> change in previous behaviour w/o a toggle?
+15:27:26 <sethp> My understanding is that it’s more of a bug fix; from macOS hosts we often saw plays failing because we trying to shut down an already closed socket
+15:27:55 <sethp> It seems to me that a failure closing a thing that’s already closed indicates “wait longer”, not “abort"
+15:28:41 * bcoca was reading up on ENOTCONN meaning
+15:29:10 <sethp> I’m not too sure what causes it, I suspect it has something to do with systemd having bound the socket but being unable or unwilling to start the daemon that would recieve connections, casuing something like a successful handshake followed very quickly by a RST
+15:29:15 <bcoca> k, makes more sense, its a noop to shutdown a connection that doesnt exist anymore
+15:29:37 <sethp> yeah, and so macOS cleans up its side before ansible has a chance to issue the close
+15:29:43 <sethp> (is my suspicion)
+15:30:21 <bcoca> not all tcp stacks are the same ... lots of grey areas in RFCs ... not always follow RFCs
+15:30:37 <bcoca> so many reasons that could happen, probalby timeout related
+15:30:41 <bcoca> lgtm
+15:30:53 <thaumos> https://tools.ietf.org/html/rfc1149
+15:30:56 <bcoca> just did not remember what ENOTCONN meant
+15:31:03 <thaumos> it's the pigeons fault in this case
+15:31:17 <alikins> seems like any otherwise unhandled exceptions in port connect could be considered 'not ready'
+15:31:20 <bcoca> thaumos: ^ that RFC has already been revised x2 by subsequent ones
+15:31:26 <thaumos> yep it has
+15:31:54 <bcoca> alikins: depends ... sooo much stuff can happen on socket shutdown ...
+15:32:55 <thaumos> @bcoca, are you willing to merge this pr?
+15:33:28 <bcoca> reading the convos first, see if anyone had any issues
+15:33:55 <bcoca> i remember dag getting involved, which is why i had not looked at this, he knows wait_for well
+15:34:57 <sethp> yeah, he suggested the new wait_for_connection module, which does indeed avoid this problem by relying on a higher-level semantic than establishing a connection to assert readiness, and sweeping any failure (including edge cases in rfcs) under that rug
+15:35:35 <sethp> which is definitely a good idea, but it doesn’t help us in the narrow but critical case of waiting for a brand new host that doesn’t yet have python installed
+15:35:37 <bcoca> yeah, reading up, convo seems totally unrelated to your change
+15:36:01 <sethp> to solve that, we need to wait for ssh and then use `raw`
+15:36:06 <bcoca> i might go further and add a list of error statuses which we can ignore
+15:36:36 <bcoca> but this looks fine to me, i'll merge, need to check with release managers on backport status
+15:37:45 <thaumos> #action bcoca to follow up with release managers for backport on merged pr
+15:37:47 <bcoca> wont make 2.4.1, but probalby 2.4.2 .. unsure about 2.3
+15:38:04 <thaumos> #topic open floor
+15:38:17 <mikedlr> unit test documentation
+15:38:40 <sethp> sounds good, thank you for your time!
+15:38:42 <mikedlr> this has been reviewed twice:  https://github.com/ansible/ansible/pull/31373
+15:39:10 <abadger1999> 2.4.2 yeah.
+15:39:29 <mikedlr> have fixed; now welcome some more reviews, but propose merging it ASAP so it goes in _before_ changes to the unit test directory and is visible to those doing it (pilou)
+15:39:52 <bcoca> abadger1999: put it into project for 2.4.2
+15:41:14 <abadger1999> dharmabumstead:  mikedlr says https://github.com/ansible/ansible/pull/31373  is ready for a new review (changed some broad swaths in response to previous reviews)
+15:41:15 <mikedlr> so nothing much more to say.
+15:41:25 <shertel> mikedlr: should something be added about cloud testing with placebo? ryansb is at a conference, but I think the plan was to try to do more of that rather than using mocks.
+15:42:07 <mikedlr> shertel: I started thinking about it;  would be nice to have but it's simply an extra section in the module unit test.
+15:42:37 <mikedlr> both strategies are legitimate for different things - mocks test against what the API docs say it should do  - placebo tests against what some version of an API actually did
+15:42:38 <shertel> Yeah, can be added later.
+15:43:00 <shertel> Good point
+15:43:54 <mikedlr> I guess I will make sure that placebo is at least mentioned.
+15:44:22 * gundalow -> away
+15:44:57 <Pilou> mikedlr: #31456 reorganize common code for unit tests :)
+15:45:13 <abadger1999> mattclay: ^
+15:46:02 <mikedlr> Pilou: I was reading through that 'cos mattclay linked it.  When it's done the unit test documents will be a good place to add info about it..  which is partly why I want to merge soon.
+15:46:29 <thaumos> so for the docs to get merged, would we say that we need dharmabumstead, mattclay and ryansb to give one more glance at them?
+15:47:38 <mikedlr> yes; at least to close their current reviews which I think I have now answered wherever it's possible
+15:49:35 <thaumos> heh, we're all not good at closing current reviews.
+15:50:34 <mattclay> I'll take a look after the meeting.
+15:50:53 <mikedlr> well, if they just say "it's fine" on IRC I'll personally be happy;  not sure about the Official Guardians of Community Process (R)
+15:50:54 <thaumos> thanks mattclay
+15:51:28 <thaumos> #action mattclay to review the doc pr later today.
+15:51:43 <thaumos> #action thaumos to ping dharmabumstead on pr as well
+15:53:01 <thaumos> #topic open floor
+15:53:14 <thaumos> anything else quick to discuss?
+15:53:15 <abadger1999> FYI: 2.4.1rc1 is out.  Please test ;-)    2.4.1 final next week unless blocker bugs are found, in which case rc2 next week.
+15:53:19 <thaumos> ^^
+15:53:31 <thaumos> #info 2.4.1rc1 is out to test folks!
+15:53:45 <abadger1999> Already have a few non-blocker bugs queued up for 2.4.2 as well.
+15:54:19 * bcoca keeps piling on
+15:54:38 <mikedlr> rds deprecation  - think we should do first announcement of that in 2.5 and is on track, but not so much test feedback on new RDS modules. https://github.com/ansible/ansible/pull/30746
+15:55:16 <mikedlr> some of the AWS working group have promised to test rds_instance which should replace rds.
+15:55:23 * shertel is still testing it
+15:56:24 <shertel> looking good though
+15:59:21 <abadger1999> Alright, anything else from anyone?
+15:59:34 <abadger1999> If not, I'll close in 60 seconds
+16:01:27 <abadger1999> #endmeeting

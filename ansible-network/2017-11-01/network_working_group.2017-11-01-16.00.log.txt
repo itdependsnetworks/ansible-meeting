@@ -1,0 +1,110 @@
+16:00:08 <gundalow> #startmeeting Network Working Group
+16:00:08 <zodbot> Meeting started Wed Nov  1 16:00:08 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:00:08 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:00:08 <zodbot> The meeting name has been set to 'network_working_group'
+16:00:47 * gundalow waits for people to join
+16:01:25 <funzo> o/
+16:01:52 <bearrito> o/
+16:03:08 <gundalow> #chair itdependsnetwork kedarX trishnag ganeshrn Qalthos jmcgill298 dt-arista funzo bearrito flatterlight
+16:03:08 <zodbot> Current chairs: Qalthos bearrito dt-arista flatterlight funzo ganeshrn gundalow itdependsnetwork jmcgill298 kedarX trishnag
+16:03:17 <ganeshrn> hi
+16:03:17 * trishnag waves
+16:04:16 <gundalow> #info Agenda https://github.com/ansible/community/labels/network
+16:06:08 <gundalow> (Just looking through the agenda to see what's has updates to review since last meeting
+16:06:12 <gundalow> )
+16:07:03 <funzo> looks like there's exactly one PR :) Also might be worth pointing folks to the 2.5 milestone for networking items to make sure it's obvious on what to expect
+16:07:48 <gundalow> #topic Add final block to list of blocks. #32172
+16:07:53 <gundalow> #link https://github.com/ansible/ansible/pull/32172
+16:08:04 <gundalow> bearrito: I believe this is yours
+16:08:08 <bearrito> yep
+16:08:20 <gundalow> #info The last sections of lines that make up a block to search through were left behind. This change fixes that.
+16:08:24 <gundalow> #info The list of lines doesn't get appended to the list of blocks until a new block is found. Changing that to append to the list of blocks when the end of the block is found.
+16:09:11 <bearrito> minor bug, just need someone to review
+16:09:15 <gundalow> Sure
+16:09:23 <gundalow> I'm pausing as I'm wondering what testing we have for that
+16:10:15 <gundalow> #Info test coverage https://codecov.io/gh/ansible/ansible/src/devel/lib/ansible/plugins/filter/network.py
+16:10:29 <gundalow> zero coverage
+16:10:42 <gundalow> well, it's been imported, but not used
+16:11:38 <gundalow> bearrito: How would you feel about adding some integration tests into https://github.com/ansible/ansible/tree/devel/test/units/plugins/filter
+16:11:47 <gundalow> #chair Anil
+16:11:47 <zodbot> Current chairs: Anil Qalthos bearrito dt-arista flatterlight funzo ganeshrn gundalow itdependsnetwork jmcgill298 kedarX trishnag
+16:12:19 <gundalow> bearrito: I realise I'm asking for you to increase the size of your three line PR a lot
+16:12:25 <bearrito> if i had time, no guarantee ill be able to get that anytime soon
+16:12:33 <gundalow> mkay
+16:12:51 <bearrito> i know we have the rule of all new modules get unit test, doesnt seem like that applied to plugins/filters
+16:13:13 <gundalow> so rule is new network  functionallity must be tested, though this is a bug fix, so I'm happy for this PR to be merged without tests
+16:13:23 <gundalow> well, not happy, more accepting :P
+16:13:42 <gundalow> #info As there isn't any test coverage we will accept filter *bugfix* PR as is
+16:14:01 <bearrito> 👍
+16:14:55 <gundalow> bearrito: I assume this should be backported to 2.4 as well (if so we will deal with that)
+16:15:22 <bearrito> i could, but i personally have no need for that.
+16:15:27 <bearrito> it could*
+16:15:38 <bearrito> looks to be safe enough to backport
+16:16:16 <gundalow> cool will get that sorted
+16:16:22 <bearrito> thanks
+16:18:03 <gundalow> #action ganeshrn to review 32172, merge and CP into 2.4
+16:18:09 <gundalow> #topic 2.5 roadmap
+16:18:20 <gundalow> funzo: What we want to do here?
+16:19:05 <gundalow> #info Everything that we (Ansible Core Network team) plans to do for 2.5 has Milestone:2.5.0 added to it
+16:19:46 <gundalow> #info Which can be found by this search: https://github.com/ansible/ansible/issues?q=is%3Aopen%20label%3Anetworking%20milestone%3A2.5.0
+16:20:09 <gundalow> #action EVERYBODY If you think anything is missing from https://github.com/ansible/ansible/issues?q=is%3Aopen%20label%3Anetworking%20milestone%3A2.5.0 please let us know in #ansible-network
+16:20:15 <gundalow> funzo: Anything else?
+16:20:40 <gundalow> #info https://github.com/ansible/ansible/projects/10 contains the higher level (big ticket items) that we are working on
+16:20:55 <funzo> i think that covers it
+16:21:20 <gundalow> #info ROADMAP_2.5.rst should be published in the next day or so, PR is out for final review (PR:32333)
+16:22:51 <gundalow> #topic Open Floor
+16:23:11 <gundalow> Anil: I've poked people to review your Lenovo PR. We are discussing the correct way to import Parimiko
+16:23:20 <gundalow> Anil Qalthos bearrito dt-arista flatterlight funzo ganeshrn gundalow itdependsnetwork jmcgill298 kedarX trishnag Anything else?
+16:23:21 <Anil> ok
+16:23:41 <Anil> Hi, Any info on why my PR 31696 failing?
+16:23:49 * gundalow looks
+16:24:29 <gundalow> So clicking the "details" link at the bottom of the PR takes us to the Shippable results: https://app.shippable.com/github/ansible/ansible/runs/42538/summary/console
+16:24:29 <dt-arista> ganeshrn: just curious if you had a chance to review https://github.com/ansible/ansible/pull/32112
+16:24:41 <gundalow> Which shows that centos6,7 and fedore24,25 are failing
+16:24:54 <Anil> yes
+16:25:03 <gundalow> Clicking on one of them, then "tests" shows that a yum test has failed
+16:25:46 <gundalow> Anil: which looks like a network issue with one of the yum repos. I've clicked rerun
+16:25:58 <gundalow> skg-net: Hi, we are in Open Floor, anything from you?
+16:25:59 <Anil> ok..
+16:26:23 <itdependsnetwork> I had one
+16:26:31 <gundalow> itdependsnetwork: sure
+16:26:48 <skg-net> nothing much..we will give a PR for openswitch module next week
+16:26:52 <itdependsnetwork> what is the status on facts? Based on this: https://github.com/ansible/ansible/commit/751eab187f51cdc58a4c112abcb4265b7112ef1b#diff-83a6bf7294d0c5ac59ee458de130f795R355
+16:26:59 <gundalow> #topic Facts discussion
+16:27:08 <gundalow> #info  < itdependsnetwork> what is the status on facts? Based on this: https://github.com/ansible/ansible/commit/751eab187f51cdc58a4c112abcb4265b7112ef1b#diff-83a6bf7294d0c5ac59ee458de130f795R355
+16:27:08 <itdependsnetwork> I thought it was being pulled out
+16:27:36 <itdependsnetwork> Then in proposal was told facts should be used and not an additional verb for GET
+16:27:44 <gundalow> ganeshrn: trishnag Qalthos Do you know?
+16:28:30 <itdependsnetwork> My understanding of Legacy is pre-deprecated limbo
+16:28:50 <itdependsnetwork> However, that may not be true...
+16:29:59 <trishnag> I don't know as of now. I haven't touched nxos_facts code yet. Qalthos do you ?
+16:30:53 <itdependsnetwork> Am I right in saying we either need a GET per module or not deprecate facts? They seem in direct conflict with each other
+16:35:21 <skg-net> my understanding was, we use facts for to get high level info (minimal),which in turn be used in the playbook, we will have exhaustive modules for gets
+16:36:15 <itdependsnetwork> from privateip: "This is facts and should remain so imho. I don't see a need for this. If there is information missing from facts modules, then lets fix it there instead of blurring the lines here"
+16:37:16 <itdependsnetwork> @gundalow: Is it fair to say this is not clearly defined? Internal conversation needs to take place?
+16:37:41 <gundalow> itdependsnetwork: Yup, I think that needs to happen
+16:37:59 <gundalow> Who from the Core team wants to do drive this?
+16:38:14 <itdependsnetwork> ok, thanks, just want to bring it up. It never got resolved in proposal so I thought this was the better forum
+16:38:56 <gundalow> itdependsnetwork: yup, it is the right forum
+16:39:17 <funzo> gundalow: let's add this to our team meating agenda, yes?
+16:39:24 <funzo> MEATing
+16:39:30 <gundalow> plan
+16:39:52 <gundalow> #action Gundalow to add facts discussion to internal team agenda
+16:40:28 <gundalow> itdependsnetwork: Thanks for bring it up
+16:40:31 <gundalow> #topic Open Floor
+16:40:35 <gundalow> Any more for anymore?
+16:42:40 <gundalow> If not will close shortly
+16:43:11 <ganeshrn> dt-arista: not yet, i will review it
+16:43:27 <ganeshrn> this need to be back ported to 2.4?
+16:43:41 <dt-arista> yeah, hence the ask.  We have a customer that is pushing for it
+16:43:51 <ganeshrn> ok
+16:44:23 <gundalow> Not sure which issue this is, though please ensure it has Project:2.4.x in GH
+16:44:33 <dt-arista> it does
+16:44:39 <ganeshrn> gundalow: https://github.com/ansible/ansible/pull/32112
+16:45:34 <gundalow> Great, thanks
+16:45:40 <gundalow> Just wanted to ensure it didn't get missed
+16:45:44 <gundalow> Anything else?
+16:45:46 <dt-arista> yep, thanks
+16:46:36 <gundalow> Cool
+16:46:40 <gundalow> Thanks everybody
+16:46:43 <gundalow> #endmeeting

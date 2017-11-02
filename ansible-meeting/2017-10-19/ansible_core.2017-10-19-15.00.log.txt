@@ -1,0 +1,365 @@
+15:00:13 <thaumos> #startmeeting ansible core
+15:00:13 <zodbot> Meeting started Thu Oct 19 15:00:13 2017 UTC.  The chair is thaumos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:00:13 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:00:13 <zodbot> The meeting name has been set to 'ansible_core'
+15:00:45 <alikins> blorp
+15:00:49 * mikedlr waves hi
+15:00:54 <thaumos> #chair alikins mikedlr
+15:00:54 <zodbot> Current chairs: alikins mikedlr thaumos
+15:00:57 <sivel> oh, hey
+15:01:03 <thaumos> oh hai
+15:01:06 <thaumos> #chair sivel
+15:01:06 <zodbot> Current chairs: alikins mikedlr sivel thaumos
+15:01:27 * Qalthos 🌊🌊
+15:01:35 <abadger1999> Óla
+15:01:39 <thaumos> lol Qalthos
+15:01:48 <thaumos> #chair Qalthos abadger1999
+15:01:48 <zodbot> Current chairs: Qalthos abadger1999 alikins mikedlr sivel thaumos
+15:02:02 * gundalow waves
+15:02:15 <thaumos> #chair gundalow
+15:02:15 <zodbot> Current chairs: Qalthos abadger1999 alikins gundalow mikedlr sivel thaumos
+15:02:49 <thaumos> #topic Add additional deps to support PR 31719
+15:02:56 <thaumos> #link https://github.com/ansible/ansible/pull/31719
+15:03:19 <thaumos> @abadger1999, is there a way that we could close this out.  If you recall, the consensus is not to add additional deps
+15:03:44 <thaumos> or if not close it out, try to coerce kustodian to do your approach.
+15:04:02 <thaumos> I have a strong feeling that they won't budge though.
+15:05:23 <sivel> -1
+15:05:42 <mikedlr> maybe, given that ansible does package installation and we are talking about including roles, we could include a role which installs ansible with deps?
+15:05:45 <abadger1999> I think there's consensus not to add additional hard deps to the main package
+15:05:45 <thaumos> -1 already noted my friend.
+15:05:54 <abadger1999> I do not know about any of the alternatives.
+15:06:06 <abadger1999> Note we've also added additional optional deps recently for azure
+15:06:08 <thaumos> okay, going back to what I said first, can we close this out?
+15:06:11 <abadger1999> In the setup.py
+15:06:18 <sivel> +1 to close :)
+15:06:19 <alikins> if I were managing a system that needed the deps, I would like the modules/plugins that needed extra deps to be split into sub-rpms and the deps added there
+15:06:23 <abadger1999> So there is precedent here.
+15:06:38 <abadger1999> Just lack of clarity on the implementation.
+15:06:39 <alikins> if I were building the packages, I'd like to keep it one rpm with fuzzy deps
+15:06:47 <thaumos> yeah, but those are "supported" in a sense.
+15:07:51 <mikedlr> there's an underlying need:  "make it easy to install all the packages I need for _my_ ansible with _my_ playbooks to work"  - there should be a ticket for that.
+15:07:51 <abadger1999> thaumos: "maybe".
+15:08:11 <abadger1999> I mean we've had to mess with those recently because they were failing while we were cutting a release.
+15:08:13 <sivel> these deps are already available, we just don't install them by default.  Also by adding this to package managers, we diverage from what we are doing with pip, unless we implement extras for pip too.
+15:08:22 <sivel> but I'm honestly not-interested
+15:08:25 <alikins> ie, ansible + ansible-plugins-filters-netaddr + ansible-plugins-lookups-dig etc
+15:08:45 <abadger1999> sivel: that's what I'm saying... we've implemented this for azure + pip already.
+15:08:48 <thaumos> @alikins, not the approach we should take either.  I don't want us managing rpm packages all the time.
+15:08:58 <abadger1999> sivel: so there's precedent now.
+15:09:23 <thaumos> but those are different classes of modules.  We can't have every tom dick and harry of module type needing this.
+15:09:39 <sivel> I feel like we were solving a different problem with azure though, unless I am mistaken
+15:09:44 <thaumos> we are.
+15:09:49 <abadger1999> https://github.com/ansible/ansible/blob/devel/setup.py#L153
+15:10:08 <abadger1999> sivel: what's the difference?
+15:10:32 <abadger1999> I need deps for the thing I am running on the controller.  How do I install those?
+15:10:44 <thaumos> bcoca has an answer for that
+15:11:00 <abadger1999> kustodian: Hi, we're talking about https://github.com/ansible/ansible/pull/31719 right now
+15:11:05 <kustodian> I'm here
+15:11:12 <kustodian> hi all
+15:11:15 <sivel> azure packaging and versioning is roughly broken, unless it was one for a completely different reason
+15:11:18 <sivel> abadger1999: ^
+15:11:19 <abadger1999> thaumos: One that's inferior to requirements files.
+15:11:22 <thaumos> #chair kustodian
+15:11:22 <zodbot> Current chairs: Qalthos abadger1999 alikins gundalow kustodian mikedlr sivel thaumos
+15:11:35 <thaumos> I'm just saying, @abadger1999
+15:11:43 <abadger1999> sivel: heh :-)  So the criteria is... if the upstream ecosystem is broekn, we can have a requirements file?
+15:11:44 <abadger1999> ;-)
+15:12:00 <sivel> abadger1999: we're having to fix someone elses problems, because they aren't interested
+15:12:11 <sivel> not saying we should do it though
+15:12:50 <abadger1999> nitzmahone: Since you wrote the extra-requirements stuff i nsetup.py to be expandable, what's your take on using it for more than just azure?
+15:13:00 <sivel> If we make them optional deps, like they are, and someone still has to explcitly perform an action to install, I am ok
+15:13:15 <kustodian> options doesn't work well with yum
+15:13:19 <kustodian> optionals
+15:13:33 <sivel> but I honestly don't see a significant ROI
+15:13:35 <abadger1999> kustodian: Optional... we were talking about doing it for pip
+15:13:39 <kustodian> aha
+15:13:41 <kustodian> sry
+15:13:51 <sivel> ansible self hosting :)
+15:13:57 <abadger1999> yum.... yeah, there's suggests recommands in fedora now but not yet in rhel/sentos.
+15:14:07 <sivel> we have a playbook that doesn't require extra deps, that installs the deps we need to run ansible
+15:14:20 <thaumos> ^ that's the way to do it
+15:14:27 <thaumos> that's how I had it as well.
+15:14:30 <kustodian> I still don't understand what is the big deal of adding 2-4 small deps, so that you have one thing less to think about when installing Ansible on a host
+15:15:09 <kustodian> how do these deps work with Tower?
+15:15:09 <thaumos> because it's for modules we don't support.  it's adding bloat to a package.  it's adding deps that we have to track if there are security issues
+15:15:10 <sivel> because I don't want them
+15:15:12 <abadger1999> <nod> Shipping roles inside of hte ansible tarball is something that bcoca talked about at one time but that does not seem to have hit any of our roadmaps recently.... so sounds like it isn't going to happen.
+15:15:28 <thaumos> @kustodian, the user would have to install them like sivel suggested
+15:15:38 <gundalow> Ansible is good at installing stuff for you :)
+15:15:43 <gundalow> Also, where do you draw the line
+15:15:57 <sivel> our deps, as our requirements.txt mentions, should be the minimal set of deps to get core ansible functionality working
+15:15:59 <thaumos> #chair gundalow
+15:15:59 <zodbot> Current chairs: Qalthos abadger1999 alikins gundalow kustodian mikedlr sivel thaumos
+15:16:16 <bcoca> we also have credstash lookup .. should we make credstash a dep?
+15:16:20 <thaumos> #chair bcoca
+15:16:20 <zodbot> Current chairs: Qalthos abadger1999 alikins bcoca gundalow kustodian mikedlr sivel thaumos
+15:16:32 <sivel> as long as they are still optional, and don't get default installed, I won't fight anyone on adding it
+15:16:40 <kustodian> imo the line would be filters and lookups
+15:16:46 <bcoca> sivel: then its not a 'dependency'
+15:16:54 <thaumos> modules are a part of that line too, kustodian
+15:16:59 <abadger1999> <nod> Yeah, key for me is if the deps are optional.  I'm a hard -1 on any hard dependency solution.
+15:17:04 <kustodian> 3 packages take care of all filters and lookups which are in the Ansible docs
+15:17:13 <gundalow> kustodian: which three?
+15:17:24 <kustodian> netaddr, dns, jmespath
+15:17:37 <bcoca> kustodian: not true, plenty of lookups in ansible docs that dont have deps
+15:17:43 <bcoca> included in those 3
+15:17:50 <sivel> and you added `requests`
+15:17:51 <kustodian> which one?
+15:17:58 <bcoca> credstash for one
+15:18:03 <kustodian> I searched the docs, didn't find any mentioned
+15:18:08 <abadger1999> kustodian: note that the epel6 packages recently removed their jmespath dependency (which had been added a few releases before) because it breaks on amazon linux.
+15:18:14 <gundalow> Would need to ensure they exist for pip, arch, debian, gentoo, macports,rpm, etc, etc,etc
+15:18:39 <bcoca> mongodb, redis, cyberarck, etc
+15:18:40 <gundalow> which we have in ./packaging
+15:18:47 <kustodian> gundalow: why do they need to be supported on al platforms, support on those which have them
+15:19:00 <gundalow> plus all the other distros which we don't support
+15:19:01 <bcoca> consule, chef_databags ... list is not short
+15:19:10 <kustodian> mongo and redis are caches as far as I know
+15:19:22 <kustodian> or there are filters as well :D
+15:19:29 <sivel> but why draw the line arbitrarily there?
+15:19:38 <gundalow> kustodian: I assume it would be confusing if you did `pip install ansible` vs `yum install ansible` and got a different set of things installed
+15:19:57 <kustodian> gundalow: probably, but I guess pip isn't an issue, since it has everything
+15:20:00 <abadger1999> gundalow: using distro packages, that is already true... so I don't think that's a big deal.
+15:20:10 <sivel> but I think we are all still in agreement, to quote abadger1999 "Yeah, key for me is if the deps are optional.  I'm a hard -1 on any hard dependency solution."
+15:20:25 <gundalow> kustodian: abadger1999, oh, OK
+15:20:29 <abadger1999> gundalow: it's probably more confusing when users do yum install ansible with distro packages vs our packages and get different deps
+15:20:42 <gundalow> abadger1999: yup
+15:20:50 <kustodian> here is my take on things: you want to use redis, you need to install redis -> you need to install python-redis, which is fine with me
+15:20:57 <kustodian> but
+15:21:05 <sivel> I'd prefer to not solve it, but I'd acquiesce to a still completely optional method
+15:21:14 <kustodian> if I want to use ipaddr filter, I'm not using any external service
+15:21:29 <kustodian> I'm using something which is very useful if I'm working with IPs
+15:21:43 <kustodian> same as for json_query and dig
+15:21:56 <kustodian> I'm not using an external service like mongo, or whatever
+15:22:02 <bcoca> filters have more 'wierd' dependencies, i.e textfsm
+15:22:23 <bcoca> passlib
+15:22:24 <sivel> to be honest here, on a related point, I actually don't use those specific lookups/filters, because they require extra deps
+15:22:36 <bcoca> jmespath
+15:22:52 <bcoca> why those and not the others?
+15:22:56 <kustodian> sivel: that's why I used regexp instead of ipaddr
+15:22:59 <bcoca> how is dig not querying an 'external source'?
+15:23:26 <bcoca> i don't say we ignore the problem, i just dont think making them a hard depencency on the ansible base package is the solution
+15:23:26 <sivel> kustodian: so you are advocating to install deps that you don't want to install?
+15:23:58 <sivel> my note was I don't use them, because I don't want those deps installed, regardless of the means
+15:24:04 <kustodian> hehe, no
+15:24:22 <kustodian> the reason why I didn't use ipaddr is because I had to do additional work to get it working
+15:24:34 <kustodian> e.g. set a playbook which installs those additional deps
+15:25:13 <thaumos> everyone does that kustodian, for a very long time.
+15:25:19 <kustodian> I guess the biggest problem is that those community (not supported) fitlers are no different in the docs from officially supported
+15:25:28 <thaumos> they are totally different
+15:25:31 * bcoca is working on that
+15:25:31 <thaumos> we don't touch them
+15:25:34 <kustodian> thaumos: do you think that it is good that everyone does it?
+15:25:39 <bcoca> thaumos: but not clearly listed as different
+15:26:09 <thaumos> as you said, you're working on it.  we haven't had the ability to doc them before.
+15:26:19 <sivel> Should we vote?  On something?  Sounds like the majority is -1 on hard deps
+15:26:20 <thaumos> regardless, we arguing ownership semantics.
+15:26:23 <thaumos> we should vote.
+15:26:29 <thaumos> vote on optional deps added.
+15:26:30 <bcoca> -1 on hard deps
+15:26:35 <sivel> -1 on hard deps
+15:26:39 <bcoca> +1 to recommends
+15:26:40 <thaumos> ...
+15:26:43 <bcoca> but that does not cover rpms
+15:26:52 <sivel> +0 on optional deps
+15:26:59 <kustodian> what about an additional package?
+15:27:07 <abadger1999> -1 on hard deps, +1 on optional
+15:27:19 <bcoca> kustodian: its not 1 additional package its 'ansible-minimal' + dozens of packages
+15:27:27 <thaumos> we are not going to maintain additional packages for community stuff.
+15:27:40 <thaumos> that is up to the module maintainer, and what bcoca said above.
+15:27:40 <alikins> +1 on splitting things with unacceptable-by-default deps into sub packages
+15:27:41 <kustodian> thaumos: that's fair
+15:27:42 <bcoca> im fine if we start down that road, but its a big commitment and maintenance burden
+15:27:55 <abadger1999> I'm okay with an additional subpackage but someone has to figure out the organization.
+15:28:02 <abadger1999> Note: I would not put content into the subpackages
+15:28:05 <abadger1999> Just dependencies
+15:28:11 <kustodian> yeah, just deps
+15:28:22 <sivel> but let me state this, optional deps added is still an explicit action
+15:28:23 <kustodian> so I know that I can do yum install ansible ansible-deps
+15:28:26 <bcoca> i would put content .. most cisco guys dont care to have arista modules installed
+15:28:32 <abadger1999> yeah.
+15:28:38 <abadger1999> Another way, perhaps better
+15:28:38 <kustodian> but it's easy, you don't have to think about it
+15:28:40 <bcoca> and viceversa
+15:28:57 <abadger1999> I'd be okay shipping playbooks in examples that installed extra packages via pip
+15:29:13 <thaumos> ...
+15:29:21 <gundalow> Well written roles that allow you to install the dependencies would be nice
+15:29:25 <thaumos> yep
+15:29:30 <thaumos> by community maintainers
+15:29:41 <alikins> modules can all go in a blob (main package or a ansible-modules sub package). plugins should probably have code packaged in subpackages with right dep
+15:29:46 <gundalow> Where that should live is a different discussion
+15:29:53 <thaumos> yep, @gundalow
+15:30:05 <abadger1999> roles would be nice ... but again the issue is that we don't have the infra^U yep, "where that should live" is exactly the issue
+15:30:07 <alikins> plugins with unusual-deps, that is
+15:30:11 <thaumos> @kustodian, basically, as we mentioned in your PR, there is a spec to fix this.
+15:30:34 <bcoca> #1 is do we want to do the subpackaging, #2 IF #1 == yes .. then discuss how to separate the packages and what goes in them
+15:30:35 <abadger1999> alikins: "should"   but I'd be against that.
+15:30:47 <bcoca> since we are not commiting to #1, i think discussing #2 is yac shaving at thsi point
+15:30:55 <abadger1999> alikins: That makes people have to think about what they're installing and I don't want to take that step yet.
+15:31:18 <alikins> they already have to do that to get things to work
+15:32:00 <abadger1999> alikins: not always.  but it is luck of the draw.
+15:32:14 <sivel> To avoid dragging this on too long, it sounds like we likely need another discussion, and perhaps a legit proposal?
+15:32:15 <abadger1999> Do you already have the deps installed for some other reason?  Then you're all set.
+15:32:30 <abadger1999> <nod>
+15:32:40 <sivel> otherwise, we exclude other potential topics here
+15:32:59 <kustodian> I agree with sivel, I guess this  is taking far to long now
+15:33:00 <sivel> but sounds like that existing ticket doesn't meet our decision
+15:33:12 <abadger1999> yeah, current implementation (with hard deps) is definitely not going to get accepted.  We seem to have questions about implementation of optional deps but are open to the idea of that.
+15:33:25 <sivel> so it shoudl be closed, and someone should proceed with a proposal or future discussion about optional deps
+15:33:49 <thaumos> we should close this out.
+15:35:20 <thaumos> @kustodian, can you do a solid and close out your PR.  Feel free to start a discussion on ansible/proposals with the subpackage approach if you'd like.
+15:35:28 <kustodian> kk
+15:35:39 <thaumos> and by subpackage I also mean include optional deps.
+15:35:49 * gundalow -> other meeting
+15:36:05 <thaumos> #action kustodian to close PR and create a proposal to carry on further discussion.
+15:36:58 <thaumos> #topic open floor
+15:37:14 <thaumos> @sivel, do you wanna discuss your category action plugins at all, or let it brew some more?
+15:37:22 <thaumos> we're out of topics for the day.
+15:37:50 <sivel> heh, we could, it's been there for a while, but seems to just be picking up on some conversation
+15:37:57 <thaumos> up to you buddy
+15:38:06 <sivel> sure, we could get feedback here on utilizing metadata
+15:38:11 <thaumos> feel free to topic it... ok
+15:38:19 <thaumos> #topic category action plugins discussion
+15:38:30 <thaumos> #link https://github.com/ansible/proposals/issues/55
+15:38:53 <sivel> Quick run down, right now "category" action plugins are a hard coded thing, like for network modules
+15:38:55 <bcoca> sivel: i dont want to use module metadata cause it inverts the 'security context' of action plugins being the more privileged ones, that is why i was going for 'actio plugin properties'
+15:38:59 <thaumos> @gundalow have you peeked at this proposal?
+15:39:23 <sivel> bcoca: so for someone different reasons we are in agreement :)
+15:39:54 <bcoca> well, i have more reasons, but that is the main one for me
+15:39:59 <sivel> if we don't do it based on hierarchy, we still run into problems about where we "hard code it"
+15:40:25 <abadger1999> I'm not a fan of the flexibility that bcoca would like to build in.
+15:40:30 <bcoca> well, heir can only be part, otherwise you are disallowing mdoules in roles/plays
+15:40:32 <sivel> I think the general way should be determination, and I'm open to a way to explicitly mention it someway
+15:40:45 <sivel> bcoca: we force hierarchy there too :)
+15:41:04 <abadger1999> I don't especially like the introspection aspect of metadata but I do agree with rcarrillocruz that it seems like the best place from a purely organizational standpoint
+15:41:08 <bcoca> sivel:  ... afaik subdirs dont work in _plugins/library dirs
+15:41:14 <sivel> but as mentioned, I am open to some explicit way to specify an action plugin
+15:41:18 <sivel> bcoca: we could make it work
+15:41:24 <abadger1999> (introspection could be partially solved by nitzmahone's idea to break modules into multiple files)
+15:41:33 <abadger1999> (where metadata is one of the files)
+15:41:50 <gundalow> thaumos: not look at it
+15:41:58 <thaumos> is there a proposal for that @abadger1999?
+15:42:10 <gundalow> Qalthos: Have you looked at https://github.com/ansible/proposals/issues/55
+15:42:17 <bcoca> abadger1999: that would leave out 'non directory' modules
+15:42:20 <alikins> seems reasonable to me. The module name -> action name match is already a 'dynamic', might as well make it explicit and dynamic
+15:42:23 <abadger1999> thaumos: I'm not sure.  nitzmahone discussed it in an internal slack and bcoca and I both jumped into the discussion.
+15:42:33 <abadger1999> But I don't know if he took it from there to a proposal
+15:42:36 <nitzmahone> No proposal for module dirs yet, but I could...
+15:42:39 <thaumos> hmm, how long ago?
+15:42:39 <bcoca> no proposal yet
+15:42:41 <sivel> my biggest problem, is where we hard code it, to allow the action plugin to explicitly called out.  I feel like the only sensical approach would be metadata, but I don't like that
+15:42:50 <thaumos> I am just curious, ignore me
+15:42:57 <sivel> the other option, is to allow playbook syntax to indicate it, but that is weird
+15:43:04 <nitzmahone> The thought was to make them optional
+15:43:11 <bcoca> sivel: that used to be how async worked
+15:43:12 <thaumos> #chair nitzmahone
+15:43:12 <zodbot> Current chairs: Qalthos abadger1999 alikins bcoca gundalow kustodian mikedlr nitzmahone sivel thaumos
+15:43:21 <abadger1999> thaumos: Since it was interna (so not useful for others here) i'll look it up after the meeting... and we can both try to get him to post it extrenally
+15:43:29 <abadger1999> oh hey, there he is :-)
+15:43:31 <thaumos> kk
+15:43:40 <thaumos> lol, he's been here
+15:43:49 <sivel> for core modules/action plugins, it could be hierarchy, but we could allow a user to specify the action plugin that want to associate to a module via a playbook
+15:44:00 <alikins> +1  "<abadger1999> (introspection could be partially solved by nitzmahone's idea to break modules into multiple files)"
+15:44:02 <sivel> that requires more syntax, and feels weird, but similar to async
+15:44:31 <bcoca> sivel: and that wasy main reason i removed async as action plugin
+15:44:58 <sivel> we still do a lot of asking.  I'd almost like to build that data at runtime, while discovering plugins we make that map, which is easy if we use hierarchy
+15:45:13 <sivel> the more outward asking we do, of looking at other files, has performance hits
+15:45:22 <alikins> this idea generalizes to a name->plugin resolver in plugin loader
+15:45:55 <sivel> we don't have to reach an agreement here, or come to a solution.  Think about it, and add your thoughts to the proposal
+15:46:00 <thaumos> yep
+15:46:01 <alikins> so an abstraction point for that seems like a first step
+15:46:07 <thaumos> it's just something to get more people to talk
+15:46:18 <sivel> honestly, I don't know they full or correct solution
+15:46:25 <sivel> but I suppose that is why we are here :)
+15:46:26 <thaumos> because we really had nothing else to discuss, and I thought it was good to get more eyes on your proposal @sivel :-)
+15:46:38 <sivel> yeah, thanks! I agree
+15:46:43 <sivel> just setting expectations
+15:46:58 <abadger1999> we should perhaps fix performance as a secondary to having a structure that we like.
+15:47:32 <abadger1999> ie: metadata associaed with the module seems to satisfy the goals we have... so we can decide on that first then figure out how to make metadata lookup fast after.
+15:47:37 <sivel> I suppose, I just have a fundamental problem with having to read so many files to determine how to make things work
+15:47:45 <abadger1999> <nod> Yeah.
+15:47:48 <thaumos> I'd be curious to hear jimi's view on this too.
+15:48:07 <thaumos> since he's always looking for perf improvements here and there.
+15:48:16 <sivel> abadger1999: but I do agree, that metadata seems to fill the most buckets, except for my complaint about file reading
+15:48:30 <bcoca> or mine about inverting the selection and context
+15:48:32 <sivel> using hierarchy, is easy, but doesn't meet everyones needs
+15:48:43 <thaumos> is it possible to make metadata more inclusive so it isn't a file read?
+15:48:43 <abadger1999> We could do things like build a db of all the modules with metadata we ship, at install time/build time, if we fail to come up with any other fast soltuion to the multiple-files probem
+15:48:46 <sivel> bcoca: I'm not fully sure how that works, but I would be interested
+15:48:55 <bcoca> sivel: im fine with adding heir 'always' to my example, but then allow action plugins to add additional criteria
+15:49:18 <sivel> abadger1999: fact cache our plugin loader?
+15:49:19 <abadger1999> then you only have to read metadata from user-added modules, not the base install
+15:49:26 <abadger1999> sivel: yeah.
+15:49:35 <bcoca> abadger1999: if we are ever going to do 'secure filtering' of plugins/modules, we need that db + crc code
+15:49:43 <sivel> abadger1999: I like that :)
+15:50:09 <thaumos> technically if a user "installs" a module that they provide, it could be added to the db as well.
+15:50:18 <abadger1999> thaumos: that's true.
+15:50:19 <alikins> could be a single manifest file or db, or a caching layer,  for module->action switcheroo, you kind of know it at install time, so building that map could be only at module install time
+15:50:31 <abadger1999> thaumos: a little more complex though.
+15:50:34 <nitzmahone> Agreed, caching is the only way to scale that
+15:50:44 <bcoca> overlays
+15:50:55 <thaumos> yep, but something we should take into account with the installer
+15:50:57 <bcoca> we can ship main list, then overlay user/custom plugins
+15:51:10 <sivel> hierarchy or metadata are the least invasive methods for today I think.
+15:51:11 <bcoca> as long as they provide some token to allow for it
+15:51:11 <abadger1999> as then you have either "It must be in the cache [user has to do more than just lay the file onto the filesystem]" or "how do we invalidate the user-added cache?"
+15:51:25 <sivel> if we do metadata, as long as we cache that info for the run, which I am sure we would do, could be ok
+15:51:50 <abadger1999> yeah, we'd definitely cache it for hte run.
+15:51:52 <thaumos> user will have to do more, they're going to have an explicit step to install a module.
+15:52:05 <thaumos> because the win for us is, it gets placed where it needs to go, and it will get cached.
+15:52:05 <abadger1999> even if we didn't cache it for longer than that.
+15:52:30 <bcoca> well, we already cache them, just blow it up every time we find new 'plugin dir'
+15:52:48 <bcoca> ^ blow up search cache, but not module loaded one
+15:54:05 <nitzmahone> Yeah, part of it will almost certainly need to be runtime discovery, but not the installed stuff.
+15:54:24 <nitzmahone> Hopefully installed stuff will always dwarf runtime
+15:54:28 <alikins> I wouldn't mind seeing modules-that-are-really-actions in their own path
+15:55:20 <alikins> that would make any caching/cache invalidation much simpler (or at least, with a smaller N)
+15:55:51 <bcoca> huh?
+15:56:13 <bcoca> arent those just 'action plugins'?
+15:56:46 <abadger1999> If I understand what you're asking for, I don't think it would be a huge wi (the number of action-plugins with just docs is several orders of magnitude smaller than the number of modules)
+15:57:29 <bcoca> should always be the case
+15:57:35 <bcoca> unless we do something really wrong
+15:58:11 <thaumos> alrighty, well... folks
+15:58:19 <thaumos> please add any feedback to the linked proposal.
+15:58:24 <thaumos> this has been a great discussion!
+15:58:35 <thaumos> Is there anything anybody wants to drop in before we close out?
+15:58:40 <mikedlr> new module unit test documentation is ready for merge https://github.com/ansible/ansible/pull/31373    ;
+15:58:43 <thaumos> @abadger1999, anything release specific?
+15:58:47 <thaumos> LOL mikedlr
+15:58:52 <mikedlr> it's just developer docs so I think it could be merged very quickly which would be helpful to then doing other edits
+15:58:53 <abadger1999> thaumos: Sure.
+15:58:58 <alikins> bcoca: there is still a ./lib/ansible/modules/inventory/add_host.py for lib/ansible/plugins/action/add_host.py. I'm suggesting those move to lib/ansible/action_modules/add_host.py (or lib/ansible/modules/actions/add_host.py )and lib/ansible/plugins/actions/add_host.py
+15:59:11 <abadger1999> As people may have seen, instead of 2.4.1 final yesterday, I released 2.4.1rc2.
+15:59:23 <abadger1999> We discovered and fixed one blocker bug at the last minute.
+15:59:29 <alikins> though, if we could just ditch needing the metadata only module, that would be even better
+15:59:39 <abadger1999> We may have a few other blocker bugs on our radar (from people testing this morning)
+15:59:57 <thaumos> @mikedlr make sure to ping dharmabumstead again on your pr
+16:00:02 <mikedlr> hope everyone agrees.  ...
+16:00:11 <bcoca> alikins: still have things like meta/include/import_x that are not actions
+16:00:18 <abadger1999> I'm hoping, if so, that I can release an rc3 on friday or Monday and  still hit 2.4.1 final next week.
+16:00:19 <bcoca> alikins: and copy that is BOTH action and module
+16:00:29 <mikedlr> thaumos: he's already done a second read through and I have responded to everything..  gundalow was also picked on :-)
+16:00:30 <abadger1999> But it may not be on Wednesday next week.
+16:00:34 <bcoca> alikins: dont think its worth moving that for the very few actions that dont have module code
+16:00:43 <thaumos> has he done the third readthrough though?
+16:00:46 <thaumos> ;-)
+16:01:05 <abadger1999> We don't have a reproducer for one of the blocker bugs yet so I can't make a more solid estimate than that.
+16:01:38 <thaumos> do we need someone to work with us on that, abadger1999?
+16:01:52 <abadger1999> In 2.4.2 news, I've cherrypicked the issues that I decided were too risky for 2.4.1 into the temp-staging-post-2.4.1 branch on github.
+16:02:16 <abadger1999> So that's ready to merge into stable-2.4 once 2.4.1 final is out the door.
+16:02:32 <abadger1999> thaumos: We have someone from the openshift team who is working on reproducing for us.
+16:02:46 <thaumos> ah ok, I notice that jimi pinged on it as well just now
+16:02:48 <thaumos> ok
+16:03:09 <thaumos> @mikedlr, poke at dharmabumstead more. gundalow please give some feedback too :-)
+16:03:20 <thaumos> thanks for the great chat today everyone
+16:03:27 <abadger1999> It may be related to https://github.com/ansible/ansible/issues/31631  but we don't have enough info/reproducer about wither to know for sure yet.
+16:03:35 <abadger1999> *about either
+16:03:42 <mikedlr> thaumos: at some point we just have to merge.  There will be more edits and more chance to comment many times in future..
+16:03:52 <sivel> sorry, I slipped away guys.  $work being all needy and whatnot
+16:03:57 <thaumos> dharmabumstead gets final say on docs.
+16:04:17 <thaumos> he's a stickler, and it's for good reason sometimes
+16:04:20 <mikedlr> I desperately want to beat Pilou with this so that the docs get edited as part of his change. .
+16:04:23 <bcoca> abadger1999: helerps.yml ??? thought we did not do other than .py for filters
+16:04:28 <thaumos> we get slapped a lot if we merge docs without his eye on it.
+16:04:45 <thaumos> okay, really. closing this out.
+16:04:49 <thaumos> #endmeeting

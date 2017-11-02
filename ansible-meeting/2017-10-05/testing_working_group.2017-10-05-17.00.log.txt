@@ -1,0 +1,66 @@
+17:00:44 <gundalow> #startmeeting Testing Working Group
+17:00:44 <zodbot> Meeting started Thu Oct  5 17:00:44 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+17:00:44 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+17:00:44 <zodbot> The meeting name has been set to 'testing_working_group'
+17:00:49 <gundalow> #chair mattclay
+17:00:49 <zodbot> Current chairs: gundalow mattclay
+17:02:30 <gundalow> #info Agenda https://github.com/ansible/community/labels/testing
+17:02:33 * mattclay waves
+17:03:59 <gundalow> mikedlr: You around?
+17:04:10 <gundalow> #topic Unit testing documentation
+17:04:38 <gundalow> #info mikedlr has been working on some unit test documentation https://public.etherpad-mozilla.org/p/ansible_module_unit_testing_guide
+17:04:51 <gundalow> #info He's in the process of turning that into RST
+17:05:45 <gundalow> Don't think the PR has been created yet
+17:06:06 <gundalow> hum, no Mike, so will move on
+17:06:10 <gundalow> #topic Network Testing
+17:06:57 <gundalow> #info rcarrillocruz has been busy improving the VM infrastructure that we run the Network tests on for DCI (distributed-ci.io)
+17:07:29 <gundalow> #info Anon access to https://distributed-ci.io should be in the next DCI release, I've not got an ETA for that, will find out and report back
+17:07:58 <gundalow> #info Currently have eos, junos, nxos, openvswitch and vyos running on DCI
+17:08:09 <gundalow> #info on devel and stable-2.4
+17:08:33 <gundalow> #action gundalow to get code coverage working with this, will start that next week or week after
+17:08:40 <gundalow> #topic Open Floor
+17:08:47 <gundalow> mattclay: anythine else?
+17:09:06 <mattclay> #info We've increased our Shippable nodes from 52 to 62.
+17:09:13 <gundalow> \o/
+17:09:23 <mattclay> #info We'll be bringing online a second server at MacStadium soon.
+17:09:49 <mattclay> That's it from me.
+17:11:52 <gundalow> mattclay: Once the roadmap is live we should link that from the agenda
+17:14:09 * gundalow looks around to see if anyone else has anything
+17:14:37 <caphrim007_> was dci ever determined to be either push or pull?
+17:14:58 <caphrim007_> peter and gundalow had differing views at Fest
+17:15:13 <gundalow> caphrim007_: ah, let me see if I can find the docs for that
+17:16:22 <caphrim007_> from my organization's pov, a push model with be problematic. even if it is more performat and easier on resources
+17:16:44 <caphrim007_> i mentioned at Fest that I have sufficient hacks around that, but they are...after all...hacks
+17:19:18 <gundalow> hum, docs are not clear
+17:19:23 <gundalow> spredzy: You around?
+17:20:43 <gundalow> spredzy: caphrim007_ is asking (and I can't remember) if it's a push/pull from distributed-ci.io to dci-agent in partners lab
+17:21:36 <Pilou> Would DCI allow current CI to be modular / distributed (i think about problems encountered with packet integration tests) ?
+17:21:56 <gundalow> Pilou: DCI is post-merge
+17:22:01 <gundalow> Shippable pre-merge
+17:22:04 <Pilou> k
+17:22:07 <gundalow> zuul: pre-merge
+17:22:35 <gundalow> We are currently using (and extending) DCI to allow us to test more network platforms that are either
+17:22:45 <gundalow> a) difficult to run via shippable
+17:23:06 <gundalow> b) test suites take to long (not a bad thing in itself)
+17:23:25 <gundalow> c) Machines take too long to bring up
+17:25:25 <Pilou> Another subject: ansibullbot#764 (test label vs test_pull_requests label, it would be easier to drop test_pull_requests and keep test)
+17:26:30 <gundalow> #topic Test labels
+17:26:57 <gundalow> I don't think we need "_pull_request" bit "label:test is:pr"
+17:27:01 <gundalow> would work
+17:27:52 <gundalow> I'd like just one label, would make searching easier
+17:28:12 <mattclay> +1 to a single label
+17:28:47 <gundalow> Pilou: You happy with single label?
+17:29:03 <Pilou> yes :)
+17:29:28 <Pilou> ok. Then it would be consistent (with 'packaging' and 'test' labels) to use docs instead of docs_pull_request.
+17:29:42 <gundalow> #agreed Drop label:test_pull_requests just use label:test (ansibullbot#764)
+17:31:03 <gundalow> You'd need to check with dharmabumstead for the docs ones
+17:31:16 <Pilou> ok
+17:34:41 <Pilou> should the unit test doc be part of the dev guide ?
+17:36:36 <gundalow> #topic Open Floor
+17:36:47 <gundalow> Pilou: correct, mikedlr will be raising a PR for it, weill review in PR
+17:39:52 <gundalow> Anyone got anything else?
+17:40:55 <mattclay> Nothing from me.
+17:42:52 <gundalow> #chair Pilou
+17:42:52 <zodbot> Current chairs: Pilou gundalow mattclay
+17:42:56 <gundalow> Thanks all
+17:42:59 <gundalow> #endmeeting

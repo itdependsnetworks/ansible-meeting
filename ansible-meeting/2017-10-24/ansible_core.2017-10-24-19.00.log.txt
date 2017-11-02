@@ -1,0 +1,288 @@
+19:00:06 <thaumos> #startmeeting ansible core
+19:00:06 <zodbot> Meeting started Tue Oct 24 19:00:06 2017 UTC.  The chair is thaumos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:00:06 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:00:06 <zodbot> The meeting name has been set to 'ansible_core'
+19:01:17 <nitzmahone> o/
+19:01:21 * shertel waves
+19:01:22 <thaumos> lol
+19:01:30 <thaumos> I was just about to post an "all by myself" gif
+19:01:35 <thaumos> #chair nitzmahone shertel
+19:01:35 <zodbot> Current chairs: nitzmahone shertel thaumos
+19:02:07 * sdoran waves
+19:02:22 <thaumos> #chair sdoran
+19:02:22 <zodbot> Current chairs: nitzmahone sdoran shertel thaumos
+19:02:52 <funzo> o/
+19:03:55 <thaumos> #chair funzo
+19:03:55 <zodbot> Current chairs: funzo nitzmahone sdoran shertel thaumos
+19:04:24 <nitzmahone> community_free_core_meeting
+19:04:34 <thaumos> ?
+19:04:41 <thaumos> new title I should use?
+19:04:42 <abond> I'm here..
+19:04:47 <thaumos> It keeps changing on me...
+19:04:51 <thaumos> #chair abond
+19:04:51 <zodbot> Current chairs: abond funzo nitzmahone sdoran shertel thaumos
+19:04:56 <thaumos> hello @abond!
+19:05:13 <nitzmahone> No, just remarking on the lack of non-RH folks today ;)
+19:05:20 <thaumos> ah
+19:05:21 <thaumos> gotcha
+19:05:24 <thaumos> well, there is one
+19:05:49 <abond> Everyone must be busy with their day jobs.
+19:05:49 <thaumos> and that's good, because I was just about to kick out his proposal topics
+19:05:57 <thaumos> jk ;)
+19:06:01 <thaumos> what's a day job!?
+19:06:15 <bcoca> what is day?
+19:06:43 <thaumos> it's when you open your blinds or come upstairs and see daylight
+19:07:09 <bcoca> upstairs? blinds?
+19:07:12 <thaumos> kind of a pointless, but it helps plants grow or something like that
+19:07:15 <abadger1999> hola
+19:07:20 <bcoca> you surface people say funny things
+19:07:24 <thaumos> #chair bcoca abadger1999
+19:07:24 <zodbot> Current chairs: abadger1999 abond bcoca funzo nitzmahone sdoran shertel thaumos
+19:07:35 <thaumos> alrighty!
+19:07:40 <thaumos> I think we have enough to start
+19:07:58 <nitzmahone> "Sunlight- it's what plants crave"
+19:08:02 <thaumos> #topic Digital ocean module updates
+19:09:05 <thaumos> abond do you know if pmarques contributes any longer?
+19:09:13 <abond> Yes he does from time to time.
+19:09:37 <abond> He's responsive when I ping him to rebase or make changes.
+19:09:47 <thaumos> for the digital_ocean public private ip update, if you get a shipit from them, it should automerge
+19:09:58 <abond> Cool! Will do
+19:10:02 * jtanner is here
+19:10:19 <thaumos> for the second one, since it's new, Core committers need to give a final spot check.
+19:10:24 <thaumos> #chair jtanner
+19:10:24 <zodbot> Current chairs: abadger1999 abond bcoca funzo jtanner nitzmahone sdoran shertel thaumos
+19:11:02 <thaumos> oh and of course I didn't notice pmarques commenting on this new on
+19:11:07 <thaumos> s/on/one
+19:12:14 <abond> I figured I needed gundalow or someone else from core to review the sshkey facts before it could move forward.
+19:12:23 <thaumos> I can take an action to get @ryansb or have @shertel nudge @ryansb to look at the new one
+19:12:37 <thaumos> yeah, or gundalow 😃
+19:12:41 <ryansb> Yeah, I'll check it out
+19:12:42 <shertel> I can review digital ocean modules
+19:12:52 <thaumos> Thanks both of you :)
+19:12:59 <ryansb> PR link?
+19:13:01 <thaumos> #link https://github.com/ansible/ansible/pull/26365
+19:13:12 <thaumos> Was already somewhat ahead of you there ryansb
+19:13:25 <thaumos> #action ryansb and/or shertel to review the PR
+19:13:32 <abond> Thank you!
+19:13:35 <thaumos> Anything else?
+19:13:41 <abond> Nope
+19:13:53 <thaumos> coolio
+19:13:59 <thaumos> #topic Open Floor
+19:14:12 <thaumos> Anything open to discuss to kill some time before jborean93 can be here
+19:14:26 <nitzmahone> #info agenda: https://github.com/ansible/community/issues/263
+19:14:34 <ryansb> https://github.com/ansible/ansible/pull/31765 - another DO request
+19:14:46 <ryansb> It doesn't do any updating of records, so I'm hesitant on it
+19:15:52 <nitzmahone> Jordan was asking about 31767 because of something I brought up, so I can talk about it...
+19:15:59 <abond> Yea woohgit was still looking into that. I believe there was more development that needs to be done.
+19:16:01 <thaumos> ah okay, nitzmahone
+19:16:07 <abond> I haven't been able to play around with that PR yet.
+19:16:20 <thaumos> let's finish this do topic that ryansb brought up then we can talk about it
+19:16:27 <nitzmahone> k
+19:16:40 <thaumos> #topic DO domain record module discussion
+19:17:06 <thaumos> you say in one comment that you have tested it though
+19:17:09 <thaumos> @abond
+19:17:56 <abond> Not since his last changes.
+19:18:03 <thaumos> ah gotcha!
+19:18:09 <thaumos> thanks for clarifying for me
+19:18:19 <thaumos> ty
+19:18:36 <abond> np
+19:19:28 <abond> I'm good from the DO side. I'll probably have more in a month.. Thanks
+19:19:31 <ryansb> I just wanted to get other eyes on it - I think it should be able to update records and not require users to manually delete old stuff
+19:19:56 <nitzmahone> #chair Qalthos
+19:19:56 <zodbot> Current chairs: Qalthos abadger1999 abond bcoca funzo jtanner nitzmahone sdoran shertel thaumos
+19:20:26 <thaumos> @ryansb I would agree with you.  seems lacking in functionality if it can't do that
+19:21:03 <abond> Yea that's where my test with the do cli came in, it might be lacking on the api side.
+19:23:14 <thaumos> @abond, would you agree then to not include this since it's missing functionality?
+19:23:29 <abond> Yes I would I agree at this time.
+19:24:04 <thaumos> okay, could one or both of you stress on the PR to have that included somehow, or close out to not be included?
+19:24:28 <abond> Yes I will take ownership o nthat
+19:24:58 <thaumos> ty kindly!
+19:25:11 <thaumos> #action abond to comment on #31765
+19:25:44 <thaumos> #topic win_reboot discussion
+19:25:53 <nitzmahone> So this isn't just about win_reboot
+19:26:01 <thaumos> #link https://github.com/ansible/ansible/pull/31767
+19:26:01 <jborean93> Hey all, sorry I'm late
+19:26:07 <thaumos> you're good, just in time!
+19:26:14 <nitzmahone> It's basically: I'm hoping to come up with a way to generically set connection args from actions
+19:26:21 <thaumos> @nitzmahone that's my fault, I am trying to simplify things to quickly
+19:26:24 <thaumos> my apologies
+19:27:05 <nitzmahone> win_reboot (and likely the new `reboot` module as well) need to be able to crank down the connection timeout in a generic fashion to be connection-agnostic
+19:28:03 <nitzmahone> However, there's no generic queryable/settable mapping provided by the connection layer- it's set by `__init__`
+19:28:18 <jtanner> crank down the timeout?
+19:28:36 <nitzmahone> Yeah, so for instance, the default winrm connection timeout is 60s
+19:28:51 <jtanner> ah, so the underlying connection subsystem
+19:28:55 <nitzmahone> Right
+19:29:12 <nitzmahone> But today, you can't walk up to a connection plugin and query arbitrary properties about it
+19:29:20 <jtanner> yeah, ssh -o <timeoutarg>=1s
+19:29:25 <nitzmahone> Each plugin takes the stuff it got passed in and does (whatever) with it
+19:29:36 <nitzmahone> Nor override those properties generically post-init
+19:29:51 <nitzmahone> Even if you know the name of the arg
+19:30:02 <jtanner> we also don't totally know the things an ~/.ssh/config is going to do after the fact either, unless we do a config dump
+19:30:59 <nitzmahone> Yeah- in this case the "set" is more important than the "get", but I figured we'd try to tackle both (some exceptions of course, like the one you mention)
+19:31:06 <thaumos> so could this be two config settings?
+19:31:20 <nitzmahone> ?
+19:31:44 <thaumos> in ansible config file,  one for linux, one for windows, and maybe even one for network devices?
+19:31:51 <nitzmahone> No, that's missing the point
+19:31:55 <thaumos> okay, sorry
+19:31:56 <jtanner> for ssh, it's a -o and also settable in (~|/etc/ssh)/config
+19:32:04 <nitzmahone> The thing is, we want these modules to be connection-plugin agnostic
+19:32:36 <nitzmahone> But if the connection supports setting a lower timeout, we want to do that by default so we're not waiting around for whatever the default is (that we can ping faster waiting for it to come up)
+19:33:12 <jtanner> i would also make the timeout a parameter for the *reboot modules
+19:33:15 <nitzmahone> It's a specific case of a general problem, in that connection properties are opaque once created
+19:33:18 <nitzmahone> It is
+19:33:30 <jborean93> Could bcoca's config part 3 PR add in a connection timeout var and we then query that, it would just be up to the connection plugin to have a `set_conn_arg` method to implement it?
+19:33:33 <nitzmahone> But we want to default to something lower in the usual case where it's not specified
+19:33:53 <nitzmahone> @jborean93 That's more or less what I'm proposing
+19:34:05 <jborean93> cool
+19:34:06 <thaumos> that's sort of what I was suggesting as well, just a lot more generic
+19:34:26 <nitzmahone> Well, the second half- the first half is a "nice to have" but not really the part I'm worried about
+19:34:28 <bcoca> i was planning on 'timeout' connection.timeout and connection.ssh.timeout
+19:34:29 <thaumos> I didn't think we'd want it to be that generic because some users might want to finetune per system type.
+19:34:36 <bcoca> ^ once we have yaml config
+19:34:47 <jtanner> finetune per system OR by region
+19:35:07 <jtanner> fickle clouds
+19:35:09 <dag> I think you can do this with: https://github.com/ansible/proposals/issues/81
+19:35:10 <jborean93> Well WinRM is a bit more difficult as you need to set 2 args for the connection timeout but that could potentially be handled by the action plugin
+19:35:42 <nitzmahone> @dag That's the config side, but the unsolved problem is a generic property get/set on connections
+19:35:59 <thaumos> this is how I see it
+19:35:59 <thaumos> ssh.timeout: 10s
+19:36:00 <thaumos> winrm.timeout: 45s
+19:36:00 <thaumos> network.timeout: 60s
+19:36:14 <nitzmahone> Most connections map those to internal fields, not properties, and there's no rhyme or reason to how they do it
+19:36:29 <bcoca> im in midle of normalizing that
+19:36:29 <nitzmahone> You're solving a different problem
+19:36:47 <bcoca> https://github.com/ansible/ansible/pull/31024
+19:37:40 <jborean93> bcoca: that's only part of the solution though, we would need to implement the override somehow in the connection plugin
+19:37:55 <nitzmahone> @bcoca: that sorta works, but is "all or nothing"- this would be "single value"
+19:38:00 <nitzmahone> exactly
+19:38:03 <bcoca> already there, conneciton plugin has it's own setting
+19:38:09 <bcoca> no, its 'cascading values'
+19:38:18 <jborean93> Because as nitzmahone says these settings are usually set in `__init__` and we need to override after that
+19:38:24 <bcoca> general timeout/connections timeout/pluging specific timeout
+19:38:37 <bcoca> jborean93: yes, during set-options phase, which is well after init
+19:38:38 <nitzmahone> @bcoca: Right, but I only see `set_options`
+19:38:59 <nitzmahone> I can't override one value from an action like that if I'm skimming it right
+19:39:13 <bcoca> nitzmahone: if you add connection var to plugin, you can
+19:39:30 <bcoca> ansible_winrm_timeout
+19:39:45 <bcoca> ^ just 'declare it' and its automatically available
+19:40:09 <nitzmahone> ah, plugin `set_option`
+19:40:14 <abadger1999> nitzmahone: So you just want connection plugins to have a connection parameter that they set to a config value in __init__ but consult self.timeout instead of the config directly from then on?
+19:40:17 <nitzmahone> not plural
+19:40:32 <bcoca> nitzmahone: plural for winrm as you do 'magic' in there
+19:40:34 <nitzmahone> Yeah
+19:40:40 <bcoca> its old 'set vars override'
+19:40:40 <abadger1999> nitzmahone: and then you can set it from other code?  (Or do you need more management than that... like overriding at call time)?
+19:40:47 <bcoca> but you dont need to set_option as vars would already do it
+19:41:25 <nitzmahone> IIRC connection has already been set up by the time the action's running , so it'd be a "runtime"/ post-all-this-stuff override
+19:41:46 <nitzmahone> But I think calling `set_option` could work so long as the plugin is getting its value from that
+19:41:53 <abadger1999> ugh.
+19:41:57 <bcoca> connection gets setup right before calling option
+19:42:11 <abadger1999> We really should not be using config for data that cahnges during runtime.
+19:42:17 <bcoca> both after task templating, should have same data available
+19:42:22 <abadger1999> It should be a light reflection of static data.
+19:42:25 <jborean93> In the reboot case we have already set it up and used it to make the actual reboot call, the polling would be after that
+19:42:27 <nitzmahone> I hadn't seen this stuff yet (which is why I wanted to talk about it)- this *might* work for us as-is or with some tweakage
+19:42:53 <jborean93> nitzmahone: may need reset in the set_options if it isn't already there
+19:42:58 <nitzmahone> Yep
+19:43:12 <abadger1999> nitzmahone: Do you need to change this for forever (ie from that point forward in an entire playbook run)?  or just for the calls that you are making?
+19:43:15 <nitzmahone> Well, ideally the plugin would always sample from there, but we'll have to see
+19:43:27 <nitzmahone> No, just for that task
+19:43:38 <jtanner> it should only change for the connection the reboot modules are making in that particular thread
+19:43:40 <nitzmahone> Currently we'll get a new connection afterward
+19:43:47 <jtanner> and it should not affect other connections
+19:43:51 <nitzmahone> If that ever changes, we've got problems
+19:44:04 <abadger1999> k.  This should be a function parameter then.
+19:44:59 <nitzmahone> I think what bcoca's got *may* get the job done- the `set_option` thing was basically what I wanted to build, but looks like it's already (partially) there
+19:45:18 <abadger1999> If you create a brand new connection instance then I could see it as a parameter to __init__() but otherwise it would be a param on calling exec_command()..
+19:45:20 <nitzmahone> If it doesn't, we can probably figure out how to get it to do so.
+19:45:53 <abadger1999> set_option is conceptually wrong though.  It is a global setting, not a per-task setting.
+19:46:35 <jtanner> and it goes beyond the task even
+19:46:36 <abadger1999> doing things wrong conceptually will have ramifications for things like jimi-c's threads branch.
+19:46:42 <bcoca> abadger1999: options are per task
+19:46:51 <bcoca> abadger1999: as task modify conneciton options
+19:46:54 <jtanner> needs to be by call from the action plugin to something like _low_level_exec_command
+19:47:20 <nitzmahone> Ah, was misunderstanding the scope of set_option...
+19:47:28 <abadger1999> oh, it's part of play_context?
+19:47:35 <bcoca> instead of play context
+19:47:39 <nitzmahone> No, it's on plugin base
+19:48:09 <nitzmahone> It looks to be instance-level to me, so seems like the right place to do it
+19:48:24 <bcoca> instead of hardocing all thsi stuff in play context, it is now the plugin that declares it
+19:48:52 <bcoca> then set_options gets the same data we used to get vrom constants/play/playcontext/variables/inventory
+19:48:55 <nitzmahone> Anyway, I don't think we need to continue discussing here- we'll take a look and see what makes sense for that. Sounds like we have a couple of possibilities
+19:49:12 <bcoca> but instead of each plugin having to figure out the right combo, it just reasds self._options['optionname']
+19:49:22 <nitzmahone> (that hopefully won't require building anything new)
+19:49:28 <nitzmahone> right
+19:50:05 <abadger1999> Hmm.. we only create a new plugin by sideeffect of using proesses, though, right?
+19:50:15 <bcoca> ?
+19:51:01 <abadger1999> I may have to  re-read how pluginloader works now...
+19:51:09 <abadger1999> But here's my potential problem.
+19:51:18 <bcoca> still works the same, the issue is 'plugin instanciation'
+19:51:19 <nitzmahone> Connection instances are currently per task
+19:51:36 <bcoca> even if they werent, set_options IS per task, and set for each task
+19:51:39 <nitzmahone> If threading branch breaks that, we have much bigger problems
+19:51:44 <abadger1999> Okay... and that is integral to the design or just a side-effect of using multiprocessiung?
+19:51:56 <bcoca> i would say .. both ?
+19:52:09 <bcoca> it was designed thsi way .. but we also designedi t as part of multiproc
+19:52:10 <nitzmahone> Well, basically we need to ensure that threading preserves that semantic
+19:52:22 <bcoca> should not be an issue once we have set_options working
+19:52:41 <bcoca> ^ just need to add delegation
+19:52:46 <nitzmahone> If a CP needs state to live between tasks, it should manage that itself with statics/globals or elsewhere
+19:52:47 <abadger1999> bcoca: if it relies on multiprocessing to implement that, then it will break when we switch to threads.
+19:53:02 <bcoca> what does?
+19:53:08 <abadger1999> nitzmahone: or it's not a semantic that should be depended upon... that's what I'm trying to determine
+19:53:15 <nitzmahone> Yeah, just because "threads pass tests" doesn't mean it's not still rife with problems- most of our tests aren't doing multi-host/multi-connection stuff
+19:53:23 <bcoca> plugin instanciation would work the same in both cases ... with threading we need to worry about cleanup
+19:53:40 <nitzmahone> Process isolation can't be depended upon, but each task getting a new connection instance probably should be
+19:53:46 <nitzmahone> yep
+19:53:50 <bcoca> we create a NEW isntance of connection plugin PER task
+19:53:59 <nitzmahone> exactly
+19:54:07 <bcoca> even if we dont, set_options will still work PER task
+19:54:14 <nitzmahone> So long as that's the case, what I'm proposing doing with set_option should work fine
+19:54:22 <abadger1999> nitzmahone: <nod>  Yep.  that's what I'm driving at.  If that's the *design* rather than just a side effect of using processes then we're golden.
+19:54:32 <bcoca> only problem woudl be if we shared connection object across parallel tasks
+19:54:32 <nitzmahone> Because it gets overwritten on each new invocation
+19:54:44 <nitzmahone> and/or looped
+19:54:51 <abadger1999> bcoca: or if we shared them across serial tasks.
+19:54:52 <nitzmahone> (which we do curently)
+19:55:02 <bcoca> loop is not issue, as it is kindof running N tasks
+19:55:09 <abadger1999> It's a question of whether we share them at all that's problematic to doing it this way.
+19:55:12 <nitzmahone> Except the connection doesn't get reset
+19:55:14 <bcoca> abadger1999: serial tasks would not matter
+19:55:16 <nitzmahone> (last I checked)
+19:55:32 <nitzmahone> So I could contrive an issue with doing this in a loop
+19:55:55 <bcoca> nitzmahone: connection gets options reset on each iteration, cause delegate_to/remote_user can change PER iteration
+19:56:24 <nitzmahone> OK, that's clearly new for the options stuff then, because in current code, it gets reused
+19:56:27 <thaumos> okay... so time check.
+19:56:33 <thaumos> is there any conclusion we can draw here?
+19:56:40 <nitzmahone> yeah, we have to get to WWG in 4m
+19:56:42 <abadger1999> we think set_option would work.
+19:56:42 <thaumos> do we need to discuss further?
+19:56:44 <bcoca> nitzmahone: no, current code redoes options per iteration
+19:56:54 <nitzmahone> I think we're good for what we needed
+19:56:54 <bcoca> otherwise delegatE_to: '{{item}}
+19:56:56 <bcoca> ' would not work
+19:57:09 <thaumos> okay, since I got interrupted, @nitzmahone would you mind summarizing this?
+19:57:11 <abadger1999> but we should document that new isntantiations of connection plugins are expected.
+19:57:23 <bcoca> abadger1999: not really needed
+19:57:23 <nitzmahone> (document where?)
+19:57:33 <abadger1999> nitzmahone: yeah.. that's a prolem.
+19:57:34 <bcoca> abadger1999: just need to avoid sharing them across parallel tasks
+19:57:59 <abadger1999> nitzmahone: somewhere in community probably.
+19:58:05 <abadger1999> Since it's not external api
+19:58:12 <abadger1999> if it were external api then dev_guide
+19:58:16 <nitzmahone> #action Windows dudes will look at connection set_option for overriding connection timeout
+19:59:00 <bcoca> nitzmahone: winrm does not currently use a timeout
+19:59:11 <jtanner> windudes.
+19:59:20 <abadger1999> bcoca: I think you and I agree but we're coming from different places -- you're coming from where the current code is.  I'm coming from the place where the current code is rewritten.
+19:59:45 <bcoca> abadger1999: im in 2 places, current code and current code + config_v5
+19:59:49 <bcoca> which adds set_optoins
+19:59:57 <abadger1999> yeah, I'm going beyond that.
+20:00:03 * nitzmahone ducks to WWG
+20:00:12 <jborean93> thanks all for the discussion
+20:00:14 <bcoca> even if you rewrite to do threads, connections MUST be per task invocation
+20:00:27 <thaumos> thanks everyone for the discussion
+20:00:31 <thaumos> I am ending the meeting now
+20:00:34 <abadger1999> I'm looking at things like jimi's threads branch and saying we need to make sure we document that so we don't violate our assumptions when we impleemnt threading or when we rewrite PluginLoader, etc.
+20:00:35 <bcoca> ^ otherwise tasks loose the ability to have diff connectionparams, so your rewrite would still need to take that into account
+20:00:35 <nitzmahone> violent agreement
+20:00:39 <thaumos> #endmeeting

@@ -1,0 +1,159 @@
+16:00:53 <gundalow> #startmeeting Network Working Group
+16:00:53 <zodbot> Meeting started Wed Oct 18 16:00:53 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:00:53 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:00:53 <zodbot> The meeting name has been set to 'network_working_group'
+16:01:15 <trishnag> o/
+16:01:32 * Qalthos waves
+16:01:43 <seanx820> o/
+16:02:46 <gundalow> #chair dag JasonJ asharp stacywsmith st8less trishnag Qalthos seanx820
+16:02:46 <zodbot> Current chairs: JasonJ Qalthos asharp dag gundalow seanx820 st8less stacywsmith trishnag
+16:03:11 <st8less> o/
+16:03:15 <funzo> o/
+16:03:32 <gundalow> #info Agenda https://github.com/ansible/community/labels/network
+16:04:56 <funzo> do we have enough people here to finish the discussion about looping?
+16:06:16 <gundalow> #chair funzo
+16:06:16 <zodbot> Current chairs: JasonJ Qalthos asharp dag funzo gundalow seanx820 st8less stacywsmith trishnag
+16:06:43 <gundalow> #unchair asharp
+16:06:43 <zodbot> Current chairs: JasonJ Qalthos dag funzo gundalow seanx820 st8less stacywsmith trishnag
+16:06:58 <gundalow> #topic Loop
+16:07:36 <gundalow> #info Proposal for extending `loop_control` will be created. This will be implemented in Ansible 2.6 (at the earliest)
+16:07:54 <gundalow> #info Aggregate will not change for 2.5
+16:08:41 <gundalow> #info Current thoughts are that a new option under ths `loop_control` keyword will be created, which will tell Ansible if that loop should be "optimised" or not
+16:08:46 <gundalow> Any questions on taht?
+16:09:11 <gundalow> I know it will be cleared once the proposal is created, though the main take away is NO CHANGE FOR AGGREGATES IN 2.5
+16:09:15 <gundalow> #chair dt-arista
+16:09:15 <zodbot> Current chairs: JasonJ Qalthos dag dt-arista funzo gundalow seanx820 st8less stacywsmith trishnag
+16:09:49 <funzo> sounds like nays
+16:09:53 <funzo> no nays
+16:10:42 <stacywsmith> I'm fine with no changes for 2.5. Just waiting to see the proposal after that...
+16:10:49 <gundalow> stacywsmith: cool
+16:11:28 <gundalow> #topic Declaritive Intent
+16:12:19 <gundalow> #info No changes will be done in 2.5, we may add some of the missing platform specific modules under the `net_` (platform agnostic) versions, which will include DI, though again, we are not going to change anything here
+16:13:19 <gundalow> Which is the same as discussed last meeting
+16:13:20 <gundalow> cool
+16:13:26 <gundalow> #topic Network Documentation
+16:13:32 <gundalow> Now for something new...
+16:14:38 <gundalow> #info Following on from Contributor Summit discussion in San Francisco we agreed that some getting started documentation was needed
+16:15:30 <gundalow> So that's now been created and would welcome your feedback
+16:15:31 <gundalow> https://github.com/ansible/ansible/pull/31807
+16:15:42 <gundalow> better view: https://github.com/gundalow/ansible/blob/docs-network-use-cases/docs/docsite/rst/network_getting_started.rst
+16:16:23 <gundalow> be aware that GitHub doesn't render `notes` or `warnings` correctly. And as expected the comments (future fixme's) are not displayed
+16:17:27 <st8less> Need to add a note about ssh keys before the run it section. That hangs up a lot of noobs.
+16:18:31 <gundalow> st8less: Ah the first run case where the fingerprint may not be in ~/.ssh/known_hosts ?
+16:19:15 <stacywsmith> plo;;;]
+16:19:26 <st8less> Yes, and given the abysmal error messaging, I think new folks need to be warned right off the bat.
+16:19:44 <gundalow> agreed
+16:19:54 <gundalow> That willbe fixed in 2.5 FYI :)
+16:20:05 <st8less> If you follow that doc with fresh vm's, it's going to fail every time.
+16:20:05 <gundalow> though I'll update the doc
+16:20:07 * stacywsmith cat walked on keyboard.
+16:21:06 <gundalow> st8less: Do you think it should be documented in the "Run it" section?
+16:22:07 <st8less> Yes, I can add a PR later today if I get some time with my thoughts. It's a great start overall, I'd just like to be verbose about the gotchas.
+16:22:59 <stacywsmith> agree with being verbose about the gotchas.
+16:23:17 <itdependsnetwork> I would add a note about the error messaging
+16:23:37 <gundalow> The hope is that this will RST will grow over time. Also there it's not a blog post, by that I mean where nessary I'll flesh out other pages with details and link to them
+16:24:04 <gundalow> Currently has: If you receive an error ``unable to open shell`` please follow the debug steps in :doc:`network_debug_troubleshooting`.
+16:24:18 <gundalow> Though I guess I should link that straight after "Run it" as well
+16:26:31 <dt-arista> does it makes sense to add vendor specific examples to this doc as well?
+16:27:54 <st8less> Maybe link them to their own examples? I could see the intro getting bloated pretty quickly.
+16:27:56 <gundalow> dt-arista: That's a fair question, I picked two random platforms
+16:28:25 <gundalow> If we have two non-commercial platforms I would have picked those
+16:28:34 <dt-arista> yep, make sense
+16:28:56 <dt-arista> but if wanted to show some differences between using eapi vs cli
+16:28:56 <gundalow> You should be able to sed -i 's/ios/eos/g' in the above and it should work
+16:29:00 <dt-arista> just curious if this is a good place
+16:29:21 <dt-arista> right ok
+16:29:22 <gundalow> I'm going to create anotehr page about authentication and proxy
+16:29:36 <gundalow> Which is where I'll go into detail about that
+16:30:00 <gundalow> So will explain eAPI, NXAPI. And also show how the non-provider platforms such as F5 work
+16:30:06 <dt-arista> got it
+16:30:08 <dt-arista> sounds good!
+16:30:34 <gundalow> Once created I'll address the FIXME FUTURE's on line 29& 30
+16:30:50 <st8less> I like that. Each platform has their own caveats, and it would be nice to document them.
+16:31:00 <gundalow> Yup
+16:31:22 <gundalow> hum, I should write down my vision for docs, though roughly
+16:31:30 <gundalow> network_getting_started.rst - Place we all send people
+16:31:47 <gundalow> network_into.rst - will be deleted and started from fresh, will just be links
+16:32:18 <gundalow> network_authentication_and_proxy.rst - NEW: detail from above
+16:33:02 <gundalow> Via the power of module docs_fragments every module will link to the updated network_into.rst (which inturn links to the other examples and guides)
+16:33:20 <gundalow> As we've found writing good doesn't isn't enough, need to make them visable
+16:34:07 <gundalow> And we will be updating the left sidebar for docs.ansible.com/ansible to make this all a lot easier to find -- see https://github.com/ansible/proposals/issues/79
+16:34:50 <dt-arista> great idea!
+16:34:59 <stacywsmith> sounds good.
+16:35:10 <gundalow> Those PRs will be added to the agenda, so please do subscribe to https://github.com/ansible/community/labels/network to see those updates. Really welcome your feedback
+16:35:19 <gundalow> Any other questions on that?
+16:35:25 <gundalow> And thanks for the comments so far
+16:36:41 <st8less> No more ?'s from me.
+16:36:48 <dt-arista> ditto
+16:36:50 <gundalow> Thanks
+16:36:53 <gundalow> #topic Open Floor
+16:37:28 <gundalow> #info there are various PRs that need reviewing on https://github.com/ansible/community/issues/247 (I don't see any specific questions) The core team will go though those offline
+16:37:40 <gundalow> #action gundalow will review the other PRs on https://github.com/ansible/community/issues/247 and update agenda as needed
+16:37:51 <gundalow> Obviously other people are welcome to review
+16:38:06 <gundalow> #cahir dt-arista
+16:38:11 <gundalow> #chair dt-arista
+16:38:11 <zodbot> Current chairs: JasonJ Qalthos dag dt-arista funzo gundalow seanx820 st8less stacywsmith trishnag
+16:38:22 <gundalow> Anyone got anything else they'd like to discuss?
+16:38:26 <gundalow> oh
+16:38:31 <gundalow> #topic Ansible 2.5 planning
+16:38:34 <gundalow> #topic Ansible 2.5 planning and update
+16:39:18 <gundalow> #info "roadmap" Networ items for Ansible 2.5 can be found on https://github.com/ansible/ansible/projects/10
+16:39:57 <gundalow> It's basically a Kanban board, items will move from left to right. That's a good way for you to see where we are upto
+16:40:21 <gundalow> #info This was done after feedback from Contributors Summit SF to give you all better visibility
+16:40:56 <funzo> thx for adding that last bit gundalow
+16:41:32 <gundalow> That isn't everything, there is also label:networking milestone:2.5.0 --- https://github.com/ansible/ansible/issues?is%3Aopen%20label%3Anetworking%20milestone%3A2.5.0
+16:42:15 <gundalow> #info if you think something that SHOULD be fixed in 2.5.0 isn't on either of those lists please let us know in this channel (#ansible-network)
+16:42:58 <gundalow> #chair Anil
+16:42:58 <zodbot> Current chairs: Anil JasonJ Qalthos dag dt-arista funzo gundalow seanx820 st8less stacywsmith trishnag
+16:43:07 <gundalow> Anil: Hi :)
+16:43:11 <Anil> Hi
+16:43:30 <Anil> I have few PRs to be merged
+16:43:31 <gundalow> What do people think of https://github.com/ansible/ansible/projects/10
+16:43:43 <gundalow> Anil: yup, saw the list, I'll review them outside of teh meeting
+16:43:53 <Anil> Sure thanks
+16:44:07 <stacywsmith> format is helpful.
+16:46:06 <gundalow> stacywsmith: ace
+16:46:09 <gundalow> #topic Open Floor
+16:46:17 <gundalow> right, chance for other people to speak...
+16:47:30 <stacywsmith> random ansible core question. trying to figure out expected behavior...
+16:47:37 <gundalow> sure
+16:47:55 <stacywsmith> The no_log parameter can be set on play/task.
+16:47:56 <stacywsmith> http://docs.ansible.com/ansible/latest/dev_guide/developing_program_flow_modules.html#ansible-no-log
+16:48:17 <gundalow> nod
+16:48:18 <stacywsmith> A module can specify no_log for the module.
+16:48:19 <stacywsmith> https://github.com/ansible/ansible/blob/devel/lib/ansible/module_utils/basic.py#L777
+16:48:23 <gundalow> correct
+16:48:27 <stacywsmith> Which should take precedence?
+16:48:42 <gundalow> It's additive
+16:48:57 <stacywsmith> It's not currently. There's a bug.
+16:49:12 <stacywsmith> Just trying to figure out the appropriate fix. ;-)
+16:49:44 <stacywsmith> Modules setting happens here:
+16:49:45 <stacywsmith> https://github.com/ansible/ansible/blob/devel/lib/ansible/module_utils/basic.py#L793
+16:49:45 <gundalow> If you specify `no_log: false` on a task and use a module with `access_token=dict(type='str', no_log=True)` then access_token should remain hidden
+16:50:37 <gundalow> stacywsmith: Got a gist/pastebin of something that fails?
+16:50:55 <stacywsmith> that was my expectation, but it currently doesn't work that way.
+16:51:23 <stacywsmith> the no_log: false on the task (or even the lack of setting no_log on the task) always takes precedence.
+16:51:43 <stacywsmith> Due to this line:
+16:51:44 <stacywsmith> https://github.com/ansible/ansible/blob/devel/lib/ansible/module_utils/basic.py#L1590
+16:52:13 <stacywsmith> It overwrites the setting the module specifies.
+16:53:49 <stacywsmith> As the note here says, this is different than specifying no_log for an option in the argument_spec. http://docs.ansible.com/ansible/latest/dev_guide/developing_program_flow_modules.html#ansible-no-log
+16:54:07 <stacywsmith> This is a module-wide or task-wide no_log.
+16:54:26 <gundalow> hum, that does sound broken
+16:54:48 <stacywsmith> Seems the fix might be to change https://github.com/ansible/ansible/blob/devel/lib/ansible/module_utils/basic.py#L1590
+16:54:50 <stacywsmith> to
+16:55:04 <stacywsmith> self.no_log |= self.boolean(v)
+16:55:24 <stacywsmith> That way if either specify no_log it gets honored. (i.e. additive as you said)
+16:56:28 <stacywsmith> I'll take this offline to an issue/PR
+16:57:23 <gundalow> stacywsmith: Thanks, or if you don't get chance today, please raise an issue
+16:57:35 <gundalow> stacywsmith: Thanks, or if you don't get chance today to fix the problem, please raise an issue
+16:57:40 <gundalow> Thanks in advance
+16:57:54 <gundalow> Anil JasonJ Qalthos dag dt-arista funzo gundalow seanx820 st8less stacywsmith trishnag Anyone got anything else?
+16:58:07 <dt-arista> all set
+16:59:09 <asharp> All fine for me thank you.
+16:59:38 <gundalow> cool
+17:00:07 <gundalow> Will leave it open for a minute incase anyone else has anything
+17:00:12 <gundalow> Thank you everyone for your time today
+17:00:21 <gundalow> I hope you find this useful, as always feedback welcome
+17:03:55 <bearrito> i've got a general dev question if the meeting is over.
+17:03:56 <gundalow> st8less: https://github.com/ansible/ansible/pull/31807/commits/1e47a724d34c3d8a14c4daff96857554a3f7c678
+17:04:59 <gundalow> #endmeeting

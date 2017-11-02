@@ -1,0 +1,199 @@
+16:01:00 <gundalow> #startmeeting Network Working Group
+16:01:00 <zodbot> Meeting started Wed Oct 11 16:01:00 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:01:00 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:01:00 <zodbot> The meeting name has been set to 'network_working_group'
+16:01:03 * skg-net waves
+16:01:25 * ganeshrn waves
+16:01:28 <gundalow> #info Agenda https://github.com/ansible/community/labels/network
+16:01:30 <kedarX> 👋
+16:03:23 * privateip is right on time 3 minutes late
+16:05:04 <gundalow> #chair Qalthos st8less funzo trishnag andriusb skg-net kedarX privateip dt-arista Anil
+16:05:04 <zodbot> Current chairs: Anil Qalthos andriusb dt-arista funzo gundalow kedarX privateip skg-net st8less trishnag
+16:05:42 <gundalow> privateip: Which bit shall we start with, feel free to #topic
+16:05:43 <ricky_laptop> heya
+16:05:48 <gundalow> #chair ricky_laptop jmcgill298
+16:05:48 <zodbot> Current chairs: Anil Qalthos andriusb dt-arista funzo gundalow jmcgill298 kedarX privateip ricky_laptop skg-net st8less trishnag
+16:07:05 <epicdean> hello
+16:07:18 <skg-net> Is there a list we can go thru which proposals are finalized?
+16:07:29 <gundalow> epicdean: Hi, welcome :)
+16:08:15 <gundalow> #topic Aggregates
+16:09:10 <gundalow> #link https://github.com/ansible/proposals/issues/71
+16:09:20 <gundalow> So this is down to:
+16:10:10 <caphrim007> o/
+16:10:19 <gundalow> 1) bcoca added `loop_*` keyword in 2.5. In Ansible *2.6* we can move to using that format for aggregates
+16:10:56 <gundalow> (reminder, originally we were talking about using `with_` (as apt, yum, etc), though that's now deprecated and replaced with the above
+16:11:30 <jmcgill298> @gundalow, is there a formal doc on the proposed solution?
+16:11:34 <gundalow> 2) Don't use the new loop_* and stick with what we've got (bike sheding name aside)
+16:11:46 <jmcgill298> err solutions
+16:12:13 <gundalow> #chair caphrim007 epicdean
+16:12:13 <zodbot> Current chairs: Anil Qalthos andriusb caphrim007 dt-arista epicdean funzo gundalow jmcgill298 kedarX privateip ricky_laptop skg-net st8less trishnag
+16:12:27 <bcoca> 'loop' ... no _
+16:12:28 <gundalow> A proposal for the loop_ will be created shortly
+16:12:35 <gundalow> bcoca: um?
+16:12:46 <bcoca> the whole point of loop is removing the _ magic with lookups
+16:13:40 <Qalthos> gundalow: "loop" not "loop_*"
+16:13:51 <gundalow> Qalthos: ah, thanks
+16:13:51 <privateip> all: there is a lot of thought that needs to go into this and its to late in the 2.5 cycle.  i propose we put together a proposal for implementation of optimzied (or whatever we call it) loops and condsier for 2.6 implementation
+16:14:07 <privateip> in the mean time everything else around aggregates stands still until that work is done
+16:14:09 <jmcgill298> Last week the consus was that the loop proposal and how it solves all our problems was not clear, and that we would have a fuller description of what that looks like this week
+16:14:43 <privateip> jmcgill298: as i started looking into it, its turns out to be a bit bigger than can be done in a week
+16:14:57 <privateip> hence my comments about how to move forward at this point above
+16:15:13 <jmcgill298> so do we want to table the conversation here until that is available?
+16:15:26 <privateip> yes thats what im basically saying
+16:15:38 <privateip> once the proposal is done we can iterate on it
+16:16:00 <privateip> point being is this is now a 2.6 feature at the earliest
+16:16:17 <privateip> and in the meantime i dont want to bikeshed the aggregates name
+16:16:32 <privateip> it is what it is at the moment and we will need to work through it post proposal
+16:17:05 <gundalow> #chair ktbyers itdependsnetwork
+16:17:05 <zodbot> Current chairs: Anil Qalthos andriusb caphrim007 dt-arista epicdean funzo gundalow itdependsnetwork jmcgill298 kedarX ktbyers privateip ricky_laptop skg-net st8less trishnag
+16:17:08 <gundalow> So
+16:17:13 <gundalow> For the purpose of this meeting
+16:17:41 <gundalow> * Give an update that we will get a proposal created for loop
+16:17:58 <gundalow> * State that this will be a *2.6* Network feature
+16:18:10 <privateip> at the earliest ^^
+16:18:18 <gundalow> privateip++
+16:18:34 <gundalow> * Stop Aggregate name bikeshed
+16:19:30 <ktbyers> Can you clarify what that means? I assume that means you are going to keep moving forward with aggregates in the current form (apologize for arriving late)?
+16:20:10 <privateip> correct .... with that said, there are no new modules slated to be written for 2.5 per the core team's roadmap
+16:20:30 <privateip> so its status quo as we figure out the correct looping mechanism
+16:20:54 <ktbyers> Okay, as of now it will stay in current form, but not be expanded on?
+16:20:59 <privateip> correct
+16:21:14 <ktbyers> Okay, thanks.
+16:21:18 <privateip> np
+16:21:44 <privateip> this will also give everyone a change to digest and provide input to this critical feature
+16:21:52 <skg-net> privately: we are waiting for the proposal agreement, we already have modules written for open switch
+16:21:53 <privateip> s/change/chance
+16:22:13 <skg-net> with current format
+16:23:14 <skg-net> One option is to remove the aggregate alone from current module and submit them for 2.5
+16:23:31 <privateip> thats probably the best course of action
+16:23:54 <skg-net> okay
+16:28:46 <gundalow> Everyone else happy with the above approach?
+16:28:48 <gundalow> +1
+16:29:19 <funzo> +1
+16:29:26 <trishnag> +1
+16:29:29 <ricky_laptop> +1
+16:29:35 <skg-net> +1
+16:29:36 <Qalthos> +1
+16:29:38 <ganeshrn> +1
+16:29:44 <gundalow> #cahir
+16:29:46 <gundalow> #chair
+16:29:46 <zodbot> Current chairs: Anil Qalthos andriusb caphrim007 dt-arista epicdean funzo gundalow itdependsnetwork jmcgill298 kedarX ktbyers privateip ricky_laptop skg-net st8less trishnag
+16:29:50 <dt-arista> +1
+16:29:50 <gundalow> ^ voting time
+16:29:53 <Anil> +1
+16:29:57 <caphrim007> +1
+16:30:05 <itdependsnetwork> not much to vote on :)
+16:30:12 <itdependsnetwork> but sure +1
+16:30:14 <kedarX> +1
+16:30:36 <gundalow> itdependsnetwork: Sure, though want to make sure people are in sync with where we are upto
+16:31:05 <gundalow> #agreed If we go down the loop route that will be done in 2.6 (earliest)
+16:31:17 <gundalow> #agreed Proposal will be created for this
+16:31:31 <gundalow> #agreed bikesheading of aggregate will be put on hold
+16:31:34 <gundalow> cool
+16:31:37 <gundalow> privateip: DI next?
+16:31:44 <privateip> sure
+16:31:48 <skg-net> Is there a list we can go thru which proposals are finalized?
+16:31:53 <gundalow> #topic Declaritive Intent
+16:33:33 <epicdean> +1
+16:34:07 <gundalow> privateip: Am I correct in saying we have decided against adding a keyword for this so the way forward is
+16:34:44 <gundalow> a) Keep it as it is (maybe move under (bikeshed)asserts: sub option in the module
+16:34:50 <gundalow> b) move to roles
+16:35:11 <gundalow> bah
+16:35:21 <gundalow> ignore b
+16:35:28 <privateip> yes we are proposing to move forward with bcoca: suggestion
+16:35:50 <privateip> no new DI modules, built roles instead with assert statements
+16:36:16 <privateip> this should 1) address the use case and 2) remove the confusion
+16:36:22 <privateip> around state vs config arguments
+16:36:37 <bcoca> and (i hope) give us better info before starting imlementing the keyword
+16:36:59 <privateip> so modules will provide stateful configuration (in the role) and assert statementss will be used in the role to validate state
+16:37:30 <itdependsnetwork> As the user I need to adhere to ansible data model?
+16:37:33 <privateip> we will solidify the current modules and take appropriate action through the project deprecation policies
+16:37:38 <privateip> no
+16:38:01 <itdependsnetwork> Meaning asserts in the role, presume data is places as role creator intended?
+16:38:14 <privateip> yes but anyone can write a role
+16:38:21 <itdependsnetwork> as opposed to filling out dict in a meaningful (to me) task
+16:38:23 <privateip> so lets be more specific on your question
+16:38:30 <privateip> to use the role do you need to adhere to the data model
+16:38:33 <privateip> in that case yes
+16:38:55 <privateip> however you can still use playbooks to translate from one data model to another prior to implementing the role
+16:39:13 <privateip> or expand on the role to include other asserts, config functions, etc
+16:39:27 <privateip> does that make sense?
+16:39:28 <itdependsnetwork> There is no method to manage roles between versions, the distro for them is less known, not specified in the module doc
+16:39:45 <itdependsnetwork> @privateip: it does make sense
+16:40:03 <ktbyers> So that pretty much means the end of DI as a separate feature--correct?
+16:40:11 <ktbyers> Just trying to make sure I understand this.
+16:40:11 <itdependsnetwork> In my use cases I would be hard pressed to make use of it
+16:40:19 <privateip> agreed with your points on versoin, distro, docs, etc ... those are anciallary issues to be tackled
+16:40:31 <privateip> ktbyers: effectively yes
+16:40:39 <privateip> at least as modules
+16:40:42 <privateip> the concept is the same
+16:40:52 <privateip> just transferred to roles instead
+16:41:29 <itdependsnetwork> Those ancillary issues to me make it pointless to invest time in using the roles (just one man's opinion of course)
+16:41:38 <privateip> ok thats fine
+16:41:45 <privateip> i understand why
+16:41:46 <epicdean> in the future will DI check state against the routing table
+16:42:09 <privateip> epicdean: as we put together the list of roles we can have those discusssions
+16:42:22 <jmcgill298> With the proposed solution, if you add it to the role, then sure
+16:42:23 <epicdean> ah ok
+16:42:26 <privateip> there is definitely no reason it couldn't do that
+16:42:35 <itdependsnetwork> Can we setup a betting line on this?
+16:43:02 <jmcgill298> let me call vegas
+16:43:56 <jmcgill298> What is the general interest in including state checks? Is there any polling done from users?
+16:44:22 <epicdean> i would like to see that
+16:44:47 <itdependsnetwork> role tasks also happen after or before the actual change with no rollback ability, correct?
+16:45:02 <privateip> depends how you write the role
+16:45:15 <epicdean> based on routing table, ospf neighbours etc
+16:51:18 <ktbyers> Any other topics for today?
+16:51:53 <itdependsnetwork> I would like to add one if ok
+16:52:25 <privateip> sure
+16:52:38 <gundalow> itdependsnetwork: #topic it please
+16:52:43 <itdependsnetwork> My vote on DI is if it is in roles, that is fine, does not effect me. If in the module, would like to know the actual verict is
+16:52:54 <itdependsnetwork> PR 28446
+16:54:08 <st8less> +1
+16:54:52 <itdependsnetwork> As @privateip: indicated before "you can still use playbooks to translate from one data model to another prior "
+16:55:16 * privateip still reading
+16:55:19 <itdependsnetwork> variable translations our a common occurrence, this would help in some of those cases
+16:56:32 <itdependsnetwork> s/our/are/g
+16:56:33 <gundalow> #topic Type manipulation #28446
+16:56:39 <gundalow> #link https://github.com/ansible/ansible/pull/28446
+16:56:45 <ktbyers> I think that PR is useful (names should change, but that type of data transformation is pretty common pattern).
+16:57:12 <itdependsnetwork> names I'm with it, just need a better name
+16:57:28 <ktbyers> This is common with napalm-ansible data structures where we frequently return a list of dicts and really you only want some part of the returned data structure.
+16:57:41 <itdependsnetwork> I know I owe some more examples
+16:58:11 <gundalow> itdependsnetwork: :)
+16:58:27 <gundalow> Helps explain the issue to non-networking people
+16:59:22 <privateip> ok i am going to need to digest this some more .... i see both sides here
+16:59:26 <privateip> pros and cons
+16:59:52 <privateip> without holding everyone up, i will comment in the issue on github and we can continue the discussion
+17:00:10 <privateip> but its not just up to me as well
+17:00:11 <itdependsnetwork> yes, did not expect to get settled here, just wanted to raise it
+17:00:19 <privateip> understood
+17:00:20 <ktbyers> Sounds good.
+17:00:23 <privateip> thanks for bring it up
+17:00:23 <itdependsnetwork> I would say, I see this as generic
+17:01:02 <itdependsnetwork> as you said changing between data models from one api to yours, or whatever seems like it should be common and well understood
+17:01:35 <privateip> ironically in a way you are exposing the same problem i see with optimizing loops
+17:01:43 <privateip> not identical but similiar
+17:01:47 <itdependsnetwork> lol
+17:01:56 <privateip> hence why i really need to think through this some
+17:02:03 <st8less> It can be done with a lot of Jinja hacking, but it's cumbersome and often nontrivial.
+17:02:28 <privateip> the good news is
+17:02:38 <privateip> by transitioning to roles, you can distribute your filter plugins with a role
+17:02:41 <privateip> :)
+17:03:21 * gundalow has to go now
+17:03:28 <ktbyers> Is that good news?
+17:03:35 <ktbyers> :-)
+17:03:42 <privateip> ha you disagree?
+17:04:12 <ktbyers> Distributing via roles probably means I won't use it.
+17:04:21 <itdependsnetwork> ^^ agreed
+17:04:32 <ktbyers> I haven't found that pattern useful. Usually I rip out the role and start again.
+17:04:50 <itdependsnetwork> also seems odd that entry into getting a new module seems easier than filter
+17:05:20 <itdependsnetwork> 40 filters, and 2K modules (numbers were made up in the interest in time)
+17:05:24 <privateip> ktbyers: would love to hear more about why that is but i need to drop for now
+17:05:41 <ktbyers> Sounds good...me too.
+17:05:42 <privateip> will try to catch up with you later
+17:05:50 <privateip> any final business?
+17:06:30 <st8less> fin
+17:06:36 <privateip> lol
+17:06:45 <privateip> thanks all ... see you next time
+17:06:49 <privateip> #endmeeting

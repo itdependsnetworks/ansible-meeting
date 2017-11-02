@@ -1,0 +1,109 @@
+16:00:29 <gundalow> #startmeeting Network Working Group
+16:00:29 <zodbot> Meeting started Wed Oct 25 16:00:29 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:00:29 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:00:29 <zodbot> The meeting name has been set to 'network_working_group'
+16:00:33 <Qalthos> Or not, depending on the timing
+16:00:50 <gundalow> #chair bearrito stacywsmith Qalthos trishnag rcarrillocruz st8less
+16:00:50 <zodbot> Current chairs: Qalthos bearrito gundalow rcarrillocruz st8less stacywsmith trishnag
+16:00:53 <trishnag> Qalthos: sure. I will add nxos_igmp_snooping integration test for now which is eb30468cd19e75def308639db4cd8d9e3325328e
+16:01:39 <gundalow> #info Agenda https://github.com/ansible/community/labels/network
+16:02:05 <gundalow> Who else is here?
+16:02:15 * gundalow waits a few mins for people to join
+16:02:23 * ganeshrn waves
+16:02:26 * trishnag waves
+16:02:32 * stacywsmith waves
+16:02:51 <kedarX> 👋
+16:02:51 <funzo> o/
+16:03:34 <rcarrillocruz> i am
+16:04:10 <st8less> o/
+16:04:14 <gundalow> #chair Anil kedarX dt-arista rcarrillocruz st8less
+16:04:14 <zodbot> Current chairs: Anil Qalthos bearrito dt-arista gundalow kedarX rcarrillocruz st8less stacywsmith trishnag
+16:05:15 <gundalow> right, starting through the agenda
+16:05:21 <gundalow> #topic fortios_api module
+16:05:27 <gundalow> #link https://github.com/ansible/ansible/pull/30767
+16:05:50 <gundalow> #action bjolivot to review again
+16:06:06 <gundalow> Reviews welcome from anyone else that's interested in Fortios
+16:06:58 <gundalow> #topic Lenovo PRs
+16:07:17 <gundalow> #info https://github.com/ansible/ansible/pull/31696
+16:07:42 <gundalow> #action Anil to add Unit tests into 31696
+16:08:24 <gundalow> As a reminder to everybody, since Ansible 2.4 we require the tests (that are run in Shippable) to be added in the *same* PR which adds the modules
+16:09:02 <jtanner> hello
+16:09:04 <Anil> ok
+16:09:12 <gundalow> #action privateip add some comments around Paramiko to https://github.com/ansible/ansible/pull/31401
+16:09:15 <gundalow> Anil: Thanks :)
+16:09:20 <gundalow> #chair jtanner
+16:09:20 <zodbot> Current chairs: Anil Qalthos bearrito dt-arista gundalow jtanner kedarX rcarrillocruz st8less stacywsmith trishnag
+16:09:21 <gundalow> Hi :)
+16:09:35 <gundalow> Anil: Any other questions on Lenovo?
+16:09:54 <Anil> no.. I am only concerned regardin the two PRs
+16:10:01 <Anil> Rest all are fine with me.
+16:10:28 <Anil> I will add unit test cases to this PR itself..
+16:10:32 <gundalow> Thank :)
+16:10:44 <Anil> is there any documention on how to test these unit tests
+16:10:51 <Anil> ?
+16:11:12 <gundalow> Anil: http://docs.ansible.com/ansible/latest/dev_guide/testing_units.html
+16:11:33 <Anil> Any samples  for facts module which i can look into ?
+16:11:54 <gundalow> There are lots of examples under test/units. Including some _facts modules
+16:12:31 <Anil> Ok.. I will look into these and will work on them tommorrow..
+16:12:49 <gundalow> test/units/modules/network/vyos/test_vyos_facts.py
+16:12:54 <gundalow> test/units/modules/network/iosxr/test_iosxr_facts.py
+16:12:57 <gundalow> test/units/modules/network/junos/test_junos_facts.py
+16:13:01 <gundalow> Thanks
+16:13:19 <gundalow> #topic NXOS Test cases
+16:13:39 <gundalow> Anyone here from NXOS?
+16:13:52 <Anil> Thanks for the guidance..As I am new to github, is taking a bit delays.. I will try to make it faster
+16:13:53 <rahushen> Hello
+16:14:01 <gundalow> #chair rahushen
+16:14:01 <zodbot> Current chairs: Anil Qalthos bearrito dt-arista gundalow jtanner kedarX rahushen rcarrillocruz st8less stacywsmith trishnag
+16:14:04 <gundalow> Hi :)
+16:14:13 <gundalow> Anil: No problem :)
+16:14:25 <Qalthos> I'm drafting a reply for 28939, but 29030 is merged
+16:14:31 <gundalow> #info Integration Tests only: nxos_udld, nxos_udld_interface, nxos_vxlan_vtep_vni https://github.com/ansible/ansible/pull/29143
+16:14:43 <rahushen> Just wondering if you need something from our end to get the tests integrated
+16:14:50 <gundalow> #info Integration Tests only: add static route, snmp_user, snapshot and hsrp it cases https://github.com/ansible/ansible/pull/28933
+16:15:22 <gundalow> #info Tests have been updated to include proper titanium condition & nxapi exclusion
+16:15:29 <gundalow> Which I believe was the last blocker
+16:15:42 <Qalthos> Hopefully not. It looks like there's an NXOSv issue for nxos_gir_profile_management, and 29143 is next to go
+16:16:02 <gundalow> trishnag: Qalthos Would be good to get these tested again
+16:16:19 <gundalow> I assume the tests will be cherry-picked into `stable-2.4` as well
+16:16:21 <Qalthos> gundalow: Literally doing that as we speak, that's been my morning
+16:16:34 <gundalow> ah, cool
+16:16:36 <gundalow> Qalthos++
+16:16:39 <zodbot> gundalow: Karma for qalthos changed to 1 (for the f26 release cycle):  https://badges.fedoraproject.org/tags/cookie/any
+16:17:01 <Qalthos> yay?
+16:17:09 <gundalow> erm
+16:17:10 <gundalow> OK
+16:17:11 <gundalow> moving on
+16:17:26 <gundalow> Qalthos: rahushen Anything else on NXOS?
+16:18:09 <Qalthos> not from me
+16:18:12 <gundalow> #chair mikewiebe
+16:18:13 <zodbot> Current chairs: Anil Qalthos bearrito dt-arista gundalow jtanner kedarX mikewiebe rahushen rcarrillocruz st8less stacywsmith trishnag
+16:18:13 <rahushen> had 3 PRs that got merged into devel, but didn't make 2.4.1. Did I miss the deadline for 2.4.1 ?
+16:18:27 <Qalthos> rahushen: which ones?
+16:19:00 <Qalthos> trishnag: ^
+16:19:11 <rahushen> #31261, #31259
+16:20:08 <rahushen> #31057
+16:20:13 <gundalow> #info We are using GitHub projects to state what should be considered for 2.4.x backport. The project is listed under labels & milestones on the right hand side of the PR. If you think anything should be backported please let us know
+16:20:55 <rahushen> I'm wondering if these can be squeezed in with 2.4.1 rc3 if there will be one
+16:21:44 <trishnag> rahushen: these PRs were merged late. the fixes are waiting on to be cherry-picked on 2.4 https://github.com/ansible/ansible/pull/31682
+16:21:48 <Qalthos> rahushen: All of those are tracked in https://github.com/ansible/ansible/pull/31682, and trishnag has replied to all of those issues with the current situation
+16:22:23 <rahushen> I understand
+16:23:27 <Qalthos> It'll get in 2.4.1 if it can, but I wouldn't be too surprised if they don't
+16:23:58 <rahushen> Qalthos: thanks!!
+16:25:24 <Qalthos> rahushen: mikewiebe anything else?
+16:25:39 <rahushen> Nothing from me
+16:26:24 <gundalow> #topic Getting started documentation
+16:26:40 <gundalow> #info https://github.com/ansible/ansible/pull/31807 Getting started documentation
+16:26:49 <gundalow> Thanks to those that have reviewed it
+16:27:03 <gundalow> It's looking fairly close to getting merged, so any final feedback is welcome
+16:27:19 <mikewiebe> Nothing from me
+16:28:43 <gundalow> #topic Open Floor
+16:28:54 <gundalow> Anything else?
+16:29:05 <gundalow> Anil Qalthos bearrito dt-arista gundalow jtanner kedarX mikewiebe rahushen rcarrillocruz st8less stacywsmith trishnag Anything else?
+16:29:25 <trishnag> nothing from my side.
+16:29:39 <kedarX> nope
+16:30:30 <stacywsmith> nope
+16:31:05 <st8less> nothing here
+16:32:14 <bearrito> nope
+16:33:28 <gundalow> OK. Will close in a few minutes
+16:40:12 <gundalow> #endmeeting

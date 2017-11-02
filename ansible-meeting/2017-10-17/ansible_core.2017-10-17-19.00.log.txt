@@ -1,0 +1,365 @@
+19:00:12 <thaumos> #startmeeting ansible core
+19:00:12 <zodbot> Meeting started Tue Oct 17 19:00:12 2017 UTC.  The chair is thaumos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:00:12 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:00:12 <zodbot> The meeting name has been set to 'ansible_core'
+19:00:48 * gundalow waves
+19:01:09 <sivel> I am here-ish, but this overlaps with my $work stand-up today
+19:01:11 <caphrim007> o/
+19:01:18 <thaumos> #chair sivel caphrim007
+19:01:18 <zodbot> Current chairs: caphrim007 sivel thaumos
+19:01:18 <gundalow> dharmabumstead: Hi
+19:01:21 <funzo> o/
+19:01:26 <thaumos> just ignore the stand up @sivel
+19:01:33 <thaumos> #chair gundalow dharmabumstead funzo
+19:01:33 <zodbot> Current chairs: caphrim007 dharmabumstead funzo gundalow sivel thaumos
+19:01:35 * gundalow waves som emore
+19:01:36 <sivel> I try
+19:01:41 * dharmabumstead waves
+19:03:01 <thaumos> how's everyone doing today?
+19:03:12 <thaumos> are we surviving the red sun in the motherland?
+19:04:01 <funzo> yyyes?
+19:04:06 <thaumos> heh
+19:04:19 <funzo> still breathing
+19:04:50 <maxamillion> o/
+19:04:58 * bcoca is busy with homemade flan
+19:05:11 <thaumos> yum
+19:05:17 <thaumos> #chair maxamillion bcoca
+19:05:17 <zodbot> Current chairs: bcoca caphrim007 dharmabumstead funzo gundalow maxamillion sivel thaumos
+19:05:24 <thaumos> alrighty folks, let's get started.
+19:05:27 <thaumos> First up
+19:05:39 <thaumos> #topic docs refactor proposal
+19:05:50 <ryansb> o/ heyo
+19:05:51 <thaumos> #link https://github.com/ansible/proposals/issues/79
+19:05:54 <thaumos> #chair ryansb
+19:05:54 <zodbot> Current chairs: bcoca caphrim007 dharmabumstead funzo gundalow maxamillion ryansb sivel thaumos
+19:06:06 <gundalow> \o/
+19:06:19 <thaumos> dharmabumstead: you raised this one.  anything in depth on it you'd like to start with?
+19:06:26 <bcoca> i think that needs enourmous ammounts of bikeshedding
+19:06:33 <dharmabumstead> It’s all in the proposal.
+19:06:47 <dharmabumstead> (At least i think it is)
+19:06:48 <thaumos> okay, cool
+19:06:50 <thaumos> lol
+19:07:06 <thaumos> I for one am not opposed to this
+19:07:16 <dharmabumstead> More importantly: does anyone *besides* me have any concerns or questions or additions?
+19:07:24 <bcoca> there are a few in the proposal
+19:07:30 <dharmabumstead> I saw tho
+19:07:31 <dharmabumstead> Se
+19:08:28 <thaumos> @dharmabumstead, can you edit the original proposal to match the feedback provided by bcoca in his comment?
+19:08:30 <bcoca> +10 on getting this started ... just going to be a lot of details to go over .
+19:08:38 <abadger1999> I would like to see project docs figured out.
+19:08:46 <thaumos> yeah, probably.  definitely a good project for the 2.5 time frame.
+19:09:03 <thaumos> Not sure I am following you 100%, @abadger1999
+19:09:14 <abadger1999> But I like that we're getting thigns separated we've needed that for a long time.
+19:09:29 <bcoca> dag points out the simplicity of the 'getting started' used to be, i would like that back, not sure if that is what you meant by the 'intro' section
+19:09:31 <abadger1999> thaumos:  things like release managing docs.
+19:09:42 <dharmabumstead> That is what i meant by the intro sectio
+19:09:58 <abadger1999> thaumos: or daily triage docs.
+19:10:38 <abadger1999> dharmabumstead: +1 on intro docs.  That will be great to have separate from the other docs.
+19:10:39 <thaumos> abadger1999, so you mean process docs for contributors/maintainers
+19:10:55 <dharmabumstead> Cool
+19:11:07 <thaumos> yeah, I think overall it's a good idea to tidy up all the things
+19:11:07 <abadger1999> thaumos: yes.... but it's a different type of contributor than the people we focus on mostly right now.
+19:11:14 * thaumos nods
+19:11:14 <dharmabumstead> I see the project docs as a separate topic from the docs reorg.
+19:11:36 <abadger1999> thaumos: ie: right now we focus on the PR submitting, possibly drive by contributors.
+19:11:37 <bcoca> what are 'project docs' in this context?
+19:11:42 <dharmabumstead> Should we switch topics? Or do we want to finish discussing the reorg proposal and then switch?
+19:12:10 <thaumos> yeah, let's focus on user doc reorg for now
+19:12:19 <docschick> +1
+19:12:20 <thaumos> I do want to cover project doc too
+19:12:25 <abadger1999> thaumos: We can pull people into more long term assistance and also more leadership roles within the community with docs addressing those pieces as well.
+19:12:25 <thaumos> oh hai docschick!
+19:12:28 <thaumos> #chair docschick
+19:12:28 <zodbot> Current chairs: bcoca caphrim007 dharmabumstead docschick funzo gundalow maxamillion ryansb sivel thaumos
+19:12:35 * docschick waves
+19:12:50 <bcoca> i think we all agree on reorg .. its really needed, now we just need to agree on details
+19:12:57 <dharmabumstead> Keep in mind that the big difference with the reorg proposal initially we be the TOC. I will mostly be a matter of rearranging the current content.
+19:12:59 <abadger1999> dharmabumstead: <nod>  I just want to figure out wher eit should land without stepping on what you're trying to accomplish :-)
+19:13:01 <maxamillion> bcoca: +1
+19:13:04 <thaumos> so refactor/cleanup; are there any other asks from our group? if not, I think we're all in agreenment
+19:13:40 <thaumos> all favor of refactor, vote please :-)
+19:13:43 <thaumos> +1
+19:13:46 <maxamillion> +1
+19:13:46 <gundalow> +100000000000
+19:13:50 <dharmabumstead> The next step in the process will be adding better front matter/intros
+19:13:50 <abadger1999> +1
+19:13:52 <dharmabumstead> Cool
+19:13:55 <bcoca> +1^10
+19:14:01 <dharmabumstead> Glad people are cool with it.
+19:14:03 <docschick> +100000
+19:14:16 <thaumos> @dharmabumstead, :-)
+19:14:21 <bcoca> dharmabumstead: its been 'on my list' since before docschick got hired
+19:14:34 <thaumos> let everyone know if we can help with organising content in any way.
+19:14:34 <dharmabumstead> There will be some additional discussion at Meredith’s meeting this afteroon and then I will branch and hit the ground runnin
+19:14:36 <dharmabumstead> G
+19:14:53 <thaumos> cool, sounds good.  I alerted her to it as well an hour ago; @dharmabumstead
+19:15:08 <thaumos> alright, moving on
+19:15:18 <thaumos> #topic project docs discussion
+19:15:32 <dharmabumstead> Cool.
+19:16:07 <thaumos> so @abadger1999, my thoughts are while we're doing the clean up we could either
+19:16:07 <thaumos> A. reorg out project/dev related items
+19:16:07 <thaumos> B. Tidy up the Dev section to be a little bit easier consumable.
+19:16:08 <dharmabumstead> Feedback encouraged. https://github.com/ansible/proposals/issues/79
+19:16:34 <abadger1999> thaumos: <nod>
+19:16:49 <thaumos> what do you lean towards, @abadger1999?
+19:17:25 <abadger1999> Also need a space to land in.. Maybe a directory under docsite/rst/ that's for thorwing project docs in until we understand what the structure needs to be?
+19:17:38 <thaumos> right, so A.
+19:17:43 <abadger1999> Right now we have very little in the way of project docs in the public repo.
+19:17:46 <gundalow> What does A & B mean?
+19:18:05 <abadger1999> it's scattered around in google docs, maybe a few etherpads, community.wiki pages, etc.
+19:18:10 * gundalow may be missing how they relate to Proposal#79
+19:18:18 <abadger1999> gundalow: topic change.
+19:18:35 <thaumos> A means, reorg it out into it's own space. B means keep it as a subsection in docs.ansible.com with it's own tree and structure.
+19:18:43 <thaumos> agreed, I hate the scatter
+19:18:50 <gundalow> What's the problem we are trying to solve?
+19:18:55 <dharmabumstead> So who is the audience for the project docs? Is it internal or external?
+19:18:56 <abadger1999> And github gists is another source... I have a gist of "how to run the meetings"
+19:19:23 <thaumos> problem is trying to solve for the one stop shop for all contributors/maintainers.
+19:19:24 <abadger1999> I keep wanting to land that somewhere but we don't have a designated place yet.
+19:19:44 <thaumos> @dharmabumstead both internal and external developers.
+19:20:04 <bcoca> abadger1999: sounds like community/
+19:20:07 <dharmabumstead> Ok
+19:20:18 <gundalow> Contributor docs proposal has been agreed to be: https://github.com/ansible/community/issues/169#issuecomment-311369221
+19:20:23 <abadger1999> bcoca: yep.  It's community but I think community is part of the rorg proposal.
+19:21:04 <thaumos> yep, totally sounds like this issue
+19:21:28 <abadger1999> Also, some of the docs are better with different requirements.. like anything to do with creating a release should not have the potential to break the build.
+19:21:58 <bcoca> well, my argument there is that html docs are not needed for release
+19:22:12 <abadger1999> Really any of the "I'm documenting the process I use to do X" docs should end up easy to modify so that it encourages the person doing X to document their steps as they're doing the work.
+19:22:14 <dharmabumstead> My question comes back to this: are we ever going to have someone who is not an Ansible/Red Hat employee doing release management work?
+19:22:22 <abadger1999> Yes.
+19:22:28 <thaumos> umm...
+19:22:29 <dharmabumstead> We are?
+19:22:31 <bcoca> possiby
+19:22:35 <thaumos> umm...
+19:22:35 <abadger1999> I'm thinking 1 to two years.
+19:22:39 <thaumos> umm...
+19:22:53 <thaumos> I don't know about that.
+19:22:53 <dharmabumstead> My next question: why would we do this?
+19:22:59 <bcoca> thaumos: most probably for 'legacy' versions
+19:23:12 <abadger1999> bcoca: Exactly my though.
+19:23:13 <bcoca> dharmabumstead: cause we need to be able to offload work
+19:23:16 <abadger1999> *thought
+19:23:16 <thaumos> why would we even enable that?
+19:23:31 <thaumos> It doesn't make sense to me to enable people to continue using something like 1.9
+19:23:32 <bcoca> thaumos: cause people still want to update 1.9 .. but we dont want to
+19:23:48 <bcoca> people ARE using it, no matter what we do or say
+19:24:02 <thaumos> In cases like that, they can figure out how to do backporting and releases themselves.
+19:24:04 <bcoca> i just had questions about 1.7 posed recently
+19:24:06 <dharmabumstead> Update doesn’t necessarily mean *release*, does it?
+19:24:21 <bcoca> dharmabumstead: that is the posiblity we are opening up to here
+19:24:34 <abadger1999> thaumos: it's an open source project... at some point hte alternatives will be allow people to see how they can make this happen if they're willing to do the work or we get forked.
+19:24:49 <bcoca> just not RH release .. but project release ... like people that still release 2.10 linux kernels even though wer are a 4.17
+19:24:55 <thaumos> Personally, I do see value in having an html doc for release.  One can argue that if someone wants to roll their own release internally, on their own internal repos, they can do it using our doc.
+19:25:16 <bcoca> thaumos: allow for it, dont make it a dependancy
+19:25:38 <abadger1999> Also... as we get better at this, we'll want to allow people to help us with major releases more too.  The key there will be if we can split the work that requires internal access from external access.
+19:26:12 <bcoca> abadger1999: almost everything except uploading to release servers and key signing
+19:26:14 <abadger1999> Curating blocker bugs can be done by external contributors, for instance.
+19:26:15 <dharmabumstead> Sure. But the doc will have to be generic enough to make sense to non-employees. And as discussed the other day, this opens up the rabbit hole of how much internal stuff do we reveal? Jenkins servers, etc
+19:26:19 <abadger1999> cherrypicking
+19:26:22 <gundalow> Having it public allows people to say "oh, when you do RC/Final releases you should also publicise that at X"
+19:26:45 <abadger1999> dharmabumstead: Talking about it yesterday.. it seemed pretty straightforward.
+19:26:57 <thaumos> can someone link me to that discussion please?  I missed it.
+19:27:04 <thaumos> doesn't have to be now
+19:27:13 <abadger1999> We can tell people that there is a jenkins server and a job that does X.  They just might not be able to access the server.
+19:27:14 <bcoca> i personally advocate moving to awx server as, unlike jenkins, you can rely on the RBAC
+19:27:36 <maxamillion> bcoca: +1 (fwiw)
+19:27:38 <dharmabumstead> So what is the value in that?
+19:27:40 <abadger1999> bcoca: <nod>  And suggestions like that (and implementations) can be community driven as well.
+19:27:58 <bcoca> dharmabumstead: would enable us to give access to credentials w/o giving the credentials away
+19:27:59 <abadger1999> thaumos: I can after the meeting.
+19:28:05 <dharmabumstead> (Telling people about the Jenkins server but not giving them access)
+19:28:06 <thaumos> thank you sir!
+19:28:07 <dharmabumstead> Ok
+19:28:17 <thaumos> same thing with the awx server as well
+19:28:19 <bcoca> dharmabumstead: exactly why i propose awx
+19:28:26 <dharmabumstead> Was replying to abadger.
+19:28:27 <thaumos> people can then hit the web page, but not get access to the content within
+19:28:29 <bcoca> cause then we CAN give access
+19:28:49 <dharmabumstead> Moving to an outside thing would address that
+19:28:57 <bcoca> ^ thaumos, with awx they can USE the credentails, w/o having to have them
+19:29:07 <bcoca> also .. dogfood!
+19:29:07 <abadger1999> dharmabumstead: Ultimately and ideally, would like it to be the same idea as some of tower's permissions enables.... People can review and audit the process even if they can't kick it off.
+19:29:20 <dharmabumstead> OK
+19:29:29 <thaumos> well, awx doesn't have a portal you always have to auth in
+19:29:39 <bcoca> i would never make my jenkins public, but awx could be
+19:29:51 <dharmabumstead> I would see that material as possibly living in the community guide. gundalow - thoughts?
+19:29:56 * misc do have public jenkins for others project
+19:29:59 <maxamillion> thaumos: that's a good point, there'd no longer be a public read-only view of jobs
+19:30:11 <abadger1999> But as I say.... this portion of it is further into the future... we first have to build the community of long term, commited contributors by showing them what we do and how we do it.
+19:30:39 <thaumos> I don't see bad things to come of this... I just want to tread lightly on how much control we do give, and how we give it.
+19:30:39 <dharmabumstead> What time frame would that be?
+19:30:41 <abadger1999> misc: yay!  I was going to ask what OSAS hosted for open source projects.
+19:30:45 <gundalow> dharmabumstead: yup, Software Development Lifecycle is part of /community
+19:30:49 <dharmabumstead> thaumos: +1
+19:31:01 <bcoca> that scares me, jenkins' access control is too easy to bypass
+19:31:07 <thaumos> yep
+19:31:10 <thaumos> it is
+19:31:19 <thaumos> I am very interested in the HOWS of this
+19:31:20 <dharmabumstead> OK. It should meet the same doc standards as we want for the rest of the docs.
+19:31:28 <thaumos> Yes, I think it should.
+19:31:29 <gundalow> dharmabumstead: +1
+19:31:37 <dharmabumstead> Which i can rant about at length if given the opportunity. Haha
+19:31:39 <thaumos> which is part of the point here.
+19:31:42 <abadger1999> dharmabumstead: Would have to be post-processed standards on some of it.
+19:31:48 <gundalow> REALLY $SOMETHING IMPORTANT THAT THE RELEASE DOCS ARE VERY CLEAR
+19:32:05 <gundalow> oops, accident, though not really, shouty gundalow
+19:32:09 <abadger1999> As I say, anytime we're documenting process, we need to do everything we can to encourage the people doing the process presently to write it down.
+19:32:12 <thaumos> not just release docs, but all dev docs in general
+19:32:36 <thaumos> there are lots of pages that are there, but you can only see them if you know about them
+19:32:41 <thaumos> Triage, who knows
+19:32:49 <thaumos> release who knows
+19:33:02 <thaumos> I am sure there are docs I still have yet to see myself.
+19:33:37 <dharmabumstead> That’ll get fixed. If you see stuff that isn’t in the TOC, please hit me over the head with it
+19:33:38 <maxamillion> thaumos: +1
+19:33:49 <bcoca> http://docs.ansible.com/ansible/latest/release_and_maintenance.html
+19:34:05 <bcoca> ^ i know this by heart now ... but no one else seems able to get to it
+19:34:25 <thaumos> @dharmabumstead, and that's why I sort of couple this discussion with your refactor one... because TOC or an index is the first thing I always rely on.
+19:34:31 <abadger1999> In the release manager doc... I tried to split the docs that fit into the present process of submit  PR, get copyedited, clarified, reviewed, and then pushed out from the process doc which needs to be treated differently.
+19:34:37 <thaumos> @bcoca, because you know it exists.
+19:34:43 <bcoca> exactly
+19:34:49 <thaumos> If it isn't linked to in toc, index, or anywhere then it's lost
+19:34:55 <abadger1999> The only thing is... I don't know where the process doc really should live.
+19:34:55 <bcoca> its linked
+19:34:57 <dharmabumstead> Yeah. That’s hw that proposal was born - looking at the TOC and realizing it was hopeless outgrown as is
+19:34:58 <bcoca> its just 3 steps down
+19:35:06 <thaumos> lol exactly
+19:35:11 <thaumos> 3 steps that someone needs to nav
+19:35:36 <bcoca> and cannot go 'back' cause our breadcrumbs only have root>current
+19:35:42 <dharmabumstead> *everyone* will get the chance - and be encouraged - to look at the reorg in progress and provide feedback.
+19:35:42 <thaumos> In my mind, TOC contains a Community section, in Community, the tree begins with all this stuff.
+19:35:56 <abadger1999> dharmabumstead: it's not just docs inside of docsite/rst that aren't linked to... there's also docs on other sites that need to be brought into a common tree (or at least linked from the common tree)
+19:35:58 <dharmabumstead> Of course.
+19:36:11 <bcoca> our current left hand list does not seem to have order nor reason to it
+19:36:27 <bcoca> some of the stuff makes sense as top level, other stuff should be a subsection
+19:36:30 <thaumos> abadger1999, off the top of your head, how many of these docs exist in google drive?
+19:36:39 <dharmabumstead> Hence the reorg proposal
+19:36:52 <maxamillion> bcoca: that was brand new information to me as of last week
+19:36:53 <abadger1999> thaumos: My drive for doing this is that I don't know.  I can't find things in google drive right now.
+19:37:23 <maxamillion> bcoca: and while I'm not super active all the time, I'm also not brand new to ansible land
+19:37:26 <abadger1999> thaumos: gundalow might know better because he was spearheading a consolidation effort that I didn't know about ;-)
+19:37:27 <dharmabumstead> I am cool with bringing external stuff in but it *has* to be “external-facing documentation quality”. I will be a stubborn bastard about this.
+19:37:40 <abadger1999> dharmabumstead: then we need a different thing for this.
+19:38:02 <abadger1999> dharmabumstead: which is fine and why I said I don't want to step on what you're doing.
+19:38:06 <maxamillion> brb
+19:38:09 <gundalow> abadger1999: What's the Q?
+19:38:10 <abadger1999> dharmabumstead: but we need a place for it to live.
+19:38:10 <thaumos> why? what's wrong with it being doc quality?
+19:38:19 <dharmabumstead> We’ve been trying to clean it up, but we stil have way way too many bits of e docs that are written in engineering instead of human.
+19:38:28 <abadger1999> ‎[12:32:09] ‎<‎abadger1999‎>‎ As I say, anytime we're documenting process, we need to do everything we can to encourage the people doing the process presently to write it down.
+19:38:31 <gundalow> Oh, what's in Google Docs, only a few bits that maybe should be made public
+19:38:32 <abadger1999> ‎[12:34:31] ‎<‎abadger1999‎>‎ In the release manager doc... I tried to split the docs that fit into the present process of submit  PR, get copyedited, clarified, reviewed, and then pushed out from the process doc which needs to be treated differently.
+19:38:39 <abadger1999> thaumos: ^
+19:38:57 <dharmabumstead> Slang...half-sentences - abbreviated words (“vars”, “cwd”) instead of ful words, etc
+19:40:14 <abadger1999> thaumos: for cost, reward, we need to get process doc content put into a common place even if it is written in engineer-speak... the audience is engineers who are going to performing those steps.
+19:40:17 <bcoca> basically anything bcoca would write
+19:40:17 <dharmabumstead> We are at the point of growth now where more enterprises are picking us up, and we are being sold (Ansible Engine). The expectation for professionalism is going way up. And the spectre of having to localize all of this in a meaningful way is approaching reality more and more
+19:41:07 <thaumos> agreed, @dharmabumstead, but I understand their point
+19:41:14 <abadger1999> thaumos: So if community/ is already taken for things that need to be copyedited and production quality, we need a separate area for the process docs.
+19:41:18 * gundalow isn't sure where this discussion is going
+19:41:21 <thaumos> yeah
+19:41:26 <thaumos> let's take a step back really quick
+19:41:36 <thaumos> So let's frame what we're asking for here.
+19:41:39 <dharmabumstead> abadger1999: i don’t mind technically deep a gauge as long as the audience expectation is set accordingly (something else we need to improve a lot). I do mind putting something out that looks like someone’s crib notes
+19:41:51 <gundalow> We could have made the release doc "production quality" in teh time we've spent discussing it here
+19:41:57 <dharmabumstead> Language. Not “a gauge”
+19:42:00 <abadger1999> dharmabumstead: What I'm asking for is someplace to put people's crib notes.
+19:42:02 <dharmabumstead> Hehe
+19:42:13 <dharmabumstead> Github
+19:42:16 <thaumos> 1. A reorg of dev/contributor content
+19:42:16 <thaumos> 2. Pull all source of documented processes into a single location
+19:42:16 <thaumos> 3. Where does this all live?
+19:42:25 <bcoca> ^ mad spattering of engineer at 2am while trying to document the process he is scrambling to fix
+19:42:29 <abadger1999> thaumos: +1 good summary.
+19:42:37 <thaumos> Okay, cool
+19:42:48 <thaumos> For number one, we ALL agree this needs to be done.
+19:42:49 <dharmabumstead> AFK for 10
+19:42:56 <thaumos> correct?
+19:42:59 <gundalow> thaumos: yes
+19:43:00 <abadger1999> yep.
+19:43:02 <thaumos> ok
+19:43:10 <thaumos> 2. we all agree this needs to be done too
+19:43:21 <thaumos> correct?
+19:43:27 * gundalow does
+19:43:41 <thaumos> please if anyone is opposed to any of this, speak up
+19:43:44 <abadger1999> more or less I would be okay with two locations with appropriate links between them.
+19:44:16 <thaumos> so it's basically #3 that needs to be figured out.
+19:44:28 <gundalow> updates/ 2am random thoughts can be recorded anywhere, then go through the standard PR process
+19:44:29 <bcoca> <= still thinking ... lots of community docs are 'curent process' .. what he is asking aobut is quick updates to this
+19:44:37 <thaumos> oh and #4 changing of some processes to allow for #2
+19:44:48 <thaumos> which is what bcoca just said.
+19:45:01 <abadger1999> Since I understand deeply what dharmabumstead wants but I know it conflicts a bit with the needs of a "crib notes" area (but the two are going to refer to each other because community contributors overlaps in both areas)
+19:45:18 <thaumos> This is why I am a fan of wikis.
+19:45:20 <gundalow> And in my mind it's find for new process docs to start in gDrive, we review and comment there, once we are happy we raise a PR, get community feedback & wordsmith
+19:45:22 <abadger1999> gundalow: I don't think so.
+19:45:37 <abadger1999> (reply to 2 am notes anywhere and then go through the PR process)
+19:45:39 <bcoca> gundalow: he wants a public forum specifically
+19:45:40 <thaumos> wikis allow for notes, can be controlled, and are quick to edit.
+19:45:49 <gundalow> abadger1999: apart from release procedure what else may need quick update?
+19:45:58 <bcoca> now we are talking about dividing our docs
+19:46:14 <abadger1999> if we rely on that, the notes will not end up in the central place. they'll end up where it was easy for the note-taker to take them (or won't be recorded at all)
+19:46:20 <thaumos> which is what abadger1999 eluded to because of doc quality concerns.
+19:46:24 <bcoca> abadger1999: one thing to consider, once documented it is rare that the process would change too much/too fast
+19:46:25 <gundalow> so leave the release doc in hacking/
+19:46:46 <gundalow> I don't think there will be that many docs that change much
+19:47:00 <thaumos> okay, let's step back again.
+19:47:09 <abadger1999> I did propose the wiki at one point but gundalow countered with the fact that the wiki has lead to a disorganization of the docs.
+19:47:19 <abadger1999> which I totally understand too.
+19:47:28 <thaumos> How about this as a suggestion, @abadger1999, can you provide out all of the docs that you think need to be consolidated into one location?
+19:47:45 <thaumos> not right now, but as a follow up.
+19:47:47 <abadger1999> thaumos: for that list we should start with gundalow's list
+19:47:56 <abadger1999> gundalow: do you have the propsal link handy?
+19:48:08 <thaumos> I think it was posted earlier.
+19:48:31 <thaumos> was it the community issue?
+19:48:32 <abadger1999> gundalow: other things besides release docs... triage procedure, thaumosah yes... https://github.com/ansible/community/issues/169#issuecomment-311369221
+19:48:45 <abadger1999> sorry...  Control-U doesn't work in GUI apps.
+19:49:33 <thaumos> part of the problem is that greg or robyn aren't in attendance in all the places. ...
+19:49:33 <abadger1999> gundalow: triage procedure, docs build procedure, how to run a meeting
+19:49:39 <thaumos> I also was not aware of the community meeting as well.
+19:49:47 <thaumos> so we're already sort of disjointed.
+19:49:57 <abadger1999> gundalow: there will be more like that as time goes on... but all along similar lines.
+19:50:06 <thaumos> and the proposals repo, community repo, and docs, and all the things are haphazard because of it.
+19:50:14 <abadger1999> <nod>
+19:50:52 <thaumos> ok, let's table this for now.
+19:51:08 <thaumos> I think we should have a follow up discussion about it thought
+19:51:10 <abadger1999> gundalow: I'm okay with things living in hacking but there is one problem... hacking doesn't have rst formatting turned into html
+19:51:13 <thaumos> s/thought/though
+19:51:21 <thaumos> because there is value in this for sure.
+19:51:30 <abadger1999> gundalow: so formatting things that get cut and paste (like links) is not ideal.
+19:51:33 <maxamillion> thaumos: wikis are where information goes to die ;)
+19:51:46 <maxamillion> thaumos: oops, was caught in backscroll buffer ... sorry
+19:51:54 <thaumos> LOL
+19:52:03 <thaumos> yeah yeah yeah...
+19:52:09 <abadger1999> maxamillion: to quote robyn: WIKI Where Information Kills Itself
+19:52:20 <maxamillion> abadger1999: that's the one +1
+19:52:32 <thaumos> I hate how google docs and etherpads are used as live wikis though
+19:52:37 <thaumos> seems counterintuitive to me
+19:52:42 <bcoca> wikis are for version controlled flamewars
+19:52:54 <thaumos> sounds like ansible project to me
+19:53:03 <maxamillion> the only group that keeps a wiki up to date is Arch Linux and a missive tip of that hat to them because I have no idea how they do it
+19:53:17 <bcoca> gentoo did for a while .. but they forgot to backup ...
+19:53:21 <gundalow> abadger1999: sorry, back
+19:53:22 <maxamillion> thaumos: oh yeah, google docs and etherpads as living documents seems wrong
+19:53:27 <thaumos> I did as well.
+19:53:28 <maxamillion> anyways ... sorry for derailing
+19:53:32 <thaumos> it's okay :-)
+19:53:35 <thaumos> anywho
+19:53:40 <thaumos> let's continue the discussion
+19:54:31 <abadger1999> <nod> Yep.  It's not a pressing thing... just want to figure it out and not step on things dharmabumstead is working towards while we do so.
+19:55:16 <bcoca> physically step, then he'll yell and you'll drop your sandals
+19:56:30 <dharmabumstead> The user-facing documentation is *not* the place for “crib notes”.
+19:56:47 <dharmabumstead> That is my whole point. With the reorg, with the cleanup
+19:57:11 <dharmabumstead> We can *point to* places where the crib notes are kept, if we really need to
+19:57:14 <abadger1999> dharmabumstead: yep, and thus we need another place that's not rst/community/ for those
+19:57:56 <maxamillion> dharmabumstead: +1
+19:57:56 <dharmabumstead> But in order to achieve the level of professionalism that we are expected to maintain in the documentation, we need to start *not* making them a place to dump “crib notes”.
+19:57:57 <abadger1999> dharmabumstead: +1
+19:58:26 <bcoca> or separate engine docs ?
+19:58:37 <dharmabumstead> bcoca: *shudder*
+19:58:47 <thaumos> yeah let's not start down that rabbit hole
+19:58:59 <thaumos> let's have a follow up discussion folks.  We need to talk more on this obviously.
+19:59:08 <thaumos> we need to close out for the WWG
+19:59:13 <dharmabumstead> Heh
+19:59:18 <dharmabumstead> Ok
+19:59:18 * abadger1999 grabs Bugs Bunny's mop and then asks "What rabbit hole"?
+19:59:26 * dharmabumstead lols
+19:59:42 <thaumos> #endmeeting

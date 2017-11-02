@@ -1,0 +1,255 @@
+19:00:05 <thaumos> #startmeeting ansible core
+19:00:05 <zodbot> Meeting started Tue Oct 10 19:00:05 2017 UTC.  The chair is thaumos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:00:05 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:00:05 <zodbot> The meeting name has been set to 'ansible_core'
+19:01:04 * sdoran waves
+19:01:09 <thaumos> #chair sdoran
+19:01:09 <zodbot> Current chairs: sdoran thaumos
+19:01:15 * thaumos waves at sdoran
+19:02:13 <funzo> o/
+19:02:20 <thaumos> #chair funzo
+19:02:20 <zodbot> Current chairs: funzo sdoran thaumos
+19:02:46 <abadger1999> Óla
+19:03:49 <thaumos> talofa
+19:03:53 <thaumos> #chair abadger1999
+19:03:53 <zodbot> Current chairs: abadger1999 funzo sdoran thaumos
+19:03:54 <alikins> blorp
+19:04:00 <thaumos> #chair alikins
+19:04:00 <zodbot> Current chairs: abadger1999 alikins funzo sdoran thaumos
+19:07:03 <thaumos> whelp
+19:07:12 <sivel> here-ish
+19:07:14 <thaumos> anyone have friends that they would like to invite?
+19:07:18 <thaumos> #chair sivel
+19:07:18 <zodbot> Current chairs: abadger1999 alikins funzo sdoran sivel thaumos
+19:07:40 <thaumos> i'll put you on a chair.  I'll just consider you as one of those people at a conference on their laptops
+19:07:45 <thaumos> :P
+19:07:55 <Qalthos> o/
+19:07:59 <thaumos> #chair Qalthos
+19:08:00 <zodbot> Current chairs: Qalthos abadger1999 alikins funzo sdoran sivel thaumos
+19:09:12 * shertel waves
+19:09:24 <thaumos> abadger1999: do we have enough to talk about the pdb flag options?
+19:09:31 <thaumos> #chair shertel
+19:09:31 <zodbot> Current chairs: Qalthos abadger1999 alikins funzo sdoran shertel sivel thaumos
+19:09:44 <abadger1999> maybe.
+19:09:58 <abadger1999> bcoca: I know you commented on the original PR implementation
+19:10:00 <thaumos> up to you bud
+19:10:06 <bcoca> ??
+19:10:12 <thaumos> #chair bcoca
+19:10:12 <zodbot> Current chairs: Qalthos abadger1999 alikins bcoca funzo sdoran shertel sivel thaumos
+19:10:24 <abadger1999> instead of catching exceptions, raising an exception.
+19:10:36 <abadger1999> thaumos: do we have the reporter/PR implementor here?
+19:10:41 <thaumos> nope
+19:10:50 <bcoca> i think its nicer for users the way it is now, anyone knowing how to run pdb ... can change 1 line
+19:11:02 <thaumos> Hard to tell if they understood what you suggested by your comment in the issue/pr
+19:11:28 <bcoca> also fine if they change it if 'debug' is enabled
+19:11:45 <thaumos> is there a developer config item we can create to add this output
+19:11:55 <bcoca> ^ debug
+19:12:03 <alikins> reference to 'pdb flag options' ?
+19:12:06 <abadger1999> bcoca: I suggested to the PR owner that they could add a cli switch or use a higher v level (their current v level propogates the exception on -vvv )
+19:12:08 <sivel> if we are talking about this, might help to have a link or background to operate off of
+19:12:09 <abadger1999> https://github.com/ansible/ansible/pull/31114
+19:12:12 <thaumos> #topic pdb output
+19:12:15 <sivel> :)
+19:12:23 <thaumos> blame abadger1999
+19:12:23 <bcoca> abadger1999: i would say debug is right option for this
+19:12:36 <thaumos> #link https://github.com/ansible/ansible/pull/31114
+19:12:43 <abadger1999> bcoca: <nod> is debug  env var only or does it have a CLI switch?
+19:12:53 <sivel> yeah, debug sounds right
+19:13:11 <bcoca> abadger1999: ansible.cfg option also
+19:13:23 <thaumos> debug sounds right to me too, if we're to add anything on top of that, have a debug flag for this info.
+19:13:25 <sdoran> No CLI switch
+19:13:34 <sdoran> Just env var and config option
+19:13:35 <bcoca> no cli yet, but any dev should be able to ANSIBLE_DEBUG=1 ansiblie ....
+19:13:36 <abadger1999> bcoca: <nod> k.  I suppose if he really wants a cli switch, he can implement it for debug.
+19:13:41 <thaumos> s/flag/config object
+19:14:07 <thaumos> cli switch doesn't make sense at all.
+19:14:16 <abadger1999> Sounds like we're all okay with debug being the appropriate level, so I'll tell him to use that instead of -vvv and we'll accept it.
+19:14:28 <thaumos> sounds good
+19:14:28 <bcoca> abadger1999: if you want,i'll post
+19:14:30 <sdoran> +1
+19:14:38 <abadger1999> bcoca: Sure, thanks.
+19:14:48 <thaumos> #action abadger1999 and/or bcoca to update PR/issue with discussion points.
+19:14:51 <bcoca> done
+19:15:16 <alikins> I would lean towards a specific switch/env var for 'no top level exception handler'
+19:15:40 <alikins> to me, -v or ANSIBLE_DEBUG shouldn't change the behavior (intentionally...)
+19:15:55 <bcoca> i agree on -v .. debug already changes behaviour
+19:16:50 <thaumos> k, next topic
+19:17:36 <thaumos> #topic Open Floor
+19:17:46 <thaumos> Anyone have something they want to discuss?
+19:18:31 <bcoca> https://github.com/ansible/ansible/pull/30464  <= anyone want to take look?
+19:18:56 <agaffney> ooh
+19:20:23 <thaumos> #topic with_<lookup> to loop review
+19:20:48 <thaumos> @sivel regarding your comment, I swore we had talked about this before on core meeting
+19:21:02 <thaumos> it's also been on the roadmap for a minute
+19:21:09 <bcoca> several roadmaps
+19:21:18 <bcoca> we kept dropping it, which is why i just implemented it
+19:21:20 <alikins> kind of sounds 3.0ish to me (or at least, 3.0 before it warns about deprecation)
+19:22:03 <sivel> my real comment was around proposals I guess.  Yes we've put it on a roadmap, and sure we've talked about it, but it kinda skipped what I believe I supposed to be the proposal process
+19:22:26 <bcoca> sivel: almost all the features i do are in proposals first, this predates even that process
+19:22:33 <sdoran> Does this replace all the with_* keywords with loop?
+19:22:37 <bcoca> i do agree that we put in many features w/o going through proposals
+19:22:44 <bcoca> sdoran: yes
+19:23:01 <thaumos> @sivel, gotcha.  agreed the proposal process is hand waavy at times.
+19:23:04 <sivel> I have other complaints about the proposal process too, but I'll work on that later
+19:23:12 <sdoran> My main concern would be confusion over moving to the new syntax.
+19:23:12 <sivel> yes, hand wavy
+19:23:23 <sdoran> And what is the benefit?
+19:23:26 <thaumos> you forgot the extra "a" that makes it more special.
+19:23:27 <thaumos> lol
+19:23:28 <bcoca> sivel:  we should make that a topic, but that probably will take up full meeting
+19:23:36 <thaumos> more than one
+19:23:36 <bcoca> sdoran: simplification, less magic, less confusion on users
+19:23:41 <thaumos> and there is another meeting for that too
+19:23:52 <sivel> I'm not super sure what we get out of this, the current syntax is what I would all syntactic sugar, generally you want to add syntactic sugar, not take it away
+19:24:13 <bcoca> sivel: we have been talking aobut reforming proposals process as right now its pretty stagnant unless someone has very dogged persistence behind one
+19:25:04 <sivel> but in the end, I don't really care enough to vote.  In a way I can have an opinion here, but I don't need to.  I'm fine either way
+19:25:35 <agaffney> sivel: in my opinion, the "magic" of with_foo calling the 'foo' lookup plugin confuses a lot of users. it took me a while (and probably some digging in the code) to come to that realization, and it made things make a lot more sense. 'loop: "{{ lookup('whatever', ...) }}"' makes that immediately obvious
+19:25:41 <bcoca> i was considering also expanding normal deprecation period, but would initially like to merge 'as is' but eventually i expect expansion on it
+19:25:47 <sivel> I will be able to cope with the change, and it makes sense to me, it's likely going to be more confusing to our regular users
+19:26:06 <agaffney> bcoca: I'd suggest separating the code from the docs, so that the code has time to soak before that becomes the "official" loop method
+19:26:32 <bcoca> agaffney: code issues deprecation warning, should not do that w/o docs, also docs are versioned
+19:26:32 <sdoran> I think it will confuse the normal users that don't dig into the code because it's a convention they are used to.
+19:26:36 <sivel> I feel for normal users with_ is easier
+19:26:41 <sdoran> But agree it does make things clearer.
+19:26:57 <sdoran> The first time I realized lookups were loops I was confused for a bit.
+19:27:04 <agaffney> bcoca: sure, but that assumes that it would/should become the "official" method in 2.5
+19:27:07 <bcoca> i think current users are 'used to with_'  but dont understand it well, new users will fair better with loop
+19:27:09 <sdoran> sivel: +1
+19:27:20 <bcoca> agaffney: yes, but its early in cycle
+19:27:21 <sdoran> The with_ is more intuitive for new users.
+19:27:31 <sdoran> Or just non-programmer Ansible users.
+19:27:37 <sivel> I'm trying to look at it from regular user perspective, which I am sure we all struggle with
+19:27:50 <sdoran> Hard to unlearn what you learned.
+19:27:51 <bcoca> sdoran: considering how many questions and misunderstandings we get from new users, i would dispute that with_ is more intuitive
+19:27:52 <sivel> `loop` sounds better to us, but I think it'll be more confusing for others
+19:27:53 <agaffney> perhaps, but docs examples are necessary to make either *really* make sense
+19:28:27 <sdoran> I think most everyone understands with_ = the looping thing.
+19:28:32 <agaffney> what about using 'with' instead of 'loop'? you could do 'with' or 'with_*'
+19:28:47 <bcoca> he, we had with initially, was very despised
+19:28:47 <sdoran> Nah, I think we should just use loop if we change it.
+19:28:56 <sdoran> Cutting the suffix would be confusing.
+19:29:05 <bcoca> first thre was `with` then came `with_`
+19:29:19 <sdoran> Ansible: The Origin Story
+19:29:28 <agaffney> what was the problem with 'with' the first time around?
+19:29:42 * bcoca got yelled at when he proposed `how` .. which became `loop_control`
+19:29:50 <agaffney> it sounds identical to what 'loop' is doing, in everything but name
+19:29:54 <bcoca> yep
+19:30:03 <agaffney> was it just the name that people didn't like?
+19:30:03 <sdoran> I think "loop" will be clearer long term. Just gonna take an adjustment.
+19:30:07 <thaumos> It's worth implementing the new approach, throw a warning, get feedback on it, and then choose to implement one way or another.
+19:30:08 <sdoran> And a translation/porting doc.
+19:30:09 <bcoca> but we already have 'loop_control' ... i think its better to keep related keywords similar
+19:30:20 <bcoca> i'm fine with adding with as an alias .. but i think that is just confusing
+19:30:21 <sdoran> +1
+19:30:30 <sivel> maybe we could even in the warning, tell the user explicitly what they should be using
+19:30:34 <sdoran> I think this is shaping up to be not so bad.
+19:30:36 <bcoca> thaumos: current implementation already does that
+19:30:39 <sdoran> sivel: +1
+19:30:42 <sivel> build out a `loop` argument for them, then they just copy paste :)
+19:30:51 * sdoran is a big fan of friendly and helpful error messages
+19:30:54 <thaumos> @bcoca, playing devil's advocate ;)
+19:31:03 <thaumos> agree with sivel
+19:31:06 <bcoca> sivel:  parsing lookup and all?
+19:31:11 <sdoran> So sivel is the devil?!
+19:31:24 <sdoran> And bcoca is Spawn? This is just getting weird.
+19:31:27 <bcoca> with-items is very misleading already
+19:31:30 <bcoca> sdoran: i always was
+19:31:46 <thaumos> sivel does look devilish with his sunglasses
+19:31:52 <sdoran> true true
+19:32:43 <thaumos> okay, so are we all cool with implementing this, but with the caveat of having a "helpful" warning message + a porting doc?
+19:32:56 <sdoran> +1
+19:33:27 <sdoran> I can help with the porting doc, provided I can sufficiently understand the change.
+19:33:48 <sdoran> I don't want bcoca to always write all the docs for his new features
+19:34:03 <bcoca> with_items: list == loop: lookup('items', list)
+19:34:24 <sdoran> Does items need mustaches?
+19:34:30 <bcoca> yes .. lazy typing
+19:35:01 <bcoca> but noone really wants with_items, they mostly want with_list ... which is there to avoid items magic
+19:35:13 <bcoca> also .. squashing
+19:35:14 <sdoran> True.
+19:35:30 <thaumos> anyone else wanna vote?
+19:35:32 <sivel> yeah, saying someone uses `with_items: "{{ foo }}"` and we tell them it should be `loop: "{{ lookup('items', foo) }}"`
+19:35:39 <bcoca> nested/cartesian/toghether are much easier as filters
+19:35:53 <sivel> so we build the whole thing out for them in the warning
+19:35:57 <bcoca> sivel: 99% of time its loop: {{foo}}
+19:36:06 <bcoca> unless they rely on '1 level of list unnesting'
+19:36:20 <alikins> -1
+19:36:25 <sdoran> I think we should build it out in the error message.
+19:36:50 <bcoca> also most used lookups, have better filter
+19:37:06 <bcoca> lookup_toghether: == loop: {{ zip(list1, list2 }}
+19:37:09 <thaumos> I know jimi|ansible has input on this as well
+19:37:31 <agaffney> I think the deprecation message should give them a general example of converting with_items to 'loop' syntax, but not try to pick apart their exact input
+19:37:41 <alikins> (doesn't significantly simplify internal code, but forces users to change their code. The name is better, but not worth the churn)
+19:38:03 <bcoca> alikins: eventually, internal code will be much simpler once we remove it and the squashign magic
+19:38:03 <thaumos> @alikins, we're not asking them to do it right away.
+19:38:22 <bcoca> sqashing is the other big 'magic' we do now that confounds users to no end
+19:38:30 <bcoca> loop has no squashing
+19:38:58 <abadger1999> +1 to adding.  I think I'd defintiely prefer a longer deprecation cycle.  Would switch over the docs immediately though.
+19:39:02 <bcoca> ^ need porting section to specifically point out yum/apt and how lists need to be passed directly into the plugin not into the loop for 'optimizaion'
+19:39:08 <alikins> if it issues deprecation warnings, we are asking them to change it
+19:39:14 <bcoca> yes
+19:39:33 <bcoca> but i'm fine with changing both deprecation start and cycle length once we get user feedback
+19:39:40 <agaffney> what about changing docs in 2.5 but not activating the deprecation notice until a later release?
+19:39:43 <thaumos> The point is @alikins, we're not having them do it right away in a version.
+19:40:02 <thaumos> @agaffney no one will implement until a warning is thrown
+19:40:03 <abadger1999> So that... your old playbooks are supported a long time but new users are only being shown the new way to do things (have to keep a small section on the old way for people who inherit someone else's playbooks, though)
+19:40:06 <bcoca> agaffney: ^ just said im fine with that, i would still merge as is right now, i do expect pushback on that
+19:40:28 <agaffney> thaumos: fair enough....the squeaky wheel gets the grease
+19:40:33 <thaumos> realistically, not everyone fully rtfm's
+19:40:53 <agaffney> I know I don't :)
+19:41:02 <thaumos> It'd be different if we threw an error.  We're nice that we give them an option for four releases.
+19:41:07 <bcoca> agaffney: you read more than most
+19:41:30 <thaumos> we hear more about warnings in playbook runs than we do about new doc entries.
+19:41:39 <bcoca> thaumos: i fully expect push back and that deprecation starts in 2.6-7 .. but i would keep updated docs to promote new way
+19:41:52 <thaumos> totally agree on the pushback.
+19:41:55 <agaffney> bcoca: only when my lack of knowledge forces my hand
+19:42:12 <bcoca> see, more than most
+19:42:29 <agaffney> touche
+19:42:35 <thaumos> if we're all cool implementing the directive and warning for 2.5 and start dep cycle in 2.6; right on.  let's do it that way.
+19:42:49 <sdoran> The playbook warnings _are_ the docs for most people.
+19:42:54 <thaumos> ^^
+19:42:55 <thaumos> yep
+19:42:56 <bcoca> k, i'll merge as is and prep both doc updates and deprecation changes
+19:42:58 <sdoran> Or the porting guide at least.
+19:43:03 <thaumos> k, sounds good bcoca
+19:43:24 <sdoran> bcoca: Please let me know if I can help with the docs. I know you've been writing non-stop docs for a while.
+19:43:32 <thaumos> #action bcoca to merge loop directive, prep doc updates and dep changes.
+19:43:43 <thaumos> same here @bcoca; I can help with docs as well
+19:44:20 <thaumos> @bcoca, will you also create a more helpful warning message?
+19:44:30 <bcoca> than the current deprecation?
+19:44:59 <bcoca> need porting guide doc first, then
+19:45:15 <bcoca> was going to do doc first
+19:46:08 <thaumos> ok
+19:46:22 <alikins> what can users do with loop: that they can do with 'with_*' ?
+19:46:35 <alikins> that they can't do with 'with_' that is
+19:46:38 <gundalow> Hum, we talking of changing the deprecation cycle (from. 4 to something else)?
+19:46:41 <thaumos> @alikins I think we sort of had this discussion already.
+19:47:00 <alikins> thaumos: We've had all the discussions before.
+19:47:06 <thaumos> @gundalow, I think bcoca sort of inferred that, but in relation to this discussion not really.
+19:47:34 <thaumos> for the loop topic, we just are bumping out the deprecation starting in 2.6 + 4.
+19:47:46 <gundalow> Mkay, that sound ok
+19:48:10 <gundalow> As a reminder deprecation need to be done early on the release, not in the last few months
+19:48:26 <bcoca> gundalow: just for this feature
+19:48:37 <bcoca> gundalow: also why i wanted to merge now
+19:48:44 <bcoca> and this is 'signaling deprecation' not removal
+19:48:52 <bcoca> feature still works
+19:48:54 <thaumos> @gundalow, let's wait to merge this until 2 wks before 2.5 comes out then
+19:48:59 <thaumos> damn too late
+19:49:13 <gundalow> If we want to change the cycle from 4 I'd want to see a proposal and proper sign off. It will effect network plans
+19:49:27 <gundalow> Bcoca cool, all good
+19:49:31 <alikins> but mainly I actually want to know what it enables, I don't really see anything in the docs changes in pr that describes that
+19:49:55 * gundalow bops thaumos with a rolled up newspaper
+19:49:59 <bcoca> alikins:  it mostly disables
+19:50:00 <thaumos> heh
+19:50:33 <thaumos> okay, closing this topic out.
+19:50:42 <thaumos> #topic Open Floor
+19:50:55 <bcoca> alikins: it removes magic and unintuitive behaviours for a more straight forward approach that users should find more accessible and intelligible
+19:51:33 <agaffney> alikins: it doesn't really enable anything. the 'loop' keyword is basically equivalent to 'with_list', and involves less magic
+19:52:34 <bcoca> a lot of people have a hard time understanding that we have 'unlimited looping keywords' as with_ depends on the lookups available
+19:53:33 <bcoca> by making lookups explicit, that will stem a lot of the confusion, also showing them side by side with filters ... will get us to simpler constructs and eventually to deprecate/remove 'transfomation lookups' like nested/toghether/items/flatten
+19:53:52 <bcoca> as there are filters that are much better suited to do the same tasks
+19:55:40 <abadger1999> It enables users to use argumets with lookup plugins for looping in a more intelligible manner
+19:56:26 <bcoca> that too
+19:56:36 <bcoca> the current mixed list/dict is impossible to use in with_ format
+19:56:45 <bcoca> as you cannot 'dual type' inside yaml
+20:03:49 <thaumos> alright folks, thanks!
+20:03:53 <thaumos> #endmeeting

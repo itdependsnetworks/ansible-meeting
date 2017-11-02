@@ -1,0 +1,142 @@
+15:00:14 <thaumos> #startmeeting ansible core meeting
+15:00:15 <zodbot> Meeting started Thu Oct  5 15:00:14 2017 UTC.  The chair is thaumos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:00:15 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:00:15 <zodbot> The meeting name has been set to 'ansible_core_meeting'
+15:00:26 * gundalow waves.
+15:00:36 <thaumos> #chair gundalow
+15:00:36 <zodbot> Current chairs: gundalow thaumos
+15:02:24 * Qalthos waves
+15:02:33 <thaumos> #chair Qalthos
+15:02:33 <zodbot> Current chairs: Qalthos gundalow thaumos
+15:04:13 * abadger1999 here
+15:04:24 <thaumos> #chair abadger1999
+15:04:24 <zodbot> Current chairs: Qalthos abadger1999 gundalow thaumos
+15:04:41 <gundalow> bcoca: did you want to go through inventory_dir?
+15:06:23 * jtanner is here
+15:07:05 <thaumos> #chair jtanner
+15:07:05 <zodbot> Current chairs: Qalthos abadger1999 gundalow jtanner thaumos
+15:07:25 <abadger1999> He does.  bcoca are you typing furiously?
+15:07:40 <thaumos> in other channels he seems to be
+15:07:41 <bcoca> sorry, juggling chainsawas
+15:07:46 <thaumos> #chair bcoca
+15:07:46 <zodbot> Current chairs: Qalthos abadger1999 bcoca gundalow jtanner thaumos
+15:07:55 <bcoca> abadger1999: you care to explain it? trying to fix shell issue
+15:08:00 <abadger1999> k
+15:08:03 <bcoca> thnx!
+15:08:06 <jtanner> i prefer to juggle chain jawas
+15:08:18 <bcoca> jtanner++
+15:08:21 <abadger1999> #topic What to set inventory_dir to with add_host
+15:08:37 <abadger1999> In Ansible-2.3.x and earlier we had a single inventory source.
+15:08:51 <abadger1999> So we could set inventory_dir to a single value.
+15:09:01 <abadger1999> Which was global.
+15:09:10 <abadger1999> In 2.4.x you can have multiple inventory sources.
+15:09:37 <abadger1999> So now each host has an inventory_dir variable which is set to the inventory it was first set in.
+15:10:06 <agaffney> can 'inventory_dir' even be meaningful with 'add_host'?
+15:10:27 <jtanner> it'll play into var loading/scoping
+15:10:29 <thaumos> #chair agaffney
+15:10:29 <zodbot> Current chairs: Qalthos abadger1999 agaffney bcoca gundalow jtanner thaumos
+15:10:32 <abadger1999> So, as agaffney is pointing out, inventory_dir isn't meaningful with add_host.
+15:10:40 <abadger1999> So we currently set it to None.
+15:10:44 <jtanner> not sure about that though
+15:10:56 <abadger1999> This is a change (documented) from what is in 2.3.x and earlier.
+15:11:08 <thaumos> link to change?
+15:11:32 <abadger1999> willthames asked why we don't set it to the host which ends up add_host: as a backwards compat hack.
+15:12:29 <abadger1999> thaumos: I'll look in a moment (it's in a ticket, not in my irc scrollback)
+15:12:52 <abadger1999> *set it to the host which ends up running add_host
+15:12:52 <thaumos> ok
+15:12:54 <bcoca> thaumos: inventory revamp
+15:13:06 <bcoca> ^ huge tickets 64 files
+15:13:09 <abadger1999> The reason is that if the playbook has
+15:13:14 <agaffney> it may make sense to set 'inventory_dir' to the same value as 'playbook_dir' when using 'add_host'
+15:13:15 <abadger1999> :hosts: host1, host2
+15:13:29 <bcoca> agaffney: that is one option, let abadger1999 finish
+15:13:54 <abadger1999> and those hosts have different inventory_dir because they came from different sources, then the add_host host could end up with either of those two inventory_dir's set.
+15:14:22 <abadger1999> So if you depended on it being a specific dir previously, you'd silently be getting a different value now.
+15:14:45 <abadger1999> At least with None, you will get an error if you try to make use of inventory_dir.
+15:15:12 <abadger1999> So my vote is to keep it None nad document some of the workarounds.
+15:15:20 * abadger1999 looks for the present documentation link now
+15:15:46 <sivel> I'm here, my life is a bit crazy right now. So much to do
+15:16:01 <gundalow> #chair sivel dag
+15:16:01 <zodbot> Current chairs: Qalthos abadger1999 agaffney bcoca dag gundalow jtanner sivel thaumos
+15:16:18 <thaumos> is dag even here?
+15:17:23 <thaumos> I'd be curious to see what the assumptions are of users
+15:17:31 <gundalow> oh, maybe not
+15:17:31 <thaumos> for inventory_dir
+15:17:50 <bcoca> most users complaining about this were assuming 'same value' as you had single inventory source
+15:17:52 <abadger1999> Here's the present documentation:
+15:17:54 <abadger1999> One exception is the ``inventory_dir``, which is now a host variable; previously it could only have one value so it  was set globally. This means you cannot use it early in plays anymore to determine ``hosts:`` or similar keywords.
+15:17:59 <bcoca> probably rest of users never gave 2nd thought
+15:18:08 <abadger1999> in the porting_guide_2.4.rst file
+15:18:23 <abadger1999> We should add more information to that if we keep this the same
+15:19:36 <jtanner> nobody cares, until their inv var doesn't have the value they expected
+15:19:48 <jtanner> or doesn't exist
+15:21:19 <thaumos> yep, like turning off a very old vm that no one answers to
+15:21:24 <bcoca> jtanner: sadly, people do
+15:22:41 <thaumos> how about give them two configurable options; 1. None 2. same value as playbook_dir
+15:23:05 <bcoca> well, with None they can ucrrently override it to whatever they want
+15:23:10 <thaumos> right
+15:23:17 <bcoca> if we set a value , they cannot override it
+15:23:19 <thaumos> but I envision that for the power user
+15:23:52 <thaumos> think of it this way, a new user who finds this inventory_dir var and get an error, but not quite be at the point to figure out why the error is occurring
+15:23:59 <thaumos> so they have the simple default of playbook_dir
+15:24:23 <thaumos> and when they feel confident enough understanding vars, they can set it to None and override as they see fit.
+15:26:28 <agaffney> instead of the config option to set it to 'playbook_dir', why not just let users do {{ inventory_dir | default(playbook_dir, true) }} or similar? they have to change something one way or another
+15:27:50 <thaumos> I feel that can be scary for new users as well.
+15:27:51 <bcoca> im +1 to None and +0.5 to playbook_dir
+15:28:14 <bcoca> the other 2 optoins are too hacky .. and those using the it currently as global can do workaround by setting it as host var
+15:28:14 <sivel> I don't think playbook_dir would be any more helpful than None really
+15:28:29 <agaffney> thaumos: this probably won't be an issue for new users. I'd imagine very few people are meaningfully using inventory_dir and add_host together, and it's probably not new users
+15:28:53 <sivel> playbook_dir could inadvertently work, but I'd prefer None to inadvertently working
+15:28:55 <abadger1999> -0.5 to playbook_dir
+15:29:30 <abadger1999> inventory_dir:  "{{ inventory_dir  }}" is a better default despite doing the wrong thing sometimes.
+15:30:01 <abadger1999> For people who are using inventory_dir, playbook_dir is probably wrong.  inventory_dir can be right some of the time.
+15:30:23 <bcoca> so it seems most of us want 'None' as deafult (current) and let user decide otherwise in add_host (maybe examples in docs)
+15:31:05 <abadger1999> +1 to None; +0.5 to inventory_dir of the host that ends up running add_host; -1 to playbook_dir
+15:32:53 <thaumos> None it is. Just provide documentation on the keyword
+15:33:06 <thaumos> Votes on None please!
+15:33:10 <abadger1999> +1 None
+15:33:21 <jtanner> +1 None
+15:33:23 <bcoca> +1
+15:33:25 <sivel> +1 None
+15:33:43 <thaumos> +1 None
+15:33:51 <bcoca> willthames?
+15:34:19 <thaumos> gundalow
+15:34:23 <abadger1999> I haven't seen him yet today so he's probably sleeping.
+15:34:27 <abadger1999> Last night he said:
+15:34:41 <gundalow> +0 no thoughts
+15:34:53 <abadger1999> ‎[15:55:30] ‎<‎willthames‎>‎ yep, as you say,better to break early than do something very unexpected
+15:35:08 <abadger1999> he would have liked it to work as before but None is his second choice.
+15:35:29 <bcoca> and has sane workaround .. think we are done, i'll update ticket and add examples in add_host module docs
+15:35:40 <bcoca> #action bcoca to update ticket and docs
+15:36:00 <thaumos> Thanks!
+15:36:18 <thaumos> Next topic?
+15:36:27 <abadger1999> bcoca: and in porting_guide (or point to add_host from porting_guide)
+15:37:09 <gundalow> summary, then linking from porting guide to the main docs would be good
+15:37:28 <gundalow> That's what I've done with https://github.com/ansible/ansible/pull/31316
+15:40:04 <bcoca> abadger1999: roger
+15:42:38 <thaumos> any quick topics for 10 -15 minutes?
+15:43:22 <thaumos> I don't think we have enough time to decide on loop_control
+15:43:25 <gundalow> abadger1999: update on 2.4.1 (and expected 2.4.2?
+15:43:27 <gundalow> )
+15:43:34 <gundalow> #topic open floor
+15:47:11 <abadger1999> 2.4.1 beta2 out yesterday night.
+15:47:23 <abadger1999> Only a few blockers left and they're all being worked on.
+15:47:31 <abadger1999> So we're on track for rc1 next week.
+15:47:43 <abadger1999> I'm still accepting most bugfixes this week.
+15:47:53 <abadger1999> But after rc1 is out, I'll clamp down on that.
+15:48:06 <abadger1999> Hoping to make rc1 and then final the week afterwards.
+15:48:17 <abadger1999> Good work everyone!
+15:48:22 <gundalow> \o/
+15:48:26 <gundalow> Thoughts on 2.4.2?
+15:49:16 <abadger1999> No thoughts yet.  The rate of bugfixing has slowed a little.  We don't have the long freeze before 2.4.1 goes out that we do for the dot-oh releases so not as many bugs get queued up.
+15:49:49 <abadger1999> I don't think I'll start in with 2.4.2 beta1 the week after 2.4.1 is released as I did with 2.4.0.
+15:50:12 <abadger1999> But I'm not sure yet when I will start those.... will wait to see how quickly bugfixes accumulate.
+15:50:21 <gundalow> Makes sense, so 2.4.2 might be one-three months after 2.4.1 gets released?
+15:50:39 <abadger1999> yep.
+15:51:09 <gundalow> cool, thanks
+15:51:46 <abadger1999> I want to make sure that people do not feel the need to cram extra stuff into 2.4.1 at the last minute but I don't want to make a 2.4.2 release just to make a release... I'll just have to see what bgus pop up and how quickly.
+15:52:40 <abadger1999> Anyone else have something?
+15:53:39 <gundalow> Not from me
+15:55:06 <thaumos> I think we're good
+15:55:14 <thaumos> thanks everyone for the discussion today!
+15:55:18 <thaumos> #endmeeting

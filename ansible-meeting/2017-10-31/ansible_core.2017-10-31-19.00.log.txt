@@ -1,0 +1,195 @@
+19:00:05 <thaumos> #startmeeting ansible core
+19:00:06 <zodbot> Meeting started Tue Oct 31 19:00:05 2017 UTC.  The chair is thaumos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:00:06 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:00:06 <zodbot> The meeting name has been set to 'ansible_core'
+19:01:05 * gundalow waves
+19:02:19 <thaumos> #chair gundalow
+19:02:19 <zodbot> Current chairs: gundalow thaumos
+19:02:25 * thaumos waves back at gundalow
+19:02:52 * Qalthos 🌊🌊
+19:03:17 <alikins> blorp
+19:03:49 <jtanner> hello
+19:04:16 <funzo> o/
+19:04:31 <thaumos> #chair Qalthos alikins jtanner funzo
+19:04:31 <zodbot> Current chairs: Qalthos alikins funzo gundalow jtanner thaumos
+19:05:54 <nitzmahone> o/
+19:06:30 <thaumos> #chair nitzmahone
+19:06:30 <zodbot> Current chairs: Qalthos alikins funzo gundalow jtanner nitzmahone thaumos
+19:07:15 <nitzmahone> hrm, this looks like #core_internal West ATM
+19:07:23 <thaumos> pretty close
+19:08:52 <cognifloyd> I'm here :)
+19:08:58 <thaumos> hi there
+19:09:01 <thaumos> #chair cognifloyd
+19:09:01 <zodbot> Current chairs: Qalthos alikins cognifloyd funzo gundalow jtanner nitzmahone thaumos
+19:09:12 <thaumos> I am not sure if bcoca is joining or not
+19:09:24 <abadger1999> ola
+19:09:25 <jtanner> what's on the agenda?
+19:09:28 <thaumos> #chair abadger1999
+19:09:28 <zodbot> Current chairs: Qalthos abadger1999 alikins cognifloyd funzo gundalow jtanner nitzmahone thaumos
+19:09:54 <thaumos> #topic Add adhoc callbacks to mirror playbook start/stats
+19:09:58 <thaumos> #link https://github.com/ansible/ansible/pull/32304
+19:10:07 <thaumos> cognifloyd's PR is the only topic for today.
+19:10:17 <thaumos> bcoca and him have a discussion in the PR about it.
+19:10:23 <thaumos> sivel is for this as well.
+19:10:37 <sivel> whoa sorry, hey
+19:10:38 <thaumos> @cognifloyd have anything you'd like to add in here as a part of the discussion in the PR?
+19:10:39 <sivel> +1
+19:10:45 <thaumos> #chair sivel
+19:10:45 <zodbot> Current chairs: Qalthos abadger1999 alikins cognifloyd funzo gundalow jtanner nitzmahone sivel thaumos
+19:10:54 <thaumos> lol sivel
+19:10:55 <sivel> I am in a priority planning meeting, so kinda here-ish, not here-ish
+19:10:58 <thaumos> no worries
+19:11:03 <nitzmahone> +1
+19:11:04 <thaumos> I didn't intend for you to ping in
+19:11:09 <nitzmahone> I've needed this for things in the past too
+19:11:16 <thaumos> just wanted to make sure you were somewhat a part of the convo still bud
+19:11:30 <thaumos> I am +1 for this as well, are we cool with it being in 2.5?
+19:11:32 <alikins> I like the idea of 32304
+19:11:59 <alikins> haven't tested/tried the impl
+19:12:12 <cognifloyd> First: My computer is very slow until this blasted VM finishes shutting down ... :P
+19:12:21 <abadger1999> +1
+19:13:11 <cognifloyd> Anyway. I think it makes sense to make callbacks work the same for adhoc as for playbooks. Even if we decide not to add v2_playbook_on_start, I hope at least v2_playbook_on_stats makes it in.
+19:14:00 <alikins> pr might be more accurately called something like 'Use a implicit playbook for adhoc instead of just a play'. Maybe could go a step or two further in that regard even.
+19:14:51 <cognifloyd> At first I had separate callbacks, v2_adhoc_* (I did that so that it'd be completely backward compatible and callback plugins would have to opt in to supporting adhoc callbacks), but bcoca said it'd be better to reuse the v2_playbook callbacks instead of adding new ones.
+19:17:31 <cognifloyd> Ultimately I did this because, as @armab pointed out, I'm trying to reuse adhoc commands in another program. For example: `ansible -m setup some.host.com | jq '.some[query].here'`
+19:18:57 <abadger1999> So looks like we have 4 +1 and 0 objections from committers.
+19:19:07 <jtanner> +1
+19:19:21 <jtanner> swoop voting
+19:19:33 <thaumos> back to my question though, are we cool with including it in 2.5?
+19:19:49 * cognifloyd is, but that's probably obvious.
+19:19:50 <thaumos> I assume yes due to all the +1's, but I like to trust but verify
+19:19:58 <bcoca> +1 to the events, just not sure the playbook object makes sense as is (no real feedback, just a feeling ... must thingk aobut it)
+19:19:59 <jtanner> if it passes tests before then, sure
+19:20:13 <cognifloyd> Yeah, the playbook object felt weird.
+19:21:02 <bcoca> cognifloyd: as for the json output, you might be able to once my 'globalize callbcks' PR gets in
+19:21:10 <bcoca> though you might need |head in verbose mode
+19:21:33 <alikins> cognifloyd: what does using adhoc that way gain you over 'ansible-playbook -i some.host.com -e "some_param=foo" | jq ...' ?
+19:21:41 <abadger1999> thaumos: yah, +1 from me for 2.5
+19:21:58 <cognifloyd> Almost. Right now, the json callback (with globalize callbaccks) would still only work if there was an on_stats or something similar at the end.
+19:22:26 <thaumos> so, for the topic, it looks like that we're good to merge.
+19:22:35 <thaumos> should we continue the rest of the discussion in #ansible-devel?
+19:22:37 <bcoca> alikins: json callback does most display work on stats, rest of methods just gather data for final output
+19:22:38 <thaumos> or here?
+19:23:11 <thaumos> We don't have anything else on the agenda, unless dag shows up for his item
+19:23:37 <bcoca> open floor?
+19:23:51 <thaumos> #topic Open floor
+19:23:53 <thaumos> yeah
+19:23:54 <thaumos> it is
+19:23:57 <bcoca> https://github.com/ansible/ansible/pull/32275
+19:24:20 <thaumos> #topic playbook dir option
+19:24:28 <thaumos> #link https://github.com/ansible/ansible/pull/32275
+19:24:36 <thaumos> +1 from me on this
+19:24:44 <bcoca> ^ for console/adhoc since neither of them have a playbook dir and cannot pick up extra group/host/vars plugins vars
+19:25:06 <bcoca> also 1st step for allowing include_role to work in adhoc
+19:25:42 <bcoca> and includes in general, for when they need templates/ etc
+19:30:04 <abadger1999> CLI Option?  sure, looks nice.  Could you write an integration test too?  Should be an easy script to write.
+19:30:13 <abadger1999> (but not blocking the initial PR for the test)
+19:30:26 <sivel> I just had someone complaining that ansible-inventory didn't pick up play relative group_vars, so I'd say +1 it oculd be useful
+19:30:44 <bcoca> sivel: yep, aslo added to that
+19:31:39 <jtanner> +1 ... "inventory" is an amalgamation of vars from various places and all should be considered
+19:32:36 <jtanner> include_role in adhoc is an interesting topic though
+19:32:41 <bcoca> that was part of it, its basically a stopgap to a 'project' concept
+19:33:04 <cognifloyd> project concept?
+19:33:16 <bcoca> jtanner: include_tasks also ... import_playbook ... i'm tempted to give specific .. just use asible-playbook warning
+19:33:42 <bcoca> cognifloyd: most people treat their ansible layout as a 'project' and expect the top level dirs to be meaningful to playbooks all the way down
+19:33:49 <bcoca> test/playbooks/x.yml
+19:33:56 <bcoca> look in group_vars/stuff
+19:33:59 <bcoca> or roles/stuff
+19:34:54 <cognifloyd> ok
+19:37:31 <thaumos> ok so vote
+19:37:48 <thaumos> merge playbook dir option +1, -1
+19:38:00 <thaumos> +1
+19:38:37 <abadger1999> +1
+19:39:41 <cognifloyd> +1 (from a non-committer *shrugs*)
+19:40:50 <alikins> +1
+19:41:20 * thaumos captured jtanner's +1
+19:41:32 * thaumos and sivels
+19:41:35 <bcoca> merged
+19:41:44 <alikins> sorta rebirth of Ansiblefile
+19:41:57 <bcoca> alikins: ?
+19:41:57 <jtanner> lulz ... 'while you were out voting, i was merging'
+19:42:04 <bcoca> https://github.com/ansible/ansible/pull/32280
+19:42:19 <thaumos> pssash whatever
+19:42:20 <bcoca> jtanner: nah, was waiting for any negative, pressed merge after YOUR +1
+19:42:22 <thaumos> lol
+19:42:30 <thaumos> bcoca ninja merged it anyways
+19:42:36 <thaumos> after the first +1 came in
+19:42:40 <thaumos> I saw it happen
+19:42:43 <bcoca> bcoca merged commit 95b31a3 into ansible:devel  38 seconds from now
+19:42:49 <bcoca> ^ i merged it in my tardis
+19:42:55 <thaumos> exactly
+19:43:02 <thaumos> k, next open floor
+19:43:06 <jtanner> so by "globalize", you mean bring it up to the cli layer and pass it down?
+19:43:07 <thaumos> #topic Open Floor
+19:43:08 <bcoca> ^ new PR above
+19:43:21 <thaumos> missed that, thanks bcoca
+19:43:24 <bcoca> jtanner: in part, also means 'hijacking' most of display methods and allow callbacks to controll them
+19:43:34 <thaumos> #topic Globalize callback
+19:43:35 <bcoca> i also update json callback as example
+19:43:41 <thaumos> #link https://github.com/ansible/ansible/pull/32280
+19:44:00 <bcoca> not ready for merge, jsut want to make sure everyone is OK with my approach
+19:44:04 <bcoca> its really hackish
+19:44:22 <sivel> I haven't really reviewed the approach, just a couple of quick things I noticed
+19:44:30 <bcoca> but its only way i saw to do this in w/o rewriting every call to display
+19:45:17 <bcoca> also preserves current behaviour unless user/callback specifically wants to override it
+19:46:10 <bcoca> https://github.com/ansible/ansible/pull/32280/files#diff-b433171851ee6e9ab6c4f98f233678b5R100 <= the 'hackish' part
+19:46:13 <abadger1999> bcoca: I'd rather implement that using a more standard oop pattern
+19:46:20 <abadger1999> but the idea is okay.
+19:46:37 <bcoca> abadger1999: he, expected that, im open to suggestions, just got this working in 5mins (to my suprise)
+19:46:43 <abadger1999> <nod>
+19:47:11 <abadger1999> bcoca: <nod> I'll look and make a suggestion and how to change it
+19:47:19 <bcoca> i had never had an object 'copy and paste' methods from another
+19:47:34 <alikins> I like the idea of #32280 but not really the current impl
+19:48:15 <bcoca> im not even looking at this as permanent solution, but quick way to enable the functionality while we work on a more thorugh design
+19:48:37 <bcoca> i just feel it is currently very hackish, want to see what other alternatives we can work with
+19:49:06 <alikins> abadger1999/bcoca: 'I'd rather implement that using a more standard oop pattern'  - yup
+19:49:46 <bcoca> this breaks every pattern i ever though possible i'm 'side classing' from 2 objects w/o having inheritance
+19:51:06 <bcoca> im both horrified and proud of said hack ...
+19:51:30 <abadger1999> heh.  Yeah, I think this is a has-a pattern
+19:51:49 <abadger1999> Just instead of monkey patching, call callback.v() if it exists.
+19:51:54 <bcoca> abadger1999: but reversed, display has a callback and then steals it's method for tiself
+19:52:35 <abadger1999> Might want to allow callback to have v undefined too.
+19:52:38 <bcoca> abadger1999: tried that but got very slow during debug
+19:52:42 <abadger1999> for some definition of undefined
+19:52:45 <abadger1999> Hmm...
+19:52:53 <bcoca> abadger1999: if not defined, it is not overriden
+19:53:00 <bcoca> also avoids expenisve hasattr calls
+19:53:20 <abadger1999> bcoca: yeah but I mean... it would be nice for the callback baseclass to define all of the methods that are special to callback plugins
+19:53:24 <bcoca> once 'set' its all direct calls, all the expense is on initial setup
+19:53:36 <abadger1999> So it would be nice for it to have a v() method that does not override display.
+19:53:45 <bcoca> abadger1999: agreed, again, this was quick fix, and callbcaks used to NOT have all display functions
+19:53:53 <alikins> re-implement display as callbacks[1] seems like a reasonable goal. [1] callback in the general non-ansible specific meaning
+19:53:57 <bcoca> abadger1999: ???
+19:54:10 <bcoca> doesnt it having a v method mean it SHOULD override display?
+19:54:11 <abadger1999> alikins: yeah... I was thinking that might also work
+19:54:21 <abadger1999> bcoca: not if v() does nothing.
+19:54:34 <bcoca> abadger1999: then you basicaly break existing v?
+19:54:44 <abadger1999> bcoca: I'll show you some code so you can see what I'm saying
+19:55:11 <bcoca> alikins: this is basically a 'callback' by overriding teh function ref directly vs a 2 step one
+19:57:20 <bcoca> abadger1999: the other thing is that there are  callbacks that dont use callbackbase, so i was remiss on making this depend on that
+19:57:22 <abadger1999> bcoca: https://paste.fedoraproject.org/paste/7Wxt2xDJR-SZCd5OYqzteQ
+19:57:43 <abadger1999> bcoca: but then, of course, we have to change how display decides to use the callback versus its own thing
+19:57:57 <bcoca> abadger1999: i see the code, still dont understand how that does not break display
+19:58:09 <abadger1999> bcoca: we're coming up on the end of the hour... shall we move this to #ansible-devel
+19:58:09 <bcoca> cause method exists, so display would use the 'noop' vs existing
+19:58:14 <thaumos> let's continue this in ansible-devel?
+19:58:18 * dag is back
+19:58:20 <bcoca> k
+19:58:21 <thaumos> we have to wrap up for our windows friends
+19:58:22 <thaumos> dag...
+19:58:24 <bcoca> dag is here, lets leave
+19:58:25 <thaumos> wth man
+19:58:28 <dag> not sure if there's still time :)
+19:58:30 <abadger1999> bcoca: (and the answer is... yes, it breaks display... that's why I say we have to change display as well)
+19:58:34 <thaumos> you always come back at the end
+19:58:43 <thaumos> not in two minutes dude
+19:58:49 <bcoca> abadger1999: eventually, yes, but did not want to go that far at this point
+19:58:54 <thaumos> can you be here on thursday?
+19:59:01 <dag> yeah, it's halloween :-)
+19:59:07 <dag> thaumos: sure, no urgency
+19:59:25 <thaumos> ok
+19:59:27 <alikins> I have to mention that is starting to make callback/display look more and more like an accidental 'logging' re-implementation
+19:59:51 <thaumos> alright folks, closing out for today!
+19:59:51 <bcoca> alikins: part  of this was to make 'display.log' load your 'python logging' callback
+19:59:54 <thaumos> thanks for the discussions!
+20:00:01 <thaumos> #endmeeting
