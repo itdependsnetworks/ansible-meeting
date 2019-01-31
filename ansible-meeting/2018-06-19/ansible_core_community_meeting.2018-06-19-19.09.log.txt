@@ -1,0 +1,162 @@
+19:09:02 <shertel> #startmeeting ansible core community meeting
+19:09:02 <zodbot> Meeting started Tue Jun 19 19:09:02 2018 UTC.
+19:09:02 <zodbot> This meeting is logged and archived in a public location.
+19:09:02 <zodbot> The chair is shertel. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:09:02 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:09:02 <zodbot> The meeting name has been set to 'ansible_core_community_meeting'
+19:09:28 <sdoran> o/
+19:09:35 <shertel> #chair sdoran
+19:09:35 <zodbot> Current chairs: sdoran shertel
+19:09:51 <abadger1999> Hello
+19:09:53 <shertel> #info Agenda https://github.com/ansible/community/issues/317
+19:09:58 <shertel> #chair abadger1999
+19:09:58 <zodbot> Current chairs: abadger1999 sdoran shertel
+19:10:37 <shertel> #topic https://github.com/ansible/ansible/pull/41656
+19:11:35 <jdelaros1> PR #41656 is a follow up from last week (PR #41297), where original module submission was broken up into 3 for better user experience.
+19:12:21 <jdelaros1> This PR is for first of 3 modules. Other modules are complete but will  be submitted separately.
+19:12:28 <shertel> Okay. Just need reviews?
+19:12:43 <jdelaros1> Yes need reviews.
+19:13:12 <jdelaros1> Nothing fundamental has changed from last week (which was already reviewed) but can review again
+19:13:47 <jdelaros1> All recommendations from last week were addressed.
+19:14:25 <sdoran> I'll review it.
+19:14:50 <shertel> thanks sdoran. Also requested that the people who initially reviewed could look it over again.
+19:14:53 <jdelaros1> Thank you
+19:15:09 <abadger1999> Should category be implemented with a default (perhaps all?) and be able to take more than one value?
+19:15:57 <abadger1999> Or will do each of these facts exist on separate machines (so you'd never use all of them at once)?
+19:17:30 <jdelaros1> Category does not have a default value, there is an exception handler if category is not valid. In fact, added choices[] so it's caught there.
+19:17:42 <abadger1999> I mean, *should*
+19:18:03 <jdelaros1> Prefer that user provides specific category/command rather than use default values.
+19:18:22 <abadger1999> if you will gather multiple categories from the same host, it is inefficient to have separate tasks to ask for hte facts on  that host.
+19:18:42 <sdoran> Pretty much exactly the feedback I was going to give. :)
+19:18:53 <abadger1999> Allowing the user to batch them into a single task by taking multiple categories would help them out.
+19:18:56 <sdoran> The facts module should accept a list of what categories to gather.
+19:19:07 <sdoran> And default to the most common one.
+19:19:40 <jdelaros1> That's a good point. Keeping them separate though allows playbooks to be easier to understand and write.
+19:19:48 <sdoran> Doing more work in a single task is much more efficient.
+19:20:00 <abadger1999> jdelaros1: Why?
+19:20:18 <sdoran> You can have both with what we're suggesting.
+19:20:32 <sdoran> If someone wanted to have multiples tasks, they could.
+19:20:54 <sdoran> But they could also pass a list to `categeory` to get them all at once.
+19:21:11 <sdoran> I need to look at where these get stored to make sure they're won't be clobbering each other.
+19:21:16 <abadger1999> redfish_facts: category=["Inventory", "Accounts"] seems as understandable as two tasks.
+19:21:18 <jdelaros1> Agreed, that is possible. One thing to know though, is that each time we ask for information, the Redfish URI to be built will be different, so there's no savings there
+19:21:56 <sdoran> jdelaros1: I figured that would be the case. But it's still more efficient from an Ansible perspective.
+19:22:03 <abadger1999> jdelaros1: The savings is from transferring and ivoking the module mltiple times.
+19:22:38 <abadger1999> The Ansible module
+19:22:54 <jdelaros1> Also, information returned is kept separate, asking for more than one type of info might be difficult to keep output files separate rather than just dumping everything into one file
+19:23:33 <jdelaros1> But agree can send more than one command at a time.
+19:23:51 <abadger1999> As for having a default.... We've been tlaking about ways to allow the user to automatically run fact modules (making them first class citizens in facts).  If there's a required parameter, this module will never be able to fit into that framework.  that's why I suggest having a default.
+19:24:08 <jdelaros1> Will take a look, if you don't mind adding that feedback to the PR>
+19:24:15 <sdoran> +1
+19:24:28 <abadger1999> Will do.
+19:24:36 <jdelaros1> ok for the default as well
+19:26:15 <shertel> thanks abadger1999 and sdoran
+19:26:19 <shertel> Skipping https://github.com/ansible/community/issues/317#issuecomment-398225131 until there are more than two people
+19:26:23 <shertel> #topic Open Floor
+19:26:45 <sdoran> What about the four PRs from jtyr?
+19:27:07 <shertel> it says he wants to discuss on the  21st
+19:27:14 <sdoran> Roger
+19:27:26 <jdelaros1> Q: Once updates are done, is discussion done in the PR itself of do I have to come back here for this PR
+19:27:56 <sdoran> jdelaros1: We can continue in the PR. Only show up here or #ansible-devel if it seems to have stalled.
+19:28:06 <sdoran> We're human and have limited attention. :)
+19:29:15 <jdelaros1> Are these suggestions considered must-fix before merging? Could that be considered a future improvement?
+19:29:50 <sdoran> I would say yes since it's a pretty big UI change. Want to get that right before it gets merged.
+19:29:55 <abadger1999> My thing about default is not a blocker... if you feel it makes little sense, I don't even require it.
+19:30:11 <abadger1999> But the request about categories should be a blocker.
+19:30:39 <jdelaros1> OK I will take a look at that
+19:30:39 <bcoca> sorry, had late lunch didnt realize the time
+19:30:40 <abadger1999> Changing parameters after the fact can cause issues for people who have already started using the module i their playbooks.
+19:31:07 <shertel> #chair bcoca
+19:31:07 <zodbot> Current chairs: abadger1999 bcoca sdoran shertel
+19:32:29 <shertel> ok... if nothing else ending meeting in a minute
+19:32:46 <stoned75> ping?
+19:32:58 <abadger1999> Go ahead
+19:33:02 <stoned75> thanks
+19:33:02 <agaffney> https://github.com/ansible/ansible/pull/41058 <-- I'd like to get another quick look and a merge, if possible
+19:33:13 <stoned75> as anyone considered addin jsonnet  support the the parser ?
+19:33:23 <stoned75> like as alternative to json
+19:33:26 <bcoca> agaffney: remove WIP if you expect a merge/final review
+19:33:37 <stoned75> s/the the/to the/
+19:33:47 <agaffney> bcoca: done :)
+19:33:51 <bcoca> stoned75: which parser?
+19:34:01 <stoned75> lib/ansible/parsing/utils/yaml.py
+19:34:10 <bcoca> nope
+19:34:30 <stoned75> I find it handly in some cases, especially for var files
+19:34:46 <bcoca> doesnt seem somthing we would add as a parser, more as a template action
+19:34:48 <stoned75> I make a more or less satisfactory implementation, cf. https://github.com/stoned/ansible/commit/8469aaf6b6b6dddb41026e665ccb01fed2caafd1
+19:35:01 <stoned75> I'm working on a |jsonnet filter
+19:35:32 <stoned75> that can be used trivialy in template or copy with content:
+19:35:50 <abadger1999> We would accept a filter.
+19:35:54 <abadger1999> as a plugin
+19:35:58 <bcoca> i think it makes more sense as lookup
+19:36:04 <abadger1999> We wouldn't change the playbook format at this point
+19:36:09 <stoned75> I also did a lookup
+19:36:11 <bcoca> as we already have template lookup and its easy to assing
+19:37:13 <stoned75> ok. thanks for your answers
+19:37:18 <abadger1999> Except that it's not a lookup...
+19:37:35 * abadger1999 needs to write the "generic jinja function" proposal
+19:38:11 <stoned75> no the code I posted a link to is not a lookup.. I have it somewhere else :)
+19:38:17 <abadger1999> It does seem like a filter... in jsonnet; out json
+19:38:28 <abadger1999> I mean, it doesn't lookup anything.
+19:38:35 <bcoca> a file
+19:38:38 <abadger1999> and it isn't a list => list transform
+19:38:40 <bcoca> as template lookup does
+19:38:48 <abadger1999> So it doesn't fit eithe rdefinition of lookup that we have.
+19:39:04 <bcoca> i agree it can fall in several parts, just thinking that as looup we can keep yet another language from inside playbooks/vars
+19:39:09 <abadger1999> we agreed that should have only been a filter before.
+19:39:12 <abadger1999> (template
+19:39:17 <abadger1999> anyhow...
+19:39:26 <bcoca> tempalte filter makes no sense, since you are alreayd in template
+19:39:58 <bcoca> and lookup IS a generic jinja2 funciton, those are already possible
+19:41:46 <stoned75> jsonnet as a template filter makes it easy to integrate, that's the selling point
+19:42:22 <bcoca> it would be 2 in th end ? to_ or from_  liek we do with json and yaml?
+19:42:26 <stoned75> and so you can use it as copy: content="{{ document | jsonnet }}"
+19:42:32 <bcoca> the issue for me, its not a data format, its a templating language
+19:42:44 <bcoca> stoned75: that is a point against it
+19:42:52 <stoned75> ok
+19:44:23 <stoned75> another use case, a bit contrived may be, is: set_fact: foo="{{ document | json | json_query() }}"
+19:44:32 <stoned75> s/json/jsonnet/
+19:44:54 <nicolas17> would the jsonnet document be able to reference other hostvars?
+19:45:10 <abadger1999> stoned75: he was joking.  (about the copy content comment)
+19:45:17 <stoned75> nicolas17: yes there's a jsonnet api for that
+19:45:39 <nicolas17> is there any other filter that can access variables like that, that weren't explicitly passed as arguments?
+19:46:00 <stoned75> that's what I'm currently debugging in the trivial jsonnet filter I wrote (uncommited)
+19:46:07 <bcoca> nicolas17: as filter, no, lookup does get vars
+19:46:54 <stoned75> my test use case is something like: set_fact: myvar="{{ doc | jsonnet(ext_vars=hostvars[inventory_hostname]) }}"
+19:47:30 <stoned75> of course you could also do jsonnet(ext_vars=hostvars)
+19:47:38 <nicolas17> oh, if you pass ext_vars that's different, it does act only on its arguments then
+19:47:49 <bcoca> dont do that, last thing you want is to force full hostvars expression
+19:47:59 <stoned75> eh :)
+19:48:13 <bcoca> hostvasrs is NOT a dict, just looks like one
+19:48:34 <bcoca> its a lazy loaded object that 'acts like a dict' but we try to avoid copying teh whole thing as it tends to get huge
+19:48:41 <agaffney> it's a set of nested lazy loaded dict-like objects
+19:48:52 * bcoca was not going to mention hostvarsvars
+19:48:58 <stoned75> ooooh yes ! thanks ! that may exactly be source of the troubles I'm having
+19:49:10 <bcoca> also, hostvars does NOT contain all the vars availabel to the task
+19:49:20 <agaffney> bcoca: nobody should mention that. I'm proud and ashamed of it at the same time, if only for the name
+19:49:27 <bcoca> also why we havea   a  lookup('vars' ...
+19:51:18 <stoned75> so if I understood you well: a template would be more appropriate, is that it ?
+19:51:58 <stoned75> s/a template/template support/
+19:52:06 <bcoca> an action or as a lookup, both get vars
+19:52:30 <stoned75> ok IC
+19:52:31 <bcoca> it IS a template
+19:53:02 <abadger1999> <nod> You could do it as a module w/ action plugin if you want and that's the majority of hte use cases.
+19:53:45 <bcoca> varname: ''{{lookup('template' ,'path'))}} is one way to do include_vars + templating language
+19:53:55 <bcoca> s/template/jssonnet/
+19:54:49 <stoned75> bcoca: ok great! and anyway, that's the use case that got me started ;-)
+19:55:53 <bcoca> you still have a problem as some vasr might reffer to jinja2 templates so you wont be able to resolve those
+19:56:02 <bcoca> i.e var1: '{{othervar +2
+19:57:27 <stoned75> bcoca: yes, but I think that can't be helped, and well if it is really needed one would have to to something along the line of lookup('jsonnet', 'path', ext_var={'myvar': myvar})
+19:58:06 <bcoca> you should not need to do that myvar will already be available
+19:58:33 <bcoca> and you can define more vars in 'vars:' part of task
+19:59:20 <stoned75> oh you will be in favor of injecting the current tasks' vars and hostvar, by default, to the lookup ?
+19:59:51 <bcoca> that is ALREADY the case
+19:59:56 <bcoca> why i told you to use lookup
+19:59:58 <bcoca> filters dont get those
+20:01:39 <stoned75> yes I understood, it's only that I was not inclined, at first, to pass by default the available vars to the jsonnet engine
+20:02:19 <stoned75> I somehow understood that a jsonnet document is supposed to be self standing
+20:03:23 <bcoca> unsure how usefule it is if user needs to know all vars consumed and pass them explicitly
+20:03:32 <bcoca> unless you only template 1 or 2 vars ...
+20:05:02 <bcoca> well, if nothing else, ending this in 1min
+20:05:22 <stoned75> ok. thanks again for your ansers and inputs!
+20:06:14 <bcoca> #endmeeting

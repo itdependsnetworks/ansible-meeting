@@ -1,0 +1,183 @@
+19:00:45 <thaumos> #startmeeting ansible core
+19:00:45 <zodbot> Meeting started Tue Feb 13 19:00:45 2018 UTC.  The chair is thaumos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:00:45 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:00:45 <zodbot> The meeting name has been set to 'ansible_core'
+19:01:25 <sivel> .hello2
+19:01:26 <zodbot> sivel: sivel 'Matt Martz' <matt@sivel.net>
+19:02:13 <mangelm> hello
+19:02:14 <thaumos> #chair sivel
+19:02:14 <zodbot> Current chairs: sivel thaumos
+19:02:16 <thaumos> hello
+19:03:02 <abadger1999> Greetings
+19:03:17 <thaumos> greetings program
+19:03:19 <thaumos> #chair abadger1999
+19:03:19 <zodbot> Current chairs: abadger1999 sivel thaumos
+19:08:08 <sivel> such great turn out
+19:08:14 <thaumos> yep
+19:08:35 <thaumos> sometimes I wonder what it would be like to have this meeting in #ansible
+19:08:36 <thaumos> lol
+19:08:48 <thaumos> definitely would be A LOT of feedback there.
+19:09:03 <agaffney> I'm here, but I tend to keep quiet unless I have something to talk about :)
+19:09:09 <thaumos> ninja
+19:10:25 <misc> same as agaffney (except there is no time traveller trying to steal my nick)
+19:10:55 <abadger1999> :-)
+19:11:15 <thaumos> so has anyone pinged ansible-devel about 2.6?
+19:11:21 <abadger1999> #chair mangelm misc agaffney
+19:11:21 <zodbot> Current chairs: abadger1999 agaffney mangelm misc sivel thaumos
+19:11:27 <thaumos> i am wondering if we just do a #info here and send a mail there.
+19:11:32 <abadger1999> Nope, probably should announce here
+19:11:49 <abadger1999> thaumos: +1
+19:12:01 <sivel> my hope was that this meeting kicks off notifying everywhere
+19:12:09 <sivel> genesis
+19:12:14 <thaumos> sounds like a plan
+19:12:53 <abadger1999> Who wants to do the #info honors? ;-)
+19:13:20 <abadger1999> mattclay, thaumos?  Or I can from the notes from the earlier discussion.
+19:13:24 <thaumos> I got pulled into another call. :-(
+19:13:30 <thaumos> or I'd do it
+19:13:31 <thaumos> lol
+19:13:38 <sivel> likely excuse
+19:13:47 <abadger1999> #info 2.6 is going to be a stability release
+19:14:01 <misc> mhh what does that mean in practice ?
+19:14:11 <abadger1999> #ifno with a few exceptions, no new features to core owned code
+19:14:11 <agaffney> no crazy new core features
+19:14:25 <misc> #info with a few exceptions, no new features to core owned code
+19:14:41 <abadger1999> #info refactoring may count as either a bugfix or a feature... we'll evaluate on a case-by-case basis.
+19:14:59 <abadger1999> #info we'll work on improving/increasing testing
+19:15:03 <abadger1999> thanks misc
+19:15:15 <abadger1999> #info Features allowed in community “files’ (plugins, modules, contrib, etc)
+19:15:31 <abadger1999> #info Community features that need new features in core code will be deferred to 2.7
+19:15:59 <abadger1999> #info we'll try to focus on fixing existing issues and merging existing PRs rather than seeking out new ones
+19:16:59 <agaffney> is there still going to be the standard 2-3 months before 2.6, or can/will that be accelerated?
+19:17:00 <abadger1999> #info Exceptions so far: We'll treat networking, cloud (amazon, gce, azure, etc), vmware more like community owned code for deciding whether a feature is allowed.
+19:17:16 <abadger1999> agaffney: Good question... I forgot to bring that up today.
+19:17:30 * abadger1999 adds a note to the doc that has this info in it
+19:17:32 <sivel> agaffney: a specific timefram hasn't been discussed, although 2-3 months is usually more like 4-6 months
+19:17:45 <misc> so, why network/clou/vmware are treated differently ?
+19:17:47 <agaffney> I mostly just pulled those numbers from my butt
+19:18:04 <sivel> misc: due to the rapid changes made in those sectors
+19:18:09 <abadger1999> #action abadger1999 to bring up whether we could look at shortening the release cycle for the 2.6 release since it's no new features.
+19:18:32 <sivel> not giving them a little bit of room for new feautres, would mean that ansible might not be feature parity with "competition" or even work properly
+19:18:52 <abadger1999> #info managing the git repo during stability still being discussed.  Leaning towards branching stable-2.6 early and having PRs to cherry-pick changes to the 2.6 tree.
+19:19:02 <agaffney> AWS and other cloud services move too damn fast for tools with a "slow" release cycle to keep up
+19:19:21 <sivel> but any changes to those areas, still aren't allowed to impact other core files
+19:19:46 <sivel> from a feature perspective
+19:20:08 <misc> but for example, k8s/openshift also move fast ?
+19:20:11 <abadger1999> the Release managers are agreed that they want some way for people to continue merging features for 2.7 while 2.6 is being devoted to stabilization but haven't 100% finalized how that will look.
+19:20:33 <abadger1999> misc: Is k8s/openshift community maintained or core?
+19:20:35 <sivel> misc: i'd group k8s/openshift into cloud
+19:20:43 <sivel> but also, yes, they are largely community
+19:20:57 <misc> indeed, community
+19:20:58 <sivel> community files/plugins/etc are not impacted
+19:21:12 <sivel> aws and vmware are a little diff, since a fair number are core maintained
+19:21:22 <misc> so, do we plan to have some support for that, like some warning in the bot ?
+19:21:26 <agaffney> abadger1999: what about cutting the stable-2.6 branch immediately after the 2.5.0 release?
+19:21:49 <mattclay> agaffney: That's something we're considering.
+19:21:53 <sivel> agaffney: it has been discussed, but the vote leaned toward waiting until we had a real reason to do so
+19:21:59 <abadger1999> agaffney: Yeah, that's what we're currently leaning towards.
+19:22:00 <agaffney> it would keep 'devel' open for 2.7, at the expense of needing to cherry-pick almost everything into stable-2.6
+19:22:03 <abadger1999> (Or even earlier)
+19:22:15 <misc> I suspect this might also just make people spend time on features anyway :/
+19:22:33 <abadger1999> Well... bcoca wanted to wai.  Other people wanted to do it immediately.
+19:22:39 <misc> cause if we have to cherry pick, we already do that for stable
+19:22:50 <abadger1999> Because we don't want new core features to hit devel even now.
+19:23:10 <sivel> we'll say it's currently undecided.  for the immediate future, devel is 2.6
+19:23:34 <abadger1999> misc: We didn't discuss changes to the bot.  I'll mention that as well
+19:24:11 <abadger1999> #action abadger1999 to check on whether we should add a warning to the the bot about 2.6 being closed for core-code features
+19:24:48 <abadger1999> misc: I suspect if we branch stable-2.6 early, then there's no need for a bot warning.  (But whoeer merges will need to either cherry-pick or tell the PR submitter to open a PR with the cherry-pick)
+19:24:59 <agaffney> is this (devoting a "major" release to fixes/stabilization) something that will probably happen again in the future?
+19:25:18 <abadger1999> Probably but I'm not sure when.  We had a previous one ~ a year ago.
+19:25:28 <abadger1999> This one might prove to be more difficult.
+19:26:05 <abadger1999> (As already seen by us saying that parts of the code maintained by core are still going to be open to new features)
+19:26:52 <agaffney> it seems reasonable to draw a line between ansible's core code and ansible modules maintained by the core team
+19:27:24 <abadger1999> agaffney:  maybe... But would you want us to refactor template, copy, and file during a stabilization release? ;-)
+19:28:07 * bcoca rewrites module_util/basic.py
+19:28:09 <agaffney> just to be pedantic, the action plugin parts of those would be on a different side of the line than the module component
+19:28:12 * abadger1999 has refatoring those on his todo list... but that probably will get pushed off to 2.7
+19:28:33 <abadger1999> agaffney: heh :-)  file is all remote.
+19:28:38 <bcoca> agaffney: no, if module is 'core' action is also 'core'
+19:28:45 <abadger1999> and to be clear, community action plugins can have new features.
+19:28:55 <bcoca> unarchive!
+19:29:59 <agaffney> so...the line to be drawn will end up looking like gerrymandered Congressional districts
+19:30:30 <bcoca> not really, its 'core engine + core plugins (includes modules, actions, etc)
+19:30:37 <bcoca> aka 'core files'
+19:31:11 <bcoca> non core plugins, can have features
+19:31:25 <agaffney> there's a semantic difference between "core files" and "files maintained by the core team" that may not be obvious at first glance, especially to people not so familiar with ansible development
+19:31:27 <bcoca> and we are making 'cloud' and 'networking' non-core for this clasification
+19:31:41 <bcoca> agaffney: why i wanted to flag support for those
+19:32:07 <abadger1999> agaffney: yes.  Although we have supported_by: core metadata to help.  (but cloud modules are excepted)... so back to my tldr; : yes.
+19:32:31 <agaffney> the "no changes to core files in 2.6" proclamation just needs to be fairly clear about what files that actually means
+19:32:34 <abadger1999> (yes == gerrymandered is correct)
+19:34:30 * bcoca would also allow for any change that makes syncronize module obsolete
+19:34:40 <thaumos> heh
+19:34:54 <thaumos> we just need to get to a point where we can call that dead.
+19:35:14 <agaffney> bcoca: I don't think you're ever going to obsolete it, but you can just deprecate/remove it :)
+19:35:31 <thaumos> that would cause a lot of havoc
+19:35:34 <bcoca> agaffney: unless i obsolete it, no, as much as most of us want to
+19:36:09 <bcoca> yes, a lead lifeboat sucks .. but cannot just take it away, need to provide diff life preservers
+19:36:25 <agaffney> pfft, that's what 'command: rsync ...' is for
+19:36:27 <thaumos> just float on the rubber duckie
+19:36:32 <agaffney> quack
+19:39:54 <thaumos> So, is there anything else to chat about today folks?
+19:40:15 <mangelm> yes, please, I have a topic that I wanted to share
+19:40:43 <mangelm> I think gundalow added it to the agenda
+19:40:50 * thaumos goes to check
+19:41:48 <thaumos> @mangelm is it the fortios stuff?
+19:41:49 <abadger1999> mangelm:  what's the topic?
+19:42:05 <mangelm> yes, it is about the fortios
+19:42:22 <mangelm> I added a comment that summarizes the point. I can explain briefly if needed
+19:43:03 <abadger1999> #topic Fortios and fortigate https://github.com/ansible/ansible/pull/33591#issuecomment-364775042
+19:45:43 <thaumos> @mangelm, are you just looking for general feedback on this being the approach?  Meaning is it preferred to have many modules to target one endpoint?
+19:45:53 <abadger1999> sivel:  How does the proposal here look? https://github.com/ansible/ansible/pull/33591#issuecomment-364775042
+19:47:30 <mangelm> thaumos, yes, I would like to know if that approach could be ok. I mean, in our previous approach we had one module that was in charge on dealing with every feature of the fortigate, but not we are proposing to have a module per feature (e.g. webfilter). Every module could deal with some endpoints (all of the related to the same feature)
+19:47:43 <thaumos> From an Ansible best practice/preference, that's the way we prefer.  Have a module do one thing and one thing well.
+19:48:01 <mangelm> in the example webfilter deals with 'urls' and 'content' and it could deal with webfilter profiles as well
+19:48:32 <thaumos> I would say you'd have one for webfilters_content and one for webfilter_profiles.
+19:48:38 <thaumos> You don't want to conflate modules too much
+19:48:46 <abadger1999> mangelm: It looks much better to me.   I'm hoping sivel can take a look at the proposal, though, since he commented on the original monolith.
+19:48:50 <sivel> can we enumerate the arguments in `webfilter_content` ?
+19:49:15 <sivel> overall the proposal seems good.  But without implementation it is hard to say.
+19:49:32 <sivel> if we can enumerate `webfilter_content` then it sounds good
+19:49:35 <mangelm> thaumos, well, if I create one for url and one content we would end up having too many modules
+19:49:55 <sivel> similarly with each additional module
+19:50:38 <mangelm> sivel, by enumeration do you mean instead of using strings, create a list of possible choices?
+19:51:08 <sivel> mangelm: the argument_spec would need to explicitly support all options within webfilter_content, as opposed to allowing it to be an arbitrary dict argument
+19:51:18 <sivel> each key would need validated, and be defined via documentation
+19:52:09 <mangelm> sivel, ok, yes, our intention is to create enumeration in every argument that requires it, meaning, if the fgt allows only a list of choices, we will define an enumeration in ansible
+19:52:55 <sivel> yes, so it sounds like you are on the right track
+19:53:03 <mangelm> if this approach looks better my intention is to provide an implementation as soon as I can
+19:53:39 <mangelm> eventually we would like to create one module per feature: system, wireless-controller, firewall, webfilter, ips, web-proxy, wanopt, application, dlp spamfilter, log, vpn, certificate, user, dnsfilter, antivirus, report, waf, authentication, switch controller, endpoint-control and router
+19:54:35 <mangelm> then I will start with webfilter, I'll provide an implementation.
+19:55:31 <mangelm> btw, will it be enough including unit test (pytest)? or Will it also require system test?
+19:55:52 <abadger1999> +1
+19:56:06 <abadger1999> mattclay:  ^ question on proper testing.
+19:57:08 <abadger1999> mangelm: I think we are okay with either one in general.  Sometimes one or the other is more suitable, though.
+19:57:28 <mangelm> abadger1999, ok, great. thanks!
+19:57:34 <abadger1999> (mattclay or gundalow might have more targetted guidance for you once the PR is opened)
+19:57:34 <mattclay> It would be ideal to have integration tests, but having unit tests is also acceptable.
+19:58:19 <mangelm> sounds good. Then I think I have enough material to continue reworking this.
+19:58:28 <mangelm> thanks a lot for your feedback, really appreciated.
+19:58:30 <mattclay> When writing unit tests it's best to mock dependencies instead of importing them -- but that prevents testing the integration with those dependencies, which is where integration tests become useful.
+20:00:08 <abadger1999> Cool.
+20:00:11 <abadger1999> #topic Open Floor
+20:00:15 <mangelm> mattclay, ok I'll take it incto account
+20:00:22 <abadger1999> Anyone have anything else today?
+20:00:36 <mangelm> mattclay, btw, do you know of an ansible module that can be used as a good reference?
+20:00:58 <mangelm> mattclay, one that you can particularly be prod of?
+20:01:29 * misc wonder on doing hackfest focused on stability for 2.6
+20:01:58 <abadger1999> stability hackfest sounds good.
+20:02:04 <mattclay> mangelm: I don't know if we have one yet. There was some community effort into working on a few examples, but I don't recall what happened with that.
+20:02:12 <misc> but unlikely I would have time to organise one, and/or be at some events for that
+20:02:30 <abadger1999> I think we've mostly done hackfests in conjunction with other events so far (pycon sprints, ansiblefest hack room, etc)
+20:02:34 <abadger1999> Yeah.
+20:02:49 <mangelm> mattclay, ok, I'll investigate a bit more and come back to you
+20:03:07 <agaffney> "hackfest" and "stability" don't often go together
+20:03:19 <mattclay> mangelm: You might want to ping gundalow later. He may know more about where we're at with good example modules.
+20:03:21 <misc> mhh, what about stabfest ?
+20:03:30 <bcoca> stabfest?
+20:03:38 <bcoca> misc: JINX
+20:04:04 <misc> great mind think alike :p
+20:04:20 <mangelm> mattclay, good! I will. Thanks a lot!!
+20:06:42 <abadger1999> Cool.
+20:06:44 <abadger1999> Anything else?
+20:06:51 <abadger1999> If not, I'll close in 60s
+20:08:56 <abadger1999> #endmeeting

@@ -1,0 +1,80 @@
+19:06:39 <abadger1999> #startmeeting Ansible Core Team IRC Meeting
+19:06:40 <zodbot> Meeting started Tue Mar 13 19:06:39 2018 UTC.  The chair is abadger1999. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:06:40 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:06:40 <zodbot> The meeting name has been set to 'ansible_core_team_irc_meeting'
+19:06:42 <abadger1999> Any community people around that want to participate i nthe core irc meeting today?
+19:07:17 <abadger1999> On the agenda we only have one PR that bcoca promised to review last week
+19:07:28 <abadger1999> and a piece of information.
+19:07:39 <abadger1999> #info Agenda: https://github.com/ansible/ansible/pull/36357
+19:07:49 <abadger1999> #undo
+19:07:49 <zodbot> Removing item from minutes: INFO by abadger1999 at 19:07:39 : Agenda: https://github.com/ansible/ansible/pull/36357
+19:07:53 <abadger1999> #info Agenda: https://github.com/ansible/community/issues/296#issuecomment-370646587
+19:08:34 <abadger1999> #info Ansible 2.5.0 Release Candidate 2 is now available! Get it on PyPI: pip install ansible==2.5.0rc2, https://releases.ansible.com/ansible/, or GitHub.
+19:16:49 <svg> o/
+19:16:55 * svg is lurking
+19:17:26 <simondodsley> #topic review a couple of PRs .
+19:17:47 <abadger1999> #chair svg simondodsley
+19:17:47 <zodbot> Current chairs: abadger1999 simondodsley svg
+19:17:54 <abadger1999> simondodsley: what PRs do you have?
+19:18:00 <simondodsley> Put these up a few weeks ago. Would like to get them merged. https://github.com/ansible/ansible/pull/36761 https://github.com/ansible/ansible/pull/37043
+19:18:14 <simondodsley> new facts for iSCSI and FC WWN
+19:18:40 <simondodsley> iSCSI was discussed some weeks ago. Did the requested changes
+19:18:45 <simondodsley> FC WWN is a new one
+19:20:18 <abadger1999> alikins, bcoca: https://github.com/ansible/ansible/pull/36761  <=== I think the only comment we had on this one was that it should go into something besides minimal.  It's now in Network.  Does it look good to merge now?
+19:21:55 <sdoran> `aixcmd` is using a hardcoded path to the binary.
+19:22:23 <simondodsley> which is the way all the aix calls are made elsewhere in Ansible
+19:22:33 <sdoran> Would be more resilient to use `get_bin_path` if possible.
+19:23:14 <simondodsley> was going to do that but went with the same methodology as other AIX calls
+19:23:28 <simondodsley> its a core AIX binary and will never change location
+19:23:36 <sdoran> Ok. Makes sense. Just something to keep in mind if it becomes an issue in the future.
+19:24:16 <simondodsley> there will be lots to change if that breaks :)
+19:30:03 <sdoran> Aside from `get_bin_path`, I'd say this looks good to merge. All other items were addressed.
+19:30:58 <sdoran> Example output is very handy to see. Thanks for that, simondodsley .
+19:32:50 <abadger1999> simondodsley: Is there a reason you start with this: iscsi_facts['iscsi_iqn'] = {}   then overwrite it with a list? iscsi_facts['iscsi_iqn'] = line.split('=', 1)[1]
+19:34:11 <simondodsley> there probably was, but I don't remember what it was right now
+19:34:45 <abadger1999> Maybe you started with Linux and thought it should have k=v pairs but then the other platforms didn't have keys
+19:35:50 <simondodsley> i admit i started with my favorite OS - linux and then went downhill from then on
+19:36:38 <abadger1999> Looking at the Linux one some more, the code is also looping through lines in /etc/iscsi/initiatorname.iscsi but the last line with InitiatorName= is overwriting anything previous.  Perhaps it should either append to a list or it should break after the line is found?
+19:38:19 <simondodsley> the format of the file is hard defined by the iSCSI standard, but different OS's add different comments (or not) in the file, so we have to check for InitiatorName= (note the equals sign) so we can't just check for InitiatorName
+19:38:40 <simondodsley> there can onl be one IQN per host
+19:39:42 <abadger1999> Cool.  So if you add a break after we've processed that line, I think that will be good then.
+19:39:58 <simondodsley> that line will always be last - its part of the standard
+19:40:16 <abadger1999> Mostly so that people understand what hte code is doing.
+19:40:35 <abadger1999> Hmm.. if it's always last, a minor optimization would be to search the lines in reverse order.
+19:41:31 <simondodsley> ok - i'll add in a break - you never know if another OS will break the standard
+19:41:41 <simondodsley> not unheard of...
+19:42:58 <abadger1999> Cool.
+19:43:08 <abadger1999> lines = get_file_content('/etc/iscsi/initiatorname.iscsi', '').splitlines()
+19:43:21 <abadger1999> lines.reverse()
+19:43:24 <abadger1999> for line in lines:
+19:43:56 <abadger1999> or one-line:
+19:44:10 <abadger1999> for line in reversed(get_file_content('/etc/iscsi/initiatorname.iscsi', '').splitlines()):
+19:45:34 <abadger1999> Okay cool, make that change and probably... iscsi_facts['iscsi_iqn'] = None or iscsi_facts['iscsi_iqn'] = "" and I'll merge that one.
+19:46:11 <simondodsley> on it. I'll ping when it's done
+19:46:17 <simondodsley> Thoughts on the second PR?
+19:46:27 <simondodsley> https://github.com/ansible/ansible/pull/37043
+19:48:03 <abadger1999> I have never used fibrechannel so I may be asking silly questions... are there more facts that should eventually be grouped together with that?  does wnn exactly map to wnn?
+19:48:10 <alikins> does that windows/powershell bit work?
+19:48:59 <jborean93> It wouldn't run
+19:49:04 <jborean93> We don't use setup.py
+19:49:18 <simondodsley> from an FC perspective the only thing that people will need are the port names. There is a node name, but not used for anything. the port names are the ones required for zoning to external storage
+19:49:21 <jborean93> So not necessary to have in that PR
+19:50:19 <abadger1999> Okay, so that's the third thing to do for 36761 (remove the powershell/windows bit)
+19:50:42 <simondodsley> ok - it will be gone
+19:51:01 <abadger1999> Alright, alikins is https://github.com/ansible/ansible/pull/37043/files okay with you?  It looks pretty straightforward to me.
+19:53:11 <alikins> not really. there is a mechanism for doing per platform facts it could be using. Also not sure it needs to be in the base fact set. Also needs tests and sample data.
+19:54:47 <jtanner> agree on the last one
+19:55:03 <simondodsley> so what is that mechanism? Why is it not a base fact? It's as base as any network card in a server
+19:55:18 <jtanner> simondodsley: what distros has that been tested on?
+19:55:35 <simondodsley> centos and ubuntu
+19:58:29 <alikins> simondodsley: create a platform specific collector like https://github.com/ansible/ansible/blob/devel/lib/ansible/module_utils/facts/network/aix.py#L142
+20:00:41 <simondodsley> I won't be able to test it then as I don't have an AIX host anymore
+20:03:17 <abadger1999> Alright, we've hit our time limit.
+20:03:33 <abadger1999> alikins, simondodsley are you two able to keep discussing this in #ansible-devel?
+20:04:11 <abadger1999> #action abadger1999 to merge https://github.com/ansible/ansible/pull/36761 once simondodsley addresses comments from this meeting
+20:04:37 <abadger1999> #action alikins and simondodsley to discuss how to improve https://github.com/ansible/ansible/pull/37043 (FibreChannel Facts PR)
+20:05:43 <bcoca> dmit ... why do i keep comming at wrong hour?
+20:06:15 <jborean93> DST?
+20:06:19 <abadger1999> bcoca: we even changed the legal time to try to make it work for you ;-)
+20:06:41 <abadger1999> Okay, I'll close the meeting in 60 seconds if there's nothing else.
+20:45:59 <abadger1999> #endmeeting

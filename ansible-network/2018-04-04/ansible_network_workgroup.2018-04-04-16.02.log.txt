@@ -1,0 +1,106 @@
+16:02:47 <funzo_> #startmeeting Ansible Network Workgroup
+16:02:47 <zodbot> Meeting started Wed Apr  4 16:02:47 2018 UTC.  The chair is funzo_. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:02:47 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:02:47 <zodbot> The meeting name has been set to 'ansible_network_workgroup'
+16:03:21 <rcarrillocruz> o/
+16:03:36 <funzo_> #chair rcarrillocruz
+16:03:36 <zodbot> Current chairs: funzo_ rcarrillocruz
+16:03:38 * rcarrillocruz away home, but reading channel periodically
+16:04:19 <trishnag> o/
+16:04:22 <rcarrillocruz> been working on adding more images support to image builder role. Now supports building latest vyos, eos, nxos and vqfx
+16:04:47 <funzo_> #topic eng update
+16:05:09 <funzo_> #topic Ansible Network Workgroup
+16:05:15 <funzo_> #info eng team updates
+16:06:00 <funzo_> qalthos is out today due to power outage, but here is his update: "it looks like a unified API connection is the way to go, stay tuned for an updated proposal covering API plugin details"
+16:06:33 <trishnag> Have been reading network-engine code, getting used to parsers for engine, worked on some bugfixes there. Now getting the tests ready for network-engine. Will have the test PR ready probably by end of the week.
+16:06:50 <privateip> hi
+16:07:16 <rcarrillocruz> https://github.com/rcarrillocruz/build-networking-image , will likely move that over to ansible-network org at some point
+16:07:50 <funzo_> #chair trishnag privateip
+16:07:50 <zodbot> Current chairs: funzo_ privateip rcarrillocruz trishnag
+16:08:31 <funzo_> ok, moving on then to the agenda
+16:08:49 <funzo_> #info A proposal for eAPI connection type
+16:08:58 <funzo_> #link https://github.com/ansible/proposals/issues/102
+16:09:43 <funzo_> Qalthos: just in time, I posted the eAPI connection type proposal just before you connected
+16:10:15 <Qalthos> yeah I'm on my phone with a new client and basically useless right now
+16:10:25 <funzo_> has anyone been able to go through the proposal?
+16:10:39 <privateip> looks like it hasn't been updated yet?
+16:10:41 <Qalthos> but I remembered my SASL password so there's that at least
+16:11:28 <privateip> i think its great we can create a unified api here but im nervous that we dont know what it looks like yet and have a very short release cycle
+16:12:28 <funzo_> i'm not sure what the scoping looks like on this
+16:12:39 <funzo_> what's the shirt size on it
+16:13:03 <Qalthos> yeah, if I had power, there would definitely be a more detailed spec out
+16:13:27 <privateip> are you thinking a fully abstracted http transport as the connection plugin?
+16:13:34 <privateip> with some messaging plugin on top of it?
+16:18:02 <funzo_> not sure how constant his connection from his phone is
+16:18:11 <privateip> ah
+16:18:24 <Qalthos> I'm not entirely sure what you mean by that, but it seems sufficient to have a request builder method, a response interpreter method, and a URL builder
+16:18:48 <Qalthos> I'm here, just heavily hamstrung by phone keyboard
+16:18:52 <privateip> so there was a discussion in the proposal about supporting other platforms
+16:19:31 <privateip> aci, f5, citrix, etc (i dont remember them all)
+16:19:41 <privateip> aci for instance is REST based
+16:19:54 <privateip> eapi/nxapi is JSONRPC based
+16:20:18 <privateip> not sure if unified api means all of those (since they all share http as a common transport)
+16:21:02 <privateip> or if unified api means JSONRPC over HTTP/S meaning we are not considering those other use cases
+16:21:23 <Qalthos> that is the goal, and I didn't see anything to make that unreasonable when.i looked through ACI
+16:22:16 <Qalthos> the payload building from nxapi to eapi is different enough that I'm not assuming anything about jsonrpc
+16:22:54 <privateip> does that imply that the messaging is coming from the connection consumer then?
+16:23:07 <privateip> ie from some code living in module_utils for instance?
+16:23:35 <Qalthos> what do you mean by messaging?
+16:24:18 <privateip> so the connection plugin, i'm assuming, handles lower level http verbs (GET, POST, PUT, DELETE, OPTION, etc) along with TCP session handling
+16:24:37 <privateip> but that doesn't describe what a GET message looks like
+16:24:46 <privateip> or a PUT message, or a POST, etc
+16:24:52 <privateip> something has to define those messages
+16:24:58 <privateip> and they will be very device specific
+16:26:13 <Qalthos> right, I suppose that could be handled by module_utils (sort of as it is today)
+16:26:20 <Qalthos> but instead
+16:26:56 <privateip> so basically you are taking module_utils/urls.py and proposing turning that into a connection plugin
+16:30:27 <Qalthos> the message construction would be handled in a plugin to handle the API specific details in a sort of similar fashion to terminal plugins
+16:31:04 <privateip> ah ok so there is an additional plugin involved then
+16:31:32 <privateip> that makes much more sense to me
+16:31:34 <Qalthos> yeah, sorry if that was unclear above
+16:31:45 <privateip> no worries
+16:32:06 <privateip> dag you around?
+16:32:34 <privateip> im guessing not but wanted to have him weigh in on this as well
+16:33:00 <funzo_> any need to update the spec with further commentary to reduce any future confusion?
+16:33:22 <privateip> yeah the spec needs to rewritten almost entirely
+16:33:34 <privateip> this is a signifcant change
+16:33:40 <privateip> imho
+16:35:16 <funzo_> #action qalthos to update eAPI spec
+16:35:20 <privateip> which goes back to my earlier worry about timing
+16:35:36 <funzo_> worth scoping at least?
+16:35:41 <privateip> it will be tough to gauge until the spec is available for review
+16:35:46 <privateip> yeah
+16:36:16 <funzo_> ack
+16:36:30 <Qalthos> i think it needs significant updates, but I think the core of it is still correct, it is just delegating certain tasks to a new plugin which should be fairly simple in size
+16:37:02 <Qalthos> I think o should have something later today if I get power back soon
+16:37:27 <privateip> cool
+16:37:41 <funzo_> any further commentary before we move on?
+16:37:46 <Qalthos> will keep the channel updated
+16:37:51 <privateip> im good
+16:37:53 <funzo_> great
+16:38:02 <funzo_> let's plan on reviewing it next week again, then?
+16:38:09 <privateip> yep
+16:38:23 <funzo_> that's all that was on the agenda
+16:38:28 <funzo_> #info open floor
+16:38:34 <privateip> hopefully all interested will be able to do some real time iteration over the course of the week in the proposal as well
+16:38:45 <Qalthos> #topic open floor
+16:39:32 <Qalthos> funzo_ ↑
+16:39:48 <funzo_> #chair sjaiswa__
+16:39:48 <zodbot> Current chairs: funzo_ privateip rcarrillocruz sjaiswa__ trishnag
+16:40:11 <funzo_> welcome sjaiswa__
+16:40:20 <privateip> \o/ sjaiswa
+16:40:38 <funzo_> we've gone through the agenda, discussed the eAPI spec, and now we have an Open Floor for any items to discuss
+16:41:22 <funzo_> i'll wait for just a bit for folks to bring up an items for discussion
+16:43:35 <privateip> funzo: question
+16:43:40 <funzo_> ask away
+16:43:46 <privateip> 2.6 roadmap?
+16:44:39 <funzo_> #info last week we discussed the 2.6 roadmap rst document update. gundalow_ updated the open PR with the network items and should be merged real soon now (tm)
+16:44:59 <privateip> ah excellent
+16:45:01 <funzo_> i'm creating a community wiki page with all the items as well, we'll update the status of the items as we complete them
+16:45:29 * privateip RTFMM (meeting minutes) next time
+16:45:36 <privateip> :)
+16:45:52 <funzo_> happy to be kept honest about the obscurities
+16:46:00 <funzo_> any other questions or topics from anyone?
+16:47:40 <sjaiswa__> @sjaiswa__
+16:47:48 <funzo_> ok, folks thanks for coming. see you next week!
+16:47:56 <funzo_> #endmeeting

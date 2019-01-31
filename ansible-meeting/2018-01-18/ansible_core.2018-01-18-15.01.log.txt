@@ -1,0 +1,204 @@
+15:01:05 <thaumos> #startmeeting ansible core
+15:01:05 <zodbot> Meeting started Thu Jan 18 15:01:05 2018 UTC.  The chair is thaumos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:01:05 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:01:05 <zodbot> The meeting name has been set to 'ansible_core'
+15:01:32 <funzo> o/
+15:01:38 <maxamillion> .hello2
+15:01:39 <zodbot> maxamillion: maxamillion 'Adam Miller' <maxamillion@gmail.com>
+15:01:39 <thaumos> #chair funzo
+15:01:39 <zodbot> Current chairs: funzo thaumos
+15:01:47 <akasurde> 0/
+15:01:48 <thaumos> #chair maxamillion
+15:01:48 <zodbot> Current chairs: funzo maxamillion thaumos
+15:01:50 <thaumos> #chair akasurde
+15:01:50 <zodbot> Current chairs: akasurde funzo maxamillion thaumos
+15:02:00 <mkrizek> o/
+15:02:07 <sivel> Hello
+15:02:21 <ryansb> hu folks
+15:02:23 <ryansb> *hi
+15:02:24 <thaumos> #chair mkrizek sivel ryansb
+15:02:24 <zodbot> Current chairs: akasurde funzo maxamillion mkrizek ryansb sivel thaumos
+15:02:50 <jtanner> Morning
+15:03:16 <thaumos> #chair jtanner
+15:03:16 <zodbot> Current chairs: akasurde funzo jtanner maxamillion mkrizek ryansb sivel thaumos
+15:04:23 * gundalow waves
+15:04:30 <thaumos> #chair gundalow
+15:04:30 <zodbot> Current chairs: akasurde funzo gundalow jtanner maxamillion mkrizek ryansb sivel thaumos
+15:04:37 <thaumos> #topic Open Floor
+15:04:45 <Pilou> hi
+15:05:47 <gundalow> #chair Pilou
+15:05:47 <zodbot> Current chairs: Pilou akasurde funzo gundalow jtanner maxamillion mkrizek ryansb sivel thaumos
+15:06:00 <ryansb> if nobody has an item: https://github.com/ansible/ansible/pull/35014 is a new PR for the GCP module generator
+15:06:20 <thaumos> #topic GCP Module Generator PR
+15:06:29 <gundalow> #topic GCP: DNS Managed Zones #35014
+15:06:39 <gundalow> thaumos: oh, sorry :P
+15:06:43 <thaumos> it's all good.
+15:06:46 <thaumos> I'll step back
+15:06:51 <gundalow> #link https://github.com/ansible/ansible/pull/35014
+15:07:10 <gundalow> ryansb: whatcha need?
+15:07:13 <ryansb> The short story: GCP, to keep up with pace of services and things, is building code generators for various targets
+15:07:19 * thaumos leaves
+15:07:38 <ryansb> I've reviewed a handwritten module, which is the basis for their templated one (in this PR)
+15:08:30 * shertel waves
+15:08:32 <ryansb> and what we need now is:
+15:09:23 <ryansb> - other people's feedback on the resulting modules
+15:09:52 <ryansb> - confirmation that the generator and methods for getting community changes (docs, etc) into the generator are adequate
+15:10:06 <ryansb> - review on the non-generated things (the module_utils in that PR)
+15:10:48 <sivel> ryansb: for starters, the PR is failing CI
+15:13:00 <ryansb> - the code-gen is also open source, https://github.com/GoogleCloudPlatform/magic-modules
+15:14:31 <maxamillion> I think as long as the code for the generated modules provide enough information in the comments of their code so that someone knows where to go to find the generator code and how to contribute to fix those (either us or someone else in the community), it's ultimately fine ... what's the plan for when they want to re-rev the auto-generated modules? another PR that someone sanity checks and
+15:14:37 <maxamillion> merges?
+15:14:54 <sivel> How do we properly document that generated modules likely shouldn't get direct PRs, but should happen in some other repo?
+15:14:59 <maxamillion> +1 for code gen being open source, if it wasn't I think I'd have an issue with it
+15:15:14 <maxamillion> sivel: +1 - that's a good question
+15:15:40 <jtanner> we have rejected generated modules in the past
+15:15:51 <maxamillion> should we add a new field for ANSIBLE_METADATA that marks it as auto-generated?
+15:15:56 <maxamillion> jtanner: oh?
+15:15:58 <gundalow> We have also accepted aut generated modules
+15:16:08 <ryansb> yeah - so one feedback thing I have is that they include links to the source templates in the generated output
+15:16:08 <gundalow> network/avi/*
+15:16:34 <ryansb> so it'd be a github link right to the source
+15:16:43 <ryansb> docs are hand-generated
+15:17:29 <ryansb> a bot-tag isn't a bad idea
+15:17:29 <sivel> We just need to make sure it's well socialized, otherwise we could run into other problems
+15:17:31 <jtanner> i feel like there needs to be a new bot workflow to autoclose issues and PRs for these sorts of modules and direct them upstream
+15:17:41 <sivel> bot tagging and commenting would def help
+15:17:52 <sivel> without it, I am a -1
+15:18:26 <sivel> it would be too hard for every person to know what is the right thing to do
+15:18:37 <jtanner> for any person
+15:18:38 <sivel> maybe also an addition to ANSIBLE_METADATA?
+15:18:42 <ryansb> so that would become a module metadata field? or something in BOTMETA
+15:18:55 <ryansb> I think ANSIBLE_METADATA would be the best home
+15:19:01 <sivel> I'd prefer ANSIBLE_METADATA I think
+15:19:07 <jtanner> it also needs something to point them at the right place (which is not ansible/ansible)
+15:19:26 <mikedlr> bot is okay; but the bot should give a comment that you can reopen if you disagree and should not then close issues that are re-opened.
+15:19:29 <jtanner> BOTMETA could easily be extended
+15:19:57 <jtanner> upstream: <url>, autoclose: true/false
+15:20:05 <mikedlr> in the case that upstream is being unresponsive we it's important to recognise that early and take over.
+15:20:22 <jtanner> i think it's unrealistic to expect us to "take over" anything
+15:20:55 <jtanner> if it turns into bitrot, autoclose could be turned off ... but nobody currently monitors for bitrot
+15:20:56 <sivel> maybe, remove the plugin
+15:21:05 <mikedlr> "take over" can have differnt meanings, but if there's a module which upstream has decided they don't care about any more for commercial reasons
+15:21:33 <mikedlr> and which has a severe / security bug then a) it needs to be fixed and b) gradually expired.
+15:22:05 <mikedlr> provided that the auto-generated code is also reviewed and fine then this is no worse than a maintainer disappearing.
+15:22:19 <ryansb> Yeah, the second case (upstream no longer does stuff) is easy
+15:22:25 <sivel> Based on teh discussion, I feel like we might need a proposal for ANSIBLE_METADATA addition, and how to handle PRs/issues, where and how to point a user
+15:22:43 <ryansb> but the severe bug *we* must fix is something we have to be clear on since this would be a community module
+15:23:01 <ryansb> e.g. we don't expect core to drop everything and fix security bugs in honeybadger
+15:23:27 <jtanner> here's a question ...
+15:23:34 <gundalow> If the upstream generator dies then people can just manually to ansible/ansible
+15:23:35 <jtanner> 1) we update the linters for some new policy
+15:23:42 <jtanner> 2) we find an issue in these modules
+15:23:46 <jtanner> 3) core team does what?
+15:23:57 <ryansb> probably sets ignore.txt
+15:24:17 <mikedlr> I think that depends;  A (I'm not sure I want to imagine how) remotely exploitable, wormable bug in released software I would expect to be fixed at any cost (including module removal)
+15:24:18 <ryansb> or, if it's something we really want fixed, submit a PR to the generator
+15:24:33 <gundalow> For the for AVI modules I've just manually updated the auto generated module and @notified the owner that they need to update their generator
+15:25:03 * gundalow doesn't have cycles to go work out how some generator works and fix it there
+15:25:04 <jtanner> in that case, does it even matter that it's autogenerated?
+15:25:10 <gundalow> jtanner: don't think so
+15:25:58 <ryansb> oh, so we manually fix and then they update the generator. If they were to make a PR with a change (that didn't incorporate the manual update) the PR diff would show they missed it, so could go back and change the generator to produce fixed output
+15:26:03 <ryansb> that's easier
+15:26:10 <gundalow> ryansb: bingo
+15:26:14 <sivel> potentially creates more work if we do that, and the "maintainer" doesn't notice, and pushes a newly generated module over top of the changes
+15:26:21 * jtanner wonders if the proliferation of auto-generated modules means we need to take another look at why people need modules in the first place.
+15:26:30 <sivel> I'd be -1 on just changing the generated module and hoping things work out
+15:27:18 <sivel> the chances of losing that change are higher, and like I mention, it will create more work to ensure when we accept a later PR that it is "doing the right thing"
+15:27:29 <maxamillion> it might make sense to also have something that will cause the generated sphinx-doc docs to have some kind of "visual marker" at the top of the page so that users know the module is auto generated and know not to file issue tickets to github.com/ansible/ansible for it
+15:27:54 <gundalow> maxamillion: nice idea, that's easy enough to add
+15:27:55 <jtanner> i think we can move forward by "pretending" they aren't autogenerated, and have no responsibility for working upstream on them. the maintainers will be responsible for guiding their contributors and bug filers and can manage the workflow via bot commands
+15:27:58 <maxamillion> probably want to have the "where does this module's code actually live" URL be a part of the addition to ANSIBLE_METADATA and/or DOCUMENTATION
+15:28:09 <maxamillion> gundalow: similar thing for ansible-doc
+15:28:22 <jtanner> otherwise, i'm gonna say these modules should go to galaxy instead
+15:28:57 <mikedlr> I have previously been involved in rpm development.  I believe that if RPM had been more open to automatically generated modules we
+15:28:58 <mikedlr> would have less of a horrible situation with every dynamic language coming up with it's own set of packaging and distribution tools.
+15:29:22 <jtanner> python-rpmfluff?
+15:30:10 <mikedlr> A default of ignoring the fact things are generated but a set of  ways to work well with the people doing auto-generation will help.
+15:30:18 <jtanner> rpm and system packaging is a whole can of worms
+15:30:40 <ryansb> so ignore the generator, other than clear markings in code+docs+ansible-doc output
+15:30:51 <sivel> I'm +1 under the following conditions.  1) We have the bot and ANSIBLE_METADATA dictate auto closing issues or PRs for these modules. 2) 100% ignoring that they are auto generated (no exceptions), no pointing people elsewhere, just forgetting where they came from
+15:31:01 <mikedlr> jtanner: briefly maintained makerpm for making rpms from perl modules ;  proved it could work;  proved both communities  weren't so keen.
+15:31:25 <sivel> currently I'm -1 on any middle ground
+15:31:29 <mikedlr> +1 on ryansb - clear markings and references are the most important.
+15:32:21 <jtanner> mikedlr: i think most people hate writing specs (i know i do), which is why i use(d) python-rpmfluff and fpm. In this case with modules, I think the story is a little different because the complication is more about who gets the finger pointed at when the module doesn't work
+15:32:37 <ryansb> sivel: so option 2 would mean we merge manual changes and such, and expect the upstream to work those into the generator
+15:33:05 <jtanner> yes, that's how i interpret #2 also
+15:33:08 <sivel> ryansb: yes, with absolutely 0 guarantee that they are notified about the change
+15:33:23 <ryansb> well, they'd be the maintainer
+15:33:24 <sivel> it's completely their responsibility to keep up to date
+15:33:24 <shertel> so we wouldn't want autoclosed issues/PRs, right?
+15:33:29 <ryansb> so would be @ ed on PRs
+15:33:38 <ryansb> but yeah, no other special stuff
+15:33:39 <maxamillion> sivel: what do you mean by "forgetting where they came from"?
+15:33:41 <sivel> ryansb: sure, but we auto @ them now and they ignore
+15:33:47 <jtanner> #1 would have autoclose workflow #2 would pretend there is no upstream
+15:33:59 <jtanner> shertel: ^
+15:34:01 <sivel> maxamillion: pretending we didn't ever know they came from another repo or were generated
+15:34:16 <mikedlr> how about allowing them to configure a bot message for bugs which allows them to _advise_ people about how to report bugs to the generator.
+15:34:20 <sivel> we just treat them like any other module
+15:34:22 <shertel> +1 to 2
+15:34:50 <mikedlr> but doesn't stop the manual process in any way;
+15:37:19 <maxamillion> mikedlr: yeah, I like that ... have some field in BOTMETA that would allow the bot to auto-close the issue with an update of "this module is autogenerated from $OVER_HERE, please report issues there" or whatever
+15:38:23 <sivel> maxamillion: yes, I think that is my option #1 (which I believe requires a new proposal)
+15:38:51 <sivel> Do we want to take some form of vote here?
+15:38:56 <sivel> Looks like we have stagnated a bit
+15:38:59 <mikedlr> maxamillion: independent of the autoclose - (above proposed as a flag) - "this module is maintainted by http://autogeneratedmods.com/bugtracker - please also report this bug upstream to them;  when fixed please close this bug too"
+15:39:14 <maxamillion> sivel: ah ok
+15:39:20 <sivel> I'll reiterate my options
+15:39:24 <maxamillion> sivel: thank you
+15:39:26 <sivel> 1) We have the bot and ANSIBLE_METADATA dictate auto closing issues or PRs for these modules. (requires a proposal)
+15:39:42 <sivel> 2) 100% ignoring that they are auto generated (no exceptions), no pointing people elsewhere, just forgetting where they came from, treated like any other module
+15:40:07 <mikedlr> so for responsive maintainers we could autoclose;  for unresponsive we can just give the link and when they largely fail to respond for a time we can just say "please fix here and report upstream"
+15:40:52 <sivel> I don't think I want to get fancy, and have conditional actions
+15:41:00 <sivel> I'd prefer one stance on how we handle them
+15:41:12 <ryansb> for all autogens, or just for the GCP autogens?
+15:41:13 <gundalow> I think #2 should be OK as ansibot will still @mention people. and if an auto generated PR comes along we will notice the change in the PR diff
+15:41:31 <ryansb> e.g. would this retroactively apply to AVI
+15:41:40 <sivel> based on work involved and such, I am going with +1 for #2
+15:41:42 <gundalow> Though I like the banner in the top of the module py to point them to the right place
+15:42:01 <gundalow> ryansb: good question #2 is what we are already doing for network/avi
+15:42:22 <sivel> but honestly I feel like we aren't getting enough movement, and I feel we've lost some participants
+15:42:51 <gundalow> sivel: yup, wonder if we should park it
+15:43:08 <shertel> ryansb is this supposed to make it for 2.5?
+15:43:49 <ryansb> would be nice but they aren't critically hosed if it doesn't (as evidenced by showing up so late in the cycle)
+15:43:56 <sivel> Module freeze is 7 February 2018, so I think we should be ok, to pick this back up next meeting
+15:44:11 <ryansb> alright, I'll remind us on the Tuesday meeting
+15:44:14 <shertel> sivel this has module_utils
+15:44:19 <sivel> Community Module Freeze that is
+15:44:43 <shertel> we don't merge features to module_utils after the 22nd, right?
+15:44:47 <sivel> shertel: I'm not sure how others see that, but module_utils for community modules, should be handled the same as modules
+15:44:59 <sivel> gundalow: ^ ?
+15:45:26 <gundalow> I *think* since that module_utils a) only effects these modules b) these modules are new, then Comunity Freeze applies to the whole PR. So they have till 7th Feb to get it merged
+15:45:27 <shertel> Ok, probably fine for this. For module_utils that are used by community and core modules, that's an unclear line.
+15:45:35 <ryansb> idk, for new mod_utils I'd say it probably counts as ok until Feb 7
+15:45:41 <ryansb> since no GCP stuff is core
+15:46:33 <maxamillion> need to step afk
+15:47:10 <gundalow> #info #35014 has till the "community" freeze as a) None of GCP is support: core b) module_util changes are only to new in 2.5 modules, therefore no risk of breaking anything else
+15:47:22 <gundalow> #info OPTION 1) We have the bot and ANSIBLE_METADATA dictate auto closing issues or PRs for these modules. (requires a proposal)
+15:47:32 <gundalow> #info OPTION 2) 100% ignoring that they are auto generated (no exceptions), no pointing people elsewhere, just forgetting where they came from, treated like any other module
+15:47:55 <gundalow> #info Remember to consider how this applies to existing auto generated modules, such as network/avi
+15:48:16 <gundalow> I think we can move on
+15:48:22 <ryansb> thanks everyone
+15:48:31 <gundalow> #topic Open Floor
+15:48:32 * ryansb has no other topics
+15:48:34 <gundalow> Anyone got anything else?
+15:49:02 <akasurde> gundalow I was thinking about a label which can identify if issues has PR or not ?
+15:49:07 <sivel> I added a topic for next week, I have things to do right now, so I'll defer
+15:49:19 <sivel> akasurde: I was thinking the same thing yesterday
+15:49:28 <sivel> I use a has_pr issue in my personal projects
+15:49:32 <akasurde> sivel, Cool
+15:50:08 <sivel> As it is, for issues which I am working, I assign to myself, but that only extends so far
+15:50:14 <sivel> a label would be useful
+15:50:29 <gundalow> Lets revisit that on Tuesday
+15:50:33 <gundalow> Anyone got anything else?
+15:50:43 <sivel> akasurde: can you add to the agenda?
+15:50:49 <akasurde> Yes sure
+15:50:55 <akasurde> thanks
+15:51:05 <gundalow> akasurde: Thanks
+15:55:47 <sivel> Ok, let's close it out I suppose
+15:56:35 <ryansb> +1
+15:57:08 <sivel> ryansb: Please add your topic to the agenda for next week, and I recommend we hit it first
+15:57:18 <sivel> while we have the most people present
+15:57:28 <ryansb> noted
+15:59:52 <gundalow> OK, thanks for your time everyone
+15:59:54 <gundalow> #endmeeting

@@ -1,0 +1,350 @@
+13:59:40 <gundalow> #startmeeting AnsibleFest Austin: Contributors Summit - Core update
+13:59:40 <zodbot> Meeting started Mon Oct  1 13:59:40 2018 UTC.
+13:59:40 <zodbot> This meeting is logged and archived in a public location.
+13:59:40 <zodbot> The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+13:59:40 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+13:59:40 <zodbot> The meeting name has been set to 'ansiblefest_austin:_contributors_summit_-_core_update'
+13:59:43 <felixfontein> +r should help, I hope
+14:00:11 <gundalow> #chair bcoca abadger1999 jtanner nitzmahone
+14:00:11 <zodbot> Current chairs: abadger1999 bcoca gundalow jtanner nitzmahone
+14:00:17 <gundalow> #info https://etherpad.openstack.org/p/ansible-summit-october-2018
+14:00:39 <bcoca> im really on a bench
+14:00:42 <gundalow> #info https://bluejeans.com/7480904391
+14:01:37 <gundalow> Can people here me?
+14:01:42 <misc> yes
+14:01:45 <resmo> hi
+14:01:51 <felixfontein> hello!
+14:01:53 <bcoca> we can HEAR you
+14:02:04 <webknjaz> I HEAR you :)
+14:03:23 <jlk> o/
+14:03:32 <bcoca> matt is happy about the microphones ...
+14:03:41 <ericsysmin> what's the password again?
+14:03:48 <bcoca> no password
+14:03:54 <ericsysmin> for wireless
+14:04:06 <bcoca> for mine 'no password'
+14:04:07 <ericsysmin> a few people here missed that slide
+14:04:10 <ericsysmin> haha
+14:04:27 <dmsimard> ansiblefest wifi is AutomatesAustin (or AutomateAustin)
+14:04:28 <felixfontein> where can I see the slides? the slide view vanished some minutes ago
+14:05:15 <ericsysmin> dmsimard: thanks
+14:06:25 <sdoran> felixfontein image it'll come back when there are slides to see.
+14:06:50 <bearrito> is there a fest / contributor summit channel?
+14:06:56 <felixfontein> sdoran: thanks!
+14:07:08 <sdoran> bearrito: This is it.
+14:07:10 <bcoca> bearrito: this one, normall #ansible-devel is where most contributors hang out
+14:07:14 <defionscode> sdoran: good to see your face, ableit in small square on a projector!
+14:07:19 <bcoca> but for fest, we all here
+14:07:49 <sdoran> defionscode: Hey dude! I'm bummed I didn't get to come since you're there.
+14:08:02 * misc think the camera is looking a bit too much at the ceiling and not enough at people
+14:08:06 <defionscode> ¯\_(ツ)_/¯
+14:08:18 <misc> a very nice ceiling
+14:08:34 <misc> (from gundalow session)
+14:09:12 <abadger1999> misc: Tell us when to stop
+14:09:36 <dag> So now we see the floor _and_ the ceiling, great :)
+14:09:43 <abadger1999> sorry.
+14:09:45 <bcoca> the door header is nice ...
+14:09:47 <abadger1999> we misunderstood.
+14:09:48 <felixfontein> nice tiling!
+14:09:52 <sdoran> :)
+14:09:53 <j^2> o/
+14:09:56 <mhayden> can we blame jlk for the camera angle yet?
+14:10:03 <bcoca> just bring camera down 10degrees
+14:10:11 <jlk> You can try...
+14:10:12 <bcoca> that way we can stare at nitzmahone and abadger1999
+14:10:52 <dag> stop !
+14:10:55 <misc> much better, thanks robyn :)
+14:11:01 <bcoca> now you've gone down too much
+14:11:07 <bcoca> there, good
+14:11:31 <jlk> please zoom the overhead screen. The text is tiny for those of us in the back.
+14:11:41 <corvus> also the front
+14:12:01 <bcoca> share screen?
+14:12:09 <dmsimard> there's also a slight amount of mic feedback ringing
+14:12:17 <felixfontein> am I the only one who cannot see the screen/slides/...?
+14:12:22 <bcoca> nope
+14:12:25 <misc> felixfontein: nope, I can't either
+14:12:40 <abadger1999> https://github.com/ansible/ansible/projects/30
+14:12:56 <abadger1999> ^ That's what's currently on the screen
+14:13:01 <gundalow> #info Ansible 2.8 project board https://github.com/ansible/ansible/projects/30
+14:13:06 <felixfontein> thanks!
+14:13:28 <felixfontein> ah! slides!
+14:13:28 <gundalow> screen back up
+14:15:10 <dag> who's talking now ?
+14:15:15 <bcoca> james tanner
+14:15:16 <gundalow> dag: jtanner
+14:16:24 <jlk> "Through communications and meetings we can make it work"
+14:16:25 <gundalow> jlk: Is the text readable?
+14:16:49 <jlk> gundalow: not to me, I have bad eyes though.
+14:17:03 <defionscode> gundalow: it's tough to read even being closer to the front
+14:17:05 <bcoca> its shown in the bluejeans session
+14:17:11 <jlk> also YAAAY GitHub Project boards!
+14:17:14 <gundalow> On screen is: https://github.com/ansible/ansible/projects/
+14:17:36 <geerlingguy> jlk: someone actually _uses_ GitHub Projects
+14:17:43 <jlk> haha. I use them...
+14:17:49 <bcoca> jlk: it worked mostly well in previous releases but we abandoned it, since that didnt work well, we are retrying them with a more structured apporach
+14:18:11 <gundalow> #info Project board gives us better viability of what is being done. Ensure we don't get to the end of the release cycle then ask "what's left"
+14:18:22 <gundalow> #info testing & review IS contribution
+14:18:26 <jlk> There's been some improvements to boards as well, with better automation, ability to interact with an issue directly from the board, etc.
+14:18:27 <bcoca> by 'us' that includes the community
+14:19:01 <bcoca> also i think we need a 'stalled' collumn
+14:19:03 <gundalow> #chair abadger1999 alikins bcoca jtanner mattclay maxamillion mordred nitzmahone Qalthos sdoran shepdelacreme sivel thaumos trishnag
+14:19:03 <zodbot> Current chairs: Qalthos abadger1999 alikins bcoca gundalow jtanner mattclay maxamillion mordred nitzmahone sdoran shepdelacreme sivel thaumos trishnag
+14:19:04 <bcoca> or 'blocked'
+14:19:06 <jlk> bcoca: Please do loop me in on any frustrations. Project boards didn't get much attention until lately
+14:19:29 <bcoca> jlk: we'll know more once we start using them again, i was big fan of them first time
+14:19:31 <gundalow> #action bcoca to add ideas for staled/blocked to Etherpad
+14:19:48 <bcoca> i have more gripes about issue forms (lack of customized fields being the biggest)
+14:19:53 <gundalow> #action gundalow to ensure we keep jlk in the loop regarding how we find GitHuub project boards
+14:20:03 <geerlingguy> I'm a big fan of them if everyone actually uses them—a lot of people don't think to put card in 'in progress' when it's in progress... that could cause some confusion
+14:20:12 <geerlingguy> just need a good process, and someone to remind people to use it
+14:20:13 <geerlingguy> ++
+14:20:30 <bcoca> gundalow: where? we dont seem to have 'project board' anywhere
+14:21:02 <gundalow> bcoca: project board = https://github.com/ansible/ansible/projects/30
+14:21:16 <gundalow> bcoca: notes/ideas to go in https://etherpad.openstack.org/p/ansible-summit-october-2018-Core-update
+14:21:24 <jlk> geerlingguy: indeed. Bots can help with ensuring issues get on boards, but that could also wind up being noisy. Boards aren't magic, still need people to buy in.
+14:21:54 <gundalow> #info We can use "Cards" to link to proposals on the Project Board
+14:21:56 <dag> We probably should clean up some of the existing projects, there's still a "2.4 blockers" project and a "2.5" and "2.5 blockers project
+14:22:23 <j^2> gundalow: is there a template for a proposal?
+14:22:24 <abadger1999> jlk: One thing I wanted was a way to specify dependencies.  For instance, https://github.com/ansible/ansible/projects/30#card-13296928  <=== I'd like to break that up into separate cards but since they all depend on the first task being performed, I wanted to make sure they were linked together more.
+14:22:33 <gundalow> #action gundalow clean up existing project boards (ensure they are closed)
+14:22:36 <gundalow> dag: Thanks
+14:22:59 <geerlingguy> abadger1999: I don't think there's any way to formally do that in GH yet :/
+14:23:01 <gundalow> #info template for proposal https://github.com/ansible/proposals/issues/new
+14:23:01 <pabelanger> o/
+14:23:24 <jlk> abadger1999: yeah, deps are not handled well. Often we end up doing a tracking issue that links to the sub issues. We only keep the tracking issue on the board as to not clutter it up with the small details.
+14:23:29 <abadger1999> geerlingguy: yeah, I think jlk was taking feedback on what other features would be nice to have.
+14:23:30 <bcoca> for very small things you can just open a 'feature' issue in ansible/asnbile
+14:23:37 <geerlingguy> In Drupal community we have similar issue, and solution (hacky but works mostly) is to have tag in title like [PP-2], where it means [Postponed-2 issues blocking]
+14:23:47 <geerlingguy> and the description has a list of blocker
+14:24:01 <dag> I'd like to see the "argument_spec used for documentation" PR in that v2.8 roadmap
+14:24:31 <dag> but maybe that slows it down, rather than speed it up ;-)
+14:24:52 <abadger1999> dag: What's the PR link?  nitzmahone, sdoran, and I talked about a plan for moving arg_spec forward... but documentation merged into arg_spec was several releases away in our thoughts.
+14:25:04 <dag> abadger1999: I have a working PR
+14:25:14 <dag> https://github.com/ansible/ansible/pull/45805
+14:25:22 <gundalow> #info Proposal Process needs some love - Gundalow to do this
+14:25:37 <sdoran> dag: The idea is to first implement controller side argument spec, then work on the documentation issue.
+14:25:37 <gundalow> #info Ansible 3.0 will be "at some point", no idea what year that will be
+14:25:41 <dag> abadger1999: it's up for discussion in the documentation WG
+14:25:56 <sdoran> dag: Mainly because there is debate over should the arg spec drive the docs, or the docs drive the arg spec?
+14:26:02 <abadger1999> Oh, this is different
+14:26:05 <sdoran> Ah
+14:26:16 <gundalow> Argspec vs DOCUMENTATION is for Docs WG which is Thursday
+14:26:22 <sdoran> Tangentially related.
+14:26:40 <bcoca> idc which direction but keeping x2 accounting is always bad, moving to 'single source of truth' +10k imho
+14:27:18 <abadger1999> dag, sdoran: Sorry.. I misunderstood what this was about.  This could make it.... will need to line up reviews.
+14:27:30 <sdoran> <nod>
+14:27:49 <resmo> +1
+14:28:28 <gundalow> #info Question: What is reasonable for deprecation and "breaking" changes
+14:28:32 <gundalow> Loops is a good example
+14:28:34 <geerlingguy> you can take with_* from my cold dead hands
+14:28:34 <jlk> oh yes
+14:28:37 <jlk> hah
+14:28:43 <bcoca> https://github.com/ansible/proposals/issues/140
+14:28:43 <gundalow> geerlingguy: :D
+14:28:51 <jlk> I couldn't find a way to use "loop" and fileglobs
+14:29:04 <corvus> i really like loop for looping.  i can never remember how to use it for with_first_found.
+14:29:06 <bcoca> how so? i have several examples
+14:29:13 <geerlingguy> loop still confuses the heck out of me as an end user for almost any use case besides really simple "with_items" loops
+14:29:18 <bcoca> corvus: with_first_found is not a loop
+14:29:23 <misc> there is also do we want to bundle all breaking change at once ?
+14:29:46 <corvus> bcoca: exactly, which is why trying to figure out how to with_first_found in a loop is :(
+14:30:03 <gundalow> #info `with_firstfound` vs 7 lines of `loop` version is painful. Though pain is pushed to the end user, rather than Ansible Internals
+14:30:11 <bcoca> loop: '{{ lookup("first_found", *listvar) }}'
+14:30:13 <bcoca> vars:
+14:30:15 <bcoca> listvar:
+14:30:20 <gundalow> People on BlueJeans is the Audio OK?
+14:30:20 <bcoca> - file1 ...
+14:30:24 <misc> gundalow: yup
+14:30:38 <misc> (at least for me)
+14:30:50 <gundalow> Cool, thanks misc
+14:31:24 <geerlingguy> loop will be better, but IMO it needs more/better docs, probably even an Ansible Blog post giving examples of how to transition
+14:31:35 <sdoran> The loop UI definitely needs more work.
+14:31:44 <thaumos> ^^
+14:31:48 <bcoca> geerlingguy: we do have a blog post .. just not showing good examples
+14:31:58 <defionscode> yeah, atm the UX of loop is rough for Ansible newcomers, cpl orgs I work with it has presented a challege for enough folks
+14:31:59 <thaumos> which is why it is going to be a long time before we deprecate anything.
+14:32:05 <jhawkesworth_> a tool to help migrating tool syntax would be awesome
+14:32:05 <geerlingguy> bcoca: :D
+14:32:10 <bcoca> ^ see proposal https://github.com/ansible/proposals/issues/140 <= this was intended vision
+14:32:15 <sivel> geerlingguy: we also have https://docs.ansible.com/ansible/latest/user_guide/playbooks_loops.html#migrating-from-with-x-to-loop
+14:32:21 <ericsysmin> have we thought about creating a file that can give at least a 1 year warning prior to deprication
+14:32:32 <gundalow> #info Consider when doing deprecations that we keep the old docs around
+14:32:34 <ericsysmin> A lot of Ansible Users do not read the output from ansible runs unless they fail
+14:32:48 <ericsysmin> so they would not see a warning from the execution
+14:32:51 <sivel> ericsysmin: we have decided to not deprecate something in the same release it's replacement was added
+14:32:54 <thaumos> Porting guides are part of that @ericsysmin
+14:33:02 <sivel> but we do have a 4 release deprecation cycle
+14:33:03 <bcoca> ericsysmin: current depcrecation cycle is 4 versions .. which is 1+ year
+14:33:06 <ericsysmin> ok
+14:33:10 <geerlingguy> sivel: hmm... I hadn't seen that before, but good to know it's there. Does need with_first_found (bcoca example above)
+14:33:18 <thaumos> and that is 4 yrs from the point of the message being applied
+14:33:25 <bcoca> but if we dont warn on execution,  people dont pay attention and then complain when it goes away
+14:33:26 <dag> Deprecation with_ is a good way to clean up Galaxy :-P
+14:33:28 <ericsysmin> I just never see that something is being deprecated until I just so happen to look at the docs
+14:33:54 <bcoca> ericsysmin: they are always in changelog and docs also
+14:33:55 <defionscode> +1 on tool to migrate ansible content loop syntax
+14:33:56 <sivel> geerlingguy: yes, although I suppose that with_first_found should typically not be transitioned to loop.  You should supply `lookup('first_found', ...)` directly to the arg that needs that value
+14:33:58 <ericsysmin> yes, definitely warn on exec, just saying a lot of people don't read those
+14:34:07 <bcoca> not sure where else to put if you dont look at the existing 3 sources
+14:34:33 <bcoca> changelog, docs and runtime
+14:34:36 <geerlingguy> sivel++ looks good, would be good to put that note in that doc then, since it is one of the with_s
+14:34:39 <ericsysmin> ah got it
+14:34:45 <ericsysmin> I'll look at changelog
+14:34:45 <sivel> part of the problems with with_X is that they are powered by lookups, and lookups aren't necessarily meant for looping
+14:34:59 <bcoca> not all lookups
+14:35:12 <bcoca> and with_items is very confusing to people with the implied |flatten(1)
+14:35:42 <gundalow> #info Question: How from a documentation point of view can we get the balance of showing poeple the new way & still documenting the old way
+14:36:00 <sivel> geerlingguy: but I will note that the with_first_found syntax is more simple at this point
+14:36:08 <gundalow> ^^^ Would welcome ideas from IRC on that question
+14:36:14 <bearrito> migrating tool syntax +1
+14:36:25 <corvus> sivel, geerlingguy: the include syntaxes fail if they don't find anything, so a case where one wants to include files if one exists, but not fail if they don't doesn't work with include+lookup
+14:36:26 <jtanner> gundalow: porting guide?
+14:37:09 <gundalow> jtanner: yup, I think that's part of it
+14:37:19 <bcoca> corvus: default to a 'noop.yml' with meta: noop task
+14:37:31 <corvus> eg: http://git.openstack.org/cgit/openstack-infra/system-config/tree/playbooks/roles/unbound/tasks/main.yaml#n1
+14:37:31 <bcoca> ^ as workaround
+14:39:13 <corvus> ideally, loop will become so awesome and prevalent that deprecating it won't be a big deal.  :)
+14:39:24 <jlk> Re this loop discussion: https://twitter.com/seldo/status/1046470918573182976?s=20
+14:40:13 <gundalow> jlk: Yup, totally
+14:40:20 <gundalow> bcoca now speaking :)
+14:40:26 <samccann> gundalow - not sure what we do today w/ deprecated features etc, but I feel the 'new' stuff should be documented at the top of a chapter/article.  Then we could move any older docs content to a 'deprecated' section in that same article. So it's still there, but it's obvious the user should move way. Then we could perhaps link to the appropriate porting guide for the 'how to' info on moving from old to new
+14:40:46 <jhawkesworth_> can you re-share the link for that proposal, bcoca?
+14:40:52 <bcoca> https://github.com/ansible/proposals/issues/140
+14:41:01 <sdoran> A migration/translation tool would also help ease the transition to loop.
+14:41:18 <tima> @dag there soon are going to be other means of cleaning up galaxy. ;)
+14:41:26 <jhawkesworth_> thanks
+14:41:29 <bcoca> im with nitzmahone, not fan of automated tool, but also not against it existing, specially with 'dry run'
+14:41:35 <defionscode> sdoran: seems the objection to that from nitzmahone is that it would have to be maintained for a long time
+14:41:51 <dag> tima: perfect ;-)
+14:42:00 <sdoran> Yeah...
+14:42:11 <defionscode> i don't think it would be _that_ hard to make POC of said tool #famouslastwords
+14:42:12 <gundalow> #info Need to "sell" the new way, Inventory Plugins are a good example of new good thing. Docs, blog posts. Real examples
+14:42:21 <sivel> migration tools are also very hard to get right for our purposes
+14:42:24 <jhawkesworth_> i think a tool could be version specific... from 2.x to 2.x+1 only
+14:42:27 <resmo> inventory plugins are indeed awesome ;)
+14:42:31 <bcoca> yeah, docs trailed 'feature' by 1 release
+14:42:49 <geerlingguy> bcoca tima sdoran - so for a lot of lint tools, they have automated fix suggestion built in... maybe a feature for ansible-lint?
+14:42:56 <geerlingguy> (thinking specifically of phpcs)
+14:43:08 <gundalow> #info Question: When we say "Ansible 3.0" what do you imagination in there?
+14:43:25 <dag> gundalow: perfect content to share in that Newsletter !
+14:43:28 <geerlingguy> when you run it, and it shows a warn/error, it asks at end of run "would you like phpcs to attempt to automatically fix these issues?"
+14:43:42 <sdoran> That's interesting.
+14:43:44 <tima> i wrote a rule for lint flagging the use of with_* but i don't think it will role out right away.
+14:43:53 <tima> @geerlingguy ^^^
+14:44:25 <geerlingguy> tima: yeah, lint should definitely wait until it's officially deprecated
+14:45:03 <gundalow> Audiance participation time: https://etherpad.openstack.org/p/ansible-summit-october-2018-Core-update line 93. Please add your thoughts on what you see in Ansible 3.0
+14:45:04 <resmo> parallel play execution?
+14:45:38 <jtanner> what's etherpad link?
+14:45:45 <bcoca> resmo: just thinking about the callback ... not something i would attempt, specially since there are plenty of parallelization products you can use on top of ansible
+14:45:50 <gundalow> https://etherpad.openstack.org/p/ansible-summit-october-2018-Core-update
+14:45:52 <corvus> fwiw, there's nothing you can do in asyncio you can't do with threads
+14:45:52 <acozine> samccann I like that idea - let's talk about ways to do better about documenting deprecations; giving users an easy path to upgrade their playbooks, giving users a "pull" rather than a "push" for upgrading, and integrating documentation more closely in the dev cycle will help too
+14:45:53 <jtanner> thanks
+14:46:04 <gundalow> #chair acozine
+14:46:04 <zodbot> Current chairs: Qalthos abadger1999 acozine alikins bcoca gundalow jtanner mattclay maxamillion mordred nitzmahone sdoran shepdelacreme sivel thaumos trishnag
+14:46:19 <gundalow> acozine: FYI if you do `#action acozine something` you can leave actions for yourself
+14:46:20 <tima> @geerlingguy right -- to your point we need to really work on having docs to help user migrate their content and not just aggressively flag deprecated stuff.
+14:47:00 <geerlingguy> I think ansible lint could be the best avenue for that stuff, especially as it (hopefully) becomes extremely standard fare for anyone using ansible
+14:47:21 <bcoca> 'tech preview'
+14:48:13 <bcoca> geerlingguy: we have been slow to deprecate/remove some things, i.e include/with_/sudo/su that we knew were 'big impact'
+14:48:34 <bcoca> can barely hear greg
+14:48:38 <gundalow> #info Can we use `ansible-lint` as a way to help guide migrations
+14:48:38 * geerlingguy appreciates that, since every new deprecation means a few hours scripting the replacement in all my roles :P
+14:48:46 <geerlingguy> bcoca: greg's mic was muted
+14:48:55 <bcoca> that would explain it
+14:49:02 <gundalow> Greg said: Lots of people use `devel`, we need to treat is as production
+14:49:11 <webknjaz> it is possible to publish smth like `.dev0` --> requiring `pip install --pre`
+14:49:19 <bcoca> we kind of do, devel is mostly usable
+14:49:21 <dag> let's call it "master" :-P
+14:49:33 <ericsysmin> I don't think people should treat devel as dev branch
+14:49:36 <ericsysmin> maybe a stage?
+14:49:42 <bcoca> no, cause i think we should still be able to 'revert features' if they prove problematic
+14:49:43 <sdoran> `really-devel`
+14:49:46 <geerlingguy> I treat devel as development; only use it when testing things
+14:49:47 <geerlingguy> lol
+14:49:52 <ericsysmin> yep
+14:49:53 <geerlingguy> maybe master could be 'production'?
+14:50:11 <bcoca> i.e stable-2.x?
+14:50:14 <ericsysmin> yea
+14:50:15 <geerlingguy> that microphone works
+14:50:16 <sdoran> Since `devel` is really our `master`
+14:50:22 <sdoran> ish
+14:50:36 <jlk> I still get so rankled about that
+14:50:38 <ericsysmin> or even a RC cycle
+14:50:40 <sdoran> (we don't call it stable, so I suppose it's not _really_ a true "master")
+14:50:41 <bcoca> +1 to have ansible-nightly
+14:51:02 <sivel> our devel isn't really the same as what most people consider master.  Whereas master is typically considered to be production stable
+14:51:05 <jtanner> https://releases.ansible.com/ansible/rpm/nightly/devel/
+14:51:08 <jlk> master != stable
+14:51:34 <sivel> dev semantics, I suppose
+14:51:37 <bcoca> too many people assume that, which is why we specifically use 'devel'
+14:51:47 <sdoran> There are many definitions per team. Team semantics vary highly.
+14:51:54 <resmo> jtanner: oh nice!
+14:52:17 <gundalow> #action gundalow to include all questions in follow up email to people/blog post
+14:52:24 <jlk> sivel: I don't think that's a universal thing. A lot of projects I interact with treat master as "we've merged it, but it's not in a tagged release yet". So features that pass tests and review get merged, but it may not all work together in production. Releases get made from branches taken from master at various points.
+14:52:52 <defionscode> what about just open PRs with 'experimental' tags? it's not hard to checkout PRs
+14:52:59 <ericsysmin> I always treated master as pre-release or staged
+14:53:12 * resmo wonders what happened to stable-2.6 in https://releases.ansible.com/ansible/rpm/nightly/
+14:53:13 <ericsysmin> then devel/dev as likely broken but might work
+14:53:22 <bcoca> defionscode: not for most devs, but a lot of users are not comfortable with git checkouts
+14:53:50 <geerlingguy> bcoca++ ^^
+14:54:06 <sivel> jlk: I suppose a very common branching model is described by https://nvie.com/posts/a-successful-git-branching-model/
+14:54:07 <geerlingguy> They want a `pip install` or a `docker run` command to run
+14:54:15 <sivel> jlk: "gitflow" for example
+14:54:17 <ericsysmin> yep, git checkout isn't expected my many people
+14:54:26 <bcoca> the nightly rpm is one good thing, we could add a 'nightly' pip target
+14:54:36 <jlk> so I know pip allows you to publish newer releases but keep one marked as the default
+14:54:39 <defionscode> but does user 'ux' _really_ matter when we're talking 'super duper experimental' stuff?
+14:54:48 <gundalow> #info Once something is merged into `devel` it's really hard to "unmerge it"
+14:55:00 <jlk> so it would be possible to publish "devel" builds to pypi without them being teh default version, which would allow people to test things easily via pip install
+14:55:06 <defionscode> i mean...it's simpler than add/remove from devel imo
+14:55:37 <jtanner> alikins: say again?
+14:55:53 * resmo sees devel branch as unstable which can break things
+14:56:14 <bcoca> it is supposed to, its not for all production
+14:56:14 <jtanner> i personally think devel is "stable as best we can get it"
+14:56:21 <bcoca> but it is stable enough for those that like the 'cutting edge'
+14:56:25 <bcoca> its not normally broken
+14:56:36 <jlk> seems  reasonable
+14:56:39 <jlk> "it passes tests"
+14:56:44 <misc> it compile
+14:56:49 <jtanner> our testing of devel at release time is not really any different from testing of devel at any given time
+14:57:03 <dag> jtanner: indeed
+14:57:10 <jlk> as in it passes all the automated tests preventing merging. But it doesn't necessarily stand up to the quality of a release.
+14:57:36 <jlk> e.g the docs may not be complete, haven't had RCs done to get outside feedback, things COULD be reverted
+14:58:30 <jtanner> hoping that that angle of "quality" is going to be assured by the "needs review" column on the project board
+14:58:57 <jtanner> in terms of raw functionality though, i don't really such a delta between devel vs. a release
+14:58:59 <jlk> jtanner: but if devel is always considered "release quality" then why is it necessary to have release candidates and feature freezes and such?
+14:59:05 <jlk> why couldn't you just tag and release at any time?
+14:59:05 <sdoran> `experimental` branch?
+14:59:18 <jtanner> jlk: i think we could theoretically do continuous release
+14:59:26 <jtanner> we just don't
+14:59:27 <bcoca> thinking that, ansible-tech_preview_threads
+15:00:33 <Pilou> jlk: it asssumes new commits provide tests
+15:01:24 <jlk> Pilou: right, it requires a fundamental design of that branch, which would dictate what is necessary to MERGE to that branch.
+15:02:25 <sdoran> I would argue Ansible is getting closer to "must get it right the first time" as it is used more and more to manage critical infrastructure.
+15:03:03 <defionscode> sdoran: lest the current status quo remain at various orgs where they stay at $version b/c they dont trust the stability of new releases
+15:03:34 <Pilou> about what abadger1999 said, isn't "preview" related to that ?
+15:04:30 <alikins> https://gist.github.com/alikins/373bcce9e283bb37bb5e78ce665e519c is kind of my running list of 3.0-ish ideas/proposals
+15:04:41 <sdoran> We don't have good street cred when it comes to Ansible updates not breaking things, despite our best efforts to maintain compatibility and not break things.
+15:04:56 <gundalow> sdoran: Very true
+15:05:11 <jtanner> alikins: the ssh error stuff can be 2.x imo
+15:05:12 <defionscode> preach
+15:05:21 <gundalow> Will move onto Contributor Experience  shortly
+15:05:28 <gundalow> Anyone got any last things for Core?
+15:05:49 <tima> @sdoran i agree.
+15:05:50 <gundalow> There will be another Core session on Thursday afternoon
+15:06:28 <jlk> trigger word
+15:07:25 <sdoran> @gundalow Now that we have more projects in Ansible land, we should look at unifying branch name/semantics. Branch names are quite inconsistent across projects today.
+15:07:38 <gundalow> sdoran: How so?
+15:07:52 <jtanner> thanks to Pilou for pushing some of that stuff forward
+15:08:19 <abadger1999> Hurd!
+15:08:21 <gundalow> Yup :)
+15:08:42 <Pilou> related pull requests listed there: https://github.com/ansible/ansible/issues/45839#issuecomment-425942560
+15:08:53 <sdoran> @gundalow The default branch varies between projects, e.g., `devel` in Ansible/AWX, and `develop` Ansible Galaxy. I bet with ansible-lint and molecule, we'll have some more different default branch names.
+15:09:04 <gundalow> sdoran: oh, good spot
+15:09:47 <gundalow> #action Review and update `ansible-lint` & `molecule` branch names. Also check AWX/Galaxy `devel` vs `develop`
+15:09:50 <corvus> https://github.com/dw/mitogen/blob/master/docs/shame.rst
+15:10:43 * misc do have a hurd VM and tried to port ansible on it
+15:10:52 <abadger1999> :-)
+15:10:55 <tima> @sdoran galaxy uses `devel`
+15:11:16 <sdoran> tima: Oops. I meant ansible-container.
+15:11:23 <gundalow> #endmeeting

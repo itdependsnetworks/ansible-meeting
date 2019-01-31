@@ -1,0 +1,498 @@
+19:00:05 <thaumos> #startmeeting ansible core
+19:00:05 <zodbot> Meeting started Tue Nov  7 19:00:05 2017 UTC.  The chair is thaumos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:00:05 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:00:05 <zodbot> The meeting name has been set to 'ansible_core'
+19:01:33 <nitzmahone> o/
+19:01:37 <thaumos> #chair nitzmahone
+19:01:37 <zodbot> Current chairs: nitzmahone thaumos
+19:01:43 <jimi|ansible> \o
+19:01:48 <thaumos> #chair jimi|ansible
+19:01:48 <zodbot> Current chairs: jimi|ansible nitzmahone thaumos
+19:01:50 <alikins> blorp
+19:01:55 <thaumos> \o/
+19:01:59 <thaumos> #chair alikins
+19:01:59 <zodbot> Current chairs: alikins jimi|ansible nitzmahone thaumos
+19:02:36 * shertel waves
+19:02:44 <thaumos> #chair shertel
+19:02:44 <zodbot> Current chairs: alikins jimi|ansible nitzmahone shertel thaumos
+19:05:17 <nitzmahone> Hrm, a little light on community quorum today :(
+19:05:20 <thaumos> yeah
+19:05:25 <thaumos> I was just thinking that
+19:05:38 <thaumos> I bet they'll show in an hour
+19:06:10 <abadger1999> Hello
+19:06:32 <nitzmahone> Wouldn't it have been the other way with our DST change?
+19:06:40 * nitzmahone head explodes
+19:06:57 <thaumos> #chair abadger1999
+19:06:57 <zodbot> Current chairs: abadger1999 alikins jimi|ansible nitzmahone shertel thaumos
+19:06:58 <bcoca> that is why i use my own timezone
+19:07:02 <thaumos> #chair bcoca
+19:07:02 <zodbot> Current chairs: abadger1999 alikins bcoca jimi|ansible nitzmahone shertel thaumos
+19:07:02 <abadger1999> nitzmahone: everyone gets DST wrong so who knows, right?
+19:07:20 <nitzmahone> That one guy that maintains the TZ database on beer and pizza
+19:08:08 * dharmabumstead lurks
+19:08:08 <bcoca> timezones are up there with language encodings in 'things that no one does right'
+19:09:31 <thaumos> if we don't get any external core team members to show up by 1915 UTC, I'll end meeting
+19:09:35 <abadger1999> We have enough to get started?
+19:09:40 <thaumos> it's just us though
+19:09:45 <thaumos> us meaning internal COre
+19:09:53 <thaumos> so up to you all
+19:09:55 <abadger1999> rue... both nitzmahone and I put some things on the agenda though
+19:10:03 <abadger1999> So we could talk about both of those
+19:10:10 <thaumos> right, but is it fair to discuss without external opinion?
+19:10:20 <nitzmahone> I think we really want some community feedback at this point
+19:10:25 <nitzmahone> (at least for mine)
+19:10:38 <thaumos> well, imho your's is a given nitzmahone
+19:10:39 <nitzmahone> I think we're more-or-less agreed
+19:10:40 * jtanner lurks
+19:10:43 <thaumos> that's just me though
+19:10:57 <nitzmahone> A given as in "a thing we need to do"?
+19:11:01 <thaumos> yes
+19:11:30 <bcoca> nitzmahone: fyi we have a config in sphinx to ignore 'version_added' passed a threshold , we might also want to update that (i used to do it, but have not done so in past releases)
+19:11:30 <nitzmahone> Me too- mostly just looking for dissenting/strong opinions on number of versions
+19:11:32 <abadger1999> yeah, if the current example is In current devel, we leave in references to 2.2 but get rid of 2.1 and earlier, +1 from me.
+19:11:55 <bcoca> nitzmahone: thinking 4 versions .. same as deprecation cycle
+19:12:01 <nitzmahone> bcoca: was that when it just changes to "historical" or does it just stop showing altogther?
+19:12:01 <abadger1999> thaumos: Better to discuss here than in slack (at least external people can read the meeting logs here :-)
+19:12:08 * sdoran is present
+19:12:09 <thaumos> +1
+19:12:15 <bcoca> nitzmahone: stops showing 'version_added tags and notes'
+19:12:25 <thaumos> #topic discuss removing version callouts in versioned docs world
+19:12:31 <bcoca> if limit=1.7 andything <1.8  does not show
+19:12:40 <thaumos> so far, there are two suggestions
+19:13:02 <thaumos> 1. tie to support cycle, i.e. devel is 2.5, show only up to 2.2 callouts
+19:13:06 <bcoca> i think we can all agree to purge the 1.x stuff
+19:13:14 <thaumos> ugh
+19:13:16 <bcoca> the rest is 'what is the window'?
+19:13:26 <thaumos> #1. tie to support cycle, i.e. devel is 2.5, show only up to 2.2 callouts
+19:13:38 <thaumos> #2. tie removal to deprecation cycle, 4 versions
+19:13:42 <thaumos> omg
+19:13:55 <thaumos> #info 1. tie to support cycle, i.e. devel is 2.5, show only up to 2.2 callouts
+19:14:04 <thaumos> #info 2. tie removal to deprecation cycle, 4 versions
+19:14:05 <thaumos> sorry for spam
+19:14:40 <abadger1999> I'm +1 to either of those.
+19:14:43 <jtanner> dirty spammer! get him! :pitchfork:
+19:14:44 <thaumos> I think 1. is a cleaner option.  I don't know of any things that should be tied to the dep cycle.
+19:14:47 <nitzmahone> I'm voting for #1 - supporting it in the tool for legacy reasons is one thing, but continuing to document in current stuff for that long seems broken to me
+19:14:59 <bcoca> mostly this affects people that migrate ... sadly we still have people at 1.7 .. but not considering those, i think 1.9 is only old version with significant user base
+19:15:02 <sdoran> Agreed, 1.x call outs seem silly at this point.
+19:15:12 <dharmabumstead> i'm in favor of option 1. remember we have versioned docs now.
+19:15:12 <nitzmahone> If we didn't have versioned docs, I'd be more inclined to match the 4 version dep cycle
+19:15:14 <jtanner> +1 for #2
+19:15:17 <thaumos> well, we can't forever be holden to them.
+19:15:23 * dharmabumstead pinkie jinx
+19:15:28 <nitzmahone> :D
+19:15:51 <thaumos> any other options/opinions?
+19:15:54 <thaumos> if not, we can vote
+19:15:55 <abadger1999> deprecation does seem separate to me... We wouldn't even add a note until the deprecation is over, right?
+19:16:09 <abadger1999> dharmabumstead: I suppose that's half-style question too.
+19:16:12 <bcoca> abadger1999: we add note when we deprecate, then note on removal
+19:16:32 <nitzmahone> Wait, so we're going to keep those things around for *6* cycles?
+19:16:40 <dharmabumstead> no, pleae.
+19:16:42 <dharmabumstead> se
+19:16:42 <thaumos> Those types of notes are different
+19:16:43 <bcoca> thaumos: its the other way around, deprecation cycle is shorter
+19:16:53 <bcoca> ^ ;'
+19:16:57 <abadger1999> k.  So yeah... I think we're talking about "When dowe remove the removal note?" And that does not need to be tied to the deprecation cycle
+19:17:01 <thaumos> imo, a dep cycle note is a different problem.
+19:17:22 <dharmabumstead> while you're considering this, please factor maintainability into it. we will have to wade back through and pick all of those things out.
+19:17:34 <bcoca> rephrase: remove once the feature is removed (after deprecation cycle) not keep for X number of extra versions due to support
+19:17:44 <dharmabumstead> so standardizing a way of marking deprecation and "behavior change" notes would be a good thing
+19:18:00 <jtanner> if their format is consistent, they'll be grep'able
+19:18:02 <bcoca> deprecation cycle itself should take care of old docs vs us keeping them for longer
+19:18:25 <abadger1999> bcoca: -1
+19:18:27 <thaumos> I am trying to find an example
+19:18:32 <nitzmahone> What I'm hoping for is that in 2.5, I can grep the entire docs corpus for 2.0,2.1,2.2 and remove any references (and going forward, 2.6 would do the same for 2.3, etc)
+19:18:47 <jtanner> thaumos: find docs | xargs fgrep -iH "as of "
+19:19:05 <abadger1999> nitzmahone: It'll have to be case by case but we could normalize the wording if we want at the same time and going forward.
+19:19:06 <thaumos> or deprecated in
+19:19:18 <nitzmahone> So that's module docs- I'm more concerned with the "guide" docs and things that describe the engine itself (though inline module arg docs sometimes say "we changed this behavior in 2.x)
+19:19:25 <alikins> I'd like to see a link and separate page for doc comments older than N version  "For changes since earlier versions see blah".   could be footnotes instead of separate docs, but any better than inline
+19:19:40 <thaumos> Here's an example
+19:19:40 <abadger1999> I do think that if we're talking deprecation, the removal note timer has to start after the feature is actually removed.
+19:19:41 <thaumos> http://docs.ansible.com/ansible/latest/intro_inventory.html
+19:19:42 <jtanner> "as of " is in !module docs
+19:19:49 <abadger1999> not when it is deprecated.
+19:19:50 <nitzmahone> I'm hoping to minimize the number of exceptions so that the excision is straightforward by searching for version numbers in text
+19:19:51 <dharmabumstead> well, that's one function that the release notes should be handling
+19:20:15 <thaumos> There is a note call out for deprecated ssh
+19:20:17 <bcoca> abadger1999: that is my point, #1 is remove 'at removal' vs #2 remove x versions after removal
+19:20:30 <dag> o/
+19:20:42 * thaumos waves at dag
+19:20:46 <abadger1999> thaumos: we can't even remvoe that now...
+19:20:48 <alikins> but I would be 100% ok with just removing any references older than 2.0 in current docs
+19:20:54 <thaumos> ok, bad example
+19:21:03 <bcoca> thaumos: we reversed that but never removed the note
+19:21:13 <abadger1999> thaumos: We can reword it, though but ansible_ssh_* hasn't been removed.
+19:21:22 <thaumos> +1
+19:21:22 <bcoca> nor is it deprecated
+19:21:25 <thaumos> bad example
+19:21:27 <nitzmahone> Even at 2.5 + two versions back (2.4/2.3), for example, Windows become stuff is nasty to traverse if we keep all the inline stuff. If we write it for what it supports today and don't document all the caveats of the old versions, it's *very* straightforward. That's what kicked this discussion off in the first place.
+19:21:29 <thaumos> carry on
+19:21:52 <nitzmahone> A user coming to those docs has to wade through a lot of crap that's really not relevant
+19:22:02 <dharmabumstead> we've got old versions of the docs that people can look at. lets keep it at 1 or 2 versions back (at most).
+19:22:21 <dharmabumstead> i agree with @nitzmahome. it's a bad user experience.
+19:22:43 <abadger1999> dharmabumstead: My reason for wanting references further back is that people porting do not want to flip between versions of hte docs.
+19:23:04 <abadger1999> (similar to not wanting to flip between release notes pages)
+19:23:14 <dharmabumstead> well, sure. but we have to consider the overall use case.
+19:23:16 <bcoca> we can have both, a 'clearer' text for 'current version' and notes/links to 'previous behaviour'
+19:23:24 <bcoca> seems like the big issue is mixing them 'inline'
+19:23:36 <abadger1999> It's best UX for them if all the information is in one place... the question is how to balance that with people who are greenfielding.
+19:23:39 <dharmabumstead> again, the other thing we should be doing is tracking those kinds of behavioral changes in the release notes.
+19:23:54 <nitzmahone> I guess it might also depend on the kind of content. I'd argue that the Windows become stuff can just be "here's how it works now" because we've *increased* the functionality in every way, with maybe just a simple note that says "a number of limitations were removed in 2.5, see the old docs if you care" or something.
+19:23:55 <abadger1999> dharmabumstead: ‎[11:23:04] ‎<‎abadger1999‎>‎ (similar to not wanting to flip between release notes pages)
+19:23:56 <dharmabumstead> and don't forget gundalow's porting guides.
+19:24:04 <bcoca> dharmabumstead: we do, also in porting guide .. but not somethign most people read unless pointed to from main docs
+19:24:12 * dharmabumstead pinkie jinx bcoca
+19:24:15 <thaumos> http://docs.ansible.com/ansible/latest/intro_patterns.html has a couple of good examples
+19:24:48 <bcoca> thaumos: as 'notes'  at bottom, those dont seem bad at all
+19:24:55 <nitzmahone> It's trickier for things like `loop`, for example
+19:25:00 <bcoca> i would remove them both at this point as 1.9/2.0 are ancient
+19:25:14 <thaumos> I think it's extra fluff that doesn't need to be there
+19:25:15 <alikins> when we remove old version references, we can verify the old way is referenced somewhere (porting guide, changelog, etc) if need be. That would be sufficient to me.
+19:25:26 <thaumos> why call it out if it isn't applicable for a new user, it could cause confusion
+19:25:34 <nitzmahone> Ideally, the docs would be "here's how you do loops" and if we maintain stuff about `with_X`, it's tied in as a note or some other easily removed callout rather than inline with the docs.
+19:25:55 <abadger1999> thaumos: I think the first note can go away once our window is passed.  The second note can't go away because we have not yet removed the functionality.
+19:26:04 <abadger1999> So we don't know where the window starts yet.
+19:26:04 <bcoca> ^ like patterns page, those notes at the end and easy to remove
+19:26:22 <nitzmahone> (I also think we rely on "note" WAY too much, but that's another discussion)
+19:26:38 * nitzmahone is as guilty as the next person
+19:26:52 <jtanner> they look better in vi
+19:26:53 <bcoca> ^ in that page, i think is a 'good example' of note
+19:26:58 <bcoca> jtanner++
+19:27:24 <abadger1999> thaumos: The reason the second one is still relevant for a new user is because they can inherit old playbooks.  If the feature still works, then they will inherit playbooks which use the old feature but if they can't find it i nthe docs then they're scratching their head wondering what it means.
+19:27:51 <bcoca> ^ why i tie it to deprecation, we should not remove anything that 'still works'
+19:28:09 <bcoca> 'And if you want to read the list of hosts from a file, prefix the file name with ‘@’. Since Ansible 1.2:'
+19:28:13 <nitzmahone> `!!ansible_schema 2.6` :D
+19:28:14 <bcoca> ^ we can remove Since Ansible 1.2
+19:28:32 <abadger1999> I am for removal + window where I'd say window should be the support cycle.
+19:28:39 <thaumos> okay, let's vote.
+19:28:47 <bcoca> abadger1999: im ok with that
+19:29:34 <thaumos> for those in favor of option 1 where we remove based on the support cycle do a +1.  In favor of dep cycle (4 versions) + 2
+19:29:41 <dharmabumstead> +1
+19:29:42 <thaumos> +1
+19:29:50 <nitzmahone> +1 to opt 1
+19:29:52 <ryansb> +s
+19:29:56 <ryansb> +2
+19:30:15 <bcoca> thaumos: support is AFTER dep cycle
+19:30:25 <bcoca> dep cycle was meant for 'shorter', not 'longer'
+19:30:32 <abadger1999> +1 and +2   .... but we're all voting on the same thing right?  because I think that bcoca and I came to hte same conclusion...
+19:30:46 <alikins> +1 to either. Or even removing anything prior to current version.
+19:30:47 <jtanner> +2
+19:30:49 <thaumos> okay, explain it again to me... because I think they're different.
+19:31:08 <abadger1999> [deprecation cycle(optional, adding features will not have this, for instance)][support cycle][remove note]
+19:31:18 <bcoca> they are, when i said 'deprecation cycle' was removing teh docs WHEN we removed the feature
+19:31:27 <bcoca> support adds +2 versions on top of deprecation cycle
+19:32:31 <abadger1999> So let's say a feature was added in 2.2.  the 2.3, 2.4, and devel docs will contain a note saying 2.2 does not contain that feature.  Once 2.5 comes out, the docs can drop that note.
+19:32:32 <bcoca> you seem to have misinterprted as +4 versions AFTER we remove the feature ... which is x2 deprecation cycle
+19:33:16 <thaumos> okay, that example is in fact the same. so we're all in agreement then
+19:33:18 <bcoca> abadger1999: i would argue against that type of note .. but yes, that falls in line with what we are saying
+19:33:33 <abadger1999> OTOH, let's say a feature is deprecated in 2.2.  In 2.3, 2.4, 2.5, and 2.6  we have a deprecation note.  In 2.6 the feature is actually removed.  And so in 2.7, 2.8, and devel we have a note saying that the feature went away in 2.6.
+19:34:17 <nitzmahone> scratch devel from that and you've got my vote
+19:34:28 <abadger1999> 2.9 comes out and we can then get rid of the note.
+19:34:31 <nitzmahone> (we'd nuke the note in 2.9 devel)
+19:34:31 * gundalow would just a one time pass though the docs and remove any reference to added in 1.x and ignore the rest
+19:34:34 <abadger1999> nitzmahone: There is a tricky bit there...
+19:34:51 <bcoca> gundalow: i think we all already agreed on that
+19:34:54 <gundalow> That will increase readability a lot, though still be a bit of work
+19:35:01 <abadger1999> nitzmahone: we want devel to contain the note but we don't need the final version once devel becomes 2.9  to contain it.
+19:35:06 <bcoca> gundalow: even more 'in 1.x it worked like this'
+19:35:16 <gundalow> Only skimming scroll back, in London meetup
+19:35:16 <abadger1999> nitzmahone: as people will look at devel while that old version is still supported.
+19:35:33 <gundalow> bcoca: Aye, I'd include removing that
+19:35:36 <abadger1999> nitzmahone: But 2.2 won't be supported once devel turns into the new releas.e
+19:35:57 <nitzmahone> I guess I'd say "at some point during 2.9 development the reference to 'removed in 2.6' will get nuked"
+19:35:57 <abadger1999> (I'm kinda hating that right now but I don't see a way around it)
+19:36:06 <thaumos> I'd be afraid some things would be forgotten with that approach @abadger1999
+19:36:19 <bcoca> thaumos: how so?
+19:36:24 <abadger1999> thaumos: they can be picked up on the next release cycle.
+19:36:32 <abadger1999> thaumos: and backported if we want.
+19:36:42 <nitzmahone> Remember we're pointing people at "current stable release" now by default, not devel
+19:36:42 <bcoca> ^ we have deprecation list, we can keep same for 2 more cycles for 'doc removal'
+19:36:47 <thaumos> someone will forget to change the messaging before a release is cut.
+19:36:48 <abadger1999> then there's not an increased danger of forgetting.
+19:36:58 <nitzmahone> So the only people looking at devel for docs should be people trying to validate stuff or use devel
+19:37:00 <thaumos> unless you are saying someone will change the message when the feature is removed in the same commmit
+19:37:07 <abadger1999> It doesn't matter if we have too much information for a while.
+19:37:36 <bcoca> having a 'rmeoved in' msg for extra version is fine, just having it for 10+ versions is annoying
+19:37:42 <nitzmahone> Yeah, I just don't want to make any assumptions about how long it sticks around in devel, beyond "sometime before 2.9 is release, references to things removed in 2.6 will be nuked"
+19:37:57 <nitzmahone> fair?
+19:38:04 <thaumos> fair
+19:38:09 <bcoca> nitzmahone: we should do at beginign of devel, take list of 'removed' and make it so in docs
+19:38:10 <abadger1999> nitzmahone: I'm like -0.5 on that.
+19:38:23 <abadger1999> Or maybe -0.1
+19:38:28 <thaumos> we really shouldn't be basing devel on anything
+19:38:31 <nitzmahone> I think the importance of devel docs went way down once we switched the default to stable
+19:38:38 <thaumos> ^
+19:38:39 <bcoca> if we do it 'before release' ... it'll be done 'next release'
+19:38:42 <dharmabumstead> /me still feels like the release notes is a logical place for a lot of this info.
+19:38:42 <nitzmahone> (importance to end users)
+19:38:43 <gundalow> Yup, same logged as removing code as the beginning of the release cycle
+19:38:45 <abadger1999> I don't like it but everything about how we can handle devel has a drawback of some sort.
+19:39:08 <bcoca> abadger1999: yep, either way someone is screwed
+19:39:23 <abadger1999> nitzmahone: later in the cycle makes me happier... rc1 for instance?
+19:39:25 <bcoca> i just think 'up front' is better for keeping docs leaner and less 'last minute doc updates'
+19:39:32 <abadger1999> after last beta?
+19:39:42 <abadger1999> something like that.
+19:39:44 <bcoca> abadger1999: is this now a RM duty?
+19:39:48 <thaumos> I think that's too much complexity
+19:39:53 <abadger1999> bcoca: it shouldn't be, no.
+19:40:03 <nitzmahone> realistically it's "whenever someone gets to it", which is why I don't want to get too prescriptive about that part
+19:40:07 <bcoca> abadger1999: by tying it to release, you kind of are making it so
+19:40:07 <dharmabumstead> is *what* now an RM duty?
+19:40:11 <abadger1999> Then maybe we should just keep it in 2.9 (in that example)
+19:40:23 <abadger1999> and remove it in devel for 2.10
+19:40:27 <bcoca> dharmabumstead: removing outdated docs
+19:40:31 <abadger1999> (and of course, we can backport if we want)
+19:40:32 * bcoca has doorbell
+19:40:45 <dharmabumstead> no, this is a *documentation person* duty.
+19:41:01 <abadger1999> <nod>
+19:41:02 * nitzmahone loves that policy ;)
+19:41:06 <dharmabumstead> i will be handling this surgery.
+19:41:30 <abadger1999> RM might ask Docs if they've completed it but RM shouldn't be in charge of making the change.
+19:41:46 <nitzmahone> If we're going to do it, that should be a release-blocking activity
+19:41:50 <bcoca> abadger1999: 90% of RMs job should be prodding other people
+19:41:52 <dharmabumstead> "DM" appreciates RM's vigilant nagging.  :D
+19:41:58 <abadger1999> Except I don't see it as release blocking.
+19:42:05 <thaumos> it's totally release blocking
+19:42:10 <abadger1999> Since we can backport the change to the last stable at any time.
+19:42:29 <bcoca> website doc updates do not require release
+19:42:36 <thaumos> we aren't going to launch a release with outdated docs for our users.
+19:42:37 <dharmabumstead> nope. they don't.
+19:42:38 <abadger1999> Having too much information isn't a blocker.
+19:42:43 <bcoca> i agree on non blocking
+19:42:46 <dharmabumstead> but thaumos is correct
+19:42:49 <nitzmahone> not *just* website docs, though, there's at least some ansible-doc touch here too
+19:42:53 <abadger1999> thaumos: it's not outdated in the sense that it's wrong.
+19:42:56 <dharmabumstead> we should release with current/updated docs
+19:43:07 <bcoca> nitzmahone: those should be updated immediatly
+19:43:08 <abadger1999> thaumos: it's outdated in the sense that we don't think we need to tell people this anymore.
+19:43:32 <bcoca> extra info that is less relevant != wrong info
+19:43:45 * abadger1999 also notes that for something nitzmahone didn't think we needed to discuss we've now taken 75% of our time on ;-)
+19:43:46 <nitzmahone> (except for n00bs tripping over it)
+19:43:54 <dag> :-)
+19:44:04 <abadger1999> #chair dag
+19:44:04 <zodbot> Current chairs: abadger1999 alikins bcoca dag jimi|ansible nitzmahone shertel thaumos
+19:44:14 <nitzmahone> Wasn't necessarily saying we didn't need to discuss, just was hoping to get some community input
+19:44:26 * bcoca stares at dag
+19:44:42 <thaumos> okay, so what's the action here.
+19:44:49 <abadger1999> I'm mentioning it because I'd like input about callbacks/display/logging.
+19:44:57 <thaumos> let's close this out so we can go over dag's proposal.  He's been waiting to go over it for a month almost.
+19:45:07 <bcoca> seems like we have 2 approaches that are very close but with minor differences on implementation
+19:45:07 * dag is patient
+19:45:14 <dharmabumstead> so what have we decided?
+19:45:16 <dag> only gets restless when we get closer to v2.5 :-)
+19:45:23 <bcoca> dharmabumstead: nix 1.x references
+19:45:26 <dharmabumstead> ok
+19:45:31 <abadger1999> We want to be able to remove the docs based on the support cycle.
+19:45:45 <abadger1999> but we're bikeshedding hte exact cut-off.
+19:45:46 <bcoca> remove docs after deprecation/removal + support period
+19:45:53 <abadger1999> because support cycle is based on when we release.
+19:45:54 <dharmabumstead> i'll do a pass and open a PR so people can take a look
+19:46:05 <thaumos> k, thanks dharmabumstead
+19:46:06 <dharmabumstead> we can go in phases.
+19:46:06 <abadger1999> And docs is something that's in the release.
+19:46:19 <thaumos> #action dharmabumstead to take first pass at removing versions from docs.
+19:46:27 <thaumos> ok, changing topics.
+19:46:31 <dharmabumstead> #w00t
+19:46:42 <abadger1999> We can definitely remove things that were removed or added in 2.1 now.  But we don't know about 2.2 yet.
+19:46:45 <jtanner> thank you dharmabumstead
+19:46:49 <thaumos> #topic adding this keyword for task results.
+19:46:50 <dharmabumstead> sure!
+19:47:14 <thaumos> so let's try not to bikeshed on the name too much.
+19:47:23 <thaumos> because I fear that this discussion will turn into that.
+19:47:26 <sdoran> Famous last words.
+19:47:26 <abadger1999> linky linky?
+19:47:31 <bcoca> dharmabumstead: for another time, was thinking of splitting into_inventory into 2, 1 with ini 1 with yaml
+19:47:34 <thaumos> #link https://github.com/ansible/proposals/issues/74
+19:47:41 <dag> This feature request came out of a different proposal, but was useful on its own
+19:48:00 <dharmabumstead> @bcoca cool. let me know if you'd like help or would like me to do a first pass for you to review.
+19:48:57 <bcoca> +1  to feature, but we need to make exception on variable naming (i prpose `_this` to avoid  collisions instead of `ansible_this` which would obey the rule, but makes dag cry)
+19:49:15 <nitzmahone> +1
+19:49:20 <thaumos> so dag, are you hoping for a merge of the PR today?  what do you want to get out of the discussion?
+19:49:21 <nitzmahone> (name TBD)
+19:49:32 <sdoran> +1 to the idea of a default registered variable
+19:49:44 <abadger1999> +1  _this would be acceptable to me
+19:49:48 <bcoca> thaumos: i suspect that mostly to get the name nailed down
+19:49:55 <bcoca> i dont think anyone is against the feature itself
+19:50:01 <dag> well, the ansible_ namespacing is IMO not the right approach for the future (I'd prefer a reserve variable name for facts, but that's a whole other discussion)
+19:50:02 <sdoran> Does this have any performance implications? Storing a lot more data in vars?
+19:50:16 <nitzmahone> Nope, it's task-level
+19:50:21 <sdoran> K
+19:50:21 <nitzmahone> (check the PR, super simple)
+19:50:28 <bcoca> dag: fyi, i have new PR on facts WITH the short names in ansible_facts.distribution
+19:50:31 <abadger1999> dag: this isn't a fact, though, right?
+19:50:34 <dag> I don't mind for _this, but prefer that we describe properly what the _ stands for
+19:50:40 <dag> abadger1999: true
+19:50:46 <nitzmahone> Just basically a handle to the result of the current task that doesn't require registration
+19:50:59 <bcoca> dag: yep, we should do that in docs that _ <= indicates private vars
+19:51:02 <abadger1999> so it still has the problem of conflicts with things users are doing in their playbooks.  I think _this is reasonable compromise.
+19:51:19 <bcoca> yeah, the rule for ansible_ ...seems overkill in this case
+19:51:28 <bcoca> ^ pun not intended, but welcom
+19:51:46 <dag> (abadger1999: I think calling our facts dictionary ansible_facts is not user-friendly and too verbose in general, but again, a complete different discussion)
+19:51:57 <abadger1999> <nod>
+19:52:20 <dag> so this or _this is fine by me though, but if we do _this, I'd prefer a good description to what we want to do with _ in the future
+19:52:23 <nitzmahone> So one thought about loops with this feature
+19:52:28 <sdoran> I get the _ prefix, but feels very “programmery”
+19:52:35 <thaumos> _ is very programmery
+19:52:42 <thaumos> it's anti to the ease of writing playbooks
+19:52:44 <nitzmahone> Do/should we have some way to get at previous iterations?
+19:53:04 <bcoca> nitzmahone: you can if you register resultvar.results[-1]
+19:53:10 <nitzmahone> IIRC right now there's no way to get at `x.results` until the entire task has completed
+19:53:54 <abadger1999> thaumos: heh.. "_" would be more programmery ;-)
+19:54:04 <dag> thaumos: I agree, although it's something people can get use to
+19:54:17 <thaumos> uhhh
+19:54:24 <thaumos> I don't know about that
+19:54:24 <nitzmahone> Could also just deprecate `register: this`
+19:54:25 <bcoca> A_this ?
+19:54:33 <dag> another name is fine too, but we haven't come up with something
+19:54:37 * abadger1999 wonders if that means perl is the platonic ideal of programming.
+19:54:46 * thaumos rolls eyes
+19:54:47 <bcoca> nitzmahone: its a problem fro ANY var named 'this', not just register: this
+19:54:57 <abadger1999> nitzmahone: this could come from vars instead of register.
+19:54:58 <nitzmahone> Ah true, inventory et al
+19:55:00 <bcoca> nitzmahone: and yes, you can find 'this' in the wild
+19:55:06 <abadger1999> jinx
+19:55:33 <dag> nitzmahone: the implementation already takes care of if people have 'this' defined
+19:55:36 <bcoca> thaumos: the reason to use _ is because it IS programmery and most peopel will not use normally
+19:55:40 <dag> https://github.com/ansible/ansible/pull/30957/files#diff-9faba8e6151654673ea88e8314c20a42R147
+19:56:21 <dag> we give a warning, but don't break the old behaviour
+19:56:29 <nitzmahone> Anything that's unlikely to be already used as an identitfier in the wild will probably suffer the same way, so I'd vote for _ as it's at least a fairly common idiom
+19:56:33 <alikins> curious why/how most the implementation ends up being in Conditional handling. (why does Conditional hava-a this? could 'this' be a a This(playbook.Base) ?  and multi-inherited like Conditional/Taggable?
+19:56:51 <nitzmahone> Ah, missed that line amidst all the comments I scrolled past
+19:56:53 <bcoca> alikins: cause it only makes sense in conditionals
+19:56:55 <thaumos> still anti to the point of playbook syntax.  it's supposed to be simple.  Adding a "_" to a keyword for an outcome result is confusing
+19:57:30 <sdoran> Lots of people will forget the `_` prefix since none of our other reserved words have it.
+19:57:36 <bcoca> tje {changed_,failed_,}when: are the only things that would benefit from 'this'
+19:57:44 <nitzmahone> So long as we've got some decent caution tape, I'm OK without a prefix
+19:58:00 <dag> nitzmahone: https://github.com/ansible/ansible/pull/30957/files#diff-9faba8e6151654673ea88e8314c20a42R147
+19:58:04 <nitzmahone> (looks like it's pretty well covered)
+19:58:05 <abadger1999> sdoran: not for long though as it will error
+19:58:12 <thaumos> okay, so then it would be when_this or changed_this
+19:58:17 <abadger1999> unless they do have this defined on their own
+19:58:21 <nitzmahone> dag: Yeah,  + docs, I'm happy w/ that
+19:58:22 <bcoca> thaumos: ??!?!?!?
+19:58:32 <nitzmahone> noooo
+19:58:40 <thaumos> exactly!
+19:58:47 <thaumos> see, someone will get confused on usage.
+19:58:49 <bcoca> nitzmahone: sadly i've encountered 'this' many times, but never '_this'
+19:58:50 * abadger1999 notes that "this" is also programmery.
+19:58:57 <thaumos> this is programmery
+19:58:58 <bcoca> so is 'self'
+19:59:18 <thaumos> result, outcome, object, product
+19:59:22 <thaumos> those are all less programmery
+19:59:24 * nitzmahone proposes VB-ish "my" and runs
+19:59:27 <bcoca> result is VERY overused
+19:59:28 <abadger1999> Would have to be namespaced still
+19:59:33 <thaumos> yes it is overused
+19:59:42 <bcoca> thaumos: w/o namespacing most of those will collide, this is why we have the ansible_ rule
+19:59:47 <thaumos> I am not suggesting any of those, I am just listing the non programmery words
+19:59:53 <abadger1999> thaumos: so unless you are willing to use ansible_result, etc.....
+20:00:01 * thaumos loves that sdoran has got us to all use programmery
+20:00:11 <bcoca> codery?
+20:00:13 <bcoca> ^ shorter
+20:00:21 <sivel> or some comment about a fish
+20:00:25 <thaumos> we have to end pretty quick for the windows working group
+20:00:42 <abadger1999> vote?
+20:00:42 <bcoca> sivel: lets not bring shells into this!
+20:00:43 <thaumos> `this` is the cleanest approach
+20:00:48 <abadger1999> (1) _this
+20:00:51 <abadger1999> (2) this
+20:00:53 <sdoran> sivel: I use fish. For better or worse.
+20:00:54 <dag> you have another week to come up with something else, and vote next week ?
+20:00:55 <nitzmahone> +1 to current PR impl with this
+20:00:56 <abadger1999> (3) ansible_results
+20:00:56 <bcoca> +1 1
+20:01:03 <sdoran> +1 to this
+20:01:04 <nitzmahone> +2
+20:01:04 <bcoca> 3 in case of tie
+20:01:09 <thaumos> +2
+20:01:11 <dag> +2
+20:01:12 <abadger1999> +1 1; -1 2; -1 3
+20:01:13 * sdoran awaits Who's On First? jokes to begin
+20:01:15 <sivel> I am still in favor of making people be explicit
+20:01:19 <sivel> so I am -1 on all options
+20:01:22 <jtanner> what am i voting on?
+20:01:30 <bcoca> sivel: im fine with that also
+20:01:31 <sdoran> this 😉
+20:01:41 <abadger1999> name of var: (1) _this (2) this (3) ansible_results
+20:01:42 <sivel> but I have a feeling I am being outvoted
+20:01:47 <bcoca> sivel: probably
+20:01:56 <sdoran> jtanner: default registered variable name `this`
+20:01:59 <bcoca> this is 'magic' which im normally against, but it is common enough
+20:02:27 <jtanner> so would it be replaced each time a naked register is used?
+20:02:36 <jtanner> or it doesn't need a register?
+20:02:42 <bcoca> im really against 'this' as keyword as i've seen many playbooks use it already, i would prefer that if we are going to violate the ansible_ rule we do it for something that does not cause collisions
+20:02:45 <nitzmahone> correct (see https://github.com/ansible/ansible/pull/30957)
+20:02:46 <abadger1999> jtanner: what to name an automatically registered variable.  no register: needed
+20:02:58 <jtanner> ah, well i like the feature
+20:02:58 <abadger1999> bcoca: +1
+20:03:07 <nitzmahone> (but only within the context of the current task, eg conditionals)
+20:03:16 <bcoca> one thing, the 'registered' this should not survive outside of current task
+20:03:25 <nitzmahone> I don't think it does
+20:03:29 <jtanner> i think i'd prefer something more private, like a dunder
+20:03:36 <dag> bcoca: it does not
+20:03:46 <jtanner> __this__ ?
+20:03:47 <abadger1999> jtanner: Is that option (1)?  _this
+20:03:51 <dag> jtanner :)
+20:03:55 <abadger1999> Mm...
+20:04:05 <nitzmahone> def -1 to dunders
+20:04:09 <jtanner> k
+20:04:23 * nitzmahone could live with _this though if people are really worried about `this`
+20:04:25 <jtanner> well #1 is fine i guess ... +1 on #1
+20:04:37 <nitzmahone> I think the impl is pretty resilient to that already though
+20:05:02 <abadger1999> It looks like the vote is close but _this is the winner?
+20:05:19 <abadger1999> Do we need more people to vote because of that?
+20:05:33 <bcoca> sivel would be the tiebreaker on -1 on all
+20:05:43 <thaumos> I really think _this is the wrong thing to do
+20:05:54 <bcoca> thaumos: that si what i think about 'this'
+20:05:58 <abadger1999> I mean... we're close enough that the people who aren't here can break the tie.
+20:06:00 * nitzmahone doesn't have strong feelings
+20:06:01 <bcoca> ansible_register so we are all unhappy?
+20:06:06 <alikins> slightly -.5 on 'this' since to me it implies a reference to the task vs a reference to the result
+20:06:10 <abadger1999> hehe
+20:06:24 <thaumos> okay, do we need to discuss more?
+20:06:27 <bcoca> alikins: do you have alternative?
+20:06:30 <jtanner> $LAST
+20:06:31 <thaumos> clearly 15 mins is not enough time
+20:06:47 <bcoca> ok, lets table, put suggestions on proposal and we can discuss again with more quorum
+20:06:49 <sdoran> Seems we should revisit this
+20:06:51 <abadger1999> thaumos: yeah, we better summarize current voting and vote again on Thrusday.
+20:06:52 <thaumos> because I am interested in hearing sivel's explicit
+20:06:57 <thaumos> agreed.
+20:06:57 * bcoca knew 'naming' was teh hard part
+20:07:04 <alikins> bcoca: 'this' as a ref to task and 'this.result' a ref to result?
+20:07:04 <jtanner> dag it's a good idea regardless
+20:07:11 <sivel> "Explicit is better than implicit."
+20:07:14 <thaumos> it's isn't even naming. it's usage.
+20:07:20 <abadger1999> thaumos: he mean... status quo (people explicitly register their results variable)
+20:07:23 <bcoca> alikins: not sure what use users would have on this beintg 'the task'
+20:07:25 <sivel> that is it, I follow the zen of python, not the zen of perl
+20:07:30 <sdoran> The feature is definitely fantastic.
+20:07:36 <thaumos> I know what he means, but it needs to be said out loud for those who don't know.
+20:07:39 <sivel> less magic, more explicit behavior
+20:07:39 <dag> jtanner: I was expecting this, I don't need to be comforted :-)
+20:07:46 <thaumos> I am playing devils advocate.
+20:07:46 <bcoca> sivel++ for 'the zen of perl'
+20:08:03 <thaumos> ok
+20:08:22 <jtanner> dag: fine ... /me slaps dag with a large trout
+20:08:49 <bcoca> sivel: im torn between both, users dont need to use the magic, they can still register, this would be an 'advanced option'
+20:08:55 <thaumos> #action add information to the proposal, will final vote on Thursday,
+20:08:59 <bcoca> but it does make those playbooks 'less readable ' ....
+20:09:17 <nitzmahone> It's just another thing you need to know like "item"
+20:09:20 <thaumos> we need to end for the windows working group folks.
+20:09:33 <sivel> I will try to be here for Thursday, I am training people in lieu of my departure, and was busy earlier
+20:09:43 <jtanner> excuses
+20:09:45 <nitzmahone> But we're not requiring that you name the loop var with `loop`, right- also optional?
+20:09:53 <thaumos> that's fine sivel, at least have your part of the discussion in the proposal :)
+20:11:03 <bcoca> https://github.com/ansible/proposals/issues/74#issuecomment-332573035
+20:11:07 <bcoca> names are important
+20:12:06 <bcoca> 'current'
+20:12:37 <jtanner> i can see any english word being a potential problem
+20:12:51 <jtanner> regardless of bikeshedding
+20:13:06 <sdoran> That's what emoji and unicode are for.
+20:13:21 <bcoca> :poop:
+20:13:32 <jtanner> +1 for the var to be 💩
+20:13:38 <thaumos> ok
+20:13:44 <sdoran> It least we're not arguing about the many faces of the poop emoji
+20:13:47 <thaumos> let's carry on the discussion to #ansible-devel
+20:13:51 <thaumos> #endmeeting

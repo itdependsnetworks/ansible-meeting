@@ -1,0 +1,143 @@
+15:07:59 <bcoca> #startmeeting ansible core irc meeting
+15:07:59 <zodbot> Meeting started Thu Dec 20 15:07:59 2018 UTC.
+15:07:59 <zodbot> This meeting is logged and archived in a public location.
+15:07:59 <zodbot> The chair is bcoca. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:07:59 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:07:59 <zodbot> The meeting name has been set to 'ansible_core_irc_meeting'
+15:08:18 <bcoca> #topic https://github.com/ansible/ansible/pull/46561
+15:08:22 <bcoca> ericzolf?
+15:10:05 <bcoca> 4th meeting w/o anyone to advocate for this so i'm going to remove from agenda, feel free to readd
+15:10:14 <bcoca> #topic https://github.com/ansible/ansible/issues/49992
+15:10:21 <bcoca> @akasurde ?
+15:10:37 <bcoca> lucastheisen ?
+15:10:43 <lucastheisen> here
+15:11:18 <bcoca> so, one reason set_fact and include-vars are hardcoded here is to avoid the situation with ansible_Facts (which all modules can provide) in dealing with injection and security issues
+15:11:33 <bcoca> i dont know that we want to open that door
+15:12:57 <lucastheisen> so, i need a way to provide merged dict's from vars files that actually get interpolated.  my team follows the _best practice_ approach where you `somesecret: {{vault_somesecret}}`, so without the interpolation, were stuck
+15:13:42 <bcoca> wouldnt setting hash_behaviour= merge do this?
+15:13:53 <bcoca> or am i missing something?
+15:14:34 <bcoca> also , i dont know what _best_practice_ is here .. i personally think the term is totally incorrect and leads to people trying to use square peg in round hole
+15:15:07 <lucastheisen> kindof... but not really.  first that is global, and given all the warnings about that behavior it seems like a bad idea to switch the global behavior...  second, the issue i found as to that behavior seemed to indicate it gets ignored for some cases (like `include_vars`)...
+15:15:48 <lucastheisen> This is the best practice i speak of: https://docs.ansible.com/ansible/latest/user_guide/playbooks_best_practices.html?highlight=best%20practices#always-name-tasks
+15:16:10 <lucastheisen> sorry, wrong section, this one: https://docs.ansible.com/ansible/latest/user_guide/playbooks_best_practices.html?highlight=best%20practices#variables-and-vaults
+15:16:10 <bcoca> include_vars follows it at task level, but you might be refering to the 'directory' option which does things differently internally
+15:17:24 <bcoca> ^ as i said 'personally' i think that should not be part of our docs in that manner, i would rephrase to 'one way to do this' .... but it is actually not a good way, much less 'best' for many contexts
+15:18:08 <lucastheisen> hmm...  well thats unfortunate cause i point to the _official_ documentation for all of our teams conventions (and everyone else i talk to)
+15:18:21 <bcoca> specially since group_vars/name/vault force you into several things, a) you always need to pass in vault secrets even if you dont use them
+15:18:43 <bcoca> ... lets leave at that, you are not here to see my lists
+15:18:59 <lucastheisen> sure..., but i _AM_ interested in your reasons.
+15:19:10 <lucastheisen> (you being someone with WAY more experience on this)
+15:19:30 <bcoca> but that is 'my' view, there are many others to consider
+15:19:43 <bcoca> and i cannot really tell you what to do w/o a lot more information about your context
+15:20:31 <bcoca> that is why im more in favor to show 'you can do X or you can do Y' since in the end you have a set of policies, internal worklow and actual deployed setup that you need to conform to and they are not always the same as the person writing the scenario
+15:21:06 <bcoca> having to write a custom plugin to import vars already tells me ... there is an easier way to set this up, that should NOT be a need
+15:21:41 <bcoca> i would also argue that you shoudl favor 'inline vaults' vs vaulted files
+15:22:12 <bcoca> https://docs.ansible.com/ansible/latest/user_guide/playbooks_vault.html#single-encrypted-variable
+15:22:21 <bcoca> but again, this is just my opinion
+15:22:38 <bcoca> others here will surely have different ones
+15:22:44 <lucastheisen> guess the downside to inline vaults is the difficulty in creating them (ansible-vault encrypt + copy/paste)
+15:23:08 <bcoca> yeah, i had very diff design, but that is what was done in the end
+15:23:18 <lucastheisen> > there is an easier way to set this up, that should NOT be a need
+15:23:38 <lucastheisen> is your suggestion to just use global `hash_merge` behavior?
+15:23:44 <bcoca> idk, i really have very little info of what are you trying to do? what are your limitations?
+15:24:08 <bcoca> w/o knowing much i would say ... a diff way of organizing your varaibles might be a better solution
+15:24:40 <bcoca> these are not easy questions to answer (why i hate the 'best practices') w/o intimate knowledge of the problems you face
+15:25:28 <lucastheisen> well, should we discuss here?  or should i write up more in the github issue to try to more fully outline my problem?
+15:25:42 <lucastheisen> (i dont wanna take up ALL the time for just my issue)
+15:26:02 <bcoca> there is nothing else on agenda ... and we seem to be only ones at meeting ....
+15:26:29 <bcoca> which is also why i dont feel comfortable giving you one answer ... we normally have a set of commiters present for any decision
+15:27:46 <lucastheisen> ok, so our situation is that we are managing a kubernetes cluster.  to that end we decided that the _hosts_ concept, best mapped to kubernetes namespaces...
+15:28:01 <lucastheisen> then we decided we wanted to keep our kubernetes secrets dry...
+15:28:17 <lucastheisen> and we have 4 environments dev/qa/beta/prod
+15:28:40 <bcoca> what kind of secrets?
+15:28:49 <lucastheisen> k8s secrets.
+15:28:58 <lucastheisen> (or configmaps when not sensitive)
+15:29:01 <bcoca> why not use lookup or vars_plugin?
+15:29:14 <bcoca> i assume those secrets are also in etcd?
+15:29:35 <lucastheisen> because k8s is not our final authority on those values...  our ansible project in git is...
+15:29:37 <lucastheisen> its push only
+15:29:43 <lucastheisen> no editing in place
+15:29:44 <bcoca> ah
+15:30:25 <bcoca> do you always need the secrets or just for certain plays?
+15:30:46 <lucastheisen> so our varibles can be common accross project, or env, or specific to the proj and environment...  for example projects foo and bar would result in foo, dev, foo-dev, bar....
+15:31:11 <lucastheisen> > do you always need the secrets or just for certain plays?
+15:31:18 <lucastheisen> we dont make a distinction...
+15:31:29 <bcoca> i dont understand
+15:31:32 <lucastheisen> (we dont isolate plays to need/not need secrets)
+15:32:11 <lucastheisen> i linked to this: https://github.com/lucastheisen/ansible-merge-vars/
+15:32:17 <lucastheisen> its a bit of an _example_
+15:32:17 <bcoca> would it make sense to do so?
+15:32:56 <lucastheisen> probably not.
+15:33:08 <bcoca> actually, the more you describe this .. the more i think you could use inventory or vars_plugin to resolve your issue
+15:33:09 <lucastheisen> because our plays can work at many levels...
+15:33:30 <bcoca> you have 'constructed/geenrated' inventory plugins that allow you to compose vars, which coudl depend on existing groups/environment/inventory source used
+15:34:06 <bcoca> you could also restructure your vars, but you seem to want to keep them as close as possible to the acual k8 map
+15:34:15 <lucastheisen> yes
+15:34:58 <bcoca> i suggest you try using the compose plugin (or if already using another dynamic plugin that supports composing) to create the vars instead of assembling them indirectly via templates in group vars
+15:35:03 <lucastheisen> essentially the inventory is about kubernetes infra... and the _config_ is about the stuff injected as secrets/configmaps
+15:35:56 <bcoca> .. this is where terminology bites us ...
+15:36:16 <bcoca> many people consider inventory 'config' or group-vars 'config'  ... me i only see 'ansible.cfg' as 'config'
+15:36:33 <bcoca> just think those are really arbitrary distinctions, in the end its all just 'data'
+15:36:43 <bcoca> dont let the labeling restrict you
+15:37:20 <bcoca> some consider host/group vars also as part of 'inventory' ... its closely related, but not really same thing, yet it all comes back to labeling vs actually finding 'what works in your case'
+15:38:44 <bcoca> just note, all this complexity is in 'our heads' vs what ansible does in the end, it looks at a 'host' and a'task' .. everything else is already reduced to a property of one of those, the trick is setting up our abstractions to meet the 'simplified end'
+15:39:00 <lucastheisen> my biggest problem is just that the behavior for hash's is replace, not merge...  if it were merge, i would be fine...  but i know i read github issues mentioning why merge is not the default and why it is a bad idea...
+15:39:02 <bcoca> ^ bit grick
+15:39:37 <lucastheisen> so i am trying to isolate the merging to a controlled subset of vars...
+15:39:40 <lucastheisen> hence the plugin
+15:39:45 <bcoca> biggest issue with that setting, your plays/roles will not be shareable, but if you ensure it is consistent in your environment, it should not be a big issue
+15:40:24 <bcoca> and i agree, its a big hammer, i've been toying with a !merge directive for vars .. but its not easy to implement
+15:41:10 <lucastheisen> scoped merge would solve a lot of problems (ive seen many others on StackOverflow and ansible gitub issues talking about it)
+15:41:27 <akasurde> bcoca, pardon me for interrupting - does vars plugin 'merge' or 'replace' vars ?
+15:42:33 <bcoca> akasurde: the plugin itself can do whatever it wants, the results from it follow hash_behaviour
+15:44:31 <akasurde> bcoca, oK
+15:44:42 <lucastheisen> it also seems like hash_behavior is not respected by `include_vars` https://github.com/ansible/ansible/issues/10446
+15:45:12 <bcoca> https://github.com/ansible/ansible/pull/14450 <- fixed long ago, that was bug
+15:46:25 <lucastheisen> guess i missed that (reading from bottom up, my error)
+15:46:48 <bcoca> ah, had not read bottom .. but we dont get notified for closed issues ... not sure if those are same issue or not
+15:47:25 <bcoca> the fix was using 'combine_vars' which is THE thing that implements HASH_BEHAVIOUR
+15:47:43 <lucastheisen> yeah, i know, i use it in my workaround :)
+15:48:05 <bcoca> there is one thing in i.nclude_vars that does NOT follow this and that is the 'directory' feature, buyt that is internal to the plubing
+15:48:19 * bcoca hits cat to get off keyboard
+15:49:24 <lucastheisen> so...  we use the dir feature...  (because `value: {{vault_value}}`...)  if we got rid of that then include_vars would work...
+15:50:04 <lucastheisen> so i would have to change my global setting for hash_behavior to merge, then switch vars to use inline vault values...
+15:50:11 <lucastheisen> is that where we are?
+15:51:01 <bcoca> i think that is simpler solution
+15:51:14 <bcoca> but again, you are the one with the full context, i only have a glimpse
+15:51:19 <lucastheisen> and, you dont want to expose the `fact_setter` option i proposed for security reasons?
+15:51:46 <bcoca> yes, that woudl allow 'random module injection' which is alreayd a problem we have with ansible_facts (though we restrict these a lot in templating)
+15:52:06 <bcoca> if we allow 'any fact' to be set, then we would be in an issue with not being able to trust ANY variable
+15:52:25 <bcoca> as a remote compromised system can hijack module results and then inject vars into your play
+15:52:57 <bcoca> the whoel reason i created the  INJECT_FACTS_AS_VARS setting
+15:53:00 <lucastheisen> technically, i did just write a module that _does_ this... (by setting self._task.action = include_vars: https://github.com/lucastheisen/ansible-merge-vars/blob/master/plugins/action/merge_vars.py#L22)
+15:53:09 <bcoca> ^ which currently defaults to the unsafe 'on'
+15:53:26 <lucastheisen> but i hear you.
+15:53:49 <bcoca> well, actions are a bit diff (they are local), but what you suggest would affect al modules
+15:54:12 <lucastheisen> would there be another way to scope it down?
+15:54:34 <bcoca> and don't count on that working, some want to introduce 'namespaces' and then reserve the 'ansible' one so you cannot do things like that
+15:54:52 <bcoca> not that i can think of, but might be a limitation of my imagination
+15:55:18 <lucastheisen> yeah, i know... the _task part clearly tells me im breaking the rules...  but didn't have another way...
+15:55:30 <bcoca> sometimes you need to break the rules
+15:55:49 <lucastheisen> is there an issue proposing a _scoped_ merge?
+15:55:51 <bcoca> in the end, it needs to work for YOU
+15:56:08 <bcoca> lucastheisen: see the INJECT_FACTS_AS_VARS commit, i do exactly that
+15:56:15 <lucastheisen> (sure and it does _now_ but any update to ansible itself my cause my stuff to just stop)
+15:56:26 <bcoca> https://github.com/ansible/proposals/issues/127 <= also
+15:56:46 <bcoca> lucastheisen: and that is the risk of 'breaking the rules'
+15:58:34 <lucastheisen> so thats at the proposal stage, so years out (if ever) correct?
+15:58:48 <bcoca> also, breaks backwards compat so think 3.0
+15:59:01 <lucastheisen> yeah, figured.  sounds thorough.
+15:59:08 <bcoca> but now you have chance to add input to it :-)
+15:59:47 <lucastheisen> the only part i _currently_ care about is: set: varname= value= scope= update=overwrite|merge|aggregate
+15:59:56 <bcoca> variable scoping is something that wasn't really design in ansible it more 'happened organically'
+16:00:11 <lucastheisen> its been my BIGGEST frustration
+16:00:19 <lucastheisen> (along with many others)
+16:00:25 <lucastheisen> (along with many other people)
+16:00:42 <bcoca> i know, i've been trying to tame that for a while, but i'm at the limit of what i think can be done with current structures and backwards compatiblity
+16:00:59 <bcoca> i can fix it for you, while breaking it for a large part of the user base
+16:01:33 <lucastheisen> understood... hence my action plugin that brought up this conversation.
+16:02:22 <bcoca> also understood, and we are always open on ways to make this better/easier, but we have to filter those against other considerations, in this case, it opens a huge hole on tempating vars
+16:02:58 <lucastheisen> ok, so final word...  ansible core is not gonna change to allow my to use my action to set facts with interpolation.  so my options are, continue using my module with the understanding that im using a private whose behavior may change at any time, or switch to global merge behavior and use inline vault values.  that sum it up?
+16:03:03 <bcoca> lucastheisen: im going to end the meeting now, but we can continue discussing this off the record, this channel or ansible-devel seem appropriate
+16:04:00 <bcoca> lucastheisen: not final word, but i would vote -1 , my vote alone is not sufficient to do/undo it so i would bring this back up in a meeting with actual quorum (tempted to cancel meetings till next year since i dont think atttendance will improve till then)
+16:04:18 <bcoca> #endmeeting

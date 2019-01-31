@@ -1,0 +1,194 @@
+19:03:34 <bcoca> #startmeeting ansible core public irc meeting
+19:03:34 <zodbot> Meeting started Tue Jul 17 19:03:34 2018 UTC.
+19:03:34 <zodbot> This meeting is logged and archived in a public location.
+19:03:34 <zodbot> The chair is bcoca. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:03:34 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:03:34 <zodbot> The meeting name has been set to 'ansible_core_public_irc_meeting'
+19:03:53 <bcoca> #topic https://github.com/ansible/ansible/pull/41197
+19:04:01 <bcoca> @akasurde?
+19:05:01 <bcoca> ok since this is 3rd noshow, im just going to remove from agenda
+19:05:20 <bcoca> #topic https://github.com/ansible/ansible/pull/39960
+19:05:30 <Tzur> Hi, I'm here
+19:05:33 <bcoca> hi
+19:06:02 <Tzur> I've updated the code as requested almost 2 months ago, and I wanted to know what can we do to get it reviewd? IBM wants to contribute more code but blocks us.
+19:06:14 <bcoca> wasnt mkrizek reviewing?
+19:06:16 <Tzur> but thiis*
+19:06:22 <bcoca> @mkrizek ping?
+19:06:52 <bcoca> its late for him
+19:06:56 <Tzur> I'm guessing he was? but he didn't comment when I tagged him..
+19:07:04 <bcoca> did you ping him in irc?
+19:07:30 <Tzur> no,  only on the PR because I did not know what is the apropriate way to reach a core member.
+19:07:31 <bcoca> many of us don't get notifications from github or we drown in them, so it is easy to miss those
+19:07:48 <Tzur> oh,ok. So I'll try to catch him on IRC?
+19:08:16 <bcoca> pinging on irc as a followup is ok, #ansible-devel is probably best place, try early in the day as i think he is in european time
+19:08:27 <bcoca> if no luck, bring it back up on thrusday
+19:08:35 <Tzur> ok, sounds good. Thank you for your time.
+19:09:27 <bcoca> np, hopefully we can get you merged soon
+19:09:42 <bcoca> #topic https://github.com/ansible/community/issues/291#issuecomment-355016399
+19:10:05 <bcoca> @abadger1999 @dag you guys were going to rename this a while back?
+19:10:13 <bcoca> @itdependsnetwork
+19:10:57 <dag> Not sure what the status is...
+19:11:17 <bcoca> well, i had rename PR you guys vetoed, but then never followed up with new name PR
+19:11:27 <bcoca> its still causing same problem
+19:12:46 <dag> I think gather_facts as module name was ditched because it conflicted with play-directive of same name
+19:13:37 <bcoca> no, mostly you wanted shorter, iirc you also wanted to rename the keyword
+19:13:55 <dag> that was my reason, but wasn't withheld
+19:14:04 <dag> IIRC
+19:14:51 <bcoca> well, several peopple disliked teh name, it was agreed to kill my PR and then submit alternatives .. but only the first part happened
+19:14:53 <dag> I didn't ask for a rename of the directive
+19:15:20 <bcoca> i remember otherwise, but willing to concede
+19:15:35 <dag> I guess we need the relevant logs, having the same discussion again is pointless if we can't learn from the previous debate
+19:15:35 <bcoca> not important, theimportant part is renaming the module so it doesnt conflict with setup.py
+19:16:45 <agaffney> is "conflicting" with the play directive really even a problem?
+19:16:57 <bcoca> no it was never due to 'conflict'
+19:17:04 <bcoca> it was people not liking the 'gather_facts' name
+19:17:31 <dag> agaffney: confusing and to be avoided
+19:18:00 <bcoca> dag: i would say the contrary, since it was the module backing the keyword
+19:18:03 <agaffney> dag: but the same is true of 'user' without causing significant confusion
+19:18:15 <bcoca> he, i remember using that exmaple also
+19:18:48 <bcoca> still, we are not rehashing the old discussion, but trying to get the action item done
+19:18:50 <dag> agaffney: to be avoided (maybe that was unavoidable ? :-))
+19:19:35 <agaffney> I wasn't part of the original discussion, so I have no idea which horses have been beaten to death
+19:19:36 <bcoca> i really dont want this to have died by bikeshed, if no one else does an alternative, i'll just merge the original, which fixed the issue
+19:19:51 <bcoca> @agaffney they all were
+19:20:48 <bcoca> @thaumos you were also involved in that one, thought you had a favorite, but it never materialized
+19:20:57 <dag> if we are deciding now on whatever basis regardless of the previous discussion, we might as well not have any debate with a lot of people
+19:21:34 <bcoca> im fine with debate, what im not fine is with people shooting it down and promising alternatives and later abandoning it
+19:21:48 <dag> In that case i'd like to bring up https://github.com/ansible/proposals/issues/74 again
+19:21:50 <dag> :)
+19:21:55 <bcoca> im even fine with gather_facts not used, i just added it as a 'logical' name, just got mired in bikeshed
+19:22:27 <dag> we should have a PEP process where ideas are refined, and eventually all sub-options are voted on
+19:22:29 <bcoca> that had an agreement, you just didnt like it and then declined to implement
+19:22:46 <dag> bcoca: there was no agreement on that one, only a veto of abadger
+19:23:03 <bcoca> he veteod this, not the full idea, unless im misremebering
+19:23:12 <bcoca> 'this' as the keyword, but not the concept
+19:23:16 <dag> bcoca: there was no decision
+19:23:22 <dag> there was no vote
+19:23:29 <bcoca> wasn't it ansible_task?
+19:23:31 <dag> only a veto for "this"
+19:23:41 <dag> nope
+19:24:19 <bcoca> its tangent anyways, not going to look at logs now
+19:24:30 <jhawkesworth_> is this the PR: https://github.com/ansible/ansible/pull/20717
+19:24:48 <bcoca> yep
+19:24:59 <dag> jhawkesworth_: discussion was in a meeting
+19:25:15 <bcoca> well, discussion was all over, but decision was made at meeting
+19:25:41 <jhawkesworth_> right
+19:25:57 <bcoca> and there were discussions after also
+19:26:22 <agaffney> I really like the idea/implementation and have no real opinion on the name. it's not like most people will ever type it explicitly anyway
+19:27:22 <jhawkesworth_> with my 'ansible user' hat on I have like 3 places I do explict fact gathering so it would not be a big issue to fix my playbooks whatever new name is
+19:27:37 <bcoca> old name will still work for a while
+19:27:50 <bcoca> the whole point was adding an alias to setup and a deprecation period
+19:28:07 <jhawkesworth_> oh sure, I just try to keep on top of syntax changes
+19:28:37 <bcoca> even if we alias to 'setup' w/o .py it would 'still work' and not conflict with the setuptools expectation
+19:29:47 <bcoca> https://github.com/ansible/ansible/pull/20717#issuecomment-277231501 <= dag you did propose rename, on ticket
+19:30:17 <dag> bcoca: I did, I never said I didn't
+19:30:40 <bcoca> [15:13] <dag> I didn't ask for a rename of the directive
+19:30:57 <dag> the directive != the module
+19:31:05 <agaffney> that confused me too. I think he meant the play directive
+19:31:22 <agaffney> I just had to go back and make sure I wasn't crazy
+19:31:52 <dag> That was a response to: (21:13:38) bcoca: no, mostly you wanted shorter, iirc you also wanted to rename the keyword
+19:31:56 <dag> *also*
+19:32:32 <dag> I do not like gather_fact indeed, we have _facts modules but they all are about a specific topic
+19:32:35 <bcoca> either im reading the post wrong, or that is exactly what you ask for, rename parameter AND module
+19:32:43 <dag> so setup_facts would be a better alternative than gather_facts
+19:32:49 <dag> someone proposed that IIRC
+19:32:54 <dag> but the meeting logs would be nice
+19:33:27 <dag> bcoca: ah, indeed, but I was talking about the meeting
+19:33:30 <bcoca> many things were proposed, which is why i gave up and let you guys with the proposals submit your ideas, but none of you did
+19:33:33 <dag> this is at least a year earlier
+19:33:38 <agaffney> setup_facts seems...wrong somehow
+19:34:14 <agaffney> to me, it makes a lot of sense for it to match the play directive
+19:34:26 <bcoca> ssshss
+19:34:36 <dag> look, it makes no sense to decide now if we're going to disregard the feedback from 20 people
+19:35:06 <agaffney> let's just call it Fred and move on
+19:35:44 <agaffney> the name seems like one of the least important parts
+19:36:04 <agaffney> it matters for UX and not much else
+19:36:28 <bcoca> well, it matters to setuptools and it breaks setups that rely on git/submodules for projects
+19:36:39 <bcoca> that also have 'buildable' python
+19:36:45 <itdependsnetwork> just catching up
+19:36:51 <dag> https://meetbot.fedoraproject.org/ansible-meeting/2018-01-09/ansible_core.2018-01-09-19.00.log.html
+19:37:03 <itdependsnetwork> I agree, +1 for fred
+19:37:15 <dag> who's fred ?
+19:37:28 <bcoca> rename of setup.py
+19:37:31 <itdependsnetwork> agaffney: 's friend :)
+19:37:49 <itdependsnetwork> actually, facebook just came out with the fred package management
+19:38:20 <itdependsnetwork> let's go with fredrick
+19:38:28 <bcoca> federico
+19:39:09 <itdependsnetwork> lol
+19:39:15 <itdependsnetwork> in all seriousness, just not setup
+19:39:45 <bcoca> well, i tried, still unsure wth to do with it now, since those with opinions on name dont want to submit anything
+19:40:00 <agaffney> is there any reason not to just stick with 'setup'?
+19:40:09 <dag> bcoca: where was it stated to submit anything ?
+19:40:23 <dag> bcoca: the meeting logs doesn't mention anything about new names to be submitted
+19:40:38 <dag> IIRC it was just postponed for the release without decision
+19:40:39 <bcoca> was followup with thamos, who took point iirc
+19:41:12 <itdependsnetwork> since setup.py is a common usage for python package management
+19:41:28 <bcoca> i dont remember exactly where things were said, mostly that they were said
+19:41:57 <dag> bcoca: same problem...
+19:42:16 <dag> it's called: getting old :-/
+19:42:21 <itdependsnetwork> gather_facts seems to make sense logicially and namespace wise
+19:42:34 <bcoca> nah, i had that problem since i was 6, can remember facts, but not their origin
+19:42:52 <dag> let me count the votes in that meeting log, and let's stick with that as a decision
+19:43:11 <itdependsnetwork> there was a lot of fred thrown around then
+19:43:12 <dag> and put that decision up for review in the meeting notes
+19:43:27 <itdependsnetwork> But we agree to change?
+19:43:56 <bcoca> i dont think there ever was disagreement, afaik the name was biggest issue, then people wanted  to redo/refactor facts .. and that happened, but they want to do it again now
+19:44:25 <bcoca> which i believe is why thamous stepped in, to try to work it into facts refactor .. but that also didnt happen
+19:44:32 <itdependsnetwork> let me put it another way, we agree to change for 2.7?
+19:44:38 <stoned75> reap_facts
+19:44:45 <bcoca> uf
+19:46:25 <bcoca> idk what to do at this point to move it forward, im jsut pissed that this is stalled for as long as it has when it is not hard to fix
+19:46:35 <itdependsnetwork> I concur
+19:46:38 <bcoca> i can  imagine @itdependsnetwork feels the same (kudos on your patience)
+19:48:29 <itdependsnetwork> I'll take silence as gather_facts.py is gtg
+19:48:35 <itdependsnetwork> ship it
+19:48:41 <itdependsnetwork> (not sure how this works)
+19:49:12 <bcoca> we have not formalized, but i would say we need at least quorum that includes most of those that voted last time
+19:49:59 <jhawkesworth_> I suggest best way to move it forward is to reopen/bring forward bcoca's PR, and ping those to voted last time.
+19:50:39 <dag> gather_facts: bcoca, jimi, maximilion
+19:50:39 <dag> facts: dag, alikins, abadger, nitzmahone
+19:50:39 <dag> no change: jimi, sivel
+19:50:42 <jhawkesworth_> =those who voted
+19:50:45 <dag> that's what I counted
+19:50:57 <agaffney> if it's open to new votes, it gets +1 from me
+19:51:10 <dag> thaumos and sivel didn't make clear their preference AFAICT
+19:51:17 <agaffney> for the PR as it is (gather_facts)
+19:51:29 <dag> maximilion was basically fine with both, but preferred gather_facts
+19:51:32 <bcoca> they did, but not at time of vote
+19:51:48 * bcoca does not have that branch anymore ...
+19:51:50 <dag> bcoca: I haven't seen a vote, was that before or after this meeting ?
+19:52:03 <dag> because in the meeting minutes there are references to an earlier discussion
+19:52:12 <agaffney> bcoca: easy enough to extract from the PR
+19:52:46 <bcoca> iirc, discussion went on for days, in ticket. #ansible and #ansible-devel, didnt really need vote to see ticket was going to be rejected
+19:53:03 <dag> 19:20:59 <abadger1999> gundalow: change the name there from gather_facts to facts and I think we had agreement from alikins and i that it would be okay.
+19:53:03 <dag> -snip-
+19:53:03 <dag> 19:22:05 <abadger1999> I'm okay with it happening.
+19:53:03 <dag> 19:22:15 <abadger1999> As loing as we can agree on name.
+19:53:03 <dag> 19:22:23 <abadger1999> that's where we got stuck last time.
+19:53:03 <dag> -snip-
+19:53:04 <dag> 19:22:38 <abadger1999> I think everyone except bcoca agreed o nthe name but bcoca had been the one writing the PR?
+19:53:29 <bcoca> did we agree on 1 name? thought we had 2 or 3
+19:53:45 <dag> that's from the meeting logs about an earlier discussion/vote
+19:53:51 <dag> I wasn't involved in that one
+19:53:56 <bcoca> i thought the only agreement was 'not gather_facts'
+19:53:59 <dag> https://meetbot.fedoraproject.org/ansible-meeting/2018-01-09/ansible_core.2018-01-09-19.00.log.html
+19:54:11 <itdependsnetwork> facts is just kicking the can down the road, going to have name space issues
+19:54:28 <bcoca> well, facts are now namespaced under ansible_facts
+19:54:40 * bcoca needs to add deprecation soon
+19:54:57 <dag> (which I would have called 'facts' as well ;-))
+19:55:05 <itdependsnetwork> so do I not have the setup.py issue?
+19:55:05 <itdependsnetwork> If so, see you guys later
+19:55:35 <dag> can't we simply make 'setup' work without calling the file 'setup.py' as was suggested for the alias ?
+19:55:57 <dag> at least the issue is unblocked
+20:02:26 <dag> https://github.com/ansible/ansible/pull/20717#issuecomment-405709479
+20:02:47 <bcoca> sorry, my router seems to be alergic to lightning
+20:02:55 <bcoca> did i miss anything?
+20:03:04 <itdependsnetwork> yea, that storm was crazy
+20:03:14 <bcoca> you in NJ?
+20:03:20 <itdependsnetwork> NY right now, but from NJ
+20:03:31 <bcoca> he, its like nightfall right now
+20:03:56 <itdependsnetwork> yea, turned around and it was dark
+20:03:57 <bcoca> ok, so i don think we are resolving anything, i'll try to ping thamos (he took point on this last time) and see what happens
+20:04:09 <itdependsnetwork> ok, thanks
+20:04:26 <bcoca> sorry about that, really irks me such a simple change is taking sooo long
+20:04:30 <bcoca> #endmeeting

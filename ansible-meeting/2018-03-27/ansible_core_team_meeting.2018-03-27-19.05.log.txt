@@ -1,0 +1,138 @@
+19:05:38 <gundalow> #startmeeting Ansible Core Team Meeting
+19:05:38 <zodbot> Meeting started Tue Mar 27 19:05:38 2018 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:05:38 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:05:38 <zodbot> The meeting name has been set to 'ansible_core_team_meeting'
+19:05:39 <abadger1999> Different ideas for doing the same things ;-)
+19:05:49 <bcoca> #chair funzo gundalow maxamillion abadger1999 thaumos
+19:05:51 <gundalow> #chair funzo gundalow maxamillion abadger1999 thaumos bcoca
+19:05:51 <zodbot> Current chairs: abadger1999 bcoca funzo gundalow maxamillion thaumos
+19:05:55 <maxamillion> heh
+19:05:59 <sivel> .hello2
+19:06:00 <zodbot> sivel: sivel 'Matt Martz' <matt@sivel.net>
+19:06:02 <bcoca> #bench ?
+19:06:03 * gundalow backs aways from from keyboard
+19:06:07 <gundalow> #chair sivel
+19:06:07 <zodbot> Current chairs: abadger1999 bcoca funzo gundalow maxamillion sivel thaumos
+19:06:21 <gundalow> You know what, for an automation company, it's a bit crap we haven't automate dthis
+19:06:53 <bcoca> we have automated everything except making people show up
+19:07:12 <maxamillion> gundalow: :)
+19:07:19 <maxamillion> bcoca: fair point
+19:07:24 <bcoca> im grafting a hacksaw to my roomba as a prototype to automate that last step
+19:07:59 <bcoca> #topic https://github.com/ansible/ansible/issues/22025
+19:08:21 <bcoca> to set fact or not to set fact?
+19:08:48 <bcoca> ^ this one requries one of 2 fixes, a) change varsmanager to actually match docs, b) change docs to match var manager
+19:09:02 <bcoca> currently I have PR for a) but am leaning towards b)
+19:09:04 <sivel> I'd just call it a feature at this point
+19:09:12 <bcoca> ^ that is a b vote?
+19:09:16 <sivel> yes
+19:09:59 <bcoca> anyone else want to weigh in?
+19:10:38 <gundalow> no real view
+19:10:39 <maxamillion> I'll vote for B as well
+19:11:13 <bcoca> @jimi|ansible ?
+19:11:39 * sdoran reading
+19:11:47 <sdoran> (too many meetings, sorry)
+19:12:02 <bcoca> AA will hae to wait
+19:13:24 <bcoca> ok, so my count is a == 0, b == +4, if no one else ojbects i'll close my current PR and open new one to update docs
+19:14:29 <bcoca> closing this, next topic
+19:14:40 <bcoca> #topic https://github.com/ansible/ansible/pull/37883
+19:14:47 <alikins> for #22025, one thing that would mitigate some of the pain would be better info about where var values come from
+19:15:04 <bcoca> ^ trond was adding 'do not print' list for a specific callback, i added to meeting to ask, should this be a global setting?
+19:15:25 <sivel> Seems nice, needs a revision that was ignored (isinstance instead of type), def should be globally accessible
+19:15:55 <sivel> should probably more closely match password cleansing with ****
+19:16:07 <bcoca> alikins: its clear where they come from, people just disagree on which should win
+19:17:12 <bcoca> ok so +2 for making general/global, anyone against?
+19:17:16 <jtanner> i'm here finally
+19:17:40 <sivel> and actually, we have some similar recursive code that uses dict/list that can simplify that a little (rekey_on_member)
+19:18:09 <bcoca> sivel:  do you want to do the general reimplementation?
+19:18:19 <sivel> not really :)
+19:18:24 <jtanner> +1 for the concept
+19:18:39 <sivel> +1 to the concept as well, just offering additional insight
+19:18:43 * bcoca must put more leaves on top of trap
+19:18:56 <maxamillion> +1
+19:19:00 <sivel> trond started it, have him work on it
+19:19:10 <bcoca> k, so +4 to generic implementation and 0 against
+19:19:19 <bcoca> #topic https://github.com/ansible/ansible/pull/37638
+19:19:31 <jtanner> sivel: point him at the function and then needs_revision it
+19:19:33 <bcoca> @Sieben_ ?
+19:20:23 <jtanner> new module
+19:21:23 <abadger1999> Re: 37883... note that it could be a performance pit.
+19:21:33 <jtanner> core is not a good function name imo
+19:21:34 <bcoca> pilou seems to have reviewed, not sure what it was put into meeting for
+19:21:39 <abadger1999> and also, you'll need to code it to use iteration instead of recursion.
+19:22:11 <bcoca> @abadger1999 leave note on ticket, specially since you did very similar already for module 'no_log' cleanup in results
+19:23:59 <bcoca> so since author does not seem to have come to meeting and i got no clue on what we are supposed to debate about it, closing this topic in 10s
+19:24:13 <bcoca> #topic open floor
+19:24:24 <bcoca> anyone have anything to discuss?
+19:24:36 <jtanner> docs are still in flux, mainly redirects
+19:25:10 <bcoca> #info 2.5 docs are not live yet, working on redirects before redeploying to live
+19:25:47 <bcoca> if nothing else, i'll close meeting in 1min
+19:25:55 <jtanner> i think they are "live", just have some residual issues with redirects from stuff like google search results
+19:26:04 <sdoran> IRT 22025, I vote A, change behavior to match docs. I expect set_fact to override things.
+19:26:06 <sdoran> (sorry for lag)
+19:26:31 <bcoca> @sdoran k, did you see my example on what happens if we make that change?
+19:26:59 <sdoran> Yeah, I was trying to grok that fully but I don't think I do.
+19:27:22 <bcoca> that the vars and inline vars passed AFTER the set_fact get overriden by the set_fact
+19:28:02 <bcoca> since our vars system depends on origin > order, set_fact becomes one of the highest precedence and cannot really be overriden except by another set_fact
+19:28:12 <bcoca> aside from 'extras' which overrides all
+19:28:49 <sdoran> Oooo, I see.
+19:29:04 <sdoran> Yeah, that's tricky.
+19:29:31 <maxamillion> yeah, that bug is going to get long in the tooth if it's "fixed" ... I think the unintended implications of "fixing the bug" are going to be wide spread
+19:29:33 <sdoran> That makes sense, but boy is that not intuitive.
+19:29:36 <bcoca> its screwy either way, at this point i think more plays break by changing the code than updating the docs
+19:29:49 <maxamillion> how long has it been the way it is?
+19:30:04 <bcoca> since dag introduced set_fact in 1.5?
+19:30:05 <sdoran> (queue jctanner with ansible-test-versions :) )
+19:30:15 <jtanner> i was thinking it, but wasn't gonna say it
+19:30:17 <bcoca> well, 'current precednece' is 2.1
+19:30:19 <bcoca> er 2.2
+19:30:23 <bcoca> changed from 2.1 to 2.2
+19:30:45 <jtanner> also, precedence tests exist now, so ...
+19:31:12 <maxamillion> yeah, honestly it's been this way for basically forever (in Ansible time) so I'm sticking with my vote to update the docs
+19:31:33 <bcoca> my plan, redo how vars work in ansible 3.0
+19:31:38 <sdoran> So where does that put `set_fact` in the _actual_ hierarchy?
+19:31:46 <sdoran> +100
+19:32:10 <bcoca> 1 step down
+19:32:11 <bcoca> or 2
+19:33:10 <jtanner> looks like mattclay moved it https://github.com/ansible/ansible/commit/8daa80e5bb8d6d02ece813d839b5b3abd228c5a5#diff-4d6233b0ed80fe74b3871f7e2d840656
+19:33:29 <bcoca> k, even with the new vote, decision stands 4/1
+19:36:26 <maxamillion> I'm curious what jimi|ansible thinks about it, he seems pretty determined to "fix the bug" in the issue ticket
+19:36:43 <bcoca> he also saw that the fix was not w/o consequences and backed off
+19:36:52 <maxamillion> bcoca: true
+19:36:56 <bcoca> pinged him this week and he seemed on fence
+19:37:04 <maxamillion> rgr
+19:37:50 <jtanner> if it's not directly related to openshift, we shouldn't be waiting on jimi to do much
+19:37:56 <jtanner> for the time being
+19:38:24 <jtanner> poke nitzmahone once he gets back
+19:38:41 <bcoca> i'll poke both and reopen vote if i see they are both against 'update docs'
+19:38:51 * bcoca grabs cowprod
+19:39:01 <jtanner> oh, you have one of those too?
+19:39:04 <bcoca> anything else? or should i end it now?
+19:39:14 <bcoca> jtanner: integrated into the shovel's shaft
+19:39:34 <jtanner> i have nothing ... except you should market that shovel + cowprod hybrid
+19:40:13 <dag> bcoca: set_fact IMO was a misnomer and not what I wanted, in the end I made what M wanted
+19:40:32 <jtanner> M?
+19:40:39 <bcoca> set_var
+19:41:02 <dag> I think that was the original name
+19:41:11 <bcoca> dag: i know ... but still the issue is less the name and creating a 'new' entry in precednece, it should have either updated existing facts OR 'vars'
+19:41:16 <jtanner> oh, our former bdfl ... i'm dumb, sorry
+19:41:41 <bcoca> set_facts is 'moar corretz' as the var is 'host scopped'
+19:41:43 <dag> bcoca: it's both the name _and_ how it works IMO
+19:42:05 <bcoca> except we created 'new facts facility with diff precedence' .... that is what i foudn problematic
+19:42:39 <dag> we can finally do this right with Ansible v3 :-P
+19:42:50 <jtanner> isn't that what was said about v2?
+19:42:57 <dag> jtanner: shhhht
+19:42:59 <jtanner> heh
+19:43:01 <bcoca> jtanner: we didnt get to variables in 2.x
+19:43:08 <bcoca> 3.x will be variables and roles
+19:43:56 <dag> 3.x will use Puppet nomenclature for everything
+19:43:57 <dag> :-D
+19:44:20 <jtanner> /kick dag
+19:44:21 <jtanner> oops
+19:44:36 <sivel> too many preceeding spaces
+19:45:34 * bcoca starts writing 'haskell version of ansible'
+19:46:05 <jtanner> i guess that'll make the 4th or 5th implementation in recent times
+19:46:23 <jtanner> python, groovy, golang already done
+19:47:17 <bcoca> you are not counting the whitespace one in current code
+19:47:40 <bcoca> k. .. this has driffted too much, going to end if no one has new topic in 1min
+19:47:57 <jtanner> but but but ...
+19:49:46 <bcoca> #endmeeting

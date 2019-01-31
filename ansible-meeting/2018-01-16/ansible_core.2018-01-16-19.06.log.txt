@@ -1,0 +1,265 @@
+19:06:24 <abadger1999> #startmeeting Ansible Core
+19:06:24 <zodbot> Meeting started Tue Jan 16 19:06:24 2018 UTC.  The chair is abadger1999. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:06:24 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:06:24 <zodbot> The meeting name has been set to 'ansible_core'
+19:06:25 <sivel> I've not either, and I have no idea how to operate the bot :)
+19:06:29 <abadger1999> maxamillion: We need one.
+19:06:49 <abadger1999> I I wrote one but it never got beyond being posted in a gist.
+19:06:56 <maxamillion> abadger1999: ah
+19:07:20 <maxamillion> the FESCo one is the only way I ever successfully chair a meeting, I can't for the life of me remember week to week
+19:07:27 <abadger1999> (We especially need to have cut and paste for the #startmeeting command... I always have to lookup what we call this meeting so that the archives group all the meetings together)
+19:07:31 <sivel> Agenda: https://github.com/ansible/community/issues/291
+19:07:45 <maxamillion> #info Agenda - https://github.com/ansible/community/issues/291
+19:07:50 <jtanner> chair some peeps
+19:07:58 <maxamillion> oh yeah
+19:08:12 <sivel> I guess abadger1999 has to chair, since he started the meeting?
+19:08:18 <abadger1999> @gundalow did we get to deprecation in the last meeting?
+19:08:26 <sivel> abadger1999: we did not
+19:08:34 <sivel> at least not that I remember seeing
+19:08:35 <abadger1999> #chair sivel maxamillion jtanner gundalow resmo
+19:08:35 <zodbot> Current chairs: abadger1999 gundalow jtanner maxamillion resmo sivel
+19:08:47 <maxamillion> #info Agenda - https://github.com/ansible/community/issues/291
+19:09:01 <abadger1999> maxamillion: basically, chair has to go through the agenda item by item, #chair (pretty much) anyone who shows up.
+19:09:02 <maxamillion> this time with feeling
+19:09:08 <maxamillion> abadger1999: rgr
+19:09:19 <jtanner> chairee's can chair others too
+19:09:26 <abadger1999> #topic What does deprecation mean https://github.com/ansible/community/issues/291#issuecomment-355958604
+19:09:32 * gundalow waves
+19:09:40 <jtanner> #chair gundalow
+19:09:40 <zodbot> Current chairs: abadger1999 gundalow jtanner maxamillion resmo sivel
+19:09:45 <abadger1999> And then keep the meeting moving forward and capture actions until we get to the end
+19:10:03 <abadger1999> gundalow: So this one is yours, care to speak on it?
+19:11:57 <gundalow> Sure
+19:12:27 <gundalow> Well, captured in the "Questions/ideas" on https://github.com/ansible/community/issues/291#issuecomment-355958604
+19:13:30 <abadger1999> gundalow: Do you have a recommended direction?  Seems like htere's a bunch of binary decisions to make.
+19:13:34 <maxamillion> I like both 2 and 3, combined and not either/or
+19:14:36 <gundalow> a) I think the same variable should be used everywhere and it should have the same meaning
+19:14:52 <abadger1999> +1
+19:14:54 <gundalow> b) I think that variable should be named something like `will_be_deleted_in`
+19:15:58 <abadger1999> +0.5
+19:16:27 <abadger1999> Maybe keep version as an alias and change it as we evaluate whether the old code is doing it correctly?
+19:16:59 <abadger1999> (ie, so that we manually inspect for code that's using version to mean was_deprecated_in instead of will_be_deleted_in)
+19:18:31 <abadger1999> gundalow: Is there more to decide?
+19:20:27 <abadger1999> Alright, anyone want to argue for something different for (a) and (b) above?
+19:20:40 <abadger1999> If not, let's vote.
+19:20:48 <shertel> a) +1, b) +1 with alias
+19:22:06 <abadger1999> Vote on: Rename the version parameter in all deprecation APIs to will_be_deleted_in and port everything to use it.  Keep an aliased name of "version" until we've gone through all of the calls to make sure they're doing it right.
+19:22:10 <abadger1999> +1
+19:22:18 <abadger1999> #chair shertel
+19:22:18 <zodbot> Current chairs: abadger1999 gundalow jtanner maxamillion resmo shertel sivel
+19:22:20 <maxamillion> +1
+19:22:59 <gundalow> back
+19:23:01 <jtanner> sometimes you can't predict when something is going to be actually deleted
+19:23:12 <jtanner> but if it's okay to change the value over time, sure
+19:23:30 <gundalow> jtanner: good point. I think if the number only ever increases then that's OK
+19:23:41 <abadger1999> gundalow: +1
+19:24:45 <abadger1999> Okay, official count is +3 and 0 against so far.
+19:24:55 <abadger1999> If no one else has something to say, I think I'll say this is approved.
+19:25:19 <jtanner> novote for me, as i don't understand the problem to be solved
+19:25:26 <sivel> I honestly don't have an opinion, so I am ok on it proceeding as is
+19:25:30 <gundalow> 1) What needs alias DOCUMENTATION.DEPRECATIOn.VERSION I can just bulk sed that
+19:25:47 <alikins> 'the future' is a valid value for 'when will this be removed'
+19:25:48 <gundalow> 2) the module.deprecate's version?
+19:25:52 <abadger1999> @gundalow<nod> If you feel cnfident you've already checked those have the right meaning, go ahead and do that.
+19:26:18 <abadger1999> module.deprecate() and display.deprecate()
+19:26:27 <abadger1999> until they're checked and everything is ported.
+19:26:49 <gundalow> well we now have validate-modules enforcing structure of DOCUMENTATION.DEPRECATION dict, so I can bulk change that to DOCUMENTATION.DEPRECATION.WILL_BE_REMOVED_IN="2.9"
+19:28:05 <gundalow> So i can do that
+19:28:23 <gundalow> and add aliases for paramaters for module.deprecate() and display.deprecate()
+19:28:31 <gundalow> We happy with "will_be_removed_in"?
+19:28:36 <gundalow> COMMENCE BIKESHEADING
+19:28:44 <abadger1999> <nod> the manual part is making sure that any use of version actually means will_be_removed_in as some of the uses are going to be when_this_was_deprecated
+19:28:52 <abadger1999> +1 with anything.
+19:29:14 <sivel> I mean, I'm not increadibly fond of the name, but yes bikeshed, and I'll go with whatever :)
+19:29:27 <gundalow> OK
+19:29:30 <abadger1999> gundalow: Simply "removed_in"
+19:29:51 <abadger1999> I think people will understand the "will be" is implied if it's in the future.
+19:29:55 <gundalow> #agreed Gundalow to to bulk update DOCUMENTATION.DEPRECATION.VERSION -> DOCUMENTATION.DEPRECATION.REMOVED_IN
+19:30:00 <maxamillion> +1
+19:30:01 <sivel> scheduled_removal, removal_version, removed_in, whatevs :)
+19:30:21 <gundalow> #agreed Gundalow to add aliases for module.deprecate() and display.deprecate() version param to removed_in
+19:30:26 <abadger1999> Okay, Anything else?
+19:30:26 <gundalow> #agreed Gundalow to document this
+19:30:31 <gundalow> ,./topic
+19:30:32 <gundalow> Thanks
+19:30:56 <abadger1999> Does anyone know if we finished discussing tdtrask's issue?
+19:31:59 <maxamillion> not I
+19:32:03 <abadger1999> #topic Should a package manager state=absent mirror the package tool or the other ansible modules? https://github.com/ansible/ansible/pull/34419#issuecomment-356784925
+19:32:13 <abadger1999> So this was partially sdiscussed last meeting
+19:32:16 <gundalow> abadger1999: Thanks :)
+19:32:28 <sivel> abadger1999: iirc we aasked to have tdtrask find a real user, and get some testing
+19:32:53 <abadger1999> sivel: okay cool.
+19:33:11 <abadger1999> #action tdtrask to come back with some feedback from a real user and we can discuss this more then.
+19:33:29 <abadger1999> #action abadger1999 to add that info to the bug report
+19:33:49 <maxamillion> "For the ACI modules " ... what are ACI modules?
+19:33:51 <abadger1999> #topic Proposal: Standard way to influence module returns: https://github.com/ansible/proposals/issues/93
+19:34:11 <abadger1999> dag: You around?
+19:35:31 <sivel> I'm not super interested in this as a feature tbh
+19:35:42 <nitzmahone> IMO this would be nearly impossible to standardize; for some (most?) modules it makes no difference, but assigning an arbitrary t-shirt size to the shape of the output seems limiting.
+19:36:00 <abadger1999> I see this as a good feature for the use case dag is talking about but I don't know that we have enough data point to proposae a standard.
+19:36:07 <dag> yes o/
+19:36:08 <nitzmahone> Plus documenting which fields are returned when gets a lot more complicated.
+19:36:17 <abadger1999> #chair dag nitzmahone
+19:36:17 <zodbot> Current chairs: abadger1999 dag gundalow jtanner maxamillion nitzmahone resmo shertel sivel
+19:36:23 <nitzmahone> @abadger1999: pretty much exactly my thought
+19:36:51 <nitzmahone> If your module needs to filter its output, go for it, but I don't think we have enough use cases to say a pattern has emerged
+19:37:18 <sivel> nitzmahone++
+19:37:21 <dag> so I guess you agree a parameter is the best option, and what would be a good name ?
+19:37:35 <abadger1999> dag parameter +1.
+19:38:04 <nitzmahone> Yeah, def +1 to "use a parameter" vs other things... `output_filter`?
+19:38:37 <nitzmahone> I just don't think we're at a point where we want to give it some sort of special reserved-word status or define standard values for it.
+19:39:03 <maxamillion> nitzmahone: +1
+19:39:15 <sivel> return_previous?
+19:39:17 <nitzmahone> I guess it also depends on why you want to filter- if it's purely about verbosity, maybe a different approach would make sense
+19:39:20 <dag> nitzmahone: it's not really filter, because that seems the default is unfiltered
+19:39:32 <dag> it's more like adding more output then is commonly needed
+19:39:39 <alikins> for the debug/test/troubleshoot scenarios mentioned in the proposal, https://github.com/ansible/ansible/pull/20664 was kind of along the same idea
+19:39:41 <nitzmahone> I personally am not a fan of polymorphic return types, but there are definitely situations where they can't be avoided
+19:39:52 <abadger1999> if it'I think that depends on how it works.  Is the model that there's a lot of output and some are removed?  *_filter.  is the model that there's several distinct parts that can be composed? include_* that takes a list.... etc..  (and note, I'm not saying those should be the names... jsut that their are different patterns that can be used)
+19:40:24 <nitzmahone> I think there are actually already a couple modules that do the `include_X` thing, but can't point to one off the top of my head
+19:41:56 <abadger1999> In general i don't think I like output=minimal|verbose|debug type parameters compared to something more informative of what is included include_output=interfaces,routes,devices
+19:42:13 <abadger1999> But I don't know if there's specific cases where the former might make sense.
+19:42:20 <dag> abadger1999: but this is for a set of modules that use the same interface
+19:42:42 <dag> abadger1999: so we can't go and add a different set for each module, because the output would be specific to what that module does
+19:42:48 <sivel> I'm also concerned what this will do for docs.  That's a lot of conditional output potentially
+19:42:50 <dag> aci_vlan_pool would be related to more vlan_pool related output
+19:42:58 <sivel> what problem do we have with just return a lot of info?
+19:43:09 <abadger1999> sivel: I think that reutnr values in docs is a lost cause already.
+19:43:42 <dag> sivel: it's very confusing if you get 3x the same values but slightly different, especially if the JSON output is all condensed on a single line
+19:43:42 <abadger1999> We've always needed something better for that but we've never sat down and figured out hte hard problem of what that would look like.
+19:43:43 <jtanner> i don't believe trimming down return values is going to make anything easier to consume.
+19:43:55 <dag> and most people only need the current value, not the rest
+19:44:22 <sivel> My view has always just been to return as much info as possible about the execution, let the user decide what is useful to them.
+19:44:26 <dag> jtanner: I guess you need to play with the ACI modules then to understand the case
+19:44:40 <jtanner> dag: i suppose ... but i think about ec2 modules
+19:44:50 <abadger1999> This is similar to what we've started to do with facts (where it can be beneficial to limit what facts are looked up, for isntance, because of the performance when trying to gather certain information)
+19:44:51 <sivel> the aci modules are already suffering from some docs problems as it is
+19:44:59 <abadger1999> #chair alikins
+19:44:59 <zodbot> Current chairs: abadger1999 alikins dag gundalow jtanner maxamillion nitzmahone resmo shertel sivel
+19:45:23 <dag> abadger1999: it's not similar, we return 3x the same dictionary, one is the original values, the propose config and the final config
+19:45:35 <maxamillion> what are the aci modules?
+19:45:36 <dag> sivel: in what sense ?
+19:45:41 * jtanner wonders how many hours worth of meetings will go into decided what data goes into small / medium / large on each module
+19:46:00 <dag> jtanner: the proposal is not meant for every module
+19:46:12 <dag> but in cases where modules have this need, to do it in a standard way
+19:46:27 <sivel> dag: we are adding arg_spec and DOC comparison to validate-modules sanity testing, and out of 7000 errors/inconsistencies across all modules, 5000+ are aci modules
+19:46:28 <jtanner> then couldn't a module return a dict with 'small' 'medium' 'large' keys?
+19:46:40 <jtanner> if it's not "all" modules
+19:46:41 <dag> ok, I feel this proposal is yet another in a series where it goes nowhere very quickly
+19:47:02 <jtanner> sorry
+19:47:11 <dag> sivel: why are we not seeing those then ?
+19:47:18 <dag> sivel: they all pass the tests
+19:47:22 <sivel> I'd say, just do whatever, not sure we need to really keep discussing, as I don't think any of us see a pattern broad enough to dictate a standard here
+19:47:23 <jtanner> not trying to derail your topic
+19:47:41 <sivel> dag: we can talk about it later, they aren't enabled/merged yet. feature is in dev
+19:47:48 <dag> sivel: I don't do "whatever", I ask for opinions and nothing gets decided in the end
+19:47:50 <dag> and it stalls
+19:47:50 <abadger1999> dag: I'd think something like include=[original, proposed, final] default=[final] would work?
+19:48:13 <alikins> ran into similar problem with REST api's before. Can't say I know of a great solution though
+19:48:33 <dag> abadger1999: that might do, but is very specific to our use-case, but I don't mind if the decision is "we don't need a standard for this"
+19:48:46 <dag> I asked gundalow, and he thought it would be best to make a proposal
+19:48:51 <abadger1999> dag: yeah...I don't think we have enough other use cases to make up a standard yet.
+19:48:55 <dag> maybe I should make less proposals and just don't care... :)
+19:49:39 <dag> alright
+19:49:46 <dag> thanks everyone
+19:49:46 <abadger1999> Okay, anything more you need on this?
+19:49:48 <abadger1999> Cool.
+19:50:21 <abadger1999> #topic new sleep module: https://github.com/ansible/ansible/pull/26889
+19:50:57 <abadger1999> So IIUC, this is like pause but allows ansible to not force a sync point between hosts if we're using the free strategy.
+19:51:41 <dag> well, there's an issue with using pause as there's no guarantee it actually paused
+19:53:09 <maxamillion> from the "Drawbacks" - "Implement a specific function that one can already do using wait_for
+19:53:12 <maxamillion> "
+19:53:14 <dag> if you have 5 hosts in your play, and the first host is skipped, that pause task is skipped
+19:53:24 <abadger1999> dag: How did this differ from wait_for?  (besides being better named for the use case?)
+19:53:44 <dag> wait_for runs on the remote side
+19:53:47 <nitzmahone> (action, not module)
+19:53:55 <dag> indeed
+19:54:00 <abadger1999> I vaguely recall adding docs that promoted wait_for for this use case.
+19:54:30 <jtanner> wait_for + delegate can be local
+19:54:33 <dag> in one of our use-cases the remote targets do not exist (they need to be provisioned first)
+19:55:03 <abadger1999> So wait_for + explicit delegate-to: localhost == what hte sleep action would do?
+19:55:26 <dag> almost, it's a very efficient sleep
+19:55:31 <dag> inefficient
+19:55:52 <maxamillion> inefficient sleep?
+19:56:07 <abadger1999> invoke a new subprocess, etc.
+19:56:24 <maxamillion> alright, don't both options do that?
+19:56:27 <dag> also not something people will get to
+19:57:53 <abadger1999> We could add documentation to the pause module that points to wait_for.
+19:58:02 <abadger1999> (if we decide that's the righ way to do this)
+19:59:51 <abadger1999> maxamillion: dag's sleep is implemented as an action plugin.  So it is executed on the controller.  There's one fork for the worker but no new fork to execute the action plugin (unlike if this was done in a module)
+19:59:51 <dag> I don't see the problem with adding one basic action plugin for something simple
+20:00:04 <alikins> would be nice to have a per task 'pre' handler for stuff like this. Assuming you could block on the 'pre' handler
+20:00:38 <dag> why we need to tell people to use another module and delegate it to localhost because that somehow fulfills the same functional requirement
+20:00:48 <maxamillion> abadger1999: ah ok, I didn't realize action plugins didn't worker fork
+20:00:52 <abadger1999> We shouldn't add multiple ways to do the same thing.  (deprecate an old method sure, but multiple ways to do the same thing is more for users to learn)
+20:01:07 <abadger1999> maxamillion: they do worker fork.  but modules (as opposed to actions) have an additional fork.
+20:01:18 <abadger1999> fork/execute remotely via ssh.
+20:01:27 <abadger1999> the local connection plugin is just a fork.
+20:01:49 <maxamillion> gotchya, so it's 2 forks instead of 1
+20:01:54 <abadger1999> right
+20:02:19 <maxamillion> so ... make wait_for an action plugin?
+20:02:19 <dag> abadger1999: there's already plenty ways to do many things in Ansible
+20:02:50 <abadger1999> dag: Could we oveload either pause or wait_for (in the existing or new action pugin) to include this functionality?
+20:02:52 <maxamillion> dag: that's true, but do we want to continue to add more ways to do things to the list of already available ways?
+20:02:53 <dag> maxamillion: not possible wait_for does so many different things that people may want to do remotely
+20:03:21 <dag> maxamillion: it depends everything that does REST could be done using get_url
+20:03:29 <dag> does it make sense, obviously not
+20:03:36 <abadger1999> maxamillion: it would be add an action plugin for wait_for that handles this case.  If not this case, then pass it on to the module as it does currently.
+20:03:49 <dag> a lot of modules can be performed using win_shell and changed_when/failed_when
+20:03:53 <dag> but it's not elegant
+20:04:06 <maxamillion> dag: uri, but I see your point ... and we've rejected a number of modules because they are just thin wrappers of REST APIs for that exact reason (in fact, it's even in the docs)
+20:04:14 <dag> hell wait_for and delegate is also not elegant if you just want to sleep a bit (or in our case sleep randomly)
+20:04:34 <dag> maxamillion: but we didn't reject everything REST
+20:04:53 <jtanner> what would the sleep module do in check mode?
+20:04:58 <dag> but I would remove the wait_for: seconds from wait_for in favor of sleep, yes
+20:05:11 <dag> jtanner: it would sleep
+20:05:14 <abadger1999> jtanner: should still sleep.  it doesn't make any changes.
+20:05:19 <dag> indeed
+20:05:20 <jtanner> k
+20:05:24 <maxamillion> dag: also, can't we set an action plugin to only handle the situation of timeout being the only condition set and pass off to the module otherwise?
+20:05:44 <abadger1999> maxamillion: I'm beginning to think that's the way to go.
+20:06:35 <dag> maxamillion: or deprecate it, because "sleep" makes more sense, and is easier to find than "wait_for" IMO
+20:07:07 <dag> and then you separate functionality from wait_for, because that's doing to many different things
+20:07:19 <alikins> I think I'd call it 'controller_sleep' or such, but otherwise seems ok to me.
+20:08:16 <dag> alikins: I can see another name makes sense, but it's not really controller-sleep (that's more what pause does if it happens to be processed)
+20:08:36 <maxamillion> I think sleep as a name for the functionality makes sense
+20:08:55 <abadger1999> Okay, we're at the end of time for the meeting.
+20:09:06 <dag> anyway, we had the same discussion once and then the decision was postponed
+20:09:23 <abadger1999> I think where we're at currently is wanting to merge this functionality into one of the current modules/plugin (either wait_for or pause).
+20:10:04 <abadger1999> and we're now trying to figure out what that would look like
+20:10:20 <dag> ok, maybe add a comment so we can continue from there ;-)
+20:10:23 <abadger1999> dag: do you want to discuss more next meeting or take a look at implementing one of those?
+20:10:25 <abadger1999> k
+20:10:49 <abadger1999> #action abadger1999 to add a comment to the effect that we'd like this integrated into either wait_for or pause
+20:10:53 <abadger1999> #topic Open Floor
+20:11:00 <abadger1999> Anyone have anything to say during open floor?
+20:11:21 <abadger1999> #info 2.5.x feature freeze will be on Monday the 22nd.
+20:11:34 <abadger1999> #info 2.4.3-rc2 is coming on Wednesday, this week (tomorrow)
+20:12:04 <agaffney> when will the stable-2.5 branch be cut?
+20:12:08 <abadger1999> nitzmahone: ^
+20:12:28 <abadger1999> #info nitzmahone will be the release manager for 2.5.x
+20:12:37 <nitzmahone> I'm leaning toward waiting until b1, which is ... (scrambles for date)
+20:14:14 <nitzmahone> Could've sworn we had those all lined out somewhere.
+20:15:07 <nitzmahone> A1 will probably be within a few days of core freeze, B1 a few days after community freeze
+20:15:16 <abadger1999> I thought so too... I think I owrked on that with thaumos before handing over RM duties to you.
+20:15:32 <nitzmahone> All I see is the stuff in roadmap
+20:15:32 <jborean93> it's on the roadmap doc
+20:15:45 <nitzmahone> But I'm planning to cut the stable-2.5 branch the week of Feb 7.
+20:15:52 <jborean93> https://github.com/ansible/ansible/blob/devel/docs/docsite/rst/roadmap/ROADMAP_2_5.rst
+20:17:03 <nitzmahone> The specific branch cut dates and alpha/beta dates weren't though- just the RC/target release dates
+20:17:39 <jborean93> ah yes sorry, thought you just wanted the freeze dates
+20:18:48 <abadger1999> <nod>  Okay, so what I have in my irc logs is that community freeze and beta1 would be 7th of February
+20:19:04 <abadger1999> So if you're planning on stable-2.5 coinciding with beta1, that sounds correct.
+20:19:12 <abadger1999> Okay, any other questions?
+20:19:19 <abadger1999> If not, I'll close in 60 seconds
+20:23:53 <dag> nitzmahone: in the past the stable branch was cut only when RC1 was ready, to avoid to many backporting
+20:24:03 <dag> too
+20:24:29 <dag> (past == stable-2.4 IIRC)
+20:24:34 <nitzmahone> Yeah, we're trying a bunch of different things this time around
+20:25:02 <abadger1999> 2.6 might be even stranger.
+20:25:04 <nitzmahone> I'm willing to delay to RC1 if people think that's a big problem
+20:25:47 <abadger1999> because we're tentatively thinking it will be a stablity release so we'll kind of want some other branch to land new features in for 2.7 when 2.6 is still in development.
+20:25:55 <abadger1999> (but we can cross that bridge  later)
+20:25:58 <abadger1999> Okay.
+20:26:02 <abadger1999> Closing meeting.
+20:26:10 <abadger1999> #endmeeting

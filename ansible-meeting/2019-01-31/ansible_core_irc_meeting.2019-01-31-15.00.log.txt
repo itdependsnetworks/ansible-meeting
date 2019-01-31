@@ -1,0 +1,48 @@
+15:00:31 <bcoca> #startmeeting ansible core irc meeting
+15:00:31 <zodbot> Meeting started Thu Jan 31 15:00:31 2019 UTC.
+15:00:31 <zodbot> This meeting is logged and archived in a public location.
+15:00:31 <zodbot> The chair is bcoca. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:00:31 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:00:31 <zodbot> The meeting name has been set to 'ansible_core_irc_meeting'
+15:01:45 * gundalow waves
+15:05:20 <bcoca> damn, forgot to make feb ticket, so jan one is still in play
+15:05:43 <bcoca> @dag?
+15:06:12 <bcoca> #topic https://github.com/ansible/ansible/issues/15484
+15:08:12 <bcoca> so handler/run_once interaction, unsure how this should work, was looking for opinions from the community
+15:08:32 <dag> yes
+15:09:14 <bcoca> part of it is due to run_once misnomer .. really 'run_on_first_update_all_hosts_with_return'
+15:09:19 <bcoca> which includes facts
+15:09:31 <bcoca> run_one_for_all
+15:09:51 <dag> one_to_run_them_all
+15:09:59 <bcoca> the_ring
+15:10:14 <dag> :)
+15:11:17 <dag> I think we're alone now
+15:11:55 * bcoca brings out D&D dice
+15:12:03 * dag plays Tiffany
+15:12:09 <bcoca> k, w/o quorum not really worth discussing anything
+15:12:34 <dag> This is the perfect time to merge all my PRs :-)
+15:12:40 <bcoca> and mine!
+15:12:57 <dag> All attendance were in favor!
+15:13:02 <dag> attendants
+15:13:15 <gundalow> motion carried
+15:13:24 <alikins> requiring run_once on the handler ala https://github.com/ansible/ansible/issues/15484#issuecomment-213642704 seems ok
+15:14:11 * dag still has his doubts about run_once, and until that is fixed, I think we should refrain from expanding a misunderstood directive
+15:14:38 <alikins> which I guess you could think of as 'when this handler runs, it should "disconnect" itself'
+15:15:01 <alikins> dag: yeah, good point
+15:15:28 <bcoca> he, agreed on that point
+15:15:43 <bcoca> but i can see that you want handler to behave differently if original task had run_once vs not
+15:16:09 <bcoca> so making handler run_once might not be a fix since you may use same handler from 'run_once: false' tasks
+15:16:27 * dag is referring to this: https://github.com/ansible/ansible/issues/19966
+15:16:33 <dag> bcoca: agreed
+15:16:35 <bcoca> not sure this is enhancing run_once as much as 'defining' how it should behave in relation to handlers
+15:17:10 <bcoca> dag: bypass_host_loop .. which ends up being a 'hardcoded' versino of run_once ...
+15:17:50 <bcoca> which makes sense for stuff like add_host/group_by ... pause i would argue should have been an 'option' for the action, but that was done long before i even realized we had a pause module
+15:17:54 <dag> bcoca: I know, has been beaten to death by now :)
+15:18:16 <dag> and we don't have quorum just yet
+15:18:21 <bcoca> resurrected, beaten to death again, revived, beaten to pulp
+15:19:16 <dag> :)
+15:23:19 <bcoca> unsure what to do, either wait for more people or just have the 4 of us decide?
+15:26:29 <alikins> decide not to decide
+15:27:20 <alikins> don't 'pause' the meeting attempting to 'run_once' each agenda item ;->
+15:27:38 <bcoca> alikins++ for reentrant sarcasm
+15:27:56 <bcoca> #endmeeting

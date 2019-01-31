@@ -1,0 +1,141 @@
+19:02:07 <bcoca> #startmeeting ansible core public irc meeting
+19:02:07 <zodbot> Meeting started Tue Oct 30 19:02:07 2018 UTC.
+19:02:07 <zodbot> This meeting is logged and archived in a public location.
+19:02:07 <zodbot> The chair is bcoca. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:02:07 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:02:07 <zodbot> The meeting name has been set to 'ansible_core_public_irc_meeting'
+19:03:07 <bcoca> #topic https://github.com/ansible/ansible/pull/38269
+19:03:17 <bcoca> @alikins_ did you finish review on that?
+19:03:44 <alikins_> I'm not reviewing that
+19:04:07 <bcoca> ah, for some reason i thought you had volunteered on it
+19:06:14 <bcoca> hmm, just saw your recent comment, if authors/maintainers still have open questions then nothing to do here
+19:06:18 <bcoca> #topic open floor
+19:07:22 <maxamillion> .hello2
+19:07:23 <zodbot> maxamillion: maxamillion 'Adam Miller' <maxamillion@gmail.com>
+19:07:25 <felixfontein> just seeing you meet here, I got one question (or actually two) :)
+19:07:47 * sdoran waves
+19:08:05 <felixfontein> there's a PR for the docker inventory script (https://github.com/ansible/ansible/pull/23096), I think it looks good, but I have absolutely no knowledge about inventory scripts. can someone maybe take a quick look?
+19:08:47 <bcoca> iirc we stopped taking changes for the inventory scripts since they are mostly unmaintained
+19:09:31 <sdoran> Yeah, which is addressed in the PR by the author.
+19:09:59 <felixfontein> and secondly, the author asks (https://github.com/ansible/ansible/pull/23096#issuecomment-434321683) about comments about a related commit (https://github.com/milo-minderbinder/ansible/commit/c5c7bac03af6370267537572979bf14a6c1154e4), which apparently was discussed on the devel ML, and where bcoca already commented on that this should probably become an inventory plugin. I know nothing about
+19:10:05 <felixfontein> that (and I'm not sure if anyone of the docker_* maintainers does, at least nobody replied so far), so maybe someone else can comment on that?
+19:10:21 <bcoca> change itself lgtm after quick scan
+19:11:05 <felixfontein> ok, then I think it can be merged ;)
+19:11:15 <bcoca> though some things are not py2/py3 safe like `str(exc) `
+19:11:30 <bcoca> but they already existed ..
+19:11:39 <felixfontein> yep
+19:11:43 <felixfontein> it doesn't make it worse...
+19:12:07 <bcoca> anyone against mergin this?
+19:12:38 <sdoran> It's a sticky spot: simple fix to make the thing work today, but goes against the policy of nor more changes to scripts.
+19:12:48 <sdoran> I'm ok with merging it, just be pragmatic.
+19:12:52 <sdoran> *to
+19:13:10 <felixfontein> merging it is also encouraging the first-time contributor to maybe do something more :)
+19:13:47 <felixfontein> is there already a docker-related inventory plugin?
+19:13:50 <sdoran> The good outweighs the bad. And asking "could you just please rewrite this whole thing?" is probably not helpful.
+19:14:24 <felixfontein> +1
+19:18:20 <bcoca> set rebuild_merge, since no oppo
+19:19:06 <felixfontein> thanks!
+19:19:30 <felixfontein> about the author's question: "Anyway, let me know if the dynamic inventory group/host naming issue still seems relevant and if I should create a separate issue & PR, or if this problem has been addressed through one of the ansible core plugins or modules."
+19:19:41 <felixfontein> (https://github.com/ansible/ansible/pull/23096#issuecomment-434321683)
+19:23:05 <bcoca> idk
+19:23:11 * gundalow waves
+19:24:28 <cyberpear_> can we talk about raw_stdin?
+19:24:52 <cyberpear_> https://github.com/ansible/ansible/pull/45170
+19:25:08 <bcoca> felixfontein:  im sure we'll eventually end with a  docker inventory plugin, until then i would say .. we'll take each PR as it pops up
+19:25:17 <bcoca> cyberpear_: wait till prev topic is done
+19:25:28 * cyberpear_ will wait, sorry
+19:26:40 <bcoca> felixfontein: anything else on this?
+19:26:55 <felixfontein> bcoca: I don't think so. I'll paraphrase your answer in the PR, if you don't mind :)
+19:27:52 <bcoca> k,
+19:27:57 <bcoca> #topic https://github.com/ansible/ansible/pull/45170
+19:28:52 <felixfontein> thanks everyone!
+19:28:55 <bcoca> -1 what you really seem to want is to modify current behaviour of stdin, not add an alternate
+19:29:09 <bcoca> also 'binary_data' will be a misnomer as its not possible to pass from a playbook this way
+19:29:43 <cyberpear_> would you be okay with modifying the behavior, even with it markedas 'stableinterface'?
+19:30:06 <bcoca> no, add an option that does it, defaults to current, not a parallel option
+19:30:17 <cyberpear_> that's what I've done
+19:30:19 <bcoca> i.e nonposix: true <= avoids the line ending issue
+19:30:36 <cyberpear_> raw_stdin is a binary flag that tweaks the behavior
+19:30:42 <bcoca> nvmd, i misread what raw_stdin is ... name is misleading
+19:30:44 <cyberpear_> but I'm fine renaming it to 'nonposix'
+19:31:11 <cyberpear_> I'm fine w/ any name that's preferred.
+19:31:22 * bcoca this is why i wanted to avoid stdin in the first place
+19:31:50 * cyberpear_ finds stdin as useful for passwords, etc.
+19:33:15 <bcoca> jborean93: you already reviewed, any reason its not merged?
+19:33:27 <bcoca> i still think name is misleading, but dont really have good alternative
+19:33:57 <jborean93> It used to be binary_stdin to match run_command IIRC and this was the best one we could come up with
+19:34:21 <jborean93> I mostly forgot about it but I believe I didn’t merge at the time because I was waiting on someone else to review
+19:35:02 <bcoca> code lgtm, its just the name  i found confusing
+19:35:14 <bcoca> stdin_posix: yes|no ?
+19:35:38 <jborean93> The trouble is this could potentially be useful for win_* modules where posix isn’t a thing
+19:35:55 <bcoca> the whole reason a \n gets added is for 'valid posix file'
+19:36:00 <jborean93> I can’t remember if we already append a newline or not though
+19:36:12 <bcoca> i expect a \r\n on windows
+19:36:48 <nitzmahone> IIRC we just close the stdin handle
+19:36:50 <cyberpear_> I'd hope that it would just take what was literally passed as the arg, without modification.
+19:37:00 <bcoca> if not binary_data:
+19:37:02 <bcoca> data += '\n'
+19:37:05 * nitzmahone looks
+19:37:57 <jborean93> I don’t think we explicitly add any new lines
+19:38:07 <jborean93> Unless we call writeline on the stdin pipe created
+19:38:29 <bcoca> on windows side, ^ code above is 'non windows'
+19:38:57 <jborean93> I know, I’m just saying stdin_posix doesn’t really match for Windows if we need to implement the arg there
+19:39:34 <bcoca> add_line_ending?
+19:39:53 <nitzmahone> Yeah, that's more what I was thinking `add_newline_to_stdin`
+19:40:07 * bcoca opens up bikeshed for voting
+19:40:12 * nitzmahone hates generically-named args like "force"
+19:42:26 * cyberpear_ likes raw_stdin as simplest
+19:46:02 <bcoca> cyberpear_: my issue with that is people will put the 'raw stdin content' in it
+19:46:09 <bcoca> instead of thinking of it as a toggle
+19:46:14 <nitzmahone> Yeah, but `raw` meaning not escaped? not encoded?
+19:46:23 <bcoca> ^ also that
+19:46:42 <bcoca> you cannot pass binary as templating/jinja2 and yaml will convert to text
+19:46:52 <bcoca> so 'raw' is double misleading
+19:47:22 <cyberpear_> you can put binary into yaml, though it's not common
+19:48:31 <cyberpear_> literal_stdin?
+19:48:45 <cyberpear_> stdin_no_munge?
+19:49:14 <jborean93> `stdin_newline`?
+19:49:31 <jborean93> `add_newline_to_stdin` seems too long but really I don't mind either way
+19:50:08 <bcoca> cyberpear_: yes,b ut that requires knowing !!binary and the parser/language supporting it
+19:50:12 <nitzmahone> stdin_newline doesn't say "boolean" to me
+19:50:32 <bcoca> even then it would not survive passing to module as that gets serialized/deserialized
+19:50:34 <cyberpear_> so if we pick something that has 'no' in it, it would hint at binary
+19:50:41 <cyberpear_> (boolean, rather)\
+19:50:42 <bcoca> would need to add base64 encode/decode
+19:51:02 <bcoca> no_ending_added
+19:51:07 <nitzmahone> no_stdin_trailing_newline
+19:51:26 * nitzmahone also usually dislikes double-negative args
+19:51:36 <bcoca> #note code to fix issue not hard, naming .... impossible!
+19:51:37 <nitzmahone> `no_stdin_trailing_newline: no`
+19:51:41 <nitzmahone> (head explodes)
+19:52:00 <cyberpear_> (we've already got that with 'no_log: no' :P)
+19:52:29 <bcoca> tempted to change that to 'censor'
+19:52:49 <jborean93> what about `no_not_censor` :P
+19:52:53 <cyberpear_> lol
+19:53:10 <bcoca> k, back to current bikeshed, before we rewrite all keywords
+19:53:22 <jborean93> out of all I think `add_newline_to_stdin` is the best if we aren't worrying about the length
+19:53:25 * bcoca stares at ignore_errors
+19:53:54 <bcoca> skip_appending_newline
+19:55:08 <cyberpear_> https://github.com/ansible/ansible/blob/ddfd1dbfc614a7a46192aa77618af36a58dda020/lib/ansible/module_utils/basic.py#L2711 is the description of the newline-adding, and https://github.com/ansible/ansible/blob/ddfd1dbfc614a7a46192aa77618af36a58dda020/lib/ansible/module_utils/basic.py#L2873 is the implementation
+19:55:19 <cyberpear_> stdin_add_newline?
+19:55:51 <cyberpear_> ^seems most descriptive, and is not negative
+19:55:53 <bcoca> tempted to just do poll on ML .. but mcnewlineface will probably win
+19:56:06 <nitzmahone> stdin_add_newline WFM
+19:56:14 <bcoca> we kind of want negative for the defeault no/None
+19:56:28 <nitzmahone> meh
+19:56:30 * cyberpear_ fine w/ default=yes
+19:56:33 <bcoca> having a 'true' default  will not let you know if user set or not
+19:56:40 <jborean93> I'm fine with `stdin_add_newline`
+19:56:46 <bcoca> but im going to say good enough in this case
+19:56:51 <jborean93> isn't this defautled to yes anyway?
+19:56:54 <bcoca> stdin_add_newline wins by exhaustion
+19:57:03 <bcoca> jborean93: the point was to default to no/none
+19:57:11 <bcoca> which would still append line
+19:57:14 <jborean93> ah
+19:57:14 <cyberpear_> the current behavior would be `stdin_add_newline: yes`
+19:57:23 <bcoca> ok with that
+19:57:27 <nitzmahone> +1
+19:57:30 <bcoca> +1
+19:57:51 <bcoca> #topic open floor
+19:58:53 * cyberpear_ will update PR for stdin_add_newline
+19:59:25 <bcoca> #endmeeting

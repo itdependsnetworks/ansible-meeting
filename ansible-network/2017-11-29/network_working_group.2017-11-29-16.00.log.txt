@@ -1,0 +1,201 @@
+16:00:05 <gundalow> #startmeeting Network Working Group
+16:00:05 <zodbot> Meeting started Wed Nov 29 16:00:05 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:00:05 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:00:05 <zodbot> The meeting name has been set to 'network_working_group'
+16:01:05 * privateip waves
+16:01:32 <gundalow> #chair privateip rcarrillocruz trishnag funzo
+16:01:32 <zodbot> Current chairs: funzo gundalow privateip rcarrillocruz trishnag
+16:01:39 <kedarX> 👋
+16:01:43 <funzo> o/
+16:01:44 <trishnag> o/
+16:01:49 * Qalthos 🌊🌊
+16:01:57 <rcarrillocruz> o/
+16:02:13 * gundalow waits a few minutes for people to trickle in
+16:02:45 <gundalow> #info Agenda https://github.com/ansible/community/labels/network
+16:04:47 <caphrim007> o/
+16:05:12 <gundalow> #chair kedarX Qalthos samerd caphrim007
+16:05:12 <zodbot> Current chairs: Qalthos caphrim007 funzo gundalow kedarX privateip rcarrillocruz samerd trishnag
+16:05:27 <gundalow> justmacs: smolz_ Hi, you here for teh Network meeting?
+16:05:48 <smolz_> yup
+16:06:16 <gundalow> Ace, would you be happy to introduce yourself?
+16:06:19 <gundalow> #chair smolz_
+16:06:19 <zodbot> Current chairs: Qalthos caphrim007 funzo gundalow kedarX privateip rcarrillocruz samerd smolz_ trishnag
+16:08:38 <gundalow> OK, will start
+16:08:54 <gundalow> Agenda: https://github.com/ansible/community/labels/network feel free to add items
+16:09:16 <gundalow> #topic Network_cli developer documentation
+16:10:12 <gundalow> #info We now have documentation for *developers* on how to use the `connection: network_cli` work that's part of Ansible 2.5
+16:10:22 <gundalow> #info https://github.com/ansible/community/blob/master/group-network/network_dev_network_cli.rst
+16:11:01 <gundalow> #info If anything isn't clear please ask in #ansible-network and we will improve the documentation
+16:14:05 <gundalow> OK, no questions on that. We will send and email out to partners with a link to https://github.com/ansible/community/blob/master/group-network/network_dev_network_cli.rst in
+16:14:12 <caphrim007> one question real quick
+16:14:19 <caphrim007> it says """The purpose of the cliconf plugin is to implement standardized calls for platform features such as retrieving the output from commands and editing the platform configuration."""
+16:14:28 <caphrim007> is there a list of said calls that are standardized?
+16:14:35 <gundalow> privateip: ^
+16:14:44 <rcarrillocruz> CliConfBase
+16:14:52 <caphrim007> or is it only the 5 that are in the cliconf plugin and no more
+16:14:59 <rcarrillocruz> that's the abstract class platform specific inherit
+16:15:35 <gundalow> #info From Ansible 2.6 we will not be accepting new platforms that use top-level nor `provider:`. New network modules will need to support network_cli
+16:15:54 <caphrim007> rcarrillocruz: thanks
+16:16:13 <privateip> as rcarrillocruz says, you can implement additional calls in the platform specific plugin
+16:16:17 <rcarrillocruz> caphrim007: https://github.com/ansible/ansible/blob/devel/lib/ansible/plugins/cliconf/__init__.py
+16:16:25 <caphrim007> yep found it
+16:17:11 <smolz_> easy to add a link to that in the doc?
+16:17:37 <rcarrillocruz> makes sense to me
+16:18:06 <rcarrillocruz> gundalow: feel free to add an action item for me to reference that in the doc
+16:18:13 <rcarrillocruz> otherwise i'll forget :/
+16:18:34 <gundalow> #action rcarrillocruz to add link to abstract class platform specific inherit to https://github.com/ansible/community/blob/master/group-network/network_dev_network_cli.rst
+16:19:46 <gundalow> oh, which reminds we. The reason we haven't put this doc in the usual docs.ansible.com place is so we can quickly update it without having to go via tech-author review. It will end up on docs.ansible.com once towards the end of Ansible 2.5 development
+16:20:04 <gundalow> caphrim007: smolz_ Any other questions on that?
+16:20:40 <caphrim007> i'm set
+16:20:40 <smolz_> just submit a PR if there are wording things?
+16:21:04 <gundalow> smolz_: Yup, that would be great. I'll review and merge
+16:21:14 <gundalow> skg-net: FYI https://github.com/ansible/community/blob/master/group-network/network_dev_network_cli.rst
+16:21:27 <gundalow> #chair skg-net
+16:21:27 <zodbot> Current chairs: Qalthos caphrim007 funzo gundalow kedarX privateip rcarrillocruz samerd skg-net smolz_ trishnag
+16:21:34 <skg-net> gundalow:thanks
+16:21:57 <gundalow> #topic Network Become
+16:22:53 <gundalow> #info Building on connection: network_cli, Ansible 2.5 also allows Playbook writers to use `become:` (rather than `authorize:` & `auth_pass`).
+16:23:22 <gundalow> #info Documentation for Network Become: (reviews welcome) https://github.com/ansible/ansible/pull/33367
+16:24:23 <gundalow> Any questions on that?
+16:25:13 <smolz_> is it just to align with other ansible modules?
+16:25:17 <gundalow> smolz_: correct
+16:25:38 <gundalow> Aligns a lot more with the "Ansible way of doing things"
+16:26:00 <smolz_> so no difference between a cisco device and a linux
+16:26:13 <gundalow> Correct
+16:28:25 <samerd> shall we remove the usage of authorize?
+16:28:56 <samerd> authorize is just updating the become and become_method
+16:29:21 <gundalow> samerd: authorize will continue to work, though at somepoint in a future release it will trigger a deprecation warning
+16:29:56 <samerd> gundalow: thanks
+16:30:31 <Qalthos> To clarify, authorize works with connection: local, become works with connection: network_cli (netconf, etc.) but no other combination
+16:31:14 <gundalow> oh, connection local.
+16:31:16 * gundalow updates docs
+16:32:10 <skg-net> Thanks that helps
+16:32:20 <Qalthos> warnings for all that will start when we deprecate connection: local for network modules
+16:32:32 <skg-net> is there a connection plugin for netconf as well
+16:32:58 <Qalthos> currently usable with junos modules, yes
+16:33:31 <skg-net> is there a similar document on how to implement that as well?
+16:34:51 <Qalthos> It's the same process as network_cli, I can't think of any specific caveats for netconf other than method names in netconf being different
+16:35:30 * Qalthos will clarify that in docs when he gets to updating them
+16:37:09 <gundalow> #action Qalthos to specific caveats for netconf in network_dev_network_cli.rst for skg-net
+16:37:21 <gundalow> erm
+16:37:26 <gundalow> did I mean that
+16:37:32 <Qalthos> you did
+16:37:36 <gundalow> good
+16:37:50 <skg-net> thx
+16:38:12 <gundalow> Any other questions on this?
+16:38:29 <gundalow> As a general reminder, feel free to ask questions in IRC any anypoint on any of this
+16:38:59 <gundalow> #topic Open Floor
+16:39:22 <gundalow> Other other thing on the agenda is from Mike Weiebe who doesn't appear to be online
+16:40:01 <gundalow> #chair
+16:40:01 <zodbot> Current chairs: Qalthos caphrim007 funzo gundalow kedarX privateip rcarrillocruz samerd skg-net smolz_ trishnag
+16:40:07 <gundalow> Anyone got anything else?
+16:40:39 <bearrito> nope
+16:40:51 <skg-net> when is 2.5 slated for release?
+16:41:06 <samerd> general question regarding the timeline of 2.5
+16:41:21 <andriusb> https://github.com/ansible/ansible/blob/devel/docs/docsite/rst/roadmap/ROADMAP_2_5.rst
+16:42:34 <gundalow> #chair bearrito andriusb
+16:42:34 <zodbot> Current chairs: Qalthos andriusb bearrito caphrim007 funzo gundalow kedarX privateip rcarrillocruz samerd skg-net smolz_ trishnag
+16:42:45 <jmcgill298> @gundalow: I asked about this in #ansible yesterday, but didn't get much response
+16:42:52 <gundalow> #chair Anil jmcgill298
+16:42:52 <zodbot> Current chairs: Anil Qalthos andriusb bearrito caphrim007 funzo gundalow jmcgill298 kedarX privateip rcarrillocruz samerd skg-net smolz_ trishnag
+16:43:28 <jmcgill298> are there any docs on what to expect when using handlers between roles and the proper way to use a handler from one role in another role?
+16:43:49 <jmcgill298> bugs have been raised since 2.1, but still not fixed; which I interpret as we aren't supporting that anymore
+16:44:07 <gundalow> jmcgill298: That's one for #ansible-devel I think
+16:44:20 <gundalow> samerd: Did you have a question around the 2.5 timeline?
+16:44:31 <jmcgill298> I'm just curious if there is an official doc that explains what to expect?
+16:44:33 <gundalow> #info 2.5 timeline & roadmap https://github.com/ansible/ansible/blob/devel/docs/docsite/rst/roadmap/ROADMAP_2_5.rst
+16:45:21 <samerd> gundalow: andriusb: Thanks, this answered my question
+16:45:22 <gundalow> jmcgill298: AFAIK http://docs.ansible.com/ansible/latest/playbooks_intro.html#handlers-running-operations-on-change are the only handler docs we have
+16:45:39 <gundalow> Anil: Hi, did you have anything?
+16:46:22 <Anil> Just want to ask regarding usage of bceome
+16:46:27 <Anil> become
+16:46:43 <Anil> from when onwards thats working ?
+16:46:54 <gundalow> Anil: sure, did you see the PR for user docs https://github.com/ansible/ansible/pull/33367
+16:47:02 <Anil> If I update by source and try out, will it work ?
+16:47:22 <gundalow> in 2.5 when using connection: network_cli you can use become
+16:47:44 <Qalthos> (aka, right now in devel)
+16:47:49 <gundalow> If you are using connection: local then you use provider's authorize: & auth_pass:
+16:48:22 <gundalow> Anil: Are your platforms using connection: local or connection: network_cli?
+16:48:24 <Anil> yeah got it.. so I will my source tommroow morning and try to work with that
+16:48:37 <Anil> I have already changed to network_cli
+16:48:56 <Anil> but then it was not going into enable mode
+16:49:13 <skg-net> can we make become to true for config modules or the user has to specify each time when the config module is used
+16:49:17 <Anil> then I patched my module_util file to make it to go to enable mode
+16:49:38 <Anil> now i will revert back and use become.. and try
+16:50:01 <Qalthos> skg-net: you can put become: yes at the playbook level if that helps
+16:50:28 <gundalow> as show in https://github.com/ansible/ansible/pull/33367
+16:50:51 * Qalthos is not sure if there's a good reason to not be elevated, but there's also become: no in that instance
+16:51:13 <skg-net> got it thanks
+16:51:21 <gundalow> Topner: Hi :)
+16:51:33 <Topner> hey there!
+16:51:50 <gundalow> Topner: We are in Open Floor, did you have any questions>
+16:52:53 <Topner> ah no I am all set right now, didn't know about this channel until I saw you mention it in ntc slack
+16:53:07 <gundalow> ah, cool
+16:53:17 <gundalow> Feel free to idle in here.
+16:53:32 <samerd> I have a question regarding the checks
+16:53:46 <gundalow> Topner: Link to Agenda: https://github.com/ansible/community/labels/network
+16:53:50 <gundalow> samerd: sure
+16:54:08 <samerd> is there any way to rerun them, sometimes the failure is not related to the pushed code
+16:55:04 <gundalow> samerd: close & re-open PR
+16:55:10 <gundalow> or push a commit
+16:55:45 <gundalow> If the failure is in (say) windows and you are only touching a Network modules then you can ignore it
+16:56:04 <gundalow> We do see issues with apt/yum repos not being accessable all the time
+16:58:34 <samerd> gundalow: thanks, actually I have a PR https://github.com/ansible/ansible/pull/33356 with such a failure
+16:58:49 * gundalow looks
+16:59:21 <itdependsnetwork> A question on network_dev_network_cli when you get a chance
+16:59:43 <gundalow> samerd: ah, so tets is "unstable", which means "first run failed, second run passed", so you are OK
+17:00:36 <Anil> yeah, that happned to me too.. why that happens, first fails and second passes ?
+17:00:45 <samerd> gundalow: I see, thanks a lot
+17:01:09 <gundalow> Anil: Possible that there was a temp issue connecting to (say) a yum repo
+17:01:49 <gundalow> #chair itdependsnetwork mikewiebe
+17:01:49 <zodbot> Current chairs: Anil Qalthos andriusb bearrito caphrim007 funzo gundalow itdependsnetwork jmcgill298 kedarX mikewiebe privateip rcarrillocruz samerd skg-net smolz_ trishnag
+17:01:58 <gundalow> itdependsnetwork: sure
+17:02:11 <Anil> I spent quite some time to find out the reason, but could not..
+17:02:11 <itdependsnetwork> Is this meant to be used by non-core modules?
+17:02:56 <gundalow> itdependsnetwork: Just to clarify, by non-core you mean
+17:03:02 <gundalow> a) modules that don't ship with Ansible
+17:03:10 <itdependsnetwork> a
+17:03:17 <gundalow> b) Modules included in Ansible but written by others
+17:03:32 <itdependsnetwork> ntc or napalm as an example
+17:04:03 <gundalow> privateip: Qalthos Do you see any reasons why modules that are NOT shipped with Ansible (such as NTC or Napalm) couldn't use network_cli (as per network_dev_network_cli.rst)
+17:04:13 <privateip> none
+17:04:17 <privateip> they could very easily use it
+17:04:27 <privateip> not limited to core
+17:04:39 <gundalow> As you'd expect, the modules would only work if Ansible 2.5+ was installed
+17:05:54 <itdependsnetwork> So I would have to distribute plugins with my module?
+17:06:12 <privateip> yes
+17:06:27 <privateip> but plugins are just as easy to distribute as modules
+17:06:34 <gundalow> In the same way you (I assume) already distribute module_utils
+17:06:47 <itdependsnetwork> ok, just a /plugins dir or something
+17:07:54 <privateip> its configurable in ansible.cfg
+17:08:33 <itdependsnetwork> ok
+17:08:40 <itdependsnetwork> still trying to wrap my brain around it, but will look some more
+17:09:20 <privateip> let me know if you have specific questions
+17:09:25 <privateip> happy to work with you to figure it out
+17:09:28 <itdependsnetwork> thanks
+17:09:29 <privateip> whatever it might be
+17:12:28 <gundalow> mikewiebe: dt-arista Welcome. You'r timezones still out, we started an hour ago :P
+17:12:38 <gundalow> mikewiebe: trishnag You want to discuss the NXOS modules?
+17:12:55 <gundalow> dt-arista: Did you have anything to discuss?
+17:13:02 <dt-arista> i figure by the time we switch times back i will adjust again
+17:13:19 <dt-arista> nothing specific just listening in on any network-cli talk
+17:13:54 <gundalow> dt-arista: https://github.com/ansible/community/blob/master/group-network/network_dev_network_cli.rst https://github.com/ansible/ansible/pull/33367 for backround
+17:14:12 <gundalow> dt-arista: ah, same as the oven clock :)
+17:14:26 <dt-arista> cool, thanks!
+17:14:27 <gundalow> #topic NXOS
+17:14:31 <dt-arista> exactly and my VCR :)
+17:14:51 <mikewiebe> gundalow: Hmm.. my timezone setting is fine but I forgot to change it on my cal :)
+17:15:29 <gundalow> dt-arista: mikewiebe Import by URL (do not download and add) https://raw.githubusercontent.com/ansible/community/master/meetings/ical/network.ics
+17:15:46 <dt-arista> thank you
+17:15:54 <mikewiebe> gunalow: I don't need to hold up the meeting since we are already over time.  We can discuss tomorrow.
+17:16:17 <samerd> help
+17:16:28 <gundalow> mikewiebe: OK. I'm not sure on teh reasons, so would need trishnag's input
+17:16:54 <samerd> sorry, ignore my last message
+17:17:00 <gundalow> samerd: :)
+17:17:11 <gundalow> mikewiebe: Sure, lets disuss that tomorrow
+17:17:21 <gundalow> #info Will discuss NXOS in tomorrows call
+17:17:26 <gundalow> #topic Open Floor
+17:17:31 <gundalow> Anyone got any final comments
+17:18:02 <gundalow> If not I'll close shorly
+17:19:17 <gundalow> Cool, thank you everybody
+17:19:20 <gundalow> #endmeeting

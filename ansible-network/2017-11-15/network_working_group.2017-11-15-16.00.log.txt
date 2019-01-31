@@ -1,0 +1,63 @@
+16:00:09 <gundalow> #startmeeting Network Working Group
+16:00:09 <zodbot> Meeting started Wed Nov 15 16:00:09 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:00:09 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:00:09 <zodbot> The meeting name has been set to 'network_working_group'
+16:00:34 * Qalthos 🌊🌊
+16:00:53 <gundalow> #chair privateip Qalthos funzo rcarrillocruz ganeshrn trishnag kedarX  st8less jmcgill298
+16:00:53 <zodbot> Current chairs: Qalthos funzo ganeshrn gundalow jmcgill298 kedarX privateip rcarrillocruz st8less trishnag
+16:03:37 * gundalow waits a couple of mins for others to join
+16:05:53 <trishnag> o/
+16:05:58 <rcarrillocruz> i'm around
+16:07:08 <gundalow> #chair Anil
+16:07:08 <zodbot> Current chairs: Anil Qalthos funzo ganeshrn gundalow jmcgill298 kedarX privateip rcarrillocruz st8less trishnag
+16:07:48 <gundalow> #info Agenda https://github.com/ansible/community/labels/network
+16:08:43 <gundalow> #topic 2.5 update
+16:09:26 <gundalow> #info `connection: network_cli` is LIVE. The issues with `authorize: true` (eos & ios) have been resolved
+16:09:39 <gundalow> #info NO MORE `unable to open shell`
+16:09:49 <gundalow> #info NO MORE `unable to open shell` even when using `connection: local`
+16:10:03 <Anil> Great!
+16:10:10 <gundalow> #action EVERYONE We'd really welcome testing on  the devel branch, this is a HUGE change
+16:11:02 <gundalow> #info Error messages are show in ansible-playbook output: fatal: [vyos01.example.net]: FAILED! => {"msg": "host key mismatch for vyos01.example.net"}
+16:11:27 <gundalow> st8less: jmcgill298 Anil We'd really welcome your feedback on this
+16:11:52 <gundalow> #info NOTE: `connection: local` & `provider:` is still needed for eapi & nxapi
+16:12:54 <Anil> So instead of local if i put network_cli, it will work .. am I right ?
+16:12:59 <gundalow> correct
+16:13:06 <Anil> in playbook
+16:13:08 * gundalow is working on updated docs, one sec
+16:13:12 <gundalow> will find example
+16:13:24 <Anil> ok
+16:13:31 <st8less> Sounds good, I'll definitely take a look.
+16:14:05 <Anil> I will test it on enos modules tommorrow
+16:14:15 <Qalthos> Caveat, if not in the set (eos,ios,iosxr,nxos,junos,vyos), there may be some action plugin tweaks needed
+16:14:24 <gundalow> #info If you set `connection: network_cli` YOU MUST also set `network_os: $platform` (where platform is the three module prefix, e.g. eos, ios, nxos, vyos)
+16:14:24 <Qalthos> I know some platforms have done that already
+16:14:59 <gundalow> # Example inventory line: ios01.example.net ansible_connection=network_cli ansible_network_os=ios ansible_user=cisco ansible_ssh_pass=mypassword
+16:15:03 <Anil> ok
+16:15:55 <gundalow> Qalthos: ah, good point. Any other caveats?
+16:16:55 <Qalthos> Not that I can think of. If it's one of those six, I fixed them myself, if not, there may be issues we need to work out
+16:17:07 <Qalthos> Again, please test
+16:17:13 <gundalow> :)
+16:17:30 <gundalow> #info For general 2.5.0 status please see https://github.com/ansible/ansible/projects/10
+16:18:17 <gundalow> #info Note that connection: (eapi, nxapi) are strech goals for 2.5 (that means there is lots of other stuff that needs doing before that, and it might end up in 2.6)
+16:19:05 <gundalow> #info 2.5 Roadmap is live https://github.com/ansible/ansible/blob/devel/docs/docsite/rst/roadmap/ROADMAP_2_5.rst
+16:19:34 <gundalow> Any other questions on 2.5 or the connection work?
+16:20:32 <Anil> I have one
+16:20:37 <gundalow> Anil: Sure
+16:21:03 <Anil> what will be the freeze date for our modules, in this context?
+16:21:30 <Anil> 15 Jan right ?
+16:22:20 <gundalow> Anil: yup
+16:22:33 <gundalow> Note: that's the final date, we'd really like stuff to be in before hand
+16:22:44 <Anil> Great Thanks
+16:23:17 <gundalow> #info notes dates in ROADMAP_2_5.rst are FINAL dates, even PRs raised before hand are NOT guaranteed to get in. Sooner the better :)
+16:23:21 <gundalow> #topic Open Floor
+16:23:24 <gundalow> #chair
+16:23:24 <zodbot> Current chairs: Anil Qalthos funzo ganeshrn gundalow jmcgill298 kedarX privateip rcarrillocruz st8less trishnag
+16:23:28 <gundalow> Anyone got anything else?
+16:27:44 <gundalow> bearrito: Hi, we are in "Open Floor", you got anything?
+16:28:12 <bearrito> nope. thought i missed it again
+16:33:58 <gundalow> Anil: st8less jmcgill298 Anything else for you?
+16:34:14 <st8less> No, I'm good.
+16:34:28 <jmcgill298> i'm good
+16:34:37 <gundalow> Cool
+16:35:10 <gundalow> Please do test the new connection work, the error messages alone should make it much more userfriendly
+16:35:13 <gundalow> #endmeeting

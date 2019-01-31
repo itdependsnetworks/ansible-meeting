@@ -1,0 +1,331 @@
+15:00:46 <bcoca> #startmeeting ansible core irc meeting
+15:00:46 <zodbot> Meeting started Thu Aug  9 15:00:46 2018 UTC.
+15:00:46 <zodbot> This meeting is logged and archived in a public location.
+15:00:46 <zodbot> The chair is bcoca. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:00:46 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:00:46 <zodbot> The meeting name has been set to 'ansible_core_irc_meeting'
+15:01:00 <bcoca> #topic with_ deprecation
+15:01:04 <bcoca> @sivel ?
+15:04:36 <sivel> skipping with_ deprecation until next week
+15:06:02 <abadger1999> Olá
+15:06:08 <bcoca> #topic touching file
+15:06:49 <abadger1999> I'd like to change the default of file state=touch to be idempotent.
+15:06:49 <bcoca> i dont see touch as a state, so it is not something i expect to be idempotent, the main reason for the touch utility is to change the date on the file, i expect this to be the 'least suprise' to most users
+15:07:23 <abadger1999> touch is a replacement for state=file because that one doesn't create files, it only modifies existing ones.
+15:07:32 <bcoca> that it also breaks backwards compat ... is another reason i dislike this change
+15:07:44 <bcoca> well, file has really bad 'state' options ...
+15:07:53 <abadger1999> touch does everything that file does with two differences.
+15:07:56 <bcoca> those should be 'types' .. but that is other debate
+15:08:00 <abadger1999> (1) It creates a file that doesn't exist.
+15:08:06 <abadger1999> (2) it sets the timestamp to now.
+15:08:15 <bcoca> which is what most people exepct from 'touch'
+15:08:37 <abadger1999> the change would be that state=touch will not change the timestamp unless told to.
+15:09:05 <abadger1999> this is backwards incompatible but it would finally give us a state that operates on files sensibly.
+15:09:10 <bcoca> i think you really want a 'present' state to mirror the 'absent' one and which would then make sense to work as you say
+15:09:21 <bcoca> the problem is that state is overloaded with 'file type'
+15:09:26 <abadger1999> bcoca: no
+15:09:36 <abadger1999> state is synonymous with file type.
+15:09:41 <abadger1999> Except for touch currently.
+15:09:47 <bcoca> and absent
+15:09:54 <abadger1999> absent is a file type.
+15:10:00 <bcoca> ^ which to me are the only 2 'real states' in state
+15:10:01 <abadger1999> just as empty string is a string.
+15:10:10 <bcoca> but None is not a string
+15:10:34 <bcoca> touch  == empty string in this case, if you want o make that argument
+15:10:41 <bcoca> absent is closer to None
+15:11:30 <abadger1999> anyhow, the question here is whether good ui or backwards compatibility is more important here.
+15:11:57 <bcoca> i dont think this change is either, as most people expect touch to modify date/time
+15:12:07 <bcoca> so -1 from me on both accounts
+15:12:28 <abadger1999> If we do want good ui but don't like touch, we could also break backwards compat by changing state=file to create a missing file.  But that will affect more people than changing this aspect of touch.
+15:12:33 <bcoca> the question on ui is idempotency vs 'least suprise'
+15:13:07 <bcoca> abadger1999: i would not leave state=filetype, i would split those to what they should have been state=present/absent type=file/dir/link/etc
+15:13:39 <bcoca> or even make a link/directory/permissions/touch modules and slowly phase out 'file'
+15:14:13 <abadger1999> When we make a file2 module, that is a possibility but it's not currently on any plans.
+15:14:21 <abadger1999> So I would like to give users a sane choice.
+15:14:35 <bcoca> i think current touch is sane, it does what most people expect
+15:14:44 <bcoca> not that i would have it in file, but that ship sailed
+15:15:21 <abadger1999> The current file module needs something that can idempotently assure that a file exists with certain attributes.
+15:15:25 <abadger1999> we lack that.
+15:15:30 <abadger1999> so we need something.
+15:15:38 <sivel> abadger1999: I think my pref (and sorry haven't read all scollback) is that touch does what it still does, timestamp defaults to now, unless otherwise specified
+15:16:01 <abadger1999> sivel: can we change state=file, then?
+15:16:03 <bcoca> timesampt=existing ? ... really hate it, but seems like it would provide what you want
+15:16:06 * gundalow waves
+15:16:20 <bcoca> also .. 3 timestamps ...
+15:16:26 <bcoca> mtime/atime/ctime
+15:16:38 <abadger1999> because currently, there's no good way to do the most common thing you want from file.
+15:16:45 <sivel> bcoca: I'm not saying that "existing" would be a value.  The user would have to explicitly specify a timestamp
+15:17:10 <bcoca> sivel: i know, but that is not what he wants to implement, its to keep 'current timestamp on file' ... so looking at 'special value' as compromise
+15:17:27 <abadger1999> bcoca: I don't think you can change ctime....
+15:17:57 <bcoca> abadger1999: you can set diff ctime than 'now'
+15:18:45 <abadger1999> How?
+15:18:54 <sivel> abadger1999: I suppose with state=file, it either doesn't touch the mtime, or allows you to use an explicit timestamp you provide.  touch should modify mtime to now, unless an explicit timestamp is provided
+15:19:10 <abadger1999> sivel: No....
+15:19:13 <bcoca> ctime is change time, not create time
+15:19:20 <abadger1999> To restate now that everyone is here....
+15:19:26 <bcoca> ti happens to be 'create time' if no changes went into it
+15:19:40 <bcoca> thoubh most systems only modify mtime after intial creation
+15:20:09 <abadger1999> The problem is that the thing you want to use file state=9(file|touch) for is to assure yourself that a file is present with the specified attributes.
+15:20:18 <abadger1999> But neither file nor state currently do that.
+15:20:23 <abadger1999> file will not create a file
+15:20:33 <abadger1999> touch updates the timestamp to now.
+15:20:44 <abadger1999> so the first is not at all possible.
+15:20:54 <abadger1999> (fie can never do what you want)
+15:21:05 <sivel> state file allows you to ensure attributes on a file that already exists right?
+15:21:11 <abadger1999> correct.
+15:21:17 <gundalow> how about add `update_time_stamp=T/F` default T.  Only applicable when `state=touch`, so going forward we aren't breaking backwards functionality, though we give people the option to make it idempotent
+15:21:19 <abadger1999> But you have to make sure it exists first.
+15:21:26 <sivel> ok, then I am still stending behind my statement
+15:21:28 <abadger1999> gundalow: no...
+15:21:30 <abadger1999> okay...
+15:21:45 <abadger1999> so the PR makes it possible to make touch do what people need.
+15:21:50 <sivel> state=file, should allow you to modify a file that already exists, optionally with a timestamp of your desire
+15:21:59 <abadger1999> but the question is whether to do it by default or not.
+15:22:04 <sivel> state=touch, should set the mtime to now, unless you explicitly give a timestamp
+15:22:22 <abadger1999> the default can be timstamp=same or timestamp=now.
+15:22:23 <sivel> that is the functionality that I am thinking
+15:22:31 <sivel> I am -1 on same/now
+15:22:36 <abadger1999> timestamp=same is the default for every other state.
+15:22:38 <sivel> +1 on explicit or None
+15:22:39 <bcoca> the problem is there is a case that is not covered, create file if it doesn't exist but dont modify timepstamp if it does
+15:22:55 <abadger1999> state=directory timestamp=same is the default there.
+15:22:56 <bcoca> as 'touch' is only one that 'creates' files
+15:22:58 <abadger1999> for isntance.
+15:23:16 <abadger1999> Byut for touch, the question is whether it should be timestamp=same or timestamp=now.
+15:23:24 <bcoca> default should be 'now'
+15:23:26 <sivel> state=touch shoudl work like the touch command
+15:23:36 <sivel> > Update the access and modification times of each FILE to the current time.
+15:23:39 <sivel> > parse STRING and use it instead of current time
+15:23:41 <abadger1999> timestamp=same has the advantages that it makes touch idempotent by default and that it matches with the other states.
+15:24:06 <bcoca> but they are not really 'states', they are type of file system object
+15:24:06 <abadger1999> timestamp=now is backwards compatible and makes it work as bin/touch's default works.
+15:24:09 <sivel> fwiw you can get the touch state of keeping the mtime/atime by using copy: content=''
+15:24:17 <bcoca> absent is the only 'real state', touch is an action
+15:24:23 <sivel> I'd prefer state=touch to work like the touch command
+15:24:40 <sivel> a non-idempotent operation, unless explicitly given a timestamp
+15:24:48 <bcoca> i would prefer file have no 'touch' state, but given that it does, it should work like the command
+15:25:01 <sivel> touch has meaning
+15:25:14 <sivel> users want something like touch, that does something different
+15:25:25 <sivel> they want to ensure a file exists
+15:25:27 <abadger1999> sivel: yes... I know ablout copy: content :-)  But it's not what users are going to look at.
+15:26:01 <sivel> touch is defined as: Update the access and modification times of each FILE to the current time.
+15:26:07 <bcoca> abadger1999: i agree with the functionality you want to add , i disagree that you should layer it on top of touch, file seems like better choice, i still dislike as it breaks backwards compat ...
+15:26:15 <sivel> users want state=present
+15:26:17 <bcoca> there are PRs for 'create'
+15:26:19 <sivel> not state=touch
+15:26:22 <abadger1999> Okay, is it worthwhile for me to ask to break backwards compatibility for file then?
+15:26:22 <bcoca> sivel: yes
+15:26:35 <bcoca> not sure, i really think we need new module(s)
+15:26:36 <abadger1999> state=file, that is.
+15:26:50 <abadger1999> state=file would be changed to create a file if it doesn't exist.
+15:26:53 <sivel> I'd still say that any use of timestamp, shoudl accept an actual timestamp
+15:27:00 <bcoca> but im less opposed to state=file creating this feature than overloading touch
+15:27:33 <abadger1999> I just feel that chaging state=file will be a larger backwards compatibility problem than changing state=touch.
+15:27:47 <abadger1999> sivel: it does, doesn't it?
+15:28:02 <bcoca> i dont disagree on that point, but it makes more sense since state=link/directory 'create when missing'
+15:28:50 <sivel> abadger1999: forgive me if I am making ignorant comments.  I have not looked at the PR.  I'm struggling to pull myself away from my memory research and compiling a patched version of python 2.7
+15:28:58 <bcoca> iirc PR was using update_timestamp , i woul change to mtime/atime (ctime is hard to change) and default to 'same' except for touch  it defaults to 'now'
+15:29:06 <abadger1999> sivel:  https://github.com/ansible/ansible/pull/43230/files#diff-46805afbf6c2565620c31f91180e79c4R78
+15:29:18 <sivel> abadger1999: thanks
+15:29:38 <abadger1999> The new parameters are modification_time, modification_time_format, access_time, and access_time_format.
+15:29:39 <sivel> I'm still not a fan of "same"
+15:29:49 <sivel> it should be `None` if you don't want to do anything
+15:30:02 <bcoca> that is for 'non touch', how do you 'preserve' with touch
+15:30:07 <bcoca> ^ preserve as special value?
+15:30:09 <abadger1999> the *_time parameters take a timestamp or the two special strings "same" and "now"
+15:30:10 <sivel> and use something like ansible_date_time if you want "now"
+15:30:41 <sivel> I suppose I'm just advocating that there are no special strings.  Either None or an explicit string
+15:30:41 <abadger1999> sivel: that works for me.... however, think of what that means for state=touch.... ;-)
+15:30:42 <bcoca> i would not use ansible variable, but system time, unless time is supplied
+15:31:04 <sivel> abadger1999: I understand what it means, and it keeps touch in alignment with the touch command
+15:31:13 <abadger1999> sivel: no it doesn't...
+15:31:29 <bcoca> touch command default is 'now'
+15:31:29 <abadger1999> It would mean that state=touch doesn't update the timestamp by default.
+15:31:32 <sivel> sorry, I suppose I advocating different functionality for state=touch and state-file
+15:31:46 <bcoca> so am i
+15:31:51 <sivel> state=file, should allow you to modify a file that already exists, optionally with a timestamp of your desire
+15:31:52 <abadger1999> sivel: <nod>
+15:31:54 <sivel> state=touch, should set the mtime to now, unless you explicitly give a timestamp
+15:32:02 <bcoca> default for 'other states' is None, default for touch is now <= i think sivel and i agree on this
+15:32:08 <sivel> yes
+15:32:20 <abadger1999> sivel: I don't like but I'd be okay with different defaults.  But I would be definitely against different functionality.
+15:32:38 <bcoca> what diff func?
+15:32:59 <abadger1999> So if state=touch needs special strings to denote "do not change", then the others should also respond to those special strings.
+15:33:09 <sivel> I mentioned it before, but the name "touch" has meaning in this context.  And users want to change the meaning.  But what they really want is "state=present", not "state=touch"
+15:33:16 <bcoca> ah, yes, the 'special meaning' should work no matter what the state
+15:33:24 <abadger1999> sivel: they want state=file to mean present, yes.
+15:33:32 <sivel> touch: Update the access and modification times of each FILE to the current time.
+15:33:35 <bcoca> sivel: yes, but present cannot be used since file/dir/link are 'states'
+15:33:51 <abadger1999> sivel: which if other people think would be okay to change, I'd be fine doing.
+15:33:52 <sivel> that is from `man touch`
+15:34:28 <abadger1999> the other states create the thing if it doesn't exist.
+15:34:30 <sivel> we should start a path of making `file` only handle files
+15:34:35 <abadger1999> Only state=file is different in that regard.
+15:34:43 <abadger1999> eh...
+15:34:46 <sivel> state=present should be what state=file is, but ensuring it exists
+15:34:50 <abadger1999> I think that would be a bad idea.
+15:34:53 <sivel> file should not manage dirs
+15:35:05 <abadger1999> but fixing state=file would be great.
+15:35:10 <bcoca> sivel: agreed, but 'ship sailed'
+15:35:33 <bcoca> abadger1999: also agreed, but i do think backwards compat there will kill us, i think the 'diff defaults' is a good compromise
+15:35:49 <bcoca> long term, we either need file2 and change the ui, separate state/type or just make multiple modules
+15:36:18 <bcoca> state=present/absent type=file <= this would give us all the func you require w/o being messy
+15:36:35 <abadger1999> right, I think backwards compat will be bad there... but if we can't fix touch, then fixing file is my next choice (leaving things entirely backwards compatible is my least favored option).
+15:38:41 <bcoca> i think the 2 defaults is a good compromise, covers the use case you want, but it does put onus on user to make 'touch idempotent'
+15:38:58 <bcoca> fixing 'file' is sadly a much bigger project than any of us have time for right now
+15:39:11 <abadger1999> It's an small easy roject.
+15:39:27 <bcoca> fixing state=file ... that i see as 'congruent' with the rest of the state= options but very problematic with existing usage
+15:39:28 <abadger1999> but the question is are we willing to sacrifice backwards comat.
+15:39:42 <bcoca> i think, no, not on this one ....
+15:39:47 <abadger1999> it would be adding a new argument.
+15:39:47 <bcoca> but that is not a hard no
+15:40:05 <bcoca> well, this is already adding new arg, x_timestamp
+15:40:08 <bcoca> or 2?
+15:40:15 <abadger1999> and warning that the default of that will be changed i nthe future.
+15:40:34 <abadger1999> I think you're arguing about something else.
+15:40:40 <abadger1999> which is probably my fault
+15:40:53 <abadger1999> i'm moving along: [08:36:35] <abadger1999> right, I think backwards compat will be bad there... but if we can't fix touch, then fixing file is my next choice (leaving things entirely backwards compatible is my least favored option).
+15:41:09 <abadger1999> but i think you're just working on timestamp.
+15:41:49 <bcoca> well, timestamp + new file is the use case you are trying to solve
+15:41:58 <bcoca> so the diff defaults solves that
+15:42:13 <abadger1999> s/timestamp/no change to timestamp/
+15:42:14 <bcoca> w/o too much change and keeps everything backwards compat
+15:42:28 <abadger1999> it doesn't solve it.
+15:42:30 <bcoca> timestamp=preserve/same
+15:42:48 <abadger1999> it makes it possible for the user to solve.
+15:42:52 <bcoca> it does 'solve' the use case, it is just not 'works by default' which is 'extra' imo
+15:43:02 <abadger1999> But it doesn't work by default.
+15:43:06 <abadger1999> right.
+15:43:11 <bcoca> ^ we saying smae thing now
+15:43:25 <bcoca> and im ok with 'idempotent touch' being extra work for user .. i would expect that
+15:43:33 <bcoca> i think most users would
+15:43:48 <abadger1999> I would not expect the user to have to do extra work for an idempotent file exists function.
+15:44:27 <bcoca> i know, but aside from major backwarad compat break and/or redesigning new file(s) modules, i think we have to settle on this middle ground for now
+15:44:33 <abadger1999> that is the problem that we still haven't solved.
+15:44:52 <bcoca> i see 2 scopes, a) user cannot do and b) user should be able to do easier
+15:45:03 <bcoca> we 'solved' a) with diff defaults
+15:45:12 <abadger1999> So there's two questions... (1) Can state=touch be that thing.  (2) Can state=file be that thing after a suitable deprecation period.
+15:45:13 <bcoca> i'm punting on b) as i think it requires new modules
+15:45:43 <bcoca> 1) no, i think that will be source of much confusion as 'touch' is expected to work as is
+15:45:45 <abadger1999> i think we're coming to the conclusion that state=touch can't be that thing.
+15:45:58 <bcoca> 2) it could .. but i think easier to create new module(s) and deprecate file
+15:46:02 <abadger1999> so I want to know if people think state=file can.
+15:46:07 <bcoca> not only easier, but better in long run
+15:47:31 <abadger1999> A singe new module is only sorta better in the long run.... we'll have to maintain both pieces of code for a 'long deprecation cycle"....
+15:48:10 <bcoca> agreed, but we can do a 'correct ui' in new stuff, 1/2 the problem in file is the complete overload of state= to be something almost no other module does
+15:48:24 <bcoca> the 'classic' present/absent + type= would have avoided many of our issues
+15:48:34 <abadger1999> it wouldn't have.
+15:48:38 <abadger1999> But it would be better ui.
+15:48:51 <abadger1999> the problems of file are really the programming style that was done in it.
+15:48:56 <bcoca> state=present type=file is exactly what would cover the use case you want WITH a good UI
+15:49:02 <abadger1999> It was a single main() function
+15:49:29 <bcoca> code org aside, which i dont think was the major problem with UI, but with maintainability
+15:49:33 <abadger1999> with conditionals trying to sort out what to do in this particular instance of requested state, previous state, and so on.
+15:49:35 <bcoca> was it does too much
+15:50:21 <bcoca> well, there was a revamp around 1.4 that introduced that, i tried to fix in 1.6 but too many people protested, so i tried to make the 'if chains more rational' but we had already lost state=default(file) to state=default(what is in target)
+15:50:36 <abadger1999> things like file not creating a file probably occurred because the code was too misbegotten to be coded correctly.
+15:50:38 <bcoca> ^ that i think was bigger issue than code rog
+15:50:46 <abadger1999> and then it was too late to fix it.
+15:50:58 <bcoca> no, even before code got out of hand MPD refused to add 'create' to state=file
+15:51:07 <bcoca> it was very early decision
+15:51:19 <bcoca> directory and link were added later (i believe i added link + hardlink)
+15:51:24 <abadger1999> and then there's a whole slew of things around symlinks that don't make sense for the same reason.
+15:51:41 <abadger1999> and once again... too late to fix it.
+15:51:42 <bcoca> agreed, the 1.4 reformat made a lot of assumptions that were really wrong
+15:51:47 <bcoca> also agreed
+15:51:58 <abadger1999> The code organization lead to file having bad UI.
+15:52:02 <bcoca> we have both fixed some, the new 'follow' semantics are more rational
+15:52:12 <bcoca> no, bad UI existed before code got out of hand ...
+15:52:17 <abadger1999> just as much as conscious bad ui decisions.
+15:52:20 <bcoca> sadly i contributed to it
+15:52:26 <bcoca> now i know better
+15:54:08 <bcoca> the question is how best to go forward, i think we have slight disagreement, you want single module, i want multiple, but i think in either case we both agree on what UI should look like
+15:54:46 <bcoca> tmost of 'file' code is in basic.py anyways (common/file?) so it is moslty the args processing and decision making that happens in module
+15:55:07 <abadger1999> It's not mostly in basic.py...
+15:55:18 <abadger1999> setting perms is in basic.py.
+15:55:23 <bcoca> *_if_dfferent which will still be complex, as the problem requires it
+15:55:44 <abadger1999> but, what a comment in the code refers to as "transitions between states" is all in the file module.
+15:55:56 <bcoca> well, perms/selinux is the most 'work' it does, creating dir/symlink is tying ammount of code ... deciding to do it ...
+15:56:02 <abadger1999> and the transitions are the most complex parts.
+15:56:05 <bcoca> yes
+15:56:31 <bcoca> and it gets muddy when you have many incomming states and outgoing ones, that is why i though seperate modules would make it easy to understand each case
+15:56:40 <abadger1999> so most of the complexity lives i nthe file module, not in basic.py
+15:56:43 <bcoca> right now we conflate dir/link/hard
+15:56:53 <abadger1999> it won't help... it will make it worse.
+15:57:12 <bcoca> ^ sorry, prevoius phrase meant that complexity in file module, 'work' is mostly in basic (perms/selinux is most of the work)
+15:57:18 <bcoca> decision vs action
+15:57:19 <abadger1999> because then we'll have to keep common policy across multiple complex modules instead of inside of a single complex module
+15:57:27 <abadger1999> <nod>
+15:57:32 <abadger1999> yeah, can agree with that.
+15:58:00 <abadger1999> But hten again, the same could be said about basic.py versus the python stdlib ;-)
+15:58:04 <bcoca> the common policy is hard to keep anyways ... i just thought diff modules are a lot easier to audit as you dont mix pathways
+15:58:19 <abadger1999> We don't mix pathways anymore.
+15:58:26 <abadger1999> we haven't since 2.6
+15:59:00 <bcoca> ah, i should look at code, i havent really read the whole thing in some time
+15:59:28 <bcoca> the mixing was a way to avoid duplication in same file, my thoughts were that it is easier to avoid that 'optimization' in diff files
+15:59:49 <bcoca> but what we gained on dedupe code we lost in auditability
+16:01:18 <abadger1999> yes to the last statement.  to the middle statement, dedupe will be most appropriate in the same file but with different toplevel functions. (Create a few helper functions for truly common code).
+16:01:57 <abadger1999> with different files... we probably can't even put them together... there's too many contributors to the old fies like file to untangle the licensing and make them module_utils....
+16:02:16 <abadger1999> let alone realizing which code is common.
+16:02:19 <bcoca> i was happy to do new code ...
+16:02:31 <bcoca> i think most of the old code would have to be removed anyways ...
+16:02:49 <bcoca> some of the logic was just 'wrong from the start'
+16:02:59 <bcoca> but kept for backwards compat ...
+16:03:22 <bcoca> like the default state being 'existing' vs file .. though file being as state is alreayd a problem ..
+16:03:56 <bcoca> so ... to not strech this out even more, we agree on 'current steps'?
+16:04:43 <abadger1999> I don't think we do....
+16:04:52 <abadger1999> we have agreement on timestamp.
+16:04:52 <bcoca> a) keep touch and file 'as is' b) new _timestamp fields will default to None (preserve) with other states, but to 'now' with touch c) special 'preserve' (same?) value to preserve timestamp for 'all states'
+16:05:26 <bcoca> i said 'current steps' for a reason, since we started this on timestamp+touch interactions
+16:05:42 <bcoca> sivel: you +1 on abc above?
+16:05:45 <bcoca> i am
+16:05:48 <bcoca> abadger1999?
+16:05:51 <bcoca> anyone else?
+16:05:54 <abadger1999> your (a) is where I disagree most strongly
+16:05:56 <abadger1999> -1
+16:06:08 <abadger1999> I want to either change touch or file.
+16:06:13 <abadger1999> I don't care much which.
+16:06:23 <sivel> reading
+16:06:33 <bcoca> i think 'for now' we keep them as they are, i do agree we need new solution but i dont think we should do it in the current file module
+16:06:41 <abadger1999> I think we should.
+16:06:47 <bcoca> abadger1999:  if we do b and c why would you change touch/file ?
+16:06:49 <sivel> I'd be ok with the proposed
+16:06:49 <abadger1999> thus, my disagreement with a
+16:07:06 <abadger1999> If we agree to change state=file, then I can agree with the idea of b and c.
+16:07:15 <sivel> abadger1999: what do you want to change file to?
+16:07:17 <bcoca> b and c only make sense if you do a
+16:07:28 <bcoca> if you change file, there is not need for b and c
+16:07:33 <abadger1999> sivel: I'd add a parameter to allow state=file to create the file.
+16:07:50 <abadger1999> Default for a deprecation cycle (4 releases) would be what it is now.
+16:08:01 <abadger1999> Default would change after the deprecation cycle.
+16:08:18 <bcoca> i'm -1 on that, i think the abc above is good compromise till we have time/resources for a full replace of file module
+16:08:34 <abadger1999> (so state=file would not create a file for the deprecation cycle.  Once deprecation cycle was over, it would flip to creating a file by default).
+16:09:52 <sivel> I'm on the fence. The concept is a good one. `file` is such a mess, and I'd rather not add to it. but if we were to explode the file module, the deprecated functionality wouldn't matter
+16:10:00 <sivel> just "thinking out loud"
+16:10:04 <abadger1999> <nod>
+16:10:39 <bcoca> i think its a congruent patch to a bad module we should be deprecating the whole thing
+16:10:42 <abadger1999> <nod> file is less of a mess since 2.6 and it's much easier to make these sorts of changes now.
+16:10:49 <bcoca> but it has major backwards compat impact
+16:10:54 <abadger1999> but no one is working on a replacement.
+16:11:03 <abadger1999> thus the deprecation cycle.
+16:11:05 <bcoca> not yet, lets make a proposal
+16:11:07 <sivel> abadger1999: I'd be +1 for your ammendment to bcoca's abc
+16:11:20 <sivel> but I'd love to explode `file`
+16:11:29 <sivel> so that `file` has proper states
+16:11:29 <abadger1999> i'd be +1 with my ammendment as well.
+16:11:34 <bcoca> -1
+16:11:53 <gundalow> According to module docs web traffic `file` is generally in top 3 of pages, so we need to be very careful about backwards compatability. Could also be a place to add some very clear notes about what we are planning
+16:12:38 <bcoca> file is almost always top search term  for ansilbe docs
+16:13:38 <abadger1999> k.  seems like we are on the fence about these... I think we should get more votes recorded in the ticket and at the next meeting so we have a sense of whetherh there's consensus.  and if not, then we'd want a bdfl decision.
+16:14:17 <gundalow> abadger1999: sounds like a sensible way to proceed
+16:14:19 <bcoca> well, we can go forward with b and c for now
+16:14:31 <bcoca> a is the discussion point
+16:14:38 <abadger1999> bcoca: well... it's all part of a package.
+16:15:14 <abadger1999> as b and c are one of two ways to fix the issue.
+16:15:55 <abadger1999> But I will have the PR author change the implementation to use split defaults as I think that follows what is looking like our preferred path at the moment.
+16:15:55 <bcoca> so its abc to work now vs modify file so this works 5 versions from now?
+16:16:39 <abadger1999> I don't understand your question...
+16:17:08 <bcoca> i'm askin if the  current options are either abc or introduce a deprecation cycle to file to make it work for the use case afterwards
+16:17:46 <abadger1999> I think that's correct.  introduce a toggle so that, after a deprecation cycle, file can work to address the use case.
+16:19:37 <bcoca> ok, we over time so going to end this on this note
+16:19:39 <bcoca> #endmeeting

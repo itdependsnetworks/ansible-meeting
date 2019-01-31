@@ -1,0 +1,173 @@
+16:00:02 <funzo> #startmeeting Network Working Group
+16:00:02 <zodbot> Meeting started Wed Apr 18 16:00:02 2018 UTC.  The chair is funzo. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:00:02 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:00:02 <zodbot> The meeting name has been set to 'network_working_group'
+16:00:14 * funzo waits for people to join
+16:00:21 * privateip waves
+16:00:39 <funzo> #chair privateip
+16:00:39 <zodbot> Current chairs: funzo privateip
+16:00:49 <Qalthos> Oh, funzo started it
+16:00:55 <funzo> #chair dagrawal Qalthos
+16:00:55 <zodbot> Current chairs: Qalthos dagrawal funzo privateip
+16:01:36 <funzo> #info Agenda https://github.com/ansible/community/labels/network
+16:02:02 <privateip> bueller??
+16:02:11 <privateip> bueller???
+16:02:17 * funzo waits for people to join
+16:02:21 <privateip> bueller????
+16:02:24 <funzo> haha
+16:02:27 <Qalthos> Polo!
+16:02:32 <Qalthos> oh wait...
+16:02:50 <funzo> Ok, so today we have a couple specs on the agenda
+16:03:07 <privateip> we got a ferris bueller and a marco polo in one meeting... productive
+16:03:19 <funzo> ganeshrn: you're not here are you?
+16:03:37 <ganeshrn> just back now
+16:03:44 * ganeshrn waves
+16:03:53 <funzo> The first proposal on the agenda is for the netconf modules
+16:03:57 <funzo> #link https://github.com/ansible/proposals/issues/104
+16:04:24 <Qalthos> #topic Generic netconf modules
+16:04:55 <funzo> anyone have a chance to go through the proposal yet? any feedback?
+16:05:05 <funzo> #chair ganeshrn
+16:05:05 <zodbot> Current chairs: Qalthos dagrawal funzo ganeshrn privateip
+16:05:37 <Qalthos> I had a look and it seemed reasonable to me
+16:06:04 <Qalthos> It also has a fair number of +1s attached, for what it's worth
+16:06:07 <funzo> great, thanks Qalthos
+16:06:21 <privateip> one thing i would like to change is the config argument
+16:06:27 * privateip is about to bikeshed
+16:06:29 <funzo> anyone else here interested in reviewing the proposal?
+16:06:48 <funzo> anyone else?
+16:06:57 <funzo> anyone
+16:07:00 <funzo> moving on
+16:07:02 <privateip> but i will add my comments to the issue
+16:07:05 <ganeshrn> is lpenz around
+16:07:08 <funzo> kidding privateip
+16:07:10 <privateip> :)
+16:07:11 <funzo> go for it, let's talk about it
+16:07:38 <privateip> i would like to see config become content and then drop src
+16:07:51 <privateip> we should use lookup plugins for loading content from files
+16:08:12 <privateip> content is more aligned with arguments across the ansible ecosystem
+16:08:29 <ganeshrn> privateip: ok will make a not of it
+16:08:38 <ganeshrn> note*
+16:08:42 <privateip> same for data in netconf_rpc
+16:08:52 <Qalthos> privateip: That's a pretty good point
+16:08:53 <privateip> oh wait
+16:09:00 <privateip> maybe not netconf_rpc
+16:09:07 <privateip> sorry yes netconf_rpc
+16:09:12 <privateip> too many things open
+16:11:21 <ganeshrn> privateip: data is the xml payload for given rpc
+16:11:23 <privateip> add the same comments to the issue in the proposal for posterity
+16:11:30 <funzo> ok any other feedback?
+16:11:33 <ganeshrn> i didn't follow your comment for junos_rpc
+16:11:34 <privateip> sure but its still content no?
+16:11:50 <ganeshrn> yes...it is a xml string
+16:12:00 <ganeshrn> not a file path
+16:12:18 <privateip> so if its content then I think we should be consistent with other modules and call it content
+16:12:44 <ganeshrn> ah got it now
+16:12:50 <ganeshrn> will rename the option
+16:12:55 <ganeshrn> lpenz: added a comments here  https://github.com/ansible/ansible/issues/38819#issuecomment-382374404 regarding proposal
+16:13:06 <ganeshrn> if he is around we can discuss it
+16:13:32 <funzo> doesn't seem like it
+16:13:35 <ganeshrn> privateip: thanks for your review comments
+16:13:57 <ganeshrn> ok will reply him on the issue
+16:14:04 <funzo> ok if there are no other comments we'll move on to the next proposal
+16:14:16 <funzo> #topic Review HTTP connection proposal
+16:14:17 <privateip> just confirming... all three are scheduled for inclusion in 2.6?
+16:14:50 <ganeshrn> yes
+16:14:53 <funzo> #link https://github.com/ansible/proposals/issues/103
+16:14:55 <privateip> great thx
+16:15:05 <ganeshrn> how much time it should be in review
+16:15:18 <ganeshrn> when can it be moved to agreed status?
+16:15:44 <privateip> next week, imho
+16:15:51 <ganeshrn> ok cool
+16:15:52 <funzo> i think that's reasonable
+16:16:05 <funzo> gives people enough time to review/respond
+16:16:10 <funzo> then move forward
+16:16:33 <funzo> ok, Qalthos you want to kick off the HTTP conn?
+16:16:40 <Qalthos> Hey, so there have been some changes from the previous eAPI proposal, so I made a new one to better hilight the differences
+16:18:06 <Qalthos> This one is still a little eAPI-oriented in the problem statements, but the same connection will support eAPI and NX-API (and others if people want to make them) through API implementation plugins
+16:18:53 <Qalthos> I'm not sure if everyone has seen the new proposal or had a chance to see the latest version
+16:19:04 <privateip> so a couple of things
+16:19:24 <privateip> do you have an example of what might be in **message_kwargs?
+16:19:46 <Qalthos> Yes, I can expand on that a bit
+16:20:33 <privateip> second, we should probably specifity that the data arg in send_request has to be json serializable
+16:22:05 <privateip> overall though it lgtm
+16:22:37 <Qalthos> ...yeah, that seems sensible. I had sort of assumed that from where I was in (e|nx)os, but I can see where someone else might want to take more complicated input there
+16:25:54 <funzo> anyone else have input on the proposal before we move on?
+16:27:21 <funzo> Qalthos: are you thinking of waiting to until next week to call this proposal good to go and agreed upon?
+16:27:36 <privateip> im +1 for moving forward at this point
+16:27:57 <privateip> i know you didn't ask me but i can only go so long without talking :)
+16:28:35 <funzo> lollll
+16:29:21 <funzo> #agreed move forward with the HTTP connection proposal
+16:29:25 <Qalthos> I've seen a lot of generic positive feedback for both this and 102, and no real concerns other than caphrim007_'s comments, which seem to be addressed, so I feel good to go
+16:29:40 <funzo> #info move forward with the HTTP connection proposal
+16:29:44 <funzo> #topic open floor
+16:29:46 <caphrim007_> Qalthos: i'll wait and see how its used. i guess
+16:29:53 <funzo> ok folks anyone have items for discussion, now is the time
+16:30:12 <ganeshrn> funzo https://github.com/ansible/community/issues/247#issuecomment-382332686
+16:30:19 <ganeshrn> you missed this comment
+16:30:49 <funzo> ganeshrn: i did, thank you
+16:31:08 <funzo> #topic Discuss Deprecation of connection=local and provider for Network modules.
+16:31:44 <Qalthos> Personally, I'm not really sure what there is to discuss here
+16:32:02 <caphrim007_> it would be a major breaking change for all my customers
+16:33:32 <privateip> the topic might be a little misleading
+16:33:39 <privateip> connection=local isn't being deprecated
+16:34:07 <privateip> the use of connection=load in network modules that support connection=network_cli or network=netconf is what we are talkign about here
+16:34:39 <privateip> in other words, this wouldn't impact your modules unless you made a change
+16:35:11 <ganeshrn> my bad...i was not clear in the comment
+16:35:55 <privateip> someone might need to resuscitate caphrim007_ ;)
+16:36:00 <caphrim007_> so this https://github.com/ansible/ansible/blob/devel/lib/ansible/plugins/action/bigip.py#L48 and this https://github.com/ansible/ansible/blob/devel/lib/ansible/plugins/action/bigip.py#L61 are not problems?
+16:36:02 <funzo> CLEAR!
+16:36:34 <pffs> oh hey it's a meeting
+16:36:35 <privateip> they would still work just fine
+16:36:58 <privateip> it would only be if you decide to drop support for connection=local in your action plugin
+16:37:04 <Qalthos> so this affects (e|i|jun|nx|vy)os(xr?)... anything else?
+16:37:08 <pffs> I think it might warrant some type of documentation about being able to use connection=local
+16:37:41 <pffs> because otherwise it makes running some of the junos scripts obnoxious if you don't realize you don't have to specify the specific connection method
+16:38:03 <caphrim007_> in terms of support (on my end) i would _love_ to remove connection local
+16:38:06 <pffs> primarily like if you want to run a play where you're enabling netconfig (network_cli) and then making a change (netconf)
+16:38:20 <caphrim007_> like pffs says, my customers too never "know" they need to do it unless they rtfm
+16:38:24 <privateip> pffs: agreed, we are playing to tip toe into this
+16:38:35 <caphrim007_> so it opens some unneccesary support cases
+16:39:16 <ganeshrn> pffs for junos an error message will be reported if wrong connection type is used
+16:39:30 <ganeshrn> that change will be available in 2.5.1
+16:39:42 <pffs> will it change to the correct one, or just fail?
+16:39:50 <ganeshrn> it will fail
+16:39:51 <pffs> because I think when I tested it in 2.5.0 it just failed
+16:40:09 <ganeshrn> yup in 2.5.0 it gave a stacktrace
+16:40:12 <Qalthos> But now it will tell you why it failed
+16:40:17 <ganeshrn> so that is fixed now
+16:40:23 <pffs> I think my issue was that the documentation specifically said to move the connection into groupvars
+16:40:39 <pffs> so it makes it really hard to use two different conenction types in the same play unless you overwrite your groupvars
+16:40:58 <privateip> you can override the connection at a task level
+16:41:28 <pffs> that's good to know, I'll keep that in mind if I try to run the same type of play again
+16:41:36 <privateip> network_cli and netconf credentials should be stored in inventory .... connection local (provider) credentials should be stored in group_vars
+16:41:52 <privateip> you can inheret the group_vars values from the inventory
+16:41:59 <privateip> so you only have to update them in one place
+16:42:31 <privateip> so this goes back to pffs: point ... we need to be extremely verbose on the communication of this change
+16:42:32 <pffs> yeah it wasn't the credentials so much as the connection type to use for a given task
+16:43:03 <caphrim007_> if this is deprecated, what is the proposed version it would be removed?
+16:43:42 <privateip> standard deprecation is 4 releases but we can extend that further if needed
+16:44:19 <pffs> I think this page is what I was using as a reference on how to set it up: https://docs.ansible.com/ansible/devel/network/user_guide/network_best_practices_2.5.html
+16:44:35 <pffs> which I think is what let me to think that connection was supposed to just be groupvars only
+16:46:37 <pffs> un/semirelated, do the netconf changes above make it so netconf actually works with bastions?
+16:46:41 <pffs> because that would be grand
+16:46:58 <privateip> im still working on the prototype that you and i discussed
+16:47:09 <privateip> its the same issue as network_cli
+16:47:19 <pffs> ah interesting
+16:48:56 <pffs> I almost feel like there should be an ansible ansible module for running ansible from ansible
+16:49:14 <Qalthos> #info we want to deprecate connection=local for modules where connection is possible with new connection types (network_cli, netconf, etc.)
+16:49:15 <privateip> that has come up many times over in #ansible-devel
+16:49:24 <pffs> not really a surprise
+16:49:35 <privateip> lots (and lots and lots) of corner cases
+16:49:44 <pffs> I just ran a change that I had to run from 7 different servers since it wouldn't complete in time from one
+16:49:47 <Qalthos> #info This mainly means ansible-developed platforms
+16:50:52 <Qalthos> #info We are planning to be very slow with this, as we know many playbooks are in use with connection=local
+16:51:05 <Qalthos> Anything I missed?
+16:51:36 <Qalthos> Anything I am wildly off base about, for that matter?
+16:52:22 <privateip> all makes sense to me
+16:53:23 <pffs> [insert_thumbs_up_emoji_here]
+16:53:47 <funzo> great
+16:53:55 <funzo> we have a couple minutes for open floor
+16:54:01 <funzo> #topic Open floor
+16:56:15 <funzo> sounds pretty quiet
+16:56:22 <funzo> I'll go ahead and end the meeting
+16:56:28 <funzo> #endmeeting

@@ -1,0 +1,65 @@
+15:07:37 <gundalow> #startmeeting Ansible Public Core Meeting
+15:07:37 <zodbot> Meeting started Thu Feb 15 15:07:37 2018 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:07:37 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:07:37 <zodbot> The meeting name has been set to 'ansible_public_core_meeting'
+15:07:48 * Pilou waves
+15:07:57 <gundalow> #chair sdoran alikins sivel Pilou
+15:07:57 <zodbot> Current chairs: Pilou alikins gundalow sdoran sivel
+15:08:00 * mikedlr waves
+15:08:02 <gundalow> Anyone can do #startmeeting :)
+15:08:06 <gundalow> #chair misc
+15:08:06 <zodbot> Current chairs: Pilou alikins gundalow misc sdoran sivel
+15:08:09 <gundalow> #unchair misc
+15:08:09 <zodbot> Current chairs: Pilou alikins gundalow sdoran sivel
+15:08:14 <gundalow> #chair mikedlr
+15:08:14 <zodbot> Current chairs: Pilou alikins gundalow mikedlr sdoran sivel
+15:08:54 <gundalow> #info Agenda https://github.com/ansible/community/labels/core
+15:09:43 <misc> ?
+15:09:49 <gundalow> misc: sorry, tab fail
+15:09:52 <misc> that's ok :)
+15:09:59 <misc> I am just soon in another meeting
+15:11:08 * akasurde waves
+15:11:08 * mattclay waves
+15:11:22 <mattclay> I'm here as well, but have another meeting in less than 20 minutes.
+15:11:39 * gundalow doesn't see anything new on the agenda that needs discussing
+15:11:44 <gundalow> #chair akasurde mattclay
+15:11:44 <zodbot> Current chairs: Pilou akasurde alikins gundalow mattclay mikedlr sdoran sivel
+15:11:48 <gundalow> #topic Open Floor
+15:11:56 <gundalow> #info Ansible 2.5.0 Beta2 should be release today
+15:12:05 <gundalow> #info Ansible 2.5.0 RC1 will be week today
+15:12:56 <mikedlr> I note that 2.6 is supposed to be a stability release;  can we have a big push to get code coverage at both unit and integration test levels?
+15:13:17 <gundalow> mikedlr: Yes, and in TWG later today we will be discussing that
+15:13:25 <mattclay> mikedlr: By "get code coverage" I assume you mean "add tests to improve code coverage" ?
+15:13:36 <alikins> I don't know if anything has said that explicitly, but that is part of the plan.
+15:13:41 <mikedlr> mattclay: yes;  gundalow I will try to come and then discuss.
+15:14:27 <mattclay> mikedlr: Yes, as alikins said, we hadn't said it specifically, but I think that's what several people have been thinking.
+15:14:29 <mikedlr> I note that modules that come in without tests are inevitably in some way broken and that fixing them is much easier when you have at least one test to start from.
+15:14:55 <mikedlr> so I think that the TWG should get core's explicit support in that.
+15:15:26 <mikedlr> s/modules/all of modules, plugins and module_utils features at least/
+15:15:37 <gundalow> mikedlr: cool, though if you have any ideas feel free to ping me in #ansible-devel, we will be going through https://github.com/ansible/community/wiki/Testing:-progress-tracker to 1)
+15:18:04 <mikedlr> thanks gundalow ; will follow that and I saw some areas there already that I might get a chance to fix;  doing some ec2 work and I remember there _were_ old integration cases that might be possible to port forward.
+15:18:49 <sivel> gundalow: I've heard tossed around that new modules going forward must have tests. Has that been solidified yet?
+15:19:54 <mikedlr> sivel: there's a policy starting from 2.5 for AWS modules only - it's in the AWS working group coding standards.
+15:20:04 <gundalow> sivel: good point, for 2.6+ we said that new modules (& wherever possible new feaures) in supported: core must have test that run in Shippable
+15:20:22 <gundalow> modules/network/ has a requirement for test for all modules
+15:21:27 <gundalow> hum, wonder where that should be documented
+15:22:33 <mikedlr> gundalow: module developers guide since that's where everyone starts?
+15:22:49 <sdoran> How will that requirement work for things we don't/can't test against, such as a specific service or API?
+15:22:54 <mikedlr> (actual point of documentation for AWS modules https://github.com/ansible/community/blob/master/group-aws/integration.md)
+15:22:59 <sdoran> +1 to putting it in module dev guide
+15:23:38 <mikedlr> sdoran: there can always be a unit test which uses recorded or faked (mocked / simulated or whatever) API messages
+15:23:43 <sdoran> Are we going to rely on unit tests with mocking/fixtures?
+15:23:58 <sdoran> Jinx ;)
+15:24:16 <sivel> I think we can cover this a bit more in the testing meeting
+15:24:31 <sdoran> <ack>
+15:25:20 <gundalow> oww, can't we talk about testing & docs all the time :(
+15:28:57 <gundalow> Anyone got anything else?
+15:29:26 * mikedlr is all good
+15:29:57 <Pilou> about doc: https://docs.ansible.com/ansible/latest/release_and_maintenance.html is not up to date (2.X isn't supported). Is there some plan to render this website ?
+15:31:00 <gundalow> Pilou: https://docs.ansible.com/ansible/devel/reference_appendices/release_and_maintenance.html That's an example of a doc that shouldn't be versioned
+15:32:25 <Pilou> or versioned somewhere else :)
+15:34:02 <gundalow> Pilou: could you please raise an issue (and put a note about differences in older versions)
+15:34:10 <gundalow> If nothing else I'll close shortly
+15:37:27 <Pilou> review welcomed on https://github.com/ansible/ansible/pull/34838 (typo in comments and unused method removed) :)
+15:42:40 <gundalow> Thanks y'all
+15:42:42 <gundalow> #endmeeting

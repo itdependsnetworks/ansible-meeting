@@ -1,0 +1,103 @@
+16:02:24 <Qalthos> #startmeeting Ansible Network Working Group
+16:02:24 <zodbot> Meeting started Wed Oct 17 16:02:24 2018 UTC.
+16:02:24 <zodbot> This meeting is logged and archived in a public location.
+16:02:24 <zodbot> The chair is Qalthos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:02:24 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:02:24 <zodbot> The meeting name has been set to 'ansible_network_working_group'
+16:02:47 <pabelanger> hello!
+16:02:56 <Qalthos> #chair dagrawal ganeshrn gundalow ikhan jungleslow privateip rcarrillocruz trishnag pabelanger
+16:02:56 <zodbot> Current chairs: Qalthos dagrawal ganeshrn gundalow ikhan jungleslow pabelanger privateip rcarrillocruz trishnag
+16:02:57 <pabelanger> sorry, was just getting drink from kitchen
+16:03:45 <Qalthos> pabelanger: no worries, feel free to take over
+16:04:01 <pabelanger> thanks!
+16:04:35 <pabelanger> #topic Core Updates
+16:05:19 <pabelanger> The ansible-network team did releases this week of roles
+16:05:46 <pabelanger> we've published them on https://galaxy.ansible.com/ansible-network/
+16:06:22 <pabelanger> right now, we don't have much information around user notification when we actually do a release, so we've started discussing how to automate that more
+16:06:43 <pabelanger> this includes either sending out a mailing post, something on twitter or even both
+16:07:21 <pabelanger> this is helps with automating our release processes too
+16:07:47 <pffs> is there anything with examples on how to use them?
+16:09:05 <pabelanger> great question, some of our roles do have documentation around usages, for example network-engine
+16:09:22 <pabelanger> but right now, that is stored just in the git repo for each role
+16:10:02 <pabelanger> I actually have a work item on myside to make it easier for users to view our docs of the ansible-network roles, but need to first sync with the ansible-doc team to discuss some items
+16:10:11 <pabelanger> like, sytle guide and publish location
+16:10:24 <pffs> yeah that'd be handy.
+16:10:39 <pffs> Are these intended to ultimately replace the more specific platform modules?
+16:10:44 <pabelanger> but for the most part, I think patches are welcome to improve our example, and shared that information between our current roles
+16:11:26 <pffs> trying to figure out why I'd use the cisco_ios get_facts over the ios_facts module
+16:13:34 <Qalthos> pffs: That is the general idea. The biggest benefit is faster release cycle for out-of-release bugfixes
+16:14:09 <pffs> makes sense.
+16:14:28 <pabelanger> Right, the ansible-network roles we look to release every 2 weeks, ansible/ansible currently has a longer cycle
+16:15:19 <pabelanger> as always, our agenda is online
+16:15:21 <pabelanger> #link https://github.com/ansible/community/labels/network
+16:15:40 <pabelanger> but this week, is is actually pretty thin
+16:15:56 <pabelanger> I can see a request to look at the following issue
+16:16:15 <pabelanger> #topic unable to set terminal parameters on ios devices
+16:16:29 <pabelanger> #link https://github.com/ansible/ansible/issues/46185
+16:17:07 <pabelanger> I believe justjais is looking at this now, according to github
+16:18:39 <Qalthos> wrt salman1485's comment (as he is the one who put this in the agenda), the terminal commands are generally necessary in order to get the complete output from the device
+16:19:00 <pffs> yeah prevent wrapping and paginating
+16:19:17 <Qalthos> Otherwise, the device tends to assume you have a terminal and tries to page output, which is bad
+16:20:06 <pabelanger> it sounds like maybe a change in functionality between ansible versions? I get the impression this might have been working before
+16:20:19 <Qalthos> The commands only affect the running session (hence why we have to send them on every connect) and make no changes to the device at all
+16:20:59 <pffs> yeah pretty common. rancid does the same thing
+16:21:13 <pffs> I put them into netmiko scripts I write as well
+16:21:24 <skregas> concerning the terminal parameters, there was no problem in Ansible 2.4. Only start seeing errors with Ansible 2.6.
+16:21:39 <Qalthos> Most of the platforms we support have something similar, if not identical
+16:21:42 <pffs> I don't think it always did the term width, though, I vaguely recall having issues with long lines in older versions
+16:22:11 <pabelanger> skregas: yah, that is what I see in the comments. So, possible something changed on ansible side, but I'd have to look at the commit history.
+16:22:25 <Qalthos> The width was a later addition, but I don't recall when
+16:23:38 <pabelanger> okay, I've added a comment to the PR, I'll see if I can look into code and see if anything changed
+16:23:38 <pffs> skregas: are you getting a tacacs command authorization failure?
+16:25:44 <pabelanger> #topic Open discussion
+16:26:01 <pabelanger> We actually don't have anything else on the agenda, so open floor
+16:26:42 <Qalthos> For reference, `terminal width 512` was added in ansible 2.4, so not sure what the change might be
+16:27:27 <skregas> @pffs: on the terminal, i get, "Command authentication failure"
+16:27:27 <Qalthos> (and was backported to 2.3)
+16:27:48 <pffs> any chance of full network_cli support for bastion at some point?
+16:28:17 <pffs> bastion is still 10-20 times slower than local and unfortunately a requirement for most of my plays
+16:28:46 <pffs> skregas: sounds like it, I think the actual authorization failure messages is customizable in ACS
+16:29:03 <Qalthos> pffs: Maybe eventually? We haven't forgotten about you, and I think about it several times a week, and I will make sure you are the first to know if there is any progress
+16:29:50 <pffs> sounds good
+16:30:27 <pffs> we had some internal discussions about replacing rancid with ansible but with current speeds wouldn't be possible
+16:31:08 <pabelanger> I should also mention, if you are planning on contributing code to https://github.com/ansible-network, I've enabled a dco license check job for all our PRs. So, you'll need to use the 'Signed-off-by' header in commit messages.
+16:32:30 <pabelanger> I'll give it a few more minutes, then we'll close out today if nothing else
+16:33:05 <Qalthos> pffs: Do you have an issue open about that? I don'
+16:33:14 <skregas> @pffs: here's my confusion. In 2.4, with a read-only account, there were no issues with the terminal length/width commands. In 2.6 there is, and nothing about that read-only account has changed. That leads me to believe something in Ansible is different?
+16:33:17 <Qalthos> t recall if there was one or not
+16:33:59 <pffs> Qalthos: for the network_cli improvement?
+16:34:07 <Qalthos> pffs: yeah
+16:34:46 <pffs> not that I recall, it was something along the lines of "we'll look at it but it'll take a lot of work so might take a while"
+16:35:37 <pffs> skregas: it's possible you were using a 2.4 release prior to when it was added in? Qalthos said 2.4 but not sure if that means 2.4.0 or not
+16:35:54 <Qalthos> pffs: You can still make a feature request issue, and at least there we can collect all the conversations about it and share any progress
+16:36:18 <pffs> will do
+16:36:20 <Qalthos> pffs: skregas: It was in rc1, so that seems unlikely
+16:36:58 <pffs> it's possible that maybe the error handling for that command failure changed as well
+16:37:19 <pffs> so perhaps it just silently ignored the command failing previously?
+16:37:36 <pffs> There are some error messages that still have that behavior
+16:38:35 <pffs> Qalthos: I had some questions on ios_user I'd posted in here previously, not sure if they quite count as enhancements or bugs or a bit of both
+16:38:56 <Qalthos> #topic ios_user queries
+16:39:30 <pffs> right now if you try to set a new password on a user who is configured using password instead of secret ansible ignores the failure message about not being able to set a secret and password at the same time and marks it as changed despite not actually doing anything
+16:40:46 <pffs> it would also be massively useful to be able to able to specify a specific hash for users since we do password rotation on a quarterly interval and right now there's not an idempotent way of tracking what changed so I end up using ios_command instead
+16:42:28 <Qalthos> The first does seem like a bug
+16:43:06 <pffs> ios_config, rather, not ios_command
+16:43:48 <pffs> yeah, to figure out which users needed to be redone I basically just ran the ios_config version several times and the ones that still said changed I reran to remove and readd the user since that was the only way I could easily tell that it was the wrong type
+16:45:11 <Qalthos> Feel free to open an issue on that and we'll see what we can figure out
+16:45:38 <pffs> Do you want me to open a single issue for both items, or one for the first half as a bug and one for the second half as a feature enhancement?
+16:46:01 <Qalthos> two issues, please
+16:46:27 <pabelanger> +1
+16:48:10 <pabelanger> pffs: Qalthos: anything else or should we close out?
+16:48:18 <Qalthos> We (being the ansible networking team) are unlikely to implement that feature in the module itself, as that work is more likely to be directed to a user configuration role
+16:48:39 <pffs> will do
+16:48:43 <pffs> Nothing else on my side
+16:48:47 <Qalthos> (see: most of the things we've talked about for the last n months)
+16:50:08 <Qalthos> But that doesn't mean someone else can't do it
+16:50:28 <Qalthos> #topic Notices
+16:51:01 <Qalthos> #info Python 2.6 support has been removed from the ansible controller as of Ansible 2.7
+16:51:27 <pabelanger> yes, thank you for that
+16:51:39 <pabelanger> I had that in my notes locally
+16:53:00 <Qalthos> network modules run on the controller, so that means you need Python 2.7 or 3.5+ to work
+16:53:24 <Qalthos> I think that's everything
+16:56:24 <pabelanger> Yah, I want to discuss more about our actually testing on different python versions, but that can be another time / date
+16:56:51 <pabelanger> with that, i think we can finish off for now. Thanks everybody for attending
+16:56:54 <pabelanger> #endmeeting

@@ -1,0 +1,100 @@
+19:11:20 <gundalow> #startmeeting Ansible Public Core Meeting
+19:11:20 <zodbot> Meeting started Tue Apr 17 19:11:20 2018 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:11:20 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:11:20 <zodbot> The meeting name has been set to 'ansible_public_core_meeting'
+19:11:41 <jtanner> hello
+19:11:50 <gundalow> #chair jtanner mat013
+19:11:50 <zodbot> Current chairs: gundalow jtanner mat013
+19:12:02 * ryansb waves
+19:12:15 <shertel> Hello
+19:12:18 <mat013> Hello :)
+19:12:30 <nitzmahone> o/
+19:12:40 <gundalow> #chair ryansb nitzmahone
+19:12:40 <zodbot> Current chairs: gundalow jtanner mat013 nitzmahone ryansb
+19:13:03 <gundalow> #info Agenda as always is https://github.com/ansible/community/labels/core
+19:13:14 <abadger1999> Hola
+19:13:27 <gundalow> #topic Feature request: support for relative copying from inventories folder #37426
+19:13:34 <gundalow> #link https://github.com/ansible/ansible/issues/37426
+19:13:46 <gundalow> #link https://github.com/ansible/community/issues/301#issuecomment-381414605
+19:13:57 <gundalow> mat013: Thanks for adding this
+19:14:07 <gundalow> Will give everybody a minute to read
+19:14:42 <jtanner> not sure i follow this
+19:15:05 <mat013> ok so if you look at the ansible documentation
+19:15:16 <jtanner> what do the "+" and "+--" represent?
+19:15:27 <bcoca> dir struct
+19:15:28 <gundalow> jtanner: refresh
+19:15:32 <mat013> https://docs.ansible.com/ansible/2.5/user_guide/playbooks_best_practices.html
+19:15:35 <gundalow> I've fixed the formatting
+19:15:40 <jtanner> ah, okay much clearer
+19:16:08 <gundalow> All, if you have https://github.com/ansible/ansible/issues/37426 open, please refresh the page, the directory structure should be a lot clearer now
+19:16:30 <bcoca> i dont think we need to add facilities, inventory_dir, group_names and invetnory_hostname all work to do this in play
+19:17:07 <bcoca> playboodk_dir/role_paths also
+19:17:15 <bcoca> even relative in role, wouild work
+19:17:48 <jtanner> dunno, this feels like more precedence magic
+19:18:16 <bcoca> action plugins have too much pathing magic already
+19:18:27 <bcoca> if user wants this, they should build it in play, which is simple enough
+19:18:57 <mat013> well i managed to make a workaround (IMHO)
+19:19:15 <jtanner> which was?
+19:19:31 <abadger1999> I'm not keen on adding more magic relative directories either.
+19:19:41 <gundalow> #chair abadger1999 bcoca
+19:19:41 <zodbot> Current chairs: abadger1999 bcoca gundalow jtanner mat013 nitzmahone ryansb
+19:19:54 <mat013> to have a group_var adding all file
+19:20:10 <abadger1999> I'd have to check if the proposed precedence follows our other precedence rules too.
+19:20:39 <bcoca> by using group var to specify path, you get 'normal precedence'
+19:21:18 <mat013> with something like {{ inventory_dir + '/roles/' + role_name + '/files' }}
+19:21:43 <mat013> however I would need to prefix everywhere where I would like to refer to files in the inventory dir with that variable
+19:22:22 <abadger1999> Yeah, I think precedence would be the opposite if we were to implement that: http://docs.ansible.com/ansible/latest/user_guide/playbooks_variables.html#variable-precedence-where-should-i-put-a-variable
+19:22:34 <abadger1999> roles would override inventory.
+19:22:57 <bcoca> abadger1999: they do .. except for defaults/main.yml
+19:23:30 <bcoca> vars:/inline vars/vars/main.yml and even set+fact/include_vars in role .. should all override inventory
+19:23:31 <bcoca> vars
+19:24:00 <bcoca> inventory has low precedence when it comes go vars
+19:24:19 <bcoca> not to be confused with keyword/config/connection var precedence, whcih is diff game
+19:24:28 <mat013> ok
+19:28:17 <mat013> Well I do not have so many other arguments than given te alternative layout it is kind of suggested that you can divide you inventory into different environments... and I would think (I can offcourse be wrong on this) that sometimes there would be files that are attached to a particular environment... and it would be convenient to have them located in there
+19:28:40 <mat013> I guess the alternative is you can place them in the file folder under the role
+19:28:56 <bcoca> {{inventory_dir}}/files/
+19:31:11 <mat013> There can be pros and cons I guess for either {{inventory_dir}}/files or {{inventory_dir}}/roles/{{role_name}}/files
+19:31:23 <mat013> I guess the former is in case you may share files across multiple roles
+19:31:40 <mat013> while the latter maybe in case you have environment specific files for a particular roles
+19:31:47 <mat013> In our case we use both
+19:31:58 <agaffney> frankly, the idea of inventory roles sounds horrible
+19:32:21 <agaffney> way too much complication for what can be resolved with using {{ inventory_dir }} in file paths
+19:32:51 <bcoca> if you want files for roles .. i would just put in the roles <rolename>/files/
+19:33:09 <bcoca> if you want to split by invneotry ./files/{{inventory_dir}}/
+19:35:44 <bcoca> do we need vote?
+19:35:52 <jtanner> -1
+19:36:08 <bcoca> -1
+19:36:11 <abadger1999> -1
+19:36:24 <jtanner> i'm just not a fan of anything magic
+19:36:40 <mat013> I guess it a nay *lol*
+19:36:52 <bcoca> sorry, but that seems to be the consensus
+19:37:16 <mat013> no worries... thanks for the attention
+19:37:16 <jtanner> mat013: i would ask you to comment with your workaround in the ticket though in case others come along
+19:37:17 <bcoca> i get why you want it, but i think that existing facilities can give you same/better w/o adding this to pathing magic .. which is already bad enough
+19:37:48 <mat013> @jtanner sure
+19:38:29 <bcoca> #topic https://github.com/ansible/ansible/pull/38196
+19:39:02 <Pilou> reviews would be great :)
+19:39:36 <jtanner> matburt: ^
+19:39:42 <bcoca> added to my queue, but cannot promise getting to it any time soon
+19:39:50 <bcoca> anyone with special interest in the psql modules?
+19:40:10 <jtanner> only the tower folks that i know of
+19:41:32 <bcoca> i'll tyr to get to it
+19:41:39 <Pilou> thanks
+19:41:40 <bcoca> #topic https://github.com/ansible/ansible/issues/38200
+19:41:40 <Pilou> i tried to include that in postgresql_ext module but i wasn't successful (https://github.com/ansible/ansible/pull/26737#issuecomment-331853349) and didn't receive any feedback
+19:41:44 <bcoca> retr0h?
+19:42:02 <bcoca> ^ he scheduled it but does not come ...
+19:43:10 <bcoca> at this point im favoring closing the ticket and asking him to either use propsals with detail and clarifying what he wants and/or come to one of these meetings
+19:43:24 <abadger1999> Pilou: Should we fallback to ansible.module_utils.database.pg_quote_identifier if none of the psycopg/postgres functions are available?
+19:44:41 <jtanner> bcoca: we should probably do an internal meeting about molecule
+19:44:49 <jtanner> and the topic in general
+19:45:28 <bcoca> jtanner: im fine with that, but it seems some of us are unclear on what the  'ask' is
+19:45:45 <jtanner> we have some of our own asks and molecule is a possible solution
+19:46:31 <bcoca> schedule it
+19:46:46 <jtanner> k
+19:46:54 <bcoca> #topic open floor
+19:47:26 <Pilou> abadger1999: not sure that _PG_IDENTIFIER_TO_DOT_LEVEL makes sense
+19:49:09 <bcoca> if no new busines i'll close in 1 min
+19:49:55 <abadger1999> Pilou: It looks like it makes sense... but the bug report you reference looks like the logic is wrong.
+19:50:34 <bcoca> #endmeeting

@@ -1,0 +1,113 @@
+19:03:39 <bcoca> #startmeeting ansible core public irc meeting
+19:03:39 <zodbot> Meeting started Tue Oct 23 19:03:39 2018 UTC.
+19:03:39 <zodbot> This meeting is logged and archived in a public location.
+19:03:39 <zodbot> The chair is bcoca. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:03:39 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:03:39 <zodbot> The meeting name has been set to 'ansible_core_public_irc_meeting'
+19:03:44 <maxamillion> .hello2
+19:03:45 <zodbot> maxamillion: maxamillion 'Adam Miller' <maxamillion@gmail.com>
+19:03:59 <kushal> .hellomynameis kushal
+19:04:00 <zodbot> kushal: kushal 'Kushal Das' <mail@kushaldas.in>
+19:06:02 <bcoca> #topic https://github.com/ansible/ansible/pull/44800
+19:06:08 <abadger1999> Olá
+19:07:16 <bcoca> @cyberpear?
+19:07:56 <bcoca> nvmd, he mentioned thrusday
+19:08:08 <bcoca> #topic https://github.com/ansible/ansible/pull/47034
+19:08:22 <abadger1999> Seems like we should have monty or shrews review and merge that if they want it?
+19:08:50 <kushal> That is me.
+19:09:23 <kushal> What needs to be done to get it merged?
+19:12:50 <bcoca> anyone with qubes experience?
+19:13:05 <bcoca> quick look at code seems fine, just needs in depth review and testing
+19:13:29 <kushal> bcoca, I have other community members who are using it. May I ask them to comment on PR?
+19:13:54 <bcoca> please do
+19:14:08 <kushal> bcoca, Thanks, I will ask them now.
+19:14:19 <kushal> bcoca, anything else code wise?
+19:15:46 <bcoca> no, mostly lgtm
+19:16:23 <bcoca> kushal: maybe add configurable options, you assume qvm utilties in path, no wrappers, etc
+19:16:55 <kushal> bcoca, Yes, that is the standard in Qubes dom0, otherwise the sysetm may not even boot.
+19:18:04 <bcoca> standard for all users?
+19:18:35 <bcoca> i imagine they need to be in the path for 'root' when bringing up the services, but i expect other users can customize their paths
+19:19:04 <bcoca> also, even root doesnt always have same environment, depends on how you become root, login/sudo/su can all alter that
+19:21:09 <abadger1999> An integration test would be good but I'm not entirely sure how those work.
+19:21:18 <bcoca> the subprocess also assumes all works, no error hanlding in case of permissions/disk full/etc
+19:21:18 * abadger1999 finds the current integration tests as example.
+19:21:46 <bcoca> we would need qubes installed, probably a vm as a container wont have dom0 access
+19:21:54 <bcoca> one hopes ...
+19:22:11 <kushal> dom0 normal user has all the primary tools in path.
+19:22:24 <kushal> As we don't need to use sudo unless we are updating dom0
+19:22:57 <abadger1999> kushal: https://github.com/ansible/ansible/tree/devel/test/integration/targets/connection_buildah  <=== there is a directory like this for every connection integration test.  I don't know which one might be the best so you'll have to look through a few to get a feel for them.
+19:23:01 <bcoca> you wont, but a more naive user might do things differntly, i'm just trying to account for that
+19:23:02 <kushal> I don't know any other way to test than using qubes.
+19:23:17 <kushal> abadger1999, Okay. I will have a look.
+19:23:50 <kushal> bcoca, Yup, but dom0 user/root has the same env as far as I know.
+19:23:58 <kushal> When it comes to handling other vms.
+19:24:37 <abadger1999> Is qubes sort of like an appliance ?
+19:25:02 <bcoca> abadger1999: think coreos alternative
+19:25:17 <bcoca> but more about security, everything runs in less privileged container
+19:25:30 <bcoca> its less aobut the containers but what they offer in isolation
+19:25:43 <abadger1999> Well, coreos does have lots of variations... I'm not sure if qubes has lots of variations or not... that's why I'm asking if it's appliance-like
+19:26:15 <kushal> abadger1999, No, it is Fedora 25 + Xen based distribution with security in focus.
+19:26:23 <kushal> abadger1999, https://qubes-os.org
+19:26:23 <abadger1999> K.
+19:26:23 <kushal> abadger1999, we can run all other distributions inside of it.
+19:26:23 <kushal> abadger1999, basically my every application has as different vm assigned.
+19:27:54 <kushal> maxamillion, Qubes provides security updates
+19:27:56 <bcoca> i said 'container's but the targets dont need to share kernel
+19:27:58 <maxamillion> for some reason I thought it required paravirt for the app VM "Containers"
+19:28:10 <maxamillion> alright, nvm
+19:28:29 <maxamillion> anyhoo, yeah I think the real issue is that nobody seems to have Qubes background
+19:28:31 <abadger1999> kushal: I guess I'm trying to establish... does the dom0 come from the qubes project and users are expected to pretty much *not* modify it/install different packages, etc?
+19:29:09 <kushal> maxamillion, Here is the FAQ https://www.qubes-os.org/faq/#general--security
+19:29:17 <kushal> abadger1999, Yup.
+19:29:27 <kushal> abadger1999, That is the expectation.
+19:29:46 <maxamillion> cool
+19:29:48 <abadger1999> Okay cool.  So there are certain expectations that the plugin can make about the host it is running on.
+19:29:50 <bcoca> im just looking at cases which dont meet the expectation
+19:30:05 <bcoca> ^  cause users do that
+19:30:14 <kushal> abadger1999, People can install packages there, but only from the official Fedora 25 repos and Qubes own repo.
+19:30:48 <kushal> abadger1999, and Fedora 25 does not get security updates, only Qubes provides any related security updates.
+19:30:51 <kushal> bcoca, correct, always.
+19:31:12 <bcoca> im more worried about other subtle environment changes, i think it will work 'as is' but someone will bring a 'bug' which is really 'i messed with what i was not suppsoed to, but you fix this other thing to compensate'
+19:31:59 <bcoca> i was just not sure how easy it was to modify the dom0 enviornment, seems there is not much protection there outside from isolating the rest of the apps
+19:32:17 <kushal> bcoca, dom0 is without any network
+19:32:21 <bcoca> ^ not saying anything in conneciotn is wrong, just being paranoid about what users do
+19:32:30 <kushal> Yup, makes sense.
+19:32:42 <bcoca> i dont need a connection to update .bashrc and not add /usr/sbin/
+19:33:07 <kushal> Only certain qubes-dom0-update command can bring in package updates
+19:33:13 <bcoca> 2 things i learnt from my first boss #1 assume people do stupid things
+19:33:19 <kushal> bcoca, /usr/sbin is already part of a normal user PATH
+19:33:24 <bcoca> #2 the stupid can be very creative
+19:33:40 <kushal> bcoca, 100% correct assumption :)
+19:34:05 <kushal> also in Qubes all of the VMs are without any sudo password.
+19:34:12 <kushal> All tools are made like that.
+19:34:17 <bcoca> but if you dont feel you need to take those precautions, i'm fine with plugin as is
+19:35:21 <kushal> bcoca, Qubes devels are also paranoid about security concerns, and they are really worried about facts or any other data that comes back to the controller (dom0 in this case).
+19:35:32 <kushal> They want to know what Ansible is doing/thinking.
+19:35:38 <bcoca> i read the issues with 'json parsing responses'
+19:35:54 <bcoca> in that respect it works very similar to salt
+19:36:09 <bcoca> the advantage is that we dont roll our own communications protol nor require an agent
+19:36:12 <kushal> Can you please comment any thoughts you all have at https://github.com/kushaldas/qubes_ansible/issues/15 ?
+19:36:22 <bcoca> our PM said he would do that
+19:36:38 <kushal> Ah, super nice. Thank you and your PM :)
+19:37:21 <kushal> bcoca, I am perfectly okay if we take time to merge this PR, and meanwhile I will get users to comment and verify that this plugin works or not.
+19:37:52 <jtanner> hello
+19:37:56 <kushal> bcoca, My final goal is make Ansible as the medium to manage vms in Qubes, but I will have to finish the module also for the same.
+19:38:16 <kushal> https://github.com/kushaldas/qubes_ansible is where I am doing the development on the same.
+19:39:03 <bcoca> mostly it looks good enough to merge, the tests will make us feel warmer/fuzzier
+19:39:14 <bcoca> i see @abadger1999 found 2.6ism
+19:39:36 <bcoca> then just ping us in ansible-devel and we can get it merged
+19:39:42 <maxamillion> kushal: +1
+19:39:50 <bcoca> if nothing else, going to open floor in 1min
+19:39:55 <kushal> jtanner, hello :)
+19:40:24 <kushal> bcoca, Thank you :)
+19:40:37 <bcoca> #topic open floor
+19:40:56 <bcoca> kushal: thanks for your contribution
+19:42:45 <kushal> bcoca, Thank you all for the feedback.
+19:42:50 <bcoca> well, if nothing in open floor, closing meeting in 1 min
+19:42:51 <kushal> abadger1999, https://docs.python.org/2/library/subprocess.html#subprocess.check_call from 2.5 :)
+19:43:23 <abadger1999> Oh, check_output is what was added in 2.7
+19:43:25 <bcoca> check_output is the 2.7
+19:43:27 <bcoca> jinkx
+19:43:33 <abadger1999> :-)
+19:43:40 <kushal> :)
+19:44:09 <bcoca> #endmeeting

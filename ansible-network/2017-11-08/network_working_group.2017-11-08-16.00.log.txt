@@ -1,0 +1,135 @@
+16:00:01 <gundalow> #startmeeting Network Working Group
+16:00:01 <zodbot> Meeting started Wed Nov  8 16:00:01 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:00:01 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:00:01 <zodbot> The meeting name has been set to 'network_working_group'
+16:02:06 <gundalow> Who's around
+16:02:22 <st8less> o/
+16:02:41 <st8less> dgjustice on ntc
+16:02:57 <gundalow> #chair jmcgill298 EricDost st8less trishnag ganeshrn
+16:02:57 <zodbot> Current chairs: EricDost ganeshrn gundalow jmcgill298 st8less trishnag
+16:03:17 * trishnag waves
+16:03:21 <itdependsnetwork> here
+16:03:29 <gundalow> st8less: Hi Bruce Campbell
+16:03:33 <gundalow> hey Ken
+16:03:34 <st8less> :P
+16:03:42 <gundalow> #chair itdependsnetwork
+16:03:42 <zodbot> Current chairs: EricDost ganeshrn gundalow itdependsnetwork jmcgill298 st8less trishnag
+16:03:43 <itdependsnetwork> hi
+16:04:05 <jmcgill298> hello
+16:04:31 <gundalow> #info Agenda as always https://github.com/ansible/community/labels/network
+16:05:11 * Qalthos 🌊🌊
+16:05:46 <gundalow> #topic Docs
+16:05:54 <gundalow> Any final feedback on https://github.com/ansible/ansible/pull/31807 ?
+16:06:41 <gundalow> Based on discussion of `~` just now on NTC Slack I wonder what else may need doing around filters, yaml and jinja 2
+16:07:34 <gundalow> I was considering as the first step that the replacement for http://docs.ansible.com/ansible/latest/intro_networking.html would have links to the Jina & filters section
+16:08:09 <st8less> There are a lot of splinter topics that arise from an intro doc.  I think keeping it fairly concise is a good idea.  Maybe add a section near the bottom for "Further reading" or "Intermediate techniques"?
+16:08:38 <gundalow> st8less: ah, yes, good clarification. I don't want to document them on that page, though as you said, link to the pages with the details on
+16:08:47 <gundalow> and where needed flesh out the specific pages
+16:08:55 <st8less> Exactly
+16:09:15 <gundalow> such as link to and improve docs/docsite/rst/YAMLSyntax.rst
+16:09:41 <st8less> As mentioned in the comments, there are tons of vendor-specific tools, techniques, and gotchas.  Best to document them separately IMO.
+16:09:42 <gundalow> That will need to be a collective effort
+16:11:06 <itdependsnetwork> perhaps in the recap re-show the task(s) you are referring to?
+16:12:20 <gundalow> itdependsnetwork: interesting idea. Maybe I shouldn't have the code as one block. Instead it should be: few lines of Playbook + description of above. Next section of playbook + description
+16:13:04 <itdependsnetwork> I like it all in one spot, people want to copy and paste it, but may make sense to do one before the other
+16:13:13 <itdependsnetwork> e.g. have both :)
+16:13:15 <gundalow> aye, copy & runnable was my idea
+16:13:44 <gundalow> hum, well if that's the only feedback that's left then I guess it's good to merge
+16:14:34 <gundalow> I'm currently working on getting code coverage details from Network tests, once that's finished I'll be working on the new intro_networking page
+16:14:35 <itdependsnetwork> +1
+16:14:37 <st8less> +1.  It will obviously be a "living" document.
+16:14:41 <jmcgill298> +1
+16:14:48 <gundalow> Cool, thanks
+16:15:01 <gundalow> Yup, once it's live we can tweak it in place
+16:15:04 <gundalow> (PRs welcome :)
+16:15:05 <gundalow> )
+16:15:36 <gundalow> #topic Open Floor
+16:16:02 <gundalow> So looking at the agenda (unless I've missed something) the remaining PRs have some review comments that need addressing
+16:16:17 <itdependsnetwork> the facts vs get's
+16:16:30 <gundalow> #topic facts vs gets
+16:16:33 <itdependsnetwork> anything come of that?
+16:17:35 <gundalow> itdependsnetwork: Not yet, I was running the London Meetup, so wasn't at the Core meeting yesterday
+16:17:49 <itdependsnetwork> ok
+16:18:14 <itdependsnetwork> DI is dead, long live DI?
+16:18:49 <st8less> s/^DI/SDN/
+16:19:29 <gundalow> #topic Open Floor
+16:21:03 <gundalow> Anyone got anything else?
+16:21:09 <itdependsnetwork> I guess it is worth mentioning to look at the 2.5 road map
+16:21:38 <ogenstad> Has anything more been said about the "unable to open shell" issue?
+16:21:53 <ogenstad> Got cc:ed by ansibot for another issue related to that one.
+16:21:56 <itdependsnetwork> I believe PR was put in
+16:22:14 <gundalow> Just finding the PR
+16:22:38 <ogenstad> Another thing I was thinking about is if there's any kind of reference for the networking facts.
+16:22:44 <gundalow> #topic connection: network_cli (unable to open shell)
+16:23:02 <ogenstad> Any naming convension or such so that it's consistent throughout Ansible?
+16:23:13 <gundalow> #info https://github.com/ansible/ansible/pull/32521 rewrites the connection framework.
+16:23:20 <gundalow> #info NO MORE UNABLE TO OPEN SHELL!!!!!!!!!
+16:23:21 <itdependsnetwork> what does: Implement a feature that handles platform differences and feature unavailability.
+16:23:24 <itdependsnetwork> mean?
+16:23:54 <gundalow> #info this allows `connection: network_cli` (as well as backwards compatabilty for `connection: local`
+16:24:30 <gundalow> The real error message will be displayed by ansible-playbook, rather than "unable to open shell"
+16:25:38 <Qalthos> pending some action plugin changes if you've copied the 'fail if not connection=local' check
+16:25:40 <gundalow> Once it's merged we will mention it here, really needs lots of testing, and we are looking to the community (you lovely people) to help with that
+16:27:27 <evgenyf> Hi guys, I have a couple of pool requests for new modules awaiting reviews, can you please have a look ?
+16:27:48 <ogenstad> That sounds great.
+16:27:48 <gundalow> evgenyf: sure, once we are back on OpenFloor (which platform are they for?)
+16:27:57 <evgenyf> #link https://github.com/ansible/ansible/pull/31243 #link https://github.com/ansible/ansible/pull/31776
+16:27:59 <gundalow> Any other questions on the connection work?
+16:28:51 <ogenstad> Currently we wait until you have merged it and test?
+16:29:02 <Qalthos> I really hope to have it in this week
+16:29:09 <gundalow> ogenstad: yup, just got a few issues to sort out first
+16:29:34 <evgenyf> guandalow: sorry, what is OpenFloor?
+16:29:42 <ogenstad> Would perhaps be nice to at least open issues for the action plugins which doesn't get changed.
+16:30:18 <gundalow> evgenyf: sorry, I meant once we've finished this topic we can move to discuss your PRs
+16:30:33 <evgenyf> guandalow: ok, sure
+16:31:05 <ogenstad> Is there any target date for 2.5? I.e. when does the testing need to be done
+16:31:27 <gundalow> #topic Ansible 2.5
+16:31:41 <gundalow> #info Network Roadmap https://github.com/ansible/community/wiki/Network:Core-roadmap-2.5
+16:32:09 <gundalow> #info Dates and full 2.5 roadmap https://github.com/ansible/ansible/blob/devel/docs/docsite/rst/roadmap/ROADMAP_2_5.rst
+16:32:20 <gundalow> #info Core Engine Freeze and Module Freeze: 15 January 2018
+16:32:24 <gundalow> ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+16:32:28 <gundalow> ***************************
+16:32:45 <gundalow> Targetting 2.5.0 for March 2018
+16:33:57 <skg-net> Is there any plugin development guide, I’m trying to create a plugin (CPS api) for openswitch instead of the previous module_utils approach
+16:34:43 <gundalow> skg-net: No guide that I'm aware of, may be best to discuss that in #ansible-devel after this meeting. That channel should have the right set of people in
+16:35:01 <gundalow> Any other question on 2.5?
+16:35:18 <skg-net> Thanks
+16:35:55 <gundalow> #topic Radware ADC devices
+16:36:04 <gundalow> #topic Radware ADC devices via vDirect server
+16:36:18 <gundalow> #info Module for running templates and workflows on vDirect https://github.com/ansible/ansible/pull/31243
+16:36:26 <EricDost> Sorry, quickly back to 2.5 - not sure if that's the right topic but any word on updating the git module to support commits, etc?
+16:36:34 <gundalow> #info vdirect_commit: committing pending configuration on Radware ADC devices https://github.com/ansible/ansible/pull/31776
+16:37:05 <gundalow> EricDost: erm, not sure, though that's not Network related. Could I redirect you to #ansible-devel for that one. Thanks
+16:37:10 <gundalow> evgenyf: Hi
+16:37:24 <gundalow> Do we have anyon Radware vDirect users here?
+16:37:37 <evgenyf> gundalow: hi
+16:37:50 <gundalow> itdependsnetwork: Any of the NTC community use Radware vDirect?
+16:38:10 <gundalow> Would be good to get some users to test and review
+16:38:28 <evgenyf> The first module was merged in v2.4, those are another two
+16:38:35 <gundalow> evgenyf: Have any of your customers used these new modules yet?
+16:39:30 <evgenyf> gundalow: not yet, we do those modules because customers want to use them)
+16:39:56 <gundalow> evgenyf: Sounds good
+16:40:15 <evgenyf> gundalow: those were tested only by myself
+16:40:29 <gundalow> Cool, just trying to get a feel of how much they've been tested
+16:41:03 <evgenyf> They were tested by myself on real systems and they have unit testing
+16:41:55 <gundalow> evgenyf: Thanks. I've merged both of them
+16:42:08 <gundalow> #topic Open Floor
+16:42:12 <gundalow> Anyone got anythign else?
+16:42:17 <gundalow> #cahir evgenyf skg-net
+16:42:23 <gundalow> #chair evgenyf skg-net
+16:42:23 <zodbot> Current chairs: EricDost evgenyf ganeshrn gundalow itdependsnetwork jmcgill298 skg-net st8less trishnag
+16:42:55 <itdependsnetwork> had a customer, and I used it then
+16:42:59 <evgenyf> gundalow: oh! so quick
+16:43:09 <gundalow> evgenyf: I'd looked through them before
+16:43:43 <evgenyf> itdependsnetwork: I think you was using the old module which did not make it to be merged right?
+16:43:54 <itdependsnetwork> correct
+16:44:39 <evgenyf> itdependsnetwork: well, you can use new modules if you still have the customer
+16:44:47 <itdependsnetwork> I will let them know
+16:44:59 <evgenyf> itdependsnetwork: nice!
+16:45:51 <evgenyf> itdependsnetwork: it will be great to test it on real
+16:48:12 <gundalow> Will close the meeting in a few minute if there isn't anything else
+16:49:36 <evgenyf> gundalow: thanks for review and merge
+16:49:55 <gundalow> nps
+16:55:23 <gundalow> #info Thanks everybody. As always feel free to add items onto https://github.com/ansible/community/labels/network or just speak to us in #ansible-network anytime
+16:55:34 <gundalow> Thank you for your time, enjoy the rest of your day
+16:55:37 <gundalow> #endmeeting

@@ -1,0 +1,62 @@
+17:01:25 <mattclay> #startmeeting Ansible Testing Working Group
+17:01:25 <zodbot> Meeting started Thu Mar  1 17:01:25 2018 UTC.  The chair is mattclay. Information about MeetBot at http://wiki.debian.org/MeetBot.
+17:01:25 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+17:01:25 <zodbot> The meeting name has been set to 'ansible_testing_working_group'
+17:02:10 <mattclay> #info Agenda: https://github.com/ansible/community/issues/248
+17:02:21 <sivel> .hello2
+17:02:22 <zodbot> sivel: sivel 'Matt Martz' <matt@sivel.net>
+17:02:27 <mattclay> #chair sivel
+17:02:27 <zodbot> Current chairs: mattclay sivel
+17:02:28 * Pilou waves
+17:02:32 <mattclay> #chair Pilou
+17:02:32 <zodbot> Current chairs: Pilou mattclay sivel
+17:05:02 <mattclay> #info Most of the code-smell sanity tests in ansible-test have been converted to Python scripts. They have been updated to accept a file list as input and provide output in a standard format.
+17:05:54 <mattclay> The only item on the Agenda today is https://github.com/ansible/ansible/pull/36468
+17:06:17 <mattclay> #topic VCR for unit testing (https://github.com/ansible/ansible/pull/36468)
+17:06:28 <mattclay> I haven't reviewed the PR yet.
+17:06:38 <mattclay> Has anyone else had time to look at it?
+17:09:17 <sivel> I just took a quick look.  I'm not a huge fan of using vcr.  And from the looks of it, it seems overkill for the tests that are there
+17:09:27 <sivel> there are 2 fixtures
+17:09:40 <sivel> as part of the cassette
+17:11:23 <mattclay> One thing I don't like about this approach is that the dependencies are in requirements instead of those being mocked.
+17:11:51 <sivel> iirc we already have other tests using `responses` which is meant to mock requests
+17:13:31 <sivel> also, since it is net new tests, we should prefer pytest
+17:13:51 <mattclay> Yes, definitely.
+17:18:55 <mattclay> I think the other issue here, at least with these modules specifically, is there isn't really any module code in the ansible repo.
+17:19:17 <mattclay> The modules just call into the avi module utils, which then pass everything through to ansible specific code within the avi sdk.
+17:19:44 <mattclay> So the modules are basically very thin wrappers around the sdk with documentation and metadata.
+17:20:23 <mattclay> So even unit testing these at all seems like it's not really accomplishing much.
+17:22:17 <sivel> Sounds like *maybe* unit testing the module_utils would be better
+17:22:27 <sivel> to make sure they interact correctly with the sdk
+17:22:35 <sivel> as opposed to testing that via a module
+17:24:49 <mattclay> Yeah, after looking at it more, I think regular unit tests are all that is needed. Even then there isn't much to do there. The import tests alone are giving us like over 70% code coverage.
+17:25:14 <mattclay> What is really needed is integration tests.
+17:26:13 <mattclay> Using VCR just shows that someone was able to run the tests and capture the test session. Replaying it later doesn't give us much.
+17:28:02 <mattclay> Specifically for the AVI modules, I don't think VCR is the correct approach for testing. VCR might be appropriate for other testing, but I'd need to see it in use first.
+17:29:53 <mattclay> I'll comment on the PR after the meeting.
+17:29:57 <mattclay> sivel: Any other thoughts?
+17:30:29 <sivel> no, I think that really covers it
+17:30:35 <sivel> as is that PR isn't useful
+17:30:36 <mattclay> #topic Open Floor
+17:30:42 <mattclay> Does anyone have anything else they'd like to discuss?
+17:30:54 <sivel> Pilou: ?
+17:31:15 <Pilou> i have one test PR for supervisorctl module
+17:31:26 <Pilou> #36033
+17:34:24 <sivel> sendProcessStdin.sh seems a little weird to me.  Couldn't that just be a python file? instead of python code in a heredoc
+17:36:08 <Pilou> the bash script allows to handle python2 and python3
+17:36:29 <mattclay> Pilou: I think the python3 testing may need some work. When python2 is installed that will cause the module to run on python2 instead of python3.
+17:36:58 <sivel> yeah, was just about to mention the tasks that explicitly are checking for python2
+17:37:29 <mattclay> Pilou: You'd need to make sure that after python2 is installed the python symlink is restored. Anything expecting python to be python2 would need to be updated to point specifically at python2.
+17:37:50 <sivel> how does the shell script do anything to support py2/py3 that couldn't just be done via python?
+17:38:30 <mattclay> Pilou: I might be able to handle that in ansible-test though, by using python2 or python3 explicitly as the interpreter instead of using the python symlink.
+17:40:17 <Pilou> mattclay: the symling is restored: https://github.com/ansible/ansible/pull/36033/files#diff-32e09c1dcbb65e8d992de4cb5e02df97R13
+17:41:00 <mattclay> Pilou: Yes, at the end of the test. Which means the module is tested under python2 instead of python3 during the test, which defeats the purpose of trying to test it on python3.
+17:41:01 <Pilou> uninstall*.yml is included in an 'always' block
+17:42:49 <Pilou> supervisorctl python module isn't compatible with python 3
+17:42:56 <mattclay> I had the same issue with the hg tests -- in fact there are still a few issues with that test. I may be able to fix it easier by making some changes to ansible-test.
+17:43:12 <mattclay> Pilou: Ah, in that case, then just skip the tests when python3 is installed.
+17:44:24 <mattclay> Converting our python3 test system into a python2 system just to run the tests doesn't do anything useful since the module itself requires python2.
+17:44:47 <mattclay> So just add 'skip/python3' to the aliases file.
+17:45:56 <Pilou> a simpler way indeed :)
+17:52:21 <mattclay> OK, anything else?
+17:56:58 <mattclay> #endmeeting

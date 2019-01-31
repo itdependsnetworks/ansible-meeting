@@ -1,0 +1,187 @@
+15:08:14 <bcoca> #startmeeting ansible core irc meeting
+15:08:14 <zodbot> Meeting started Thu Apr  5 15:08:14 2018 UTC.  The chair is bcoca. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:08:14 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:08:14 <zodbot> The meeting name has been set to 'ansible_core_irc_meeting'
+15:08:47 <bcoca> #topic https://github.com/ansible/ansible/pull/38285
+15:09:00 <bcoca> #chair Sieben_
+15:09:00 <zodbot> Current chairs: Sieben_ bcoca
+15:09:25 <Sieben_> Hello everybody
+15:09:31 <bcoca> hi
+15:09:35 <Sieben_> I got the scaleway_compute module working
+15:09:49 <Sieben_> so it can create, start, reboot, stop and destroy instances
+15:10:02 <Sieben_> I've added a playbook to test it
+15:10:23 <bcoca> i imagine that requires credentials
+15:10:39 <Sieben_> Debug messages are enabled to help reviewers understand how it works. I'm all up for converting them to regular log messages
+15:10:45 <Sieben_> Yes indeed
+15:10:50 <Sieben_> but maxamillion got them
+15:11:04 <Sieben_> If more are needed just ping me
+15:11:07 <bcoca> ah, now i remember the previous discussion
+15:11:37 <bcoca> what did you want to discuss now?
+15:11:58 <Sieben_> I would like to collect as much feedback as possible on the code. I would like to know what are the next steps to perform before having it merged
+15:12:21 <Sieben_> I would like to know if there is design issues, api issues, comments...
+15:12:22 <bcoca> mostly it is getting eyes on it
+15:12:31 <bcoca> have you read the checklist?
+15:13:00 <Sieben_> Yes
+15:13:43 <bcoca> k, if followed that normally takes care of most issues, just need reviwers at this point?
+15:13:49 <bcoca> @maxamillion ?
+15:14:06 <Sieben_> Yes
+15:14:22 <maxamillion> I'm on it, I already told Sieben_ I'd review today
+15:14:35 <bcoca> #chair maxamillion
+15:14:35 <zodbot> Current chairs: Sieben_ bcoca maxamillion
+15:14:52 <maxamillion> .hello2
+15:14:53 <zodbot> maxamillion: maxamillion 'Adam Miller' <maxamillion@gmail.com>
+15:15:06 <Pilou> I guess one question will be "how to print some debug messages ?"
+15:15:14 <Pilou> https://github.com/ansible/ansible/pull/38285/files#diff-4259e225b60891dd12355d4205e44926R216
+15:15:32 <bcoca> AnsibleModule has a 'warning' method
+15:15:37 <bcoca> and a log one
+15:15:57 <bcoca> ^ my reading of that, it IS using the module.warn
+15:16:01 <maxamillion> +1
+15:16:09 <maxamillion> that was my understanding as well
+15:17:14 <resmo> hi
+15:17:36 <bcoca> #chair Pilou resmo
+15:17:36 <zodbot> Current chairs: Pilou Sieben_ bcoca maxamillion resmo
+15:17:42 <maxamillion> there's a debug method in the AnsibleModule class as well
+15:17:44 <sdoran> There's also the `debug()` method
+15:17:46 <maxamillion> fwiw
+15:17:49 <alikins> ie, do not print debug messages to stdout (and ideally not stderr either)
+15:17:50 <maxamillion> sdoran: +1
+15:17:51 <bcoca> and .. there is a debug method
+15:17:57 <sdoran> Triple jinx!
+15:18:00 <maxamillion> SO MUCH JINX
+15:18:39 <bcoca> any other items on this issue?
+15:19:24 <bcoca> Sieben_:  looks like you are still working on some parts, you might want to prefix subject with [WIP] so bot labels correctly
+15:20:14 <Sieben_> bcoca, done
+15:20:16 <maxamillion> +1
+15:21:10 <bcoca> if nothing else on this, i'll open the floor
+15:22:04 <bcoca> #topic open floor
+15:22:37 <agaffney> https://github.com/ansible/ansible/pull/22648 <-- it's been a week, and there's been no use cases presented that don't work (as opposed to not working exactly as someone wants)
+15:23:30 <bcoca> im for merging it, i think it is a good balance between keeping it explicit and reducing the number or repetitions
+15:24:01 <bcoca> i do like the variation you made on alikins' prototypes also
+15:25:07 <bcoca> ^ anyone else want to vote?
+15:25:20 <bcoca> +1 from me
+15:25:28 * sdoran giving it one last look
+15:25:43 <agaffney> +1 from me ;)
+15:25:57 <sdoran> No conflict of interest there ;)
+15:26:15 <agaffney> if you can vote for yourself for political office, why not this? :)
+15:26:18 <bcoca> agaffney: i assume +1 from author
+15:26:38 * bcoca has voted -1 for his own PRs on occasion
+15:27:31 <sdoran> +1
+15:28:14 <alikins> I would lean towards -1 despite that I like the idea and the implementation. I'm weary of introduction a new mechanism for defining/setting var values without some docs/specs on how it should work
+15:28:36 <bcoca> alikins: but +1 for the feature?
+15:29:01 <bcoca> im pretty sure that we can get docs after, just not worth writing if we are not going to accept the feature
+15:29:07 <privateip> does it work with roles?
+15:29:28 <alikins> bcoca: I'm not sure I understand the distinction 'for the feature' ?
+15:29:34 <bcoca> privateip:  it will affect roles
+15:29:39 <agaffney> privateip: I haven't explicitly tested that, but it should. it generally works the same way that 'environment' does
+15:29:41 <bcoca> alikins: the code itself w/o docs
+15:30:02 <alikins> then no, not really
+15:30:20 <privateip> so it would be nice to know for sure if there are any issues with roles ... other than that im +1
+15:30:50 <agaffney> privateip: what exactly do you mean by that? defaults set at the play level will apply to tasks in roles, and it can be used within roles via 'block'
+15:30:54 <bcoca> privateip: its part of base, which means it is settable/applies to play/roles/blocks/tasks
+15:31:34 <sdoran> That was my understanding as well. Which is also nice because you can define defaults for those various scopes.
+15:31:38 <privateip> im just saying it should be tested with roles instead of assuming it will work
+15:32:00 <sdoran> Though someone will inevitably ask for a true global setting...
+15:32:01 <bcoca> any issues would be the same as for any current keyword that does the same, i.e environment, no_log, ignore_errors, etc
+15:32:12 <bcoca> privateip: fair enough
+15:32:25 <agaffney> privateip: you can always submit a follow-up PR to add roles to the integration tests :)
+15:32:28 <bcoca> sdoran: a config default, but i would shy aways from that
+15:32:29 <alikins> needs at least unit tests and examples and docs
+15:32:59 <agaffney> alikins: it has integration tests. unit tests are probably unnecessary
+15:33:06 <bcoca> alikins: has integration tests, and i agree some unit tests would be nice, example is in ticket, but i would not hold merging any feature to be doc/test complete or we would never add anything
+15:33:32 <maxamillion> sorry ... multitasking badly, looking at agaffney's PR
+15:33:36 <sdoran> bcoca: Agreed. I don't want to get in the business of supporting globally changing module defaults.
+15:34:05 <bcoca> that is why 'this' version fo the solution keeps things explicit enough to not break 'play auditability'
+15:35:52 <bcoca> so +4 , +1 (conditioned on adding tests for roles), -1 (conditioned on lack of docs)
+15:35:59 <bcoca> anyone else?
+15:36:00 <abadger1999> +1
+15:36:04 <bcoca> +5
+15:36:07 <alikins> that changes code in the middle of a 250 line method that is described as 'The primary workhorse of the executor system'. seems worthy of unit tests
+15:36:08 * abadger1999 not really here, sorry
+15:36:59 <agaffney> frankly, I have no idea how to add unit tests for this, but feel free to make suggestions, and I can do a follow-up PR to add them
+15:37:18 <agaffney> but I'd think the combination of existing unit tests around the task executor code and the new integration tests would be sufficient
+15:37:44 <bcoca> im fine with docs and more tests being follow up
+15:38:01 <bcoca> we can always 'revert' before release if we feel it is not well enough covered
+15:38:09 <maxamillion> +1 - but I would like to see some docs on this (more tests would be nice, but there's a good baseline there so I'm good with it)
+15:39:23 <bcoca> k, seems the 'yays' have it, will 'close' in 1 min unless more arguments/votes come in
+15:39:26 <agaffney> I can do a followup with docs. those are just a PITA to "test", since I can't reasonably build the entire set of docs locally to see how it looks
+15:40:07 <bcoca> agaffney:  take care of the 'substance' , since it is rst it will display in github/pr, we can take care of style later
+15:40:15 <bcoca> ^ our docs guy will also review them
+15:41:31 <bcoca> ok, merging, agaffney i'll expect follow up PR, alikins can you help him with unit tests for this?
+15:42:00 <alikins> does 'module_defaults' keyword break on older ansibles?
+15:42:01 <bcoca> iirc we do have some unit tests for task_executor._execute,
+15:42:15 <bcoca> alikins: any new keyword will, has to be in porting guide
+15:42:27 <bcoca> well, any new .. except loop, which was hidden
+15:42:37 <agaffney> alikins: if by "break", you mean complain that it's not a valid play attribute, yes, probably
+15:43:22 <bcoca> alikins: do you propose a change in policy regarding new keywords?
+15:46:05 <bcoca> k, if nothing else, closing topic, merging PR
+15:46:25 <bcoca> #task agaffney followup additional doc, tests and examples
+15:46:29 <alikins> not sure what would be best for old ansible to do (not that we can change it now...). exiting seems harsh but alternatively would be to let playbooks run with the wrong/different task args
+15:47:07 <bcoca> alikins: before 2.x we just 'ignored' invalid keywords, but that was a problem with mispelling 'beocme' vs 'become'
+15:47:26 <bcoca> in 2.0 we started validating the keywords, we've added a few since then  .. and yes, its a fatal error
+15:47:34 <nitzmahone> Yeah, we def don't want to return to 1.x behavior there
+15:48:14 <nitzmahone> I could see warnings being added to actively-maintained versions for new keywords we know are coming
+15:48:18 <bcoca> we COULD have a 'convert bad keyword to warning' switch .. but im unsure that is better than 'this is not valid keyword for this ansible' and have people upgrade versions or fix play to match their version
+15:49:03 <bcoca> nitzmahone: a more customized error? 'invalid keyword, x is new in 2.6'?
+15:49:15 <bcoca> but 'this is 2.4'
+15:49:16 <nitzmahone> Something like that
+15:49:18 <alikins> so what happens now if I run a module_defaults playbook against say 2.4 ansible-playbook?
+15:49:18 <dw> alikins: python's __future__ mechanism kinda relates to this.. semantics that are due to become default must be explicitly declared for a few versions before they finally become default. any older version aware of the mechanism can complain gracefully if a feature is unrecognized. not sure it's useful here, but it is related
+15:49:22 * alikins tries
+15:49:30 <nitzmahone> Whether warning or error I'm not sure
+15:49:38 <nitzmahone> *bang*
+15:49:43 <bcoca> alikins: same thing that happens in a 2.0 when using loop_control, fatal error
+15:49:49 <nitzmahone> Should be invalid task arg or something
+15:49:53 <nitzmahone> yeah
+15:50:08 <nitzmahone> DS doesn't know what to do with it so kablooie
+15:50:17 <alikins> 'ERROR! 'module_defaults' is not a valid attribute for a Play'   - but that is the kind of thing the docs/description/tests should mention
+15:50:27 <sivel> All new keywords we add blow up, and I think it shoudl blow up
+15:50:36 <sivel> if used in an older ver without that keyword
+15:51:01 * nitzmahone leans toward error as well, though specific error messages in actively maintained versions would be OK w/ me
+15:51:23 <nitzmahone> Ultimately we won't be able to run the content as the author intended, so it should be an error
+15:51:28 <bcoca> im ok with adding more specific error messages to 'maintained versions' but that would still be a change in how we've handled until now
+15:51:35 <nitzmahone> yep
+15:51:46 <bcoca> i think its an error either way, 'ignoring' is bad
+15:52:02 <bcoca> making the error more helpf ul to user ++++++++++++++++++
+15:52:15 <maxamillion> +1
+15:53:05 <bcoca> #topic add feature/process to older 'maintained' versions to inform user that invalid keyword is avialable in newer/upgraded version
+15:53:14 <bcoca> ^ who wants to implement?
+15:53:31 * nitzmahone ducks
+15:53:34 * bcoca hides
+15:53:52 <nitzmahone> resmo++ for best quit timing ever
+15:54:00 * sdoran hides under table
+15:54:13 <bcoca> agaffney: fyi, https://github.com/ansible/ansible/blob/devel/docs/docsite/keyword_desc.yml <= you migh twant to add entry here
+15:55:07 <bcoca> alikins: want to create a 'feature idea' issue and hope someone has time/incentive to create this?
+15:56:54 <agaffney> bcoca: any hint on where in the docs to add info about module_defaults?
+15:58:05 <bcoca> http://docs.ansible.com/ansible/latest/user_guide/playbooks.html ... not sure which specific subsection is best
+15:58:25 <bcoca> advanced playbook features?
+15:58:36 <sdoran> Was just about to say that.
+15:59:04 * bcoca really wants to remove 'best practices' as title
+15:59:24 <sdoran> "One way to do it"
+15:59:30 <agaffney> I'm creating a stub branch for now with the keyword_desc.yml entry and a placeholder in the docs
+15:59:32 <bcoca> 'our suggestsion'
+15:59:36 <bcoca> agaffney: thnx
+15:59:46 <bcoca> ok, if nothing else, closing meeting in 1 min
+16:00:28 <alikins> I dont think there is much use in warning about future keywords. maybe if it could be done super generically and generally...
+16:00:50 <bcoca> alikins: the hard part is distinguishing between a typo and a 'future keyeword'
+16:01:04 <bcoca> ^ not on purpose .. mispelled keyword naturally ...
+16:01:16 <alikins> I mean, if we know about it before hand it wouldn't hurt (much)
+16:01:22 <nitzmahone> Probably a new subclass of FieldAttribute or something that has a "future_warning" kwarg or something
+16:01:24 <bcoca> alikins: agreed
+16:01:52 <bcoca> yes, as long as we know that 'in next version' we are adding it ... my issue is that .. plans change and we RARELY do such things
+16:01:54 <nitzmahone> We'd be able to cover most things with that- just add the FieldAttribute in the right place(s) as we would in the real implementation, but no functionality
+16:02:21 <nitzmahone> I'm thinking more like "once it's landed and we're sure it's shipping" to add to maintenance releases, not preemptively
+16:02:24 <bcoca> but im fine if someone wants to implement the facility
+16:02:33 <bcoca> +1 to the fieldattribute type=future
+16:02:35 * nitzmahone doesn't care enough to do it ATM ;)
+16:02:53 <agaffney> it seems overkill to go back and modify old versions to note features that only exist in newer versions
+16:03:14 <sivel> yeah, I agree.  An old version shouldn't be aware of the future
+16:03:16 <bcoca> its more work, but i do agree its nicer to the user
+16:03:23 <sivel> I disagree
+16:03:37 <bcoca> sivel: you would feel ansible is taunting you to upgrade?
+16:03:43 <nitzmahone> Ideally if it's galaxy content or something it'd have the minimum version of Ansible specified/enforced in metadata
+16:03:54 <nitzmahone> "do not taunt Happy Fun Ansible"
+16:04:08 <alikins> nitzmahone: I could see that, maybe if there was an enumerated list of keywords/syntax that could be easily added to without special casing in playbook loaders
+16:04:20 <bcoca> nitzmahone: we could build that into the 'detector' .. if feature A or B in tasks.yml ... min=2.4
+16:04:57 <bcoca> at this point sounds more like a feature for the 'package definition' on galaxy
+16:05:20 <bcoca> im going to punt to someone making a proposal, not really anything to vote on here right now
+16:05:26 <bcoca> #endmeeting

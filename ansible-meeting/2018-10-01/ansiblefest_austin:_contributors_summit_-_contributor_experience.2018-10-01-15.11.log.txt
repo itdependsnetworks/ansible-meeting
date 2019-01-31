@@ -1,0 +1,231 @@
+15:11:43 <gundalow> #startmeeting AnsibleFest Austin: Contributors Summit - Contributor Experience
+15:11:43 <zodbot> Meeting started Mon Oct  1 15:11:43 2018 UTC.
+15:11:43 <zodbot> This meeting is logged and archived in a public location.
+15:11:43 <zodbot> The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:11:43 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:11:43 <zodbot> The meeting name has been set to 'ansiblefest_austin:_contributors_summit_-_contributor_experience'
+15:11:53 <gundalow> #chair abadger1999 alikins bcoca jtanner mattclay maxamillion mordred nitzmahone Qalthos sdoran shepdelacreme sivel thaumos trishnag
+15:11:53 <zodbot> Current chairs: Qalthos abadger1999 alikins bcoca gundalow jtanner mattclay maxamillion mordred nitzmahone sdoran shepdelacreme sivel thaumos trishnag
+15:12:04 <tima> @sdoran yeah i made sure the engineers on galaxy are lining up with core conventions.
+15:12:15 <gundalow> #info Agenda & docs https://etherpad.openstack.org/p/ansible-community-experience
+15:12:56 <gundalow> ------------------
+15:13:02 * resmo leaving for heading home. bbl
+15:13:10 <gundalow> resmo: Thank for your time
+15:13:25 <Pilou> about performance: we don't have any non regression performance tests
+15:13:47 <sdoran> We also stood up ES/Kibana in AWS as a place to store some of this performance information.
+15:13:51 <bcoca> we have been looking into those
+15:14:15 <sdoran> Again, we need to work to solidify this into something useful, but we're plugging away at it.
+15:14:28 <jtanner> is outbound ssh blocked on conf wifi?
+15:14:45 <jtanner> nvm, just my box at home
+15:14:46 <maxamillion> jtanner: no, I've got ssh and mosh running from my laptop just fine
+15:14:49 <maxamillion> +1
+15:16:07 <bcoca> yes
+15:19:27 <gundalow> #info Docs for how to add integration tests need work
+15:19:30 <ericsysmin> what's the testing meeting, when?
+15:19:33 <bcoca> this one
+15:19:52 <bcoca> this room, schedule is in ansible/community (for all our public meetings)
+15:20:00 <ericsysmin> ok
+15:20:05 <gundalow> #info https://raw.githubusercontent.com/ansible/community/master/meetings/ical/testing.ics <- Testing Working Group meeting agenda
+15:21:02 * mordred has power for his laptop and therefore irc access now
+15:21:18 <dmsimard> mordred++
+15:22:03 <ericsysmin> gundalow: thank you :) added
+15:22:25 <geerlingguy> OMG.
+15:22:39 <geerlingguy> I just realized asciinema is supposed to be read "ascii cinema"
+15:22:47 <jtanner> hah
+15:22:50 <geerlingguy> I have been reading it as "ascii enema" forever
+15:22:51 <jtanner> that's how i pronounce it
+15:22:55 <geerlingguy> very different connotation
+15:22:56 <sdoran> @gundalow We have good docs on how to _run_ tests, but a how to write new ones and an overview/walkthrough would be very helpful.
+15:23:03 <abadger1999> geerlingguy: You and me both.
+15:23:06 <sdoran> @geerlingguy Me too!
+15:23:14 <abadger1999> You can copy and paste out of asciinema.
+15:23:15 <defionscode> i read it 'askeenema'
+15:23:17 <abadger1999> which is nice
+15:23:25 <sdoran> I pronounced it out loud to a friend once. He cringed, then corrected me. :)
+15:23:45 <geerlingguy> defionscode: ditto :D
+15:24:08 <jtanner> this is how i test PRs https://github.com/jctanner/ansible-tools/blob/master/ansible-pr-checkout
+15:24:39 <sdoran> Yeah, we definitely need to add that to the Testing PRs doc.
+15:25:09 <gundalow> #action nitzmahone give gundalow docs on how to pip install from a branch (which also rebases)
+15:26:09 <gundalow> #action gundalow to review and write docs from https://github.com/jctanner/ansible-tools/blob/master/ansible-pr-checkout
+15:26:13 <defionscode> TIL pr sudo branches
+15:26:14 <jtanner> my script does the "latest" code
+15:26:29 <sdoran> Yeah, me too. PR sudo branches sound really neat.
+15:26:39 <sdoran> I always just checkout the submitters branch from their fork to test.
+15:27:12 <gundalow> Imo: Thanks for all the ideas :)
+15:27:20 <corvus> if you want to turn off the authorship colors in the etherpad, you can do so by clicking the gear icon in the top right and unchecking the show authorship colors box.  this is preferable to hitting the 'clear authorship colors' button, which will actually remove the information from the etherpad.
+15:27:21 <jtanner> i have some other magic for testing modules from PRs https://github.com/jctanner/jfc/blob/master/examples/site.yml
+15:27:25 <defionscode> sdoran: i use https://hub.github.com/ to checkout PRs
+15:27:30 <jlk> the fact that it takes however many lines of bash that link is is a bad sigh :/
+15:27:37 <defionscode> lets you do `git checkout https://github.com/github/hub/pull/134`
+15:27:39 <jlk> hub is fantastic
+15:27:40 <geerlingguy> defionscode: same here, but here's the raw git stuff used: https://gist.github.com/adam-p/15413fabef6cffecd897
+15:27:51 <sdoran> @defionscode I tried `hub` for a while, but could never get into it. I guess I should give it another go.
+15:27:57 <geerlingguy> `git fetch upstream pull/37/head:pr37 && git checkout pr37`
+15:27:58 <sivel> pip install from PR: pip install git+https://github.com/ansible/ansible.git@pull/PR_NUMBER/head#egg=ansible
+15:28:15 <jlk> sivel: nice!
+15:28:19 <geerlingguy> sdoran: I just don't alias hub to git, just use hub as hub. Don't want silly proprietary tools to take over my cli!
+15:28:22 <abadger1999> #info document a testing workflow based around: https://help.github.com/articles/checking-out-pull-requests-locally/
+15:28:36 <sivel> I may have missed something there, but I think it roughly looks like that
+15:29:01 <bcoca> yep, but people have to look for it
+15:29:05 <geerlingguy> consolidating bot comments++
+15:29:10 <defionscode> +1
+15:29:20 <geerlingguy> it's annoying seeing every PR have like 3 pages of bot stuff before conversation
+15:29:45 <jlk> yeah, bots using the discussion as a command and control is unfortunate
+15:29:47 <sdoran> I think the thing `hub` didn't do was allow me to push to the PR branch, if I'm rebasing or adding a changelog for someone else's PR.
+15:30:07 <jlk> sdoran: have you seen "suggest changes" ?
+15:30:22 <sdoran> I have not.
+15:30:24 <sivel> jlk: I think I missed refs/ in that URL.  git+https://github.com/ansible/ansible.git@refs/pull/PR_NUMBER/head#egg=ansible
+15:30:27 * sdoran searches
+15:30:32 <defionscode> jlk: that's not a cli-driven feature though, is it?
+15:30:41 <gundalow> #info Bot could add a single comment on PRs saying "Docs for PR author (thanks, how to add tests) PR authors (How to download and test, how to report issues)
+15:30:50 <jlk> one sec, I may have leaked an unreleased feature :/
+15:31:18 <sdoran> `runme.py` also works
+15:31:24 <jlk> defionscode: I don't believe it's cli yet
+15:31:26 <jtanner> hah, thanks jlk
+15:31:34 <defionscode> :(
+15:31:44 <sdoran> "Isn't it funny, a ship that leaks from the top"
+15:32:16 <jlk> crap. Okay so stay tuned during / after GitHub Universe... forget I said anything.
+15:32:37 <willthames> #action gundalow document runme.sh
+15:33:03 <jlk> the feedback is back
+15:33:04 <willthames> #action gundalow document the magic metadata stuff
+15:33:29 <willthames> sorry, mic on front table pointing wrong way (anywhere not away from gundalow)
+15:33:35 <sdoran> I would also love to see the aliases documented, since I still don't really get how those work.
+15:34:15 <willthames> I mostly get how they work but there are a lot of magic ones!
+15:34:34 <sdoran> #action gundalow Document CI test aliases
+15:35:28 <jtanner> jlk: can we get API to hide comments? =)
+15:35:40 <jlk> stay tuned....
+15:35:52 * bcoca keeps rightclicking
+15:36:03 <defionscode> bcoca: didnt realize you used a mouse
+15:36:14 <bcoca> only way to do some things, like hide bot comments
+15:36:23 <sdoran> The Ansible Contributor Summit is also the GitHub Wish List Summit. :)
+15:36:28 <bcoca> one of few reasons i spin up a gui browser
+15:36:30 <geerlingguy> lol
+15:36:34 <maxamillion> sdoran: +1
+15:36:37 <gundalow> #action gundalow to talk mattclay to de duplicate Ansibullbot comments - especially for same test failing on different Python versions -PR 46344
+15:37:04 <geerlingguy> honestly Ansible is probably the project using the most GitHub project organization features I've seen... should have some communication with GitHub proper
+15:37:29 <bcoca> that is why we secretly embeded jlk there!
+15:37:34 <dmsimard> jtanner: I have some ideas around how ara could help identify failures very precisely and with context, happy to chat
+15:37:43 <sdoran> @bcoca You read my mind. I was _just_ tying that.
+15:37:45 <dmsimard> it's something I'd eventually like to do in Zuul too.
+15:38:00 <jlk> I'm working on the ability to do that in Zuul
+15:38:09 <defionscode> geerlingguy: might be possible now that it's MSFT and there is a seeminly good relationship with RH
+15:38:24 <webknjaz> @gundalow: JFYI I've got Checks API CLI tool https://github.com/webknjaz/check-in
+15:38:35 <jlk> dmsimard: https://github.com/sigmavirus24/github3.py/pull/888 is the start
+15:38:37 <sdoran> Oh wow. I forgot MSFT bought GitHub.
+15:38:42 <sdoran> That's a good sign. J)
+15:38:43 <sdoran> :)
+15:38:44 <bcoca> tha tis a good thing
+15:38:47 <maxamillion> sdoran: +1
+15:38:55 <bcoca> if you had not been able to forget .. skype ...
+15:38:58 <maxamillion> sdoran: just like people either forget or didn't realize Red Hat bought Ansible ;)
+15:39:06 <jlk> dmsimard: adds the ability to interface with the Checks API to be able to point out specific lines of problem in the PR. Once that work is done I'll work to add it into Zuul itself, so zuul can report back via the checks API
+15:39:20 <gundalow> #action gundalow  runme.sh  docs - If you are reading this you probs don't want this
+15:39:24 <jlk> sdoran: the deal isn't done yet, so nothing has changed. Though not much should change after it's done.
+15:39:30 <gundalow> #action gundalow document code coverage
+15:39:54 <dmsimard> jlk: cool, there is already an implementation for gerrit on zuul syntax errors so it'll be similar I suppose
+15:39:56 <sdoran> @jlk I always forget how long those things take. I assumed it was closed already..
+15:40:00 <jlk> webknjaz: you may be interested in https://github.com/sigmavirus24/github3.py/pull/888
+15:40:01 * tima waves to @retr0h
+15:40:43 <jtanner> jlk: did you change your github nick?
+15:41:09 <jlk> I did, because everything at GitHub is based off the handle. "j2sol" wasn't something I wanted to carry forward.
+15:41:18 <jtanner> hrm, TIL
+15:43:03 <webknjaz> jlk: Actually I'm more interested in having async version of that via gidgethub
+15:43:29 <jlk> ah interesting.
+15:43:50 <jlk> Zuul is sitting on github3.py for ... reasons. I haven't seen gidgethub yet
+15:43:51 <felixfontein> that ping feature sounds really interesting
+15:43:55 <webknjaz> yeah, I'm exploring ways of having bot actually using GitHub Apps API
+15:44:14 <webknjaz> gidgethub is used in Python (org) bots
+15:44:27 <jtanner> http://ansibullbot.eng.ansible.com/ansibot/metadata/byfile_sorted.html
+15:44:32 <webknjaz> it's bring-your-own-io thing
+15:45:39 <geerlingguy> now there's #ravemode in room next to ours (in case you hear a back beat)
+15:46:02 <misc> nope
+15:46:27 <tima> @geerlingguy probably sound tests for the keynote tomorrow.
+15:46:55 <geerlingguy> or they're having a dance party since they finished setup!
+15:47:41 <tima> this year we are doing something different and the keynotes are a dance party. ;p
+15:47:41 <webknjaz> jlk: oh and ansibullbot is currently using pygithub
+15:47:56 <jlk> yup, there's too many options out there
+15:48:09 <jlk> GitHub itself doesn't maintain any of the Python libs.
+15:48:14 <webknjaz> yeah
+15:48:19 <jlk> the work I put into github3.py is personal project stuff
+15:48:34 <gundalow> #info Question: Should people with Commit powers update PR for someone else
+15:49:23 <jtanner> does github3.py do graphapi yet? =)
+15:49:27 <abadger1999> jlk: Does github have a search for: "Things I touched most recently"?
+15:49:33 <jlk> GitHub does do a good job of tracking who commits what. You can have multiple committers in a PR, you can also have multiple authors in a single commit.
+15:49:53 <jlk> jtanner: no, creating a library for graphql is... not easy.
+15:49:56 <sdoran> Yup. I try to do only the annoying/little fixes to other PRs, but work with the PR author for feedback on substantial changes.
+15:50:12 <jtanner> jlk: i know ... i chose jinja just to get it done
+15:50:12 <abadger1999> jlk: <nod> My use case is making sure I'm not dropping PR reviews on the floor.
+15:50:17 <jlk> abadger1999: I don't think so, other than your dashboard. That's incomplete.
+15:50:23 <abadger1999> okay.
+15:50:30 <abadger1999> Feature request ;-)
+15:50:32 <jlk> abadger1999: octobox works for some of that
+15:50:43 <jlk> based on notifications but more than just "unread"
+15:50:59 <webknjaz> jlk: in my playground I fall back to just using requests mostly now https://github.com/webknjaz/pypi-deployment/blob/master/app.py#L65-L69
+15:51:45 <jlk> abadger1999: if you're logged in and just go to "https://github.com" do you get a "recent activity" view?
+15:51:48 <dag> Exactly, most drive-by contributors are not interested in the process
+15:51:58 <gundalow> #info Question: If a PR only needs a simple fix before merge should that be fixed then merged
+15:52:12 <dag> they just want to have the fix in, and that's they're main motivation
+15:52:13 <gundalow> #info Add more into Sanity tests for these things
+15:52:30 <dag> it's only after a few of these fixes, they might be interested to learn more about the process
+15:52:37 <dag> (which is different for module contributors)
+15:52:43 <abadger1999> jlk: I do... I guess I need something like that but an infinite list?
+15:54:04 <gundalow> #info If it's a PR older than n-months then asking them the author to update isn't good
+15:54:28 <gundalow> #info Can we automate `version_added`
+15:54:33 <dag> gundalow: For drive-by contributors (specially those that edited through the web interface) I don't bother having them fix their PR, I usually fix something myself and merge
+15:55:56 <jlk> I do think Ansible should take the approach other projects have taken. "Your submission is great and it is nearly complete. Thank you, we'll fix up the rest and merge it."  Focus on getting the code in rather than doing back/forth to have the contributor have a "perfect" contribution.
+15:56:16 <jlk> it does break somewhat the ability to bisect on a pure commit level. Would need to bisect at a merged PR level.
+15:56:19 <gundalow> jlk: I like that
+15:56:36 <gundalow> #info  jlk: I do think Ansible should take the approach other projects have taken. "Your submission is great and it is nearly complete. Thank you, we'll fix up the rest and merge it."  Focus on getting the code in rather than doing back/forth to have the contributor have a "perfect" contributio
+15:56:43 <dag> jlk: we do a merge-commit, so it'll be the same commit eventually
+15:56:52 <jtanner> keep in mind that we are merging literally hundreds of PRs every month
+15:56:52 <dag> jlk: we edit their branch before merging
+15:57:02 <jlk> yes, but the branch is a series of commits
+15:57:05 <jlk> that will be filtered in
+15:57:18 <jtanner> 903 PRs merged in august
+15:57:24 <jlk> Honestly I'm not sure if bisect will be smart enough to deal with that
+15:57:28 <jlk> or if Ansible devel is even bisectable
+15:57:30 <abadger1999> jlk: I think the default (which most people usually use) is the squash button.
+15:57:41 <jlk> oof. I dislike that
+15:57:43 <dag> jtanner: this is only for the very small PR's (usually documentation) via the GitHub website (via "Edit on GitHub"), those people may not even know how to add a second commit to their existing branch
+15:57:43 <abadger1999> rather than the rebase or merge button
+15:58:09 <abadger1999> (I use rebase sometimes... but have fallen into line with doing squash a lot too)
+15:58:57 <dag> nitzmahone: Guilty as charged ! :-P
+15:59:20 <dag> Good excuse though :)
+15:59:36 <gundalow> #info Should we add commits to PRs that we will not merge - Things are lost by force push?
+15:59:43 <Pilou> we could do PR on PR
+15:59:49 <bcoca> is someone talking?
+15:59:59 <abadger1999> willthames just started
+16:00:06 <Pilou> (in order to prevent to overwrite commits from other)
+16:01:06 <felixfontein> Pilou: I've already done some PRs on PRs. works fine for everything, except if people need help with rebasing :)
+16:01:44 <abadger1999> jlk: octobox seems neat but... only lists a dozen of so of my commented PRs and I know I should have a *ton* ;-/
+16:02:58 <jlk> jtanner: https://developer.github.com/changes/2018-03-21-hovercard-api-preview/
+16:03:25 <gundalow> #info First PR comment for new_contributors, give them some extra guidance, extra thanks. Make it clearer to reviews that this is a new contributor and may need guidance, https://developer.github.com/changes/2018-03-21-hovercard-api-preview/
+16:03:25 <jlk> abadger1999: octobox is based on notifications. So it's only going to show things you've gotten a notification about.
+16:03:35 <jtanner> https://github.com/ansible/ansibullbot/blob/master/ansibullbot/triagers/plugins/contributors.py
+16:03:40 <jtanner> that's how bot is doing it ^
+16:04:16 <jlk> also a valid way to get it
+16:04:22 <jtanner> jlk: is that different?
+16:04:26 <jlk> it is
+16:04:42 <jlk> GET /users/:username/hovercard is the hovercard API path
+16:04:45 <abadger1999> jlk: Ah... So If I've commented but no one has said anything since then, it won't show up?
+16:04:47 <jtanner> ah, then i guess i don't know what you were talking about then
+16:04:53 <jlk> it may be worse as it's more free form
+16:04:55 <shertel> I have to manually refresh octobox. It doesn't sync right.
+16:05:17 <jtanner> hrm, hovercard ... /me googles
+16:06:05 <jtanner> jlk: this is a v4/graphql endpoint?
+16:06:09 <geerlingguy> will these session recordings be available anywhere?
+16:06:12 <jtanner> https://developer.github.com/v4/previews/#hovercards
+16:06:17 <jlk> jtanner: it's in v4 and v3
+16:06:21 <jtanner> oh
+16:06:23 <geerlingguy> want to be able to jump through discussion for a couple others I won't be able to make
+16:06:34 <jlk> trying to find a better page about it
+16:06:54 <gundalow> geerlingguy: all sessions audio will be recorded
+16:07:02 <geerlingguy> gundalow: thanks
+16:07:47 <jlk> looks like we've done a crap job of documenting this thing.
+16:07:59 <ericsysmin> Can we document a way to use Ansible Galaxy to extend ansible modules?
+16:08:25 <bcoca> ericsysmin: s/modules/all plugins/
+16:09:24 <jlk> jtanner: so in the web UI if you hover your mouse over somebody's GitHub avatar you can get some contextual info as a pop up.  I'll walk over
+16:09:29 <gundalow> DING DING DING
+16:09:31 <ericsysmin> A lot of projects seem to require to wait for merges/releases before people can use their modules when many times they are independently tested
+16:09:34 <gundalow> Back in 30 minutes for Galaxy
+16:09:36 <gundalow> #endmeeting

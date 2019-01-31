@@ -1,0 +1,145 @@
+15:03:16 <ryansb> #startmeeting Ansible Core IRC meeting
+15:03:16 <zodbot> Meeting started Thu Sep  6 15:03:16 2018 UTC.
+15:03:16 <zodbot> This meeting is logged and archived in a public location.
+15:03:16 <zodbot> The chair is ryansb. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:03:16 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:03:16 <zodbot> The meeting name has been set to 'ansible_core_irc_meeting'
+15:03:29 <ryansb> #chair alikins mkrizek shertel sdoran
+15:03:29 <zodbot> Current chairs: alikins mkrizek ryansb sdoran shertel
+15:03:49 <ryansb> welcome, today's agenda: https://github.com/ansible/community/issues/347
+15:04:07 <ryansb> There's only one issue on here, which is https://github.com/ansible/ansible/pull/35636
+15:04:18 <ryansb> is sethp-nr around?
+15:04:26 <sethp-nr> Good morning!
+15:04:34 <bcoca> wasaboutto #startmeeting
+15:04:41 <ryansb> #chair bcoca
+15:04:41 <zodbot> Current chairs: alikins bcoca mkrizek ryansb sdoran shertel
+15:05:05 <ryansb> #link https://github.com/ansible/ansible/pull/35636
+15:05:14 <sdoran> Good old systemd.
+15:05:19 <bcoca> sethp-nr: im aware of your PR, but also looking at several others, the problem with systemd is that it keeps changing over time
+15:05:34 <bcoca> the installed base does not respond uniformly to state/rc/command expectations
+15:05:46 <bcoca> also looking at big revamp with  https://github.com/ansible/ansible/pull/40441
+15:05:53 <bcoca> which might help a bit with the consistency
+15:05:54 <maxamillion> .hello2
+15:05:55 <zodbot> maxamillion: maxamillion 'Adam Miller' <maxamillion@gmail.com>
+15:06:27 <bcoca> https://github.com/ansible/ansible/pull/35636 <= also looking how to integrate waits to get more consistent 'statusi'
+15:08:41 <sethp-nr> I’m looking at 40441 now; it looks like it’s certainly in a related space but I’m not sure it addresses our issue
+15:10:07 <bcoca> my point is that none of them address the full issue, inconsistent data returned from the tool itself
+15:10:16 <sethp-nr> I’m happy to give it a try, though, and rebase whatever parts of 35636 remain important on top of that work
+15:10:23 <bcoca> i was looking to see if directly using dbus was better .. but that ends up having the same problem
+15:10:41 <abadger1999> Ola
+15:10:58 <sethp-nr> I would expect that to get worse, since now we’d be exposed to version differences in the request/response protocol
+15:10:59 <bcoca> so i'm left with a couple of choices, 'versoin dependant response tracking'  ... or try to force things to a 'known common state'
+15:11:13 <bcoca> sethp-nr: yep, my hopes were crushed
+15:12:18 <bcoca> ^ unless someone else has a suggestion, cause i really dont see a good solution at this point, which is also why i've been remis to merge many of these as they compound the problem and fix 'a case' while breaking others
+15:13:01 <sethp-nr> What you’re describing certainly matches our experience with systemd
+15:13:09 <bcoca> and systemd itself is not only problem, the debian implementation diverges from the expectation .. then also diverges per version ...
+15:13:17 <sdoran> As unfortunate as it is, not trusting the tool and tracking our own state seems to be the only reliable solution.
+15:13:26 <bcoca> that is my fear
+15:13:29 <gundalow> Is there something we can do from the testing side to reduce the risk?
+15:13:35 <bcoca> and i've been trying to find alternatives
+15:13:58 <bcoca> gundalow: add more distros with more setups .. but that ends up being a bit unreasonable
+15:14:03 <sethp-nr> I can do some more digging into 40441, but my goal with 35636 was to go the opposite way – push the state management down into systemd itself, since the one part of the interface that seems moderately consistent is the behavior of the `systemctl start/stop` command
+15:14:21 <sethp-nr> but you’ve maybe found cases where that isn’t true
+15:14:23 <bcoca> debian jessie (previous stable/8) is a good canary, but its not the only divergent
+15:14:34 <sdoran> gundalow: The matrix gets more complex since different versions of systemd on the same distribution can behave differently.
+15:14:53 <bcoca> sethp-nr: yep, specially when you have dependant/chained services .. it gets 'fun'
+15:16:10 <sethp-nr> Does “fun” here imply duplicating / reversing queued jobs because dependency actions are racing with the execution of the module?
+15:17:10 <bcoca> ^ in some cases .. in others you have to deal with triggers that are not as easy to track
+15:17:12 <abadger1999> it sounds like we have to do version checking in the end :-(
+15:17:36 <abadger1999> Fragile and inelegant but if systemd upstream doesn't give us any better options....
+15:17:42 <bcoca> abadger1999: not only version, version + distro .. as different 'implementation' also change behaviour, specially when systemd is managing init scripts
+15:17:46 <abadger1999> Yeah.
+15:18:24 <bcoca> sethp-nr: its not that i think your PR is bad .. i think we need to deal with fundamental problem first and right now im not sure either path will solve it in a good way
+15:18:45 <bcoca> i think your PR mitigates many of the issues in many cases .. but breaks others .. due to the underlying inconsistencies
+15:19:02 <bcoca> i feel like im playing jenga with chainsaws during an earthquake
+15:20:04 <bcoca> that said, sethp-nr im willing to try to integrate your PR and see what happens, but in devel for now as i would not want to affect stable release ... prefer 'known problems' than 'new problems' for that
+15:20:29 <sethp-nr> Yeah, that makes sense
+15:21:07 <bcoca> and if anybody has a better idea than the 2 we are contemplating ... i really really want to hear it
+15:21:24 * ryansb not nearly expert enough on systemd
+15:21:32 <bcoca> cause version/implementation tracking and  'side state management' are not good solutions, they are fragile and a ton of work with very bad returns
+15:21:40 <bcoca> ryansb: live happier
+15:22:00 <bcoca> im not an expert either, just dealing with CLI returns is scary enough
+15:22:12 <bcoca> also looked at dbus messaging .. gets worse ...
+15:22:27 <sdoran> It's maddening how inconsistent the returned data are.
+15:23:06 <bcoca> my knuckles have bled more than once due to that ... i have 'old timey brick n plaster walls' .. not crappy sheetrock
+15:23:33 <sdoran> Unix tools used to be nice and predictable. (I'm sure there are exceptions)
+15:24:20 <bcoca> i would not call systemd a unix tool ...
+15:24:29 <sethp-nr> Sorry, internet flubbed
+15:24:30 <bcoca> but yeah, many tools have done weird things
+15:24:35 <bcoca> sethp-nr: np
+15:24:43 <bcoca> just venting at this point ...
+15:25:32 <sethp-nr> That’s an important stage of “systemd”, I think
+15:25:45 <bcoca> im still unsure of which route to take ... part of me desperatly hopes somene else figures out something i'm missing ...
+15:25:58 <bcoca> abadger1999: you seem to lean towards version/implementaiton tracking
+15:26:40 <abadger1999> Yeah... seems the least bad (but if there's another way that's better, then I'm all for it)
+15:27:02 <abadger1999> It's just not good to wait forever for something better to appear when we have bugs that need to be fixed now.
+15:27:10 <bcoca> the other option i can think of is 'figureing out state ourselves'
+15:27:44 <bcoca> agreed, but most of the stalled PRs are because they break something else, i was researching alternatives .. this week i finally realized dbus was dead end
+15:28:38 <sdoran> It's definitely a house of cards.
+15:28:45 <abadger1999> If we could figure out state in a way that was less fragile... but given the flexibility of init systems in general, I'd think that is more fragile
+15:29:02 <sdoran> Account for another tool's inconsistencies in Ansible can be a slippery slope.
+15:29:07 <sdoran> *in
+15:29:10 <sdoran> *g
+15:29:14 <sdoran> Geeze, can't type today.
+15:29:53 * bcoca points at docker.py ....
+15:30:16 <sdoran> Oh man, that's discouraging. I'm working on podman/buildah modules...
+15:30:21 <bcoca> he
+15:30:38 <bcoca> get ready for many 'version >= ' comparissons
+15:34:29 <sdoran> I know in the past we have elected not to "code around" certain systemd behaviors in Ansible, electing to report a "failure" because that is what systemd reported.
+15:35:14 <sethp-nr> For our case, I think we can use the command module as a workaround (which feels similar to me to building the state reconciliation bcoca’s talking about, but in particular rather than in general)
+15:35:18 <bcoca> that is our 'current state' .. the problem is that people are submitting fixes for 'their' cases and most of those break assumptions and other cases we've already 'worked around'
+15:35:59 <bcoca> sethp-nr: almost tempted to ask everyone for their shell/command workarounds as that will be a nice db with 'many cases'
+15:36:24 <sdoran> So we just need to make a decision to break from that historical stance, if that is indeed the case.
+15:36:43 <sdoran> It does stink having to "fall back" to using command/shell rather than the module...
+15:36:55 <bcoca> im torn between both solutions, neither seems good enough to me
+15:38:10 <bcoca> we have a +1 for the systemctl track,  unsure how others lean
+15:41:13 <maxamillion> sdoran: there might be hope, I'm reasonably sure a lot of podman/libpod, buildah, and skopeo were built to address shortcomings of docker and are developed by past docker developers with lessons learned in mind
+15:42:38 <bcoca> @webknjaz's PR was creating a state machine, but mostly relied on systemd output, i think a similar track but 'not trusting' systemd and veryfing state in other ways might be viable alternative to the 'version db and comparisson'
+15:42:54 <sdoran> "Trust, but verify" ;)
+15:43:16 <bcoca> both still require a 'state mapping' from systemd states to something our users will understand 'started/stopped/enabled/disabled'
+15:44:00 <bcoca> and we need to give 'good messages' likee, 'could not disable cause other service depends on this and would require disabling that service first'
+15:44:15 <bcoca> and that requries a lot of logic we dont currently have
+15:47:12 <bcoca> hmm so no one else has opionons on this?
+15:47:42 <bcoca> thoughts/ideas?
+15:49:01 <sdoran> I think we've come to the point where Ansible needs to account for systemd inconsistencies to create a consistent user experience and prevent having to fall back to command/shell.
+15:49:18 <bcoca> how about this, let it sink in and we can decide course of action on tuesday? since today we really only have 1 vote and i would really like more before reaching a decision
+15:49:25 <sdoran> I am concerned about where that will lead, though. Slippery slope of crazy edge case code.
+15:49:42 <bcoca> sdoran: we are choosing between a cliff and a very high drop
+15:49:46 <sdoran> Yup.
+15:49:59 <bcoca> so im not concerned about it, im resigned to it
+15:50:06 <sdoran> I have not architected enough things like this to see if this is going down a Bad Road or not.
+15:50:12 <sdoran> Would like others to weigh in as well.
+15:50:34 <bcoca> he, they are both 'bad roads' .. ive done similar things many times .. and im still unsure which road is 'worst'
+15:50:42 <sdoran> But the alternative becomes "Oh, you have to use shell/command when dealing with systemd 60% of the time".
+15:50:51 <bcoca> that is 'current state' .. sadly
+15:50:57 <bcoca> and that is clearly 'worst of all roads'
+15:50:59 <sdoran> Or "Ansible really stinks at managing system services".
+15:51:28 <sdoran> The positive outcome could be "SystemD is a pain, but Ansible make is way easier to deal with" :)
+15:51:43 <webknjaz> sounds about right
+15:51:44 <bcoca> i've been trying to find any other alternative and im out of options, but REALLY open to anything viable
+15:51:59 <bcoca> that is my hope, i just dont see a good road to that
+15:55:05 <sdoran> That just means to accept the pain and complexity ourselves for the sake of making Ansible better, and making it better for users.
+15:55:22 <sdoran> I'm ok with that so long as it is tenable.
+15:55:35 <bcoca> exactly, just unsure of which one of the chioces is the  most tenable
+15:55:46 <bcoca> if either are tenable .. past experience says 'not really'
+15:55:47 <sdoran> I have never written or maintained a state machine.
+15:56:17 <sdoran> Would it be easier to buy the SystemD folks a beer and have a good long talk? :)
+15:57:20 <bcoca> my past interactions when pointing out the inconsistencies are mostly 'deal with it'
+15:57:30 <bcoca> 'this is how it is now'
+15:57:41 <sdoran> Ok. Just thought I'd ask.
+15:57:58 <maxamillion> I mean, to be fair ... we've done similar things over time ... there's certain playbooks that worked in 2.0 that don't work now in 2.6
+15:58:08 <maxamillion> things change
+15:58:15 <bcoca> but i welcome anyone to try, the issue is not as much the future as 'existing' inconstencies .. which they cannot do much about at this point
+15:59:01 <bcoca> maxamillion: yes and we have deprecations and many reasons for the same, my issue is that many of these change are also inconsistent, in some cases RC signifies erros, in other cases it does not
+15:59:17 <bcoca> in some cases you NEEd to parse the output, in other cases that output is not reliable
+15:59:37 <bcoca> some changes have been for the better, but many have n ot
+16:00:30 <bcoca> and the whole issue with the debian implementation, is clearly not systemd folk's fault .. that is squarly on debian implementers
+16:00:42 <bcoca> its jsut the 'general state of installed systemd' is a mess
+16:00:57 <bcoca> for those trying to 'predictably and reliably' trying to get info from it
+16:02:53 <bcoca> im not even trying to assign blame, just dealing with the existing situation, i think systemd folk can make it better going forwards, but have no influence on 'existing problem' .. cause they cannot go to every server and force an update to they 'current systemd version'
+16:03:14 <bcoca> ^ i should not give them that idea .. last thing we need is sytemd dealing with system upgrades internally
+16:03:49 <bcoca> sorry, i got ranty .. but this is a sore subject for me ...
+16:04:53 <bcoca> and i've been researching alternatives this last month to hit every dead end
+16:06:12 <maxamillion> bcoca: fair
+16:07:07 <bcoca> so if we cannot get enough votes next meeting, i'll decide what path to go and just trod onto it .. meanwhile i'll pray to FSM for a miracle
+16:07:24 <bcoca> #endmeeting

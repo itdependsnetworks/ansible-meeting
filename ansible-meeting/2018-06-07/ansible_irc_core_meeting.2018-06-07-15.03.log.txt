@@ -1,0 +1,57 @@
+15:03:44 <bcoca> #startmeeting ansible irc core meeting
+15:03:44 <zodbot> Meeting started Thu Jun  7 15:03:44 2018 UTC.
+15:03:44 <zodbot> This meeting is logged and archived in a public location.
+15:03:44 <zodbot> The chair is bcoca. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:03:44 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:03:44 <zodbot> The meeting name has been set to 'ansible_irc_core_meeting'
+15:03:51 <bcoca> #topic https://github.com/ansible/ansible/pull/38280
+15:03:55 <bcoca> @tbouvet ?
+15:04:01 <tbouvet> hello
+15:04:37 <tbouvet> question is just : is it ok to merge this PR ?
+15:05:10 <bcoca> probably, seems like dag approved, just need 1 other
+15:05:40 * shertel waves
+15:05:44 <abadger1999> Olá
+15:05:50 <bcoca> #chair shertel abadger1999 tbouvet
+15:05:50 <zodbot> Current chairs: abadger1999 bcoca shertel tbouvet
+15:05:51 <sdoran> Ahoy!
+15:05:57 <bcoca> #bench sdoran
+15:06:01 <bcoca> #chair sdoran
+15:06:01 <zodbot> Current chairs: abadger1999 bcoca sdoran shertel tbouvet
+15:06:24 <sdoran> I got benched. :/
+15:06:29 <tbouvet> maybe @maxamillion ?
+15:07:47 * jtanner juggles meetings again
+15:09:33 <sdoran> I’ll give it one last review.
+15:09:53 <maxamillion> I'll give it one more look over here in a bit
+15:09:54 <bcoca> #info sdoran to give review
+15:10:08 <bcoca> ok, 2 heads better than one
+15:10:19 <sdoran> :)
+15:10:21 <bcoca> tbouvet: is that all you wanted?
+15:10:31 <tbouvet> yes thanks
+15:10:43 <bcoca> #topic open floor
+15:12:55 <bcoca> closing in 1 min if nothing to discuss
+15:14:25 * nirik wonders if should bring up the 2.5.4 test failures
+15:14:49 <bcoca> /kickban nir ... er please do
+15:15:01 <bcoca> tests failing in epel?
+15:15:15 <bcoca> link?
+15:15:29 <nirik> failing in fedora...
+15:15:38 * nirik gets link
+15:16:04 * jtanner wonders how fedora's tests differ from ours
+15:16:30 <nirik> https://kojipkgs.fedoraproject.org//work/tasks/4094/27334094/build.log
+15:16:41 <nirik> they do not, it's running ansibles tests.
+15:17:04 <bcoca> weird, we test on 24/25 on every commit
+15:17:14 <nirik> E           AttributeError: 'Connection' object has no attribute '_winrm_kwargs'
+15:17:38 <bcoca> ah, think those got fixed, @jborean93 ?
+15:18:09 <nirik> so perhaps it's just something that didn't get in 2.5.4?
+15:18:29 <jtanner> a bit early for jborean. nitzmahone can you look at it?
+15:19:03 <abadger1999> Hmm... jborean was looking at it.
+15:19:19 <abadger1999> But last I heard, he was still looking at how to fix it.
+15:19:28 <nitzmahone> Yeah, the fix went in right after 2.5.4, so 2.5.5 will have it next week
+15:19:28 <bcoca> yep, looks like same issue
+15:19:31 * nirik admits he hasn't had time to bug people really on it. ;(
+15:19:37 <abadger1999> k
+15:19:54 <nirik> cool.
+15:19:59 <bcoca> `ansible.errors.AnsibleError: Requested option _extras was not defined in configuration`
+15:20:05 <nitzmahone> Was just some changes to the tests to switch out the patching scheme
+15:20:32 <bcoca> did we ever figure out why the tests passed tests when testing the test PR?
+15:25:32 <bcoca> ok, seems like nothing else to discuss
+15:25:34 <bcoca> #endmeeting

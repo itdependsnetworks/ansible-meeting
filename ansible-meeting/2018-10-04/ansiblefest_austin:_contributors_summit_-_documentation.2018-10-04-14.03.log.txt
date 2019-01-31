@@ -1,0 +1,346 @@
+14:03:55 <cybette> #startmeeting AnsibleFest Austin: Contributors Summit - Documentation
+14:03:55 <zodbot> Meeting started Thu Oct  4 14:03:55 2018 UTC.
+14:03:55 <zodbot> This meeting is logged and archived in a public location.
+14:03:55 <zodbot> The chair is cybette. Information about MeetBot at http://wiki.debian.org/MeetBot.
+14:03:55 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+14:03:55 <zodbot> The meeting name has been set to 'ansiblefest_austin:_contributors_summit_-_documentation'
+14:04:06 <dag> Aha movement ! :)
+14:04:16 <cybette> #info etherpad link https://etherpad.openstack.org/p/ansible-summit-october-2018-documentation
+14:04:28 <cybette> #info bluejeans link https://bluejeans.com/7025862841/
+14:05:03 <felixfontein> is there already sound?
+14:06:20 <cybette> felixfontein: can you hear us?
+14:07:16 <defionscode> gundalow: the rooms are split up now? main room is docs, and the others?
+14:07:41 <bcoca> tried to join x2 bluejeans sessions and now im blocked from any/all of em
+14:07:59 <gundalow> 1 is docs
+14:07:59 <gundalow> 2 is windows
+14:07:59 <gundalow> 3 is galaxy
+14:08:33 <defionscode> ah ok, thanks! AWS is later or was is pulled off?
+14:09:09 <dag> bcoca: I have 2 open, but one hasn't started, might still fail :-)
+14:09:59 <cybette> defionscode: AWS is later at 13:00 Austin time
+14:10:20 <defionscode> cybette: ok cool
+14:11:10 <felixfontein> audio is hard to understand
+14:11:15 <felixfontein> bits seem missing
+14:11:31 <dag> felixfontein: I think this is background chatter ?
+14:11:40 <felixfontein> ok, that would be fine :)
+14:12:52 <ryansb> AWS is on today
+14:12:57 <dag> felixfontein: I hope it is :)
+14:13:11 <samccann> dag: same here
+14:13:18 <felixfontein> oooh, ansible 2.7 has just been released
+14:13:39 <felixfontein> yes
+14:14:31 <felixfontein> I don't have a mic
+14:15:07 <abadger1999> Okay, gundalow is going to help get bluejeans and the room's microphones setup
+14:15:43 <samccann> \o/
+14:16:11 <geerlingguy> I am back in St. Louis... and I have lost context—can someone link to the etherpad for today's meetings?
+14:16:25 <felixfontein> https://etherpad.openstack.org/p/ansible-summit-october-2018-documentation
+14:16:26 <geerlingguy> would like to try to join one or two when I'm not stuck in a meeting
+14:16:27 <geerlingguy> thanks!
+14:16:49 <felixfontein> cut off after 2018 to get the general one
+14:17:16 <felixfontein> yes
+14:17:20 <felixfontein> whoever is speaking
+14:17:43 <felixfontein> hearing you too
+14:18:57 <cybette> bluejeans link again: https://bluejeans.com/7025862841/
+14:19:49 <geerlingguy> I'll be able to join soon, still getting going after a late night of travel
+14:21:54 <geerlingguy> Is documentation the only breakout happening currently? The Galaxy session bluejeans link was invalid
+14:22:13 * sdoran was wondering the same thing
+14:22:17 <bcoca> galaxy is working for me
+14:22:25 <bcoca> and they are presenting
+14:22:30 <geerlingguy> https://bluejeans.com/748091404391 :/
+14:22:31 <bcoca> https://bluejeans.com/7480904391/
+14:22:40 <geerlingguy> ah, someone stuck a 14 in there
+14:22:44 <bcoca> i did have a lot of trouble
+14:22:48 <dag> audio is still a bit soft (compared to other noises),
+14:23:00 <felixfontein> dag+
+14:23:14 <felixfontein> sounds like someone is installing something audio-related
+14:23:23 <felixfontein> very close to the mic at least
+14:23:23 <dag> can everyone else please shut their microphone
+14:23:34 <sdoran> That's better.
+14:23:39 <dag> (ah everyone has)
+14:24:01 <felixfontein> is that gundalow?
+14:24:11 <sdoran> That's alikins
+14:24:17 <bcoca> Adrian
+14:24:18 <felixfontein> ah
+14:24:37 <dag> so alikins audio is very good, but I can't hardly hear Carol
+14:24:41 <bcoca> less british accent
+14:25:00 <bcoca> i 'unjoined' docs, could not hear anything clearly
+14:25:17 <dag> bcoca: they fixed it
+14:25:21 <dag> its fine now
+14:25:39 <felixfontein> audio is fine now
+14:25:43 <felixfontein> <-- same timezone as dag
+14:25:48 <abadger1999> From room: Desire to be able to jump on irc and get involved in working on something.
+14:25:54 <felixfontein> did someone else say something?
+14:25:58 <cybette> yes
+14:26:01 <felixfontein> then no
+14:26:12 <felixfontein> at least in the last 30 seconds or so
+14:26:15 <felixfontein> testingtesting123
+14:26:16 <cybette> chris is talking
+14:26:29 <abadger1999> Question about which timezones people are in.
+14:26:45 <felixfontein> CEST
+14:26:52 <abadger1999> (Audio is now working so I'll stop transcribing)
+14:27:00 <felixfontein> abadger1999: thanks!
+14:27:02 <sdoran> US East (UTC -0400)
+14:27:11 <samccann> US east
+14:27:28 <felixfontein> I'm interested in module docs
+14:29:16 <felixfontein> for me it's not (frustrating thing repeating myself), but it's easy to forget to change default values/... in both places, so having some things (default, type, choices) in only one place is kind of neat for me
+14:29:33 * geerlingguy will be back in a while
+14:30:57 <dag> So we do want to parse the Windows arg_spec as well, but this is being reworked now anyway, so we are not looking at that at this time
+14:30:57 <abadger1999> This is dag's PR: https://github.com/ansible/ansible/pull/45805
+14:31:04 <ChrisShort> ty
+14:31:15 <dag> as soon as we have a well-defined arg_spec (which is almost done) we can look at that
+14:31:32 <dag> the question remains do we want to pull in pwsh for generating docs ?
+14:32:19 <felixfontein> duplication = sanity check is a very good point
+14:32:28 <dag> but even if that answer is no, there's still value in having the argument spec being used for documentation
+14:32:28 <sdoran> I'm working on that for 2.8 (removing arg_spec from AnsibleModule).
+14:32:57 <dag> felixfontein: I don't agree, that's like saying, let's implement every module twice to see if there's no bug introduced
+14:33:18 <dag> felixfontein: while certainly valuable, that is not practical
+14:33:34 <felixfontein> dag: I don't say we shouldn'd do it because of that, but that it is a good point I haven't thought about so far :)
+14:35:51 <defionscode> dag: I mean whats an alternative? make argspec super verbose? ¯\_(ツ)_/¯
+14:36:16 <dag> oh wait
+14:36:24 <dag> the argument_spec is not the only thing used
+14:36:41 <dag> the documentation is still be used for descriptions
+14:36:45 <dag> being
+14:38:15 <defionscode> oh i see, dag I hadnt seen that PR, my initial reaction is "i like"
+14:39:30 <dag> and the documentation still wins over the argument spec
+14:40:48 <cybette__> #link https://github.com/ansible/ansible/pull/45805
+14:42:43 <felixfontein> do I understand it correctly that for Windows modules, there's usually a .py file which is only for documentation, and the real module is the .ps1 file? (I've never looked at a Windows module before)
+14:42:55 <defionscode> felixfontein: that's correct
+14:44:01 <defionscode> and there is no argspec-like interface either afaik
+14:44:19 <felixfontein> yep, it looks like (at least in the 1-2 examples I looked at ;) )
+14:44:30 <felixfontein> so nothing structured yet
+14:45:20 <felixfontein> there's one file moved to lib/ansible/utils/_module_args.py in the PR
+14:45:40 <bcoca> there is a 'powershell argspec' but it works very differently
+14:45:57 <bcoca> but i do think it is close to 'feature parity' with the python one
+14:47:49 <abadger1999> I think I like the high level of this feature.  But _module_args.py makes use of mock.  So we wouldn't want anything to need that at runtime.
+14:48:00 <defionscode> logic wise maybe we'd have to do an open() on the ps1 and parse out the ps argspec portion?
+14:48:08 <cybette__> #link Guide to contributing to docs (WIP) https://github.com/ansible/ansible/pull/46481
+14:48:46 <dag> defionscode: This is the Windows arg_spec implementation: https://github.com/ansible/ansible/pull/44705
+14:48:47 <bcoca> just realized, the argspec conversation in galaxy is not this one .. this is one in docs land
+14:49:05 <defionscode> ah
+14:49:09 <bcoca> https://github.com/ansible/ansible/compare/devel...alikins:argument_spec
+14:49:32 <bcoca> ^ adrian's branch trying to put args spec checks outside of AnsibleModule for better reuse
+14:49:40 <felixfontein> dag: could it be that something got lost?
+14:50:42 <dag> felixfontein: might be, fact is that I removed the example modules so maybe...
+14:51:08 <felixfontein> too bad there isn't an older version of the PR still lying around... :)
+14:52:37 <defionscode> i agree re: explaining what happens
+14:52:53 <felixfontein> the only page I can see is the PR right now
+14:53:04 <felixfontein> ah, now there's a different one
+14:53:46 <felixfontein> *nod*
+14:56:09 <gundalow> For those attending remotely, are you managing to follow along OK? Please do keep your ideas coming.
+14:56:28 <dag> bcoca: That'll be very useful
+14:56:52 <cybette__> #link Ansible Style Guide https://docs.ansible.com/ansible/latest/dev_guide/style_guide/index.html
+14:57:16 <bcoca> part of the 'role spec validation' uses that code, but it currently 'fakes a module' , factoring out argspec for use in other systems outisde AnsibleModule seems to benefit docs also
+14:57:19 * abadger1999 notes that he is trying to record the ideas from the meeting into the etherpad
+14:57:41 <dag> bcoca: I would like to validate the EXAMPLES section by the arg_spec too
+14:57:52 <dag> abadger1999: very much appreciated !
+14:57:58 <bcoca> another need role spec checking has is 'descriptions/labels' which if added to argspec might simplify migrating docs
+14:58:00 <cybette__> abadger1999: great job, thank you <3
+14:58:25 <felixfontein> I did not either
+15:00:07 <felixfontein> a mail to ansible-devel mailinglist would be helpful to find about such stuff as well
+15:00:20 <geerlingguy> back soon, had to drop again
+15:01:44 <dag> felixfontein: or the Contributor's Newsletter ! :-)
+15:01:56 <Viper233> https://docs.ansible.com/ansible/latest/dev_guide/developing_modules_documenting.html#documentation-block I don't see the style guide linked  here
+15:02:03 <felixfontein> dag: yeah, in whatever form it appears :)
+15:02:14 <dag> felixfontein: printed on glossy paper !
+15:02:31 <felixfontein> dag: there was this discussion in some ansible/community issue about how to propagate info on such things which affect contributers
+15:03:00 <dag> felixfontein: I know, have been asking for this since London, to build a contributor's community
+15:04:56 <felixfontein> let's pester gundalow about that in the contributer experience session afterwards
+15:06:20 <gundalow> :)
+15:07:57 <felixfontein> oh wait, there is no more contributer experience session today, right?
+15:08:02 <felixfontein> I think I looked at the wrong day
+15:08:34 <felixfontein> anyway, that's something for your bucket list gundalow ;)
+15:10:32 <felixfontein> most people aren't committers
+15:10:40 <felixfontein> so for most people, that's not a problem :)
+15:11:19 <gundalow> felixfontein: we can sync up when I'm back
+15:11:28 <felixfontein> gundalow+
+15:12:08 <felixfontein> gundalow: I wrote myself a note
+15:16:03 <Viper233> https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-apigateway-domainname.html example of edit on github page
+15:18:13 <felixfontein> adding to what dag says: also when switching between documentations, renamed modules make problems
+15:18:36 <felixfontein> (maybe if a module has an alias, a dummy file should be generated at the alias place to redirect to the new location?)
+15:18:45 <felixfontein> (assuming module renames keep an alias for a bit of time)
+15:18:55 <bcoca> i thought we fixed that a couple of months ago
+15:19:24 <bcoca> alias is one function, deprecation uses it, but having an alias does not automatically mean it is deprecated
+15:19:56 <bcoca> shell: rm -rf /
+15:20:04 <dag> Viper233: I don't see an edit on github button ?
+15:20:10 <felixfontein> it doesn't seem to work: letsencrypt is an alias of acme_certificate (a deprecated one), but https://docs.ansible.com/ansible/latest/modules/letsencrypt_module.html does not exist while https://docs.ansible.com/ansible/latest/modules/acme_certificate_module.html works
+15:20:11 <dag> ah, the logo
+15:20:40 <dag> Viper233: I prefer adding the text there, wouldn't be surprised that people miss out on it
+15:21:12 <dag> felixfontein: We have restructured so many things that it would leave behind a lot of ghost-files :-(
+15:21:38 <felixfontein> dag: if they're just there while the alias is actively mentioned in the current version, that's fine for me
+15:21:39 <dag> felixfontein: however this is something that over time no longer poses a problem
+15:21:48 <dag> felixfontein: unless we are restructuring a lot :)
+15:21:48 <Viper233> dag: just the logo. It's still just an 'Edit on github' process. This seems to work is this community. Text/logo doesn't matter, the fork/commit/PR user experience is the same
+15:23:00 <felixfontein> dag: but at least for aliases (which are not deprecated), shouldn't it be possible to put the alias into the URL to get to the documentation?
+15:23:11 <dag> Viper233: I disagree, the logo alone does not give sufficient clues, the text provides a mental note
+15:23:32 <bcoca> big red flashing banner
+15:23:50 <Viper233> <blink>
+15:23:50 <dag> felixfontein: yes, for aliases a solution could be built
+15:23:53 <dag> bcoca: :)
+15:23:57 <felixfontein> bcoca: <marquee>?
+15:24:28 <bcoca> <marquee><blink>...
+15:24:40 <felixfontein> yeah
+15:25:20 <Viper233> dag: I think you are right. I was looking for text. I already knew that you could edit the documentation on github, it took me a couple of minutes to figure out that it was the logo. I thought initially it was a SSO with my github account
+15:25:28 <cybette__> #info Monthly "fixit" topics for the WG - let's pick 3 for Oct/Nov/Dec - vote by adding +1 next to the topic https://etherpad.openstack.org/p/ansible-summit-october-2018-documentation
+15:25:56 <felixfontein> something about docs: I've sometimes seen people using markdown styling in module docs, mostly single backticks. Maybe there could be some sanity check telling people not to do that (and to use C(...) or I(...) instead)? :)
+15:26:11 <dag> We are targeting "Drive by contributors" (actually users) mostly with this
+15:26:40 <dag> those that are sufficiently frustrated that they want to avoid the next purpose going through the same ordeal
+15:27:11 <dag> felixfontein: Yes, tests for that would be a good idea !
+15:27:20 <dag> felixfontein: I see them do **bold** too :)
+15:28:08 <dag> So I lost some of the audio the past 5 minutes as the kids returned from school :-(
+15:29:39 <dag> Yes, don't forget EMEA :-P
+15:30:05 <cybette__> break for 15 min, back at 10:45 CDT
+15:30:17 <dag> Thanks !
+15:30:17 <felixfontein> 17:45 CEST :)
+15:31:01 <dag> gundalow: take a t-shirt back for me !
+15:31:06 <dag> gundalow: Large will do :-)
+15:31:25 <felixfontein> actually, what about having some more "helpers" like C(...), I(...), U(...), L(...,...)?
+15:31:44 <felixfontein> and how about making them work nicely in ansible-doc as well (at least L is pretty ugly there)?
+15:32:26 <gundalow> Dag the t-shirts ran out on the first day. I did t even get one :(
+15:32:59 <abadger1999> felixfontein: If you have ideas, that would be a good area to improve.
+15:33:34 <dag> gundalow: bummer
+15:33:59 <dag> felixfontein: there's a feature request open to redo ansible-doc, because I hate the output
+15:34:48 <dag> https://github.com/ansible/ansible/issues/46011
+15:34:48 <abadger1999> We've talked about things like how to make links better but it wasn't obvious to us how to format it better
+15:34:59 <bcoca> current output is very basic
+15:35:01 <felixfontein> dag: I think the output of ansible-doc is not *that* bad ;) it's mainly L(...,...) which is ugly
+15:35:14 <felixfontein> abadger1999: how about "`link name' (URL)"?
+15:35:29 <dag> abadger1999: We did make the link generation better, it includes the URL now (and in some terminals you can click now)
+15:35:44 <dag> felixfontein: Isn't that L(name,url) ?
+15:36:02 <felixfontein> dag: either that or L(url,name). I always have to check :)
+15:36:52 <dag> felixfontein: The changes are in here: https://github.com/ansible/ansible/pull/45949
+15:37:19 <dag> but this was for the See also stuff, we should do the same for L()
+15:37:58 <bcoca> +1, just to bikeshed: 'related'
+15:38:13 <felixfontein> lol
+15:38:21 <dag> we do want to add hints to html output so we can search for them through Sphinx as well
+15:45:55 <cybette__> resuming in a minute
+15:46:35 * geerlingguy begins 60 second countdown... :D
+15:46:56 <dag> felixfontein: I am probably confusing my work on ansible-doc for seealso, with the arg_spec PR
+15:47:38 <bcoca> well, they can be related, if arg_spec starts being the source of docs
+15:48:02 <cybette> this is a long minute... :P
+15:48:16 <bcoca> mars minute its 1.3 earth hours
+15:48:47 <felixfontein> luckily we don't live on mars
+15:49:03 <bcoca> speak for yourself!
+15:49:23 <bcoca> http://dilbert.com/strip/2008-05-08  <= in case anyone wonders about my 'mars math'
+15:52:02 <felixfontein> it's hard to understand audio, there are always cut-offs
+15:52:11 <bcoca> i've been thinking of adding to M() since now we document other plugins
+15:52:40 * geerlingguy installs 2.7... proceeds to see a jillion deprecation warnings for all the packaging tasks that use with_item loops
+15:53:04 <bcoca> was not aware of any with_ deprecation
+15:53:16 <abadger1999> did that happen?  Thought we deferred that....
+15:53:17 <bcoca> is this for squashing?
+15:53:38 <geerlingguy> https://bin.acquia.com/?a861e2998d8add53#ULOqWXxlj271M92AbFYfjgKo50ovAp2iRywqMR1fmwk=
+15:54:17 <bcoca> that does seem to be about squashing, didnt know we had deprecated that
+15:54:18 <geerlingguy> basically if you use apt, pip, yum, package, etc. and with_items to pass in a list of packages it throws that warning now. It was a pattern I used for years until I discovered `name` takes a list
+15:54:35 <bcoca> i thought we were going to tie ti to the deprecation/removal of with_
+15:54:35 <felixfontein> the 2.7 rcs didn't complain about with_ loops
+15:54:42 <geerlingguy> but there are sooooo many roles that still squash
+15:55:00 <felixfontein> ah yes, there were warnings about squash
+15:55:19 <dag> Do we already have a style guide for consistent Etherpad updates :)
+15:55:22 <geerlingguy> example task more: https://bin.acquia.com/?e4c19daa1d4b26e6#YO33KxfQkAnsOpcBDYa1pKr1vbvqtBavjmXKjMnSQEQ=
+15:55:30 <bcoca> found deprecation message
+15:55:44 <felixfontein> what kind of webdev skills are you asking for?
+15:55:53 <bcoca> last time i did 'webdev' 'div' was a 'new thing'
+15:55:57 <dag> felixfontein: Javascript and CSS work
+15:56:08 * geerlingguy guesses there will be a lot of new issues on ansible/ansible saying "I don't think I squash things, I just use with_items why is it showing this message" :D
+15:56:12 <bcoca> <tr><td> is still in my muscle memory
+15:56:33 <abadger1999> Better breadcrumbs
+15:56:34 <dag> Every documentation includes the complete toc
+15:56:34 <abadger1999> Better section headers on the module index pages
+15:56:36 <abadger1999> Duplicate search facilities
+15:56:42 <dag> which makes pages about 10x larger than they need to be
+15:56:50 <abadger1999> (and of course, this integrates with sphinx somehow...)
+15:57:01 <bcoca> breadcrumbs have never worked right
+15:57:14 <dag> yeah, it is likely you need to upstream some of the things to Sphinx (especially the reference and search)
+15:57:17 <bcoca> and toc should be link to 'grouping list' in plugins/modules
+15:57:37 <felixfontein> the bluejeans image isn't really updating well
+15:58:00 <bcoca> https://github.com/ansible/ansible/pull/35978
+15:58:05 <bcoca> ^ deprecating squash
+15:58:12 <bcoca> totally forgot this was there
+15:58:52 <geerlingguy> chouseknecht needed to do like a 3 hour presentation :D
+16:00:56 <bcoca> the search box was the original search, we added bottom search, but had to bring back box due to popular demand
+16:01:02 <bcoca> ^ what i tried to say on bj
+16:01:06 <bearrito> do the 2 searches behave differently? if not, is it much of a concern to have 2 places to search?
+16:01:19 <bcoca> iirc, they are the same search
+16:02:01 <abadger1999> they are different search
+16:02:03 <bcoca> accidentally? we had a lot of people asking for it and dharma indicated he would
+16:02:23 <abadger1999> a lot of people couldn't find the search.
+16:02:38 <bcoca> ok, so current box is not what i discussed with him, we looked into it and could use same search with box
+16:02:49 <bcoca> we even played around with some demo code
+16:03:10 <bcoca> the site we use for the bottom search allows for input box
+16:03:19 <abadger1999> If you have that demo code, that would be good.  We could get that integrated
+16:03:41 <bcoca> i'll look for it, but it is probably in one of his branches
+16:04:00 <bcoca> it was mostly a copy/paste from the sample code from the search provider
+16:04:47 <bcoca> i had just assumed when it was added that it was a result of that .. didnt realize it was a 'sphinx accident' ... funny though
+16:05:19 <bcoca> we had PR from user with drop down box for multiversion
+16:05:26 <bcoca> but it was mostly hardcoded js
+16:06:05 <bcoca> https://github.com/ansible/ansible/issues/45651
+16:06:18 <bcoca> also looking for that code
+16:07:29 <felixfontein> I ran make webdocs (though restricted to modules)
+16:07:29 <dag> I run it very often these days
+16:07:33 <bcoca> I do, when my heating is off
+16:07:37 <felixfontein> haha
+16:07:40 <dag> bcoca: it's much better now :)
+16:07:42 <samccann> :-)
+16:07:54 <felixfontein> yep, recent changes by dag make it much less heaty
+16:07:59 <bcoca> yes, specially since we stopped building toc PER module page
+16:08:03 <felixfontein> (at least if you're running it again)
+16:08:09 <bcoca> still, its very cpu intensive
+16:08:17 <felixfontein> yep
+16:09:00 <bcoca> most of the time is spent in indexing and toc building, the templates seem to run pretty fast
+16:09:10 <geerlingguy> qq - how will we manage multiple versions of a role for different projects?
+16:09:21 <geerlingguy> Can I still install namespaced packages in a project subdir?
+16:09:22 <felixfontein> please no iframes!
+16:09:33 <bcoca> geerlingguy: i think you want #ansible-galaxy
+16:09:43 <fxfitz> Yup ^^^
+16:09:45 <jtanner> geerlingguy: no quick answer, but it's something we do need to figure out
+16:10:03 <bcoca> <docs meeting here>
+16:11:20 <bcoca> we use mostly jinaj2 templates to generate .rst for sphiinx
+16:11:51 <bcoca> that step is normally fast, the rst => html (what sphinx does) is the slow/cpu hog part
+16:12:39 <bcoca> i think im only hearing 1/2 the conversation
+16:14:02 <felixfontein> rst => html in general should be pretty fast - if you just generate the page content. the problematic part is probably the TOC, handling links, etc.?
+16:14:04 <cybette__> bcoca: there's not always someone speaking, but now Alicia is. can you hear her well?
+16:14:37 <bcoca> no, and now i lost sound midsentence
+16:15:06 <felixfontein> there seem to be long pauses from time to time
+16:15:13 <cybette__> the pauses are there
+16:15:37 <cybette__> but dropping off mid sentence is a problem. although we are sticking to the mics as much as possible here
+16:15:39 <bcoca> mid word?
+16:15:53 <bcoca> nvmd, bj dropped me
+16:16:02 <cybette__> at least abadger1999 is taking great notes (thank you!!)
+16:16:07 <felixfontein> how often are the devel docs regenerated?
+16:17:28 <felixfontein> thanks!
+16:17:40 <cybette__> felixfontein: once a day at around 2 or 3 in the morning central US time
+16:23:37 <felixfontein> linting the examples sounds like a very good idea! (also spellchecking etc.)
+16:24:04 <felixfontein> spellchecking is usually annoying
+16:24:45 <felixfontein> if there's a exclusion list for spellchecking, there should also be one per module / module category
+16:27:05 <bcoca> examples were not required to be valid yaml, it was freeform initially, i dont know if all were converted after we changed the restriction
+16:27:40 <bcoca> some have plays, most others are just tasks, so linting might need to be very permissive
+16:28:02 <felixfontein> hmm, that can actually be quite a problem
+16:29:38 <bcoca> abadger1999: cannot find the search box code .. but it should be easy to recreate with example from our search provider
+16:29:46 <abadger1999> k
+16:30:06 <bcoca> also cannot find the contribution with a 'drop down' for versioning .. but htat was almost 3yrs ago
+16:30:12 <abadger1999> I believe all examples were changed to valid yaml.  I know I converted some things to comments in examples to get around that
+16:30:15 <felixfontein> I can see the terminal window
+16:30:15 <bcoca> 'doc site version navigation'
+16:30:47 <bcoca> abadger1999: i had to do same for updates, but dont know if we ever did for all existing
+16:36:48 <digigrate_> Your breaking up up again.
+16:37:43 <felixfontein> audio is not really working
+16:37:53 <digigrate_> voice is breaking up^^^
+16:38:01 <felixfontein> yep
+16:38:14 <felixfontein> also with current speaker
+16:40:06 <cybette__> how about now?
+16:40:18 <felixfontein> cybette__: seems better
+16:50:26 <geerlingguy> Is there going to be a kubernetes discussion today?
+16:50:37 <geerlingguy> I thought I remembered seeing it in etherpad monday but it looks like not
+16:50:52 <bcoca> https://etherpad.openstack.org/p/ansible-summit-october-2018
+16:51:00 <bcoca> dont see it htere
+16:51:11 <geerlingguy> k
+16:52:25 <gundalow> Food is ready
+16:52:56 <felixfontein> nice for you :) I have to cook myself
+16:53:03 <gundalow> geerlingguy: no k8s session here. Though maybe we'll setup a working group
+16:53:44 <geerlingguy> cool. I have a vested interest at this point as we're building two projects with Ansible + Kubernetes (instead of integrating Helm), aaaand I'm starting work on "Ansible for Kubernetes" :)
+16:54:32 <geerlingguy> Kubernetes : scheduling infra awesomeness :: Ansible : automating infra awesomeness
+16:54:52 <geerlingguy> It's funny, just like with Docker, there are many people who are like "why don't you just, like, log into servers and run commands and stuff?"
+16:55:13 * geerlingguy Because we are enlightened beings. We don't log into servers, pfft.
+16:55:18 <felixfontein> will there be (or is already?) an IRC channel for ansible documentation?
+16:56:33 <felixfontein> sounds good!
+16:58:01 <dag> #ansible-docs already claimed by @dharmabumstead, so we're good !
+16:58:29 <felixfontein> thanks
+16:58:39 <abadger1999> #endmeeting
+16:58:53 <cybette> #endmeeting

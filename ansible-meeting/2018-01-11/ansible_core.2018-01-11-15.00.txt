@@ -1,0 +1,158 @@
+==============================
+#ansible-meeting: ansible core
+==============================
+
+
+Meeting started by thaumos at 15:00:05 UTC. The full logs are available
+at
+https://meetbot.fedoraproject.org/ansible-meeting/2018-01-11/ansible_core.2018-01-11-15.00.log.html
+.
+
+
+
+Meeting summary
+---------------
+* filesystem module refactor merge request  (thaumos, 15:04:19)
+  * LINK: https://github.com/ansible/ansible/pull/25519   (thaumos,
+    15:04:58)
+  * ACTION: bcoca to do final review & merge on
+    https://github.com/ansible/ansible/pull/25519  (gundalow, 15:08:29)
+
+* Discuss a preferred method to handle playbook adjacent group_vars
+  directories  (thaumos, 15:13:42)
+  * LINK: https://github.com/ansible/ansible/issues/33177   (thaumos,
+    15:14:00)
+  * In Ansible 2.3, it appears that the function _get_hostgroup_vars
+    from the Inventory class handled the scenario of a playbook that
+    included another playbook and kept the path of the original playbook
+    in scope. However, in 2.4 with the transition to inventory plugins,
+    the basedirs for the playbook are determined by the DataLoader which
+    doesn't appear to have any knowledge of the original playbook that
+    did the include/import. I would lik  (gundalow, 15:14:19)
+  * ACTION: sivel to provide an explanation in the issue, and update the
+    porting guide for 2.4  (sivel, 15:31:50)
+  * ACTION: sivel to document the playbook dir change in the porting
+    guide and on the bug report  (abadger1999, 15:31:51)
+  * ACTION: again as above  (thaumos, 15:32:02)
+
+* LooseVersion comparison in py3 is subject to exceptions due to
+  comparing int and str. DO weo go with that PR or do something else?
+  (thaumos, 15:32:34)
+  * LINK: https://github.com/ansible/ansible/pull/34427   (thaumos,
+    15:32:47)
+  * ACTION: we will address each LooseVersion failure on it's own for
+    now  (sivel, 15:45:39)
+  * ACTION: sivel will talk to chouse about galaxy versions, and
+    documenting a spec  (sivel, 15:45:55)
+  * ACTION: sivel will update galaxy code to catch exception, and error
+    to the user pointing to glaxy version spec  (sivel, 15:46:24)
+  * ACTION: sivel to talk to chouseknecht about plans for versioning
+    specification of galaxy roles  (abadger1999, 15:59:36)
+
+* Open floor  (abadger1999, 16:00:57)
+  * LINK: https://github.com/ansible/ansible/issues/34272 since bcoca is
+    in holiday, can I bring attention to that bug ?  (misc, 16:01:35)
+  * ACTION: abadger1999 will have jimi|ansible look into 34272 and then
+    will write up a porting guide entry if it's really a bugfix.
+    (abadger1999, 16:05:14)
+  * LINK:
+    https://github.com/ansible/community/issues/291#issuecomment-355960628
+    (andol, 16:17:17)
+
+* cloudflare_dns bugfix ansible/ansible#31800  (gundalow, 16:19:09)
+  * ACTION: akasurde to merge PR  (thaumos, 16:23:37)
+  * ACTION: andol to reach out to jtanner about getting added to botmeta
+    for maintainership of module  (thaumos, 16:24:00)
+
+Meeting ended at 16:24:27 UTC.
+
+
+
+
+Action Items
+------------
+* bcoca to do final review & merge on
+  https://github.com/ansible/ansible/pull/25519
+* sivel to provide an explanation in the issue, and update the porting
+  guide for 2.4
+* sivel to document the playbook dir change in the porting guide and on
+  the bug report
+* again as above
+* we will address each LooseVersion failure on it's own for now
+* sivel will talk to chouse about galaxy versions, and documenting a
+  spec
+* sivel will update galaxy code to catch exception, and error to the
+  user pointing to glaxy version spec
+* sivel to talk to chouseknecht about plans for versioning specification
+  of galaxy roles
+* abadger1999 will have jimi|ansible look into 34272 and then will write
+  up a porting guide entry if it's really a bugfix.
+* akasurde to merge PR
+* andol to reach out to jtanner about getting added to botmeta for
+  maintainership of module
+
+
+
+
+Action Items, by person
+-----------------------
+* abadger1999
+  * abadger1999 will have jimi|ansible look into 34272 and then will
+    write up a porting guide entry if it's really a bugfix.
+* akasurde
+  * akasurde to merge PR
+* andol
+  * andol to reach out to jtanner about getting added to botmeta for
+    maintainership of module
+* jimi|ansible
+  * abadger1999 will have jimi|ansible look into 34272 and then will
+    write up a porting guide entry if it's really a bugfix.
+* jtanner
+  * andol to reach out to jtanner about getting added to botmeta for
+    maintainership of module
+* sivel
+  * sivel to provide an explanation in the issue, and update the porting
+    guide for 2.4
+  * sivel to document the playbook dir change in the porting guide and
+    on the bug report
+  * sivel will talk to chouse about galaxy versions, and documenting a
+    spec
+  * sivel will update galaxy code to catch exception, and error to the
+    user pointing to glaxy version spec
+  * sivel to talk to chouseknecht about plans for versioning
+    specification of galaxy roles
+* **UNASSIGNED**
+  * bcoca to do final review & merge on
+    https://github.com/ansible/ansible/pull/25519
+  * again as above
+  * we will address each LooseVersion failure on it's own for now
+
+
+
+
+People Present (lines said)
+---------------------------
+* abadger1999 (90)
+* sivel (77)
+* jimi|ansible (51)
+* thaumos (34)
+* maxamillion (18)
+* gundalow (17)
+* misc (15)
+* tdtrask (11)
+* zodbot (10)
+* andol (8)
+* dag (5)
+* akasurde (5)
+* jtanner (3)
+* Pilou (2)
+* gregdek (2)
+* rcarrillocruz (1)
+* mikedlr (1)
+
+
+
+
+Generated by `MeetBot`_ 0.1.4
+
+.. _`MeetBot`: http://wiki.debian.org/MeetBot

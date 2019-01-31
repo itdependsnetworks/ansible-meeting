@@ -1,0 +1,136 @@
+19:11:21 <abadger1999> #startmeeting Ansible Core Meeting
+19:11:21 <zodbot> Meeting started Tue Aug  7 19:11:21 2018 UTC.
+19:11:21 <zodbot> This meeting is logged and archived in a public location.
+19:11:21 <zodbot> The chair is abadger1999. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:11:21 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:11:21 <zodbot> The meeting name has been set to 'ansible_core_meeting'
+19:12:02 <abadger1999> #topic Roll Call
+19:12:06 <abadger1999> Who's here?
+19:12:11 <abadger1999> #info Agenda: https://github.com/ansible/community/issues/329
+19:12:15 <sivel> .hello2
+19:12:16 <zodbot> sivel: sivel 'Matt Martz' <matt@sivel.net>
+19:12:20 <agowa338> Hi
+19:12:38 <sivel> I just struck out proposals/39
+19:13:42 <agaffney> you mean 139?
+19:14:05 <abadger1999> #chair sivel agowa338 agaffney
+19:14:05 <zodbot> Current chairs: abadger1999 agaffney agowa338 sivel
+19:14:10 <abadger1999> Cool, thanks
+19:14:12 <sivel> no 39
+19:14:16 <sivel> "role spec"
+19:14:28 <sivel> there are multiple, but 39 was placed on the agenda
+19:14:42 <abadger1999> #topic Announcement: Ansible Contributor Summit
+19:15:06 <abadger1999> There will be a two day contributor summit as part of ansiblefest Austin.
+19:15:21 <abadger1999> October 2nd and 3rd.
+19:15:30 <abadger1999> Err..
+19:15:31 <abadger1999> Sorry
+19:15:36 <sivel> contributor summit is 1st and 4th
+19:15:44 <abadger1999> Contributor summit October 1,  and 4th.
+19:15:55 <abadger1999> The main Ansiblefest in the middle of that.
+19:15:59 <sivel> #info AnsibleFest Austin will be on both Tuesday 2nd and Wednesday 3rd October 2018
+19:16:01 <sivel> #info The Contributor Summit will also be over two days, on Monday 1st and Thursday 4th October, from 9:30am to 4pm (time subject to change).
+19:16:13 <abadger1999> If you want to add topics: https://etherpad.openstack.org/p/ansible-summit-october-2018
+19:16:29 <abadger1999> People will be able to attend remotely as well as in person.
+19:16:44 <abadger1999> For more information:
+19:16:46 <abadger1999> #info https://github.com/ansible/community/issues/329#issuecomment-410040811
+19:17:25 <abadger1999> #topic Deterministic ansible vault encryption -- https://github.com/ansible/ansible/pull/43689
+19:18:06 <agowa338> Are there any open questions about that pr?
+19:18:20 <abadger1999> So, agowa338 has a PR to change the salt for vault encryption so that the encrypted content will be the same if the plaintext hasn't changed.
+19:19:06 <sivel> I have nothing to add, other than being in agreement we need security review
+19:19:43 <agaffney> does a deterministic salt reduce security in a meaningful way?
+19:19:56 <agaffney> I'm all for the functionality, but only if it makes sense from a security standpoint
+19:20:35 <agowa338> In short, it does not reduce security and provides the ability to git blame and so on
+19:20:42 <abadger1999> <nod> If we can't find anything wrong with this here, someone will figure out how to pass it on to someone inside of red hat who can do a security review of it.
+19:20:49 <sivel> yeah, I won't speak to any security concerns really.  Which is why I think we need someone from a security team to review
+19:21:59 <abadger1999> agowa338: The only thing I wonder is whether the length check for the plaintext would be a good idea.
+19:22:01 <agowa338> Ok, so we have consents for a security review. Does anyone have some other question related to that one?
+19:22:09 <abadger1999> I see what you mean about the secret being a bad idea to check
+19:22:42 <abadger1999> But length of the plaintext is already something an attacker can get indirect information about.
+19:23:01 <abadger1999> (since this encryption, the longer the plaintext, the longer the ciphertext)
+19:23:49 <jborean93> abadger1999: I don;t think that's true?
+19:24:00 <abadger1999> jborean93: It is... you can try it to see.
+19:24:02 <jborean93> ahh sorry you said plaintext
+19:24:08 <agowa338> abadger1999: I still think the length check is a bad idea, and even if the attacker knows the lenght of the plaintext what value does that provide?
+19:24:14 <jborean93> sorry just woke up and my brain is still processing things...
+19:24:29 <abadger1999> signatures wouldn't change in size but encrypted cipher text would.
+19:25:10 <jborean93> yea at first I read that as the length of the password would change the overall size but realise my mistake
+19:25:34 * jborean93 hides in the corner
+19:25:41 <agowa338> abadger1999: What I mean is, if I tell you my plaintext has 12 characters, what can you do what you couldn't do before in order to crack it? As it is concated with the secret and than sha256 hashed the answer is nothing.
+19:27:08 <abadger1999> agowa338: the salt is a sha256sum of the plaintext + password, correct?
+19:27:19 <agowa338> yes
+19:27:36 <ryansb> there are partial known plaintext attacks for info like known-length, including guess-based attacks such as "if it's 10 chars, it might be a 10-digit USA phone number, or a date in YYYY-MM-DD format"
+19:27:54 <abadger1999> So if the attacker knows that the plaintext is no characters, then they can try to brute force the salt to recover the password.
+19:28:45 <agowa338> But If you know that you can also brute force the ciphertext. The one solution that gives you plaintext is the correct one...
+19:28:51 <abadger1999> If they know that the plaintext is one character, they can try brute forcing the salt using a password prepended by a likely plaintext character.
+19:29:15 <abadger1999> If vault files are typically of a form like:
+19:29:29 <abadger1999> ---\nvar: val
+19:30:00 <agowa338> abadger1999: And? I don't see how that is worse than brut forcing the same with aes, as you still could iterate through your dictionary and attempt decrypting the cipher (the first block of it)
+19:30:27 <abadger1999> if the attacker knew that the plaintext was nine characters they would probably know that there are likely just two characters they have to substitute out of that.
+19:30:49 <jborean93> it would be quicker to bruteforce the salt than running the PBKDF2 function to derive the keys for AES and the HMAC function
+19:31:23 <abadger1999> that's why I think it might be wise to decide on a minimum length for the plaintext.
+19:32:07 <abadger1999> jborean93: that's a good point.... would it be better to use a pdkdf2 function to create the salt rather than simple sha256sum?
+19:32:35 <jborean93> abadger1999: you need a salt for the pbkdf2 function
+19:32:42 <jborean93> that's where the salt is currently used
+19:32:44 <abadger1999> ah right.
+19:32:52 <abadger1999> well.
+19:32:55 <abadger1999> actually.
+19:33:04 <abadger1999> we can hardcode a salt for that.
+19:33:38 <abadger1999> is pbkdf function more expensive just because it will do many rounds?
+19:33:47 <jborean93> I believe that is the case
+19:33:53 <abadger1999> I'm not a cryptographer so i don't know all the ins and outs.
+19:34:55 <jborean93> IIRC we do 10000 rounds right now
+19:35:05 <agowa338> Does anyone atm know if a fixed salt for pbkdf2 provides any security or just obscurity? I have not checked that until now...
+19:35:07 <abadger1999> yeah.  at least when using cryptography.
+19:35:44 <ryansb> [also not a cryptographer]
+19:35:45 <abadger1999> agowa338: It doesn't provide extra security.
+19:35:49 <agowa338> My first thought of using a fixed salt is that one could shorten the calculation, but I'm not certain if that is true for that specific algorithm.
+19:36:20 <jborean93> these are definitely questions for a security expert, I'm really just shooting in the dark
+19:36:22 <ryansb> the salt wouldn't provide additional security other than by being nonempty, and requiring attackers to recalculate their brute forcing tables for ansible
+19:36:46 <abadger1999> agowa338: but that's not really the point there... we're generating a salt value... we'd be using the pbkdf function to make it more CPU intensive to try brute forcing the salt.
+19:36:47 <ryansb> the best is, obviously, unique salts for all hashed values because then each value requires massive resources
+19:37:08 <agowa338> ryansb: But is that the case? Or can you factor it out? That's something one would have to check in advance..
+19:38:38 <jborean93> well a unique salt will ensure a unique key from the PBKDF2 function even if the same password is used
+19:39:13 <jborean93> we encode part of that key in the vault text making it easier for someone to verify the same password was used if we always use the same salt
+19:39:28 <abadger1999> Here's a question... why should we use the secret as an input into the salt?
+19:40:01 <jborean93> so the same plaintext will produce a different result
+19:40:06 <alikins> could be useful to make the # of rounds to use on decrypt to come from  the header format, then at least we could change it in the future
+19:40:12 <jborean93> unless the password is the same
+19:40:18 <abadger1999> Mm..... I suppose sufficiently simple values of the plaintext might be problematic
+19:41:01 <agowa338> The password is required to not make the plaintext guessable, as it is assumed that the vault secret is secure.
+19:41:18 <abadger1999> @aliikins: <nod>  Although that would be backwards incompatible.
+19:43:54 <agowa338> jborean93: One is unable to conclude if the same password has been used, the only thing one can do is for example if have a list of users and initial password and you use the same, that that password was the same for all users. But that is the desired state, as it also allows us to trace regressions by just git diff (a college reset the password to an older probably leaked value)
+19:45:28 <ryansb> alright, after some additional research, if we had a static salt for all Ansible vaults, then it would still be very costly to calculate rainbow tables for vaulted stuff
+19:45:48 <ryansb> er, vault passwords rather
+19:45:59 <jborean93> agowa338: in your PR I agree, I was replying to the question if we fix the salt to the same value. That would theoretically make it easier to guess the passwords?
+19:47:05 <jborean93> I should probably just stop talking, this really needs to go to someone who can verify all this
+19:47:09 <agowa338> The salt must be different for different plaintext. Otherwise we break the crypto, as you could xor large portions...
+19:48:16 <agowa338> Basically what we want is different salts for different plaintext and guaranteeing having the same salt for the same plaintext (as long as the same secret is used)
+19:49:21 <jborean93> agreed, and we just want to verify that is an ok thing to do
+19:51:19 <abadger1999> I think the idea of "the same salt" is using the same salt for generating the vault file's salt.
+19:55:21 <abadger1999> Okay, so it sounds like we have to things that we think might improve security still.
+19:55:31 <agowa338> yes, the final salt that is used for the aes ctr encryption needs to be the same but unique on a per file basis. But also dependent on the key, as it should change if the key changes. Another solution would be to not only require a key to be provided, but also a salt (even though it would be backwards incompatible).
+19:56:47 <agowa338> also having deterministic encryption will improve security, as the user can from a simple "git diff" see, if the password changed or not. Currently it could be changed or just re encrypted.
+19:57:36 <agaffney> saying that it will improve security seems a bit dubious there, but the benefit is real
+19:58:48 <agowa338> it is a slight improvement, but also has the cost, that one knows that it has not changed. But I would remove that cost by saying if you don't re-encrypt all you vault data with every commit it is not different from what we have currently.
+20:02:21 <agowa338> And therefore I would say the benefits counter the risks appropriately. So what do you think? Go or Nogo to a merge after the security audit?
+20:03:03 <ryansb> if it's a risk/benefit tradeoff, is there a case for making it a configurable thing?
+20:03:13 <alikins> are we talking about reusing the existing salt on a reencrypt? or always using the same salt everywhere?
+20:03:21 <agowa338> ryansb: By adding it as a new cipher.
+20:03:40 <ryansb> I see
+20:03:51 <agaffney> alikins: consistent salt based on plaintext and secret
+20:03:58 <agowa338> But I don't know if the cipher is currently selectable from the command line.
+20:04:07 <alikins> it is not
+20:04:50 <agowa338> So if you want to have it configurable that would have to be done first (or we use a crude environment variable workaround)
+20:07:46 <abadger1999> @alikins sort of reusing the existing salt on a reencrypt.
+20:08:19 <abadger1999> we'd be calculating the salt using information which would not change the salt if the plaintext and secret have not changed.
+20:08:38 <agowa338> salt = sha256(plaintext + secret)
+20:09:09 <agowa338> instead of `salt = os.urandomn(32)`
+20:09:29 <agowa338> os.urandom(32) i mean
+20:13:05 <abadger1999> I think I've added all the comment from the meeting into the PR.
+20:14:09 <abadger1999> I don't see any showstoppers but there's definitely some starting points for a security review to chew on.
+20:14:36 <abadger1999> I'll ping btarasso who can try to find someone inside of red hat to review it.
+20:15:04 <abadger1999> #action abadger to ping btarasso about having a red hat security person review the proposed code
+20:15:11 <abadger1999> #topic Open Floor
+20:15:17 <abadger1999> Anyone else have anything else?
+20:15:51 <ryansb> not I
+20:16:40 <abadger1999> Okay, I'll close in 60s
+20:17:42 <abadger1999> #endmeeting

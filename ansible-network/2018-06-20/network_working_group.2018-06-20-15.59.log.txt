@@ -1,0 +1,58 @@
+15:59:50 <Qalthos> #startmeeting Network Working Group
+15:59:50 <zodbot> Meeting started Wed Jun 20 15:59:50 2018 UTC.
+15:59:50 <zodbot> This meeting is logged and archived in a public location.
+15:59:50 <zodbot> The chair is Qalthos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:59:50 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:59:50 <zodbot> The meeting name has been set to 'network_working_group'
+16:00:17 <Qalthos> #chair ganeshrn gundalow privateip rcarrillocruz trishnag caphrim007
+16:00:17 <zodbot> Current chairs: Qalthos caphrim007 ganeshrn gundalow privateip rcarrillocruz trishnag
+16:00:56 <caphrim007> o/
+16:01:04 <Qalthos> #link https://github.com/ansible/community/issues/247 agenda
+16:01:15 <caphrim007> i can never remember if networking meetings happen here or in ansible-meeting
+16:01:22 <caphrim007> sometimes its one and other times the other
+16:01:26 <caphrim007> but...glad to be here
+16:01:52 <Qalthos> Network meetings are always in here
+16:02:08 <Qalthos> everybody else uses #ansible-meeting
+16:02:16 <Qalthos> #topic ipaddress for F5
+16:02:36 <caphrim007> i believe i've outlined my thoughts on this topic in the agenda
+16:02:40 <caphrim007> if people want to look
+16:03:05 <caphrim007> i don't see this as a long term thing with py3 becoming more and more deployed
+16:03:18 <caphrim007> but it would help to move my work off of our netaddr external dependency
+16:03:33 <Qalthos> caphrim007: I thought it was fairly well laid out
+16:03:54 <caphrim007> i looked for pre-existing work in ansible itself as part of my case
+16:04:01 <caphrim007> which is also linked in the topic
+16:04:41 <Qalthos> My main concern is that module_utils should all be *BSD* licensed... though there are many exceptions as we are not always careful to check
+16:05:30 <caphrim007> i understand. my argument was that, the language itself has this today
+16:05:33 <caphrim007> python that is
+16:05:43 <caphrim007> but it was not backported to older versions
+16:05:53 <caphrim007> and i cannot today say "everyone use py3 for f5 modules"
+16:07:18 <Qalthos> Oh I understand the need
+16:07:38 <caphrim007> well. anyway. i thought i would toss it out there instead of just going and merging it myself
+16:08:16 <caphrim007> and let it be known that it *will* be removed, as outlined in the topic
+16:09:06 <Qalthos> I just don't want to put in yet another non-BSD file in there without getting an okay from the core team, as we've had problems come up around that in the past
+16:09:25 <caphrim007> ok
+16:09:44 <caphrim007> should we call the core team in here? or should i wait until next core meeting to ask?
+16:10:29 <Qalthos> It would probably be much easier to wait until tomorrow's meeting and bring it up there
+16:10:34 <caphrim007> k
+16:12:24 <Qalthos> I think it's a fine idea, I'm just not 100% on the licensing, hopefully they can speak a bit more authoritatively about it
+16:12:52 <Qalthos> #topic Open Floor
+16:13:27 <Qalthos> Anyone else here who wants to bring something up?
+16:13:59 <Anil> Well, I have a minor query
+16:14:03 <Qalthos> sure
+16:14:17 <Qalthos> #cahir Anil
+16:14:21 <Qalthos> #chair Anil
+16:14:21 <zodbot> Current chairs: Anil Qalthos caphrim007 ganeshrn gundalow privateip rcarrillocruz trishnag
+16:14:38 <Anil> Our GA for 2.6 is likely to happen on 2018-06-28?
+16:15:28 <Anil> Or will it get one week delayed ?
+16:16:16 <Qalthos> I'm not sure if we're still hitting that or not, rc3 came out yesterday, and there might be one more coming
+16:17:12 <Anil> Another query I have is that How can start on my plans on 2.7 now itself ?
+16:17:39 <Anil> I would like to change all modules in CNOS to persisistence connection in 2.7
+16:18:55 <Anil> I should raise PR only after 2.6 right ?
+16:19:50 <Qalthos> 2.6 has been branched for a while, you can send PRs to devel right now if you want
+16:20:33 <Anil> ok.. got it..
+16:22:16 <Anil> Thanks, thats all from my side, CNOS is changing to Cisco style CLI, so I have to factor in that changes as well taking care of backward compatibility as well
+16:24:40 <Qalthos> Anil: That sounds like... fun. Good luck with all that and let us know if you have trouble
+16:24:50 <Qalthos> Anyone else?
+16:39:56 <Qalthos> Right, have a good week, then
+16:40:09 <Qalthos> Thanks all for coming
+16:40:13 <Qalthos> #endmeeting

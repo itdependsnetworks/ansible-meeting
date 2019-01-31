@@ -1,0 +1,113 @@
+16:00:47 <Qalthos> #startmeeting Network Working Group
+16:00:47 <zodbot> Meeting started Wed Aug 29 16:00:47 2018 UTC.
+16:00:47 <zodbot> This meeting is logged and archived in a public location.
+16:00:47 <zodbot> The chair is Qalthos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:00:47 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:00:47 <zodbot> The meeting name has been set to 'network_working_group'
+16:01:23 <Qalthos> #topic Core Status
+16:01:55 <Qalthos> #info core is frozen as of last week
+16:02:11 <Qalthos> #info commuinity modules freeze tomorrow
+16:03:50 <Qalthos> Here are some of the things the team has been working on this past week
+16:04:30 <Qalthos> * vyos and junos cliconf bugfixes
+16:04:45 <Qalthos> * fixes for nxos_system and nxos_banner
+16:05:39 <Qalthos> * ios & iosl2 platform bug fixes
+16:06:25 <Qalthos> * working with firepower to get ftd roles and connection in for 2.7
+16:06:42 <Qalthos> #topic Agenda
+16:06:59 <Qalthos> #link https://github.com/ansible/community/issues/247 is the agenda, as always
+16:07:51 <Qalthos> I don't see anything on here that hasn't been discussed or acted on yet
+16:08:31 <Qalthos> #topic Open Floor
+16:08:57 <lindsayhill_> Only thing I was going to mention was that I'm not going to be able to get voss_config done before module freeze. :(
+16:08:57 <Qalthos> Anyone have something they want to cover?
+16:09:02 <bdowling> Was there a meeting last week?  I wanted to answer any questions on 35817
+16:09:25 <Qalthos> lindsayhill_: That's unfortunate :(
+16:10:15 <lindsayhill_> Yeah. I've gotten a bit stuck with handling the 'flat' config style that VOSS uses. flat configs - that is, no indentation under "interface blah"
+16:10:21 <Qalthos> bdowling: last week was https://meetbot.fedoraproject.org/ansible-network/2018-08-22/ansible_network_working_group.2018-08-22-16.07.log.html
+16:11:06 <lindsayhill_> But the lines under "interface blah" *are* context-sensitive, until the next 'exit' line. I'm sure it _can_ be handled, but probably needs to extend NetworkConfig
+16:11:40 <lindsayhill_> I thought I had things working well, then realized when doing some testing that I really didn't. Heh.
+16:15:05 <bdowling> @qualthos, ah, there seems to be a few different groups for the archives, I was looking at https://meetbot.fedoraproject.org/sresults/?group_id=network_working_group&type=team
+16:15:50 <Anil_Lenovo> Quathos: I have 2 PRs pending. One which u have reviewed PR#44398, was pending on license issue. License issue got resolved. Now that can be merged.
+16:16:02 <Qalthos> bdowling: Ah, that would work if we collectively managed to call the meeting the same thing every week
+16:17:05 * Qalthos issues a general, friendly reminder that my name has no 'u' in it
+16:17:34 <bdowling> Oops, finger habit :)
+16:18:05 <Anil_Lenovo> Yeah.. I sorry. Its just a typo as after q, u comes always
+16:18:05 <Qalthos> bdowling: I'm not personally familiar with the PR in question, but it seems most of the issues have been resolved, so I'll ping people to try to get some movement there
+16:19:01 <Qalthos> #action Qalthos see what needs to be done for #35817
+16:19:15 <Qalthos> #topic Lenovo
+16:19:25 <Anil_Lenovo> Yes
+16:19:59 <Anil_Lenovo> 2 PRs #44398 and #44559
+16:20:46 <Anil_Lenovo> Qalthos: You may merge first one as License issue got resolved after my legal team mailed Gundalow
+16:21:21 <Anil_Lenovo> i think the second one will be looked by Gundalow
+16:21:39 <Qalthos> Anil_Lenovo: Right, so I am not anything resembling a lawyer, but the discussion does raise some issues. The biggest problem with this is it is a one-off solution for this PR and does not address any of the other code that has already been merged
+16:21:59 <Qalthos> Which even includes your other PR, even though it probably shouldn't
+16:23:08 <Qalthos> If this is the path we're taking moving forward for this problem, I'd like to see that license applied to all the other code that's been brought in before we move any further on these PRs
+16:23:33 <Anil_Lenovo> yes.. as David Kasberg is no more associated with Lenovo and retired, the licensing issue doesnt matter
+16:24:59 <Qalthos> Again, not a lawyer, but if your legal team agrees that this is a problem for this chunk of code, it is likely a problem for every other piece of code being moved in this way
+16:26:01 <Anil_Lenovo> They says that there is no problem, I am free to move. That has been conveyed to John by mail. So he seems Ok with it
+16:26:31 <Qalthos> If that is the case, then I would like some record of that in the PR
+16:26:46 <Anil_Lenovo> Let me check, if not, I will copy it to u as well
+16:27:08 <Qalthos> If Lenovo is happy with the relicense, you shouldn't need to add the license in the PR as you have
+16:27:39 <Qalthos> All that aside, if we can talk about 44559 for a minute
+16:27:50 <Anil_Lenovo> sure
+16:28:12 <Qalthos> You have changes to cnos_rollback in a PR supposedly dedicated to integration tests
+16:28:44 <Anil_Lenovo> yeah.. that may go off by refactoring I guess
+16:28:46 <Qalthos> If that were not in there, this PR would have been merged this morning, as it is, it got mired in the license issue
+16:29:03 <Anil_Lenovo> How to remove that 2 files..
+16:30:25 <Qalthos> It looks like if you just remove the first two commits, that will probably fix everything. Are you comfortable with git rebase? it should not be a terribly difficult task in this case
+16:31:06 <Qalthos> Alternately, copy versions of those files from devel and make a new commit that reverts the contents
+16:31:25 <Qalthos> that one is probably way easier and more likely to work
+16:31:40 * Qalthos has a bad habit of reaching for the complicated solution first
+16:32:10 <Anil_Lenovo> yes.. The mistake i did is that the licensing PR I have done directly from devel, and this is from a branch
+16:32:57 <Qalthos> You can checkout a new copy of devel, or even just download the files from GitHub
+16:33:17 <Anil_Lenovo> ok.. will do so
+16:33:42 <Qalthos> Just make sure you have the changes you've already made saved somewhere so you don't have to redo it later (:
+16:33:51 <Anil_Lenovo> sure
+16:33:52 <lindsayhill_> There's always some sequence of git commands that can 'fix' it...but sometimes it's easier to just start clean & copy files across
+16:34:18 <lindsayhill_> I think there's an XKCD about this somewhere. Personally I rely on ohshitgit.com
+16:35:02 <Qalthos> #action Anil_Lenovo clarify result of licensing issue in 44398 so we have a clear path forward for this code
+16:35:31 <Qalthos> #action Anil_Lenovo Remove changes to cnos_rollback from 44559
+16:35:37 <Anil_Lenovo> Qalthos : please share your email id so that I can forward you the mail from my legal team
+16:35:46 <Qalthos> And then I think we can move on
+16:35:53 <Anil_Lenovo> sure
+16:37:04 <Qalthos> #topic Open Floor
+16:37:16 <Qalthos> Anyone else want to bring something up?
+16:37:56 <yaplej> I would like to see if someone could look at #38420 and PR44001.
+16:38:10 <Qalthos> sure
+16:38:47 <yaplej> also related issue 43861 was beyond me for a real fix.
+16:40:01 <Qalthos> #topic ios_config macros
+16:43:22 <bdowling> yaplej -- kind of annoying that cisco doesn't indent those macro blocks, they really should follow a block model.
+16:43:52 <Qalthos> yaplej: 44001 seems sensible enough, I'll see that this gets followed up on
+16:46:03 <Qalthos> #action Qalthos Make sure someone reviews 44001
+16:46:41 <ganeshrn> bdowling: imo it is too late in release cycle to merge this PR 35817
+16:46:54 <Qalthos> yaplej: And yes, I have no idea what we can do about 43861
+16:47:04 <ganeshrn> i am +1 to merge it at start of 2.8 dev cycle so that it get enough time to uncover and fix any side effects arising due to this change
+16:48:18 <ganeshrn> yaplej: it is in my todo list
+16:49:00 <bdowling> ganeshrn: understood.  I didn't get time to dig into that last issue it saw in testing.  not clear exactly where connection options get initialized or it was just an issue from unit test environment..
+16:49:23 <ganeshrn> will add a fix in module_utils/ios to not ignore "#macro" since it is a platform specific stuff
+16:50:07 <ganeshrn> bdowling: it get's initialised in bin/asnible-connection for network_cli
+16:50:22 <Qalthos> ganeshrn: Thank you for sweeping in and solving all of my problems at the last moment
+16:50:42 <ganeshrn> just finished my dinner :)
+16:50:52 <Qalthos> And on that note
+16:50:57 <Qalthos> #topic Open Floor
+16:51:18 <Qalthos> Last call for anything anyone wants to bring up for the meeting
+16:51:58 <bdowling> Qalthos: and ganeshrn: #44463 -- curious on your thoughts re: prompt matching.  I hate to keep coming back to this, but feel the prompt regex is a serious issue (the tasks/connection really should have confidence it is issuing the commands at the right spot)..
+16:52:59 <ganeshrn> bdowling: yes agreed it is annoying ...we had a discussion internally on this
+16:53:22 <ganeshrn> currently exploring options to fix it in more robust way
+16:53:43 <ganeshrn> for ios on some device the prompt is not prefixed with '\n'
+16:53:54 <ganeshrn> that's the main reason for this issue
+16:54:52 <bdowling> really?  that's odd.  I only saw a couple issues pointing at that, so didn't understand where that occurs.
+16:55:13 <ganeshrn> one option explored is to make `terminal_stdout_re` in terminal plugin configurable
+16:55:55 <ganeshrn> bdowling: https://github.com/ansible/ansible/issues/44463#issuecomment-414766830 check this comment
+16:58:04 <bdowling> ? that's showing where it mis-identified a prompt?
+16:58:31 <ganeshrn> and this one https://github.com/ansible/ansible/issues/38732#issuecomment-381962805
+16:59:15 <ganeshrn> 2018-08-21 13:40:26,116 p=11205 u=pffs |  -- _find_prompt -> self._matched_prompt: Pri>  --
+16:59:25 <ganeshrn> ^^ is the misplace prompt
+17:00:18 <bdowling> In 38732 -- is that not just the case that it is the first prompt the device printed and there is no banner? So all the device prints when you connect is the first prompt?
+17:00:51 <bdowling> To get around that we could 'echo HELLO' ;)
+17:02:42 <ganeshrn> is it only for the first prompt?
+17:03:02 <bdowling> It seemed to occur right after login in the log.
+17:03:41 <ganeshrn> yes in the logs he shared that seems to be the case
+17:04:08 <ganeshrn> but in comment he mentions there in proper pattern to this
+17:04:24 <ganeshrn> no*
+17:08:56 <Qalthos> Well, thanks everyone for coming
+17:08:59 <Qalthos> We're quite a bit over time, so I'm going to close the meeting before I forget
+17:09:06 <Qalthos> #endmeeting

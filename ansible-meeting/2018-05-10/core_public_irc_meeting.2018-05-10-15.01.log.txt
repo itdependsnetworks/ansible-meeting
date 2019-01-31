@@ -1,0 +1,103 @@
+15:01:28 <bcoca> #startmeeting core public irc meeting
+15:01:28 <zodbot> Meeting started Thu May 10 15:01:28 2018 UTC.
+15:01:28 <zodbot> This meeting is logged and archived in a public location.
+15:01:28 <zodbot> The chair is bcoca. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:01:28 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:01:28 <zodbot> The meeting name has been set to 'core_public_irc_meeting'
+15:02:01 <bcoca> #topic module aliases
+15:02:03 <bcoca> @mattclay?
+15:02:14 <mattclay> I'm here.
+15:02:15 <bcoca> ^ i would say, 'yes', more curious on why you ask
+15:02:21 <bcoca> #chair mattclay
+15:02:21 <zodbot> Current chairs: bcoca mattclay
+15:02:42 <bcoca> #chair jhawkesworth_ Imo farhan7500 carchi8py
+15:02:42 <zodbot> Current chairs: Imo bcoca carchi8py farhan7500 jhawkesworth_ mattclay
+15:03:05 <sac> o/
+15:03:41 <bcoca> mattclay: fyi, 'renames' use 2 features, deprecation and aliases (deprecating a module is renaming to leading underscore)
+15:04:02 <bcoca> #chair sac
+15:04:02 <zodbot> Current chairs: Imo bcoca carchi8py farhan7500 jhawkesworth_ mattclay sac
+15:04:44 <mattclay> bcoca: Yes, the question is whether or not we want to use aliases for purposes other than renaming modules.
+15:05:16 <bcoca> again, yes, i find it useful, why would we not want to?
+15:07:00 <mattclay> It's a feature not currently supported by our tests. Also, there has been some concern over symlinks (from @nitzmahone_ I believe), but this would be expanding our usage of them.
+15:07:24 <bcoca> not expanding, but 'shipping' it, this usage has been avaialble since 1.8
+15:07:32 <bcoca> ^ i 've actually used this same trick with custom modules
+15:09:02 <mattclay> I'm also a little concerned that modules using this may end up being littered with many conditionals over time to change behavior based on the name used to invoke the module.
+15:09:40 <bcoca> that is valid concernt, but i dont think this is a case of that
+15:09:57 <bcoca> it just changes the default endpoint depending on name, user can still override in options
+15:10:22 <mattclay> Depending on the module name could also cause problems for someone wanting to run a copy of the module under a different name.
+15:10:54 <bcoca> not the original, but the alias
+15:11:19 <bcoca> what do you propose instead, he copy the full module and just change the default?
+15:11:21 <jhawkesworth_> I'm not sure I like module name being used as a way to get variant behaviour as a general principle
+15:11:38 <bcoca> for this case, changing the deafult endpoint ... i think its a valid use
+15:11:41 <mattclay> The endpoint could be changed when invoking the module.
+15:11:56 <bcoca> if it were mangling more behaviour or options i would not be as tolerant
+15:12:15 <bcoca> mattclay: yes, and it will override the default, as we would all expect
+15:13:53 <jhawkesworth_> I guess something similar exists for template win_template where the only difference is default line endings - but that's done using inheritance in action plugin iirc
+15:13:55 <mattclay> bcoca: Why not use module defaults instead of aliasing the module?
+15:14:48 <bcoca> i can see a couple of reasons, 1st .. keep names the same when dealing with do, we have other do modules so an aws one stands out, 2nd this would handle it for all plays vs having to create the defaults per play
+15:15:38 <bcoca> if someone wanted to use eucalyptus aliases to amazon modules, it hink that would be fine too
+15:15:57 <bcoca> ^ if that makes sense, i forgot what euca was a variation of
+15:21:01 <jhawkesworth_> trying to think if there are any implications for python modules that might be persuaded to run against windows hosts (assuming a suitable python is installed) and whether that might be an argument for / against allowing this
+15:21:56 <jhawkesworth_> as an example the `git` module is something people have desired to be runable on windows
+15:23:14 <jhawkesworth_> it seems like the module in question turns out to be more generic than its existing name implies.
+15:24:59 <mattclay> Given the low turnout to the meeting due to Red Hat Summit and PyCon, we should probably wait to make a decision until next week when more people have an opportunity to provide feedback.
+15:25:16 <jhawkesworth_> makes sense to me mattclay
+15:26:27 <itdependsnetwork> is floor open?
+15:26:29 <bcoca> jhawkesworth_:  it would not matter as for windows you would get 2 copies of the file under diff names
+15:26:35 <bcoca> @itdependsnetwork no
+15:26:55 <mattclay> I'm OK updating the tests to handle this case. I just don't want to do that and then find out we decide against shipping a module alias this way.
+15:27:28 <bcoca> ok, deffering then, but its going to be over 2 weeks
+15:27:39 <bcoca> and passed the 'freeze'
+15:27:52 <bcoca> #topic https://github.com/ansible/ansible/pull/39114
+15:28:08 <bcoca> ^ i thought that was alreayd reviewed, still not passing 2 points, its a list
+15:28:14 <bcoca> @Imo?
+15:28:19 <Imo> Hi
+15:28:26 <bcoca> what did you want us to consider at this point?
+15:28:50 <Imo> What next?  Can it go in or does something else need changing?
+15:29:44 <bcoca> well, i had pointed to making it taking 'points' either as tuples or other structure, but you changed it to take a list and then consider 0:1 ans 2:3 as coordinates .. that does not look like good interface to me
+15:31:42 <Imo> Okay, will change it.
+15:32:04 <Imo> Sorry, not quite sure what makes it a good interface but will change to your suggestion.
+15:32:17 <bcoca> #topic https://github.com/ansible/ansible/pull/39753
+15:32:33 <bcoca> ^ this seems more of a topic for the networking meeting
+15:33:04 <carchi8py> These are update for Netapp storage modules
+15:33:41 <bcoca> there is a netapp team of maintainers are they not being responsive?
+15:34:21 <carchi8py> They are we just wanted to make sure both approval could come form the netapp team to submit these
+15:35:04 <bcoca> im not sure im parsing that correctly
+15:36:16 <carchi8py> Sorry, this is the first time we've update these, after we get approval from the netapp team, what are next steps to submit these. I thought it was to come to the core team meeting
+15:36:41 <bcoca> no, nettapp team can just merge it by providing 'shipit' to PR
+15:36:52 <carchi8py> ahh ok, thanks
+15:36:53 <bcoca> core is not normally involved on maintaing community modules like those
+15:38:41 <bcoca> #topic https://github.com/ansible/ansible/pull/39656
+15:38:46 <bcoca> @farhan7500 ?
+15:39:21 <farhan7500> Hi, this is a Hewlett Packard StoreServ 3PAR module for provisioning common provisioning groups
+15:40:00 <farhan7500> We have a series of PRs we would want to get reviewed, this to get started with. All of them are on the lines of provisioning a 3PAR storeserv device
+15:40:38 <bcoca> understood, its hard for us to handle those w/o access to a device to test or emulation framework
+15:42:27 <bcoca> also, between rh summit and pycon i doubt i'll be able to find willing core team member to set time aside to review, have you tried other maintainers in the /storage/ subfolder?
+15:43:01 <farhan7500> No, I can look for the maintainers there
+15:43:23 <bcoca> .github/BOTMETA.yml has a good reference of maintainers by section
+15:43:24 <farhan7500> This is our first module here, so new here
+15:43:48 <bcoca> it used to be easier to get them in, but at this point we are spread very thin in core
+15:43:57 <farhan7500> Ok, will look there..
+15:44:40 <jhawkesworth_> If you can dig out customers who use ansible also maybe you can get some reviews from them.
+15:44:52 <bcoca> try also in #ansible-devel or here after 2weeks, when we get more people back from conferences
+15:44:59 <jhawkesworth_> might not be able to fully review python code but at least comment on interface
+15:45:38 <bcoca> itdependsnetwork: now
+15:45:44 <bcoca> #topic https://github.com/ansible/ansible/issues/34109
+15:45:47 <farhan7500> Thanks
+15:45:56 <itdependsnetwork> hi, thanks
+15:46:11 <bcoca> ^ iirc, i got overruled and someone else promissed to rename
+15:46:26 <itdependsnetwork> lol, yes
+15:46:43 <bcoca> and, as predicted, months later, nothing happened ...
+15:46:47 <itdependsnetwork> yes :)
+15:47:07 <itdependsnetwork> I missed one meeting... and the PR got closed
+15:47:08 <bcoca> not sure what i can do now, opinions on this bikeshed are still very strong, but not strong enough for anyone to actually do it
+15:47:29 <bcoca> which is why i ended up closing my ticket
+15:47:57 <itdependsnetwork> ok, heard your message before that many are out, so fine to punt until next week, but just want to keep track on it.
+15:48:27 <bcoca> in 2 weeks, pycon comes right after RH summit
+15:48:28 <itdependsnetwork> Willing to do the work, just no sense in recreating what you did, to just close it, it no one can agree
+15:48:40 <bcoca> ^ exactly why i have not touched it
+15:48:42 <itdependsnetwork> ok, fair enough. 2 weeks
+15:48:46 <bcoca> gl
+15:48:51 <itdependsnetwork> haha, thanks
+15:48:52 <bcoca> #topic open floor
+15:56:12 <bcoca> #endmeeting

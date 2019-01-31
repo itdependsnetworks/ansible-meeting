@@ -1,0 +1,74 @@
+17:00:55 <mattclay> #startmeeting Ansible Testing Working Group
+17:00:55 <zodbot> Meeting started Thu Jan 25 17:00:55 2018 UTC.  The chair is mattclay. Information about MeetBot at http://wiki.debian.org/MeetBot.
+17:00:55 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+17:00:55 <zodbot> The meeting name has been set to 'ansible_testing_working_group'
+17:00:59 <mattclay> #chair gundalow
+17:00:59 <zodbot> Current chairs: gundalow mattclay
+17:01:07 <mattclay> #info Agenda: https://github.com/ansible/community/issues/248
+17:01:15 * gundalow waves
+17:01:20 <sivel> .hello2
+17:01:21 <zodbot> sivel: sivel 'Matt Martz' <matt@sivel.net>
+17:01:30 <mattclay> #chair sivel
+17:01:30 <zodbot> Current chairs: gundalow mattclay sivel
+17:02:02 <mattclay> gundalow: Do you have any updates?
+17:02:35 <gundalow> Nop
+17:02:40 * Pilou waves
+17:02:55 <sivel> I fixed a bunch of false positives in the argument_spec <-> docs comparison, that happened as a result of mutation
+17:03:05 <mattclay> #chair Pilou
+17:03:05 <zodbot> Current chairs: Pilou gundalow mattclay sivel
+17:03:09 <sivel> Was able to force re-load of the modules
+17:03:37 <sivel> Since nearly all network modules use a *_argument_spec dict from module_utils
+17:03:48 <mattclay> sivel: Nice. Were there many false positives?
+17:04:13 <sivel> There were over 30 modules that were imapcted and that I removed from the ignore, it limited them to legit docs issues now
+17:04:51 <sivel> There is an open PR to remove more, based on deprecated arguments: https://github.com/ansible/ansible/pull/35319
+17:05:08 <sivel> gundalow: approved it, just need to merge now I suppose
+17:05:35 <sivel> I wasn't sure if it was "good" behavior, so I was going to defer to gundalow, and since he approved it...
+17:06:18 <mattclay> #info We will be switching Windows integration tests to Azure soon for 2012, 2012 R2 and 2016.
+17:06:24 <sivel> I noticed!
+17:07:12 <mattclay> There were some issues with integration tests on Azure which were blocking the move, but those should have been fixed now.
+17:07:49 <mattclay> #info `ansible-test compile` tests will be merged into `ansible-test sanity` soon
+17:08:39 <mattclay> That's it from me for updates.
+17:08:59 <mattclay> #topic Open Floor
+17:09:30 <mattclay> Does anyone have anything they'd like to discuss today?
+17:09:31 <Pilou> I would like to put NPM tarballs to ansible-ci-files.s3.amazonaws.com, is that possible ?
+17:10:24 <mattclay> Pilou: Which test(s) would this be for?
+17:10:29 <Pilou> these tarballs are used in NPM integration tests (https://github.com/ansible/ansible/blob/devel/test/integration/targets/npm/tasks/setup.yml),
+17:11:16 <mattclay> Yeah, that looks like a good use case for ansible-ci-files.
+17:11:44 <mattclay> As long as the version is a fixed value.
+17:12:32 <Pilou> there are 3 versions (https://github.com/ansible/ansible/blob/devel/test/integration/targets/npm/tasks/main.yml#L32)
+17:13:44 <mattclay> This will yield a lot more than 3 versions: `nodejs_path: 'node-v{{ nodejs_version }}-{{ ansible_system|lower }}-x{{ ansible_userspace_bits }}'`
+17:14:12 <Pilou> 3 NPM versions, 2 OS (linux, darwin) and arch
+17:14:35 <mattclay> Why only 2 OS?
+17:14:59 <Pilou> FreeBSD is ignored
+17:15:16 <mattclay> Why is that?
+17:15:50 <Pilou> because upstream doesn't provided any binary for FreeBSD
+17:17:43 <mattclay> OK, so for CI then we'd be looking at 6 files. If someone wanted to run a different arch that could get us up to 12.
+17:18:10 <Pilou> CI is only x64 ?
+17:18:24 <gundalow> Pilou: yup
+17:19:17 <mattclay> Pilou: Have you been seeing CI failures due to download failures for this test?
+17:19:22 <Pilou> yes
+17:20:13 <Pilou> https://github.com/ansible/ansible/pull/35167#issuecomment-359403713 https://app.shippable.com/github/ansible/ansible/runs/51594/32/console
+17:20:28 <mattclay> OK, seems reasonable. We should probably both x86 and x64 even though CI only needs x64 -- we don't want to deliberately cripple the test for folks running it locally.
+17:20:58 <mattclay> s/probably/probably include/
+17:22:22 <Pilou> is there a way to detect if the test is run from shippable ? maybe an environnement variable ?
+17:22:44 <mattclay> Yes, why?
+17:23:21 <Pilou> ansible-ci-files.s3.amazonaws.com could be used for shippable runs only
+17:23:36 <mattclay> We prefer to have as few differences between CI runs of tests and local runs.
+17:24:02 <Pilou> fine to me :)
+17:24:21 <mattclay> Is there an open issue or PR for this change already?
+17:25:00 <Pilou> not yet
+17:25:52 <Pilou> the full URL will be https://ansible-ci-files.s3.amazonaws.com/test/integration/roles/npm/node-v[...] ?
+17:27:58 <mattclay> We should probably start putting files under https://ansible-ci-files.s3.amazonaws.com/test/integration/targets/ now.
+17:28:22 <sivel> I have to leave, see you all later.  Should be back online in 15 minutes or so
+17:28:27 <mattclay> The roles directory predates the rename of roles to targets in the integration tests.
+17:31:47 * mattclay puts files in S3
+17:31:56 <Pilou> thanks !
+17:34:14 <mattclay> Does anyone have anything else?
+17:35:13 <Pilou> a test related PR with shipit label not merged yet: #34983 :)
+17:37:12 <gundalow> Nothing else from me
+17:37:59 <mattclay> Pilou: Files have been uploaded to: https://ansible-ci-files.s3.amazonaws.com/test/integration/targets/npm/
+17:40:01 <mattclay> Pilou: merged
+17:41:00 <Pilou> thanks again :)
+17:41:03 <mattclay> I don't have anything else.
+17:41:28 <Pilou> nothing else from me
+17:41:43 <mattclay> #endmeeting

@@ -1,0 +1,345 @@
+19:00:02 <thaumos> #startmeeting ansible core
+19:00:02 <zodbot> Meeting started Tue Jan 23 19:00:02 2018 UTC.  The chair is thaumos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:00:02 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:00:02 <zodbot> The meeting name has been set to 'ansible_core'
+19:01:29 <alikins> blorp
+19:01:33 <thaumos> #chair alikins
+19:01:33 <zodbot> Current chairs: alikins thaumos
+19:03:28 <maxamillion> .hello2
+19:03:29 <zodbot> maxamillion: maxamillion 'Adam Miller' <maxamillion@gmail.com>
+19:03:33 <thaumos> #chair maxamillion
+19:03:33 <zodbot> Current chairs: alikins maxamillion thaumos
+19:03:41 <sivel> hey, sorry, was running late
+19:03:45 <thaumos> no worries
+19:03:47 <thaumos> #chair sivel
+19:03:47 <zodbot> Current chairs: alikins maxamillion sivel thaumos
+19:04:05 <thaumos> just three people right now, not including me
+19:04:09 <sivel> I think we should start today with the "generated modules" discussion that I believe gundalow placed on the agenda
+19:04:17 <sivel> we didn't get that finished last meeting
+19:04:18 <thaumos> I thought that happened last week?
+19:04:26 <thaumos> ah, is that why it was added?
+19:04:32 <sivel> We didn't come to a decision, too many people wandered away
+19:04:41 <thaumos> and if we have enough people to discuss sounds good to continue it.
+19:04:54 <sivel> right
+19:05:04 <nitzmahone> I'm here
+19:05:11 <nitzmahone> (that whole lunch/nap thing didn't happen)
+19:05:31 <thaumos> #chair nitzmahone
+19:05:31 <zodbot> Current chairs: alikins maxamillion nitzmahone sivel thaumos
+19:05:37 <thaumos> lunch, now?
+19:05:43 <thaumos> wake up early nitzmahone?
+19:06:08 <ryansb> heya
+19:06:08 <nitzmahone> Pre-freeze scramble until midnight-ish yesterday
+19:06:18 <thaumos> I saw that, @nitzmahone
+19:06:23 <thaumos> both you and @abadger1999
+19:06:30 <thaumos> #chair ryansb
+19:06:30 <zodbot> Current chairs: alikins maxamillion nitzmahone ryansb sivel thaumos
+19:06:33 <nitzmahone> Those 16h days are painful
+19:06:39 * thaumos nods
+19:06:57 <maxamillion> yeah, I don't recommend them :)
+19:07:19 <abadger1999> Olá
+19:07:29 <nitzmahone> I usually only have a few of those a year these days, so life's improving from startup-land where it was a few a month.
+19:07:58 <sivel> #chair abadger1999
+19:07:58 <zodbot> Current chairs: abadger1999 alikins maxamillion nitzmahone ryansb sivel thaumos
+19:08:05 <maxamillion> nitzmahone: that's good
+19:08:14 <abadger1999> I do find I like coding better in the dead of night.  Unfortunately, that doesn't correspond with the rest of the world.
+19:08:33 <thaumos> well, @abadger1999, you could claim to be on Aussie time.
+19:08:40 <nitzmahone> @abadger1999 exactly; I feel like I start to hit my stride at 6-7pm
+19:08:42 <thaumos> I think we have enough to being.
+19:08:44 <abadger1999> hard to order pizza from Oz, though ;-)
+19:08:46 <maxamillion> nitzmahone: I remember when I was on the OpenShift Team they were *really* frequent in my first 6 months, then things settled and it was only every couple weeks ... but I have zero plans to ever do that kind of thing again with that level of frequency
+19:08:51 <sivel> thaumos++
+19:08:53 <thaumos> #topic generated modules discussion continuation
+19:09:06 <maxamillion> @thaumos++
+19:09:16 <thaumos> #link https://github.com/ansible/ansible/pull/35014
+19:09:26 <maxamillion> hrmmm... maybe it's fedbot that handles the karma
+19:09:26 <sivel> We tabled the vote on how we handle generated modules last meeting, because we didn't have enough people at the time
+19:09:28 <thaumos> can someone who was present last week catch us up really quick?
+19:09:30 <thaumos> thanks sivel
+19:09:46 <sivel> Basically, the new gce modules are to be generated using code in a different repo
+19:09:47 <abadger1999> the problem that made sense to me from last meeting was how to make sure bugs get merged in modules and not regressed.
+19:10:01 <sivel> We discussed how we would handle that, and came up with 2 options to vote on
+19:10:02 <maxamillion> abadger1999: +1
+19:10:04 <ryansb> alrighty - so we were talking about GCE modules that they've written a code generator to create based on API stuff
+19:10:08 <sivel> OPTION 1) We have the bot and ANSIBLE_METADATA dictate auto closing issues or PRs for these modules. (requires a proposal)
+19:10:18 <sivel> OPTION 2) 100% ignoring that they are auto generated (no exceptions), no pointing people elsewhere, just forgetting where they came from, treated like any other module
+19:10:18 * ryansb shuts up, sivel's got it
+19:10:20 <sivel> Remember to consider how this applies to existing auto generated modules, such as network/avi
+19:10:22 <maxamillion> there needs to be a clear way of saying "these modules come from $NOT_ANSIBLE_PLACE, please report bugs there"
+19:10:27 <sivel> sorry :)
+19:10:29 <nitzmahone> Can I propose Option 3?
+19:10:35 <sivel> nitzmahone: of course
+19:11:12 <nitzmahone> We were talking about the possibility of pip-distribution of modules/module_utils... Look into that and say that generated modules should use that (assuming we can make it work reliably)
+19:11:14 <abadger1999> Of those two, Option 2 made sense to me.
+19:11:27 <abadger1999> nitzmahone: +1 if we can swing it
+19:11:35 <nitzmahone> Keep it out of our repo
+19:11:38 <sivel> nitzmahone: I think we have kinda decided, to stay away from pip-distribution in lieu of ansible-installer for now iirc
+19:11:40 <thaumos> .....
+19:11:45 <sivel> and drop then in galaxy
+19:11:53 <sivel> them*
+19:12:09 <nitzmahone> But that's 2.7+ at this point, yeah?
+19:12:25 <sivel> 2.5 should have basic install functionality, maxamillion is heading that
+19:12:26 <ryansb> I feel like option 3 is not sufficiently soon for "actually helping our GCE users"
+19:12:27 <thaumos> I'd fully support option #3 and would prefer that path. however, timing is questionable at this time.
+19:12:48 <maxamillion> sivel: that got moved to a topic branch
+19:12:55 <sivel> or maybe we decided that ansible-installer would be shipped around 2.5 but in a topic branch..
+19:12:59 <abadger1999> nitzmahone: installer is going to be in its own branch for now and the people who are testing it will be able to use from there.  But of course, that excludes general users.
+19:12:59 <sivel> sorry, brain was catching up
+19:13:04 <maxamillion> sivel: no worries
+19:13:22 <maxamillion> I'm hoping to have something "first draft" done tomorrow or Thursday to start getting feedback from others
+19:13:40 <thaumos> maxamillion +1
+19:14:00 <nitzmahone> Yeah, timing's definitely the issue; I'm just loathe to open the door at all
+19:14:03 <sivel> So I do like #2, #3 would be nice, but that can always be the future goal
+19:14:29 <thaumos> keeping #3 in mind, #2 is the closest to status quo.
+19:14:43 <thaumos> #1 would cause unnecessary workflows
+19:14:50 <nitzmahone> @thaumos agreed
+19:14:57 <ryansb> I think #2 is the best as well here - keeps module maintainership standard - doesn't make a new class of modules/code review/etc
+19:15:27 <abadger1999> I think #2 works if we have a good relation with the module devs.  I have worked with some that are very good about integrating fixes in the modules here into their generator so for all intents and purposes I don't know that they are using a generator.  OTOH, I've worked with some where they argue that they can't make a change because their generator can't do that.
+19:15:59 <ryansb> I see. That'd be an expectation-setting exercise with the GCP folks that I can discuss with them
+19:16:01 <thaumos> regarding the latter, @abadger1999, then that's something they have to think about it not being merged.
+19:16:02 <abadger1999> And that is a terrible experience becaue then you feel you have to closely review any of their changes to be sure they aren't regressing things that were previously talked about
+19:16:04 <nitzmahone> Yep; the maintainer team that gets pinged on those can manually close any PRs; I think especially if the code has lots of GENERATED DON'T DORK WITH THIS "caution tape" on it, we'll be fine.
+19:16:22 <maxamillion> so #2 assumes that the module maintainers will field github issues as per the standard development workflow right now, but will simply do the fix in their repos for the generator code and then merge in newly generatedmodules?
+19:16:29 <ryansb> yes, that's right
+19:16:37 <maxamillion> cool
+19:16:48 <maxamillion> yeah, then I'm +1 to #2
+19:16:51 <thaumos> keep this simple folks, because it makes things a lot easier for when #3 is the main option.
+19:16:53 <nitzmahone> @abadger1999: for generated modules, I'd be inclined to: a) REQUIRE a test suite before they're merged b) only review UI in general for bugfixes
+19:17:09 <sivel> Anyone against #2?
+19:17:19 <ryansb> nitzmahone: test as in integration test suite?
+19:17:21 <thaumos> I am +1 for #2
+19:17:22 <nitzmahone> yes
+19:17:26 <ryansb> or units, or all of aboe
+19:17:29 <thaumos> I don't think anyone has expressed against it.
+19:17:30 <ryansb> *above
+19:17:35 <sivel> I think tests for modules is a different topic, but I've been led to believe that tests will be required for new modules in 2.6+
+19:17:46 <thaumos> for avi, I stressed very hard that they have internal testing on their code.
+19:17:47 <nitzmahone> We have the infra now, the GCE folks should implement the integration glue required for it
+19:17:52 <thaumos> so I think it's fair to ask of anyone else as well.
+19:17:53 <sivel> from what I've been told, no new module will be accepted 2.6+ without tests
+19:18:03 <thaumos> that is fair too.
+19:18:20 <thaumos> I am 100% for that if code is to be included at all with the engine delivered package.
+19:18:27 <sivel> but I haven;t gotten clarification on that
+19:18:32 <thaumos> okay, so I think this is settled.
+19:18:35 <ryansb> so that's reasonable
+19:18:39 <nitzmahone> yay
+19:18:48 <ryansb> can we have a vote for: #2, and require integration tests/glue?
+19:18:57 <nitzmahone> +1
+19:18:57 <sivel> Yes, good for me
+19:18:57 <abadger1999> ryansb:  note that ui often becomes a point of contention with auto generated modules
+19:18:59 <sivel> +1
+19:19:05 <thaumos> +1
+19:19:18 <ryansb> Yes, that's true and why I'm having them generate one module and learn
+19:19:23 <sivel> Although I will say, we of course still need to review new submissions
+19:19:30 <ryansb> not generate all of them and then make us do 500 reviews
+19:19:31 <nitzmahone> Absolutely
+19:19:38 <ryansb> excellent
+19:19:40 <abadger1999> "The API I'm autogenerating from uses parameters thusly!"  "But users of ansible modules will expect parameters to be done thisly"
+19:19:41 <thaumos> @sivel, which is what was done for all the avi modules
+19:19:45 <ryansb> +1 from me for the vote on issue
+19:19:45 <thaumos> so this is not new.
+19:19:55 <abadger1999> +1 for 2
+19:19:59 <ryansb> abadger1999: yes, already discussed that contention with them
+19:20:05 <sivel> I think we are agreed then
+19:20:06 <mattclay> +1 for 2
+19:20:08 <ryansb> they're lucky in that the GCE API is actually very sensible
+19:20:10 <thaumos> #agreed 100% ignoring that they are auto generated (no exceptions), no pointing people elsewhere, just forgetting where they came from, treated like any other module
+19:20:22 <ryansb> so the mismatch from API/ansible UI isn't onerous
+19:20:32 <abadger1999> ryansb: yeah, I'm for this... just want to make sure you know what you're signing up for ;-)
+19:20:40 <nitzmahone> #agreed absolute integration test requirement  for generated modules
+19:20:40 <thaumos> @sivel, was your inventory paths comment discussed?
+19:20:44 <sivel> thaumos: no
+19:20:47 <ryansb> well, what I'm signing *them* up for ;)
+19:20:49 <thaumos> k
+19:20:56 <thaumos> anything else for the current topic?
+19:20:58 <abadger1999> hehe
+19:21:05 <ryansb> Reminder: if folks would like to review the concrete version of the PR it is here: https://github.com/ansible/ansible/pull/35014
+19:21:06 <abadger1999> ryansb: the burden for you is in reviewing
+19:21:11 <ryansb> yes, it is
+19:21:29 <thaumos> ....
+19:21:30 <thaumos> .......
+19:21:32 <thaumos> .........
+19:21:34 <thaumos> .........
+19:21:49 <thaumos> #topic inventory paths with commas
+19:21:50 <ryansb> aaaand topic closed
+19:21:54 <sivel> If an inventory path has a comma right now, that path is thrown away, simply because it has a comma, used in shorthand explicit hosts like `-i localhost,`
+19:21:55 <alikins> and the generator is open-source'y enough?
+19:22:00 <thaumos> #link https://github.com/ansible/ansible/pull/35002
+19:22:06 <thaumos> @alikins topic closed
+19:22:14 <ryansb> alikins: will follow up with you offline
+19:22:33 <sivel> So if something has a path like /path/to/my,cool,playbook/whatever/hosts then we don't look for host_vars/group_vars relative to the inventory file
+19:23:05 <thaumos> i would argue that is not a good practice.
+19:23:07 <sivel> My suggestion was to only throw it away if it had a comma, and was not a valid path
+19:23:24 <sivel> thaumos: sure, I suppose, that argument is valid
+19:23:26 <nitzmahone> runtime warning?
+19:23:46 <abadger1999> sivel:  Could we add does not have a "/" in it?
+19:23:48 <sivel> A runtime warning could work just like my logic change
+19:24:18 <sivel> abadger1999: I'm not sure, I'd have to validate whether the path gets expanded first, or expand it in the check
+19:24:19 <nitzmahone> silent skip could be confusing
+19:24:27 <sivel> right now, it is a silent skip
+19:24:31 <abadger1999> sivel:  in the bug report, it was expanded first.
+19:24:42 <abadger1999> but I don't know about other uses that get to that code.
+19:25:26 <thaumos> this is the first time anyone has complained about this.  it seems like a very uncommon approach to directory naming.
+19:25:29 <abadger1999> Expandd is actually what shifted me to think some improved heuristic is needed. Because the user couldn't even specify a relative path to workaround the issue.
+19:25:34 <sivel> thaumos: windows users ;)
+19:26:36 <sivel> So, 1) I could make it a warning, or I could ensure the path is expanded, and if it has a `/` and the path exists, then don't throw it away
+19:26:42 <sivel> forgot a 2) in there
+19:26:56 <sivel> 2) ensure the path is expanded, and if it has a `/` and the path exists, then don't throw it away
+19:26:59 <abadger1999> and of course, user could specify ./file,with,commas if they needed to circumvent the "/" in heuristic (which matches with the standard way that PATH variables are configured too)
+19:27:23 <sivel> abadger1999: which is why I would ensure to expand before the check
+19:28:13 <sivel> Anyone have an opinion on the approach?
+19:28:24 <sivel> Or just forget the issue was ever filed and wontfix
+19:28:39 <abadger1999> I'm +1 (2), okay with (1), wishy-washy on the PR as is (probably makes the situation better but feels like it could overshoot the other way slightly)
+19:29:16 <sivel> I'm not super concerned about having to change my impl, that's what we are here for
+19:29:29 <sivel> nitzmahone: ?
+19:29:32 <alikins> I like forgetting about it until there is a way to explicit indicate a arg is a name and not a path
+19:29:34 <maxamillion> I'm on the fence about it, paths with commas just seem silly, but if it's a valid path on the system I hate to just say, "no we don't support that"
+19:30:12 <sivel> I think the problem is that all other args use @ for a file, but -i would be opposite of that
+19:30:26 <sivel> since the @ is inferred there
+19:30:49 <nitzmahone> This was the way it was in 2.4, right?
+19:31:00 <nitzmahone> (or is this new behavior for 2.5?)
+19:31:03 <maxamillion> krh
+19:31:06 <alikins> or could just add an escape for the 'somehost,' mini-lang
+19:31:06 <maxamillion> oops
+19:31:11 <sivel> the code was changed in some manner in 2.4 through the inventory re-write
+19:31:26 <sivel> I'm guessing it has been this way for a while though, but without concrete proof
+19:31:50 <sivel> so afaik it is not a regression
+19:31:52 <nitzmahone> If it was new for 2.5, I'd be more inclined toward the escape/warning path, but I'm +1 for sivel's fix as-is since it's been this way for awhile
+19:32:31 <nitzmahone> And apparently *somebody* hit it...
+19:32:59 <alikins> could combine and use optional '@file,with,commas' as a disambiguator
+19:33:27 <sivel> actually... 2.3 worked
+19:33:33 <sivel> the 2.4 inventory rewrite seems to have broken it
+19:33:40 <maxamillion> ah
+19:33:57 <nitzmahone> so throw another log on the fire for the patch as-is, then
+19:34:11 <maxamillion> alright, so the question then becomes "Was this a bug before that got fixed, or a bug now that was introduced?"
+19:34:35 <abadger1999> both behaviours are bugs ;-)
+19:34:53 <abadger1999> It's unspecified and both behaviours negatively impact someone.
+19:35:16 <nitzmahone> with sivel's fix in place, who's negatively impacted?
+19:35:16 <abadger1999> I'm with nitzmahone, though, when both choices are wrong, previous behaviour wins.
+19:35:39 <maxamillion> nitzmahone: +1
+19:35:42 <maxamillion> abadger1999: +1
+19:36:08 <sivel> I'm of the opinion that the current fix has a lower chance of negatively impacting someone
+19:36:15 <alikins> either way having -i supprt 'some_string_to_use_as_hostname' and 'some/path' is ambiguous so I think a new cli args would be right fix
+19:36:19 <abadger1999> nitzmahone: someone who has a file or directory that consists of hostnames and commas which is not their intended inventory.
+19:36:23 <sivel> but I coudl extend it to check for '/'
+19:36:39 <abadger1999> nitzmahone: or more exactly "not the intended inventory for this run"
+19:36:45 <sivel> so someone has a file called `localhost,`
+19:36:59 <sivel> I'd think that was less likely than the current situation though
+19:37:16 <sivel> and expanding it to check for `/` likely wouldn't solve anything
+19:37:18 <alikins> or hostnames that look like file paths
+19:37:34 <sivel> alikins: it would have to include a `,` to satisfy that
+19:37:54 <nitzmahone> yeah, definitely a corner case, and since it used to work...
+19:37:55 <nitzmahone> https://memegenerator.net/img/instances/250x250/74052180/tradition.jpg
+19:37:57 <abadger1999> wouldn't "/" (asuming paths are alwways expanded by then) be better?
+19:38:16 <abadger1999> but yeah, if the patch restores previous behaviour, warts and all, I'm fine with that too.
+19:38:26 <sivel> abadger1999: if you used `-i localhost,` and had a file called `localhost,` the expanded path would have / and still match
+19:38:28 <alikins> long term pref would be a cli arg for inventory paths and another for hostname string
+19:38:50 <abadger1999> sivel: Ah I see what you're saying... previous logic is broken.
+19:39:03 <abadger1999> previous == further up the call stack
+19:39:13 <abadger1999> execution stack.  whatevs.
+19:39:16 <sivel> the `-i localhost,` format was always said to be "internal", but too many people use it at this point
+19:39:24 <nitzmahone> ... and this is really only applicable for adhoc anyway, right (the host/file/dir confusion)
+19:39:35 <sivel> nitzmahone: it applied to playbooks
+19:39:37 <abadger1999> @nitzmahone no, it works for ansible-playbook too
+19:40:02 <nitzmahone> Hm, never tried that
+19:40:09 <abadger1999> I often end up using ansible-playbook -i 'host1,host2' test.yml  when testing things for issues.
+19:40:45 <abadger1999> anyhow... I think we now all agree sivel is doing the right thing.
+19:40:46 <sivel> Ok, am I good to proceed with the current implementation in that PR, or does anyone object?
+19:40:58 <sivel> cool
+19:41:27 <sivel> I see no further objections
+19:41:36 <sivel> nitzmahone: are you ok for this to merge to 2.5?
+19:42:00 <nitzmahone> +1
+19:42:06 <abadger1999> sivel: you can backpotr to temp-staging-post-2.4.3 as well.
+19:42:11 <sivel> thaumos: I think we are ready to move on
+19:42:23 <abadger1999> since it's correcting a change in behaviour
+19:42:25 <maxamillion> sivel++ nitzmahone++ abadger1999++
+19:42:25 <zodbot> maxamillion: Karma for toshio changed to 1 (for the f27 release cycle):  https://badges.fedoraproject.org/tags/cookie/any
+19:42:31 <sivel> #action sivel to merge 35002 to devel for 2.5 and backport to temp-staging-post-2.4.3
+19:42:32 <maxamillion> oh, it is zodbot
+19:42:40 <maxamillion> but toshio is the only one with a fas account :)
+19:42:49 <abadger1999> Yay, I win!
+19:43:16 <thaumos> #topic new label to identify wip of issue
+19:43:43 <thaumos> @akasurde is curious if we can do ^^ something like has_pr or working
+19:44:12 <nitzmahone> context?
+19:44:21 <sivel> When triaging or looking through open issues
+19:44:30 <nitzmahone> What's wrong with [WIP] + WIP label?
+19:44:34 <sivel> sometimes you have to read in depth for context if someone has submitted a PR for the issue
+19:44:40 <sivel> [WIP] is for PRs
+19:44:54 <sivel> this would indicate that an open issue has a PR
+19:44:58 <nitzmahone> Ah I see
+19:45:08 <sivel> I use `has_pr` personally on some projects
+19:45:21 <jborean93> Isn't that why you would link the PR in the issue?
+19:45:31 <sivel> jborean93: sure, but you still have to go look for that
+19:45:43 <thaumos> yeah but still not easy to see from the issue list, which is what I think akasurde is eluding to
+19:45:44 <sivel> there could be 8 issues, and a single PR, you would have to go looking
+19:45:55 <jborean93> ah yep, understand that
+19:46:00 <sivel> a label would be much easier to spot
+19:46:07 <sivel> a bot could apply if there was a link
+19:46:12 <maxamillion> yeah, I agree with sivel ... having the label there would be nice, maybe it's even something the bot could populate if there's a PR linked (though I could see that being error prone in some scenarios)
+19:46:14 <alikins> +1 has_pr
+19:46:18 <sivel> or we could label manually too
+19:46:33 <nitzmahone> I'd be +1 for the label, but probably manual labeling
+19:46:46 <nitzmahone> People link PRs to all sorts of crap that may or may not be accurate
+19:46:46 <sivel> a manually added label is better than nothing
+19:46:52 <gundalow> "resolved_by_pr: nnn" could trigger the new label being added
+19:47:07 <sivel> even if the bot could add it via a !has_pr, there are a lot of options
+19:47:17 <sivel> gundalow++
+19:47:18 <alikins> bonus +1 for has_pr_with_tests_that_pass
+19:47:18 <gundalow> I don't like finding references to PRs to cause the label to be added, as nitzmahone said, people link crap
+19:47:27 <jborean93> I wonder if you could get the bot to search for `Fixes: ` in a PR and retroactively but the has PR label on the issue
+19:47:28 <nitzmahone> or vice versa "fixes: xxx" on the PR could add the label
+19:47:33 <nitzmahone> mental jinx
+19:47:49 <gundalow> What will people do with this label?
+19:47:50 <nitzmahone> But I don't think we want to add it on just a random PR link
+19:48:08 <gundalow> Will someone actually review all label:has_pr and do something with them?
+19:48:10 <nitzmahone> I could see it being useful when looking for issues to close
+19:48:16 <jborean93> The trouble is I don't see many people using the bot commands so it will most likely be us doing it
+19:48:24 <gundalow> jborean93: yup
+19:48:37 <sivel> We could do it during traige
+19:48:43 <maxamillion> jborean93: +1
+19:48:59 <sivel> we have to triage new PRs anyway
+19:49:05 <nitzmahone> Also for calling attention to the PR if we happen to trip over an issue with that label
+19:49:48 <jborean93> true, I still think it would be a burden to maintain it and there will be a lot of hit and misses
+19:50:02 <jborean93> Even if were to automate it there's going to be a lot of false positives
+19:50:04 <gundalow> yup, that's why I'm wondering on cost vs benefit
+19:50:05 <sivel> nitzmahone: yes, it could help us get through some of the backlog faster if we could easily search that
+19:50:27 <sivel> I think something is better than nothing
+19:50:30 <nitzmahone> We've got much dumber labels than that; if someone says it'll make their triage better, I'm +1
+19:50:39 <nitzmahone> But maybe minimal-to-no automation to start
+19:50:45 <sivel> I am fine with that
+19:50:47 <gundalow> issues containing resolved_by_pr 44 open, 284 closed
+19:50:59 <sivel> even if you just say sivel is the only one who does it, and it only happens on Monda :)
+19:51:04 <sivel> Monday
+19:51:19 <nitzmahone> WFM
+19:51:29 <jborean93> I'm not against it, just think it probably won't be used too much unless it is automated
+19:51:46 <sivel> jborean93: agreed, but we can get there, have to start somewhere
+19:51:53 <maxamillion> sivel: +1
+19:51:55 <maxamillion> I like it
+19:52:56 <sivel> who wants to start moving this forward?  I can, but not sure if anyone cares specifically about label color and other fun topics :)
+19:53:13 <nitzmahone> label created
+19:53:21 <nitzmahone> If you don't like the color, well... tough
+19:53:26 <nitzmahone> :D
+19:53:28 <sivel> thanks!
+19:53:41 <sivel> I can talk with tanner later about potential bot stuff
+19:54:03 <sivel> thaumos: next?
+19:54:08 <nitzmahone> #done has_pr label created, potential automation to follow
+19:54:14 <thaumos> #topic Open floor
+19:54:23 <thaumos> create a bot called thaumos that can just queue up issues.
+19:55:00 <abadger1999> 2.4.3 rc3 is scheduled for tomorrow.
+19:55:09 <abadger1999> We have a blocker bug to fix.
+19:55:24 <sivel> Is there any update on the progress of the blocker fix?
+19:55:28 <abadger1999> (actually a blocker bug whose fix causes a regression and thus we have to fix the fix)
+19:55:33 <abadger1999> sivel: not yet.
+19:56:01 <abadger1999> Going to get an update from jimi tonigh but don't wnat to interrupt his concentration until then.
+19:56:20 <sivel> thanks
+19:56:24 <sivel> just curious
+19:56:26 <nitzmahone> #info 2.5 is in core/curated freeze
+19:56:37 <nitzmahone> community plugin/module freeze is Feb 7
+19:57:10 <abadger1999> if it drags on, 2.4.3 will be the release that makes us re-evaluate how we decide to block a minor release.
+19:58:06 <thaumos> two things to truthfully consider.
+19:58:48 <thaumos> 1. Changing Thursday's time
+19:58:48 <thaumos> 2. Me to stop being the leader of this because I don't feel like I add much value (saying it this way to troll jctanner)
+19:59:20 * nitzmahone ducks out to WWG
+19:59:22 * nitzmahone lurks
+20:00:37 * thaumos hears crickets.
+20:00:46 <thaumos> alright if nothing more, ending meeting
+20:00:56 <thaumos> #endmeeting

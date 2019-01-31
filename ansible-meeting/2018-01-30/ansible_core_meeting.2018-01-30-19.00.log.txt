@@ -1,0 +1,481 @@
+19:00:44 <abadger1999> #startmeeting Ansible Core Meeting
+19:00:44 <zodbot> Meeting started Tue Jan 30 19:00:44 2018 UTC.  The chair is abadger1999. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:00:44 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:00:44 <zodbot> The meeting name has been set to 'ansible_core_meeting'
+19:00:50 <maxamillion> .hello2
+19:00:52 <zodbot> maxamillion: maxamillion 'Adam Miller' <maxamillion@gmail.com>
+19:00:52 <abadger1999> Greetings everyone
+19:01:01 <maxamillion> o/
+19:01:04 <evrardjp> o/
+19:01:12 <eikef> /wave
+19:01:30 <sivel> .hello2
+19:01:31 <zodbot> sivel: sivel 'Matt Martz' <matt@sivel.net>
+19:01:44 <abadger1999> #link Agenda: https://github.com/ansible/community/issues/291
+19:01:53 <abadger1999> #chair maxamillion evrardjp eikef sivel
+19:01:53 <zodbot> Current chairs: abadger1999 eikef evrardjp maxamillion sivel
+19:02:01 <sivel> maxamillion: did we get you covered for your `service` topic?
+19:02:07 <sivel> I don't think we talked about it
+19:02:16 <maxamillion> I don't think so, no
+19:02:19 * sdoran waves
+19:02:24 <abadger1999> #chair sdoran
+19:02:24 <zodbot> Current chairs: abadger1999 eikef evrardjp maxamillion sdoran sivel
+19:02:27 <nitzmahone> o/
+19:02:41 <maxamillion> sivel: the issue is closed though, so we probably don't need to
+19:02:43 <sivel> oh, yeah, we cancelled last meeting, due to low attendance
+19:02:51 <abadger1999> #topic https://github.com/ansible/ansible/issues/35293  Should the service module error when a service does not exist?
+19:03:00 <abadger1999> #chair nitzmahone
+19:03:00 <zodbot> Current chairs: abadger1999 eikef evrardjp maxamillion nitzmahone sdoran sivel
+19:03:26 <sivel> we did have a must_exist flag at one point, but it didn't work correctly, and was never included in a release
+19:03:27 * mattclay waves
+19:03:39 <sivel> and sounds like recent discussions have pushed to using failed_when
+19:04:12 <sivel> having multiple service modules would make having must_exist more complicated
+19:04:27 <ryansb> hey folks
+19:04:45 <sivel> #chair mattclay ryansb
+19:04:45 <zodbot> Current chairs: abadger1999 eikef evrardjp mattclay maxamillion nitzmahone ryansb sdoran sivel
+19:05:15 <sivel> I don't really think it is necessary.
+19:05:44 <maxamillion> I think ultimately the conclusion of the bug is what I expected and I think the behavior is expected, if we try to ensure that something is installed from the `service` module, we're crossing over into package management and that seems like it should be a separate module/task (as it is today)
+19:05:50 <nitzmahone> Also seems like conditional execution/failure based on facts might be another way to go
+19:06:14 <sivel> nitzmahone: true, do we have a service_facts module?
+19:06:26 <sivel> I know awx has one, and we have been porting some of those thigns
+19:06:58 <abadger1999> I was leaning towards state: stopped not failing but dag's examples show that it's possible to make it behave that way using failed_when or ignore_errors whereas the opposite would not be true.
+19:07:12 <abadger1999> So I'm good with the way things are as well.
+19:07:19 <evrardjp> +1
+19:07:28 <sivel> Ok, sounds like we are all leaning toward keeping it as is
+19:07:33 <maxamillion> sivel: we do
+19:07:55 <sivel> maxamillion++
+19:08:31 <maxamillion> :)
+19:08:33 <abadger1999> #info Consensus is that the current way (failing when the srvice does not exist) is appropriate.  See dag's explanation in the bug report.
+19:08:33 <sivel> https://github.com/ansible/ansible/blob/devel/lib/ansible/modules/system/service_facts.py
+19:08:36 <evrardjp> nothing sounds as nice as consensus
+19:08:51 <abadger1999> #topic Vote on changing Thursday's time from 1500 UTC. Suggesting 1600 or 1700 UTC.
+19:09:05 <nitzmahone> +1 from west coast ;)
+19:09:21 <abadger1999> I'd like this :-)  Either works for me better than the current time.  17:00 UTC is better.
+19:09:22 <evrardjp> nitzmahone: which one would that be?
+19:09:34 <maxamillion> +1 to either, I'm central
+19:09:35 <sivel> I am fine with either, but 1700 does put it pretty close to this time, not much of a spread
+19:09:36 <nitzmahone> (of the US ;) )
+19:09:41 <abadger1999> But I think I can make 16:00 most of hte time
+19:09:49 <mattclay> 1600 is OK, 1700 would conflict with TWG
+19:10:07 <abadger1999> Mm... true.  Try 16:00 UTC and see ow it goes?
+19:10:11 <sivel> +1
+19:10:15 <evrardjp> 1600 is easier for east europeans too, I'd say. Not sure how much it impacts you.
+19:10:16 <nitzmahone> +1
+19:10:19 <abadger1999> #chair mattclay
+19:10:19 <zodbot> Current chairs: abadger1999 eikef evrardjp mattclay maxamillion nitzmahone ryansb sdoran sivel
+19:10:20 <sdoran> +1 to either time
+19:10:22 <evrardjp> +1
+19:10:30 <maxamillion> +1
+19:10:49 <abadger1999> #action THursday meetings will be changed to 16:00 UTC for the time being.
+19:11:04 <nitzmahone> Who's updating the calendar/ics?
+19:11:05 <abadger1999> Anyone know how/where to change the calendars?
+19:11:06 <ryansb> +1
+19:11:16 <ryansb> gundalow: I think did it last time
+19:11:29 <sivel> we aren't keep the google calendar, since we can't update any more
+19:11:34 <dag> I have a problem with this
+19:11:35 <ryansb> I usually open the ICS in vim and manual-edit, which is almost definitely the *wrong* way
+19:11:59 <sivel> but the ics files are in community
+19:12:11 <abadger1999> #chair dag
+19:12:11 <zodbot> Current chairs: abadger1999 dag eikef evrardjp mattclay maxamillion nitzmahone ryansb sdoran sivel
+19:12:17 <dag> it's nice for US-centric timezones, but does not help with other timezones
+19:12:26 <sivel> https://github.com/ansible/community/blob/master/meetings/core-team.yaml
+19:13:15 <gundalow> update ^ & https://github.com/ansible/community/tree/master/meetings to rebuild .ocs
+19:13:25 <evrardjp> dag: which timezones are you thinking of?
+19:13:26 <maxamillion> dag: that's a fair point ... is there another time that would you'd like to propose?
+19:13:36 <dag> e.g. if we do this, both meetings fall outside business hours in Europe
+19:14:08 <abadger1999> #chair gundalow
+19:14:08 <zodbot> Current chairs: abadger1999 dag eikef evrardjp gundalow mattclay maxamillion nitzmahone ryansb sdoran sivel
+19:14:11 <dag> evrardjp: if you bring tuesday's and thursday's meeting closer together, it's harder for people to attend
+19:14:12 <nitzmahone> So long as there's someone on the hook to run both meetings- I think thaumos' original point was that he's running both right now, and 7am is not a fun time to do so
+19:14:12 <sivel> I think earlier is the problem, since we have such a large core team presence in US west coast
+19:14:25 <dag> nitzmahone: fair point
+19:15:02 <sivel> we do lose a lot of people not including people on the west coast, so I fear we don't get enough core attendance, and no decisions are made
+19:15:03 <abadger1999> And also... I've seen that many thursday meetings have been cancelled due to lack of attendance (seen because I'm not able to make it there at that time)
+19:15:13 <dag> I think we should have at least one weekly meeting so that people in India, EU and US can attend during business hours
+19:15:16 <sivel> abadger1999: exactly
+19:15:17 <eikef> For Germany, 16 UTC is end-of-business, though seeing how the Thursday meetings right now often get punted due to lack of attendance, having them later rather than not at all works
+19:15:18 <evrardjp> dag: I agree, I was just wondering how far you go, to care about asia or not
+19:15:23 <dag> and maybe one outside business hours
+19:15:39 <dag> evrardjp: yes
+19:16:02 <sivel> I just don't think keeping it at current is going to work, we'll end up cancelling
+19:16:14 <nitzmahone> I think we're actually pretty evenly spread around TZs, but it's probably unrealistic to assume that most of the team will be at any given meeting
+19:16:17 <dag> I don't want to accommodate just for EU either
+19:16:54 <evrardjp> couldn't this be researched on a doodle-like thing first, to know what the impact would be on the attendance, and then take a decision?
+19:16:54 <sivel> well, we may have other issues where we don't have enough people attending from our side
+19:16:57 <abadger1999> @nitzmahone which is a problem when we are going to be making decisions at meetings.
+19:17:01 <nitzmahone> right
+19:17:31 <evrardjp> (that's what we did for openstack-ansible)
+19:17:39 <maxamillion> I do like the idea of having one meeting per week that's convenient for each side of the globe, I think so long as we define what attendance is required for voting consensus to make decisions on behalf of the core developer community  that would work well
+19:17:54 <abadger1999> @maxamillion I don't think it will work well.
+19:17:58 <gundalow> Do we expect everyone/most people from core to be abel to make both core meetings?
+19:17:59 <maxamillion> abadger1999: no?
+19:18:01 <nitzmahone> evradjp++ on data-driven decision
+19:18:01 <ryansb> or decide that synchronous votes are insufficient
+19:18:11 <abadger1999> People will start to feel that their end of the discussion isn't being heard as well.
+19:18:15 <sivel> My preference has been a minimum of 5 core members voting
+19:18:18 <maxamillion> abadger1999: yeah, fair
+19:18:29 <abadger1999> gundalow:  yes.
+19:18:29 <maxamillion> sivel: what's the total count up to now?
+19:18:35 <dag> another option is to move voting to a single weekly meeting and/or use a voting mechanism that doesn't require real-timeliness
+19:18:44 <ryansb> so perhaps an async polling situation (or a 3-day veto window?) so people who miss the meeting can go back and raise concerns
+19:18:51 <ryansb> uh, yeah what dag said
+19:18:54 <sivel> maxamillion: for the time change?
+19:19:28 <maxamillion> sivel: no, sorry ... total count of core contributors (for establishing voting attendance requirements on decision making)
+19:19:37 <maxamillion> though it might not matter, abadger1999 has a good point
+19:19:52 <abadger1999> Somewhat... You can have discussion in meetings and then voting in tickets, for instance.... but you still have to have representation of non-present viewpoints at the meetings.
+19:19:56 <abadger1999> for the discussion.
+19:20:29 <dag> voting in tickets is going to be a bit awkward, although you could edit you previous vote, so maybe...
+19:21:12 <abadger1999> Okay.... let's do this for now... people attending, vote on 16:00 UTC for thursday.  This thursday, whoever attends that, round out the vote and we'll see if we move to 16:00 or not.
+19:21:12 <dag> asynchronous voting means the options have to be well laid-out in advance, every change to the options may require revoting :-(
+19:21:17 <ryansb> That's true - we sort of do that today by commenting on agenda or telling someone who *can* be there
+19:21:34 <nitzmahone> Pure number of core team members present doesn't necessarily mean we all think the same way either; eg, India team is very heavily-networking focused- should they be exclusively making decisions about core engine because they happened to be awake for the meeting? (and vice versa)
+19:21:37 <abadger1999> And we can discuss whether to move to some other model after that.
+19:21:39 <sivel> maxamillion: we have 25 core members, we have 5 who have voted here now, 11 external committers
+19:22:08 <abadger1999> dag:  Yeah.
+19:22:36 <evrardjp> dag: options should be well laid-out anyway for taking a proper decision. Vote flexibility seems logical to me. But I am just a watcher here, just sharing my experience if you need it.
+19:22:54 <abadger1999> Proposed: Move Thursday's meeting to 16:00 UTC.
+19:22:55 <abadger1999> +1
+19:22:59 <sivel> we tend to not have decided on final voting options until the discussion here
+19:23:01 <sivel> +1
+19:23:03 <maxamillion> sivel: ah ok
+19:23:13 <maxamillion> +1
+19:23:17 <ryansb> that's why I'd rather have a post-hoc veto type thing
+19:23:44 <ryansb> so if a vote happens and someone with material objections misses, they can bring it up again in a meeting where they're awake
+19:23:53 <dag> evrardjp: I agree in theory, but in practice it adds another complexity as people may propose different options after some people have already voted, it's going to be a lot more messy
+19:23:59 <sivel> ryansb / nitzmahone / mattclay / gundalow ? voting on 1600
+19:23:59 <nitzmahone> Maybe a standard part of the meeting is to review the #agreed's from the previous meeting and check for any diseent
+19:24:01 <ryansb> and doesn't require us to always lay out options in advance
+19:24:05 <abadger1999> ryansb: then you get started on work until the week after a decision is "made".
+19:24:09 <ryansb> sivel: +1 for 1600
+19:24:24 <gundalow> OK with me
+19:24:33 <ryansb> Yeah, it would require a delay (or for us to be willing to roll back things)
+19:24:39 <dag> -1 because the impact on the non-US community
+19:24:41 <sivel> nitzmahone has already said +1, so with him that is +6
+19:24:49 <ryansb> which I think is acceptable, because I know we'll be abysmal at always specifying options ahead
+19:24:58 <nitzmahone> +0 (don't have strong feelings other than my personal attendance is more likely at >=1600) - the point of multiple meetings was to make global attendance more likely...
+19:25:00 <ryansb> and we're usually better at iterating + rolling back
+19:25:12 <mattclay> +1 for 1600
+19:25:29 <dag> ryansb: I agree in principle, but I have experienced it to fail :-(
+19:25:48 <sivel> for 1600: +5 (+6, +0, -1)
+19:26:14 <nitzmahone> Agreed that laying out options a priori is probably a recipe for fail- we usually seem to crystallize those after a bit of discussion
+19:26:16 <dag> I guess we have a US crowd today ? ;-)
+19:26:18 <sivel> abadger1999: I think we are roughly where we were
+19:26:20 <ryansb> A person objecting is no guarantee of a rollback - it's just a guarantee we'll re-discuss it
+19:26:22 <nitzmahone> (sometimes in a totally different direction)
+19:26:28 <abadger1999> #action abadger will record Thursday 16:00 UTC vote currently stands at +1:6, 0:1, -1:1,  Will gather more votes at Thursday's meeting (15:00 UTC) and then if approved will take effect next week.
+19:26:41 <ryansb> so.... I guess I'm just saying "formalize a veto or a re-vote process in some way"
+19:27:11 <abadger1999> And then we can discuss how to change meetings further after that.
+19:27:29 <abadger1999> #topic https://github.com/ansible/ansible/pull/33419  New module: keycloak_clienttemplate
+19:27:35 <abadger1999> eikef: this is your topic.
+19:27:41 <eikef> Heya. :)
+19:28:01 <abadger1999> sivel:  Looks like you've been reviewing already.
+19:28:08 <abadger1999> Do you just want to finish that off?
+19:28:10 <sivel> a long time ago
+19:28:12 <eikef> I tried to incorporate all changes requested. The sticking point here is that one part of the parameters can't be enumerated completely and is thus an unchecked dict
+19:28:19 <sivel> I haven't had the time to go back and look at it
+19:28:33 <sivel> I think we also need a user of keycloak (other than the OP) to do a review
+19:28:34 <eikef> i.e. there are protocol mappers which can have a config which the api defines as a dict but does not document any further
+19:29:15 <eikef> There was interest by another person, I can ask them to chime in on this as well
+19:29:22 <eikef> though they are also external to ansible
+19:29:54 <sivel> eikef: that is fine
+19:29:59 <abadger1999> <nod>  That works for getting a user's input.
+19:30:11 <eikef> ok, I'll send them a mail
+19:30:16 <sivel> in some cases we will not have the knowledge of the service to give feedback on how well it works in the real world
+19:30:19 <abadger1999> eikef: Can the information in the protocol mappeers include private information?
+19:30:28 <sivel> we are just suppling code reviews in those cases
+19:30:29 <abadger1999> (passwords, tokens, and such?)
+19:30:38 <eikef> abadger: not to my knowledge. I have been careful not to expose secrets or such in logs.
+19:30:44 <abadger1999> Okay cool.
+19:31:21 <eikef> which isn't an issue on these tempülates, but more on the keycloak_client (which is in already; it does filter out the instances where keys could be logged)
+19:31:38 <abadger1999> Does anyone else want to help do code review so this can get in before the community feature freeze?
+19:32:52 <eikef> I'm thankful for the code review input so far, it's made the module better (and I'll incorporate the changes from this review into the already-in keycloak_client as well so that they remain on-par)
+19:32:59 <sivel> I will attempt to do another quick code review soon
+19:33:49 <eikef> I'll ask for a review from the other keycloak module user I know of.
+19:34:18 <sivel> abadger1999: I think we can move on
+19:34:22 <abadger1999> ool
+19:34:30 <eikef> yepp
+19:34:36 <sivel> LooseVersion strikes again
+19:34:37 <abadger1999> #action sivel to continue to review keycloak_clienttemplate
+19:34:45 <abadger1999> #action eikef to recruit a user to test
+19:35:03 <abadger1999> #topic LooseVersion Problems
+19:35:06 <abadger1999> #link https://github.com/ansible/ansible/issues/35435
+19:35:15 <abadger1999> #link https://github.com/ansible/ansible/issues/35417
+19:35:22 <abadger1999> #link https://github.com/ansible/ansible/issues/32301
+19:35:27 <abadger1999> Three issues.
+19:35:38 <abadger1999> Underlying bug is https://bugs.python.org/issue14894
+19:35:41 <sivel> abadger1999: in this case, due to `hostname` using LooseVersion on import basically, it can fail, especially even when not specific to SLES
+19:35:54 <abadger1999> This is the same underlying issue as the galaxy issue from a few weeks ago
+19:35:57 <nitzmahone> ugh, LooseVersion
+19:36:05 <sivel> abadger1999: yes, different module
+19:36:13 <sivel> 2 of those issues are galaxy and are "resolved"
+19:36:52 <sivel> the target in the report is Arch, which doesn't return anything valid from platform
+19:37:11 <sivel> so the way that we use LooseVersion there is doubly unsafe
+19:37:38 <sivel> I think we can drop LooseVersion there, and just do int comparison
+19:37:38 <nitzmahone> Can we soft-dep distutils.Version and fall back (or fail gracefully) if it's missing?
+19:38:02 <sivel> nitzmahone: does that actually exist?  I had done softdep for packaging
+19:38:15 <sivel> and had a backwards compat file where you could import Version
+19:38:20 * abadger1999 updates agenda item that two are galaxy issues, already resolved
+19:38:50 <sivel> but soft deps there make things non-portable really
+19:38:51 <nitzmahone> I mean more the usual `HAS_DISTUTILS` pattern
+19:39:24 <sivel> nitzmahone: https://gist.github.com/sivel/2c353cc16f64c6595fbf8a411a754a8e
+19:39:37 <sivel> that was my soft dep compat
+19:40:11 <sivel> We also have the potential to use my SafeLooseVersion that I wrote a while ago
+19:40:24 <sivel> I'd have to rewrite, since I think I threw it away
+19:40:32 <nitzmahone> Heh- I've written that one a couple times too
+19:40:33 <sivel> but easy enough
+19:41:03 <nitzmahone> Yeah, something along those lines- basically best effort to use the best version parser we can
+19:41:06 <sivel> SafeLooseVersion threw away leading non digits, and cast everything back to string
+19:41:34 <sivel> abadger1999: had some specific opinions here
+19:42:33 <sivel> When I was working on that version.py it was part of module_utils/compat/version.py iirc
+19:42:37 <abadger1999> I think for this one, cast to int and fallback to UnimplementedStrategy if the cast fails seems to fit in with the code.
+19:42:37 <nitzmahone> Those are all fine unless there's a prerelease identifier of some sort hanging off it; then all bets are off (depending on format, PEP440 or packaging.Version might work)
+19:43:11 <sivel> abadger1999: ok, I think that was in alignment with my thoughts in a "handle this on a per case basis"
+19:43:13 <evrardjp> abadger1999: +1
+19:43:50 <abadger1999> sivel: <nod> Yeah, I cribbed from your comment on the issue ;-)
+19:43:55 <sivel> I however couldn't get that exception to happen, but could work on the change
+19:44:09 <abadger1999> Cool.  make it so.
+19:44:16 <sivel> I'll assign it
+19:44:41 <abadger1999> #action sivel to work on casting to int and comparing for the hostname module
+19:45:09 <sivel> I just need to better understand what sles actually returns from get_distribution_version
+19:45:10 <abadger1999> #topic https://github.com/ansible/ansible/pull/35453  inclusion of config_template action plugin
+19:45:16 <sivel> but we have docker images I can test with
+19:45:17 <evrardjp> o/
+19:45:25 <abadger1999> evrardjp:  This one is yours
+19:45:29 <evrardjp> yup
+19:45:42 <evrardjp> so... this config_template module was proposed in the past
+19:46:14 <evrardjp> I suggest to re-analyse this, because the community has grown
+19:46:45 <evrardjp> While I agree this could be shipped as a role, bringing it into the core would make things simpler for many consumers.
+19:47:20 <evrardjp> Before rejecting it once again, I wanted to discuss with you on the reasons for its exclusion
+19:47:31 <evrardjp> and why wouldn't it bring a good value to the ansible community in general
+19:48:17 <evrardjp> I am aware that red hat is willing to use it in different places, it was silly for me to make our lives complex.
+19:49:31 <evrardjp> I'd naturally suggest this to be maintained by $team_openstack
+19:49:42 <abadger1999> Looking at the previous discussion, It looks like the reason is that there is a different way to do this already so this is an unneccasry addition.
+19:49:45 <sivel> I'll note a few things. This doesn't meet guidelines for non arbitrary module arguments. It duplicates existing functionality that can allow you to achieve the same results without this action plugin.
+19:50:05 <evrardjp> abadger1999: that was partially the case.
+19:50:56 <sivel> And in the realm of don't ship everything, it sounds like a good candidate for galaxy going forward
+19:51:06 <maxamillion> sivel: +1
+19:51:23 <abadger1999> sivel: <nod> That's true, the non-arbitrary module arguments means that we've gotten stricter in this regard reently.
+19:51:25 <evrardjp> Some features are not implemented or needed extra filter plugins or lookups, and chaining them has, as proven in the previous discussion, slower results
+19:51:51 <evrardjp> sivel: could you express what you mean by non arbitrary module arguments?
+19:51:55 <evrardjp> explain*
+19:52:35 <evrardjp> the duplication is something I'd like to see, as I don't see the duplication part at first sight.
+19:52:43 <sdoran> `config_overrides` takes an arbitrary dict as input
+19:52:46 <sivel> evrardjp: in recent guideline additions, we have started declining modules that have arguments that accept arbitrary data strucutres that cannot be enumerated or prperly calidated
+19:52:59 <sdoran> We'd rather these be enumerate params.
+19:53:03 <sivel> as sdoran points out, config_overrides violates those guidelines
+19:53:12 <sivel> by accepting arbitrary data
+19:53:18 <evrardjp> Understood
+19:53:28 <evrardjp> That is a core feature of the action plugin indeed.
+19:54:17 <nitzmahone> Yeah, not sure I'd agree about the "duplicates existing functionality" - it's more like a structured lineinfile/blockinfile kind of thing that allows for structured-data template files to be altered by selection (ala xml module).
+19:54:22 <evrardjp> That deserves to be recorded for the future as the reason for rejecting the plugin. I think it would also be valuable to express why this decision was taken
+19:54:30 <evrardjp> maybe we are doing something wrong.
+19:55:30 <nitzmahone> IMO the biggest issue here is naming; if you compare this to the xml module, they're roughly the same thing.
+19:55:33 <evrardjp> it's kinda a mix of template with lineinfile with arbitrary things. Very different and very efficient. But let's not talk about the module itself
+19:56:02 <evrardjp> nitzmahone: XML module didn't exist at the time we introduced it for the first time, which makes me wonder where we are.
+19:56:03 <abadger1999> nitzmahone: <nod> That may be a good way to look at it indeed.
+19:56:27 <evrardjp> but now that xml module was indeed introduced, maybe there is something to do here.
+19:57:06 <sivel> partly we didn't have xml filters
+19:57:15 <nitzmahone> This action's approach would be far superior to eg, lineinfile for this usecase; and I'd agree that making a "real" J2 template file out of these things would be inordinately painful to allow the same degree of flexibility.
+19:57:18 <abadger1999> Do we have an ini filter?
+19:57:25 <evrardjp> yaml filter?
+19:57:47 <sivel> abadger1999: we do have yaml, and I have a PR for ini filters
+19:58:02 <sivel> https://github.com/ansible/ansible/pull/22959
+19:58:26 <evrardjp> still it would require quite a series of filtering to get to the result of something that's very clean for users.
+19:58:33 <evrardjp> but that's a different topic
+19:58:34 <sivel> also, the XML module is very targeted at manipulating only XML and only individual values
+19:59:30 <evrardjp> so modifying multiple values need multiple tasks/loop, which makes it less efficient I'd say :)
+19:59:36 <evrardjp> but let's drop that argument
+19:59:53 <evrardjp> I just want to know if there is room for this kind of plugin
+20:00:16 <abadger1999> sivel:  So if this was split up into an ini, yaml, and json module, would that push it into the acceptable category?
+20:00:26 <evrardjp> and what should we do to make it so.
+20:00:36 <evrardjp> exactly
+20:00:38 <sivel> abadger1999: maybe, but we denied a json module recently also, and we already have an ini module
+20:00:44 <abadger1999> I think that yaml shold be split out anyways.
+20:00:52 <abadger1999> (since it depends on something not in the stdlib)
+20:01:30 <sivel> but I'd look at it more if it were a targeted module like ini_file or xml, and was broken into multiple type modules
+20:01:32 <nitzmahone> If we had filters that could roundtrip everything, this would probably not be necessary, but even with to_ini/from_ini, you'd lose any comments/ordering...
+20:01:49 <evrardjp> I can definitely split it up if need be, but I won't work on it if I am gonna receive a plain "no" without further evaluation :D
+20:02:02 <evrardjp> evaluation of risk/reward :D
+20:02:04 <abadger1999> nitzmahone: that might arguably be a bug/missing feature of the filters.
+20:02:10 <maxamillion> evrardjp: totally fair
+20:02:18 <nitzmahone> I've got some beefs with the UX on this, but I'm not opposed to the concept (I think it's a different audience than typical template stuff, but there are plenty of folks out there that want to work this way)
+20:02:26 <nitzmahone> @aba
+20:02:31 <sivel> so we would need a yaml and json module, and it would need to be real modules, not an action plugin, and work targeted like ini_file and xml
+20:02:36 <abadger1999> but that doesn't preclude something like this being a valid module too.
+20:02:36 <sivel> and then I would re-evaluate
+20:02:44 <abadger1999> <nod>
+20:02:50 <nitzmahone> @abadger1999 maybe, but we'd have to come up with an intermediate format that wasn't a dict to pull it off
+20:03:03 <abadger1999> nitzmahone: Special fields inside of the dict.
+20:03:15 <sivel> I'm not sure the proposed action plugin solves those needs does it nitzmahone ?
+20:04:11 <nitzmahone> @sivel: at a glance, it's hacking an existing file by path- but I've not reviewed in depth
+20:04:11 <abadger1999> #info we're not as united in opposition to this as previously but there are still concerns
+20:04:22 <evrardjp> :)
+20:04:28 <abadger1999> #info There is now an xml module and ini_file module as prior art
+20:04:48 <evrardjp> what would be the actions items?
+20:04:56 <abadger1999> #info minimum needed to take a new look at reviewing this would be to split each output format into its own module.
+20:05:09 <evrardjp> ok.
+20:05:25 <sivel> evrardjp: largely: we would need a yaml and json module, they would need to be real modules, not an action plugin, and work targeted like ini_file and xml
+20:05:27 <evrardjp> thanks for the conversation.
+20:05:53 <sdoran> I think it would make sense to have other modules for manipulating structured data in the save vein as `xml` and `ini_file`.
+20:05:57 <sivel> they would compliment the existing ini_file and xml modules, if I didn't indicate that
+20:06:09 <sdoran> But modules, not action plugins, as already mentioned.
+20:06:09 <abadger1999> #info those should be modules rather than an action plugin (see the current xml and ini_file modules and to a lesser extent, lineinfile)
+20:06:32 <sdoran> Don't use `template` as a `template` 😉
+20:06:33 <abadger1999> evrardjp: Also note, bcoca was the primary one against this last time and he's currently on PTO.
+20:06:44 <evrardjp> yes that's what I understood, I will evaluate with the teams, to see if this can be worked out, and for how much effort. If it doesn't pass our expectations, we'll probably close this work, and do the galaxy approach. (For your information, and transparency)
+20:06:47 <abadger1999> So we haven't heard feedback from him yet.
+20:06:57 <nitzmahone> Agreed that mixing J2 templating and this is not a great idea; dedicated module that hacks an existing file with maybe a template lookup and a content override if you want to do any J2 templating
+20:07:27 <sivel> evrardjp: galaxy will become more prevelant over the next few releaes, pushing more items to galaxy, even pushing out of the ansible package hopefully
+20:07:28 <nitzmahone> Maybe *slightly* less efficient that way, but I'd suspect not much in the real world
+20:07:43 <nitzmahone> @sivel +1000 to that
+20:07:52 <evrardjp> nitzmahone: we have benchmarks if you want :D
+20:08:05 <sivel> we are working on building a plugin installer that sources from galaxy (maybe other sources too)
+20:08:05 <evrardjp> sivel: this is the reason I play transparency.
+20:08:12 <abadger1999> Cool.
+20:08:17 <abadger1999> Anything else for now?
+20:08:22 <sivel> TLS
+20:08:46 <abadger1999> #topic Should/how can we support old tls/ssl versions? https://github.com/ansible/ansible/pull/35462
+20:09:17 <abadger1999> dag:  this one is from you.  I brought it up for discussion with other committers earlier so we've had some pre-discussion.
+20:09:39 <dag> so reason is two-fold: support old devices (e.g. for upgrading them) and also for allowing support departments to test against them
+20:10:02 <abadger1999> I think we're mostly agreed that it is necessary to allow people to do this but we have all sorts of differing viewpoints on how.
+20:10:19 <dag> both have come up, and for hpilo modules we already have something similar implemented (although I think we could improve the user interface)
+20:10:30 <dag> I agree
+20:10:30 <nitzmahone> My $0.02: in the absence of module config, we should have a method to enable old protocols/ciphers on urls.py-based stuff. Module args are the easiest, perhaps followed by envvars...
+20:10:31 <maxamillion> abadger1999: +1
+20:11:23 <nitzmahone> Ideally, we'd have module config that would allow this to be settable in inventory and opted-into by any module that wants the capability, but that wouldn't happen until at least 2.7 I'm guessing.
+20:11:31 <dag> nitzmahone: I think it makes more sense to do this per module/task, rather than a playbook/system-wide option, as to me it's something you do deliberately
+20:11:44 <nitzmahone> (so if you're talking to an old host, you could enable old proto/ciphers on the inventory)
+20:11:48 <jborean93> dag: it may be useful to do it per host
+20:11:54 <sivel> This should definitely default to secure, and require explicit instruction to be insecure
+20:11:58 <dag> doing it in a playbook/env var could result in unintended consequences
+20:11:59 <sivel> bonus for what jborean93 mentions
+20:12:03 <jborean93> +1 to sivel
+20:12:03 <nitzmahone> @sivel +1
+20:12:04 <abadger1999> dag:  regarding hpilo, one of the things discussed was to default to secure, which may mean the default for hpilo should be changed (but I don't know if that means it works for only a few or even no devices out of the box?)
+20:12:06 <dag> jborean93: possibly
+20:12:39 <abadger1999> I'm with dag about per-task being right for the general case.
+20:12:45 <evrardjp> sivel: +1
+20:12:48 <dag> abadger1999: correct, we need to change hpilo interface
+20:13:15 <sivel> The biggest problem with it being a module argument, is that it will require explicit modifcations to all modules to support this
+20:13:42 <abadger1999> sivel:  I think that is needed anyway
+20:13:48 <maxamillion> sivel: +1
+20:13:56 <abadger1999> sivel: as some modules should not use it at all.
+20:14:03 <sivel> Also, since we are deep past the feature cutoff for core files...
+20:14:11 <dag> well, module_utils/urls.py would get it
+20:14:14 <maxamillion> abadger1999: yeah, fair point
+20:14:34 <abadger1999> One of hte notification modules may not need it because the service provider uses tlsv1.2
+20:14:35 <dag> hmmm
+20:15:09 <abadger1999> As sdoran pointed out, in earlier discussion, if we allow any of these protocols, we could become vulnerable to a downgrade attack.
+20:15:16 <dag> abadger1999: it will depend on the implementation, i.e. do we allow fallback, or do we force it to a specific version
+20:15:18 <maxamillion> I think the scope of the changes to modules won't be *that* big because the number of things that still use old tsl/ssl should be pretty minimal
+20:15:44 <maxamillion> abadger1999: downgrade attack?
+20:15:44 <dag> for hpilo we allowed to set a specific version, rather than influence fallback
+20:15:47 <abadger1999> so it's not safe to allow the insecure protocols all the time.
+20:15:49 <abadger1999> <nod>
+20:15:52 <nitzmahone> @abadger1999: depends on meaning of "allow" - I'd say we don't turn anything on unless explicitly requested
+20:15:53 <dag> abadger1999: indeed
+20:16:02 <sdoran> Task level gives the best granularity, and as a result gives you the shortest use of the insecure mode.
+20:16:13 <dag> we also have to consider the case that TLSv1.2 becomes insecure at some point in the future
+20:16:20 <sdoran> If it's a host var, would that "bleed over" into something like `uri` tasks?
+20:16:28 <sdoran> That's what I'd be concerned about.
+20:16:30 <jborean93> is there a need to specify a cipher, or enable older ciphers, or is it just the protocol for now?
+20:16:32 <dag> and so what we provide by default may change in the future
+20:16:39 <nitzmahone> @sdoran: it would; but depends on use case
+20:16:40 <abadger1999> maxamillion: https://en.wikipedia.org/wiki/Downgrade_attack
+20:17:08 <abadger1999> maxamillion: MITM attack variant where the attacker causes the client and server to negotiate an older, insecure version of the protocol.
+20:17:13 <sdoran> jborean93: Ciphers and protocol versions are somewhat related.
+20:17:18 <maxamillion> abadger1999: ohhhh, ok
+20:17:18 <nitzmahone> If the problem is "old client", that's what you want, but if it's "old server", per-task is the right thing to do.
+20:17:21 <dag> jborean93: also a good question, in our cases we haven't had the need to specify ciphers (with our infra) but theoretically it could :-/
+20:17:52 <sdoran> The main issue is that TLSv1 is considered broken. So the whole protocol, not any specific ciphers. I'd have to go back and read up on why again. Been a while.
+20:17:54 <abadger1999> dag: agreed about defaults changing
+20:17:54 <nitzmahone> @jborean93 I think if we're going to do it, we'll need to support both
+20:17:56 <dag> I think Red Hat removed ciphers in the past
+20:18:28 <maxamillion> yeah, I think so ... would have to double check, but that sounds right
+20:18:30 <nitzmahone> Not sure about removed, but maybe disabled from the default enabled set in OpenSSL config/Python
+20:18:40 <dag> sdoran: python 2.7.14 doesn't say so though, SSLv23 normally should still support TLSv1 (so I wonder whether Red Hat patched it out)
+20:19:24 <dag> https://docs.python.org/2/library/ssl.html#socket-creation
+20:22:00 <abadger1999> #info we're agreed that we need to allow the user to select the older, insecure protocols but we're not yet sure how
+20:22:13 <sdoran> Oh geeze. `SSLv23` is basically "all the things+future". That's a pretty terrible name for it.
+20:22:50 <abadger1999> #info option: module args.  Pros, best granularity, shortest time, allows to leave out modules that don't need it.  Cons: requires changes to every module that needs it
+20:23:08 <dag> sdoran: yes, that's why we explicitly exclude some stuff then ;-)
+20:23:22 <dag> sdoran: so basically _we_ control what it include and in the future
+20:23:27 <abadger1999> #option config setting.  Pros: Change in two places (config and module_utils/urls.py) Cons: Enables for everything.  Opens us up to downgrade attacks.
+20:23:33 <abadger1999> #info config setting.  Pros: Change in two places (config and module_utils/urls.py) Cons: Enables for everything.  Opens us up to downgrade attacks.
+20:24:12 <jborean93> could we have a fallback for the config option, e.g. try it securely with TLS 1.2 and allow fallback to the older protocol if that fails
+20:24:25 <abadger1999> #info inventory_vars: Similar to config setting but allows to restrict per managed host in case the problem is that the managed host doesn't support the protocol (rather than some other server)
+20:24:45 <abadger1999> jborean93: Probably have to make requests twice in that case.
+20:24:58 <sdoran> jborean93: Yes, but you can only really fail back safely to TLSv1.1 without getting into downgrade attack territory.
+20:25:08 <abadger1999> jborean93: it's a significant change in module_utils/urls.py to do that probably
+20:25:41 <dag> indeed, that's why for hpilo we decided to ask for a specific PROTOCOL_<TYPE>
+20:25:50 <dag> it's easier to control what you end up doing
+20:26:04 <abadger1999> Make request once with secure  protocols.  If fail and option_to_use_insecure_protocol == True, construct a new sslcontext with insecure protocols enabled and try that.
+20:26:04 <nitzmahone> Yeah, the way Python and OpenSSL do this make it really hard to be explicit.
+20:26:38 <abadger1999> sdoran: (I think SSLv23 is the openssl name for it and dates back to when there was only sslv2 and sslv3)
+20:26:47 <jborean93> Well we currently do it explicitly, if we can abstract the calls out shouldn't it just be possible to send another request with the older protocol instead of TLSv12
+20:27:03 * jborean93 hasn't read the code so may be talking crap here
+20:27:15 <dag> So this is the ugly implementation in hpilo: https://github.com/ansible/ansible/blob/devel/lib/ansible/modules/remote_management/hpilo/hpilo_boot.py#L147
+20:27:17 <abadger1999> jborean93: yes.  but we have to create a new sslcontext and make a request using that.
+20:27:55 <dag> since it has "choices", some of that is not needed ;-)
+20:28:08 <abadger1999> jborean93: I'm also not certain how difficult it gets to write the code to work on python without SSLContext.
+20:28:31 <jborean93> ok
+20:31:35 <abadger1999> Okay... So.. further action/
+20:31:37 <abadger1999> ?
+20:32:10 <dag> I guess this is not v2.5 material, right ?
+20:32:30 <jborean93> I think module option gets us over the line, we can look at config/hostvar at later releases
+20:33:02 <nitzmahone> If you implement all within the module, you can squeak in for 2.5, but hacking up urls.py is out of scope now IMO
+20:33:55 <nitzmahone> (maybe that means temporarily bringing in a copy of relevant urls.py)
+20:34:05 <jborean93> was the ability to use older protocols removed in 2.5, it could arguably be a bugfix
+20:34:16 <abadger1999> I'm not sure if we can implement entirely outside of urls.py... I think we need to ^U  yeah, would have to copy the urls.py code
+20:34:26 <dag> nitzmahone: for hpilo we depend on python-hpilo who does it for us anyway, but imc_rest is our existing issue :-/
+20:34:49 <abadger1999> @jborean93 It's a feature, not a bug.  Also, I believe it was 2.2 or 2.3.
+20:35:13 <jborean93> ah cool, well if it was removed ages ago I agree it would be a feature
+20:35:20 <dag> :-)
+20:35:29 <dag> a regression really :-)
+20:35:31 <nitzmahone> @dag so does that get you where you need for 2.5?
+20:36:04 <dag> nitzmahone: I can live with patching Ansible as we did, but users don't...
+20:36:15 <nitzmahone> (for 2.5, add module arg to override protocol, copy as much of urls.py into module as is necessary)
+20:36:25 <dag> I wasn't expecting this for v2.5, so fine by me
+20:36:55 <nitzmahone> how many modules would need that treatment to solve the issue for now? Just imc_rest?
+20:37:04 <dag> however it would be nice to know what the interface would be, so I can already accommodate for it, but again, I wasn't expecting this for v2.5
+20:37:11 <dag> so fine to push forward
+20:37:30 <dag> imc_rest and hpilo_facts/hpilo_boot (UI)
+20:37:46 <dag> that I know of
+20:37:48 <nitzmahone> I thought you said hpilo was in external code to the module though?
+20:37:57 <dag> yup, that's why I added UI ;-)
+20:38:17 <nitzmahone> So what's their override look like?
+20:38:41 <dag> well, we provide ssl_context to it, so the implementation could be similar
+20:38:58 <dag> preferrably urls.py would create the ssl_context we then reuse
+20:39:12 <dag> but for now, I think we're good
+20:39:24 <nitzmahone> I'd be nervous to try and define a guaranteed-it'll-look-like-this interface for this so late in 2.5, because that basically means someone needs to go make the urls.py changes and verify that we can do everything we want with whatever's chosen (even though we won't ship the changes to urls.py)
+20:39:29 <dag> I'm not going to alter the user interface if there's another change coming
+20:39:40 <dag> indeed
+20:40:00 <nitzmahone> So hold for 2.6 then?
+20:40:13 <nitzmahone> (at least, urls.py change may be deemed "too hot for 2.6" as well)
+20:40:19 <dag> if that's possible, I heard it was a maintenance release...
+20:40:54 <nitzmahone> right
+20:41:10 <abadger1999> Yeah, I think we have to define what we mean by maintenance release.
+20:41:19 <abadger1999> But not in this meeting ;-)
+20:41:19 <nitzmahone> Yep, but not today ;)
+20:41:23 <abadger1999> jinx
+20:41:23 <nitzmahone> mental jinx
+20:41:24 <dag> I assume modules can add new features, though ? :-)
+20:41:28 <abadger1999> Yep.
+20:41:29 <dag> let's vote not to vote on this issue
+20:41:43 <dag> to get a sense of accomplishment
+20:41:53 <maxamillion> heh
+20:41:54 <nitzmahone> +1 to kick the can
+20:42:02 <jborean93> +1
+20:42:04 <maxamillion> +1
+20:42:13 <dag> -1
+20:42:13 <nitzmahone> Maybe capture the salient points of the discussion on the issue
+20:42:16 <dag> :-)
+20:42:26 <abadger1999> Okay, We're not done with this but I think we're at a good place to go away for a few days, think up some new ways to address it, and then come back with those ideas.
+20:42:41 <abadger1999> #topic Open floor
+20:42:48 <abadger1999> Anyone have anything for open floor?
+20:43:09 <abadger1999> #info 2.4.3 final is on track for release tomorrow
+20:43:29 <abadger1999> I'll close in 60s if no one has anything.
+20:43:46 <nitzmahone> 2.5.0a1 is Thursday; will be available on PyPI
+20:44:01 <nitzmahone> * scheduled to appear ;)
+20:44:44 <abadger1999> Don't mess up the pypi upload or the first 2.5.0 release will be 2.5.1 ;-)
+20:44:57 <abadger1999> Okay, that's all folks
+20:45:00 <abadger1999> #endmeeting

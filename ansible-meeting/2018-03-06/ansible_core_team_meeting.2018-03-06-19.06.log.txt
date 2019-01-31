@@ -1,0 +1,244 @@
+19:06:49 <abadger1999> #startmeeting Ansible Core Team Meeting
+19:06:50 <zodbot> Meeting started Tue Mar  6 19:06:49 2018 UTC.  The chair is abadger1999. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:06:50 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:06:50 <zodbot> The meeting name has been set to 'ansible_core_team_meeting'
+19:07:02 <abadger1999> #topic Roll call
+19:07:05 <abadger1999> Who's here?
+19:07:12 <sdoran> o/
+19:07:14 * Imo is
+19:07:18 <abadger1999> #chair lmo alikins sdoran
+19:07:18 <zodbot> Current chairs: abadger1999 alikins lmo sdoran
+19:08:14 <dag> o/
+19:08:18 <abadger1999> #info Agenda https://github.com/ansible/community/issues/296
+19:08:20 <abadger1999> #chair dag
+19:08:20 <zodbot> Current chairs: abadger1999 alikins dag lmo sdoran
+19:09:04 <abadger1999> #topic Fix name parameter templating in include_role https://github.com/ansible/ansible/pull/36372
+19:09:18 <sivel> .hello2
+19:09:19 <zodbot> sivel: sivel 'Matt Martz' <matt@sivel.net>
+19:09:35 * sivel was lost in the world of includes
+19:09:52 <abadger1999> #chair sivel
+19:09:52 <zodbot> Current chairs: abadger1999 alikins dag lmo sdoran sivel
+19:10:03 <abadger1999> sivel: Well then, this topic is for you!
+19:10:19 <Imo> Hi, thanks.  I put forward 36372 but didn't put in the PR
+19:10:20 <abadger1999> bcoca:  Include_role PR to evaluate if you're around as well.
+19:10:45 <sivel> abadger1999: I've already started reviewing that PR
+19:10:47 <Imo> (I just modified some tests to account for it)
+19:10:47 <sivel> or...wait
+19:10:51 <sivel> there are 2 of the same PR?
+19:11:27 <sivel> one sec
+19:11:28 <Imo> https://github.com/ansible/ansible/pull/37001 - Sorry, this was just the test for the original PR
+19:12:01 <Imo> Original PR: https://github.com/ansible/ansible/pull/36372     Test PR:  https://github.com/ansible/ansible/pull/37001
+19:12:28 <sivel> https://github.com/ansible/ansible/pull/37024
+19:12:41 <sivel> 37024 looks nearly identical, and I am reviewing that one
+19:12:48 <alikins> might as well make the repro case in the bug report into a intg test
+19:13:07 <sivel> yes, 37024 is the same exact PR that I am reviewing
+19:13:09 <alikins> ah, nm
+19:13:17 <sdoran> Yup. I like to add the tests as the fixes come in.
+19:13:36 <sivel> So one of these PRs will have to be closed
+19:14:08 <sdoran> Ideally they’d come in with the PR.
+19:14:09 <sivel> I'll get that cleaned up later
+19:14:20 <sivel> deduping PRs and getting this reviewed
+19:14:33 * gundalow waves
+19:14:47 <abadger1999> #info https://github.com/ansible/ansible/pull/37024 is a duplicate of https://github.com/ansible/ansible/pull/36372
+19:15:07 <sivel> a nearly identical duplicate too :)
+19:15:11 <sivel> just diff var name
+19:15:13 <abadger1999> #action sivel will take care of reviewing the code from those PRs.
+19:15:29 <abadger1999> sivel: And 37024 used .copy() fro mthe get-go ;-)
+19:15:54 <abadger1999> #info will also merge the test pr when the fix is added: https://github.com/ansible/ansible/pull/37001
+19:16:10 <abadger1999> Imo:  Okay, anything else here?
+19:16:20 <Imo> Thanks.  Nothing else from me.
+19:16:24 <abadger1999> Cool.
+19:16:37 <Imo> Thanks sivel.
+19:17:04 <sivel> It won't be immediately, as I'm off playing/fixing some other include stuff right now
+19:17:12 <abadger1999> #topic Improve default values choices https://github.com/ansible/ansible/pull/36901
+19:17:14 <sivel> but it's on my to do, and I just linked the issues
+19:17:26 <abadger1999> #chair gundalow
+19:17:26 <zodbot> Current chairs: abadger1999 alikins dag gundalow lmo sdoran sivel
+19:17:36 <abadger1999> dharmabumstead: Are you around to discuss 36901?
+19:17:51 <abadger1999> nitzmahone: You also weighed in on 36901.
+19:18:30 <sdoran> Where did we land in accessibility implications of that?
+19:18:43 <dag> yeah, so I simply want to know what we want to do
+19:19:01 <nitzmahone> I'm +1 for merge as-is
+19:19:01 <gundalow> Anyone got a link to the AWS style that's been refered to?
+19:20:24 <dag> sdoran: what accessibility implications were you thinking of ?
+19:20:56 <sdoran> red/green color blind
+19:20:59 <abadger1999> sdoran: We used a website that simulates various colorblindness's and decided that the text shows up and is explanatory, it jsut isn't called out by the colors.
+19:21:11 <sdoran> <ack>
+19:21:13 <abadger1999> sdoran: Might be different if it was a different background color.
+19:21:20 <abadger1999> #chair nitzmahone
+19:21:20 <zodbot> Current chairs: abadger1999 alikins dag gundalow lmo nitzmahone sdoran sivel
+19:21:58 <abadger1999> Maybe this: http://boto.cloudhackers.com/en/latest/ref/ec2.html
+19:22:01 <dag> so the blue, red and green used here on white background is not a problem
+19:22:02 <abadger1999> gundalow: ^
+19:22:19 <gundalow> -1 to AWS
+19:22:23 <dag> sivel brought this up and I verified
+19:22:37 <abadger1999> I find dag's revision to be better than the AWS method.
+19:22:57 <gundalow> abadger1999: yup, agreed
+19:23:03 <abadger1999> probably would be dag's, current pretty closely together, then AWS in a distant last place.
+19:23:49 <sdoran> This looks good. I'm +1 to merge it.
+19:23:52 <nitzmahone> IMO dag's modification makes much better use of horizontal space
+19:24:03 <dag> so I am open to make more changes, a better way to indicate default, or leaving it 2 columns (not optimize for smartphone)
+19:25:19 <nitzmahone> +1 to "take it as it is"
+19:26:32 <abadger1999> dag: If we could make the colyumn header read Defaults and<br>Choices, would that be a possible compromise with dharmabumstead?  (I think you're right that "choices" has to remain in the column, though)
+19:26:40 <abadger1999> Inside the field, I mean.
+19:27:03 <dag> BTW the return values and facts were already reformated in a similar manner and that one was approved more easily: https://github.com/ansible/ansible/pull/36943
+19:27:29 <dag> abadger1999: Sure, but the problem was that the table was broken
+19:28:21 <dag> abadger1999: I will make a new screenshot showing the issue, the way tables are done here is quite fragile
+19:28:51 <abadger1999> Yeah, I hate that code but I'm afraid to touch it :-(
+19:29:35 <dag> one example where the current tables go wrong is: http://docs.ansible.com/ansible/latest/uri_module.html#return-values
+19:29:43 <dag> compared to v2.4: http://docs.ansible.com/ansible/latest/uri_module.html#return-values
+19:29:57 <dag> but that seems a CSS issue though
+19:30:19 <dag> so my changes don't affect that issue, I hope to fix it too
+19:31:19 <dag> It takes some time to render, so I suggest the meeting continues ;-)
+19:31:25 <abadger1999> (The broken table is here: http://docs.ansible.com/ansible/devel/modules/uri_module.html#return-values)
+19:32:01 <abadger1999> nitzmahone, gundalow: So... where do we go from here since dharmabumstead isn't around?
+19:32:20 <gundalow> I believe it needs dharmabumstead's blessing
+19:32:26 <gundalow> So we can all give it shipits
+19:32:33 <gundalow> then assign to him for final review
+19:32:34 <gundalow> ?
+19:32:38 <nitzmahone> I guess
+19:32:52 <sivel> yes, he has asked that we not merge any doc changes.
+19:34:36 * gundalow adds his comments and +1
+19:35:25 <abadger1999> dag/other external contributors: It's probably not obvious but since getting a docs person we've been kinda negotiating how docs works.  Currently, dharmabumstead as the docs person working with us gets to sign off on all documentation changing (outside of module docs... I think he wants to do that in the future but is concentrating on the pre-generated rst first).
+19:35:59 <abadger1999> So that's why we're discussing it here but are unsure of what to do since dharmabumstead isn't present.
+19:36:46 <gundalow> +1 for clarification
+19:37:11 <abadger1999> #action: dag to screenshot how trying to put Defaults<br>and Choices in the heading causes issues.
+19:37:13 <dag> abadger1999: I understand someone has to sign off, no problems there
+19:37:36 <abadger1999> #action people here to add shipits to the PR if they're happy with it
+19:37:39 <dag> abadger1999: it's still building, and I always have to wait til the end because the CSS is generated last (\o/)
+19:37:46 <abadger1999> #action waiting for dharmabumstead for more info.
+19:37:59 <abadger1999> #undo
+19:37:59 <zodbot> Removing item from minutes: ACTION by abadger1999 at 19:37:46 : waiting for dharmabumstead for more info.
+19:38:10 <abadger1999> #action waiting to discuss more with dharmabumstead before taking action
+19:39:05 <abadger1999> Alright... I'll move on in the topics for now.  We can loop back to this if dharmabumstead shows up or we want to discuss the screenshot.
+19:39:40 <abadger1999> #topic Should unarchive handle absolute paths in archives? https://github.com/ansible/ansible/pull/37048
+19:40:06 * dag would say "no"
+19:40:21 <abadger1999> I put this one on the agenda... I'm fixing a bug with an extra_option and discovered that we don't really account for how absolute paths in an archive could mess with the unarchive module.
+19:40:28 <dag> too dangerous, but since we allow for options, we can't prevent it either
+19:40:40 <abadger1999> <nod>
+19:40:59 <dag> abadger1999: the only safe way is to remove extra_opts, but it was by great demand added
+19:41:08 <abadger1999> I agree with dag that we should ignore absolute paths.  If the user wants to install to root, then they can manually specify dest: '/'
+19:41:23 <dag> the problem is that you can't make a drop-in replacement once you start supporting extra_opts
+19:41:29 <abadger1999> yeah.
+19:42:18 <abadger1999> bcoca: You and I were discussing htis last night if you have any more thoughts on it now.
+19:42:23 <dag> the utopic future is a pure-python uncompress
+19:43:04 <abadger1999> nitzmahone: The problem caused by this can be severe enoguh (although it is a corner-case, not triggered without specific extra_opts) that I'd like to backpotr it if we're okay with it.
+19:44:11 <nitzmahone> I agree that we shouldn't allow it, but should it be a silent failure or a warning?
+19:44:18 * nitzmahone votes for the latter
+19:44:26 <gundalow> abadger1999: dharmabumstead isn't able to join today
+19:45:22 <nitzmahone> ... and yes, once we've settled, let's backport, though depending on timing it might be 2.5.1
+19:46:00 <nitzmahone> If it's merged to devel and CP-PR'd by EOD tomorrow, it can go for 2.5.0rc2/2.5.0final
+19:46:38 <abadger1999> nitzmahone: Hmm... Could be hard to warn consistently.  gnu tar (at least) automatically strips leading "/" unless you give it an extra option.
+19:47:22 <nitzmahone> OK- we can take that offline (I may have misread the PR, but it looks like you're explicitly skipping paths starting with /)
+19:47:42 <nitzmahone> But +1 to disallow and +1 to backport
+19:47:43 <abadger1999> nitzmahone: I'm modifying the paths... The reason is also due to extra_opts.
+19:47:44 <dag> abadger1999: This is what's going wrong with the tables: https://github.com/ansible/ansible/pull/36901#issuecomment-370904564 (although I made a mistake that made it worse, but similarly)
+19:48:09 <dag> I am going to re-render it
+19:48:33 <gundalow> dag: if you add a <br/> on the other headers does it fix it?
+19:48:35 <nitzmahone> Even if it were just a single warning like "this archive contains absolute paths; some files were skipped" or something like that
+19:49:10 <abadger1999> dag:  K.  I wonder if <span color="blue">Defaults</span> and<br/>Choices would work.
+19:49:30 <dag> gundalow: that might do the trick
+19:49:55 <dag> I think I need to add the "and" to the second <div>, but even two lines will make it wrong, but added <br/>'s might be the solution
+19:50:36 <dag> first doing it without, make a new screenshot, and then adding <br/>'s everywhere :p
+19:51:00 <dag> I think with a better CSS this would be less of a problem
+19:51:25 <abadger1999> nitzmahone: K... Can think about that.  The one thing is that my PR actually started out to catch the special case of using --strip-components=1 with a regular, relative path archive. (in that case, gnu tar is turning the toplevel directory, "ansible-2.5.0/" into "/" )
+19:51:29 <dag> if only rST would have easier table-support
+19:51:58 <abadger1999> nitzmahone: I could make adding a warning skip the specific case of "/", though)
+19:53:16 <abadger1999> Tables are a pain in any plain text language.  I think if we didn't have html that we wanted to embed in the tables we could use rst's simple table format and it would be easier to use than what we have now.
+19:53:35 <abadger1999> But we do want to embed html so...
+19:54:19 <dag> abadger1999: why do we want to embed html ?
+19:54:35 <abadger1999> dag: The colors and such?
+19:54:40 <nitzmahone> nested tables and more formatting support
+19:54:59 <abadger1999> links and bold/italics could be done in rst although we'd have to change the code to handle it.
+19:55:02 <nitzmahone> Otherwise we're completely at Sphinx' mercy on how that stuff gets transformed to HTML
+19:55:03 <dag> colors/formatting can be done in other ways, but nested tables, yes...
+19:55:11 <abadger1999> Oh yeah.. I forget we added nested tables.
+19:55:15 <abadger1999> for suboptions
+19:55:19 <dag> indeed
+19:55:42 <dag> I still don't completely understand how that's done with Jinja2, I don't grasp it...
+19:55:49 <abadger1999> We could simulate that in rst via cell spanning but that would be more complex than nested tables.
+19:56:04 <dag> yeah, you have to calculated everything in advance
+19:57:05 <nitzmahone> ... and you'd lose a lot of other flexibility WRT responsive table layout
+19:57:26 <dag> https://github.com/ansible/ansible/pull/36901#issuecomment-370907980
+19:57:36 <dag> so that's with 2 lines in a cell
+19:57:55 <dag> BTW I don't understand why <th> acts this way and <td> doesn't
+19:58:08 <gundalow> SOoething in the CSS?
+19:58:13 <dag> most be
+19:58:15 <dag> must be
+19:58:38 <dag> now with added <br/>'s
+19:58:52 <dag> if that doesn't work, I'll dive into CSS
+19:58:58 <abadger1999> <nod>
+19:58:58 <dag> are we still meeting :p
+19:59:07 <abadger1999> Okay.  I think we should call the meeting
+19:59:11 <Imo> First time here, but, what sort of change gets considered for back porting into 2.5?  Could https://github.com/ansible/ansible/pull/36372   be considered after sivel's review? (sorry for introducing a change of topic)
+19:59:12 <abadger1999> #topic Open Floor
+19:59:44 <agaffney> I'd like to get some review/opinions on https://github.com/ansible/ansible/pull/36357
+20:00:01 <abadger1999> Imo: It can be considered.... bakporting is decided by (1) Not a feature. (2) Risk vs reward of the change.
+20:00:45 <abadger1999> Imo: I think you're okay from (1) but we'll have to think about (2).  sivel wanting to test for cornercases indicates to me that there are definitely risks involved.
+20:01:05 <abadger1999> #topic Allow loading dirs from role defaults/vars  https://github.com/ansible/ansible/pull/36357
+20:01:41 <Imo> abadger1999, okay, ta.
+20:02:25 <abadger1999> agaffney: I like the sentiment there but I think we'll need bcoca or jimi to review it.
+20:02:39 <agaffney> bcoca has already given it at least a cursory look
+20:03:14 <abadger1999> Did he find any things to change?
+20:03:16 <agaffney> without throwing any wrenches in the works
+20:03:31 <agaffney> no, but I also don't know if he *really* reviewed it
+20:04:32 <abadger1999> <nod>
+20:04:49 <abadger1999> Okay, I see no problems with it and actively like the things it tries to achieve.
+20:05:05 <abadger1999> I'l have to let him approve, though, as that's code I'm not overly familiar with.
+20:05:35 <agaffney> there's probably some bike-shedding that could/should go on around naming of new/moved functions, but it's *probably* mostly ready to go as-is
+20:05:47 <abadger1999> Cool.
+20:06:01 <dag> gundalow: adding a <br/> doesn't fix it :-/ It doesn't seem to be sufficient in added linespace
+20:06:14 <abadger1999> I'll throw it on the agenda for next week.
+20:06:21 <abadger1999> #topic Open floor
+20:06:29 <abadger1999> Anyone else have something to bring up?
+20:06:34 <abadger1999> Otherwise I'll close in 60s
+20:06:52 <bcoca> hmm, my watch is an hour off?
+20:07:01 <dag> https://github.com/ansible/ansible/pull/36901#issuecomment-370910808
+20:07:18 <Imo> bcoca, looks like it
+20:07:25 <agaffney> bcoca: it's usually calendar timezones for me
+20:07:44 <dag> So if we want to change the column header, we need to find another solution. Let me try to ditch the blue
+20:07:47 <bcoca> dag br might not help unless you set the 'flow' for the td/th
+20:08:41 <bcoca> Choices/Defaults might look 'less bad'
+20:08:44 <dag> bcoca: Yeah, it must be CSS :-/
+20:08:51 <dag> bcoca: that's why I am doing now as a test
+20:08:54 <dag> no blue
+20:09:05 <abadger1999> bcoca: agaffney has a PR that needs review from you or jimi-c https://github.com/ansible/ansible/pull/36357
+20:09:06 <bcoca> i really want to remove tables and move everything into divs ... but been long time since i was webdev
+20:09:19 <dag> I had it in reverse: Defaults/Choices, but don't care about order
+20:09:38 <bcoca> that shoudl be good, i just wanted to test more, its on my list .. agaffney will probably bug me to get it done sooner rather than later
+20:09:43 * abadger1999 thinks that divs destroy accessibility.
+20:09:44 <agaffney> my webdev experience ends around the time that XHTML and jquery were king
+20:09:45 <abadger1999> Cool.
+20:10:00 <bcoca> abadger1999: not by nature ... just by how they get abused
+20:10:08 <abadger1999> agaffney: Are you implying that's not current state of the art? ;-)
+20:10:12 <gundalow> bcoca: If you could document what you want I could ask one of my webdev friends to take a look
+20:10:13 <bcoca> you CAN use divs to give good visual flow and still make them accessible
+20:10:45 <agaffney> abadger1999: these days, you're doing it wrong if you're not using 3 or 4 layers of frameworks for both JS and CSS, as well as using JS on the server side
+20:10:46 <gundalow> Though he's not around at the moment, so can't help with the current issue
+20:10:54 <abadger1999> Okay, anything else?
+20:11:05 <bcoca> gundalow: convert tables to divs, but keep them 'blind friendly' ... easy to say, much harder to do unless you edit tags directly, most wysiwyg tools are not good at taht
+20:11:06 <abadger1999> 60s to raise your hand or I'll close.
+20:11:07 <gundalow> Did we give 2.5.0 RC update?
+20:11:15 <dag> agaffney: ;-)
+20:11:24 <abadger1999> 2.5.0rc2 should be out this week.
+20:11:29 <abadger1999> Thursday or so.
+20:11:32 <bcoca> agaffney: i still edit webpages with vim
+20:11:40 <abadger1999> It definitely will not be 2.5.0 final this week.
+20:11:44 <agaffney> bcoca: I edit *everything* with vim
+20:12:06 * agaffney started doing webdev with HTML 3 and notepad
+20:12:22 * bcoca feels old now and needs a nap
+20:12:30 <abadger1999> @nitzmahone I figure you're in windows meeting but feel free to speak up if you want to say anything else about the 2.5.0 rc/final releases.
+20:12:50 <nitzmahone> Yep, rc2 Thursday, hopefully final next Thursday
+20:13:20 <dag> oh, windows meeting...
+20:13:24 <abadger1999> #infor 2.5.0rc2 Thursday, hopefully final next Thursday
+20:13:29 <abadger1999> #info 2.5.0rc2 Thursday, hopefully final next Thursday
+20:13:32 <abadger1999> Okay.
+20:13:35 <gundalow> nitzmahone: only one week betweenRC2 and final (assuming no major bugs)
+20:13:42 <nitzmahone> yep
+20:13:51 <gundalow> cool
+20:13:53 <abadger1999> 60s timer to close meeting again.
+20:13:56 <gundalow> Nothing else form me
+20:14:01 <gundalow> from
+20:14:05 * gundalow give sup typign
+20:15:00 <abadger1999> hehe
+20:15:06 <abadger1999> #endmeeting

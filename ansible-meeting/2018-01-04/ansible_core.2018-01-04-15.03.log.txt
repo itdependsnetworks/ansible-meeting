@@ -1,0 +1,90 @@
+15:03:30 <gundalow> #startmeeting Ansible Core
+15:03:30 <zodbot> Meeting started Thu Jan  4 15:03:30 2018 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:03:30 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:03:30 <zodbot> The meeting name has been set to 'ansible_core'
+15:03:38 <gundalow> #chair maxamillion sivel
+15:03:38 <zodbot> Current chairs: gundalow maxamillion sivel
+15:04:05 <gundalow> .hello2
+15:04:05 <zodbot> gundalow: [hellomynameis gundalow]
+15:04:51 <gundalow> #info Agenda: https://github.com/ansible/community/issues/291
+15:04:55 <gundalow> Pilou: Hi, you around?
+15:05:07 <shertel> Hi
+15:05:24 <gundalow> abadger1999: you around (DEFAULT_MODULE_LANG and DEFAULT_MODULE_SET_LOCALE. MODULE_LANG)
+15:06:04 <gundalow> jvanderhoof: Hi, you around?
+15:06:08 <jvanderhoof> i am
+15:06:22 <gundalow> #topic Conjur Lookup Plugin #34280
+15:06:27 <gundalow> #chair shertel jvanderhoof
+15:06:27 <zodbot> Current chairs: gundalow jvanderhoof maxamillion shertel sivel
+15:06:40 <gundalow> #info Conjur Lookup Plugin https://github.com/ansible/ansible/pull/34280
+15:07:13 <gundalow> jvanderhoof: What would you like help with?
+15:07:29 <gundalow> I see there are some review comments from Pilou that I believe still need addressing
+15:07:35 <jvanderhoof> I’d love some feedback
+15:07:53 <jvanderhoof> perfect.  i’ll address those.  once addressed, what’s the next step?
+15:07:59 <jvanderhoof> (first Ansible PR)
+15:08:29 <jvanderhoof> any examples of lookup plugins w/ unit tests?
+15:09:04 <jvanderhoof> I have some integration tests using Docker, which are run internally.  I can use that as a jump off point.
+15:09:52 <sivel> I just added a number of additional necessary changes
+15:10:08 <gundalow> jvanderhoof: example unit test https://github.com/ansible/ansible/tree/devel/test/units/contrib/inventory
+15:10:08 <jvanderhoof> thank you for the feedback!
+15:10:27 <jvanderhoof> thanks gundalow
+15:10:55 <gundalow> Most welcome
+15:11:35 <jvanderhoof> If i get those changes in place today, should I reach back out to both of you for the next steps?
+15:11:38 <gundalow> Unit test docs http://docs.ansible.com/ansible/latest/dev_guide/testing_units.html
+15:11:45 <shertel> Lookup plugin unit test too: https://github.com/ansible/ansible/blob/devel/test/units/plugins/lookup/test_password.py
+15:12:04 <gundalow> shertel: urgh, thanks. It's a lookup, not a dynamic inventory
+15:13:12 <jvanderhoof> that password test looks much better.  Should I assume you’d prefer I mock the network requests?
+15:13:27 <gundalow> correct
+15:13:37 <jvanderhoof> thanks!
+15:13:52 <gundalow> unit test (by defination) shuldn't need any external services, otherwise they would be integration tests
+15:14:07 <jvanderhoof> :) good point
+15:14:31 <shertel> @jvanderhoof Except I notice that example I pointed you to is using unittest, which we are moving away from. Just use pytest.
+15:14:33 <gundalow> shertel: sivel Once the PR feedback is done and unit tests are added do you think it's good to merge (subject to final review)
+15:15:17 <shertel> Looks pretty good to me
+15:15:22 <sivel> short of understanding anything about conjur...
+15:15:29 <jvanderhoof> sounds good. I’ll get all comments addressed ASAP.
+15:15:56 <jvanderhoof> Conjur is a credential store, similar to HashiCorp Vault
+15:16:45 <jvanderhoof> I have more full documenation around setting up Conjur & Ansible.  Is that something I can link to in the lookup plugin documentation?
+15:17:20 <gundalow> Yup, you can do: U(https://example.com/docs/foo.html)
+15:17:36 <jvanderhoof> perfect.  Thanks!
+15:19:19 <gundalow> jvanderhoof: Any other things feel free to ask in #ansible-devel
+15:19:42 <jvanderhoof> will do.  I appreciate the time this morning.  I feel good about my next steps.
+15:19:48 <gundalow> FYI 2.5 freeze will be 22nd Jan, so you should have time to get this in
+15:20:11 * Pilou waves
+15:20:12 <jvanderhoof> cool.   I’ll shoot for sooner rather than later to make sure it gets in.
+15:20:19 <gundalow> Ace
+15:20:28 <gundalow> jvanderhoof: Anything else on this?
+15:20:33 <gundalow> #chair Pilou
+15:20:33 <zodbot> Current chairs: Pilou gundalow jvanderhoof maxamillion shertel sivel
+15:20:33 <jvanderhoof> nope.  i’m good
+15:21:09 <gundalow> #topic Filesystem: refactor, improvements, add tests #25519
+15:21:25 <gundalow> #info Filesystem: refactor, improvements, add tests https://github.com/ansible/ansible/pull/25519
+15:22:08 <gundalow> Pilou: over to you
+15:23:12 <Pilou> comments have been addressed, review is stalled since one month
+15:24:09 * gundalow has triggered a shippable rerun on it
+15:24:32 <Pilou> this PR miss 2.4 already, i would prefer not to miss 2.5 :)
+15:27:25 <sivel> Tests will fail after the re-run on the integration tests
+15:27:32 <sivel> Due to using tests as filters
+15:28:10 <sivel> Pilou: you can convert them using hacking/fix_test_syntax.py
+15:28:31 <Pilou> yep
+15:28:52 <sivel> http://docs.ansible.com/ansible/devel/porting_guide_2.5.html#jinja-tests-used-as-filters for additional info
+15:35:50 <Pilou> it should be ok now
+15:42:52 <gundalow> sorry, was afk
+15:45:04 <gundalow> Pilou: poke bcoca for final review
+15:46:43 <bcoca> bcoca is going on vacation ... so alternate ....
+15:47:00 <gundalow> Not sure who approved that :P
+15:47:37 <bcoca> not as much approved as mandated
+15:47:47 <gundalow> :)
+15:48:10 <gundalow> Wonder how else can/should review
+15:50:30 <gundalow> I'm in another meeting now, if someone could take over that would be great
+15:53:18 <Pilou> #topic check_file_absent_if_check_mode in basic.py #33967
+15:54:19 <Pilou> #info add and use check_file_absent_if_check_mode in lib/ansible/module_utils/basic.py https://github.com/ansible/ansible/pull/33967
+15:54:56 <Pilou> feedbacks and reviews are welcome for this one too :)
+15:56:18 <Pilou> In case nobody there, I will close this out at 16:00.
+15:56:44 <shertel> #info shertel to leave a review on https://github.com/ansible/ansible/pull/33967
+15:57:06 <shertel> #topic Open Floor
+15:57:18 <eikef> sivel, would you mind having another look at https://github.com/ansible/ansible/pull/33419 (keycloak_clienttemplate), where I applied fixes as requested in as far as it is possible; would like to get it merged before the freeze if possible :-)
+15:58:27 <eikef> (issue is that there is a sub-sub-option which is a freeform dict which cannot be enumerated completely since a.) it is user-extensible in keycloak and b.) there is no documentation apart from the source on possible options for the existing dicts)
+16:01:09 * jtanner has been very distracted all morning
+16:02:31 <jtanner> shertel: time to #endmeeting?
+16:02:44 * shertel supposes so
+16:03:09 <shertel> #endmeeting

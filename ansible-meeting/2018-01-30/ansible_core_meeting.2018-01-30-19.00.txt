@@ -1,0 +1,147 @@
+======================================
+#ansible-meeting: Ansible Core Meeting
+======================================
+
+
+Meeting started by abadger1999 at 19:00:44 UTC. The full logs are
+available at
+https://meetbot.fedoraproject.org/ansible-meeting/2018-01-30/ansible_core_meeting.2018-01-30-19.00.log.html
+.
+
+
+
+Meeting summary
+---------------
+* LINK: Agenda: https://github.com/ansible/community/issues/291
+  (abadger1999, 19:01:44)
+* https://github.com/ansible/ansible/issues/35293  Should the service
+  module error when a service does not exist?  (abadger1999, 19:02:51)
+  * Consensus is that the current way (failing when the srvice does not
+    exist) is appropriate.  See dag's explanation in the bug report.
+    (abadger1999, 19:08:33)
+  * LINK:
+    https://github.com/ansible/ansible/blob/devel/lib/ansible/modules/system/service_facts.py
+    (sivel, 19:08:33)
+
+* Vote on changing Thursday's time from 1500 UTC. Suggesting 1600 or
+  1700 UTC.  (abadger1999, 19:08:51)
+  * ACTION: THursday meetings will be changed to 16:00 UTC for the time
+    being.  (abadger1999, 19:10:49)
+  * LINK:
+    https://github.com/ansible/community/blob/master/meetings/core-team.yaml
+    (sivel, 19:12:26)
+  * ACTION: abadger will record Thursday 16:00 UTC vote currently stands
+    at +1:6, 0:1, -1:1,  Will gather more votes at Thursday's meeting
+    (15:00 UTC) and then if approved will take effect next week.
+    (abadger1999, 19:26:28)
+
+* https://github.com/ansible/ansible/pull/33419  New module:
+  keycloak_clienttemplate  (abadger1999, 19:27:29)
+  * ACTION: sivel to continue to review keycloak_clienttemplate
+    (abadger1999, 19:34:37)
+  * ACTION: eikef to recruit a user to test  (abadger1999, 19:34:45)
+
+* LooseVersion Problems  (abadger1999, 19:35:03)
+  * LINK: https://github.com/ansible/ansible/issues/35435
+    (abadger1999, 19:35:06)
+  * LINK: https://github.com/ansible/ansible/issues/35417
+    (abadger1999, 19:35:15)
+  * LINK: https://github.com/ansible/ansible/issues/32301
+    (abadger1999, 19:35:22)
+  * ACTION: sivel to work on casting to int and comparing for the
+    hostname module  (abadger1999, 19:44:41)
+
+* https://github.com/ansible/ansible/pull/35453  inclusion of
+  config_template action plugin  (abadger1999, 19:45:10)
+  * LINK: https://github.com/ansible/ansible/pull/22959   (sivel,
+    19:58:02)
+  * we're not as united in opposition to this as previously but there
+    are still concerns  (abadger1999, 20:04:11)
+  * There is now an xml module and ini_file module as prior art
+    (abadger1999, 20:04:28)
+  * minimum needed to take a new look at reviewing this would be to
+    split each output format into its own module.  (abadger1999,
+    20:04:56)
+  * those should be modules rather than an action plugin (see the
+    current xml and ini_file modules and to a lesser extent, lineinfile)
+    (abadger1999, 20:06:09)
+
+* Should/how can we support old tls/ssl versions?
+  https://github.com/ansible/ansible/pull/35462  (abadger1999, 20:08:46)
+  * LINK: https://docs.python.org/2/library/ssl.html#socket-creation
+    (dag, 20:19:24)
+  * we're agreed that we need to allow the user to select the older,
+    insecure protocols but we're not yet sure how  (abadger1999,
+    20:22:00)
+  * option: module args.  Pros, best granularity, shortest time, allows
+    to leave out modules that don't need it.  Cons: requires changes to
+    every module that needs it  (abadger1999, 20:22:50)
+  * config setting.  Pros: Change in two places (config and
+    module_utils/urls.py) Cons: Enables for everything.  Opens us up to
+    downgrade attacks.  (abadger1999, 20:23:33)
+  * inventory_vars: Similar to config setting but allows to restrict per
+    managed host in case the problem is that the managed host doesn't
+    support the protocol (rather than some other server)  (abadger1999,
+    20:24:25)
+
+* Open floor  (abadger1999, 20:42:41)
+  * 2.4.3 final is on track for release tomorrow  (abadger1999,
+    20:43:09)
+
+Meeting ended at 20:45:00 UTC.
+
+
+
+
+Action Items
+------------
+* THursday meetings will be changed to 16:00 UTC for the time being.
+* abadger will record Thursday 16:00 UTC vote currently stands at +1:6,
+  0:1, -1:1,  Will gather more votes at Thursday's meeting (15:00 UTC)
+  and then if approved will take effect next week.
+* sivel to continue to review keycloak_clienttemplate
+* eikef to recruit a user to test
+* sivel to work on casting to int and comparing for the hostname module
+
+
+
+
+Action Items, by person
+-----------------------
+* eikef
+  * eikef to recruit a user to test
+* sivel
+  * sivel to continue to review keycloak_clienttemplate
+  * sivel to work on casting to int and comparing for the hostname
+    module
+* **UNASSIGNED**
+  * THursday meetings will be changed to 16:00 UTC for the time being.
+  * abadger will record Thursday 16:00 UTC vote currently stands at
+    +1:6, 0:1, -1:1,  Will gather more votes at Thursday's meeting
+    (15:00 UTC) and then if approved will take effect next week.
+
+
+
+
+People Present (lines said)
+---------------------------
+* abadger1999 (120)
+* sivel (87)
+* dag (62)
+* nitzmahone (59)
+* evrardjp (51)
+* maxamillion (29)
+* ryansb (17)
+* sdoran (14)
+* eikef (13)
+* zodbot (12)
+* jborean93 (11)
+* gundalow (3)
+* mattclay (3)
+
+
+
+
+Generated by `MeetBot`_ 0.1.4
+
+.. _`MeetBot`: http://wiki.debian.org/MeetBot

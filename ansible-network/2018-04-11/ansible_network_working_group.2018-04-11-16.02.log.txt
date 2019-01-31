@@ -1,0 +1,113 @@
+16:02:13 <gundalow> #startmeeting Ansible Network Working Group
+16:02:13 <zodbot> Meeting started Wed Apr 11 16:02:13 2018 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:02:13 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:02:13 <zodbot> The meeting name has been set to 'ansible_network_working_group'
+16:02:42 * Qalthos waves
+16:02:46 <Qalthos> er
+16:02:49 * Qalthos 🌊🌊
+16:03:01 * ganeshrn waves
+16:03:01 <gundalow> #chair sjaiswal samerd caphrim007 privateip Qalthos rcarrillocruz ganeshrn trishnag
+16:03:01 <zodbot> Current chairs: Qalthos caphrim007 ganeshrn gundalow privateip rcarrillocruz samerd sjaiswal trishnag
+16:03:06 * privateip waves
+16:03:13 <trishnag> o/
+16:03:16 <caphrim007> o/
+16:03:47 <gundalow> #info Agenda as always: https://github.com/ansible/community/labels/network
+16:04:26 <gundalow> caphrim007: did you have some questions around persistent connection?
+16:05:06 <gundalow> #chair jmcgill298
+16:05:06 <zodbot> Current chairs: Qalthos caphrim007 ganeshrn gundalow jmcgill298 privateip rcarrillocruz samerd sjaiswal trishnag
+16:05:13 <caphrim007> gundalow: yeah i need to work with someone to figure out why the responses from my server, when communicated with via the network_cli connection plugin, seem to be injected with arbitrary \r strings
+16:05:35 <caphrim007> i'm not sure if its something to do with ansible, or my server
+16:05:38 <gundalow> #topic Persistent Connection development questions
+16:05:53 <gundalow> caphrim007: nothing else on the agenda, so we can start with this
+16:06:14 <caphrim007> lemme drag my code back out. i shelved it last night
+16:07:14 <privateip> caphrim007: is this the culprate? --> https://github.com/ansible/ansible/blob/devel/lib/ansible/plugins/connection/network_cli.py#L424
+16:07:17 <pffs> is persistent connection via bastion something that might make 2.6?
+16:07:49 <caphrim007> privateip: that \r should be at the end of the entire line though
+16:07:59 <caphrim007> hold on. i'm still repro'ing my problem
+16:08:56 <gundalow> pffs: did you acozine1 documented it: https://github.com/acozine/ansible/blob/network_faq/docs/docsite/rst/network/user_guide/faq.rst https://github.com/ansible/ansible/pull/38359
+16:09:16 <privateip> pffs: you mean the enhancements we discussed?   persistent connection works today with bastion just not the way you would think
+16:09:52 <caphrim007> here's my output; i'm dumping these lines here
+16:09:52 <caphrim007> https://gist.github.com/caphrim007/a8df95ba7113467797e67dc6f42d4d85
+16:10:09 <pffs> privateip: yeah, the not having to reconnect part I think you talked about
+16:10:46 <caphrim007> dump here (receive) https://github.com/ansible/ansible/blob/devel/lib/ansible/plugins/connection/network_cli.py#L391
+16:10:56 <pffs> that document looks pretty good, although the "try not to use a bastion unless you can't help it" part makes me a little sad
+16:10:57 <caphrim007> and dump here (send) https://github.com/ansible/ansible/blob/devel/lib/ansible/plugins/connection/network_cli.py#L423
+16:11:18 <caphrim007> observe lines 17 and 19 of the gist
+16:11:27 <caphrim007> where did this come from "display-t \rhreshold"
+16:11:30 <caphrim007> that \r
+16:12:17 <caphrim007> the result of whatever that \r is, is that the return value includes my initial command
+16:12:35 <caphrim007> because this here https://github.com/ansible/ansible/blob/devel/lib/ansible/plugins/connection/network_cli.py#L472
+16:12:39 <caphrim007> seems to split on new lines
+16:12:42 <caphrim007> catches the \r
+16:12:58 <caphrim007> and then makes it \n separated when it stitches it back here https://github.com/ansible/ansible/blob/devel/lib/ansible/plugins/connection/network_cli.py#L476
+16:13:33 <caphrim007> so my output looks like this afterwards
+16:13:34 <caphrim007> https://gist.github.com/caphrim007/f87d51f8ddd09b3e955a952b4cf85aca
+16:13:39 <caphrim007> instead of just being "0"
+16:14:48 <caphrim007> and in some cases it goes really wacky like this https://gist.github.com/caphrim007/6bb984fa7e22db12baed8001602dc8dd
+16:15:10 <caphrim007> so i'm not sure why it seems to send it ok
+16:15:15 <caphrim007> but it receives it wrong
+16:15:21 <caphrim007> i'm baffled
+16:15:26 <pffs> caphrim007: does that happen on longer commands only?
+16:15:32 <caphrim007> yes
+16:15:41 <pffs> always at the same character count, maybe?
+16:15:44 <caphrim007> it seems to happen around the same character
+16:15:46 <caphrim007> yes
+16:15:51 <caphrim007> at/around char 37
+16:15:52 <pffs> I wonder if it's a terminal width thing
+16:16:07 <Qalthos> Yeah, that sounds just like a terminal width issue
+16:16:09 <caphrim007> that was my next guess, that its an issue with my remote device
+16:16:24 <privateip> ah i remember we had a similar issue with terminal widths way back when
+16:16:39 <pffs> I've had that issue on IOS as well for really long lines
+16:16:49 <privateip> are you able to modify the terminal width?
+16:16:49 <pffs> since I think it sets the term width to 512 on IOS
+16:17:08 <pffs> tmsh might be really impacted on that since your prompt tends to be super long
+16:17:27 <caphrim007> pffs i agree
+16:17:39 <caphrim007> privateip i am not sure if i can set the width
+16:17:43 <caphrim007> "it depends"
+16:17:48 <caphrim007> because some times the shell is bash
+16:17:51 <caphrim007> but other times its tmsh
+16:17:57 <caphrim007> and tmsh may not have that ability
+16:18:02 <pffs> caphrim007: https://devcentral.f5.com/questions/is-there-a-way-to-set-terminal-width-in-tmsh
+16:18:12 <pffs> although that requires the user have bash access
+16:18:33 <caphrim007> pffs....well....we kiiiiinda require that
+16:18:48 <caphrim007> the box is more-or-less unconfigurable without admin privs
+16:18:51 <pffs> not everyone does, though
+16:19:10 <caphrim007> right, but ansible is essentially useless if you dont have admin role
+16:19:31 <pffs> I wonder if you could use something like from here: http://www.shrubbery.net/pipermail/rancid-discuss/2015-February/008034.html
+16:19:33 <caphrim007> 98 of 100 f5 modules are essentially useless
+16:19:47 <pffs> looks like rancid sets a specific TERM value before connecting
+16:23:33 <caphrim007> trying both methods right now
+16:28:08 <gundalow> While caphrim007 is looking into that, does anyone have anything else?
+16:28:17 <gundalow> samerd: pffs Anything from you?
+16:29:13 <gundalow> Hi Anil, anything for todays meeting?
+16:29:24 <pffs> had some issues yesterday running via a bastion with really high latency where I was getting a bunch of the error reading protocol banner messages
+16:29:26 <Anil> Hi
+16:29:57 <pffs> Tried modifying paramikos lineread timeout above 2 seconds but didn't seem to matter
+16:30:05 <Anil> No.. i dont have anything specific to discuss. But in 2.6 I would like to move all cnos modules to persisytenc connection
+16:31:01 <caphrim007> pffs: i think your tty link is working
+16:31:26 <gundalow> Anil: https://github.com/ansible/community/blob/master/group-network/network_dev_network_cli.rst should help with that
+16:32:08 <Anil> Gundalow: Great! Thanks..
+16:32:32 <gundalow> pffs: Could you please raise an issue once you've got enough information
+16:32:56 <Anil> Gundalow: I will work on that , and more over there are change in CLIs for cnos. So I will change them too
+16:33:09 <gundalow> nod
+16:33:13 <pffs> gundalow: can do. It's on 2.4.3 since 2.5.0 is completely broken for bastions with even a tiny amount of latency
+16:33:13 <gundalow> #topic Open Floor
+16:33:27 <caphrim007> pffs: yep, its working now with stty. \o/
+16:33:38 <Qalthos> \o/
+16:34:03 <privateip> nice
+16:34:29 <pffs> caphrim007: iirc when we were fixing rancid to work with f5s we ended up running everything from the bash shell instead of tmsh because of something like that
+16:34:42 <pffs> like there's a -q option or something that makes the output much easier to read
+16:35:39 <privateip> pffs: this is going ot be a very non trival change ... would you be able to test some devel code?
+16:35:52 <privateip> the bastion stuff that is
+16:35:56 <pffs> privateip: sure
+16:36:15 <privateip> okay ... will reach out to you once i have it ready  (might be a couple of weeks)
+16:36:28 <pffs> I can probably even get something set up in my lab so that I can induce latency the connection to the bastion
+16:36:38 <privateip> that would be great
+16:36:44 <samerd> @gundalow: I have a question, not related to ansible-network but regarding to partnership between Mellanox and Ansible, I do not know the right forum to raise it.
+16:37:08 <pffs> solid,  yeah, just highlight me on here and I'll test for you
+16:38:15 <privateip> samerd: you can email me offline psprygad@redhat.com
+16:38:27 <gundalow> thanks privateip
+16:38:48 <samerd> @privateip: thanks a lot, will do after the meeting
+16:47:00 <gundalow> OK, will close if there is nothing else
+16:48:06 <gundalow> OK, thanks all
+16:48:08 <gundalow> #endmeeting

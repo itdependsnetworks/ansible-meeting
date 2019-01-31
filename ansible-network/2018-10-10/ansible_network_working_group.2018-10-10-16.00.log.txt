@@ -1,0 +1,188 @@
+16:00:41 <Qalthos> #startmeeting Ansible Network Working Group
+16:00:41 <zodbot> Meeting started Wed Oct 10 16:00:41 2018 UTC.
+16:00:41 <zodbot> This meeting is logged and archived in a public location.
+16:00:41 <zodbot> The chair is Qalthos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:00:41 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:00:41 <zodbot> The meeting name has been set to 'ansible_network_working_group'
+16:01:15 <Qalthos> #chair dagrawal ganeshrn gundalow ikhan justjais nilashishc pabelanger privateip rcarrillocruz trishnag
+16:01:15 <zodbot> Current chairs: Qalthos dagrawal ganeshrn gundalow ikhan justjais nilashishc pabelanger privateip rcarrillocruz trishnag
+16:01:30 <Qalthos> #topic Core Updates
+16:01:49 <Qalthos> #info Ansible 2.7 was released last week!
+16:02:18 <rcarrillocruz> o/
+16:02:25 <rcarrillocruz> who was at fest?
+16:02:27 <rcarrillocruz> any feedback
+16:02:29 <Qalthos> You can find it in all the usual places, which for most cases means pypi
+16:02:36 <pabelanger> o/
+16:02:45 <justjais> \o/
+16:03:02 <pabelanger> ansiblefest was great, I thought it had a lot of energy this time around
+16:03:09 <pabelanger> not to say others did't have energy
+16:03:12 <trishnag> o/
+16:03:21 <pabelanger> but 1400 people talking about ansible was awesome
+16:03:28 <Qalthos> #info AnsibleFest was last week as well
+16:03:31 <Qalthos> I wasn't there, but I heard it was nice
+16:04:26 <Qalthos> Not a lot of updates from the team this week due to fest
+16:05:15 <Qalthos> (but since many are here, they can talk about that if they want)
+16:06:02 * privateip waves
+16:06:07 <Qalthos> Beyond that, the agenda can, as always, be found at
+16:06:09 <Qalthos> #link https://github.com/ansible/community/labels/network
+16:08:28 <Qalthos> Right, then, let's get on with it
+16:08:45 <Qalthos> #topic A brief note on HTTPAPI
+16:09:38 <Qalthos> I tried to cover the concerns raised in the issue, and I would have loved to sit down with you and talk about it if I'd been there
+16:10:30 <Qalthos> The gitst is that httpapi has had some development over the 2.7 cycle to make it friendlier to uses other than the one it was designed for
+16:11:15 <Qalthos> If you want to use it or can't figure out how to do something, let me know and we can talk about how to make it better
+16:12:23 <Qalthos> That out of the way, we have some proposals on the agenda
+16:12:35 <Qalthos> #topic Interface manager role
+16:12:46 <Qalthos> #link ansible-network/network-proposals#1
+16:13:09 <Qalthos> privateip: do you want to take this?
+16:13:12 <privateip> sure
+16:13:25 <privateip> i think most (hopefully) of the details are in the proposal
+16:13:43 <privateip> the proposal covers creating a new platform agnostic role for network interfaces
+16:13:52 <privateip> this would ultimately replace net_interface in core
+16:14:05 <privateip> looking for comments / critiques / suggestions / opinions
+16:15:27 * privateip waits for Jeopardy! theme song to stop playing in his head to continue
+16:15:30 <caphrim007_> i've commented all of my comments on it i think
+16:15:36 <privateip> are you good with it?
+16:15:43 <caphrim007_> yeah i'm good with it
+16:16:01 <privateip> does the extensions make sense to you?
+16:16:07 <caphrim007_> totes
+16:16:15 <privateip> excellent
+16:16:29 <caphrim007_> i was just interested in agreeing that "this is what we'll call vendor extensions
+16:16:52 <caphrim007_> as far as "put them in a dictionary and it passes through" that's a-ok with me
+16:17:13 <privateip> yep, we will carry that same pattern through to every role
+16:17:21 <caphrim007_> vendor should also be responsible for documenting in their role those extensions
+16:17:27 <privateip> yes correct
+16:17:30 <caphrim007_> k
+16:17:36 <privateip> that should be done in their lower order provider role
+16:17:43 <caphrim007_> correct
+16:18:10 <privateip> ok i think we are good to move to the next topic
+16:18:29 <Qalthos> #topic VRF definitions role
+16:18:34 <Qalthos> #link ansible-network/network-proposals#3
+16:18:53 <privateip> same conversation just different role
+16:19:06 <privateip> the role was intentionally kept brief
+16:19:23 <privateip> i know there is quite a bit more we can (and will) add to the model
+16:19:27 <privateip> but wanted to start somewhere
+16:19:51 <privateip> since we release every other week, i took the short path to get the role work started
+16:19:56 <privateip> anyone disagree with this approach?
+16:20:15 <caphrim007_> i don't know how my platform would conform to this, but that's a work item for me. the gist of the proposal i'm ok with
+16:21:11 <privateip> are there model changes that would help?
+16:21:20 <privateip> we can defer a week if you want some more time to absorb it
+16:21:32 <privateip> i got it published a little late for this weeks meeting
+16:21:33 <caphrim007_> no, its more of a problem of i believe my product supports this...i just dont know where
+16:21:39 <privateip> ok
+16:22:45 <privateip> as you absorb it, please lets discuss if we need to make changes ... with the roles construct and release cycle we have infinitely more ability to make changes on the fly
+16:22:53 <caphrim007_> k
+16:23:51 <privateip> i guess we are on to vlans
+16:23:53 <Qalthos> #topic VLANs role
+16:23:57 <Qalthos> #link ansible-network/network-proposals#2
+16:24:05 <privateip> that was some impressively fast typing :)
+16:24:19 <caphrim007_> had a question about vlans proposal actually
+16:24:19 <Qalthos> You got to it while I was typing (:
+16:24:26 <caphrim007_> how does it differ from this role? https://github.com/ansible-network/configure-vlan
+16:24:48 <privateip> we will be folding configure-vlan into this proposed role
+16:25:00 <caphrim007_> can we annotate that on the proposal?
+16:25:07 <privateip> yes absolutely!
+16:25:15 <privateip> i can take that as an AI
+16:25:53 <Qalthos> #action privateip Update description that configure-vlan will be folded into this role
+16:27:28 <privateip> general question.... is there enough detail in the proposals?
+16:28:27 <caphrim007_> we could probably use a section that outlines what the generic params will be?
+16:28:39 <caphrim007_> or are vlan, name, status, and state all of them
+16:28:45 <caphrim007_> vlan_id*
+16:29:37 <Qalthos> I'm leaning towards no, but there's not a lot of functionality for these proposals given the early-and-often approach
+16:29:41 <privateip> for this initial release those are it unless you have others you want to propose
+16:29:44 <Qalthos> So I'm not actually sure what more to add
+16:29:59 <caphrim007_> is vlan_id another way of saying "vlan tag"?
+16:30:07 <privateip> i think we need a generalized "role architecture" write up
+16:30:10 <privateip> yes
+16:30:13 <caphrim007_> k
+16:30:23 <privateip> that we can link to in the proposals
+16:30:43 <privateip> to address things like caphrim007_ commentary around extensions
+16:31:11 <privateip> you can tag me for that AI as well
+16:31:15 <nilashishc> privateip: So the job of these roles would be to generate vlan/vrf/interface config and then  utilize the provider roles' config_manager function to push it to the device?
+16:31:49 <nilashishc> I mean the provider specific load functions.
+16:32:10 <privateip> sorta ... the high order role (vlans in this case) provide data validation and any munging (if necessary) ... the lower order roles (provider roles) are wholly responsible for the implementation
+16:32:23 <privateip> config_manager is not involved
+16:32:24 <Qalthos> #action privateip create role architecture writeup that can be linked in to role proposals to answer common questions regarding roles
+16:32:25 <nilashishc> Oh got it.
+16:32:55 <ganeshrn> privateip: the top level 'state' option is provided for  intent check right?
+16:33:03 <privateip> at least not required (some roles may choose to re-use config_manager tasks)
+16:33:09 <privateip> ganeshrn: correct
+16:33:33 <ganeshrn> in that case we will might need the delay option as well
+16:33:39 <privateip> the overall idea is to give complete control to the provider for implementation
+16:33:51 <Qalthos> privateip: on that note, more detail on the purpose of each option could be added to the proposals
+16:33:58 <privateip> ganeshrn: two functions... configure and validate
+16:34:13 <privateip> playbook writer is responsible for any delay if both are used back to back
+16:34:23 <privateip> Qalthos: +1
+16:35:01 <Qalthos> #action privateip describe each role option on proposals
+16:35:47 <privateip> any final comments?
+16:35:52 <Qalthos> privateip: does that mean there should be a validate.yaml function as well?
+16:35:59 <privateip> yes
+16:36:01 <Qalthos> or is that in configure?
+16:36:03 <privateip> and there is
+16:36:21 <privateip> network_interfaces support config and validate
+16:36:25 <privateip> vlans just config (for first release)
+16:36:34 <privateip> vrf_definitions just config (for first release)
+16:36:44 <privateip> we will add validate to both vlans and vrf in subsequent releases
+16:36:56 <privateip> i anticipate a third function as well
+16:36:58 <privateip> facts
+16:37:31 <privateip> so over time a higher order role will support functions: configure, validate, facts
+16:37:40 <privateip> but we can phase this in over release cycles
+16:37:49 <nilashishc> +1
+16:38:18 <privateip> the whole intention of bi-weekly release cycles is to avoid huge feature addtions
+16:38:25 <dagrawal> privateip can we also make a configurable 'function' in these roles
+16:38:39 <privateip> dagrawal: can you explain your idea?
+16:38:48 <dagrawal> provider roles can implement it the way they want
+16:39:26 <dagrawal> e.g. get_existint_vlan function for vlan role
+16:39:53 <dagrawal> higher order role does not know there is a function like it
+16:40:17 <dagrawal> and it can be passed as kv pair
+16:40:26 <privateip> ah yes
+16:40:35 <privateip> definitely
+16:41:03 <privateip> i will try hard to get the draft of the role architecture document done by next week and there we can define abstractly how that would function
+16:42:46 <Qalthos> Anyone have any other comments on either the VLAN role or role direction in general?
+16:43:30 <Qalthos> (that second half may have been way more broad in scope than I meant)
+16:44:48 <Qalthos> We have one more last minute entry on the agenda
+16:45:02 <Qalthos> #topic Lenovo cleanup PR
+16:45:53 <Qalthos> Anil_Lenovo: There is a bit much here to go through right now, but I'll look it over and try to get something back to you today
+16:46:17 <Qalthos> #link https://github.com/ansible/ansible/pull/46623
+16:46:26 <Anil_Lenovo> Qalthos: Thats Ok take your time
+16:46:32 <Qalthos> #topic Open Floor
+16:46:49 <pabelanger> I can give a little update on zuul / infrastructure things
+16:47:15 <Qalthos> #topic zuul / infra
+16:47:49 <Qalthos> pabelanger: go for it
+16:48:07 <pabelanger> While I was at ansiblfest last week, I ran into logan- who is a public cloud provider. Was talking about our future infrastructure needs, and he's been able to via us some credit for POC using nodepool / zuul on limestone. The super cool things about it, is it took only a few hours to bring online 2 more regions for our testing
+16:48:29 <pabelanger> so today, we have 2 public cloud providers (openstack), giving 4 regions for testing
+16:48:36 <pabelanger> making our jobs much more redundant
+16:48:57 <Qalthos> neat
+16:49:20 <pabelanger> I also had a meeting with packet.net this week, again to help bootstrap some infrastructure things. And again, they've give us some credits so we can do a POC atop of their baremetal servers
+16:49:39 <pabelanger> which, once working could be another region for clouds or maybe k8s / openshift
+16:50:38 <pabelanger> So far, both regions vexxhost / limestone have been working great, and we've had no outages there
+16:52:31 <Anil_Lenovo> I have one topic to discuss pertaining to cumulus network modules. Can I ?
+16:52:59 <pabelanger> sure, that is all I had
+16:53:00 <Qalthos> Anil_Lenovo: Sure
+16:53:21 <Anil_Lenovo> One of my customer has both Lenovo and Cumulus switches.
+16:54:05 <Anil_Lenovo> And he want to use image transfer and vlan configurations using our respective modules
+16:54:28 <Anil_Lenovo> but for cumulus the modules were there, they are all deprecated now
+16:55:06 <Anil_Lenovo> and they have a single module only now viz. CCLU
+16:55:09 <Anil_Lenovo> NCLU
+16:55:21 <Qalthos> #topic cumulus modules
+16:55:44 <Anil_Lenovo> any one from cumulus here to help me out ?
+16:56:29 <Anil_Lenovo> what are their plans on deprecated module like image download etc
+16:57:34 <Anil_Lenovo> it comes here lib/ansible/modules/network/cumulus
+16:58:55 <Anil_Lenovo> Next query I have is that they dont have example on vlan configurations ? Will it work with nclu.py ?
+17:00:31 <pabelanger> I'm not sure myself, I think we might need to take an action item here and loop back next week
+17:01:59 <Anil_Lenovo> Yeah. Some contact point is also fine
+17:02:21 <Anil_Lenovo> I can then chat with them privately
+17:02:38 <privateip> my understanding from talking with them is that nclu is the only module they are going to write
+17:02:55 <privateip> whether or not it supports vlans... i dont know
+17:03:07 <Anil_Lenovo> ok
+17:03:21 <privateip> that said, we dont have to wait for cumulus
+17:03:46 <privateip> we can develop modules in this community
+17:03:51 <privateip> if someone is willing to take on the task
+17:05:40 <Anil_Lenovo> then we need to know the cli syntax and may need a switch too
+17:10:02 <Qalthos> Well it doesn't sound like we'll be getting anywhere with that here and now
+17:10:52 <privateip> VM?
+17:10:59 <privateip> CumulusVX?
+17:12:35 <Anil_Lenovo> No issues. Will see next week, they may review the meeting minutes and will respond.
+17:14:20 <Qalthos> A better course might be to open an issue against the NCLU module, though I can't say if they'll see that either
+17:15:08 <Anil_Lenovo> I will try that
+17:15:36 <Qalthos> We're a bit over time, so thanks everyone for coming
+17:15:46 <Qalthos> #endmeeting

@@ -1,0 +1,271 @@
+19:01:02 <gundalow> #startmeeting Ansible Core
+19:01:02 <zodbot> Meeting started Tue Nov 14 19:01:02 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:01:02 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:01:02 <zodbot> The meeting name has been set to 'ansible_core'
+19:01:11 <gundalow> sivel: Hello there :)
+19:01:21 <nitzmahone> o/
+19:01:35 * mikedlr o/
+19:01:49 <funzo> \m/
+19:02:15 <alikins> blorp
+19:02:43 <gundalow> #chair sivel nitzmahone funzo alikins
+19:02:43 <zodbot> Current chairs: alikins funzo gundalow nitzmahone sivel
+19:02:50 <aalexmonteiro> \o/
+19:03:17 <gundalow> #info Agenda as always: https://github.com/ansible/community/labels/core
+19:03:33 <gundalow> aalexmonteiro: Guess we will start with yours :)
+19:03:36 <gundalow> #chair aalexmonteiro
+19:03:36 <zodbot> Current chairs: aalexmonteiro alikins funzo gundalow nitzmahone sivel
+19:04:05 <gundalow> #topic HPE OneView #32701 #32798
+19:04:18 <gundalow> #link https://github.com/ansible/ansible/pull/32701
+19:04:29 <gundalow> #link https://github.com/ansible/ansible/pull/32798
+19:05:11 <gundalow> aalexmonteiro++ for unit tests
+19:05:20 <sivel> Something I notice immediately in #32701 is we are asking for tests to be written using pytest and not using unittest
+19:05:33 <gundalow> sivel: oh, good spot
+19:05:43 <sivel> we are migrating away from unittest based tests
+19:05:46 * gundalow wonders if we have that documented anyway
+19:06:03 <sivel> note sure, we discussed it in detail a "few" testing meetings ago
+19:06:16 <sivel> I think mikedlr was going to update his PR for that
+19:06:22 <sivel> his testing docs PR
+19:06:52 <sivel> There aren't many tests there, so it shouldn;t take too long at least for 32701
+19:06:54 <mikedlr> sivel: not really;  I did both;  the important thing is Pilou's standardisation work.
+19:06:57 * jtanner lurks
+19:06:58 <gundalow> Docs have mention of pytest and unnittest
+19:07:18 <gundalow> aalexmonteiro: Would you be OK to update to use pytest
+19:07:22 <mikedlr> if that is cleared up what way it goes I'd be happy to revisit the documentaiton
+19:07:24 <aalexmonteiro> ok guys
+19:07:29 <aalexmonteiro> no problem
+19:07:51 <sivel> aalexmonteiro: let us know in #ansible-devel if you have any questions about using pytest
+19:07:59 <gundalow> #action aalexmonteiro to update to use pytest (not unittest)
+19:08:15 <sivel> outside of that, nothing really caught my eye
+19:08:28 <Pilou> mikedlr: #31456 is ready for review :)
+19:08:35 <gundalow> What should checkmode be for _facts modules?
+19:08:36 <aalexmonteiro> ok guys, thanks
+19:08:48 <gundalow> in argspec
+19:09:17 <sivel> hrm
+19:10:14 <sivel> they don't really support checkmode, and most I have seen don't declare checkmode, which defaults to false
+19:10:47 <gundalow> quick grep shows some *_facts.py with supports_check_mode=True
+19:10:50 <sivel> but getent which is a facts plugin does list supports_check_mode=True
+19:11:14 <sivel> thinking about it, it seems they should probably be True, since they don't make modifications, just report info
+19:12:23 <abadger1999> Greetings
+19:12:40 <gundalow> #chair abadger1999
+19:12:40 <zodbot> Current chairs: aalexmonteiro abadger1999 alikins funzo gundalow nitzmahone sivel
+19:12:50 * mattclay waves
+19:12:57 <gundalow> #chair mattclay
+19:12:57 <zodbot> Current chairs: aalexmonteiro abadger1999 alikins funzo gundalow mattclay nitzmahone sivel
+19:13:21 <gundalow> aalexmonteiro: How come you have `no_log: true` in teh exampels in 32701?
+19:13:27 <abadger1999> sivel: +1
+19:13:29 <gundalow> also, why can't I type?
+19:13:34 <abadger1999> that way they get run in check_mode.
+19:13:52 <sivel> abadger1999: yeah, without having to explicitly state that they should run
+19:14:02 <aalexmonteiro> This is to prevent the password from being displayed
+19:14:38 <sivel> aalexmonteiro: in argument_spec password should be no_log
+19:14:48 <sivel> that prevents needing to do it on each task
+19:15:02 * mikedlr reads through https://github.com/ansible/ansible/pull/31456/files ; looks good. Will have some suggestions for saying pytest is preferred.
+19:15:34 <gundalow> aalexmonteiro: https://github.com/ansible/ansible/blob/devel/lib/ansible/module_utils/oneview.py#L210 should have `, no_log=True`
+19:15:49 <gundalow> then you can remove the `no_log: true` from the examples
+19:16:11 <aalexmonteiro> @gundalov ok
+19:16:52 <gundalow> apart from that 32701 looks good
+19:16:57 <gundalow> looking at #32798
+19:18:13 <gundalow> Can #32798 support checkmode?
+19:18:44 <sivel> I'm guessing it could
+19:19:13 <gundalow> comments added
+19:19:31 <gundalow> aalexmonteiro: Over all look good. Feel free to ask for extra help in #ansible-devel at anypoint
+19:19:43 * gundalow will move to next topic if there isn't anything else here
+19:19:49 <aalexmonteiro> Thank you guys
+19:20:30 <gundalow> #topic Deprecate tests used as filters Proposal#83
+19:20:34 <gundalow> sivel: You're up
+19:20:37 <sivel> hey!
+19:20:47 <gundalow> #info https://github.com/ansible/proposals/issues/83 Deprecate using jinja tests as filters
+19:20:51 <sivel> Just wanted to get some eyes on my proposal, and maybe move forward with it
+19:20:59 <sivel> I want to deprecate using jinja tests as filters
+19:21:01 <gundalow> #info https://github.com/ansible/ansible/pull/32361 WIP implementation
+19:21:19 <sivel> so that eventually we no longer do `result | failed` is would be `result is failed` in proper jinja syntax
+19:21:39 <sivel> There is more reasoning in the proposal and such
+19:22:18 <sivel> Can everyone take a look?  I know bcoca already +1ed it in the proposal
+19:22:21 <gundalow> +1 for useful DEPRECATION WARNINGS
+19:22:38 <mikedlr> +1 also - I have been confused by this not so long ago.
+19:22:41 <sivel> If we get past whether we should do this, I have an implementation detail question
+19:23:09 <sivel> Like I mention in the proposal, the deprecation warning will be specific and give an example of what to change, with context about what test was actually used
+19:23:54 <sivel> abadger1999 mattclay alikins jtanner nitzmahone anyone else?
+19:24:06 <sivel> I guess I could have just copied the list of chairs there :)
+19:24:20 <nitzmahone> +1 to that
+19:24:28 * gundalow stabs people on slack
+19:24:39 <jtanner> sorry, vmware emails in my inbox again
+19:24:42 * bcoca stabs slack on people
+19:24:43 <mikedlr> is there any chance that we start to have a playbook updating script which modernises old playbooks?
+19:24:45 <sivel> nitzmahone: to the feature or the deprecation warning?
+19:24:46 <nitzmahone> Now that tests are properly pluggable, I'm all for it
+19:24:55 <alikins> not sure I understand the implications or motivations (I don't disagree with them though)
+19:25:00 <nitzmahone> sivel: Both
+19:25:01 * sdoran waves
+19:25:11 <sivel> alikins: one of the big problems is our users don't understand the difference
+19:25:17 <sivel> and jinja applies a difference to them
+19:25:19 <sdoran> Is it just stylistic or does it have some technical benefit as well?
+19:25:23 <nitzmahone> Partly because we conflated them for a long time
+19:25:27 <abadger1999> sivel: Ansible 3.0 for actually removing it?
+19:25:40 <mikedlr> I want to do some migration strategy from  rds to rds_instance and it could be helpfully automated, for example.
+19:25:40 <sivel> abadger1999: My implementation listed 2.9 I think?
+19:25:46 <sivel> I'd have to check
+19:25:54 <bcoca> select/reject take tests as arguments, being the same as filters confuses people
+19:25:56 <sivel> I may have used 2.10, but don't know what our version number plans are
+19:25:57 <abadger1999> We may want to ask the business side about this...
+19:25:58 <gundalow> #chair bcoca mikedlr sdoran jtanner ryansb
+19:25:58 <zodbot> Current chairs: aalexmonteiro abadger1999 alikins bcoca funzo gundalow jtanner mattclay mikedlr nitzmahone ryansb sdoran sivel
+19:25:59 <mikedlr> plan to do it in 2.9 but then actually do it in 3.0?
+19:26:00 * sdoran admits to switching to `is success` after sivel pointed out the error of my ways
+19:26:02 <abadger1999> I know things like deprecating with_ got pushed back.
+19:26:10 <sivel> yes, what bcoca said: select/reject take tests as arguments, being the same as filters confuses people
+19:26:15 <jtanner> so for the "is failed" is "failed" going to be a reserved var that we always pass into templar?
+19:26:15 <bcoca> 2.9, 2.10, 2.3256
+19:26:30 <gundalow> Do we have any feed for how many people this will impact
+19:26:31 <abadger1999> Deprecating tests using filter syntax is probably a similar level of pain.
+19:26:32 <sivel> we have had real tests for some time, just no deprecation message
+19:26:42 <gundalow> s/feed/feel/
+19:26:47 <sivel> so this deprecation message is useful
+19:26:54 <sivel> otherwise no one will ever know, nor move
+19:26:58 <bcoca> abadger1999: we did not get that much push back on with_ only 3 people complained
+19:27:10 <gundalow> think a lot of integration tests do result|failed
+19:27:19 <abadger1999> bcoca: k.  But we reveted the warning for now.
+19:27:22 <bcoca> s/a lot/ all/
+19:27:26 <sivel> I think with with_/loop it was because we implemented loop in the same version we were deprecating with_
+19:27:30 <abadger1999> bcoca: This seems to be a similar level of pain.
+19:27:34 <sivel> this is different, as tests have existed for a while
+19:27:38 <bcoca> abadger1999: i did, but was planning to from start
+19:28:01 <sdoran> gundalow: Yes, they most certainly do. I've been slowing rewriting them when I find them.
+19:28:03 <gundalow> grep "|failed" -r test/integration/targets | wc -l
+19:28:04 <gundalow> 226
+19:28:07 <sivel> Also, as the deprecatiog example shows, it will give you an example of how to fix it
+19:28:13 <sivel> Also, I will fix all the integration tests
+19:28:14 <jtanner> i'm indifferent, but i also take the time to learn jinja when i don't understand it
+19:28:16 <sivel> I did docs already
+19:28:21 <alikins> looking through my corpus of plays/roles, I see 167 uses of just '.*\|failed|.*\|sucess|.*\|skipped'.
+19:28:32 <sdoran> Don't forget `changed`
+19:28:41 <sivel> alikins: that is expected, since we conflated what tests and filters were for so long
+19:28:47 <alikins> which is not bad for a few hundred megs of playbooks
+19:28:57 <sivel> I actually tend to use the `is` syntax everywhere, but I have a lot of jinja experience
+19:29:16 <sivel> But as mentioned, I know there will be complaints about the deprecation warning
+19:29:24 <sivel> but I think this moves us in a useful direction
+19:29:26 <nitzmahone> And at least for the builtins, IIRC we have patched filters that map to the test impls
+19:29:28 <sivel> and not for no purpose
+19:29:32 <nitzmahone> (eg failed)
+19:29:33 * gundalow personally wasn't ever sure about the difference, so I like that we are clarifying it
+19:29:49 <abadger1999> Anyhow.. I like getting rid of cruft... But I have concerns over timeline that I'm not qualified to answer... I think we have to tell the business side, "We're going to deprecate this" but let them have input o nthe timeframe for doing so.
+19:29:59 <sivel> I didn't tally all of the +1 s
+19:30:05 <sivel> but so far that is all I have seen
+19:30:24 <sdoran> nitzmahone: Yes, we support the different conjugations to make in "read better", which I always liked.
+19:30:29 <sivel> +1 gundalow, mikedlr, bcoca, sivel, nitzmahone
+19:30:38 <sdoran> +1 from me as well
+19:30:45 <sivel> now, if we agree that this should be done, I have a grammar question
+19:30:52 <sivel> and I feel like we have agreement
+19:30:55 <sdoran> Now the hard part...
+19:30:55 <bcoca> result is success
+19:31:01 <sivel> so...
+19:31:02 <sivel> yes
+19:31:03 <bcoca> result is succeeded
+19:31:07 <nitzmahone> No, you shouldn't end a sentence with a preposition
+19:31:07 <sivel> there are tests like `isdir`
+19:31:11 <abadger1999> +1 on doing it from me with just the caveat that I think timeframe still needs to be flexible until we hear from the business side
+19:31:17 <sivel> and `when: result is isdir` is weird
+19:31:28 <nitzmahone> +1 to alias to `dir`
+19:31:29 <bcoca> sivel: dir 'alias' exists iirc
+19:31:31 <sivel> I went through and made some additional aliases
+19:31:38 <sivel> bcoca: yes, my PR does that
+19:31:52 <sivel> however, and I'm ok with the aliases for better "grammar"...
+19:31:53 <gundalow> thaumos: FYI, when you return we are discussing https://github.com/ansible/proposals/issues/83 and *when* it should be done and *when* the removal should be set for
+19:32:06 <sivel> I added deprecations on the *old* names, but I personally think I should remove that
+19:32:11 <nitzmahone> agreed
+19:32:13 <mattclay> When we document why we're making the change, is there anything else we can say other than we wanted to avoid confusion between what is a test and what is a filter?
+19:32:13 <sivel> no reason to actually deprecate them
+19:32:27 <abadger1999> Can you have tests and filters that have the same name?
+19:32:27 <nitzmahone> But maybe change the docs to refer to the "sane" names
+19:32:33 <sivel> nitzmahone: already did that
+19:32:38 <nitzmahone> Since we stopped conflating them
+19:32:45 <nitzmahone> We already do
+19:32:57 <sivel> I just added the deprecation for the old name, but I don't agree that we should have that deprecation, but wanted to check with everyone else
+19:33:12 <sivel> in the heat of the moment, I took it too far imo by adding deprecations for things like `isdir`
+19:33:17 <abadger1999> (For "dir" I'm wondering what happens if someone creates a filter that does a python dir [probably for debugging like the type filter we added])
+19:33:17 <bcoca> abadger1999: once we separate them, they can
+19:33:23 <sivel> I want to remove that, just checking that others feel the same
+19:33:25 <nitzmahone> @sivel: didn't see the docs change in your WIP PR
+19:33:31 <nitzmahone> (still dont)
+19:33:36 <sivel> nitzmahone: maybe I didn't push :)
+19:33:55 <sivel> nitzmahone: it's there
+19:33:58 <nitzmahone> Yeah, I don't think we need to deprecate
+19:34:02 <sivel> https://github.com/ansible/ansible/pull/32361/files
+19:34:07 <sivel> the top files in that are docs
+19:34:23 <sivel> https://github.com/ansible/ansible/pull/32361/files#diff-38a0a1a2d6162e9940c9fd752205bb6eL78
+19:34:30 <sivel> an example of an alias
+19:34:31 <abadger1999> +0 on whether to deprecate old names or not.
+19:34:51 <abadger1999> I like getting rid of cruft so perhaps I'm slightly for deprecating the old names.
+19:35:01 <sivel> I don't think it is necessary honeslty.  The new names will read better, but the old ones have no technical limitation
+19:35:14 <sivel> getting rid of cruft is a good argument there
+19:35:18 <abadger1999> but I don't feel strongly either way
+19:35:29 <sivel> for now, I will remove that deprecation
+19:35:30 <abadger1999> <nod>
+19:35:31 <nitzmahone> Ah now I see them- the underscores (or lack thereof) are hard to see
+19:35:44 <sivel> nitzmahone: ah, yes
+19:36:18 <sivel> Ok, I will move foward, remove the deprecation for grammatically incorrect tests, and start making integration test changes
+19:36:53 <sivel> but in the end, I think this will help users, although they will have some work to do to replace a few chars
+19:36:59 <abadger1999> Who's going to take this to the business side?  (Usually that's thaumos but he's in another meeting today)
+19:37:35 <thaumos> I can. Add action for me to look into the discussion.
+19:37:43 <sivel> I don't yet know who the business is :)
+19:37:50 <nitzmahone> Join the club ;)
+19:37:53 <sivel> thaumos: and feel free to come talk with me too
+19:37:58 <jtanner> all signs point to thaumos
+19:37:58 <sdoran> We're all the business. ;)
+19:38:00 <thaumos> Will do bud
+19:38:02 <gundalow> #chair thaumos
+19:38:02 <zodbot> Current chairs: aalexmonteiro abadger1999 alikins bcoca funzo gundalow jtanner mattclay mikedlr nitzmahone ryansb sdoran sivel thaumos
+19:38:08 <sivel> I mean we used to call Tim "The Business"
+19:38:11 * nitzmahone gives thaumos the business
+19:38:14 <thaumos> I'm still half here
+19:38:27 <abadger1999> #action thaumos to take https://github.com/ansible/proposals/issues/83 to the business side to look at timframe for deprecation
+19:38:31 <thaumos> Thank heavens for notification
+19:38:40 <abadger1999> :-)
+19:38:50 <sivel> Ok, I will "tentatively" approve it, and add a comment that we have to talk to "the business"
+19:38:55 <sivel> and continue my work
+19:39:07 <sdoran> That's the spirit!
+19:39:23 <sivel> I suppose that is it from me
+19:41:27 <alikins> nitzmahone: personal foul and 15 yard penalty for giving him the business
+19:41:35 <gundalow> Cool, thanks all
+19:41:44 <nitzmahone> At least it wasn't another HR violation
+19:42:07 <gundalow> If you have further thoughts or ideas please add them to https://github.com/ansible/proposals/issues/83 or https://github.com/ansible/ansible/pull/32361
+19:42:29 <gundalow> #topic Open Floor
+19:42:44 <gundalow> #chair
+19:42:44 <zodbot> Current chairs: aalexmonteiro abadger1999 alikins bcoca funzo gundalow jtanner mattclay mikedlr nitzmahone ryansb sdoran sivel thaumos
+19:42:48 <gundalow> Anyone got anything else?
+19:43:07 <sivel> Anyone in here work in Raleigh?
+19:43:08 <bcoca> splitting headache count?
+19:43:18 <sivel> I know where a few of you are
+19:43:20 <jtanner> sivel: i wfh in raleigh
+19:43:37 <bcoca> sivel: i think you have 3 people in the area, but they rarely visit the ofifce
+19:43:39 <sivel> I'll be in Raleigh and Durham the first week of Dec
+19:43:40 <sdoran> I do not. I'm _kinda_ close to there though.
+19:43:41 <alikins> sivel: also wfh in raleigh
+19:43:45 <abadger1999> sivel: jtanner alikins and shertel are in the area but all wfh.
+19:43:52 <bcoca> 4 now!
+19:43:58 <sivel> well, if you want to come visit, I'll be in the area
+19:44:07 <thaumos> shertel works from the office in Durham actually.
+19:44:09 <nitzmahone> sivel: New Hire + Xmas party?
+19:44:12 <jtanner> sivel: for that?
+19:44:18 <jtanner> for what*
+19:44:35 <sivel> jtanner: uh, for orientation
+19:44:36 <bcoca> orientation
+19:44:54 <nitzmahone> @sivel: staying for the Ansible Holiday party?
+19:45:00 <jtanner> sivel: oh hah, yer gonna have long days
+19:45:05 <sivel> nitzmahone: I leave on the 8th
+19:45:19 <nitzmahone> It's on 12/7, if you want to meet a bunch of folks
+19:45:29 <sivel> I'll be there then!
+19:45:33 <thaumos> Perfect timing
+19:45:43 <sdoran> Yeah, that's excellent timing.
+19:45:48 <nitzmahone> We'
+19:45:48 <thaumos> Okay really, afk again.
+19:45:57 <sivel> anyway, that was my open floor topic
+19:46:00 <nitzmahone> @sivel: We'll poke the right person to make sure she adds you to the list
+19:46:00 <jtanner> sivel: what email can we forward the invite to?
+19:46:11 <sivel> jtanner: for now, I guess mdmartz@gmail.com
+19:46:58 <sivel> I'll have a more official email later I suppose :) but I don't have calendaring enabled at matt@sivel.net
+19:47:05 <sdoran> I'm in the "no travel due to impending baby" zone at that time.
+19:47:16 <sdoran> So don't think I'll be able to come down, unfortunately.
+19:47:50 <gundalow> Right, guess we are done
+19:48:06 <gundalow> Will let people have 10mins before Windows Meeting in #ansible-windows
+19:48:21 <gundalow> #endmeeting

@@ -1,0 +1,140 @@
+17:00:04 <gundalow> #startmeeting Ansible Testing Working Group
+17:00:04 <zodbot> Meeting started Thu Aug 16 17:00:04 2018 UTC.
+17:00:04 <zodbot> This meeting is logged and archived in a public location.
+17:00:04 <zodbot> The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+17:00:04 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+17:00:04 <zodbot> The meeting name has been set to 'ansible_testing_working_group'
+17:00:12 <gundalow> #chair mattclay jtanner
+17:00:12 <zodbot> Current chairs: gundalow jtanner mattclay
+17:00:33 <jtanner> hello
+17:00:40 <shertel> \o
+17:00:51 * mattclay waves
+17:01:31 <gundalow> #chair shertel
+17:01:31 <zodbot> Current chairs: gundalow jtanner mattclay shertel
+17:04:06 <gundalow> jtanner: did you have something?
+17:04:13 <gundalow> feel free to #topic foo
+17:04:19 <ryansb> hi
+17:04:24 <jtanner> no, just wanted to get whole team interested in testing
+17:04:29 <gundalow> ah
+17:04:58 <gundalow> #topic Core Testing update
+17:06:18 <gundalow> #info work continues on getting Zuul to test ansible/ansible, this is currently running on `ansible/zuul-test-repo` (fork).
+17:07:00 <gundalow> #info Currently working on using `groupsN` to allow jobs to be run in parallel, like we do with Windows in Shippable
+17:08:08 <gundalow> f#info Once that is done I'm looking at two state process for identifying and running tests against PRs that affect multiple network platforms
+17:08:23 <gundalow> #info Once that is done I'm looking at two state process for identifying and running tests against PRs that affect multiple network platforms
+17:08:42 <gundalow> Feel free to ping me for more details, there will be a demo once it's a bit further
+17:09:03 <gundalow> Any Qs on that now?
+17:09:33 <mattclay> #info integration test container repositories (`ansible/*-test-container`) now include basic CI for the docker builds (except the `acme-test-container`, which will be enabled later)
+17:10:01 <gundalow> Initially Zuul  is for Networking (and OpenStack), though no reason we couldn't use it to test anything we don't have direct access for
+17:11:41 <jtanner> mattclay: what's the plan for supporting all those container repos?
+17:11:52 <gundalow> jtanner: support in what sense?
+17:11:57 <jtanner> could be possibly open up commit access to those individuals?
+17:12:02 <jtanner> s/be/we
+17:12:28 <gundalow> mattclay: worth detailing the two step update process?
+17:12:40 <gundalow> (or however many steps for build/tag/ansible-test)
+17:15:02 <mattclay> jtanner: Are you just thinking of designating community members as maintainers and giving them commit access?
+17:15:16 <jtanner> yes
+17:15:29 <jtanner> inflox as one example
+17:15:32 <jtanner> infoblox*
+17:16:07 <jtanner> ideally you aren't the one spending time merge all the PRs for all those repos
+17:16:51 <mattclay> jtanner: We certainly could, but the PR volume on those has been very low (or non-existent). Someone should still review too.
+17:17:05 <jtanner> k
+17:17:27 <jtanner> in the theoretically situation where those repos start to multiply exponentially, we should revisit this
+17:18:31 <bcoca> does zuul system use our same shippable resources ?
+17:18:38 <mattclay> Yeah, if the volume picks up on those at all I'd definitely like to see community maintainers. But for the infrequently updated ones I don't think it's necessary.
+17:18:43 <mattclay> bcoca: No
+17:19:31 <mattclay> gundalow: It would be good to have some documentation about the general test container pattern (how the repos are set up and used, updated, etc.)
+17:19:52 <gundalow> mattclay: yup agreed. I'll ping you some notes I've started
+17:20:36 <gundalow> bcoca: Zuul = Nodepool/RDO (openstack things). So you don't have to worry about Zuul adding more into the Shippable backlog :)
+17:20:38 <mattclay> gundalow: Are you thinking those docs should live in the Ansible dev guide?
+17:20:45 <gundalow> mattclay: yup
+17:20:54 <bcoca> gundalow: just want to keep my bitmining safe!
+17:21:03 <gundalow> bcoca: :D
+17:26:04 <gundalow> jtanner: also FYI it's two commits: 1) to update container 2) to update which version of the containers ansible-test will use
+17:26:23 <jtanner> 3) update tests to use new features
+17:26:26 <gundalow> PR for (2) ensure that (1) hasn't broken any integration tests
+17:26:33 <gundalow> ah, yes
+17:26:41 <jtanner> i'm familiar with the process =P
+17:26:53 <jtanner> ive made one or two or three of them
+17:26:54 <gundalow> OK, just saying it here for completness
+17:27:12 <gundalow> Once we've got it documented means that anyone can hit merge, doesn't just have to be mattclay
+17:27:23 <jtanner> agree
+17:27:28 <jtanner> awareness will be key though
+17:30:31 <mattclay> Since we're on the topic of test containers, I'd like to hear thoughts on how to organize the distro-specific test containers. Right now they're still in the ansible/ansible repo, but I want to split them out like has been done for the other test containers.
+17:30:57 <mattclay> I considered having a single repo for all of them, since they usually share a lot in common (mostly around pre-installed packages).
+17:31:36 <mattclay> However, automated builds don't work well on quay.io because we'd trigger rebuilding all containers for a change to a single Dockerfile.
+17:32:13 <mattclay> So we could put each distro container in its own repo, but then changing things across all of them, such as adding a new dependency, requires multiple PRs (~10).
+17:32:18 <gundalow> jtanner: mattclay created https://github.com/ansible/community/issues/340 to track documenting this
+17:33:26 <mattclay> We could have them in one repo for easier PRs, but then we'll need to create a custom container build process.
+17:34:35 <mattclay> Does anyone have any thoughts or suggestions?
+17:35:30 <gundalow> I like quay.io to do the builds without us having to go through the manual process like we currently do
+17:35:46 * gundalow looks at how many updates there have been
+17:36:13 <gundalow> https://github.com/ansible/ansible/commits/devel/test/utils/docker Not much traffic
+17:36:52 <mattclay> gundalow: I'm hoping we'll update them more frequently after the overhaul. But perhaps we could use a script to automate common changes across all the repos?
+17:37:17 <gundalow> And most are for single distro, so it would be 3+1 PRs, rather than 10+1)
+17:37:53 <mattclay> gundalow: Can you elaborate?
+17:39:11 <gundalow> From looking at the commits in `utils/docker` the existing changes seem to be limited to one family (ie centos). We test two versions of centos, so that's 2+1 PRs (two repos + ansible/ansible)
+17:39:28 <gundalow> or 4+1 for Fedora
+17:39:35 <jtanner> the quay.io process seems like
+17:39:38 <jtanner> a good thing
+17:40:11 <jtanner> can quay be tied to specific branches?
+17:40:22 <gundalow> So sure, we could look at optimizing this with scripts, though maybe we should look how much of a problem it actually is before spending time autogenerating Dockerfiles
+17:40:26 * jtanner will be in the office with those devs tomorrow
+17:40:26 <mattclay> jtanner: Yes. What are you thinking?
+17:40:43 <jtanner> a quay build per branch?
+17:40:57 <jtanner> like an nios branch, a vcenter branch, etc
+17:40:59 <mattclay> How does that help over having separate repos?
+17:41:16 <jtanner> i dunno, i thought you were postulating how to have one repo
+17:42:23 <mattclay> Well, one repo with one branch. Having multiple branches means multiple PRs, so has most of the same issues as multiple repos.
+17:42:51 <jtanner> k
+17:43:03 <mattclay> Also, this wouldn't be for the "unique" test containers -- just the generic distro ones (centos*, fedora*, ubuntu*, opensuse*, ...)
+17:43:53 <mattclay> gundalow: Are you thinking that instead of one repo for each distro container, we'd have one per family since most likely a change to one version in the family is going to be a change to all of them?
+17:44:43 <jtanner> oh, okay. nvm me
+17:45:17 <gundalow> mattclay: I was thinking one repo per container
+17:45:33 <gundalow> I assume ^ is the only way to have automated builds?
+17:46:04 <gundalow> I'd like us to get out of the business of having to click "build" on things
+17:47:10 <mattclay> gundalow: No, we can have multiple automated container builds for a single repo.
+17:47:12 <gundalow> With the push for more automated testing (it's a good thing (tm), certification, getting partners on board) I'd expect the number of containers to increase a lot over the next 18months, so would like for us (you :P) not to have to click to many things to make it happen
+17:47:16 <gundalow> ooooh
+17:47:24 <mattclay> gundalow: But changes to that repo will rebuild all of them regardless of how many changed.
+17:47:46 <gundalow> Wonder if that reduces the PR churn a bit
+17:47:55 <mattclay> I'd like to avoid changing a fedora container also rebuilding all of them -- but maybe that's something we shouldn't care about.
+17:48:23 <mattclay> If we group them by family rather than container then at least changing fedora (where we're likely to change all versions) would only rebuild fedora and not others.
+17:48:40 <mattclay> But it still means multiple PRs when we want to make changes to all of them, like adding the same package to each.
+17:49:08 <mattclay> So perhaps we start with one repo with multiple automated builds and consider splitting it up later if we get tired of waiting for all the unrelated builds to run?
+17:50:11 <ryansb> Minimum viable build pipeline
+17:50:26 <gundalow> mattclay: sounds like a plan
+17:50:26 <ryansb> +1 to trying it that way first
+17:50:27 <mattclay> The other side-effect is that when we tag a new release, all containers get a new version even if they didn't change. I guess I'm OK with that. At least it's simple.
+17:50:51 <mattclay> Just because we have a new version doesn't mean we need to update ansible-test to use it.
+17:50:52 <gundalow> mattclay: Where do we define which version of the container should be used?
+17:50:58 <jtanner> common content like that, seems like a problem ansible-container tried to solve
+17:51:14 <gundalow> Was expecting to see a SHA/version string in https://github.com/ansible/ansible/pull/41626/files#diff-5618cb565c0b1555d4cbf2e423cea546R174-R177
+17:51:40 <mattclay> gundalow: https://github.com/ansible/ansible/blob/devel/test/runner/completion/docker.txt
+17:52:07 <gundalow> ah, thanks
+17:52:32 <mattclay> OK, so any objections to using a single repo for the distro containers (centos*, fedora*, opensuse*, ubuntu*), resulting in changes to any rebuilding all and new release versions affecting all, even if they're unchanged?
+17:53:38 <gundalow> so, PR to update something in fedora*, which would trigger fedora* to be rebuild. However we are only interested in fedora25, so we'd only update that line in `docker.txt`. That works for me
+17:54:07 <mattclay> gundalow: Yeah, or we could use a single version for all of them in ansible-test since they're all versioned together.
+17:54:20 <ryansb> jtanner: kinda, there was more around the deployment of various bits
+17:54:52 <ryansb> buildah has an ansible connector now, so if we wanted a shared-playbook build method we could use that
+17:56:04 <mattclay> With all of the containers being built/versioned together it should be pretty easy to migrate that.
+17:56:41 <mattclay> We've got 4 minutes left of our scheduled meeting. Is there anything else?
+17:56:45 <gundalow> mattclay: single version would work.
+17:56:50 <gundalow> Nothing else from me
+17:57:08 <gundalow> jtanner: did this cover everything you were thinking?
+17:57:21 <jtanner> wasn't thinking anything
+17:57:38 <mattclay> gundalow: BTW, change to fedora25 would build all, not just fedora* since everything would be in one repo.
+17:58:22 <gundalow> mattclay: yup, but if we had per-distro-version lines in `docker.txt` we'd only make fedora25 live
+17:58:43 <gundalow> I don't have any strong views for/against single version in `docker.txt`
+17:58:52 <gundalow> vs current line-per-version
+17:59:47 <mattclay> gundalow: Ah, yes, I see what you're saying. Do you see any benefit to listing versions for each though, if we're versioning them togther? I guess the only advantage is if we've broken something in say cento6:1.1.0 but want to start using centos7:1.2.0 without fixing the issue in the centos6 image first.
+18:00:39 <mattclay> Oh, the other advantage of versions for each is that we can tell when they changed version in the tests instead of it being a blanket update to all.
+18:01:00 <mattclay> I guess I should keep versions for each then -- one less change to make. :)
+18:01:09 <gundalow> That's the case I was thinking
+18:01:30 <gundalow> I think multiple lines is best
+18:01:31 <mattclay> Thanks for the feedback.
+18:01:41 <gundalow> mattclay: Thanks for automating this :)
+18:03:24 <gundalow> Anyone got anything else?
+18:03:44 <mattclay> Nothing from me.
+18:04:02 <gundalow> #agreed Containers:  Move to one repo per Distro. Keep one line per version in `docker.txt`
+18:06:39 <gundalow> Thank y'all
+18:06:42 <gundalow> #endmeeting

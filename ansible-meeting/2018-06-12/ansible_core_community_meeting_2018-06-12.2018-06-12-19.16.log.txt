@@ -1,0 +1,169 @@
+19:16:24 <maxamillion> #startmeeting Ansible Core Community Meeting 2018-06-12
+19:16:24 <zodbot> Meeting started Tue Jun 12 19:16:24 2018 UTC.
+19:16:24 <zodbot> This meeting is logged and archived in a public location.
+19:16:24 <zodbot> The chair is maxamillion. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:16:24 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:16:24 <zodbot> The meeting name has been set to 'ansible_core_community_meeting_2018-06-12'
+19:16:31 <maxamillion> alright, now we're cooking with gas
+19:16:44 <maxamillion> #topic https://github.com/ansible/ansible/pull/41297
+19:16:48 <maxamillion> jdelaros1: the floor is yours
+19:16:57 <jdelaros1> Thanks.
+19:17:56 <jdelaros1> This is a request for a new module for HW management via Redfish. This is a long time coming, presented at RH Summit last month and have engaged with several Ansible Prod Mgrs, not that it matters too much :)
+19:18:42 <jdelaros1> First contribution, read all submission instructions, fixed CI failures, so hopefully not missing anything.
+19:19:20 <jdelaros1> Ansible was written to be vendor-neutral, and the DMTF is picking up development of module once upstream.
+19:19:47 <maxamillion> "the DMTF" ?
+19:20:00 <jdelaros1> Requests are not done via ssh but via URIs to Out-Of-Band controllers (i.e. iDRAC, iLO, etc)
+19:20:21 <jdelaros1> That's the gist of it. Questions?
+19:21:03 <maxamillion> jdelaros1: do you just need someone to review the PR?
+19:21:43 <jdelaros1> If that is needed for inclusion, then yes.
+19:21:56 <sivel> The new Request class in 2.7 could simplify some of the logic, but not a requirement.
+19:22:26 <sivel> since it acts somewhat similarly to the Session class from requests, could consolidate some functionality
+19:23:19 <maxamillion> sivel: +1
+19:23:28 <jdelaros1> @maxamillion, Distributed Management Task Force
+19:23:34 <sivel> https://github.com/ansible/ansible/blob/devel/lib/ansible/module_utils/urls.py#L819
+19:24:00 <jdelaros1> Organization that defines the Redfish specs
+19:24:05 <maxamillion> jdelaros1: what is that and how do we get them roped into Ansible maintenance/development?
+19:24:14 <maxamillion> ah alright
+19:24:59 <jdelaros1> The DMTF board chair sits on my floor, we've had many discussions, and they are waiting for this module to be upstream so they can extend functionality
+19:25:10 <maxamillion> jdelaros1: alright
+19:25:28 <maxamillion> alright, we'll get some review done
+19:25:32 <maxamillion> moving on ...
+19:25:46 <jdelaros1> ok thanks
+19:25:50 <maxamillion> #topic k8s facts
+19:26:00 <maxamillion> #undo
+19:26:00 <zodbot> Removing item from minutes: <MeetBot.items.Topic object at 0x7f541d538d90>
+19:26:14 <maxamillion> #info we need a review for https://github.com/ansible/ansible/pull/41297
+19:26:18 <maxamillion> #topic k8s facts
+19:26:50 <maxamillion> alright, so there's two PRs  .... one adds facts functionality to the k8s module and the other adds a new k8s_facts module
+19:26:51 <maxamillion> https://github.com/ansible/ansible/pull/41297/files
+19:26:55 <maxamillion> errrr
+19:27:03 <maxamillion> https://github.com/ansible/ansible/pull/41128
+19:27:15 <maxamillion> https://github.com/ansible/ansible/pull/41088
+19:27:34 <maxamillion> I'm curious about a vote from the group on preferred method of handling this
+19:28:12 <maxamillion> I'm really sorry, but I'll brb in like 10 minutes
+19:28:51 <ryansb> I'd prefer a _facts module if the lookup isn't doing the job
+19:29:04 <willthames> 41088 is just a bug fix imho - making sure that the k8s module actually works as documented
+19:29:26 <willthames> lookup plugin is doing it's job, to be fair, but it wouldn't if I wasn't using connection=local
+19:29:56 <ryansb> in AWS-land we're trying to get rid of/not add `state: list`, but I agree that the k8s case does seem more bugfixy
+19:29:59 <willthames> but where do we stand on lookup plugins vs facts
+19:30:37 <willthames> 41128 is really to allow the deprecation of the `state: list` functionality and move it to k8s_facts (or lookup plugin)
+19:30:48 <ryansb> different purposes, basically. Lookups are host-executed, and in some cases don't work (as you mentioned)
+19:30:59 <ryansb> I don't think there's any work to move all the way to one or the other
+19:31:12 <willthames> We have `query` for one of the cases I mentioned
+19:31:52 <ryansb> yeah, I'm +1 on a separate facts module, and since the https://github.com/ansible/ansible/pull/41088/files one is fixing to match docs I don't have an issue with it
+19:32:16 <willthames> I'm used to writing facts modules, I saw that facts were being implemented in a weird way in the k8s module so wrote k8s_facts, not really remembering there was a k8s lookup plugin too
+19:32:53 <maxamillion> I'm +1 (driving, irc on my phone while at stop light) ... brb
+19:33:35 <willthames> fabianvf did you ever find the original pushback on k8s_facts?
+19:35:03 <fabianvf> willthames: unfortunately no, think it may have been an ephemeral communication. I think the gist of it was that facts modules aren't the Ansible way and that the lookup plugin was preferred, I don't think I really pushed on it
+19:35:27 <willthames> in the general case would we always want lookup plugin and facts module? do we need dozens of AWS lookup plugins?
+19:35:45 <fabianvf> I personally have no objection though, +1 for me
+19:35:48 <willthames> fabianvf: I'm used to the AWS approach where *everything* has a facts module :)
+19:35:54 <ryansb> heheh :)
+19:36:08 <willthames> apart from aws_eks_cluster_facts, I do mean to get around to that at some point :)
+19:37:17 <willthames> ok, sounds like there are no dissenting voices
+19:37:22 <ryansb> ok, so let's call that closed since there are no other objections, and if there are they can go to the issue
+19:37:26 <willthames> I'll work on tidying up the k8s_facts modules
+19:37:28 <ryansb> hehe, jinx
+19:37:49 <willthames> I have no idea why tests are failing, but that's one for #ansible-devel
+19:38:02 <ryansb> #topic handling extra error information on modules https://github.com/ansible/community/issues/317#issuecomment-396299814
+19:38:16 <ryansb> #link https://github.com/ansible/ansible/pull/40723/files
+19:39:23 <ryansb> I agree with bcoca's comment that if it's an error it should be a `fail_json` but that adding extra keys beyond a message on the failure makes sense
+19:39:30 <ryansb> like having a list of failed packages, etc
+19:39:41 <ryansb> otherwise warnings are supported via module.warn()
+19:40:35 <ryansb> thoughts?
+19:41:15 <maxamillion> alright, I'm back
+19:41:38 <sivel> In the `go` module I am writing, failed packages are places in the msg
+19:41:59 <sivel> just an FYI: https://github.com/ansible/ansible/pull/39752/files#diff-2195b9bd50d313da12caf83b1cc100d7R195
+19:42:13 <ryansb> is there a case for people using the extra list in followup rescue/on-fail tasks?
+19:42:26 <maxamillion> yeah, I still think the information is best handled in the `msg` field just since that's basically what that's designated for
+19:42:37 <maxamillion> ryansb: which is a fair point
+19:42:40 <sivel> honestly I kinda doubt people are trying to directly act on the failed packages
+19:42:43 <maxamillion> meh, I'm on the fence
+19:42:52 <sivel> the task shoudl fail, and the msg properly indicates whey
+19:43:05 <sivel> why*
+19:43:07 <maxamillion> sivel: I could see some auto remediation happening in certain scenarios with blocks
+19:43:12 <ryansb> yeah, for this case maybe they wouldn't
+19:43:21 <ryansb> +0 from me: up to maintainer
+19:43:44 <jborean93> I like more specific errors and helpful hints to be part of the msg
+19:44:04 <maxamillion> willthames: I'll gladly review or we can con fabianvf into it
+19:44:12 <maxamillion> willthames: just to follow up since I was afk
+19:44:33 <maxamillion> jborean93: I can see how that could be difficult if someone's trying to parse or handle things specifically
+19:44:55 <maxamillion> I agree with ryansb, up to the maintainer
+19:45:13 <sivel> I mean modules can return whatever, but at minimum it should be duplicated into the message
+19:45:24 <willthames> maxamillion: main issues are failing docs tests but I made no docs changes and the errors don't *seem* to be related to my changes
+19:45:26 <jborean93> that's fair enough, I think parsing the msg is a bit too brittle but that doesn't stop people from doing it
+19:46:11 <maxamillion> willthames: it's possible you didn't make a docs change but a new change went in to enforce a docs guideline that the CI system didn't previously enforce (which is not uncommon)
+19:46:15 <sivel> I'm not against including a list of failed packages in the response, but without including it in the message, it might not be clear enough
+19:47:04 <maxamillion> sivel: I'm +1 for ensuring all the info is in `msg` but can also be provided under a different key in order to take action if someone wants to
+19:47:06 <sivel> (also, I haven't looked at the PR in question, just speaking theoretially)
+19:47:23 <sivel> and I am having a really hard time typing today ;)
+19:49:31 <maxamillion> alright, there doesn't seem to be any more discussion on this
+19:50:50 <maxamillion> #info modules should provide all relevant output/status/error information via `msg` but can also provide other information (duplicate or otherwise) in a way that can have action taken on it automatically, at the maintainers discretion
+19:51:36 <maxamillion> #topic should inventory.any_unparsed_is_failed configuration setting be backported to 2.6?
+19:51:46 <maxamillion> #link https://github.com/ansible/ansible/pull/41171
+19:52:22 <maxamillion> mattclay: anything specific you want to discuss here or just get +/-1 s on "backport?"
+19:52:36 <mattclay> Yeah, just looking for a vote on whether or not we should backport that.
+19:52:44 <sivel> -1
+19:53:01 <maxamillion> sivel: why so?
+19:53:14 <sivel> I'm classifying it as a feature
+19:53:26 <maxamillion> ah ok
+19:53:38 <maxamillion> from that perspective, that's fair
+19:53:42 <sivel> people had an expecation, it was a wrong expectation, users thought it was a bug, but they were really missing a feature
+19:53:55 <maxamillion> sivel: agreed
+19:53:59 <maxamillion> -1 here as well
+19:54:53 <abadger1999> Precedence is that we would classify it as a feature.
+19:55:25 <abadger1999> Pretty much anythng that adds UI gets classified as a feature (config is UI)
+19:55:34 <maxamillion> done and done
+19:56:08 <maxamillion> #agreed https://github.com/ansible/ansible/pull/41171 should not be backported to stable-2.6 because it is a feature
+19:56:16 <mattclay> Thanks
+19:56:25 <maxamillion> #topic https://github.com/ansible/ansible/pull/41058
+19:56:31 <maxamillion> agaffney: the floor is yours
+19:57:21 <agaffney> the intention of the PR is to remove some code duplication and allow for mixing/matching features in the default-py-derived callback plugins
+19:57:44 <agaffney> right now, you can't use YAML output and hide "skipped" tasks
+19:58:09 <agaffney> bcoca has some minor misgivings, but I wanted to get additional feedback
+19:59:24 <willthames> other than the short deprecation cycle it seems like a good idea to me
+19:59:31 <abadger1999> I lean towards accepting.
+19:59:57 <agaffney> the deprecation version can easily be changed. I just didn't know if it should be something like 2.10 or 2.11, or if those versions will even exist
+20:00:36 <willthames> it should be 2.11. If that doesn't exist, then we'll change those to whatever is 3.x 4 versions from 2.7
+20:00:50 <maxamillion> yeah, I'm leaning towards accepting as well
+20:00:59 <agaffney> the 'debug' callback plugin can also probably be deprecated, as the 'yaml' callback plugin overlaps by nature
+20:01:18 <abadger1999> (Yeah, deprecation should be +4 versions from the release it first shows up in)
+20:01:51 <agaffney> I had just copied the deprecation section from another file and didn't change the version because I wasn't sure what to change it to
+20:02:52 <agaffney> so...change the removal version to 2.11 and also deprecate 'debug'. anything else to add?
+20:05:33 <abadger1999> Hmm... If bcoca is thinking that yaml shold remain in a separate file... I can sorta see that point.
+20:05:54 <abadger1999> If yaml wasn't already needed by ansible, it would definitely be in a separate plugin.
+20:06:01 <agaffney> yeah, as do I. I have no strong feelings about that
+20:06:16 <agaffney> I can back out the 'yaml' changes
+20:06:19 <abadger1999> Maybe we can add some sort of encode and decode hooks
+20:06:36 <abadger1999> (well. serialize hooks to be clear it isn't about charset encoding)
+20:06:53 <abadger1999> and then the yaml plugin can be separate but have less duplicate code?
+20:08:08 <agaffney> you mean have _dump_results() call a separate function just for formatting the dict, with the current JSON implementation as the default in callback/__init__.py?
+20:08:32 <abadger1999> Yeah.  And then the function is either passed in or it's an attribute of the callback class.
+20:08:54 <abadger1999> That way the yaml plugin can override the default
+20:09:36 <agaffney> the 'yaml' callback plugin (for example) can just define its own version of the function, just like it does for _dump_results() now
+20:10:15 <agaffney> although, I think that could/should be in a separate PR, after I back out the 'yaml' changes in this PR
+20:10:45 <agaffney> I'm really more after the ability to mix/match functionality. the removal of some duplicate code was just a bonus
+20:11:29 <abadger1999> <nod>
+20:11:35 <abadger1999> yeah, that sounds like a plan.
+20:11:51 <abadger1999> Also... I now notive the yaml callback plugin returns json sometimes.
+20:12:01 <agaffney> okay, so I'll change the removed_in to 2.11 and back out the 'yaml' changes
+20:12:11 <abadger1999> Cool.
+20:12:12 <abadger1999> +1
+20:13:16 <agaffney> and I guess also add a changelog snippet while I'm at it
+20:16:12 <abadger1999> Thank you, yes :-)
+20:21:15 <maxamillion> alright, I'll consider that one resolved ... any action items or anything?
+20:21:26 <maxamillion> (sorry, I got ping'd offline for a couple minutes)
+20:22:15 <agaffney> there are a few minor action items for me on my PR, which are already in progress
+20:22:25 <jdelaros1> maxamillion, one question, what happens after a PR review? What is next step?
+20:23:32 <maxamillion> jdelaros1: once it's reviewed and signed off, it gets merged and if you get merged will likely land in Ansible 2.7 (unless for something the review/iterate process takes forever)
+20:23:50 <maxamillion> jdelaros1: https://github.com/ansible/ansibullbot/blob/master/ISSUE_HELP.md#when-will-your-pull-request-be-merged
+20:24:04 <jdelaros1> Thanks
+20:24:16 <maxamillion> jdelaros1: certainly
+20:25:02 <agaffney> I wish there was a good way to write tests for a stdout callback plugin
+20:26:20 <maxamillion> on of the ad-hoc command line things and pattern match?
+20:27:41 <maxamillion> errr in the scripts that are run in integration tests ... I can never remember the name of them
+20:28:04 <agaffney> any code that does matching on the output from ansible-playbook would be....unpleasant to write and read
+20:33:10 <maxamillion> #topic Open Floor
+20:33:21 <maxamillion> agaffney: agreed :/
+20:33:36 <maxamillion> alright, anything for open floor? I know this has been a crazy long meeting
+20:46:35 <maxamillion> #endmeeting

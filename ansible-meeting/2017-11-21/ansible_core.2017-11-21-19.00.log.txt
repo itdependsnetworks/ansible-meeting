@@ -1,0 +1,374 @@
+19:00:04 <thaumos> #startmeeting ansible core
+19:00:04 <zodbot> Meeting started Tue Nov 21 19:00:04 2017 UTC.  The chair is thaumos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:00:04 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:00:04 <zodbot> The meeting name has been set to 'ansible_core'
+19:02:19 * gundalow waves
+19:02:26 <thaumos> #chair gundalow
+19:02:26 <zodbot> Current chairs: gundalow thaumos
+19:02:33 * thaumos waves back at gundalow
+19:02:47 <thaumos> I wonder how many meetings we can look back and see us do that
+19:03:22 <bcoca> new ansibot feature
+19:03:36 <thaumos> #chair bcoca
+19:03:36 <zodbot> Current chairs: bcoca gundalow thaumos
+19:03:46 <thaumos> ansibot is the new hubot
+19:04:03 <thaumos> it does all the things
+19:04:23 <thaumos> it even 5-mans lvl 15 heroics
+19:05:11 <jtanner> wut
+19:05:19 <bcoca> you mean mythic+
+19:05:19 <thaumos> #chair jtanner
+19:05:19 <zodbot> Current chairs: bcoca gundalow jtanner thaumos
+19:05:25 <thaumos> yes mythic+
+19:05:33 <thaumos> you know what I meant :-P
+19:05:35 <bcoca> get your wow refs right!
+19:05:48 <thaumos> they are forever heroics to me
+19:05:54 <jtanner> i prefer sham-wow refs. BILLY MAYS HERE ...!
+19:06:02 <thaumos> long live 15-man ubrs
+19:06:14 <thaumos> ^^ not really
+19:06:14 <jtanner> although billy was not the shamwow guy
+19:06:17 <jtanner> but whatevs
+19:06:28 <thaumos> I think I missed the shamwow days
+19:06:38 <bcoca> oxy clean
+19:06:38 <maxamillion> ubrs?
+19:06:45 <thaumos> #chair maxamillion
+19:06:45 <zodbot> Current chairs: bcoca gundalow jtanner maxamillion thaumos
+19:06:52 <thaumos> ubrs == upper blackrock spire
+19:08:02 <thaumos> if we get a couple more, we can talk about the host pattern topic you brought up bcoca
+19:08:41 <thaumos> on a side note
+19:08:49 <maxamillion> awwww, rip the oxy clean guy ... he was the best
+19:08:49 <maxamillion> I always wanted him and Steve Irwin to get together and sell something, there'd be *so* much energy
+19:08:54 <thaumos> #topic keycloak PR #31716
+19:08:57 <thaumos> #link https://github.com/ansible/ansible/pull/31716
+19:09:08 <thaumos> does someone here wanna take a stab at looking and commenting on this one?
+19:09:33 <thaumos> @alikins, care to continue reviewing it?
+19:09:49 <bcoca> PTO
+19:09:54 * thaumos sighs
+19:10:06 <maxamillion> thaumos: I'm not familiar with the term "upper blackrock spire"
+19:10:21 <thaumos> no worries, just me and bcoca being World of Warcraft nerds
+19:11:24 <thaumos> #action thaumos to sync with alikins after holidays about the PR.
+19:11:31 * bcoca tempted to confiscate Wow nerd card based on 'heroic 15' gaffe
+19:11:42 <jtanner> such shame.
+19:11:45 <abadger1999> :-)
+19:12:01 <thaumos> don't revoke it!
+19:12:10 <thaumos> Just give me a point on my card :-P
+19:12:19 <thaumos> #chair abadger1999
+19:12:19 <zodbot> Current chairs: abadger1999 bcoca gundalow jtanner maxamillion thaumos
+19:12:29 <maxamillion> thaumos: ah ... that's one I never got into, watched a room mate drop out of high school because he couldn't put it down (long story, but it was bad... he got to a point where he was lying to us and would go to a coffee shop and play) ... so I never touched it
+19:12:32 <maxamillion> oh, zodbot?
+19:12:33 <maxamillion> .hello2
+19:12:34 <zodbot> maxamillion: maxamillion 'Adam Miller' <maxamillion@gmail.com>
+19:12:36 <maxamillion> \o/
+19:12:43 <thaumos> #topic list-hosts behaviour discussion
+19:13:07 <thaumos> @bcoca, I got a kick out of the reporter saying, "So, want me to open a bug?"
+19:14:22 <gundalow> .hello2
+19:14:22 <thaumos> @bcoca, does the PR you reference go along with the project list topic?
+19:14:23 <zodbot> gundalow: gundalow 'John Barker' <john@johnrbarker.com>
+19:14:28 <gundalow> .hello1
+19:14:31 <gundalow> .hello3
+19:15:21 <bcoca> ??
+19:15:23 <gundalow> (sorry, carry on)
+19:15:25 <maxamillion> gundalow: there's '.hello <some_nick>' and then '.hello2', the latter of which will assume you mean your own nick for the <some_nick> field
+19:15:32 <bcoca> sorry, 20 chainsaws in air .. not sure which one
+19:15:47 * maxamillion goes into lurk mode
+19:15:48 <thaumos> sorry sir
+19:16:02 <thaumos> #link https://groups.google.com/forum/#!msg/ansible-project/oRZwBj4XDx8/7IPtbtKFCgAJ
+19:16:16 <thaumos> and
+19:16:18 <thaumos> #link https://github.com/ansible/ansible/issues/32860
+19:16:20 <bcoca> yeah, wanted vote on which should the actual behaviour be
+19:16:25 <thaumos> okay
+19:17:42 <thaumos> what did you mean by "some have pointed out that the 'new behaviour' is a feature"?
+19:17:58 <thaumos> Sorry, I am just trying to follow along with you
+19:18:06 <bcoca> that the vars declaration can be used by other inventories
+19:18:21 <bcoca> even if 'current inventory' does not have any hosts or groups related to the 'decalred group'
+19:18:32 <bcoca> also, 2 diff topics
+19:18:57 <bcoca> one is patterns, the other is '[groupname:vars]' being valid if only entry in ini inventory
+19:19:10 <bcoca> still want vote on both, but lets not confuse them
+19:19:11 <thaumos> 10-4, I'll stop conflating topics
+19:19:14 <thaumos> yep
+19:19:15 <thaumos> agreed.
+19:19:22 <thaumos> I am on the same page as you now.
+19:19:31 <thaumos> okay, so first topic then being the project topic post
+19:20:36 <bcoca> https://github.com/ansible/ansible/issues/32906 <= this might be a symptom
+19:21:30 <thaumos> so between versions, was there a decision to make the behaviour change, or was it a result of something?
+19:22:43 <abadger1999> bcoca: I think that it should match both hosts and groups bu I'm not yet sure what the string pattern versus glob pattern distinction is.... trying to re-read that comment now.
+19:24:29 <bcoca> if pattern is 'dev' we always just matched group named 'dev' and ignored host named 'dev', but when doing 'patterns' i.e 'de?' we would match both
+19:24:54 <bcoca> i think that the 'pure string' should stay as is and the 'regex/glob' should also try matching hosts
+19:25:59 <abadger1999> I thnk the pure string should match both as well but if the 2.3 behaviour was just to match the group, I can get behind that as "backwards compatible" until we decide to change it consciously.
+19:26:24 <bcoca> abadger1999: we've had a warning about group/hosts with same name just cause of that behaviour
+19:27:02 <bcoca> i would not recommend changing that at this poing, teh globbing, makes more sense to me, and that is what i want a vote on this point, if you want to bring the string matching up, lets schedule it
+19:27:17 <abadger1999> <nod> As long as the additional "backwards compatible" justification is there, that works for me.
+19:27:55 <abadger1999> I don't think it's the right way but if it's also a backwards compat break, I'm fine with continuing to use the 2.3 behaviour.
+19:28:54 <thaumos> can we introduce a way to allow for users' interpretations of execution?
+19:29:30 <thaumos> so they can opt into this old way, that way make it still backward compatible by enforcing a pluggable solution?
+19:29:37 <maxamillion> thaumos: I don't understand what you mean by "users' interpretations of execution" ... can you clarify? (or is that a term I just haven't learned yet)
+19:29:50 <thaumos> yeah, let me clarify.
+19:30:34 <bcoca> thaumos: nope, that is just too complex .. too many knobs
+19:30:54 <thaumos> @maxamillion for clarification, Can we have a plugin allow for a user to have Ansible do what they expect for --list-hosts output?
+19:31:00 <thaumos> @bcoca, okay fair.
+19:31:25 <abadger1999> +1 for restoring 2.3.x behaviour
+19:32:09 <thaumos> @abadger1999 would you suggest we bug fix that behaviour in, then document our intentions grandfathering in a deprecation cycle for 2.8?
+19:32:39 <thaumos> or are you suggesting something different?
+19:32:48 <maxamillion> thaumos: ah, I follow
+19:32:49 <abadger1999> thaumos: Like I say, I'm fine with the 2.3 behaviour... bcoca seems to think it *is* the right behaviour and I'll go along with that.
+19:32:49 <bcoca> thaumos: it has nothign to do with output, but with actualy generating the host list
+19:33:10 <abadger1999> thaumos: So no need to deprecate and change because of me.
+19:33:12 <maxamillion> thaumos: yeah, I'd agree with bcoca ... I could see that getting off in the weeds fast, first thing that comes to mind is test matricies
+19:33:15 <bcoca> i would really like more people from core on this .. but seems bad timing
+19:33:32 <thaumos> who do we need to pull in @bcoca?
+19:33:39 <bcoca> im going to 'fix' for now and make backwards compat, we probably want to revisit later
+19:33:47 <thaumos> personally I am +1 on old behaviour as well
+19:33:57 <thaumos> we should revisit for sure.
+19:34:24 <abadger1999> bcoca: Make it so ;-)
+19:34:27 <thaumos> #action bcoca to fix for now and make backwards compat
+19:34:29 <maxamillion> agreed, +1 for backwards compat
+19:34:58 <thaumos> #action bcoca to revisit this later with greater core group at a later date.
+19:35:10 <thaumos> #action thaumos will remind bcoca to revisit it later.
+19:36:54 <thaumos> #topic '[groupname:vars]' being valid if only entry in ini inventory
+19:37:07 <thaumos> #link https://github.com/ansible/ansible/issues/32860
+19:38:19 <thaumos> agreed that vars only empty groups should produce an error,
+19:39:17 <abadger1999> +1
+19:39:20 <maxamillion> +1
+19:39:24 <abadger1999> Reasoning: that will pick up typos
+19:39:40 <bcoca> mostly why it existed, as it was noop otherwise
+19:39:54 <maxamillion> typos and general confusion of "oops, I missed something" vs "why isn't this doing what I wanted it to / expected it to do"
+19:40:03 <maxamillion> also*
+19:40:09 <maxamillion> but yeah, +1
+19:40:20 <bcoca> merged
+19:40:22 <maxamillion> \o/
+19:40:32 <bcoca> abadger1999: can i cp to stable?
+19:40:39 <abadger1999> bcoca: yep.
+19:40:49 <abadger1999> bcoca: cut off is tomorrow.
+19:42:26 <bcoca> 2 blockers to go
+19:43:13 <abadger1999> Since I may be somewhat busy, I would love if people either cherrypick today or explicitly tell me in irc/slack that they have something they need to get into rc1.
+19:43:40 <bcoca> going to cp 2 more then, letting 3rd wait for shippable
+19:43:47 <bcoca> removed one blocker as it is not 'correclty sovled'
+19:44:58 <thaumos> @mattclay, wanna talk about your pylint rules topic really quickly?
+19:45:08 <mattclay> Sure
+19:45:29 <abadger1999> bcoca: Sounds good.
+19:45:30 <thaumos> #topic pylint rules len-as-... and no-else
+19:45:48 <abadger1999> (Would be nice to do jborean's as well after)
+19:45:57 <abadger1999> he doesn't have thanksgiving ;-)
+19:46:14 <thaumos> is he here?
+19:46:27 <abadger1999> thaumos: Australia... I think I can speak to his.
+19:46:36 <thaumos> right, that's why I asked
+19:46:46 <bcoca> they started celebrating thanksgiving since last year's election
+19:46:47 <thaumos> if you're cool speaking for him, then we can cover it :-)
+19:47:02 <thaumos> I didn't want to do it without him because he's on the other side of the globe
+19:47:08 <mattclay> We've been enabling various pylint rules to catch things that can cause problems. I don't think anyone has issues with that. However, there are some pylint rules which really only enforce style guidelines, along the lines of PEP 8. The question is whether we want to enable more of those or not, specifically: len-as-condition and no-else-return
+19:47:40 <abadger1999> I am okay with enforcing more.
+19:47:51 <mattclay> This came up due to this PR: https://github.com/ansible/ansible/pull/30764
+19:47:52 <abadger1999> len-as-condition I like because it's a small optimization.
+19:48:06 <dag> mattclay: I have been fixing those as the PEP8 sanity test already catches these IMO
+19:48:24 <dag> mattclay: so I don't see a need in adding them from pylint as well
+19:48:31 <mattclay> dag: Is there a matching PEP 8 rule that catches them which we've disabled?
+19:48:47 <dag> mattclay: no, we fix these already afaict
+19:48:52 <mattclay> s/PEP 8 rule/pycodestyle rule/
+19:49:11 <dag> mattclay: your PR is related to files not already PEP8 compliant
+19:49:20 <mattclay> They aren't failing CI, so either there is no pycodestyle rule for them, or it is disabled.
+19:49:23 <abadger1999> no-else-return... I'm somewhat, meh about but there's nothing wrong with fixing it that I can see.
+19:49:29 <dag> they are in the legacy whitelist
+19:49:33 <mattclay> Ah, OK.
+19:49:42 <bcoca> -1 to style rules, but dont think you had to ask
+19:50:19 <dag> I have been fixing both in other files, so I am pretty sure this is already covered
+19:50:23 <mattclay> I didn't even check to see if they were on the legacy whitelist. In that case there's no need to enable the rules in pylint if we're picking them up in the non-legacy check using pycodestyle.
+19:50:37 * mattclay verifies
+19:51:17 <abadger1999> (For the first one, I mean: if "len(variable) != 0:" takes more CPU and brainpower than "if variable:")
+19:53:11 <mattclay> I'm not seeing a pycodestyle failure for the no-else-return case.
+19:53:32 <mattclay> Even when removing a file from the legacy list which fails the pylint test.
+19:54:00 * mattclay checks len-as-condition
+19:56:07 <jborean93> Hey
+19:56:39 <thaumos> dude, it's early @jborean93
+19:56:41 <thaumos> go to sleep
+19:56:41 <mattclay> I'm not seeing any pycodestyle failures for len-as-condition either.
+19:56:42 <dag> hmmm, pretty sure I have seen both of them in the past when using ansible-test
+19:57:07 <jborean93> thaumos: 5:56am, have the windows meeting in a few minutes so got to be prompt for that :)
+19:57:09 <dag> nevermind
+19:57:16 <thaumos> heh
+19:57:46 <thaumos> @jborean93 sleep much higher in my book than windows :-P
+19:57:56 <dag> mattclay: so non-whitelisted code fails if you enable this in pylint ?
+19:59:05 <mattclay> We don't have a file whitelist for pylint, just configs to enable rules for various groups of files. If we enable these two pylint rules we'll have failures that aren't detected by pycodestyle (even if those files are not on the legacy PEP 8 list).
+19:59:26 <mattclay> So it's not redundant to enable them. The question is whether want to or not.
+20:00:01 <thaumos> so let's vote.
+20:00:06 <dag> mattclay: I mean just as the opposite test to prove me wrong
+20:00:12 <dag> +1
+20:00:41 <mattclay> dag: Sorry, I'm not sure what you mean.
+20:00:44 <thaumos> abadger1999: you had a +1 on len-as correct?
+20:00:48 <abadger1999> +1
+20:01:19 <bcoca> -1
+20:02:07 <abadger1999> I suppose I'm +1 on most style changes that don't have false positives.  Just some I'm willing to offer a justification for.
+20:02:12 <thaumos> any more votes?
+20:02:22 <thaumos> we need to close out the meeting for the windows working grou
+20:02:32 <mattclay> +1 on len-as
+20:02:43 <thaumos> give @jborean93 a reason for waking up at the crack of dawn
+20:03:30 <nitzmahone> We run in our own channel, so overlap is OK other than people interested in both :D
+20:03:37 <thaumos> ah, good to know
+20:04:07 <thaumos> so that being said, do we want to continue the meeting to get in jborean93's topic?
+20:04:21 <thaumos> up to you folks, I may need to leave though because I have fatherly obligations.
+20:04:49 <mattclay> So we have for len-as-condition: +3, -1 ?
+20:04:58 <thaumos> to close the current topic though, mattclay looks like you got a positive vote on len-as
+20:05:01 <thaumos> yes
+20:05:20 <mattclay> How about no-else-return?
+20:05:29 <thaumos> maxamillion: do you care to vote for len-as-condition?
+20:06:43 <abadger1999> mattclay: +1 from me on no-else-return.  I don't have justification besides consistency, though.
+20:08:56 <abadger1999> Seems like we need more people for no-else-return, guess we should continue next week.
+20:08:57 <maxamillion> thaumos: sorry, got called afk for a second ... reading backscroll
+20:09:27 <abadger1999> If jborean93 would like to discuss his get_md5, it seems like something we can talk about quickly.
+20:09:29 <maxamillion> yeah, I'm +1 for len-as
+20:09:41 <abadger1999> Comes down to how long the deprecation cycle should last.
+20:09:48 <maxamillion> I'm also a big sucker for pep8
+20:10:01 <dag> sigh, everytime I run pylint on Ansible codebase, my system grinds to a halt, CPU gets hot, fans to the max :-/
+20:10:31 <thaumos> sounds like ansible-dc
+20:10:35 <thaumos> s/dc/doc
+20:10:56 <mattclay> dag: Yeah, pylint is a CPU hog. I think it's mostly from the type inference.
+20:11:06 <bcoca> we can make ansible-doc much faster, just remove 1000 modules
+20:11:16 <thaumos> @bcoca ;-)
+20:11:41 <jborean93> Ok, if people want to talk about it now, my question is around this PR https://github.com/ansible/ansible/pull/33002
+20:11:54 <thaumos> are we cool with closing out the current topic?
+20:12:01 <abadger1999> alikins had a start on fixing that, actually... Use jinja2 templates for building the module lists instead of sphinx TOC.
+20:12:08 <mattclay> We can delay the vote to next week since a lot of folks are out. I just wanted to be able to give feedback on direction for that PR.
+20:12:21 <bcoca> abadger1999: that affects docsite build, not ansible-doc
+20:12:36 <abadger1999> bcoca: ah... ansible-doc is pretty snappy, though, right?
+20:12:50 <bcoca> abadger1999: you have not done 'ansible-doc -l' in a while have you?
+20:12:56 <abadger1999> Hmmm over a second or two.
+20:13:06 <abadger1999> yeah, okay, could use some optimization again.
+20:13:11 <bcoca> we had to add --list_files version or ansibot was hosed
+20:13:27 <thaumos> okay, we can defer @mattclay, but it sounds like most are for it.
+20:13:35 * mattclay nods
+20:13:47 <thaumos> #topic deprecate get_md5 from stat and win_stat
+20:14:17 <abadger1999> I'm +1 for deprecating.  The question is how.  And how long deprecation cycles should be.
+20:14:28 <jborean93> Currently `stat` and `win_stat` have an option `get_md5` which defaults to true which pretty much has been replaced with `get_checksum` and `checksum_algorithm`
+20:14:30 <thaumos> I am +1 for deprecating as well
+20:14:35 <thaumos> dep cycle should be the standard 4
+20:14:40 <dag> deprecating return values is always a hard thing to do :-/
+20:14:42 <thaumos> no need in making that longer in the tooth
+20:15:10 <dag> hard to test for it, unless we would have special values like we do for omit
+20:15:14 <bcoca> you can leave the return longer (empty) but just changing it to 'false' by default sould 'fix it' w/o need of removing the option
+20:15:21 <bcoca> some people WANT md5 (dontaskmewhy)
+20:16:13 <jborean93> Yea, the default is `yes` and we can't just add a warning and remove after 4, we either need to remove the yes option after x cycles and then finally the option altogether some cycles after that
+20:16:13 <maxamillion> +1 for deprecating also
+20:16:35 <jborean93> The PR currently adds the ability to set `checksum_algorithm: md5` so people can still get md5 hashes
+20:16:51 <bcoca> just change to no by default, leave the option, no need to deprecate
+20:16:59 <bcoca> ah, if that is avialble, ok
+20:18:01 <jborean93> Wouldn't we want to remove it eventually?
+20:18:19 <thaumos> remove it,
+20:18:47 <jborean93> So the question is how many releases do we want to do it?
+20:18:50 <thaumos> 4
+20:18:55 <jborean93> we technically will do it in 4 steps
+20:19:00 <jborean93> 1st step to change default to no
+20:19:04 <jborean93> 2nd step is to finally remove it
+20:19:20 <thaumos> change default to no and warn on yes for 2.5, dep out in 2.9
+20:19:27 <bcoca> remove has to do with deprecation, not with default change
+20:20:29 <jborean93> But people would need at least some notice that the default changes, especially on a stableinterface module
+20:20:50 <jborean93> I can only set a warning "without bothering people too much" when someone explicitly set's `get_md5: True`
+20:21:37 <maxamillion> thaumos: +1
+20:22:33 <thaumos> I say notice in changelog, porting guide, and a warning on the task.
+20:23:01 <thaumos> we can also do a post in ansible-project as well.
+20:23:14 <thaumos> after that, I think we've done all we can to notify
+20:23:40 <jborean93> Ok, so you are saying, change to no in 2.5 (with all the changelog porting info), warn if set to yes saying it will be removed in 2.9 and then finally remove in 2.9?
+20:23:49 <abadger1999> I can +1 thaumos's proposal but I could +1 others as well.
+20:24:02 <thaumos> yes
+20:24:45 <maxamillion> +1 to thaumos as well
+20:25:24 <jborean93> Ok, that's fine with me, I can update the PR for that
+20:25:57 <jborean93> Do we want to document that the `md5` return value will also be removed in 2.9, or do we usually keep those for backwards compatibility and just null it out?
+20:26:06 <abadger1999> it being stableinterface does make me feel bad about changing it but....
+20:26:22 <abadger1999> if we're going to remove one we might as well remove both.
+20:26:26 <maxamillion> stableinterface?
+20:27:05 <abadger1999> maxamillion: we mark modules with stableinterface or preview to denote whether the params and return values are going to change in a backwards incompatible manner.
+20:27:21 <maxamillion> oh right
+20:27:22 <abadger1999> And as I say that, it makes me feel even worse about changing it.
+20:27:22 * maxamillion derps
+20:27:29 <maxamillion> that's in the metadata doc
+20:27:39 <jborean93> I think technically if the option is being removed in 2.9 I think the return value also get's removed by default
+20:27:41 <jborean93> so not too bad
+20:27:42 <abadger1999> I may like bcoca's better now... change the default value but leave it in.
+20:28:01 <jborean93> Because it only returns `md5` if `get_md5: True`
+20:28:03 * jborean93 checks
+20:28:18 <maxamillion> yeah, probably best to leave it in as to not break that
+20:29:55 <jborean93> ok `md5` is not returned when `get_md5: False` so it does it together
+20:30:14 <jborean93> By changing the default it already removes the value and I'm fine with that
+20:32:05 <maxamillion> +1
+20:32:26 <jborean93> Cool, well that works for me and I can update the PR for what was discussed
+20:32:32 <abadger1999> bcoca: So... I'd like to deprecate get_md5, but since this is stableinterface, not remove it.  (until 3.0)  Does that make any sense to you?
+20:33:29 <thaumos> I don't agree with having two approaches
+20:33:41 <thaumos> in my mind since we're adding an alternative, it's still stable
+20:33:52 <thaumos> it causes confusion having two things we will always have to maintain
+20:34:17 <thaumos> we're giving the users an alternative that still does the same thing and removing it four versions down the road in 2.9
+20:34:17 <maxamillion> I guess that bowls down to what needs to remain unchanged within the definition of the stableinterface
+20:34:28 <maxamillion> boils *
+20:34:35 <abadger1999> yes it does... but what does stableinterface mean if it's not stable?
+20:34:37 <maxamillion> stay with me brain...
+20:35:06 <thaumos> stable to me means we're retaining functionality.  doesn't have to be tied to the letter of implementation.
+20:35:09 <abadger1999> is it: stable subject to deprecation cycle and preview can change releaes-to-relase?
+20:35:24 <jborean93> Well you did remove the params option in a stableinterface recently :)
+20:35:24 <abadger1999> thaumos: stable to me means, don't break playbooks.
+20:35:31 <abadger1999> heh
+20:35:34 <abadger1999> Yes, that is true.
+20:35:39 <abadger1999> no deprecation cycle either.
+20:35:50 <thaumos> @abadger1999 we're giving fair warning to changing language.
+20:35:55 <jborean93> If people set get_md5: True right now it won't break, it's only if they didn't and are relying ont he md5 return value
+20:36:11 <thaumos> to me it's different if we rip the rug out from under people saying sorry this isn't here anymore and you got nothing to replace it with.
+20:36:12 <jborean93> The trouble is how you warn without annoying people with warnings
+20:36:28 <thaumos> people that don't like warnings can turn it off
+20:36:42 <thaumos> we're doing them a solid by keeping it around for four versions.
+20:37:27 <abadger1999> Okay, if we're okay with a definition of stableinterface that includes removing parameters, then I'm okay with deprecate and remove as proposed by thaumos.  But we may want to update the docs that reference stableinterface.
+20:37:41 <thaumos> I can foresee someone saying, "Well why don't you just fix get_md5?!  You left it in, which means you could still fix it?!  I don't care that it's deprecated, fix it because I don't want to rewrite my playbooks!"
+20:38:05 * jborean93 support Python 2.4 so I don't need to upgrade my hosts
+20:38:13 <abadger1999> and that is what I thought we were saying with stableinterface.
+20:38:19 <abadger1999> But if we don't then that's fine too.
+20:38:30 <thaumos> nope, there's a very defined difference in my eyes.
+20:38:33 <abadger1999> we just should add the clarificatio nto the docs
+20:38:59 <thaumos> we reserve the right to change the language to make more sense.  It is still stable because functionality remains.
+20:39:09 <abadger1999> Two places in docs:
+20:39:11 <abadger1999> docs/templates/plugin.rst.j2:{% set module_states = { 'preview': 'it is not guaranteed to have a backwards compatible interface', 'stableinterface': 'the maintainers for this module guarantee that no backward incompatible interface changes will be made'} %}
+20:39:11 <maxamillion> I thought stableinferface meant what abadger1999 is saying, so if that's not what the intention is I'd also like to see a clarification in the docs
+20:39:16 <abadger1999> docs/docsite/rst/dev_guide/developing_modules_documenting.rst:   :stableinterface: This means that the module's parameters are
+20:39:53 <thaumos> we're retaining backwards compat by keeping the functionality.
+20:40:29 <jborean93> I do agree the docs seem to state the interface stays the same, if we were to change the default's then the interface changes
+20:40:32 <abadger1999> thaumos: I really think backwards compat means playbooks continue to function.
+20:40:42 <abadger1999> without revision
+20:41:13 <thaumos> okay, how about this.
+20:41:23 <thaumos> have an undocumented get_md5 that is deprecated.
+20:41:41 <thaumos> i really do foresee people complaining about it still being there yet we do nothing with it
+20:42:19 <abadger1999> I was thinking that too.... The one problem (not a blocker but we should go into it with our eyes open) is that it hurts people who have to port to undocument get_md5
+20:42:24 <thaumos> because they didn't take the time to rtm about get_checksum:yes and checksum_algorithm: md5
+20:42:37 <abadger1999> I inherited this playbook that has a get_md5 parameter.  What does that do?
+20:42:41 <jborean93> Well the checksum_algorithm: md5 isn't there right now
+20:42:48 <jborean93> This PR was going to add it
+20:42:52 <thaumos> right
+20:43:04 <thaumos> so assuming it'll be there when added, it's repetitive
+20:43:08 <thaumos> and causes confusion
+20:43:32 <jborean93> agreed
+20:43:32 <thaumos> I am just future thinking
+20:44:19 <thaumos> what are other's thought  on the subject?
+20:44:25 <abadger1999> yeah, agreed.... so it's a questoin of can we satisfy both old users and new users?
+20:44:40 <thaumos> yeah, I know what you mean @abadger1999
+20:44:54 <thaumos> I just feel we satisfy the old users by warning them and directing them to the new right way
+20:45:16 <abadger1999> Maybe the undocumented route and a note section that sayss "There used to be a get_md5 parameter,  use get_checksum instead"?
+20:45:24 <thaumos> we have lots of code rot if we keep around a parameter that is deprecated.
+20:45:47 <abadger1999> Oooh.. the deprecation message could include the note to use get_checksum, that might be the right way.
+20:46:12 <thaumos> lol,
+20:46:18 <thaumos> I thought's that's what it would do anyways
+20:46:35 <jborean93> Still doesn't help people relying on it implicitly being set to yes
+20:46:49 <maxamillion> I still think it violates the stableinterface as it is currently written, but if the group wants to clarify what stableinterface means then I'm not going to be grumpy about it
+20:47:34 <thaumos> here's a thought i had... can we alias it somehow
+20:47:40 <thaumos> I think no, but thought i'd raise that as an option
+20:47:42 <abadger1999> So Step (1) Change default and deprecate with the message pointing to get_checksum.  Step (2) in 4 releases, undocument the get_md5 parameter.  Step (3) In ansible 3.0 or if we decide we're tired of maintaining it for old users, we remove.
+20:47:48 <thaumos> and Koa is getting grumpy. I need to roll soon
+20:48:19 <jborean93> Change the default for 2.5?
+20:48:36 <abadger1999> I am okay  with changing the default in 2.5.  I think bcoca was too.
+20:48:40 <maxamillion> abadger1999: +1
+20:48:52 <maxamillion> abadger1999: that seems to "check all the boxes"
+20:50:13 <jborean93> ok, do we have a doc/page where we list things to deprecate in the future, or is it a try to remember to do kind of thing?
+20:50:42 <thaumos> can someone take over for me pls :)
+20:50:44 <abadger1999> jborean93: Currently the latter but I would love it if you started the former.
+20:50:47 <abadger1999> thaumos: I'll endmeeting
+20:50:48 <thaumos> thanks all!
+20:50:53 <thaumos> ty!!!!
+20:51:25 <jborean93> Cool, thanks will update the PR based on what we discussed
+20:51:26 <jborean93> thanks all
+20:53:10 <abadger1999> #info Decided on a mix of several proposals: ‎[12:47:42] ‎<‎abadger1999‎>‎ So Step (1) Change default and deprecate with the message pointing to get_checksum.  Step (2) in 4 releases, undocument the get_md5 parameter.  Step (3) In ansible 3.0 or if we can agree we're no longer going to maintain it for old users, we remove.
+20:53:17 <abadger1999> #topic Open floor
+20:53:29 <abadger1999> Okay, we've gone long into overtime.  Anyone have anything else?
+20:53:44 <abadger1999> #info no meeting on Thursday, it's a major US holiday
+20:54:09 <abadger1999> #info 2.4.2 rc1 comes out tomorrow; 2.4.2 final on the 29th if there are no blockers
+20:54:25 <abadger1999> I'll end the meeting in 60seconds if no one has anything.
+20:56:49 <abadger1999> #endmeeting

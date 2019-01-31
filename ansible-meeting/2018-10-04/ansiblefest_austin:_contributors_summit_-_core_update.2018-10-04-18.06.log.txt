@@ -1,0 +1,335 @@
+18:06:07 <gundalow> #startmeeting AnsibleFest Austin: Contributors Summit - Core update
+18:06:07 <zodbot> Meeting started Thu Oct  4 18:06:07 2018 UTC.
+18:06:07 <zodbot> This meeting is logged and archived in a public location.
+18:06:07 <zodbot> The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+18:06:07 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+18:06:07 <zodbot> The meeting name has been set to 'ansiblefest_austin:_contributors_summit_-_core_update'
+18:06:16 <gundalow> #chair abadger1999 alikins bcoca jtanner mattclay maxamillion mordred nitzmahone Qalthos sdoran shepdelacreme sivel thaumos trishnag
+18:06:16 <zodbot> Current chairs: Qalthos abadger1999 alikins bcoca gundalow jtanner mattclay maxamillion mordred nitzmahone sdoran shepdelacreme sivel thaumos trishnag
+18:06:48 <felixfontein> where's the bluejeans for this meeting?
+18:07:01 <nirik> https://redhat.bluejeans.com/4339046286/webrtc
+18:07:22 * bcoca waves at gundalow
+18:07:32 <felixfontein> now I see gundalow, but with another link
+18:07:43 * nirik has to do a quick reboot, be on in a min.
+18:08:13 <gundalow> This is https://bluejeans.com/7480904391/ Core
+18:08:29 <gundalow> Linux System Roles is in #ansible-meeting-2
+18:10:22 <felixfontein> yes
+18:10:25 <felixfontein> I can hear you
+18:10:26 <bcoca> i can hear you
+18:11:01 <bcoca> i unmuted, spoke, remuted
+18:11:11 <bcoca> again
+18:11:32 <bcoca> use someone else, today Bj has been very unstable with me
+18:13:16 <dag> o/
+18:13:37 <dag> Maybe next time we should start 30 minutes later by default ;-)
+18:13:47 <felixfontein> lol
+18:14:34 <dag> if you want involvement, we need e bikeshedding topic ;-)
+18:15:21 <gundalow> #topic Challenges Beyond Batteries Included
+18:16:13 <gundalow> Question: What's the transition to move modules?
+18:16:34 <bcoca> its chicken/egg issue
+18:16:56 <bcoca> it would be nice to 'spin off aws' to it's own repo and modify ansible packaging to install directly and/or optionally
+18:17:04 <bcoca> kind of ansible-minmal was supposed to be
+18:17:57 <bcoca> toaster modules?
+18:18:08 <gundalow> bcoca: fictional module :)
+18:18:20 <bcoca> ah, i would start with 'new module  line'
+18:18:35 <bcoca> or look at tower modules, since we mostly 'control' both sides there
+18:20:01 <bcoca> modules are 'independant' of each other so there is really little to gain by moving them all out, it gets a lot trickier with module_utils/action plugins/etc
+18:22:10 <bcoca> not even communicated, that is basic assumption with every package
+18:22:18 <bcoca> source of package supports contents
+18:23:17 <bcoca> mattclay: the way galaxy content is designed, they would need to live in their own repos
+18:23:50 <mattclay> bcoca: We should consider how to support them living in one repo.
+18:24:07 <bcoca> <= choir, but that is something they currently want to avoid
+18:24:14 <bcoca> they want to equate collection == repo
+18:25:03 <mattclay> So make ansible/ansible a collection.
+18:26:36 <alikins> https://github.com/alikins/ansible-roles-modules   was kind of an old experiment on this idea (using roles, pre collections)
+18:27:55 <bcoca> since currently you can 'drop in ' a module and it already can do anything the core ones do, im unsure what gaps there would be with collections
+18:29:12 <bcoca> namespacing does not require collections, collections just provide them by default
+18:29:19 <bcoca> namespacing is something we need to support in core
+18:29:49 <bcoca> ansible. instead of core.
+18:29:53 <bcoca> bikeshed ^
+18:30:50 <felixfontein> why not std? :P
+18:31:02 <bcoca> you'll need shots for that
+18:31:52 <bcoca> ansible.callback
+18:32:09 <bcoca> even modules when module_utils changes
+18:32:18 <bcoca> though we can ship 'updated module_utils'
+18:33:39 <felixfontein> yay, dependency hell
+18:33:50 * bcoca waves at can of worms
+18:35:53 <bcoca> think '
+18:35:56 <bcoca> modules-extras
+18:37:33 <bcoca> mattclay: yes
+18:37:34 <felixfontein> I hear you too
+18:38:27 <felixfontein> https://github.com/ansible/ansible-modules-core https://github.com/ansible/ansible-modules-extras :)
+18:38:43 <bcoca> modules separate had 2 problems, mainly dual commits
+18:38:55 <bcoca> but with 'module_utils' being a plugin most of those issues are gone
+18:39:21 <bcoca> the other issue is 'split ticketing'
+18:41:40 <felixfontein> ...or the modules they have installed don't work with the new ansible version...
+18:41:55 <bcoca> one thing this could do 'better' is including dependant libs
+18:42:03 <bcoca> i.e we include aws_modules/plugins but not boto
+18:42:17 <bcoca> also we have option of 2 packages
+18:42:21 <felixfontein> but then, boto is required on the target machines, not on the host?
+18:42:26 <bcoca> ansible (batteries) and ansible-minimal (core)
+18:42:36 <bcoca> felixfontein: it gets fun that way
+18:42:48 <felixfontein> bcoca: indeed! :)
+18:43:14 <felixfontein> maybe some extension of the package manager modules which allow to mention a list of modules, and they install the required libraries for these modules? ;)
+18:45:30 <bcoca> 'latest stable release' of those modules
+18:46:04 <bcoca> doesnt mean we dont own the other repo
+18:49:18 <bcoca> its deprecated
+18:50:02 <bcoca> misleadingly 'core'
+18:52:10 <dag> Guys, I need to go... indoor soccer
+18:52:25 <bcoca> futbito?
+18:52:26 <felixfontein> have fun, dag!
+18:52:54 <dag> My biggest concern to move modules out of this repo into individual repositories (for Galaxy) is that there's no incentive for people to cooperate
+18:53:16 <dag> and you'll find people dumping their own (modified) modules over the wall
+18:53:30 <dag> and it will become unclear which module is still maintained and authoritative
+18:53:56 <bcoca> that is why galaxy is looking at scoring and 'badges'
+18:54:04 <dag> bcoca: that doesn't really help
+18:54:11 <bcoca> it helps, does not solve
+18:54:25 <dag> no, it may be counterproductive
+18:54:45 <dag> because a much better module may never get the same exposure because an old module is still being used by the majority
+18:55:13 <bcoca> well, the scoring goes to 'quality' mainly, quantity score will also be there, but not same thing
+18:55:13 <dag> there will be a land-grab in the beginning, but over time it's a lost cause IMO
+18:55:30 <dag> and things may still get unmaintained, but still popular
+18:55:31 <bcoca> possibly, but there are ways to mitigate that
+18:55:58 <bcoca> consider that many modules are currently 'unmaintained' though still in ansible/ansible
+18:55:58 <dag> no, if one popular module becomes unmaintained, people will basically be told to change their repo's for another one
+18:56:01 <dag> which will not happen
+18:56:07 <dag> (or will be very inconvenient)
+18:56:25 <bcoca> i dont see that as a new problem
+18:56:25 <dag> bcoca: at least if someone has an interest *that* module will become maintained again
+18:56:37 <dag> not some other module, that people may never find
+18:56:40 <bcoca> possibly, but it also makes us a gateway to it
+18:56:45 <dag> so there's no incentive to cooperate
+18:57:07 <dag> in fact, people do not need to collaborate, upstreaming would mean doing your own, public thing
+18:57:08 <bcoca> unless we look at '# of authors' as part of the scoring
+18:57:27 <dag> that's why I think we're fixing the wrong thing here, but hey, I have been repeating myself over and over
+18:57:32 <dag> indoor soccer time now :)
+18:57:35 <dag> bye !
+18:57:46 <felixfontein> *wave*
+18:57:49 <bcoca> dag: not really, moving the modules out, does not mean ansible team is not handling those repos
+18:58:30 <bcoca> *cough* docker *cough*
+18:58:32 <dag> well, for most it will
+18:58:45 <digigrate_> Is there a roadmap doc for module migration?
+18:58:51 <felixfontein> some of the docker modules are not really maintained
+18:58:58 <bcoca> no, we just started brainstorming on it
+18:59:06 <bcoca> felixfontein: my point exactly
+18:59:36 <bcoca> abadger1999: but part of discussing it is so we can also influence mazer design
+18:59:41 <felixfontein> I did the "mistake" of subscribing to docker_* notifications. there are *a lot* :)
+19:01:45 <bcoca> mattclay: if we eject but still run those tests on the 'module repo' they can be more distributed and still have the coverage
+19:02:04 <abadger1999> bcoca: the things we're talking about are strictly social problems... not technical problems.
+19:02:26 <abadger1999> maybe the galaxy server could get stuff but I'm not sure...
+19:02:39 <abadger1999> (stuff == features to support this)
+19:02:41 <alikins> I don't think ejecting is the first goal, but getting it into a modular 'packaged' structure and 'bundle' it
+19:02:45 <bcoca> part of the plan there is adding testing for the content
+19:03:25 <bcoca> alikins: ejecting from package and ejecting from repo dont need to be related nor coincide in time
+19:03:51 <bcoca> also dont think we remove all
+19:04:11 <bcoca> removing community makes sense, 'all' does not, imo
+19:04:31 <sdoran> Agreed.
+19:04:44 <sdoran> we should keep "core" stuff and focus on removing community bits.
+19:04:53 <digigrate_> i’m interested in structure/bundle AND testing
+19:05:00 <sdoran> That we don't truly support ourselves.
+19:05:08 <bcoca> i do think dag has a point and that removing it from repo might break community engagement
+19:05:22 <sdoran> That is my biggest concern.
+19:05:33 <sdoran> I don't think I'm communicating it well, though.
+19:05:46 <sdoran> If we fragment the community, it could hurt engagement.
+19:05:57 <sdoran> Folks could get lost figuring out where and how to contribute.
+19:06:08 <bcoca> i would argue its already fragmented in that most just want/look at a small subset
+19:06:30 <sdoran> Right, but all the PRs go do one repo.
+19:06:42 <sdoran> It'd be a change (in the Ansible community) to move to multiple repos.
+19:06:57 <bcoca> mattclay: we dont need to move any code/issues if we could support mulitple collections per repo
+19:06:58 <sdoran> Ooo backporting would be painful... I didn't think about that.
+19:07:18 <bcoca> no, once you kick out you dont backport, we deprecate the module in ansible/ansible
+19:07:34 <bcoca> it should be possible for users to download new module version directly
+19:08:00 <sdoran> Ok. Just needs communication, but doable for sure.
+19:09:39 <bearrito> might've been discussed already, but this sounds like it'll complicate locked down envs without easy access to galaxy or non-satellite hosted rpms
+19:09:51 <felixfontein> anyone knows how the relation module_utils <--> modules is? is it possible to split up the whole of support:community into small chunks so that every community-supported file in module_utils belongs to at most one of these chunks?
+19:10:10 <abadger1999> bearrito: sdoran has brought that up as "how will downstreams package us in the new world?"
+19:10:19 <abadger1999> I think the question remains open
+19:10:59 <jhawkesworth_> I'm concerned can't just treat our current groupings of modules i.e. windows as a single thing.  some of the modules will probably allways be core, others community.  so no easy translation to a windows namespace.
+19:11:06 <bcoca> we can still build the current tarball even if modules are elsewhere
+19:11:40 <bcoca> jhawkesworth_: only if we have mutiple levels
+19:11:42 <jtanner> package specs aren't limited to one source tar
+19:11:47 <bcoca> windows.iis windows.registry etc
+19:12:27 <bcoca> nitzmahone: that was mainly what i proposed with those separations
+19:12:43 <bcoca> 'the community' reffered to current maintainers/working groups, many of which are now in core
+19:17:45 <bcoca> mattclay: but we do that now, just that they check into core a lot of stuff we cannot test
+19:19:55 <bcoca> ^ already said above repo and packaging splits are not tied to each other
+19:20:55 * jtanner has purposefully avoided the "kick out" talk
+19:21:07 <sdoran> The repo split is more about community, testing, and perception. It's not about packaging and delivery (as I understand it).
+19:21:08 <bcoca> we used 'eject'
+19:21:33 <geerlingguy> (just adding 2¢) I really hated when we had more than one repo for modules-extras vs ansible core, it added cognitive burden to experience of contribution, searching, etc.
+19:21:37 <sdoran> How about "migrate" or "rehome".  (Trying to find buzzword with positive spin :) )
+19:21:40 <abadger1999> sdoran: I think those go hand in hand
+19:22:03 <geerlingguy> the batteries included is one of the weird things that architecturally I hate, but as an end user it's incredibly awesome
+19:22:16 <geerlingguy> Drupal community has had this exact same debate for _years_
+19:22:16 <jtanner> unless of course you use a bad battery
+19:22:17 <bcoca> mattclay: then we cannot use 'collections' as they currently stand
+19:22:20 <geerlingguy> the 'smallcore' initiative
+19:22:31 <geerlingguy> basically 'let's rip out all the harder to maintain modules so core maintainers have easier lives'
+19:22:44 <jtanner> and "unmaintained"
+19:22:46 <geerlingguy> what ended up happening was count of modules in core doubled every release for 6-7, 7-8 :D
+19:22:48 <bcoca> its not easier lives, its 'dont give false expectations of support'
+19:23:10 <geerlingguy> well that's just a communication issue imo
+19:23:20 <geerlingguy> and in docs at least there are flags
+19:23:27 <geerlingguy> like "this module has a stable api" or whatever
+19:23:37 <bcoca> which we can piont at but then people say 'but it is in your package'!
+19:24:06 <jtanner> redhat has a motto of "we ship it, we support it" which is driving a lot of this discussion
+19:24:12 <bcoca> he, i got him off 'core.'
+19:24:15 <jborean93> I think the docs right now are a bit unclear as to what is core and what isn't
+19:24:23 <jhawkesworth_> renamespacing at packaging time sounds like it could cause testing problems
+19:24:25 <jtanner> they're clear, but people don't read it
+19:24:41 <jborean93> jtanner: I disagree, they may not ready it but it isn't really clear
+19:24:54 <bcoca> its not just RH motto, that is what most people expect when you 'ship it'
+19:25:08 <jtanner> first result for "ansible core supported modules": https://docs.ansible.com/ansible/2.6/user_guide/modules_support.html
+19:25:26 <jborean93> understand that, but the module pages themselves don't show if it core or not
+19:25:35 <bcoca> jborean93: yes they do
+19:25:41 <jborean93> bcoca: where?
+19:26:00 <jborean93> I see a Support section for core ones but nothing that explicitly says they are core, the support is just a generic read this KB
+19:26:05 <bcoca> https://docs.ansible.com/ansible/latest/modules/copy_module.html?highlight=copy#support
+19:26:19 <bcoca> well, then lets clarify that
+19:26:25 <jborean93> yes we should
+19:26:27 <bcoca> it used to be a lot more explicit when core/extras
+19:26:40 <jborean93> non core don't even have the support, so unless you know that means core or not it's confusing
+19:27:01 <jborean93> Having an extra in the status section would help, in my opinion
+19:27:05 <felixfontein> other modules have no information about support in the docs
+19:27:06 <sdoran> Yeah, that note is absent on community module. We could improve the visibility of that in the docs pages.
+19:27:11 <sdoran> Maybe a new color! ;)
+19:27:29 <bcoca> jborean93: that is a bug, they used to have 'community' and other metadata status
+19:27:41 <bearrito> yeah, that support section should have the classification stated there
+19:27:46 <sdoran> `ansible-doc` shows the METADATA
+19:27:47 <jborean93> bcoca: it shows the interface status but that's it
+19:27:54 <jborean93> been like that for a long time now
+19:27:55 <bcoca> that is a doc bug
+19:28:01 <jborean93> cool
+19:28:05 <bcoca> i dont normally read the html but that is clearly a bug
+19:28:15 <bcoca> we had 'all support states' with a blurb there
+19:28:27 <jborean93> I think since the redesign it dissapeared
+19:28:36 <bcoca> i say BUG!
+19:28:36 <jtanner> if "fixing" it, would also be nice for the support description to link back to the other page of categories
+19:29:46 <jborean93> jtanner: to show other modules that are in that category?
+19:29:48 <abadger1999> I think that dylan and I finally arrived at that version.
+19:29:54 <jtanner> jborean93: yes
+19:30:11 <abadger1999> Looking at the template, what it lacks is a "non-core, non-network" section.
+19:30:11 <bcoca> jtanner: per module page? that will be expensive generating and 'reading'
+19:30:29 <bcoca> seems like those were removed
+19:30:45 * mattclay steps away for a few minutes
+19:30:47 <jtanner> in the module page where it will say "this is core supported", the word core could be a hyperlink to the other page
+19:30:48 <jborean93> is it expensive to generate it with a link?
+19:31:02 <abadger1999> current =>   if supported_by: core, network:  Red Hat supports this module.   Need to add an else: This module is not supported by red hat.
+19:31:05 <bcoca> a link no, the list of all modules that match, yes
+19:31:16 <jtanner> didn't ask for list
+19:31:37 <bcoca> sorry misinterpeted" to show other modules that are in that categoy"
+19:31:47 <abadger1999> It should not be expensive to link back.
+19:31:50 <felixfontein> the only interesting list is probably a list of modules supported by Red Hat
+19:31:55 <jborean93> I think we should always have the Support section, maybe even put it at the top
+19:32:11 <jborean93> and have that list back to the module index per type like jtanner says
+19:32:11 <jtanner> felixfontein: that's core and network and eventually certified
+19:32:25 <bcoca> import q/q() or embeded print()
+19:32:51 <bcoca> 'what we use for debug'
+19:32:51 * jborean93 sorry for derailing the packaging talk
+19:33:03 <bcoca> jborean93: no, that is a bug we need to fix
+19:33:16 <bcoca> about making it more visible, i would make a 2nd issue as 'feature request'
+19:33:35 <bcoca> and i think we already have a list of 'supported' modules somewhere, we were required to build it
+19:34:05 <jborean93> yep jtanner posted the link https://docs.ansible.com/ansible/2.6/user_guide/modules_support.html, each section then has a link to a list of modules per category
+19:34:36 <jtanner> https://github.com/jctanner/ansible-tools
+19:34:38 <jborean93> I can create a PR to fix the bug, did we just want to make sure the Support section is always returned and link to the module index?
+19:34:43 <bcoca> keep remote files + strace ...
+19:35:06 <bcoca> nitzmahone: iirc there is way to do remote pdb with vim
+19:35:25 <acozine> jborean: link to PR?
+19:35:49 <acozine> oh, nm, I misread "can create" vs "have created"
+19:35:50 <gundalow> #action gundalow to turn debug stuff into a blog post
+19:36:12 <jborean93> acozine: I will send you one, when I create it unless you wish to do the work?
+19:36:48 <acozine> jborean93: thanks, if you did it, I'd be happy and grateful
+19:36:56 <jborean93> no worries
+19:36:58 <bcoca> one problem with import q, does not work with Mock
+19:37:45 <bcoca> but that is almost a 'safety' so i dont leave 'import q' inline when checking in
+19:37:51 <abadger1999> jborean93: https://github.com/ansible/ansible/blob/devel/docs/templates/plugin.rst.j2#L399 <==== you just need an else for this clause (and to add the links that jctanner requested)
+19:38:06 <abadger1999> import q works with mock.
+19:38:07 <jtanner> https://tannerjc.net/wiki/index.php?title=Ansible_Developer_Filament
+19:38:15 <abadger1999> git hook!
+19:38:34 <bcoca> PR 'remove spurious print()'
+19:38:45 <sdoran> Yup. I wrote something to "clean my debugging" .
+19:39:03 <gundalow> #action add `ansible-test sanity` check for `q`
+19:39:16 <bcoca> our tests, mock protests about import q
+19:39:45 <abadger1999> You;ll have to show me because I don't know what that would be.
+19:39:56 <bcoca> k
+19:41:13 <bcoca> yes, but BEFORE we do the work
+19:41:43 <bcoca> proposal is for discussion
+19:43:29 <mattclay> I'm back.
+19:43:44 <jborean93> having the meeting at the current time is hard for people in my time zone
+19:43:49 <jborean93> so proposals are quite difficult
+19:44:21 <bcoca> opinoins have diverged on the subject
+19:46:35 <bcoca> beer?
+19:46:57 <bcoca> workshops also
+19:47:10 <abadger1999> pair programming could really be nice
+19:47:21 <sdoran> +1
+19:47:44 <sdoran> AnsibleFest Sprints!
+19:48:04 <bcoca> but that requires well defined and narrowly scoped projects
+19:48:23 <sdoran> Just "work on Ansible" 😉
+19:48:28 <bcoca> not 'implement platform'
+19:48:30 <jtanner> fix ALL the bugs
+19:48:33 <felixfontein> lol
+19:48:34 <bcoca> or my 'vars proposal'
+19:48:43 <felixfontein> jtanner: 12389 hours hackathon?
+19:48:46 <bcoca> role spec might have been 'right size'
+19:50:18 <jtanner> tear down the walls
+19:50:42 <bcoca> openstack needed core to discuss update_json and module/plugin blacklisting
+19:50:52 <felixfontein> would that work well with remote attendance (bluejeans)?
+19:51:01 <bcoca> galaxy and documentation were both talking about arg_spec refactor at same time
+19:51:25 <sdoran> Themed groups work well: Windows, AWS, Networking, System, Core, etc.
+19:51:35 <bcoca> yeah, but the overlap kills us
+19:51:43 <gundalow> https://etherpad.openstack.org/p/ansible-summit-october-2018 line 151 for feedback please
+19:51:52 <bcoca> dag was in 2 meetings every session
+19:52:07 <bcoca> I CAN BE QUIET, REALLY
+19:52:15 <jtanner> a quiet chipmunk
+19:52:43 <felixfontein> if people are saying something, it isn't understandable on bluejeans
+19:52:54 <jtanner> nah, was unrelatd
+19:52:56 <bcoca> that has been issue with 1/2 the sessions
+19:52:57 <felixfontein> ok
+19:53:18 <felixfontein> from remote it is hard to judge what is unrelated and what was important if you can't hear it :)
+19:54:40 <shertel> audio has been pretty clear for me felixfontein
+19:55:16 <bcoca> some sessions were fine, others either you only heard speaker or it just went out all the time
+19:55:39 <felixfontein> yep. this one was very good I think.
+19:56:07 <jtanner> everyone sits in a room and solves the oldest bug in ansible
+19:57:34 <bcoca> https://github.com/ansible/ansible/issues/10121
+19:57:43 <abadger1999> jtanner: That could be neat.  Have a laptop, a big screen, and pairs of people go up to work on identifying and then implementing a fix for the bug ;-)
+19:57:53 <bcoca> https://github.com/ansible/ansible/issues/10374 < 2nd oldest
+19:58:09 <jtanner> reproducing bug could be 80% of the time consumed
+19:58:23 <bcoca> https://github.com/ansible/ansible/issues?q=is%3Aissue+is%3Aopen+sort%3Acreated-asc
+19:59:41 <jtanner> https://github.com/ansible/ansible/issues?utf8=%E2%9C%93&q=is%3Aissue+is%3Aopen+sort%3Acreated-asc+label%3Abug+-label%3Asupport%3Acommunity
+20:01:36 <jtanner> reproducing a bug is a great intro to git/scm + github + ansible + etc
+20:02:27 <geerlingguy> AnsibleFest Sprints+1
+20:02:40 <geerlingguy> That is practically the only reason I still go to DrupalCons. Best part for me
+20:03:06 <bcoca> AnsibleFest Strolls+1 .. some of us are not as spry as we used to and sprinting is asking too much
+20:03:15 <geerlingguy> lol
+20:03:26 <jtanner> Ansible Hobble
+20:03:35 <bcoca> im not THAT old!
+20:04:36 <bcoca> we had that in previous fests 'the expert' and 'the subject matter'
+20:05:21 <bcoca> robyn: and offer discount?
+20:07:59 <bcoca> 'ask a vendor'
+20:08:32 <bcoca> the proposal sounds good, but your sanity is diff issue
+20:09:00 <bcoca> 'napfest'
+20:10:41 <chouseknecht> +1 for sprints
+20:10:55 <chouseknecht> or hobbles
+20:19:13 <sdoran> Well, meeting a badger in person can be dangerous, especially if it's a wild badger.
+20:20:13 <bcoca> i want a bcoca rubber duck
+20:20:37 <abadger1999> This one is an Anonymous Badger
+20:20:44 <bcoca> lol
+20:20:56 <abadger1999> A.Badger
+20:21:00 <sdoran> Anonymous no more!
+20:21:02 <sdoran> ;)
+20:21:09 <bcoca> i know carrie ann has chased more than one of us for pictures for 'ask an expert' fliers
+20:21:37 <bcoca> robeeeeyn
+20:23:10 <abadger1999> And if you call him f13 he'll get really confused ;-)
+20:23:31 <jtanner> there's no f13 on my keyboard, so i can't
+20:23:45 <abadger1999> If you had one, we'd have to call you f13 ;-)
+20:24:37 <bcoca> also you are 'old python version killer'
+20:24:50 <jtanner> snake charmer
+20:25:14 <bcoca> unicode magician?
+20:25:22 <bcoca> unimancer?
+20:25:39 <jtanner> bytebasher
+20:26:06 <bcoca> botmaster
+20:26:10 <bcoca> ^ u now
+20:26:56 <bcoca> spoilers!
+20:28:03 <abadger1999> you're both samdoran and sdoran!
+20:28:22 * abadger1999 keeps cc'ing the wrong guy on github
+20:28:41 <sdoran> Yeah, that's an unfortunate collision.
+20:29:15 <gundalow> #endmeeting

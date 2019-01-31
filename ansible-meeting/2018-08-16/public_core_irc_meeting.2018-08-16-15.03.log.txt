@@ -1,0 +1,254 @@
+15:03:35 <bcoca> #startmeeting public core irc meeting
+15:03:35 <zodbot> Meeting started Thu Aug 16 15:03:35 2018 UTC.
+15:03:35 <zodbot> This meeting is logged and archived in a public location.
+15:03:35 <zodbot> The chair is bcoca. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:03:35 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:03:35 <zodbot> The meeting name has been set to 'public_core_irc_meeting'
+15:03:41 <bcoca> no topics in queue, so
+15:03:43 <bcoca> #open floor
+15:05:34 <nitzmahone> Shall we nail down the file changes from last time?
+15:05:43 * nitzmahone wonders who's here to vote
+15:05:58 <sdoran> o/
+15:06:05 <jtanner> hello
+15:06:21 <sdoran> What file changes so I can catch up?
+15:06:26 <nitzmahone> Toshio's on PTO today, but asked me to try and get this nailed down
+15:06:35 <sdoran> Was it the timestamp/touch stuff?
+15:06:45 <bcoca> there is a 5th option that i didnt include in the emails, which is 'create new modules to take over current file and eventually deprecate it'
+15:06:51 <nitzmahone> Touch + "state: file" behavior
+15:07:28 <sdoran> Touch as a separate module mould be nice. But I'm not sure that will help this discussion.
+15:07:37 <sdoran> (don't want to derail it)
+15:07:56 <sivel> helps when I open IRC, also I'm lagging terribly right now
+15:08:06 <sivel> might not be able to participate until I can fix this
+15:08:22 <nitzmahone> sivel: ENEEDSCOFFEE, or? ;)
+15:08:26 <bcoca> @nitzmahone please put important items in agenda, bring up in open floor is not best way, agenda gives people time to read up
+15:08:43 <sivel> 200+ms pings to my router
+15:08:58 <sivel> making everything even slower than that
+15:09:05 <nitzmahone> bcoca: you requested deferral- I assumed it was to the next meeting...
+15:09:06 <jtanner> if this is a discussion where community folks aren't participating, we should do it on bluejeans.
+15:09:11 <sivel> like 600ms to my IRC machine
+15:09:42 <agaffney> jtanner: to be fair, I'm watching, even if I'm not giving an opinion
+15:09:48 <bcoca> nitzmahone: well i closed meeting when this topic was brought up in last 5 mins of previous in open floor and there was a lot of confusion, that does nto mean you shouldnt add to agenda
+15:10:14 <nitzmahone> I just got asked this morning to run it down
+15:10:36 <bcoca> understood, just stating it as a matter of order on how to do these things so everyone is aware
+15:10:40 <bcoca> not saying we cannot discuss now
+15:11:53 <nitzmahone> If we're going to get this one taken care of for 2.7, probably needs to be decided today
+15:12:02 <nitzmahone> (otherwise I'd say defer until next week's meeting)
+15:12:22 <bcoca> https://gist.github.com/bcoca/bf836eb553ecf2bed1ec81d7d96a3fcf <= to get everyone on same page
+15:12:47 * gundalow waves
+15:12:59 <gundalow> (previous meeting overran)
+15:13:02 <bcoca> nitzmahone: i would say that 2.7 discounts option a) then
+15:13:32 <bcoca> b,c or d would be only ones in then, e) new modules  is also more long term
+15:14:16 <nitzmahone> I've had more time to think about c), and I think it's a bit of a trip-hazard that's worse than the original problem
+15:14:23 <bcoca> my vote is for b) since it is least intrusive and almost ready
+15:14:43 <bcoca> after 2.7 we can then decide if a) and e) make more sense long term
+15:14:56 <jtanner> B seems reasonable to me
+15:14:58 <bcoca> nitzmahone:  i agree on c) being a bad choice
+15:15:26 <bcoca> even d) (which i think is also bad) is better than that
+15:15:49 <nitzmahone> I have reservations about b, my personal preference would be d) purely for "minimal intrusiveness", but agree it's not ideal
+15:15:52 <bcoca> i agree with toshio that in 'perfect world' a) would already be the case .. but that has always been the outlier in file
+15:15:55 <nitzmahone> But I could live with b
+15:16:08 <bcoca> he, i prefer b, but can live with d
+15:16:21 <nitzmahone> Yeah, a) is how it should've been, but it's not, and I really hate breaking stuff in core modules like that, even with a deprecation period
+15:16:38 <bcoca> i think that we can leave a) for 'long term file future'
+15:16:40 <sdoran> A makes the most sense to me. I've always found state=touch to be really weird.
+15:16:44 <bcoca> as well as e) , those compete there
+15:16:54 <bcoca> sdoran: in file: all the states are 'non states'
+15:17:06 <bcoca> and i was against adding state=touch, but  .. it still happend
+15:17:13 <bcoca> actually, ony 'real state' is 'absent'
+15:17:30 <mattclay> +1 for b
+15:17:32 <bcoca> all others imply 'present' but are really 'file type' .. except 'touch' which is really an action
+15:17:55 <bcoca> short story: file module is really horribly inconsistent at this point, both internally and with other modules
+15:18:13 <bcoca> nitzmahone: do you have toshio's vote by proxy?
+15:18:25 <bcoca> iirc he still wanted a) but was fine with c)
+15:18:25 <nitzmahone> Toshio is c)
+15:18:36 <bcoca> so no one for a
+15:19:00 <bcoca> a/0,b/2, c/1,d/1
+15:19:10 <agaffney> +1 for B, +0.5 for D
+15:19:15 <bcoca> ^ anyone need more clarification or are we all ready to vvote?
+15:19:17 <nitzmahone> I was originally for A-prime (dep warning only on creation), but you convinced me that it might not fire often enough to catch people's attention that way
+15:19:19 <sdoran> Yeah, that's unfortunate. A is ideal, but B seems workable just really goofy (from a user POV).
+15:19:23 <bcoca> a/0,b/3, c/1,d/1
+15:19:43 <bcoca> sdoran: i dont think we have a good optoin on the table for the short term
+15:19:46 <sdoran> So I suppose +1 for B.
+15:19:48 <bcoca> we have ''least bad'
+15:19:54 <nitzmahone> bcoca: for b)
+15:19:59 <bcoca> a/0,b/4, c/1,d/1
+15:19:59 <nitzmahone> We need to bikeshed UI on that
+15:20:11 <nitzmahone> But yeah, call me +1 for b with that caveat
+15:20:14 <bcoca> nitzmahone: i dont see any of the options not having bikeshed ...
+15:20:29 <nitzmahone> (just wanted to be clear that it's not "go merge it" just yet ;) )
+15:20:57 <bcoca> k, i didnt want to bikeshed but thoguht mtime= atime= were better than modify_timestamp ...
+15:21:19 <bcoca> ok, as long as teh general plan is agreed, im fine with people tweaking with author
+15:21:23 <agaffney> mtime/atime could be useful in other contexts are general file module params like 'mode' and 'owner'
+15:21:30 <bcoca> a/0,b/5, c/1,d/0
+15:21:43 <agaffney> s/are/as/
+15:22:08 <nitzmahone> IMO the bigger issue with setting those is things like date formatting in core modules (if we're allowing specific values) vs just "sample/preserve what's there if possible"
+15:22:18 <nitzmahone> (I haven't looked at the proposed impl yet)
+15:23:02 <bcoca> i think he is using 'same' as 'preserve'
+15:24:11 <bcoca> nitzmahone: yes, we need date/time functions that convert anything to 'epoc' which is what most modules should consume
+15:26:10 <sdoran> I think @sivel had something like that a while back. Generic detesting processing in a module param field.
+15:26:53 <nitzmahone> Just so we're clear: I know a lot of folks were +1 to breaking the current "state: file" behavior to try and make it more consistent last time we talked about this... Is everyone OK with leaving that as-is?
+15:26:53 <abadger1999> you know, B) has already been mostly decided... I don't know why it's being discussed again.
+15:26:58 <bcoca> once we have the functions its easy enough to build into the type system
+15:27:02 <sivel> I have a duration PR, not specific time
+15:27:03 <abadger1999> I'm not.
+15:27:19 <sivel> but I believe we have a filter to convert to datetime
+15:27:21 <abadger1999> and I was able to get both sivel and gundalow to agree with me that it should be changed.
+15:27:38 <sdoran> I'm more in favor of changing the behavior to A in the long term.
+15:27:39 <bcoca> nitzmahone: as is for now, i would like to open disucssion on a) and e) after we deal with this release
+15:27:49 <nitzmahone> I *really* dislike making a change like that to a core module...
+15:28:01 <abadger1999> The controversy here is whether we can change state=fiile to create a nonexistent file
+15:28:02 <bcoca> me too, that is why i was going with e) new module(s)
+15:28:10 <abadger1999> with a deprecation period
+15:28:16 <abadger1999> (and a toggle, in my proposal).
+15:28:34 <nitzmahone> The toggle makes everything worse though IMO (if you mean creates= or some form of it)
+15:28:36 <gundalow> If we get clear options can we ask the community?
+15:28:43 <gundalow> (email in -devel & -project)?
+15:29:07 <nitzmahone> Because we're adding a new trip hazard that's only useful during the deprecation period, then we either have to lug that around forever or deprecate it too
+15:29:09 <abadger1999> assuring that a file exists idempotently is what most people want the file module to do.  But it doesn't do that.
+15:29:20 <sivel> I have to honestly say I feel like we are spending too much time on this
+15:29:22 <bcoca> so since we have agreement on b) we can go forward with that for now, then start discussion on long term view for file ?
+15:29:32 <sivel> I vote for just letting abadger1999 do his thing at this point
+15:29:35 <abadger1999> @nitzmahoneif the current behaviour is useful, then it remains useful after the deprecation.
+15:29:38 <gundalow> sivel: How do you think we should proceed?
+15:29:44 <gundalow> sivel: +1
+15:29:58 <abadger1999> @nitzmahoneif it's not useful... then why are we even thinking of keeping it?
+15:30:02 <bcoca> i prefer not breaking plays and at this point i think the current file module is just wrong UI wise
+15:30:11 <sivel> I think we have given abadger1999 enough data to work on.  And abadger1999 has gotten a vote, that favors his decision already
+15:30:12 <gundalow> nitzmahone: Maybe looking to you to move this along?
+15:30:32 <bcoca> sivel: as it stands we seem to be 3/2
+15:30:36 <bcoca> on long term
+15:30:55 <sivel> that is a 5 person vote, that I had stated I think should be the requirement
+15:31:06 <nitzmahone> If you want me to just make the call, it's probably going to be unpopular with all of you. Fix it with d), decide timestamp behavior separately.
+15:31:08 <sivel> minimum requirement
+15:31:08 <abadger1999> @nitzmahone if it is useful, for file, then it will be usefu for link, hard, and directory as well.
+15:31:36 <sivel> I think we need this decided now, and not draw it out any longer
+15:31:37 <bcoca> @nitzmahone i think we all agree on b for short term at this point, what is now in question is long term
+15:31:43 <abadger1999> I would rather it just formalize the 4::1 vote from last meeting.
+15:32:03 <sivel> we also don't need to decide the long term, to start on the short term now
+15:32:18 <nitzmahone> My distaste for adding "creates" to file is almost strong enough that I'd veto that at this point
+15:32:20 <bcoca> agreed, which is why i think we can separate the discussions, do b) now
+15:32:32 <sivel> we've had multiple votes that are leaning towards the same results
+15:32:34 <nitzmahone> I hadn't really had much time to mull it over, but I have now
+15:32:43 <sivel> so I say, abadger1999 go ahead and get things done :)
+15:33:01 <abadger1999> @nitzmahone <nod> if you don't want the toggle, though, then you're saying that the current behaviour is not useful to people.
+15:33:07 <bcoca> i disagree, when you have 2 core members willing to veto
+15:33:09 <abadger1999> nitzmahone: So we shuld just get rid of it.
+15:33:22 <bcoca> either have overwhelming majority or this needs compromise/discussion
+15:33:22 <abadger1999> we can do it without the toggle if it is genuinely not useful.
+15:33:45 <nitzmahone> That's not what I'm saying- merely that `creates` is only temporarily useful and otherwise a UI trip-hazard that IMO is worse than the problem we're trying to solve.
+15:34:12 <nitzmahone> We wouldn't design it with `creates` if we were doing it from scratch
+15:34:18 <bcoca> well, most anti vaxers grew with everyone vaxinated
+15:34:29 <abadger1999> i do.  I have four to one and a couple abstentions after two weeks of meetings to discuss it.
+15:34:30 <bcoca> their parents were last to se polio and things like that widespread
+15:34:35 <nitzmahone> And IIUC the intent is to go back and fix it like we would have
+15:34:37 <bcoca> damn .. sorry bad paste
+15:34:58 <abadger1999> nitzmahone: If it's not useful then why put it in?  Just change the default after a deprecation period.
+15:34:58 <bcoca> abadger1999: im counting 3/2
+15:35:04 <nitzmahone> Was gonna say, way to derail the discussion bcoca ;)
+15:35:20 <bcoca> nitzmahone: almost tempted
+15:36:00 <nitzmahone> e) is off the table for the foreseeable future
+15:36:19 <bcoca> as i said, it was long term thought
+15:36:25 <bcoca> i can live with b) for a while
+15:36:29 <bcoca> even d)
+15:37:02 <nitzmahone> I really dislike summary judgement, but it feels like we're at an impasse here.
+15:37:34 <bcoca> well, we have agreement on b) .. its a/c that is being really debated as longer term solutions
+15:38:18 <bcoca> i agree that a) makes the module more 'congruent' internally, but the backwards compat is a big hurdle for me
+15:38:46 <bcoca> i really dislike c for many reasons, specially since it is what 'state=present' should be .. we are just making a bad UI worse
+15:40:33 <nitzmahone> With b, you can do everything that's necessary, but `state: file` remains incongruous.
+15:40:43 <bcoca> but either way, i dont think we need to chose either of those for 2.7 as b) provides the functionality for users NOW w/o breakage
+15:40:51 <bcoca> nitzmahone: agreed
+15:41:10 <bcoca> and my preference for long term is e) but i seem to be minority on that
+15:41:15 <abadger1999> nitzmahone: there's two things the incongruous and the: nothing does the right thing by default.
+15:41:42 <abadger1999> that's why this is tied into touch.... if touch was idempotent by default, then it would do the right thing by default.
+15:41:43 <bcoca> i would say more than 2, but agreed
+15:41:59 <nitzmahone> I could live with adding a) if the dep warning only fired in the "file would be created" scenario
+15:42:01 <bcoca> but i disagree that 'touch' shold be idempotent
+15:42:03 <abadger1999> But touch is a bad name to use for the functionality... thus we're back to let's change file.
+15:42:21 <nitzmahone> Let's just take those off the table- the horse has left the barn.
+15:42:27 <abadger1999> nitzmahone: that is easily doable.
+15:42:45 <bcoca> nitzmahone: i dont think that is good as 'file could be created' in future, just cause it wasn't currently does not mean the machine state wont change
+15:42:50 <nitzmahone> But I don't want 4 cycles of warnings for *any* usage of `state: file`
+15:43:09 <abadger1999> and it feels like the proper thing.
+15:43:11 <nitzmahone> If we're doing that, just do d) and be done with it, we didn't break anybody
+15:43:12 <bcoca> i know, but i dont see way around that
+15:43:52 <abadger1999> even if the state of the file fluctuates... the user will get a warning at least once unless the file's fluctuation takes longer thn 4 releases.
+15:43:55 <bcoca> though creating a file unexpectedly is probalby not as bad as deleteing them
+15:44:04 <nitzmahone> exactly
+15:44:29 <nitzmahone> The whole thing is a pretty dusty corner in my gut opinion, so we need to make a decision and move on
+15:44:52 <abadger1999> nitzmahone: the problem with d is that then you have three states which all do almost the same thing.
+15:44:52 <bcoca> yeah, its low probability it will only fluctuate after change .. unless they write playbook recently before change
+15:45:02 <bcoca> its not really 4 versions for all users
+15:45:11 <abadger1999> which is ui disaster (just having two touch and file is already bad)
+15:46:12 <nitzmahone> Ranked vote please (assuming we're doing b)) :
+15:46:12 <nitzmahone> a') change `state: file` to create in 4 releases (w/ limited deprecation warning)
+15:46:12 <nitzmahone> d) `state: file_create_if_missing` (or some TBD form of it)
+15:46:20 <bcoca> so anyone else want to weigh in vote on long term? we seem stuck with only current people
+15:46:29 <nitzmahone> e) nothing further
+15:46:39 <jtanner> B
+15:46:42 <bcoca> e) is new modules, f) nothing further
+15:46:44 <abadger1999> (a) 1st place, (b) 2nd place   (e) -1
+15:46:53 <bcoca> jtanner: b has been voted on, short term fix, we are talking long term now
+15:47:03 <jtanner> oh, sorry on RCM call
+15:47:05 <abadger1999> err
+15:47:06 <bcoca> a, c, e,f
+15:47:10 <bcoca> b is already 'in'
+15:47:19 <abadger1999> (a)  1st place (b) 2nd place (e) -1
+15:47:32 <abadger1999> damn it, i'm dyslexic about my d's today
+15:47:36 <abadger1999> (a)  1st place (d) 2nd place (e) -1
+15:47:42 <jtanner> drink more coffee
+15:47:48 <abadger1999> i don't drink coffee.
+15:47:54 <jtanner> problem solved
+15:48:24 <bcoca> a/1,b/5, c/1,d/0  at this point, with d getting x3 2nd choice
+15:48:57 <nitzmahone> a/d/(my e)
+15:49:38 <bcoca> nitzmahone: so moving vote from b?
+15:49:40 <nitzmahone> 30sec for anyone else that wants to vote
+15:49:43 <sdoran> Long term: A, D
+15:49:58 <nitzmahone> b) is happening already, this is what else (if anything) to do
+15:50:17 <bcoca> ok, so going to stop mixing votes, closing prev on b as 'done deal'
+15:50:21 <nitzmahone> yep
+15:50:23 <sdoran> yep
+15:50:26 <bcoca> now we have a,c,d,e,f for long erm
+15:50:42 <bcoca> a3,c0,d0,e1,f0
+15:50:45 <bcoca> my e
+15:50:48 <bcoca> aka new modules
+15:51:04 <bcoca> f == no more actions, allow b to stand as only solution
+15:51:16 <nitzmahone> It looks like there's enough support for a
+15:51:35 <nitzmahone> @abadger1999: you going to run with that?
+15:51:46 <abadger1999> @nitzmahoneyep, sounds good.
+15:52:01 <bcoca> last chance to vote
+15:52:35 <bcoca> k, ending it then
+15:52:37 <nitzmahone> OK, decided. We'll do a limited deprecation warning in cases where `state: file` would have created for 4 releases, then actually implement the behavior.
+15:52:58 <bcoca> nitzmahone: limited is not going to work as not everyone is using state=file today, that will be affected when we change it
+15:52:59 <nitzmahone> and some form of explicit timestamp management (possibly limited only to "preserve" semantics at this point, depending on the date stuff)
+15:53:08 <nitzmahone> That's what we just voted on
+15:53:46 <bcoca> i would say that is a1 vs a .. but easy for the other 2 to confirm
+15:53:46 <abadger1999> #action abadger1999 to change state=file to emit a deprecation warning when a file does not exist.  will change to creating a file in 4 releases.
+15:54:04 <bcoca> sdoran: ?
+15:54:46 <bcoca> k, since he seems to have left, assume yes
+15:54:52 <bcoca> #open floor
+15:54:59 <sdoran> Nah, I'm just confused on the q.
+15:55:08 <sdoran> (sorry, I'm a slow thinker)
+15:55:30 <bcoca> sdoran: a) was change state=file with deprecation notice, amended by nitzmahone to ONLY show deprecation if file is missing on target
+15:56:00 <nitzmahone> (vs warning anyone using `state: file` for 4 releases)
+15:56:07 <bcoca> which means that users using state=file but with file existing 'now' might get suprised by change if file goes missing at any point aftewards
+15:56:28 <bcoca> not even worried of people doing so today, but in release before change
+15:56:38 <nitzmahone> I guess if the dep warning said "you should probably be using the `stat` module" I could live with original a)
+15:56:54 <bcoca> ^ that shoudl be true even if we dont deprecate ...
+15:57:56 <nitzmahone> *sigh*
+15:58:01 <sdoran> Hrmm... that's though.
+15:58:11 <jtanner> make sure whatever the long term choice is, ends up on roadmap doc
+15:58:12 <sdoran> I could go either way.
+15:58:20 <sdoran> Sorry, that's not helpful.
+15:58:24 <bcoca> at least its not deleting files
+15:58:40 <bcoca> sdoran: a 0.5 still 'wins', so counting it as a) being long term solution
+15:58:47 <nitzmahone> #action summary judgement: Original A), point users to stat and say `state: file` will create in the future in the dep warning
+15:58:53 <sdoran> Yeah, I'm 0.5.
+15:58:55 <bcoca> a1
+15:59:07 <sdoran> I'll spare you all the arguments in my head.
+15:59:10 <nitzmahone> (dep warning on all usage of state: file)
+15:59:30 <bcoca> nitzmahone: so back to a) vs a1?
+15:59:33 <nitzmahone> yes
+15:59:40 <bcoca> k
+15:59:41 <nitzmahone> Let's move on
+15:59:48 <bcoca> #endmeeting

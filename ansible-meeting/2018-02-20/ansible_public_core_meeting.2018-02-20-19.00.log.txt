@@ -1,0 +1,279 @@
+19:00:20 <abadger1999> #startmeeting Ansible Public Core Meeting
+19:00:20 <zodbot> Meeting started Tue Feb 20 19:00:20 2018 UTC.  The chair is abadger1999. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:00:20 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:00:20 <zodbot> The meeting name has been set to 'ansible_public_core_meeting'
+19:00:37 <abadger1999> Greetings everyone, who's here for the Public Core Meeting?
+19:00:51 <abadger1999> #info Agenda: https://github.com/ansible/community/issues/296
+19:01:42 <sivel> .hello2
+19:01:43 <zodbot> sivel: sivel 'Matt Martz' <matt@sivel.net>
+19:01:56 <abadger1999> #chair sivel
+19:01:56 <zodbot> Current chairs: abadger1999 sivel
+19:02:52 <abadger1999> sdoran, bcoca: You guys around?
+19:03:05 <abadger1999> There's only a few topics on the agenda.
+19:03:30 <sdoran> I am.
+19:03:47 <abadger1999> sdoran:  Do you know about https://github.com/ansible/ansible/pull/35809
+19:03:49 <ryansb> heya
+19:03:52 * etienne just lurking
+19:03:54 <abadger1999> Or is that only maxamillion?
+19:04:02 <abadger1999> #chair sdoran ryansb etienne
+19:04:02 <zodbot> Current chairs: abadger1999 etienne ryansb sdoran sivel
+19:04:36 <abadger1999> sdoran: Oopss... I meant: https://github.com/ansible/ansible/issues/35745
+19:04:57 <abadger1999> (35809 looks like it was already decided by bcoca in the ticket)
+19:05:31 <abadger1999> Actually.. I'm wrong.
+19:05:37 <abadger1999> 35809 is the one that's unresolved.
+19:06:01 <abadger1999> 35745 is the one that's had a comment by bcoca
+19:06:18 <sdoran> Sorry. Was in OpenStack meeting.
+19:06:32 <sdoran> This one is coming back to me.
+19:07:09 <abadger1999> #topic https://github.com/ansible/ansible/pull/35809    Ignore non-valid file extensions for include_vars dirs
+19:07:48 <sdoran> Ok, caught up now.
+19:08:23 <sdoran> Looks like the intention was for it to fail in the dir was "polluted" with other files.
+19:08:47 <sdoran> we need to decide if we want that since it is how it was originally designed
+19:09:19 <abadger1999> Okay.  Do we have pros and cons?
+19:11:21 <ryansb> That looks reasonable to me. The big con is if people are relying on that, this breaks them
+19:11:25 <sdoran> Pros would be you can have vars files in a directory with other files and it will ignore files without certain extensions.
+19:12:23 <sdoran> Cons would be you're limited to know file extensions for vars files?
+19:12:50 <sdoran> Picking up arbirtary files for variables in a directory could be dangerous.
+19:13:18 <abadger1999> Okay.  Do we have any idea how many people we'd break by changing behaviour?
+19:13:37 <sdoran> But if whitelisting file extensions, its less dangerous?
+19:15:07 <abadger1999> sdoran: You're thinking... if an extension is in the whitelist, then it is *not* a vars file?
+19:15:08 <ryansb> no idea how many we'd break
+19:16:09 <abadger1999> K.
+19:16:12 <sdoran> I'm not clear on exact cons since it doesn't allow arbitrary files currently.
+19:16:21 <abadger1999> Who do we need to have involved i nthis discussion?
+19:16:36 <sdoran> It just doesn't allow anything _but_ files with valid extensions to be in the vars file directory.
+19:16:48 <ryansb> ooh, I read that PR wrong
+19:16:56 <abadger1999> ah.  So if there are files without valid extensions, currently it just breaks?
+19:17:01 <sdoran> Yes.
+19:17:27 <sdoran> So if I have anything but json,yml, or yaml files in my vars dir, it fails
+19:17:30 <ryansb> oh. Ok that seems pretty ok to me, since it's overall loosening behavior and wouldn't break existing stuff that works today
+19:18:07 <sdoran> The solution bcoca brought up was to use a find task with a loop on include_vars
+19:18:58 <sdoran> I don't think this would pick up extra files, potentially causing security concerns.
+19:19:14 <abadger1999> Alright.  I don't see a down side to this patch, then.
+19:19:40 <abadger1999> But bcoca isn't here.
+19:19:42 <abadger1999> I'll do this.
+19:20:12 <abadger1999> I'll say that none of see a downside to the change and ask bcoca to reply with cons if he wants to stop it, otherwise we'll eventually merge it.
+19:20:25 <sdoran> And Ansible would also not be grabbing any file and trying to run it through `yaml.SafeLoader()`
+19:20:29 <abadger1999> (maxamillion is out for a while so it's not a hurry up situation)
+19:20:35 <sdoran> beacause it's looking for extenios
+19:21:03 <sdoran> So I think this is ok to allow. As ryansb said, it's relaxing what's allowed in the content of vars file dirs.
+19:22:02 <sdoran> While I agree with bcoca that it's better to be explicit and use a loop to specify _exactly_ what you want to be included, I don't see harm in allowing harmless neighbor files.
+19:23:00 <abadger1999> #topic Add ability to define filter macros: https://github.com/ansible/ansible/issues/36130
+19:23:03 <sdoran> Would be good to double check with bcoca to make sure there's not a glaring "bad situation" I'm not envisioning.
+19:23:19 <sdoran> But it seems mostly a matter of taste/design decision.
+19:23:27 <sdoran> Hence the need for discussion :)
+19:23:46 <abadger1999> This is a feature idea ticket.  No code.
+19:24:06 <abadger1999> I think it is a nice idea but wihtout code it's hard to see whether we should approve something or not.
+19:24:21 <abadger1999> Not sure why gundalow added it to the agenda.
+19:24:46 <abadger1999> He's not here today, so I'll defer it.  Feel free to speak up here or o nthe ticket if you see something.
+19:24:55 <abadger1999> #topic Open Floor
+19:25:02 <abadger1999> Anyone have anything they'd like to discuss?
+19:25:15 <abadger1999> nitzmahone: Anything you want to mention about the 2.5 release?
+19:25:25 <sivel> I have nothing
+19:25:45 <nitzmahone> 2.5.0rc1 is Thursday
+19:25:58 <nitzmahone> As always, will be available on PyPI, so please play!
+19:26:12 <abadger1999> #info 2.5.0rc1 will be out on Thursday
+19:26:25 <abadger1999> #info 2.4.4-beta1 will be out on Wednesday
+19:26:45 <abadger1999> Okay, I'll close the meeting in 60s unless someone stops me.
+19:27:10 <leigh-j> https://github.com/ansible/ansible/pull/34642
+19:28:18 <abadger1999> #chair leigh-j
+19:28:18 <zodbot> Current chairs: abadger1999 etienne leigh-j ryansb sdoran sivel
+19:28:33 <abadger1999> #topic https://github.com/ansible/ansible/pull/34642 adds new option to galaxy cli to preserve scm meta
+19:28:51 <leigh-j> fyi current building is just a rebase
+19:29:14 <abadger1999> chouseknecht: You around for evaluating a PR for galaxy client?
+19:30:06 <alikins> interesting idea
+19:30:43 <sdoran> Does this essentially clone the repo rather than just downloading a `tar` file?
+19:31:03 <sdoran> I'm very much in favor of that, though the name is a bit misleading.
+19:31:32 <leigh-j> it follows the same process
+19:31:40 <leigh-j> replaces scm archive with tar
+19:31:49 <sdoran> That has long been a rather annoying "setup cost" for your dev workstation if you have tons of galaxy roles in a `requirements.yml`. You have to clone them all manually.
+19:32:29 <leigh-j> yeah wasnt sure the best way to describe it but the intended use case is deving roles
+19:34:09 <leigh-j> also handy working with teams that find dealing with submodules hard
+19:34:27 <sdoran> Exactly!
+19:37:14 <abadger1999> leigh-j: How does this interact if one run uses --keep-scm-meta and a second run does not (in either order)
+19:38:09 <leigh-j> second run the role would already be present so no checking out is done
+19:38:11 <abadger1999> I think maxamillion or chouseknecht should probably review and sign off.  maxamillion is curently on PTO for a few weeks.
+19:38:25 <abadger1999> I think it looks okay, though.
+19:38:38 <leigh-j> it just a change to the packaging when adding a non existant role or using force
+19:38:41 <abadger1999> leigh-j: Might want to document that behaviour.
+19:38:47 <abadger1999> <nod>
+19:39:04 <chouseknecht> abadger1999: in a class all day. If you would be kind enough to sack or email me the PR, I’ll take look this evening.
+19:39:13 <leigh-j> can do would welcom ideas for better wording in the --help
+19:39:14 <abadger1999> chouseknecht: Will do.  thanks!
+19:39:36 <sdoran> I'm in favor of the feature. May need some work on the language/flags and we should most definitely document it.
+19:40:04 <abadger1999> leigh-j: Cool.  I'll let house know the PR# and he'll take a look.
+19:40:20 <abadger1999> #topic Open floor
+19:40:23 <abadger1999> Anyone else?
+19:40:32 <abadger1999> (will close in 60s if there's nothing else)
+19:41:16 <bcoca> back
+19:41:26 <sdoran> :)
+19:41:37 <sdoran> Just in time
+19:41:41 <bcoca> fyi, the include_vars issue was by design of original author of the feature, i was actually against feature itself, but i know people rely on it 'as is'
+19:41:47 <abadger1999> #topic https://github.com/ansible/ansible/pull/35809    Ignore non-valid file extensions for include_vars dirs  (redux)
+19:42:00 <bcoca> -1 to include since there is simple workaround and the feature itself is redundant, but relied upon in current state
+19:42:06 <abadger1999> bcoca:  So... what's the Con of making it ignore the extra files?
+19:42:26 <bcoca> sorry, need to reread, thought ticket was to 'not ignore' files
+19:42:41 <bcoca> at least that was the one we discussed last week sdoran?
+19:43:11 <abadger1999> It's this PR: https://github.com/ansible/ansible/pull/35809/files
+19:43:36 * abadger1999 lets sdoran refresh bcoca's cache
+19:43:46 <agaffney> kinky
+19:43:47 <bcoca> ah ,feature is to consider them 'non error', sorry, yes that was part of validation the original author wanted
+19:43:52 <bcoca> mostly to point out backups
+19:44:21 <sdoran> bcoca: It was to disable the "foreign file alert" in a vars file dir.
+19:44:24 <bcoca> im fine if we remove the whole thing, would be as backwards breaking as this change
+19:44:54 <sdoran> Would allow non-vars files to exist alongside vars files, but they would be ignored and no failure.
+19:45:15 <bcoca> sdoran: you can do same already as i posted on ticket
+19:45:29 <bcoca> this doesnt even introduce toggle for those relying on old behaviour
+19:45:54 <abadger1999> bcoca: How would people be relying on the old behaviour?
+19:46:08 <bcoca> expecting errors on non vars file, to show that some update did not go as planned
+19:46:25 <bcoca> ^ iirc original author was using this to pickup files generated from other sources
+19:46:27 <abadger1999> Since it errors presently, it's not clear to me what the step by step is.
+19:46:50 <bcoca> the error IS the point, it would stop processing  cause it is detecting some previous process (the generator) failed
+19:47:23 <bcoca> author originally made the 'non directory' have same issue, when i removed globally he asked to keep just for directory cause of his process
+19:47:55 <bcoca> so i 'fixed' it for the old behaviour include_vars; filename but left the restriction for his 'directory' param
+19:48:28 <bcoca> now, if you are ll fine with breaking it for the original usage ... just notting i dont think the whole feature is needed at all
+19:48:54 <bcoca> removing it keeps the code simler and allows people to use exactly what they want/need
+19:48:58 <bcoca> simpler
+19:50:05 <bcoca> the 'throwing an error' is only thing this feature adds that you cannot do directly already
+19:50:13 <bcoca> removing that, removes the reason for having the option
+19:50:57 <sdoran> I thought they just wanted to store other files alongside their vars files without having to whitelist extensions. I wasn't aware of it being used as a detection mechanism for something.
+19:50:59 <abadger1999> Hmm... So files_matching and extensions are ways to get the module to error?
+19:51:14 <bcoca> yes, that was on purpose, actual part of the design
+19:51:20 <alikins> would be a nice place to warn if possible
+19:51:23 <abadger1999> So they're the opposite of the files option.
+19:52:04 <bcoca> alikins: im fine with that but should be extra option in module , not change the default
+19:52:11 <abadger1999> although I guess that file is not a list
+19:52:20 <bcoca> non_matching_files: error|warn|ignore
+19:53:08 <sdoran> So some folks are relying on the "foreign files alert" in a vars files dire, others want to be able to put whatever they want in a vars files dir and have Ansible only pickup files with certain extensions.
+19:53:16 <sdoran> Hard to be everything to everyone...
+19:53:20 <bcoca> abadger1999: in the end the whole feature was badly designed imo, im just saying this 'fix' basically removes the only behaviour this feature really added, a loop does a better job for what the author of bug report wanted
+19:53:23 <alikins> "Warning: You have peanut butter in your vars files dirs. That may be awesome but it's undefined so skippy'ing it"
+19:53:39 <bcoca> sdoran: they can put whatever they want, i showed in ticket how to do it
+19:54:01 <agaffney> alikins: I'll pay you to actually add that warning
+19:54:06 <bcoca> https://github.com/ansible/ansible/issues/35745#issuecomment-363569367
+19:54:13 <bcoca> ^ he would
+19:55:00 <abadger1999> Yeah, I think original feature should have been refused.  But the feature that the new reporter thinks it should implement seems like what should have been implemented instead.
+19:55:30 <abadger1999> If someone wanted to error because of unknown files, they should have been separate.
+19:55:32 <bcoca> abadger1999: agreed on refused ... but really then its just using a loop so 'the feature' would have been redundant
+19:55:47 <abadger1999> declarative vs imperative.
+19:56:10 <bcoca> not sure the one form is diff than th eother
+19:56:20 <bcoca> both include vars from a list of files
+19:56:44 <bcoca> the diff is how you achive the list, from loop/lookup or reimplementing same logic inside module
+19:56:46 <abadger1999> I think we should fix this with a toggle for the original behaviour.
+19:57:15 <abadger1999> We can put the original behaviour on a deprecation cycle as well.
+19:57:20 <alikins> I would ignore it before adding more options
+19:57:24 <bcoca> i would put the whole feature on deprecation
+19:57:34 <abadger1999> (at least, in order to switch the default)
+19:57:44 <bcoca> its redundant .. and if he really wanted a fail, a find task before it works just fine
+19:58:18 <bcoca> specially the implementation that was done ....
+19:58:20 <abadger1999> bcoca: I don't know what scope you're applying to "the feature" so I don't know if agree with that or not.
+19:58:34 <bcoca> reading multiple files from dir + pattern in include_vars
+19:59:00 <bcoca> the only diff was that in this case he also wanted an error if 'forgein file' was in that list
+19:59:25 <bcoca> both 'features' can be accomplished w/o any code in include_vars, but we accepted it anyways
+20:01:34 <bcoca> my only point is that a) current PR breaks backwards compat, b) if we are willing to do so, lets remove all this cruft and just add a couple of examples in the module docs that do the same thing allowing for much more flexibility
+20:02:39 <abadger1999> I'm coming to the conclusion that we should be moving way from pushing people into jinja2.  jinja2 should be an advanced feature.
+20:02:46 <bcoca> ^ features like this are subject to everyone adding their own particular case when a tool that already implements them is already there ... kind of like 'url' implementation in archive/yum/etc when get_url alreayd implements auth/https/proxy/etc
+20:02:50 <abadger1999> (exception for simple var substitution)
+20:03:12 <abadger1999> But I do think that failing should have been done in a separate task.
+20:03:15 <bcoca> abadger1999: no need for jinja2, find module
+20:04:05 <abadger1999> What the documentation reads as is: load from files in this directory.  Use files_matchin, extensions, and ignore_files as filters on the files that were found in there.
+20:04:31 <abadger1999> erroring is counter to the docs in that it's not a filter, it's an error.
+20:04:45 <bcoca> ignore_files <= option
+20:05:19 <bcoca> docs are not great, but the reason that exists was cause 'the erorr' was wanted
+20:05:29 <abadger1999> only ignore_files is a filter in the current code.
+20:05:40 <abadger1999> the other two are "error checking".
+20:05:56 <abadger1999> that sort of thing belongs in a separate task.
+20:06:01 <abadger1999> anyhow..
+20:06:05 <bcoca> i dont dispute that, i would rip out all this code
+20:06:14 <abadger1999> Are we agreed that due to backwards comapt, this needs a toggle?
+20:06:21 <bcoca> at the very least
+20:06:28 <abadger1999> I'll update the PR with that, then.
+20:06:39 <abadger1999> #topic Open floor
+20:06:48 <bcoca> backwards compat is only reason i would defend this, i really would prefer to deprecate/remove and just show 'find + include_vars' examples
+20:06:48 <abadger1999> Anything else?  Otherwise I'll close in 60s
+20:07:12 <bcoca> jinja2 macros?
+20:07:32 <bcoca> ^ basically jinja2 allows you to save 'reusable jinja2 expressions' to use as macros
+20:07:50 <bcoca> i.e you can setup a filter chain that does comlex processing and 'publish' as a simple macro
+20:08:25 <bcoca> that is what ticket above is asking for, i had been looking into this for a while, would require 'new plugin class'
+20:08:37 <sdoran> I think that'd be useful. Rather than having to include a template file just to get a macro all the time.
+20:08:54 <sdoran> Most folks don't know about/use macros, but they're very handy when you need them.
+20:09:03 <bcoca> sdoran: well, that is what we would do behind scene, include all macro files before running template
+20:09:10 <sdoran> Does it introduced any arbitrary code inject concerns?
+20:09:20 <sdoran> I've only used macros a tiny bit in some templates
+20:09:24 <bcoca> nothing above what template already does
+20:09:29 <sdoran> <ack>
+20:10:11 <sdoran> That's pretty clever. Save the template author from having to do the include.
+20:10:13 <bcoca> im just not sure how many people would use em, or if we can create complex enough ones to actually get good at data manipulation
+20:10:53 <bcoca> sdoran: basically, that would be 90% of the implementation, the other 10% is adding plugin loader macro_loader to find the directories to read the files from
+20:10:54 <agaffney> are they really that useful over just creating custom filter plugins?
+20:11:10 <bcoca> agaffney: they allow 'jinja2 experts' to create basically complex filters
+20:11:10 <sdoran> Not many would use them. Would definitely be a power user feature.
+20:11:20 <agaffney> couldn't you just create a custom filter plugin that calls a bunch of other filters?
+20:11:23 <bcoca> 'useful' is relative ... how many jinja2 experts vs python ones?
+20:11:43 <bcoca> agaffney: not really, filter plugins dont get access to other filters
+20:11:48 <agaffney> there's nothing you can do in jinja that you can't do in python, and almost/just as easily
+20:11:53 <sdoran> Somtimes fewer lines of code, but really just preference, familiarity.
+20:11:56 <bcoca> agreed
+20:12:25 <bcoca> again, not something im pushing, i just looked into it as a curiosity, its easy to implement, i just doubt many people would create macros
+20:12:30 <bcoca> once there ... people might use em
+20:12:35 <agaffney> it seems unlikely that somebody would be a "jinja expert" and put together these types of macros without also being a "python expert"
+20:12:42 <bcoca> jinx!
+20:12:49 <sdoran> If you're a Jinja ninja but Python scares you, right macros? ¯\_(ツ)_/¯
+20:12:56 <sdoran> s/right/write
+20:13:00 <bcoca> ^ i just read backlog and saw abadger1999 didnt know what they were, so i explained
+20:13:07 <bcoca> and also, easy to implement
+20:13:11 <bcoca> still unsure if worth it
+20:13:35 <abadger1999> Yeah, to satisfy this feature request, I think that this would have to be specified in the playbook.
+20:13:50 <agaffney> probably not worth it, given that it's already easy to create custom filters
+20:14:16 <bcoca> if there was a huge repo of jinja2 macros out there, i might push for this .... but in it's absence ....
+20:14:30 <bcoca> abadger1999: 'specified in playbook'?
+20:14:35 <sdoran> Would these be easier to share than custom filters?
+20:14:47 <sdoran> I don't think so, just wondering.
+20:14:54 <bcoca> sdoran: basically 'as easy', just requries jinja2 knowledge vs python knowledge
+20:15:13 <bcoca> 'sharing' == copying file into  <type>_plugins/ folder
+20:15:43 <sivel> defining something of this type is not that easy.  To do it via the playbook entirely is complex
+20:15:55 <bcoca> my vote +0 .. not going to oppose someone wanting to add .. but im not going to write it either, shouldnt take more than 1h though
+20:15:58 <sivel> there is no way to create a macro outside of the current processing template
+20:16:11 <abadger1999> bcoca:  a new plugin type doesn't do anyhting that filter plugins don't already give people.  Just a matter of how they'd call them.  The user really wants something more like the c prepreocessor that they can define a macro in the playbook and then use later.
+20:16:19 <sivel> I've spent far more than an hour on it already
+20:16:20 <bcoca> sivel: macro can exist in it's own 'template file', which we can include before processing any template
+20:16:38 <sivel> bcoca: I'd be -1 on creating a template file on the fly like that
+20:16:46 <bcoca> abadger1999:  more than 'how they call them' (same as filter) its how they 'write them' in jinja vs python
+20:16:47 <agaffney> this proposed feature would be nothing more than auto-inclusion of macro template files when doing any template rendering, right?
+20:17:00 <bcoca> sivel: would not be on the fly, file would have to exist 'as the plugin'
+20:17:18 <bcoca> agaffney: basically, easy to implement
+20:17:25 <bcoca> i just dont see the use
+20:17:41 <bcoca> only if there were a big jinja2 macro community .. then maybe ...
+20:17:45 <sivel> I think if we require a user to create a jinja2 template file with the macro, we've already lost
+20:17:55 <sivel> if they go to that point, should be a new filter
+20:17:56 <bcoca> sivel: same with a filter plugin
+20:18:18 <agaffney> it doesn't really seem to offer anything over filter plugins, just a bit more user confusion
+20:18:20 <abadger1999> sivel: +1
+20:18:23 <bcoca> sivel: this is not for users to create, its for authors, users would just 'use' ... its just another plugin type, just diff programmign language
+20:18:24 <sivel> I don't see us really gaining anything by allowing users to create macro files as a plugin, that can't be achieved via filters
+20:18:47 <sivel> if it were purely in playbook, I'd have a different outlook
+20:18:48 <bcoca> its not what they can achive, its how the author can create it
+20:18:57 <sivel> if it's another plugin type, then I am -1
+20:19:37 <sivel> I made a POC of a lookup that could do this on the fly
+20:19:40 <agaffney> even without a specific feature, a third party can already write a macro template, and a user can stick it in their templates/ dir and do `{% include 'foo.j2' %}` (or whatever) in their template. does automatically including them *really* help anybody?
+20:19:56 <bcoca> sivel: temlpate lookup should already bea ble to do  .. just not directly accessible
+20:20:12 <bcoca> agaffney: yes, that works today
+20:20:27 <bcoca> not sure why we continue discussing this, no one seems to want to add it
+20:20:28 <agaffney> that's what I'm saying...it already works, so why an extra feature?
+20:20:35 <bcoca> except ticket requestor
+20:20:54 <sivel> I say we just give them some current possibilities, and close the issue
+20:20:54 <bcoca> i dont see a good reason
+20:21:02 <bcoca> works4me
+20:21:19 <abadger1999> Cool.  Anything else?
+20:21:26 <abadger1999> If not I'll close in 60s
+20:21:43 <bcoca> you keep saying that ...
+20:21:43 <sivel> I've been working on a time duration parser.  but no real need.  I just know we've talked about it before
+20:21:52 <sivel> but don't need to talk about it now
+20:21:56 <bcoca> time duration parser?
+20:21:59 <sivel> just an FYI
+20:22:11 <sivel> 1h10m10s as a format for a time duration
+20:22:13 <bcoca> sivel: did you get a chance to look at update_json?
+20:22:15 <bcoca> ah, nice
+20:22:31 * bcoca might look at update_json again next week
+20:22:41 <sivel> bcoca: I have not looked at it recently.  I'll work back around to that
+20:22:41 <bcoca> ^ its 'almost there', just needs a couple of pieces
+20:22:51 <abadger1999> #endmeeting

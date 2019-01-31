@@ -1,0 +1,173 @@
+15:14:46 <bcoca> #startmeeting core public irc meeting
+15:14:46 <zodbot> Meeting started Thu Jan 24 15:14:46 2019 UTC.
+15:14:46 <zodbot> This meeting is logged and archived in a public location.
+15:14:46 <zodbot> The chair is bcoca. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:14:46 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:14:46 <zodbot> The meeting name has been set to 'core_public_irc_meeting'
+15:14:52 * gundalow waves
+15:15:17 * bcoca really  needs to fix google cal notifications ...
+15:15:19 <dag> o/
+15:15:34 <bcoca> dag is here!
+15:15:44 <sdoran> 🎉
+15:15:46 <bcoca> #topic https://github.com/ansible/ansible/pull/28662
+15:15:53 <dag> only by coincidence :)
+15:15:58 <bcoca> adding 'required_by' to arg_spec
+15:16:48 <bcoca> i'm -0 .. seems we already have too much there adn the argspec conditionals are not as readable as module implementations, it does duplicate code, but not that much
+15:16:56 <bcoca> but i'm also not strongly opposed
+15:17:21 <dag> We already decided on this once, but there's not been any progress on an alternative implementation, and the alternative proposed is also not desirable
+15:17:31 <gundalow> bcoca: are you saying basic.py isn't readable, or in the module where we define the argspec?
+15:17:36 * gundalow is +1
+15:17:56 <bcoca> the argspec rules themselves
+15:17:59 <sivel> In general I find all of the `required_` to be unreadable
+15:18:05 <sivel> I am -1 to adding any more
+15:18:07 <dag> the benefit of an arg_spec implementation, is that we can created the documentation automatically
+15:18:24 <maxamillion> .hello2
+15:18:25 <zodbot> maxamillion: maxamillion 'Adam Miller' <maxamillion@gmail.com>
+15:18:29 <dag> mutual exclusive options, dependencies, etc.
+15:20:04 <maxamillion> I'm mind of indifferent to adding more `required_` if we could document what we have now and the new one(s) in a meaningful way
+15:20:51 <dag> maxamillion: correct, there's not official documentation, currently I look up a blog post to look into what I need
+15:20:51 <bcoca> i believe they got added to developer guides
+15:20:53 <maxamillion> kind of*
+15:21:03 <maxamillion> oh? nice
+15:21:11 <bcoca> i must have dreamed it then
+15:21:19 <sivel> regardless of documentation, there is no way to just look at the code when used and understand what they do
+15:21:25 <dag> I will put it on the Docs WG agenda
+15:21:28 <sivel> the implementation is 100% unclear
+15:21:54 <dag> sivel: the implementation could be a bite more verbose, using keys etc.
+15:22:14 <dag> sivel: I don't disagree, but leaving it as python code is a big step backward for the wrong reasons IMO
+15:22:39 <bcoca> not really a step, its 'current state'
+15:23:13 <dag> bcoca: comparing to not have the arg_spec functionality
+15:23:42 <sivel> adding to it furthers the pain of the current state and implementation.  I'd rather drop most of them in favor of some string constants that users can use for standardized messaging
+15:23:53 <dag> so ignoring this PR, what direction do we want to take this ?
+15:24:02 <sivel> and plugins implementing their own, potneitally with some common functions that handle basic cases
+15:24:09 <sivel> but that would happen outside of the arg_spec itself
+15:24:23 <alikins> kind of a mini dependency manager for args
+15:24:28 <dag> plugins implementing their own is not a solution, we can't use it for automating documentation
+15:24:49 <dag> and that's where 50% of the value is
+15:25:10 <sivel> people don't read docs anyway ;)
+15:25:13 <bcoca> theoretical value ... 'docs from argspec' has been vaporware since 1.7
+15:25:18 <dag> I'd go for a better/understandable syntax
+15:25:32 <bcoca> sivel: but at least it gives us something to point them at judgingly!
+15:25:38 <sivel> haha
+15:25:38 <dag> bcoca: I have a PR that has been postponed to 2.9 (at least)
+15:25:49 <dag> bcoca: so thats's policy, not vaporware
+15:26:03 <bcoca> dag: was not aware, which pr? why was it postponed?
+15:26:19 <dag> was discussed in Austin
+15:26:29 <dag> don't know
+15:27:03 <dag> https://github.com/ansible/ansible/pull/45805
+15:27:15 <bcoca> too many things were discussedin austin in parallel, i was in 2-3 meetings most of the time so i might have missed that part
+15:27:43 <dag> it's only about the parts that are in the current arg_spec though, not a 100% solution to docs
+15:28:12 <bcoca> ok, given that .. im more inclined to add this to arg_spec .. jsut part of me wants to rewrite the 'conditionals' in a much more readable way
+15:28:34 <bcoca> well, argspec needs more fields to totally take over docs
+15:28:38 <dag> so the document strings would stay in the DOCUMENTATION, and one could still override the arg_spec if needed from docs (which is a requirement for things like type: raw etc.)
+15:29:09 <dag> bcoca: +1 for making it more readable, -1 for moving back to python code, or have people do their own thing
+15:29:23 * bcoca is even happier now that he decided to keep 1 source on the other plugins
+15:29:46 <bcoca> dag: i would even be happy with moving argspec into docs, like we have for other plugins
+15:30:05 <bcoca> but im in a minority on that one
+15:30:07 <dag> bcoca: makes more sense to me too
+15:30:51 <dag> although we have cases where things are generated as well
+15:31:13 <dag> shall I look into a more descriptive alternative to what we have now ?
+15:31:32 <dag> so it becomes more readable ?
+15:31:50 <bcoca> so i guess we mostly opose 'current conditional argspec implementation' not that you add conditional cases
+15:32:23 <dag> bcoca: yeah, I'm held hostage because people don't like what others wrote :-)
+15:32:24 <bcoca> the only issue with that is backwards compat , so current form should still exist, even if we move to a 'nicer' formulation
+15:32:26 <dag> that's my feeling
+15:32:56 <bcoca> dag: that is why i'm -0 , i don't think its fair to hold hostages in that manner
+15:33:17 <bcoca> but i also think we should not add to the crap pile
+15:33:37 <dag> crap pile is debatable :)
+15:33:55 <dag> or I'll look into who was to blame
+15:33:56 <bcoca> true, not really crap as much as 'hard to read'
+15:34:01 <dag> and it might have been you :p
+15:34:01 <bcoca> the code actually functions well
+15:34:05 <bcoca> probably
+15:34:19 <bcoca> my crap smells just like anyone elses ....
+15:34:37 * bcoca looks for #dontlogthis function on zoidbot
+15:34:47 <gundalow> too late
+15:34:58 <dag> let me see if I can come up with a proposal to make it more readable but keep existing functionality
+15:35:08 <bcoca> so we are at 0, we have 0 , -1, +1
+15:35:16 <bcoca> anyone else want to vote/weigh in?
+15:35:30 <bcoca> dag: or we can wait for that and hopefully remove all resistance
+15:36:04 <dag> bcoca: but I can't promise doing this in the next 2 months (i.e. before 2.8)
+15:36:37 * gundalow would like to make a decision on docs vs argspec and add it onto the 2.9 roadmap and actually get it done, been going back-and-forth on this for a long time
+15:36:41 <bcoca> understood, you are volunteer we cannot expect you to promise for deadlines
+15:36:46 <dag> bcoca: is the relation I need something we need to have in the future implementation ? In that case there'sno harm in adding IMO
+15:37:10 <bcoca> im not sure we 'need' but i think its 'nice to have'
+15:37:21 <bcoca> just need enough people in favor
+15:37:45 <bcoca> if i thought his was 'needed' i would would be +1 even in current form
+15:37:48 <dag> docs vs argspec is not actually relevant here, because we need another way of formatting the data
+15:38:09 <dag> so I'd be looking at a dictionary, could be YAML in the future
+15:39:01 <bcoca> so do we table the current pr for now? or do those that have abstained want to weigh in with their votes?
+15:39:49 * bcoca goes to find a cricket to at least have that feedback
+15:40:03 <maxamillion> I'm thinking about it but I don't want to come off the sidelines and be the tie breaker since I've not been a part of the history of these discussions
+15:40:05 * gundalow gently pokes jillr jtanner mattclay nitzmahone
+15:40:16 * gundalow needs to relocate
+15:40:33 <bcoca> maxamillion: its ok, just express your opinion to this point, if you are missing anything others can fill in
+15:40:44 <jtanner> wut?
+15:41:28 <maxamillion> I like the change, I see the merit in it but I worry about the slippery slope of trying to manage that dependency chain in the arg spec
+15:41:36 <dag> is this the right time to put my supershipit on the table :p
+15:42:08 <bcoca> dag: you have commit, which is  > supershipit
+15:42:16 <bcoca> but those with -1 also have 'revert' ...
+15:42:20 <dag> haha
+15:42:34 <dag> that's what holding me back pushing the merge button, really :p
+15:42:35 <bcoca> which is why we discuss here and try to get consensus
+15:42:54 <bcoca> dag: why i have 2 pages of PRs pending (had 3 yesterday)
+15:43:07 * dag only has 26
+15:43:26 <maxamillion> I like the `required_` params as helpers to the module for sanity checking and I like the idea of enhancing them but I think we need to a better way of documenting them and to offer something meaningful to users/developers because at face value it's not apparent what those things do
+15:43:39 <maxamillion> really sorry, but I need to brb
+15:43:47 <bcoca> maxamillion: np, thanks for your input
+15:43:55 <dag> maxamillion: we all agree on that
+15:44:16 <dag> and I am going to make sure the existing stuff is documented
+15:44:21 <bcoca> so if we commit to fix syntax in future, im going to change my vote to +1
+15:44:44 <bcoca> if no one else is against ... this will be considerd 'passing' in 2 mins
+15:46:42 <bcoca> k, goint to merge it then
+15:46:46 <bcoca> #topic https://github.com/ansible/ansible/pull/35462
+15:46:50 <alikins> hesitant to add more stuff to arg spec, but in favor of moving that kind of info into arg spec 'data' instead of ad hoc python code per module, so +0.75 ;->
+15:47:13 <bcoca> ^ and putting us over the top as the flag is waved
+15:47:51 <dag> hmm, that PR has conflicts again
+15:48:30 <dag> this one was discussed a year ago, and is quite important for Cisco (among others)
+15:49:23 * bcoca always finds it ironic that those that specialize in security are always last to update security protocols
+15:49:45 <bcoca> so lgtm, but im not sure i'm best person to review this
+15:50:26 <dag> bcoca: that's not the only point, vendors support customers that do not run (for whatever reasons) the latest stuff
+15:50:40 <dag> but also, without this you wouldn't be able to update the older stuff
+15:50:44 <dag> using Ansible
+15:50:46 <bcoca> i know,  i had pix boxes 10yrs out of 'support'
+15:50:47 <sdoran> As much as I don't like anything `required_` (because I do find them inscrutable), it is better than having module authors implement this themselves over and over, and the community does seem to want this.
+15:51:03 <bcoca> im not as much complaing about vendor but the whoel environment
+15:51:04 <dag> we actually put old firmware on devices in order to do customer repro's
+15:52:47 <dag> so I think this basically needs another review ?
+15:54:16 <bcoca> yeah, i would add to my list, but that might take till 2.12
+15:54:31 <bcoca> if no one else takes i'll try to prioritize this, since people are 'hurting' right now
+15:54:40 <dag> I know there was some pressure behind the scenes after I put it on the agenda
+15:55:06 <bcoca> news to me, but that probably would get someone to review it quicker
+15:55:44 <dag> I think that's when sivel got involved :)
+15:56:32 <bcoca> sivel just has 10 clones reviewing everything, he always gets involved
+15:57:03 <bcoca> @sivel, since you already did review want to requeue this one on yourlist?
+15:57:21 <maxamillion> I'll review later today if nobody can get to it.
+15:57:21 <sivel> Doing a little less right now, since I have too many things of my own atm
+15:57:24 <sivel> bcoca: which?
+15:57:38 <bcoca> https://github.com/ansible/ansible/pull/35462
+15:57:51 * dag also does not know how we can have integration tests for this
+15:57:52 <bcoca> so going to move on and whichever one gets to it first
+15:57:59 <dag> sure
+15:58:11 <sivel> ah, yeah. trying... I could also ask shertel to look too, but that wouldn't happen until next week
+15:58:15 <bcoca> dag: requires httptester and probably a downgrading of openssl and creative nginx config
+15:58:37 <bcoca> #topic https://github.com/ansible/ansible/pull/49719
+15:58:38 <dag> bcoca: was hoping to get away with it just config
+15:59:03 <bcoca> one can hope ...
+15:59:04 <sivel> would def be nice to have a test that verifies it actually does something
+15:59:30 <bcoca> dag: this basicaly removes all restictions on 'method'?
+15:59:41 <dag> bcoca: yes, it no longer is a fixed list
+15:59:57 <bcoca> sivel you also reviewd this
+16:00:01 <sivel> I'm fine with the concept
+16:00:02 <dag> but it still expects a single word, as that's what is required by spec afaict
+16:00:07 <bcoca> needs rebase
+16:00:12 <sivel> I haven't looked at it since the last round of fixes
+16:00:20 <sivel> assuming they are sane, I'm fine with the concept
+16:00:22 <bcoca> im also ok on principal
+16:01:01 <bcoca> dag: rebase that and we'll also try to get reviewed soon
+16:01:11 <dag> ah, also conflicts ? sigh
+16:01:22 <bcoca> popular files ...
+16:02:05 <sivel> dag I think it was another of your PRs that caused the conflict ;)
+16:02:16 <sivel> "Fix parameter types and other fixes"
+16:02:34 <bcoca> k, we are 'over time', sorry for late start, 2 more items carried over till next meeting
+16:02:37 <bcoca> #endmeeting

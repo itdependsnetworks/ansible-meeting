@@ -1,0 +1,151 @@
+15:00:07 <thaumos> #startmeeting ansible core
+15:00:07 <zodbot> Meeting started Thu Nov  2 15:00:07 2017 UTC.  The chair is thaumos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:00:07 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:00:07 <zodbot> The meeting name has been set to 'ansible_core'
+15:00:26 * gundalow waves
+15:00:32 <thaumos> #chair gundalow
+15:00:32 <zodbot> Current chairs: gundalow thaumos
+15:00:41 <gundalow> oh, I added something to the agenda, though I'll be back in a couple of mins
+15:00:51 <thaumos> heh, ok
+15:02:29 <ryansb> heya
+15:02:34 <thaumos> #chair ryansb
+15:02:34 <zodbot> Current chairs: gundalow ryansb thaumos
+15:02:35 <thaumos> hit there
+15:02:54 <gundalow> back
+15:02:58 <thaumos> wb
+15:04:32 <thaumos> so how are you both today?
+15:04:54 <gundalow> Good thanks
+15:05:08 <gundalow> If more people appear we can discuss $topic
+15:05:13 <thaumos> yep
+15:06:09 * Qalthos 🌊🌊
+15:06:16 <thaumos> #chair Qalthos
+15:06:16 <zodbot> Current chairs: Qalthos gundalow ryansb thaumos
+15:07:06 <ryansb> pretty good man - raining from clouds
+15:09:29 * Pilou waves
+15:09:39 <thaumos> #chair pilou
+15:09:39 <zodbot> Current chairs: Qalthos gundalow pilou ryansb thaumos
+15:09:54 <thaumos> feels like it's going to be a rough Thursday.
+15:11:36 <thaumos> #topic fix for include_role unit tests
+15:11:44 <thaumos> #link https://github.com/ansible/ansible/pull/31920
+15:11:54 <thaumos> Pilou: this is your's
+15:12:11 <Pilou> yep
+15:12:31 <thaumos> anything specific you wanted to discuss?
+15:14:28 <Pilou> no
+15:14:32 <bcoca> he, just had someone report that templating on include/import_roles is not working
+15:14:41 <thaumos> #chair bcoca
+15:14:41 <zodbot> Current chairs: Qalthos bcoca gundalow pilou ryansb thaumos
+15:15:09 <gundalow> #action jimi|ansible to review https://github.com/ansible/ansible/pull/31920 as he made the original changes
+15:16:01 <gundalow> bcoca: Any thoughts on it?
+15:16:11 <gundalow> Otherwise I guess we can go to Open Floor
+15:16:23 <bcoca> need to fix the bug before i can update the test
+15:17:04 <abadger1999> Ola
+15:17:10 <thaumos> #chair abadger1999
+15:17:10 <zodbot> Current chairs: Qalthos abadger1999 bcoca gundalow pilou ryansb thaumos
+15:17:21 <thaumos> @bcoca, looks like this bug should be fixed in 2.4.2, right?
+15:17:26 <Pilou> bcoca: I found #31920 while fixing #32021
+15:20:05 * jimi|ansible looks at that PR
+15:20:29 <jimi|ansible> i thought i had fixed a lot of those originally
+15:21:06 <bcoca> i was also under same impression, but tima just told me otherwise
+15:21:46 <bcoca> https://gist.github.com/bcoca/acbb85fcddede006ea23a343bef6ed94
+15:22:03 <bcoca> ERROR! Could not find specified file in role: tasks/{{mytasks}} <=
+15:23:07 <Pilou> about #31920, the original changes are ok, but related unit tests are not reliable
+15:27:55 <thaumos> so, to recap... seems like we need to fix the currently reported bug before this test can do anything.
+15:28:31 <thaumos> @bcoca, can we consider this bug as a blocker for 2.4.2?
+15:28:35 <thaumos> or is it s 2.4.3 thing?
+15:29:06 <bcoca> i would consider it a blocker .. but only if we have a fix
+15:29:29 <bcoca> specially since it is broken in 2.3 also
+15:31:56 <thaumos> well, since they are preview, imo they aren't really blockers.
+15:32:10 <abadger1999> <nod>
+15:32:12 <abadger1999> Nice to have
+15:32:41 <abadger1999> Priority nice to have but I won't block release if it isn't fixed.
+15:34:46 <gundalow> Anything left to discuss on this?
+15:35:29 <gundalow> #agreed Not a blocker as: 1) It's a preview, 2) was broken in 2.3
+15:36:11 <abadger1999> #action jimi|ansible to look at fixing the underlying bug
+15:36:28 <abadger1999> jimi|ansible:, Pilou ^ I assume that's right?
+15:37:11 <Pilou> yep
+15:37:17 <abadger1999> thaumos: Rooms gone dead.  Next topic
+15:37:18 <thaumos> sorry, I was poking around to find issues opened on this.
+15:37:20 <jimi|ansible> the PR looked fine so I merged it, if there's another underlying bug we can fix that as well
+15:37:22 <thaumos> my bad
+15:37:30 <abadger1999> #undo
+15:37:30 <zodbot> Removing item from minutes: ACTION by abadger1999 at 15:36:11 : jimi|ansible to look at fixing the underlying bug
+15:37:49 <abadger1999> #info PR merged.
+15:37:56 <Pilou> thanks !
+15:37:58 <abadger1999> jimi|ansible:  Should I cherry-pick it now?
+15:38:05 <jimi|ansible> sure
+15:38:22 <abadger1999> Cool.  We're done with this topic
+15:38:34 <gundalow> #topic overloaded --ask-pass
+15:38:38 <thaumos> #topic do we need a new cli arg to unlcok ssh key
+15:38:48 <gundalow> #link https://github.com/ansible/community/issues/273#issuecomment-341108984
+15:38:50 <thaumos> sorry
+15:39:02 <gundalow> #info Background discussion https://github.com/ansible/ansible/issues/31988
+15:39:08 <gundalow> #info We are overloading --ask-pass, sometimes it means:
+15:39:15 <gundalow> #info a) Use this password to unlock an encrypted SSH Key
+15:39:20 <gundalow> #info b) Use this for password auth
+15:39:28 <gundalow> #info QUESTION: Do we need a new command line argument that's only used to unlock the SSH Key?
+15:39:32 <gundalow> Thoughts?
+15:40:00 <bcoca> https://github.com/ansible/ansible/issues/32503
+15:40:36 <bcoca> ^ @jimi|ansible
+15:41:28 <alikins> #31988 is similar to a recent discussion about generalizing the --ask-*-pass handling
+15:42:22 <gundalow> Yup
+15:42:43 <abadger1999> gundalow: So it sounds like we can't have two separate arguments when using paramiko?
+15:43:00 <abadger1999> I suppose paramiko could try to connect twice...
+15:43:16 <abadger1999> as a workaround
+15:43:29 <abadger1999> bcoca: ^ Would that work (as you looked at the paramiko api)
+15:43:48 <bcoca> not really, once you pass a ssh pass, it will use it both ways
+15:44:18 <bcoca> ^ i updated the paramiko connection docs to reflect this
+15:45:07 <abadger1999> gundalow: what is the bug?  Is paramiko consuming the ssh pass to unlock the key and then not using it for ssh auth?
+15:45:16 <gundalow> Wouldn't look_for_keys=False fix this?
+15:45:19 <bcoca> no, it will fallback
+15:45:23 <bcoca> gundalow: no
+15:45:31 <abadger1999> gundalow: or is it erroring when attempting to unlock the key?
+15:45:43 <bcoca> look keys just stops ansible from looking for  'default locations' but if you pass in a keyfile, it will still do this
+15:45:55 <bcoca> abadger1999: no error, if it cannot decrypt key it will use as ssh password
+15:45:56 <gundalow> How can I connect to a machine using a passphrase when there are also keys available
+15:46:00 <alikins> to me, I'd like all of the --ask-*-pass to set up a (not-ansible-specific) callback to be called when it is needed. The main complication is interactive prompts want stdin/stdout, but sometimes the callbacks wouldn't get called until in a worker process. if we could work around that (always call them before starting a worker?) it should make it easier to handle things like ssh-key-pass vs ssh-pass
+15:46:21 <abadger1999> bcoca: There is a bug, though... trying to ask what that is: https://github.com/ansible/ansible/issues/31988
+15:47:06 <bcoca> abadger1999: the bug was that we did not document nor tell the user when this happens, you can only really hit this issue if your passhprase == ssh password
+15:47:24 <alikins> but then, things like the ssh connect/auth state machine kind of have to be in the worker
+15:47:39 <bcoca> alikins: the problem with that is 200 hosts prompting
+15:47:52 <gundalow> privateip: You around?
+15:47:57 <bcoca> we would need to institute tty locking, like debug, but this changes engine behaviour
+15:49:10 <bcoca> https://github.com/ansible/ansible/pull/31024/files#diff-f24f238727907014621e8c7a84a5644dR47 <= my update to password docs in paramiko
+15:50:00 <alikins> but maybe connection plugins need to support an auth callback api, possibly via IPC.  But I don't really want to accidentally re-implement PAM
+15:50:12 <bcoca> http://docs.paramiko.org/en/2.3/api/client.html
+15:50:46 <bcoca> alikins: that was one reason i was thinking of forking the stdout callback to handle out tty interaction and use multiproc queues to send/recieve events/input
+15:52:05 <bcoca> that way we avoid the 'debug lock issue' and still ensure serialization at one point, the queue acts as a stack
+15:52:15 <alikins> though my temptation is just to document 'please, just use ssh-agent, I beg you'
+15:52:25 <abadger1999> "the queue acts as a stack"
+15:52:38 <abadger1999> Allan Turing is turning over in his grave right now.
+15:52:52 <abadger1999> ;-)
+15:53:04 <bcoca> youknowwhatimeant
+15:53:32 <gundalow> Well, misspelling peoples names generally does irk them
+15:53:41 <alikins> abadger1999:  hey, it's true for N items where N=0,1.  I'm sure it's okay for the rest...
+15:53:56 <abadger1999> :-)
+15:54:07 <abadger1999> gundalow: hah.  that too.
+15:54:19 <abadger1999> At least I didn't misspell both names
+15:54:26 <gundalow> :D
+15:54:34 <bcoca> Allan Truning?
+15:54:59 <orc_fedo> @alikin might some 'ssh-agent' configuration be useful here?
+15:55:54 <bcoca> going back to problem at hand, this is moslty user being 'suprised' by a behaviour (to be fair so was I, did not know paramiko did this), I think documenting it shoudl be good enough
+15:55:54 <abadger1999> So.... is there actually anything to do here?
+15:56:19 <bcoca> 99% of peopel wont hit this and only 1% of those hitting it will notice/care they used ssh key instead of ssh pass
+15:56:50 <abadger1999> bcoca: Hmm... is the bug that you can't have ssh key passphrase == login passphrase on the remote machine?
+15:56:56 <bcoca> i think that updating docs is enough ... someone will want ssh plugin to have feature parity
+15:57:05 <abadger1999> bcoca: if so, your doc update still doesn't highlight that problem
+15:57:09 <gundalow> I think only docs improvements for 2.5
+15:57:15 <thaumos> agreed on documenting this
+15:57:25 <bcoca> abadger1999: no, the problem is that 'we dont tell user we used key instead of ssh login when both use same password'
+15:57:42 <abadger1999> bcoca: okay... but then why is the user's task failing?
+15:59:00 <bcoca> cause cisco does not allow key auth, but since we successfully decrypted key .... paramiko uses key
+15:59:20 <bcoca> ^ this is very much an incredebly narrow corner case
+15:59:56 <bcoca> a) ssh key must be provided b) target must no accept ssh key c) passphrase for key must be same as ssh login password
+16:00:48 <bcoca> d) must be using paramiko (which is true for most networking)
+16:02:08 <thaumos> alright folks, we need to close the meeting out in a minute or so
+16:02:13 <abadger1999> gundalow: ^ So that seems like the documentation is more of a FAQ entry
+16:02:28 <bcoca> probably both
+16:02:38 <alikins> I guess you could retry without any keys, just password to workaround that case, but... ewww.
+16:02:39 <thaumos> I think both
+16:02:55 <abadger1999> thaumos: <nod>  We can close meeting and continue in #ansible-devel
+16:03:03 <thaumos> k, cool
+16:03:05 <thaumos> #endmeeting

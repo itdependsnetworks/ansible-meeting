@@ -1,0 +1,46 @@
+17:00:30 <gundalow> #startmeeting Ansible Testing Working Group
+17:00:30 <zodbot> Meeting started Thu Jun 28 17:00:30 2018 UTC.
+17:00:30 <zodbot> This meeting is logged and archived in a public location.
+17:00:30 <zodbot> The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+17:00:30 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+17:00:30 <zodbot> The meeting name has been set to 'ansible_testing_working_group'
+17:00:39 * mattclay waves
+17:00:46 <gundalow> #chair mattclay
+17:00:46 <zodbot> Current chairs: gundalow mattclay
+17:03:00 <mattclay> #info Agenda: https://github.com/ansible/community/issues/248
+17:03:09 <mattclay> There is nothing new on the agenda for today.
+17:03:18 <gundalow> #topic Open Floor
+17:12:30 <Pilou> mattclay: I am not sure how to solve this one https://github.com/ansible/ansible/issues/42035
+17:12:54 <mattclay> #chair Pilou
+17:12:54 <zodbot> Current chairs: Pilou gundalow mattclay
+17:13:22 <Pilou> I mean, is that the expected behavior ?
+17:15:40 <mattclay> We should probably include the inventory plugin test in the smoketest group.
+17:16:20 <mattclay> How long does the aws_ec2_inventory test take to run typically?
+17:17:06 <Pilou> i don't know
+17:17:08 <Pilou> shertel: any idea ?
+17:19:42 <Pilou> otherwise we could add a non cloud plugin inventory test, but in that case cloud tests which aren't executed seem useless
+17:20:28 <mattclay> Pilou: Would another inventory plugin have detected the issue?
+17:20:32 <Pilou> nope
+17:20:40 <Pilou> erf
+17:20:45 <Pilou> yes
+17:21:56 <mattclay> Sounds like we need a new inventory plugin test for one of the plugins we can test in CI -- one that doesn't take long to test.
+17:22:25 <mattclay> The aws_ec2_inventory test is not fast. I'm running it now, to see how long it takes.
+17:22:30 <Pilou> ok, i will reopen #41888 then
+17:22:58 <Pilou> should not aliases file of cloud tests be updated ?
+17:23:18 <Pilou> I mean, it is not clear at all that these tests aren't executed
+17:24:00 <mattclay> What is unclear?
+17:25:08 <Pilou> "cloud/default/2.7/4" shippable build doesn't run "posix/ci/cloud/group4/aws" tests
+17:26:27 <mattclay> It does. But some of our test groups (ex: cloud) have special handling for changes that trigger all tests.
+17:26:54 <mattclay> Tests like cloud and windows will run a small smoketest group when there are changes made to the core of Ansible, rather than running all of the tests.
+17:27:09 <mattclay> If changes are made to cloud or Windows specific areas, then all those tests will be run.
+17:29:21 <Pilou> are these tests run before/after each rc release ?
+17:30:00 <mattclay> The full test suite is run nightly (with coverage) for the devel branch.
+17:30:35 <mattclay> I've looked at adding that for the stable branches as well, but haven't added support for that yet.
+17:31:14 <mattclay> The aws_ec2_inventory test completed in just under 6 minutes for me.
+17:32:31 <Pilou> with the shippable web interface, is there a way to display these automated nightly runs ?
+17:33:07 <mattclay> I've started working on improving how we trigger plugin specific tests, but I haven't finished that yet. When it's done it should be easier to trigger the correct plugin tests without having to run everything.
+17:33:45 <mattclay> Pilou: Not easily. The easiest way to find them currently is by looking at https://codecov.io/gh/ansible/ansible
+17:34:24 <Pilou> ok, thanks for all these informations :)
+17:35:01 <mattclay> You can click on a run there and, then the Build tab and finally "View CI Build" for one of the Shippable jobs. That will get you to a nightly CI run with coverage enabled.
+17:55:14 <mattclay> Does anyone else have something to discuss before the meeting ends?
+17:57:02 <gundalow> #endmeeting

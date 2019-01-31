@@ -1,0 +1,92 @@
+17:01:53 <mattclay> #startmeeting Ansible Testing Working Group
+17:01:53 <zodbot> Meeting started Thu Jan  4 17:01:53 2018 UTC.  The chair is mattclay. Information about MeetBot at http://wiki.debian.org/MeetBot.
+17:01:53 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+17:01:53 <zodbot> The meeting name has been set to 'ansible_testing_working_group'
+17:01:58 <mattclay> #chair gundalow
+17:01:58 <zodbot> Current chairs: gundalow mattclay
+17:02:14 <sivel> hello
+17:02:39 <mattclay> #chair sivel
+17:02:39 <zodbot> Current chairs: gundalow mattclay sivel
+17:02:46 <mattclay> #info Agenda: https://github.com/ansible/community/issues/248
+17:03:58 * mattclay checks the agenda to see where we left off
+17:05:37 <mattclay> If I'm remembering correctly, I think we've already covered everything on the agenda.
+17:06:22 <mattclay> #topic Open Floor
+17:06:32 * gundalow waves
+17:07:45 <mattclay> gundalow, sivel: Do either of you have any updates or anything to discuss?
+17:07:54 <sivel> I have nothing
+17:08:15 <Pilou> i have some tests related PR waiting for reviews if you want :)
+17:08:22 <mattclay> #chair Pilou
+17:08:22 <zodbot> Current chairs: Pilou gundalow mattclay sivel
+17:08:58 <Pilou> #33766 (galaxy unit tests: add missing arg) and #33968 (control machine and managed host can be distinct)
+17:09:23 <gundalow> I have two things 1) Can we detect bad usage of {} 2) I'm wondering once 2.5 is done to extend validate-modules to check more of DOCUMENATION vs argspec
+17:11:45 <sivel> By bad usage, I asume you are talking about '{}'.format(foo) ?
+17:12:27 <sivel> We might be able to put something together, although not sure how reliable it would be.  I don't know of anything that does that check
+17:13:20 <mattclay> We can probably add that as a custom pylint test.
+17:13:45 <mattclay> I've started work on adding custom pylint tests to CI but haven't finished.
+17:14:33 <sivel> The validate-modules code for argspec should be functional, it's just not enabled to run by default
+17:14:49 <sivel> gundalow: past what it already does, are there anything it should be doing?
+17:16:56 <abadger1999> gundalow: I think we can but it will take a bit of coding and I haven't had time to prioritise it.
+17:17:28 <mattclay> Pilou: Merged #33766 (galaxy unit tests: add missing arg)
+17:17:45 <abadger1999> I think you want to find string literals i nthe code (perhaps ast or perhaps jsut a regex) and then look for '{}'.  If there are no false positives in our code base, then you're done.
+17:17:52 <abadger1999> If there are then you'll have to get trickier
+17:18:11 <Pilou> mattclay: thanks!
+17:21:13 <mattclay> sivel: Is it disabled by default for performance reasons?
+17:22:12 <sivel> mattclay: yes, it is very slow.  It does some analysis, to find missing imports, magicmocks all the missing imports, imports the module, mocks AnsibleModule, runs `main()`, pulls out the argument_spec
+17:22:26 <sivel> well, maybe not too slow considering some of our other code smell tests and such
+17:22:50 <sivel> I honestly haven't run it in a while
+17:24:43 <mattclay> sivel: Is the import mocking used to handle cases where imports from outside the standard library are imported without catching ImportError?
+17:25:31 <sivel> mattclay: yes, basically.  In some cases even when wrapped in try/except with HAS_WHATEVER, we still need it to run
+17:25:56 <mattclay> sivel: Why is that?
+17:26:29 <sivel> When I wrote it originally, there were some modules that used info from the imports in the arg spec
+17:26:34 <sivel> that may be different now
+17:26:47 <mattclay> That should no longer be the case now that we have the import sanity test.
+17:26:52 * mattclay checks
+17:27:14 <mattclay> Ah, we still have 32 skip entries for the import test -- so we're not quite there yet.
+17:27:42 <mattclay> sivel: How much of the slow performance is due to the import analysis and mocking vs the rest of the test?
+17:27:42 <sivel> someone would have to do some analysis on all of the imports that are mocked when doing that test
+17:27:52 <sivel> mattclay: I can't say right now
+17:28:11 <sivel> my thoughts are that the majority of the slowness is import mocks
+17:28:36 <mattclay> I think it's definitely something we should look at doing if we can get the performance reasonable, which is sounds like we can if we can do away with the import mocks.
+17:28:41 <sivel> https://github.com/ansible/ansible/blob/devel/test/sanity/validate-modules/module_args.py#L43
+17:29:25 <mattclay> Probably a first step will be to fix the remaining import issues: https://github.com/ansible/ansible/blob/devel/test/sanity/import/skip.txt
+17:29:40 <mattclay> That way we shouldn't need to mock imports.
+17:29:56 <Pilou> related to remaining import issue: #34076 :)
+17:30:33 <sivel> mattclay: I'll look at sticking `q` in the code or something, and log all of the modules it mocks
+17:30:56 <sivel> I've had it running for like 10 minutes now on all modules, so it
+17:31:00 <sivel> 's a bit slow :)
+17:32:11 <gundalow> (back)
+17:32:39 <gundalow> Yes I was talking about '{}'.format(foo), It's something that's easily missed in reviews
+17:32:55 <mattclay> Pilou: Merged
+17:33:12 <sivel> gundalow: I'll play with a quick regex and see what I can come up with
+17:34:01 <sivel> my current regex caught all 14 lines in that conjur_variable.py PR
+17:34:20 <Pilou> it seems a custom pylint could be used too (https://github.com/PyCQA/pylint/blob/df53e1eb10c72c77036ef22e59e1b81f6b96582b/pylint/checkers/strings.py#L148)
+17:34:41 <sivel> yeah, we were talking about using a custom pylint plugin
+17:35:26 <mattclay> It sound like I need to finish adding support for custom pylint plugins to ansible-test so we can start adding some for cases like this.
+17:35:51 * mattclay looks for old branch
+17:37:00 <sivel> looks like W1305 already supports finding mixed indexed and non indexed format
+17:37:11 <sivel> could likely use part of that code
+17:37:54 <mattclay> I found my branch for adding pylint plugin support (plus a few other pylint related changes). I'll look after this meeting to see what's left for that to be ready to use.
+17:39:08 <mattclay> I think I put it on hold before due to pylint hanging -- but that has gotten better with newer pylint versions and other changes made to how we execute pylint since I last worked on plugin support.
+17:49:00 <sivel> alright, so fwiw, don't try to use `q` in that module_args.py code, seems to cause some really weird problems :)
+17:52:52 <mattclay> Pilou: You've been doing a lot of import cleanup. Are you planning on working on any more?
+17:54:06 <sivel> mattclay: looks like even just checking `uri.py` causes it to mock 85 modules.  Some of which are stdlib, so not sure why modulefinder lists them as badmodules
+17:55:00 <mattclay> sivel: Does it work for `uri.py` if you disable the mocking?
+17:55:18 <mattclay> I expect it should, since that module isn't on the skip list for the import test.
+17:56:42 <Pilou> mattclay: yep
+17:57:09 <sivel> mattclay: interesting, it does seem to run fine
+17:58:19 <sivel> mattclay: even `hostname` which is on the skiplist seems to work
+17:59:39 <sivel> not all of them work though that are on the skip list
+17:59:44 <mattclay> sivel: Probably because you have the deps installed that it needs.
+18:00:08 <sivel> would be odd to have the deps that yum needs on my mac, but not sure what they are
+18:00:12 <mattclay> sivel: The import test uses an empty venv, so it's more picky about imports.
+18:01:46 <mattclay> sivel: I thought you tested `hostname`, not `yum`?
+18:01:56 <sivel> I just tested all of them in skip.txt
+18:02:17 <sivel> only 3 failed for me
+18:02:55 <mattclay> Well at least for `hostname` the import error only happens on Python 3.7. I'm checking the others now.
+18:04:38 <sivel> azure_rm_dnsrecordset.py dimensiondata_network.py gcdns_zone.py were the 3 that failed for me
+18:04:50 <mattclay> sivel: It looks like the skip list is out-of-date. I'll clean it up. Some of the other imports errors are one you'll likely have installed.
+18:05:37 <sivel> cool, I'll play around a little more with that code and try to see if there are any other issues
+18:05:54 <mattclay> OK. Anything else before we end the meeting?
+18:06:17 <gundalow> Nothing else from me
+18:06:22 <gundalow> Thanks for runningit
+18:09:03 <mattclay> #endmeeting

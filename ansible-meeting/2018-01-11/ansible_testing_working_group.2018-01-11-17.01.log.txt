@@ -1,0 +1,121 @@
+17:01:47 <mattclay> #startmeeting Ansible Testing Working Group
+17:01:47 <zodbot> Meeting started Thu Jan 11 17:01:47 2018 UTC.  The chair is mattclay. Information about MeetBot at http://wiki.debian.org/MeetBot.
+17:01:47 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+17:01:47 <zodbot> The meeting name has been set to 'ansible_testing_working_group'
+17:02:05 <mattclay> #chair gundalow
+17:02:05 <zodbot> Current chairs: gundalow mattclay
+17:02:13 <gundalow> Hi
+17:02:32 <mattclay> #info Agenda https://github.com/ansible/community/issues/248
+17:02:41 <mattclay> It looks like there's nothing on the agenda today.
+17:02:46 <mattclay> gundalow: Do you have anything to discuss?
+17:02:55 <gundalow> [16:26] < vachon> gundalow, apparently the subscription in use for the shippable azure is out of quota
+17:03:02 <gundalow> from #ansible-devel
+17:03:07 <gundalow> #topic Azure quota
+17:03:45 <mattclay> I'll take a look at that after the meeting. We've had an increase in Azure tests lately and may be hitting the quota due to that. Tests that don't clean up after themselves properly could also be responsible.
+17:04:13 <gundalow> mattclay: ah, so unlike AWS things can be left over between runs?
+17:04:18 <mattclay> If the tests don't clean up when finished it can take longer for resources to be removed, particularly if jobs are canceled before finishing.
+17:04:39 <mattclay> Nothing gets left over, it just takes longer (hits timeout) instead of immediate cleanup. Same as AWS tests.
+17:04:52 * Pilou waves
+17:04:56 <gundalow> #chair Pilou
+17:04:56 <zodbot> Current chairs: Pilou gundalow mattclay
+17:05:06 <gundalow> mattclay: ah, thanks for the detail
+17:05:23 <mattclay> In the case of Azure though it usually happens only if the Shippable job is canceled.
+17:05:26 <gundalow> #info We've had an increase in Azure tests lately and may be hitting the quota due to that. Tests that don't clean up after themselves properly could also be responsible. If the tests don't clean up when finished it can take longer for resources to be removed, particularly if jobs are canceled before finishing.
+17:05:34 <gundalow> Just so I can find it in the logs again after
+17:05:56 <gundalow> #topic POWER/AIX and POWER/LINUX testing
+17:06:41 <gundalow> kairo misc and Pilou and myself were talking a little bit about testing on IBM POWER earlier in the week
+17:07:10 <Pilou> I have created an account there http://openpower.ic.unicamp.br/minicloud/ but I didn't test the related PR yet
+17:07:22 <gundalow> kairo works for IBM
+17:07:56 <gundalow> Pilou: is the process fairly easy?
+17:08:07 <gundalow> http://openpower.ic.unicamp.br/minicloud/ <--- gives you POWER/LINXU
+17:08:23 <mattclay> Pilou: I assume those accounts are only suitable for manual testing, not CI?
+17:08:39 <Pilou> yes & yes
+17:09:37 <misc> yeah, getting some aix is quite expensive
+17:09:39 <gundalow> Though there is a contact so we *may* be able to find if we can get something that's suitable for CI
+17:10:02 <misc> I did look inside Rh, and we have some aix box for support and QE, but internal only
+17:10:20 <gundalow> though I expect it would be low capacity, like macstadium
+17:10:33 <mattclay> Probably not fast to provision instances either.
+17:10:57 <misc> (also, we did figure that 1.456$ per period wasn't the same as 1,456$ per period)
+17:11:08 <Pilou> should we propose to kairo to run a Zuul instance :) ?
+17:12:18 <misc> I wonder if that's somewhere where dci could help too
+17:14:29 <gundalow> #chair musc kairo
+17:14:29 <zodbot> Current chairs: Pilou gundalow kairo mattclay musc
+17:14:36 <gundalow> #unchair musc
+17:14:36 <zodbot> Current chairs: Pilou gundalow kairo mattclay
+17:14:42 <gundalow> #chair misc
+17:14:42 <zodbot> Current chairs: Pilou gundalow kairo mattclay misc
+17:15:05 <gundalow> kairo: Just chatting about POWER/Linux & AIX
+17:15:37 <kairo> Hi all, regarding Power/Linux I spoke with the guy that is responsible by UNICAMP Power minicloud and is possible
+17:15:38 <gundalow> misc: You make a really good point, now we have Distributed CI (DCI) We *could* run post-merge tests on POWER/AIX that's behind the RH VPN
+17:15:45 <kairo> but not for AIX
+17:15:56 <gundalow> kairo: That's great, thanks for contacting them
+17:16:13 <gundalow> What exactly do you think they'd be able to give us access to?
+17:16:40 <misc> gundalow: or get a partnership with ibm and have them throw some aix server to us ?
+17:17:00 <gundalow> catching that would break your arms
+17:17:11 <kairo> gundalow: I will work on that tomorrow, but I think next week is possible. I do it on my free time, that I will do my best.
+17:17:29 <gundalow> kairo: feel free to cc me in and let me know how I can help
+17:17:45 <kairo> I have my personal power, but I need to buy another power supply. :)
+17:18:15 <kairo> I have a POWER7 running PowerVM and AIX
+17:18:43 <kairo> but, I cannot guarantee when it will be working, sorry.
+17:18:56 <kairo> Does Red Hat have Power Machines?
+17:18:59 <gundalow> That's cool, you are already doing great things
+17:19:53 <kairo> My personal goal is put Ansible better then others automations tools for AIX ;)
+17:21:04 <gundalow> kairo: you don't need to have shell set to smitty :)
+17:21:10 <kairo> If I could have a place to create DCI tests would be perfect. IBM still investing a lot on Power systems and would be nice if we could have Ansible more supported by AIX
+17:21:59 <mattclay> If we have enough capacity for AIX I wouldn't be opposed to adding it to CI.
+17:22:21 <gundalow> kairo: I've setup DCI for testing Ansible Networking. So if we can get a small RHEL7/CentOS7 machine running somewhere that can talk to a POWER machine I can do the rest.
+17:22:26 <mattclay> Or Linux on POWER.
+17:22:46 <gundalow> mattclay: Could ansible-core-ci talk to something behind a VPN?
+17:23:00 <kairo> mattclay: a small LPAR running AIX to start would be nice.
+17:23:18 <mattclay> gundalow: Yeah, we could probably make that work.
+17:24:09 <kairo> gundalow: for Linux on Power it will be easy as the guy for UNICAMP minicloud is my colleague at IBM
+17:24:12 <mattclay> We either need VMs that provision quickly (a few minutes) or we'll need to use nodepool to keep instances around for immediate use by CI.
+17:26:03 <mattclay> For Linux on POWER, what tests are we expecting to get benefit running vs our existing platforms? Mainly fact gathering?
+17:27:57 <kairo> I think facts.,,
+17:28:02 <gundalow> Facts was the main thing
+17:29:22 <mattclay> That's a small enough set of tests that we may be better off with manual testing, rather than investing in adding another platform to CI.
+17:30:17 <gundalow> Would it be worth adding tests for the AIX service work?
+17:31:29 <mattclay> Is AIX an option for CI? I though Linux on POWER was the only potential option for CI?
+17:31:48 <kairo> gundalow: not only service, if you see I submitted many different modules
+17:33:17 <misc> mhh, would facts be different for linux on power than linux on something else ?
+17:35:10 <kairo> misc: kernel modules, devices maybe
+17:35:57 <misc> kairo: I kinda expect them to the the same code path
+17:36:14 <misc> we could run the codecoverage tool and compare
+17:37:48 <kairo> misc: to give you it more precisely I will get this Linux box and we can check if it will be a potential option for CI
+17:38:18 <gundalow> That would be great
+17:38:34 <gundalow> Not sure if it's worth discussing anything else at the moment then
+17:38:49 <mattclay> kairo: Thanks
+17:39:41 <kairo> about the AIX, any chance to have it as not my power box that is hosted at home :P
+17:48:02 <mattclay> A while back I looked at using the IBM Power Development Platform (PDP) for getting access to AIX for testing. Unfortunately the setup there is intended for interactive use rather than CI.
+17:49:51 <mattclay> Is there anything else to discuss?
+17:50:01 <Pilou> Some test related PR without review: controller host and managed node can be distinct #34498 #33968, broken import #34479 :)
+17:50:04 <kairo> I just confirmed and we will have the Linux on Power soon.
+17:50:11 <kairo> ;)
+17:51:30 <mattclay> #topic controller host and managed node can be distinct #34498 #33968
+17:51:56 <mattclay> Pilou: How are you running those tests that your control host and managed host are different?
+17:52:04 <gundalow> back
+17:52:21 <Pilou> using LXC containers
+17:52:41 <Pilou> I try to mimic ansible-test behaviour
+17:53:11 <mattclay> Why are you running them on separate hosts? Is it specifically to test that scenario?
+17:54:26 <Pilou> because control host and managed node aren't the same in most use case
+17:55:38 <mattclay> Were there specific cross-host issues you were trying to test?
+17:56:35 <Pilou> there isn't any specific cross-host issues with these 2 PRs
+17:57:07 <Pilou> but tests should works anyway
+17:59:46 <mattclay> Pilou: I assume you had to run the tests w/o ansible-test, or make some modifications, aside from inventory, to run the tests against lxc containers?
+18:00:50 <Pilou> These are similar to #25672, see the ansible-playbook command in the description
+18:02:35 <Pilou> extract from my current script: https://paste.fedoraproject.org/paste/4RoYdDmbkYTIc7CS9JDJxw
+18:04:22 <mattclay> OK, that makes more sense. I was wondering how you were running the tests with the controller and managed host being different.
+18:04:37 <mattclay> Since that's not supported by ansible-test.
+18:05:25 <mattclay> I'll review those two PRs and merge after the meeting if there are no issues.
+18:05:31 * alikins reads backlog and +1's potentially getting IBM/POWER/AIX/LINUX/POWERVM/ test systems (and related modules merged)
+18:05:38 <Pilou> thanks !
+18:05:45 <mattclay> #topic broken import #34479
+18:06:24 <mattclay> Pilou: This one just needs review?
+18:06:31 <Pilou> yep
+18:07:45 <mattclay> The changes look OK to me, but you might want to have shertel or ryansb review.
+18:09:23 <Pilou> ok. Only 10 exceptions remaining in skip.txt !
+18:10:01 <mattclay> If it didn't take so long to provision a Windows instance I'd say add an integration test for it so we could run it in CI.
+18:11:33 <mattclay> #topic Open Floor
+18:11:57 <mattclay> Anything quick to discuss before the meeting ends? We're already 10 minutes past our scheduled end time.
+18:12:20 <gundalow> Nothing else from me
+18:13:51 <mattclay> #endmeeting

@@ -1,0 +1,130 @@
+17:00:52 <mattclay> #startmeeting Ansible Testing Working Group
+17:00:52 <zodbot> Meeting started Thu Oct 11 17:00:52 2018 UTC.
+17:00:52 <zodbot> This meeting is logged and archived in a public location.
+17:00:52 <zodbot> The chair is mattclay. Information about MeetBot at http://wiki.debian.org/MeetBot.
+17:00:52 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+17:00:52 <zodbot> The meeting name has been set to 'ansible_testing_working_group'
+17:01:18 <pabelanger> o/
+17:01:24 <mattclay> #info Agenda: https://github.com/ansible/community/issues/248
+17:01:40 <mattclay> #chair gundalow pabelanger
+17:01:40 <zodbot> Current chairs: gundalow mattclay pabelanger
+17:01:56 <mattclay> There is nothing new on the agenda for today.
+17:02:00 <mattclay> #topic Open Floor
+17:02:21 * gundalow waves
+17:03:07 <pabelanger> only question I had was, do we know why https://github.com/ansible/ansible/pull/46686 broke ansible-network? It seems that ansible-test didn't catch it on stable-2.7 for some reason
+17:04:06 * mattclay looks
+17:04:19 <pabelanger> trying to find log of failure now
+17:04:44 <gundalow> pabelanger: Hi, got a link showing what it broke?
+17:04:56 <pabelanger> https://object-storage-ca-ymq-1.vexxhost.net/v1/a0b4156a37f9453eb4ec7db5422272df/logs/61/161/8811951469c29d37304936b16b095f076e107f40/check/ansible-test-sanity/1448c09/job-output.html#l672
+17:05:37 <pabelanger> I'm not yet up to speed on ansible-network sanity test, but that caused our jobs to fail and zuul wouldn't allow merging
+17:05:52 <pabelanger> what ended up happening was developers force merged the PRs, by passing tests
+17:06:00 <mattclay> I don't think that PR you linked to is responsible for the failure.
+17:06:16 <pabelanger> mattclay: not the failure, but was the fix
+17:06:35 <mattclay> Oh, sorry, I misunderstood then.
+17:06:36 <gundalow> The Zuul ansible-test sanity test copies the PR under test on top of an Ansible checkout then runs `ansible-test sanity`
+17:06:44 <pabelanger> https://github.com/ansible-network/network-engine/pull/160
+17:06:52 <pabelanger> shows the actually PR in ansible/ansible fixing the job
+17:07:04 <pabelanger> via depends-on header (cross project testing)
+17:07:17 <mattclay> OK, so what broke and where?
+17:08:01 <pabelanger> I think what happen was, the ansible-network modules were using iterate funciton, but stable-2.7 didn't have it
+17:08:05 <pabelanger> and sanity caught it
+17:08:17 <pabelanger> but, I guess this is the only module so far that was trying to use it?
+17:08:43 <mattclay> OK, so where's the test that failed? Is that the vexxhost link you provided?
+17:08:50 <pabelanger> ya
+17:08:52 <pabelanger> https://object-storage-ca-ymq-1.vexxhost.net/v1/a0b4156a37f9453eb4ec7db5422272df/logs/61/161/8811951469c29d37304936b16b095f076e107f40/check/ansible-test-sanity/1448c09/job-output.html#l671
+17:08:56 <pabelanger> is an example of the pylint failure
+17:09:00 <mattclay> That is where the failure was first seen?
+17:09:32 <pabelanger> I'll need to confirm with trishnag
+17:09:48 <pabelanger> but our jobs in ansible-network started failing because of it for some reason
+17:10:24 <pabelanger> lib/ansible/plugins/action/command_parser.py:347:45 I guess that is coming from ansible/ansible?
+17:10:29 <mattclay> OK, I think I see what happened.
+17:10:32 <pabelanger> not the ansible-network role
+17:10:59 <gundalow> I have to drop off
+17:11:08 <mattclay> We added a new sanity test to ansible/ansible. The next time the ansible-network tests ran they used the updated test and started showing errors.
+17:11:57 <pabelanger> mattclay: okay, yah. Any idea why ansible/ansible didn't see the error on the update test?
+17:12:48 <mattclay> pabelanger: No ansible-network tests were executed for that PR.
+17:13:01 <mattclay> With "that PR" being the one that added the sanity test.
+17:13:09 <pabelanger> oh, yah. That will do it
+17:13:20 <pabelanger> is that something we can add moving forward?
+17:13:58 <mattclay> I think the problem is that ansible-network is using HEAD from an ansible/ansible branch for testing. It needs to be pinned to a specific SHA.
+17:14:23 <mattclay> Then the SHA needs to be periodically updated in a PR so that any necessary fixes can be made to ansible-network at the same time.
+17:14:52 <pabelanger> yah, we are pulling latest HEAD for our testing
+17:15:04 <pabelanger> how do we know which sha to use?
+17:15:54 <mattclay> Pick the latest one that's passing now and use that. Then someone needs to regularly pick the latest SHA and update it using a PR. If the tests pass, great. If not, update the PR again with the necessary fixes so that the tests pass. That way you won't have spontaneous test failures.
+17:16:27 <mattclay> It's the equivalent of doing a pip install in CI. If you use the latest release you'll encounter new failures from time to time, so you instead pin to to a specific version and update the version periodically.
+17:16:54 <pabelanger> doesn't that mean we'll also pin ansible to a specific sha?
+17:16:58 <mattclay> If updating the version causes failures then you have an opportunity to fix those in the same PR that updates to a newer version.
+17:17:06 <mattclay> Yes, that's the whole point.
+17:17:36 <mattclay> Either you're using a known good version of ansible (by SHA or tag) or you're using HEAD and prone to periodic failures.
+17:17:48 <pabelanger> okay, that is a different workflow we have today. We are testing against latest HEAD, I am not sure how important that is for ansible-network.
+17:18:42 <pabelanger> could we in ansible-network comment back on a PR for ansible-test changes? eg: the PR you mentioned that changed tests
+17:18:48 <pabelanger> also, do you mind linking it?
+17:19:32 <mattclay> https://github.com/ansible/ansible/pull/46557
+17:20:39 <pabelanger> okay, I'll review that shortly
+17:21:32 <mattclay> You could report back results. However, then the issue we have is that the fixes can't be made in the PR since it's for a differentn repo.
+17:23:39 <pabelanger> mattclay: yah, I think the issue is, that was a break change for us. Which is fine, but we didn't get any heads up about it. Not sure how best to protect in the future in this case.  You are right, we can provider feedback but if pylint in adding a new rule, we just need to be aware of that
+17:24:15 <pabelanger> thanks for info, that helps me understand why this broke
+17:24:34 <gundalow> back
+17:25:00 <gundalow> Yup, sanity in Zuul currently runs from HEAD of devel. The integration tests run from `devel`, `stable-2.7`, `stable-2.6`
+17:25:02 <mattclay> I'm thinking we may need more than one version of the ansible/ansible repo for testing ansible-network. It may be appropriate to pin the version used for the sanity tests and use HEAD for the integration tests.
+17:25:58 <mattclay> That way when sanity tests change you have an opportunity to update the ansible-network code to the new standards when updating the pinned version, while still being able to run integration tests against HEAD to catch conflicts with changes to the core engine.
+17:27:09 <pabelanger> yah, that is fine. But this seemed to happen on a stable branch of ansible. I wouldn't have expected modules to have to change APIs in this case
+17:27:19 <pabelanger> devel, I would fully support updates for pylint there
+17:28:06 <pabelanger> I have to run to next meeting, will catch up on backscroll in a bit
+17:28:30 <mattclay> pabelanger: It wasn't changed in stable, only devel.
+17:30:04 <mattclay> gundalow: Are sanity tests always being run using the devel branch of ansible?
+17:30:22 <mattclay> Oh, yeah, I see you answered that already.
+17:32:10 <mattclay> gundalow: So if I understand correctly the ansible-network tests are running sanity using ansible devel, and then integration tests using ansible devel, stable-2.7 and stable-2.6 ?
+17:32:32 <mattclay> Using HEAD from all of those branches.
+17:36:28 <gundalow> mattclay: correct
+17:36:36 <gundalow> hum, we pip install
+17:36:42 <gundalow> sorry
+17:36:56 <gundalow> we pip install @stable-2.x for integration tests
+17:38:03 <mattclay> gundalow pabelanger: OK, so then all you need to do is use a stable branch or specific devel SHA for sanity tests and then update it whenever you're ready to update the ansible-network code to newer standards.
+17:38:21 <gundalow> https://github.com/ansible-network/ansible-zuul-jobs/blob/master/zuul.d/jobs.yaml#L21
+17:38:34 <mattclay> As long as you're using devel:HEAD for sanity tests you'll fail periodically when tests are added/updated, as would be expected.
+17:39:21 <gundalow> Yup
+17:40:24 <mattclay> No need to try running ansible-network tests every time we make changes to ansible-test.
+17:41:04 <gundalow> yup
+17:41:34 <mattclay> OK, I think that resolves that issue. Is there anything else to discuss?
+17:43:05 <mattclay> Well, I guess there is one other thing to think about. Once you pin to a stable branch or specific SHA, when are you going to update it to keep up with newer sanity tests?
+17:44:31 <mattclay> gundalow: How are you handling branches for ansible-network? Are there separate branches to match ansible releases or something else?
+17:49:44 <gundalow> mattclay: correct, will find a link
+17:50:00 <gundalow> devel: https://github.com/ansible-network/network-engine/blob/devel/.zuul.yaml
+17:50:18 <gundalow> stable-2.7: https://github.com/ansible-network/network-engine/blob/stable-2.6/.zuul.yaml
+17:51:40 <mattclay> gundalow: OK, so you'll want to use the matching branch in ansible for the sanity tests in network-engine.
+17:52:11 <mattclay> stable*:HEAD makes sense for the stable branches for sanity tests.
+17:52:19 <gundalow> That's all fine I think
+17:52:31 <mattclay> For devel, you'll probably want to pin to a SHA rather than using HEAD.
+17:52:44 <mattclay> But then someone will need to periodically update that SHA.
+17:52:58 <mattclay> Otherwise you'll fall behind and have issues when cutting the next stable branch.
+17:53:35 <mattclay> So you'll probably want to update the devel SHA several times during development for the next release, including around the first beta or RC.
+17:54:08 <gundalow> Yup, that's a fair point
+17:54:46 <mattclay> That way you don't create a stable-2.8 branch for network-engine, only to find out it's failing stable-2.8 sanity tests because you had been testing on an older SHA that was too far out-of-date.
+17:56:45 <gundalow> Just wondering how many times during a release we need to update the SHA, and how we remember
+17:57:09 <mattclay> gundalow: Is it just ansible-network/network-engine that is using ansible/ansible for running tests?
+17:57:37 <gundalow> ansible-network/*
+17:57:42 <gundalow> same setup
+17:57:47 <gundalow> same setup as network-engine
+17:57:58 <mattclay> OK, so they're all following the same stable branching strategy?
+17:58:07 <gundalow> yup
+17:58:26 <mattclay> Is the config for which version of ansible/ansible to use for testing done at the org level or the repo level?
+17:59:53 <pabelanger> mattclay: gundalow: I'll look at our jobs again, I think you are right, we might not be setup properly on our side
+18:02:46 <gundalow> #action pabelanger to look at jobs and consider using SHA for Devel
+18:02:52 <gundalow> Thanks
+18:03:57 <mattclay> Having separate stable jobs for each stable branch should be easy. For devel, you may need to have something like ansible-test-sanity-{short-git-sha-here} so you can apply it to each repo individually, as you'll likely need to make changes to that repo.
+18:04:30 <pabelanger> Yah, we'll be able to do that on zuul jobs
+18:04:30 <mattclay> If you have only a single ansible-test-sanity-devel job then when you update it you'll break repos which will run with the new tests but haven't been updated to fix the reported issues yet.
+18:04:46 <pabelanger> ++
+18:04:52 <pabelanger> thanks for explaining the flow
+18:04:57 <mattclay> Then you can retire old ansible-test-sanity-{unused-git-sha} jobs when they're no longer needed.
+18:06:35 <mattclay> pabelanger: We're just figuring it out as we go. It helps to think of the ansible-test sanity tests as though they're pylint or pycodestyle. You need to upgrade to newer versions of those tools on a repo-by-repo basis so you have an opportunity to fix the newly reported issues.
+18:07:09 <mattclay> But in this case instead of pip installing a tool by version you're installing from a git SHA.
+18:07:36 <gundalow> pip installing for integration tests. Sanity tests currently pull HEAD via git clone
+18:07:55 <mattclay> Yep
+18:08:15 <mattclay> pabelanger: OK, does that give you everything you need to work with?
+18:09:37 <pabelanger> mattclay: it does, thanks
+18:10:07 <mattclay> We're past our scheduled meeting end time. Is there anything else to discuss before the meeting ends?
+18:10:47 <gundalow> Nothing else from me
+18:10:54 <gundalow> mattclay: Thanks for the info and the SHA idea
+18:15:09 <mattclay> #endmeeting

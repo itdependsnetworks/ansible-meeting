@@ -1,0 +1,76 @@
+19:00:57 <bcoca> #startmeeting core public irc meeting
+19:00:57 <zodbot> Meeting started Tue Nov 20 19:00:57 2018 UTC.
+19:00:57 <zodbot> This meeting is logged and archived in a public location.
+19:00:57 <zodbot> The chair is bcoca. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:00:57 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:00:57 <zodbot> The meeting name has been set to 'core_public_irc_meeting'
+19:01:12 <sdoran> o/
+19:01:23 <bcoca> #topic to mount or not to mount  https://github.com/ansible/ansible/pull/48608
+19:01:25 * gundalow waves
+19:01:46 <bcoca> #chair sdoran gundalow
+19:01:46 <zodbot> Current chairs: bcoca gundalow sdoran
+19:01:50 <bcoca> @sivel?
+19:01:53 <bcoca> @abadger1999 ?
+19:02:06 <bcoca> think the 3 of us have handled mount 'the most'
+19:02:09 <abadger1999> Hello
+19:02:35 <abadger1999> mount2 and fstab modules
+19:02:48 <bcoca> 2 main options i think we can add (while we rewrite whoel thing) are 'update_fstab' and 'manage_mount_dir'
+19:03:00 <bcoca> ^ though mount2 and fstab also appeals to me
+19:03:27 <bcoca> specially since current is very ... lineinfileish ...
+19:03:28 <abadger1999> As booleans?
+19:03:50 <bcoca> taht is my current thinking, but if you have other types that fit better?
+19:04:08 <sdoran> I'm in favor of mount2 and fstab.
+19:04:15 <sivel> I am in agreement with mount2 and fstab
+19:07:21 <bcoca> so we all give up on current mount module and expect it to die slow death?
+19:07:34 <abadger1999> I could see an update_fstab boolean option (not sure of the other as this module is named "mount" so it feels like everything should mount and unmount... only fstab being optional.)... but I would much rather people spend time on making two separate modules since they are very different things.
+19:08:12 <bcoca> currently it deletes mountpoint on unmount ... which is really bad imo, but we should not change outright
+19:08:28 <abadger1999> ah.
+19:08:44 <bcoca> only reason i suggest that, since currently it creates/removes it
+19:08:49 <abadger1999> Okay, so separate from the fstab versus mount functionality altogether.
+19:09:00 <bcoca> yep ... i would not add any of it to mount2
+19:09:05 <abadger1999> <nod>
+19:09:19 <bcoca> its just current behaviour is bad and since we cannot realy just change it, toggle seems least bad solution
+19:10:31 <abadger1999> I could see both booleans, still would rather people spent time creating the two new modules.
+19:10:52 <bcoca> agreed
+19:11:04 <bcoca> so we can answer that on ticket
+19:11:09 <abadger1999> <nod>
+19:11:10 <abadger1999> Yep.
+19:11:17 <bcoca> @sivel that works for you?
+19:11:26 <bcoca> anyone else have opinion?
+19:12:15 <sivel> sorry, off doing 3 things
+19:12:22 <bcoca> who isn't?
+19:12:40 <sivel> but yes.  2 new modules
+19:13:04 <bcoca> k, i'll let you respond to author, that we prefer 2 modules, but i thin that if they insist on just option, we should accept for now
+19:13:10 <bcoca> just bikeshed on name
+19:14:47 <bcoca> #topic https://github.com/ansible/ansible/pull/46675
+19:15:00 <bcoca> @rajeevarakkal ?
+19:15:25 <bcoca> #topic https://github.com/ansible/ansible/pull/47690
+19:15:45 <bcoca> ^ need more eyes on it, lgtm but want to make sure rest dont see issues with it
+19:16:20 <abadger1999> @bcoca Well... new option that's a boolean rather than new state. (for the mount summary)
+19:16:44 <bcoca> yeah, states are unchanged, just what happens during those states
+19:16:58 <bcoca> 'also update fstab' and 'also manage dir'
+19:17:05 <bcoca> ^ 2 main asks for it
+19:17:16 <bcoca> with 'not' being what some people ask
+19:17:58 <bcoca> so no one against returning regex matches with wait_for ?
+19:18:29 <bcoca> #topic open floor
+19:18:41 <abadger1999> =1 wait_for
+19:18:43 <abadger1999> +1
+19:19:00 <bcoca> had me there for a sec with =1 ....
+19:19:19 <abadger1999> I would changelog things like that
+19:19:29 <abadger1999> But the code looks good.
+19:19:42 <sivel> btw, we need to wrap this meeting up within 10 minutes today
+19:19:55 <abadger1999> Changing sleep 10 to sleep 3 in the integration test... not sure if that is good.
+19:19:56 <bcoca> at open floor, if nothing else, i'll close sson
+19:20:09 <bcoca> that was ask from reviewers
+19:22:25 <sdoran> I think that wait_for addition is fine. The UI is a bit convoluted since you kinda have to understand somewhat how `re` and groups work.
+19:22:37 <abadger1999> bcoca: Heh, you merged too quickly..
+19:22:46 <abadger1999> Made the comment about hte timeout change on the ticket.
+19:22:52 <abadger1999> And it didn't have a changelog yet.
+19:23:04 <sivel> abadger1999: looking at the blame, that line was added with 10 seconds from the initial commit
+19:23:12 <sivel> so doesn't seem we adjusted it
+19:23:27 <sivel> https://github.com/ansible/ansible/commit/0a972ea6bf39794de406a3a4780977cad15e999b
+19:23:35 <sivel> just as an FYI
+19:23:47 <sivel> but yes, changelogs
+19:23:49 <abadger1999> <nod>
+19:24:18 <bcoca> well, since no new topics, going to end this in 1 min
+19:26:31 <bcoca> #endmeeting

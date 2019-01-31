@@ -1,0 +1,120 @@
+19:00:29 <bcoca> #startmeeting core public irc meeting
+19:00:29 <zodbot> Meeting started Tue Jan  8 19:00:29 2019 UTC.
+19:00:29 <zodbot> This meeting is logged and archived in a public location.
+19:00:29 <zodbot> The chair is bcoca. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:00:29 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:00:29 <zodbot> The meeting name has been set to 'core_public_irc_meeting'
+19:00:40 <bcoca> #topic https://github.com/ansible/ansible/pull/28662
+19:00:54 <maxamillion> .hello2
+19:00:55 <zodbot> maxamillion: maxamillion 'Adam Miller' <maxamillion@gmail.com>
+19:01:16 <bcoca> @dag ?
+19:02:23 <bcoca> @jamescassel ?
+19:02:28 * cyberpear waves
+19:02:38 <bcoca> #topic https://github.com/ansible/ansible/pull/50327
+19:03:57 <cyberpear> one of the needs for basic regex escaping came about when needing to escape something passed to sed
+19:04:11 <bcoca> not against change, but not sure 'basic' is best name, 'posix' seems more appropos
+19:04:34 <cyberpear> I'm fine w/ any name we give it.  POSIX supports basic and extended.
+19:05:56 <bcoca> ^ anyone else?
+19:06:23 <cyberpear> "posix-basic"?
+19:07:01 <bcoca> might be ok with basic as long as docs/example say its 'posix basic' .. i know there is 1 other regex std that uses both .. but i cannot recall and im pretty sure its too obscure/unused
+19:07:31 <sdoran> Are we renaming the filter or just trying to figure out what to call it in the docs?
+19:07:40 <bcoca> the other option is new filter posix_escape(extended=false)
+19:07:40 <cyberpear> I also retroactively named the existing functionality as "python" and left it as default; I'm okay to rename that if it's desired.
+19:08:30 <bcoca> so +1 functionality ... but open to bikeshed on interface
+19:08:36 <sdoran> Ah, I think I see it now.
+19:09:25 <bcoca> i really dont have strong pref, was just confused by 'basic' until i read the comments, which is why i thought another more obvious name shoudl be used
+19:09:43 <nitzmahone> +1 to new re_type arg vs new filter
+19:10:18 <cyberpear> At the very least, I'll s/basic regex/POSIX basic regex/g in the docs.
+19:10:41 <sdoran> Yup, just did some reading I prefer posix basic as that's the official name.
+19:10:50 <sdoran> It's more accurate. Basic is ambiguous.
+19:10:56 <nitzmahone> `posix_basic` `posix_extended` `python`?
+19:11:04 <cyberpear> so re_type="posix-basic"?
+19:11:12 <cyberpear> that works
+19:11:15 <nitzmahone> underscore though please, no dash
+19:11:23 <cyberpear> got it
+19:11:26 <sdoran> +1
+19:11:55 <bcoca> +3, no oposition .. its small enough feature im not going to look for quorum
+19:11:56 <cyberpear> okay to alias 'posix_extended' to 'python'?
+19:12:04 <bcoca> are they same?
+19:12:13 <cyberpear> I think so...
+19:12:16 * bcoca has not looked closely to python regex quoting
+19:12:17 <cyberpear> open to being corrected, though
+19:12:31 <sdoran> I would hold off on that until you verify it.
+19:12:34 <cyberpear> k
+19:12:45 <sdoran> Because I don't know either and would hate to be inaccurate.
+19:13:22 <sdoran> You can put a link/note in the ticket if you find out that is the case and make it so (if it's accurate).
+19:13:41 <cyberpear> will do
+19:13:42 <sdoran> Otherwise, don't conflate them.
+19:13:43 <sdoran> Thanks.
+19:13:45 <bcoca> k, cyberpear we can review again after changes, but seems like we will most probably merge aafter the tweaks
+19:13:50 <bcoca> going to close this for now
+19:13:56 <bcoca> #topic https://github.com/ansible/ansible/pull/50642
+19:14:03 <bcoca> @federico ?
+19:14:48 <bcoca> #topic https://github.com/ansible/ansible/pull/50564 <= should we revert?
+19:16:16 <bcoca> any thoughts?
+19:17:04 <nitzmahone> I can't recall off the top of my head- would this cause them to reset between plays?
+19:17:10 <bcoca> i'm with @shertel on this one, think reverting to previous behaviour and document the limitations of clear_facts for this case
+19:17:14 <nitzmahone> (things set via set_fact)
+19:17:25 <bcoca> nitzmahone: no, it causes set_fact to have less precedence
+19:17:49 <bcoca> when using 'cacheable' ... in the same play, currently it has less precedence, but only when persisted across  runs
+19:18:07 * bcoca whishes he had tardis to oppose this 'feature' more strongly in past
+19:18:16 <nitzmahone> yeah
+19:18:25 <bcoca> set_fact is a misnomer to start, sets a 'host var for current run' with high precedence
+19:18:28 * nitzmahone looks wistfully at horse running from barn in distance
+19:18:53 <shertel> Yeah :-/
+19:18:55 <sdoran> set_host_var_for_current_run has a nice ring to it ;)
+19:18:58 <bcoca> cacheable=true adds the 'ability' for this variable to be 'cached with facts' , but we set it x2 to keep 'normal precedence in current play'
+19:19:25 <bcoca> this creates problem since meta: clear_facts, will remove the 'cached' version but not the 'set_fact' version
+19:19:44 <bcoca> my pr fixed this and i meant to discuss here, but got merged by acccident beforehand
+19:20:00 <bcoca> so now i wanted to consult with more people before i revert or keep the new behaviour
+19:20:14 * bcoca might just deprecate set_fact and remove the whole problem
+19:21:04 <nitzmahone> holy-cure-worse-than-disease, Batman
+19:21:42 <nitzmahone> Seems like trying to correct that with a new action might be better than potentially breaking the existing one, for better or worse
+19:22:09 <shertel> +1
+19:22:16 <bcoca> nitzmahone: hence the deprecation
+19:22:40 <cyberpear> Looks like this change makes set_fact w/ cacheable=yes always operate at low priority, which could break existing playbooks and can be achieved by checking whether said fact exists already.
+19:22:41 <bcoca> set_var: scope=host/play/fact
+19:22:59 <bcoca> cyberpear: why i didnt want it merged
+19:23:00 <cyberpear> +1 set_var w/ scope
+19:23:46 <dag> o/
+19:23:54 <bcoca> its something i realized after writing the PR, it can have nasty consequences
+19:24:00 <nitzmahone> Yeah, I'm leaning toward "damage done, EHORSENOTFOUND", the fix seems likely to cause more problems than it solves
+19:24:00 <dag> I have a schedule conflict :-/
+19:24:10 <bcoca> but we also have the 'clear_facts' bug, so i wanted more heads thinking on this before i decide
+19:24:28 <bcoca> dag: we can discuss your stuff on thursday
+19:24:47 <dag> bcoca: fine, thanks !
+19:27:58 <bcoca> so can infer everyone is for revert + update clear_facts docs?
+19:28:28 <bcoca> with possible 'obsoletion' new module in future (set_host_var) that will solve the problem in a better way?
+19:28:32 <sdoran> Yes. Seems the least problematic route.
+19:28:53 <bcoca> k, glad i had this sanity check
+19:29:02 <bcoca> #topic open floor
+19:29:54 <cyberpear> I've been looking for a good way to get the equivalent of vars.keys() since 'vars' isn't supposed to exist... Any ideas?
+19:32:48 <cyberpear> Perhaps something like "lookup('vars', '*', print_var_names=True)" ?
+19:35:05 <bcoca> i have been thinking about that one, but i have no good solution
+19:35:17 <agaffney> what's the use case? the need to get a list of all local vars implies you're doing something the hard way
+19:35:18 <bcoca> specially since 'vars' already does not have 'all vars'
+19:35:39 <cyberpear> what's missing from 'vars'?
+19:35:54 <bcoca> some magic vars, corner cases, depends on context
+19:35:54 <cyberpear> vars.keys() seems to meet my current needs fwiw
+19:36:09 <bcoca> ^ but agaffney poses good question, 'what is the use case?'
+19:36:27 <agaffney> cyberpear: does hostvars[inventory_hostname].keys() not work for you?
+19:36:31 <bcoca> any of what i can think of is covered by 'is defined'
+19:36:38 <bcoca> agaffney: that lacks play vars
+19:36:51 <agaffney> bcoca: I know, but I don't know what the use case is yet
+19:37:05 * jtanner has been sitting in ansible-devel for past 10 minutes thinking "this is a slow meeting"
+19:37:29 <cyberpear> My case has been to select all vars than end in some suffix or start w/ some prefix
+19:37:41 <cyberpear> these include role default vars
+19:38:28 <cyberpear> One use case was to grab <rolename>_external_urls vars from a series of roles and download those urls for offline air-gapped use.
+19:38:30 <bcoca> a find vars seems to be more appropos
+19:38:42 * bcoca gives jtanner some coffee
+19:38:59 <bcoca> 'match_vars', '*_suffix'
+19:39:17 <cyberpear> something like would fit the bill
+19:39:18 <bcoca> lookup('vars', match='' ...
+19:41:33 <bcoca> cyberpear: put in feature request (or PR) to extend vars plugin with a match .. for that case '*' would also return all keys
+19:41:54 <cyberpear> thanks, will do.
+19:42:37 <bcoca> can implement just looking at the 'variables' variable the lookup gets (ALL vars are in there)
+19:43:19 <bcoca> but it will return the values ...
+19:43:40 <cyberpear> thanks for the tip. I'll give a quick shot at implementing, otherwise I'll open an RFE if I run into trouble.
+19:43:44 <bcoca> might need extra to 'return dict with key instead of value' ... though that is a diff lookup imho
+19:49:27 <bcoca> ok, if nothing else, going to end it now
+19:49:48 <bcoca> #endmeeting

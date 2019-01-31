@@ -1,0 +1,206 @@
+15:03:22 <bcoca> #startmeeting ansible core irc meeting
+15:03:22 <zodbot> Meeting started Thu May 24 15:03:22 2018 UTC.
+15:03:22 <zodbot> This meeting is logged and archived in a public location.
+15:03:22 <zodbot> The chair is bcoca. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:03:22 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:03:22 <zodbot> The meeting name has been set to 'ansible_core_irc_meeting'
+15:03:40 <akasurde> 0/
+15:03:46 <sac> o/
+15:03:54 <tbouvet> o/
+15:03:56 <bcoca> #topic https://github.com/ansible/ansible/pull/33986
+15:04:15 <sivel> .hello2
+15:04:16 <zodbot> sivel: sivel 'Matt Martz' <matt@sivel.net>
+15:04:32 * ryansb wave
+15:04:59 <abadger1999> ola
+15:05:35 * sdoran waves
+15:06:08 <mkrizek> o/
+15:06:24 * gundalow waves
+15:06:38 <bcoca> soo any other opinions on that ticket?
+15:07:00 <bcoca> i know alikins wanted a 'facts expressions' facitliy that allowed to define a bunch of these to be processed before/after gathering
+15:08:29 <bcoca> #chair abadger1999 mkrizek gundalow tbouvet akasurde sac sdoran
+15:08:29 <zodbot> Current chairs: abadger1999 akasurde bcoca gundalow mkrizek sac sdoran tbouvet
+15:08:40 * gundalow sits
+15:08:40 <abadger1999> -1 on that PR.
+15:08:51 <sdoran> While I love facts in Ansible, it's hard to be all things to all people. Including minor things like this in the default facts clutters things up.
+15:08:57 <maxamillion> .hello2
+15:08:58 <zodbot> maxamillion: maxamillion 'Adam Miller' <maxamillion@gmail.com>
+15:09:30 <sdoran> I much prefer creating an easy mechanism to allow folks to make their own custom facts modules.
+15:09:32 <abadger1999> It's not about "gathering" something from the managed machines
+15:09:58 <bcoca> agreed
+15:10:00 <sdoran> True, it's really just munging existing data.
+15:10:05 <bcoca> sdoran: already done
+15:10:16 <abadger1999> goarch filter!
+15:10:23 <bcoca> any vars file can munge data, i dont see the need for this
+15:10:31 <bcoca> abadger1999: not even, this is too simple imho
+15:10:43 <sdoran> So I'd say there are better ways to solve this. -1 from me
+15:10:48 <akasurde> I agree with sdoran
+15:11:22 <bcoca> seems consensus is 'no'
+15:11:37 <akasurde> bcoca, how we can achieve this without new facts ? just curious
+15:11:51 <sivel> -1 on goarch
+15:11:55 <bcoca> see my post in the ticket
+15:12:08 <bcoca> you just define the vars anywhere and they'll be populated once facts are gathered
+15:12:10 <akasurde> bcoca, ok
+15:12:31 <bcoca> vars:  or extra vars or inventory  ... anywhere
+15:13:14 <bcoca> maxamillion: is that enough for you?
+15:13:36 <maxamillion> bcoca: yup, this is good, thanks!
+15:13:40 <bcoca> i mean, he should just put my post in group_vars/all.yml
+15:13:48 <bcoca> if he is that avid of golang user
+15:13:54 <sdoran> Yeah, that's a much better way to do it.
+15:14:15 <bcoca> #topic dag's cobbler modules https://github.com/ansible/ansible/pull/39913  https://github.com/ansible/ansible/pull/39910
+15:15:06 <bcoca> @dag ?
+15:15:16 <bcoca> ^ from post, he seems to be looking for reviewers
+15:15:32 <bcoca> jimi|ansible: want to take this one?
+15:15:36 <jimi|ansible> i haven't touched cobbler in 5 years, so I'm not sure I'm the best for it
+15:15:44 <jtanner> longer for me
+15:15:46 <jimi|ansible> though I'm not sure it's changed much since then...
+15:15:46 <bcoca> <= 7yrs here
+15:16:35 <bcoca> sync one seems very simple
+15:17:40 <jtanner> i know it'll be groan inducing, but cobbler is simple enough that i'd demand integration tests on these PRs
+15:17:45 <bcoca> state=query .. properties as generic dict ...
+15:18:01 <bcoca> ok, going to table this then till dag appears
+15:18:08 <jimi|ansible> approved sync
+15:18:12 <dag> I am here
+15:18:29 <jtanner> dag: what is your test plan?
+15:18:40 <sivel> based on the things bcoca just stated, indicates that the PR doesn't meet our module guidelines
+15:18:48 <sdoran> @bcoca those would be my two main grievances as well
+15:18:48 <dag> jtanner: good question, I can add some tests, but they will be disabled anyhow
+15:19:00 * sdoran relocating
+15:19:01 <dag> so wasn't sure if this was wanted
+15:19:11 <jtanner> cobbler can be installed quickly iirc, so it's feasible to have destructive integration tests
+15:19:18 <sivel> query should be a lookup, as query shouldn't be a state, or a separate facts plugin
+15:19:31 <bcoca> also on sync module, supports check mode but just assumes always changed, doesnt cobbler api allow you to find out if sync had diffs?
+15:19:38 <jimi|ansible> for cobbler_system, I'm not a fan of having properties being a mapping under a single property
+15:19:54 <bcoca> ^ that is my other issue
+15:19:56 <jimi|ansible> bcoca: sync always changes things
+15:20:03 <dag> bcoca: no, api is very basic
+15:20:15 <bcoca> k, that is what i thought, just needed to confirm
+15:20:33 <bcoca> had hoped it had been updated since i last used
+15:21:05 <dag> jimi|ansible: if I list all the options, we need to test the correct naming with every Cobbler release, which is a lot harder
+15:21:31 <dag> jimi|ansible: possibly this is not an issue, but I don't have a lot of experience with older Cobbler releases and the API
+15:21:38 <jimi|ansible> don't we have a mechanism to already recursively specify argument_spec stuff?
+15:21:46 <sivel> jimi|ansible: yes
+15:21:59 <jimi|ansible> this module implements its own way of that working
+15:22:08 <dag> that's not the problem, I don't know if the list of options as changed over time
+15:22:18 <dag> I only need a limited subset for myself
+15:22:43 <jimi|ansible> dag: sure, and I'm not sure the api gives any hints about what is supported, or if it blows up when unknown params are specified
+15:22:58 <dag> I cannot query the options using the API, so I can't make it smarter than this, except hardcoding the options making it very specific to one release possibly
+15:23:23 <maxamillion> ugh, that's a bummer :/
+15:23:38 <dag> Well, let me add tests and ensure that it is tested properly, including errors
+15:23:51 <jimi|ansible> so yeah, for this case i don't think there's much of an option unfortunately :/
+15:24:03 <dag> but if it would give a proper error, is this scheme acceptable ?
+15:24:23 <bcoca> can you guys do this offline (on ticket?) so we can get on with other topics
+15:24:29 <jimi|ansible> yep
+15:24:31 <dag> ok
+15:24:31 <bcoca> thanks
+15:24:38 <bcoca> #topic https://github.com/ansible/ansible/pull/37877
+15:24:53 <bcoca> *cringe* another jenkins plugin with a 'params' ....
+15:25:17 <bcoca> maxamillion: sounds about right, its really like command/shell .. no good way to know 'changed'
+15:26:09 <bcoca> @maxamillion??
+15:26:14 <bcoca> ^ anyone else have opinion on that?
+15:26:51 <bcoca> *crickets*
+15:27:23 <maxamillion> if that's acceptable, I'm good with it .. just wanted to double check with everyone
+15:27:27 <abadger1999> Should always set changed=True instead of always setting changed=False
+15:27:37 <maxamillion> abadger1999: +1
+15:28:14 <bcoca> agreed
+15:28:40 <maxamillion> commented
+15:28:47 <maxamillion> we can move on whenever you like, thanks
+15:29:02 <bcoca> #topic https://github.com/ansible/ansible/pull/35400
+15:29:11 <abadger1999> Should the phrase "not idempotent" appear in the module docs
+15:29:12 <abadger1999> ?
+15:29:19 <bcoca> changing the 'empty' return for ipaddr filter?
+15:30:00 <bcoca> abadger1999:  i dont think its needed, same as shell/command/script, this is just 'run arbitrary code'
+15:30:21 <bcoca> anyone that wants to trigger a jenkins build should know that ... SHOULD
+15:30:21 <sivel> for ipaddr, I've asked for a new kwarg for the *new* behavior, and indicated that would could add some deprecation notice potentially
+15:30:31 <bcoca> ^ im fine with that
+15:30:38 <bcoca> just not change w/o deprecation
+15:32:29 <bcoca> ok, going to consider that settled
+15:32:31 <abadger1999> Ask drybjed too? (He wrote the ipaddr filters, right?)
+15:32:45 <bcoca> #topic https://github.com/ansible/ansible/pull/37771
+15:32:50 <sac> o/
+15:32:53 <abadger1999> But yes, +1 to the deprecation strategy
+15:33:01 <bcoca> abadger1999: we can cc him but i think this is more a question of how we change an existing stable interface
+15:33:25 <bcoca> ^ and i think we all agree, fine, but with deprecation period and toggle
+15:34:03 <bcoca> @sac u have the floor
+15:34:21 <sac> Thanks. I was wondering if this PR can be accepted?
+15:34:45 <sac> For 2.6.
+15:35:14 <bcoca> idk, you have  1 shippit from pilou (which i believe counts as maintainer)
+15:35:29 <sac> Yeah.
+15:35:52 <bcoca> romo created the other gluster module, did you ping him for another shipit?
+15:36:18 <sac> I pinged rosmo long back. But he doesn't seem to be around.
+15:36:30 <bcoca> note: we might want to move gluster_volume to new storage/gluster/ dir
+15:36:31 <sac> So, I have kind of hit the wall.
+15:36:40 <maxamillion> I'm in the process of a PR-review-a-thon to try and get as much in as is reasonable for the 2.6 freeze, I can review later today
+15:36:40 <sac> bcoca, that is on my todo lit.
+15:36:42 <sac> list*
+15:37:02 <bcoca> ok, before jtanner asks, any way we can test this ?
+15:37:43 <sac> I'm not sure how we can do it. I requested a few gluster maintainers to test and review.
+15:37:55 <sac> Got a couple of OK from them on the PR.
+15:38:20 <bcoca> quick skim module looks ok, i'll give it a 'read only' pass, putting in my queue
+15:38:21 <sac> I mean if that counts.
+15:38:34 <sac> bcoca, maxamillion thanks.
+15:38:40 <Pilou> bcoca: a unit test ?
+15:39:12 <bcoca> Pilou: integration, would be nice to see it actually works with the tool
+15:39:26 <bcoca> #topic https://github.com/ansible/ansible/pull/38280
+15:39:41 <jtanner> =)
+15:40:05 <bcoca> @tbouvet ?
+15:40:13 <bcoca> same issue, you need reviewrs to push forward?
+15:40:18 <tbouvet> I was wondering if this PR can be accepted because I have done all I can do (integration tests, documentation, ...)
+15:40:31 <tbouvet> @bcoca : yes
+15:40:44 <bcoca> dag: you have not cleared your negative review on this?
+15:41:14 <tbouvet> I have done every remark from review
+15:41:22 <tbouvet> I think, it's difficult to split in 2 modules because all commands are to manage a docker swarm cluster.
+15:41:33 <bcoca> i see, but i would like him to clear it before proceding
+15:41:42 <bcoca> im not familiar with the module, he is
+15:41:48 <tbouvet> I don't know how to do that
+15:41:58 <bcoca> @ryansb anyone in core doing docker currently?
+15:42:10 <bcoca> tbouvet: not up to you, its him that needs to clear it
+15:42:24 <tbouvet> ok
+15:42:24 <bcoca> or not, then it would be up to you to address the issues
+15:42:31 <tbouvet> I'm doing docker currently
+15:42:42 <ryansb> chouse is technically doing Galaxy work, but has done docker module things in the past
+15:42:56 <bcoca> i know, but he has left that role
+15:43:12 <bcoca> was hoping someone else was involved and had time to chime in on this docker_swarm module
+15:43:29 <maxamillion> I'm tangentially doing docker, but not in official capacity for core work ... I've worked with the docker python API a lot in the past though so I can fill that role if we need someone to
+15:43:58 <tbouvet> FYI, I'm ready to do others modules like docker_stack, ... (if it's can help you)
+15:44:10 <bcoca> nice, if you can give it another once over, dag and you should count as enough shipits when ready
+15:44:52 <bcoca> @dag? you still here?
+15:45:26 <maxamillion> tbouvet: I'm open to all docker modules you care to bring to the table and maintain :)
+15:45:37 <bcoca> @tbouvet i'll ping him, he and @maxamillion should get you sorted out
+15:45:44 <maxamillion> bcoca: +1
+15:45:59 <tbouvet> +1
+15:46:17 <bcoca> #topic open floor
+15:47:01 <sac> bcoca, you mentioned moving gluster_volume under storage/glusterfs
+15:47:15 <bcoca> once the PR is accepted, i'll do it
+15:47:28 <sac> Oh okay.
+15:47:39 <bcoca> nothing there currently to 'move to'
+15:48:02 <sac> The question was: I have a peer fixing a bug in gluster_volume https://github.com/ansible/ansible/pull/40644
+15:48:16 <sac> Does it make sense to do it as part of that bug.
+15:48:31 <sac> I fixed it just today, so it has tme before being reviewed :-)
+15:48:51 <abadger1999> Did anyone show up for a meeting about the change to file follow=True?
+15:48:55 <bcoca> dont worry, no need to do both there, its simpler if i just do it
+15:49:08 <sac> bcoca, ack!
+15:49:15 <bcoca> @abadger1999 not that i know of, no topic on ticket either
+15:52:44 <bcoca> k, if nothing else, closing meeting in 1min
+15:52:46 <Pilou> Feebacks welcome on https://github.com/ansible/ansible/pull/39809 (Tower modules: fix parameters handling)
+15:53:54 <bcoca> 17 file PR on open topic ... you are EVIL
+15:54:42 <bcoca> quick skim, lgtm, i'll see on pinging authors to get shipits
+15:55:17 <jtanner> Pilou: i pinged those folks internally for a review
+15:55:27 <sdoran> Pilou: you should heave ryanpetrello review those. He did a bunch of work to them recently.
+15:55:44 <sdoran> Jinx!
+15:55:59 <jtanner> triple jinx
+15:56:08 <bcoca> Pilou:  you might get review in 1h
+15:56:14 <sdoran> We're very good at offloading work, evidently. :)
+15:56:34 <jtanner> we're good at not pretending to know tower, that's for sure
+15:56:38 <maxamillion> hot potatoe ... PR edition
+15:56:42 <maxamillion> potato*
+15:56:47 <maxamillion> why did I add an e on the end?
+15:56:49 <maxamillion> meh
+15:56:58 <bcoca> if the potato is full of c4 and on a random timer, yes, apt alegory
+15:56:58 <jtanner> tomato, potato
+15:56:59 <Pilou> :)
+15:57:04 <drybjed> hi, sorry, somebody asked about ipaddr filter, what are you up to?
+15:57:35 <bcoca> drybjed: they want to change the 'empty' result, we decided, ok, but add toggle and deprecation period
+15:57:54 <bcoca> https://github.com/ansible/ansible/pull/35400
+15:58:00 <drybjed> looking, thanks
+15:59:03 <bcoca> drybjed: we can continue any discussion on ticket
+15:59:06 <bcoca> #endmeeting

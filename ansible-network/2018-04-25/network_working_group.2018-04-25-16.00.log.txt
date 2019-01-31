@@ -1,0 +1,80 @@
+16:00:24 <gundalow> #startmeeting Network Working Group
+16:00:24 <zodbot> Meeting started Wed Apr 25 16:00:24 2018 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:00:24 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:00:24 <zodbot> The meeting name has been set to 'network_working_group'
+16:00:29 * Qalthos 🌊🌊
+16:00:41 * ganeshrn waves
+16:01:00 <gundalow> #chair jtanner acozine1 Qalthos brampling samerd ganeshrn andriusb
+16:01:00 <zodbot> Current chairs: Qalthos acozine1 andriusb brampling ganeshrn gundalow jtanner samerd
+16:01:38 <privateip> o/
+16:01:51 <gundalow> #chair privateip
+16:01:51 <zodbot> Current chairs: Qalthos acozine1 andriusb brampling ganeshrn gundalow jtanner privateip samerd
+16:02:26 <funzo> o/
+16:02:34 <gundalow> #info Agenda as always (feel free to add items) https://github.com/ansible/community/labels/network
+16:02:38 <gundalow> #chair funzo
+16:02:38 <zodbot> Current chairs: Qalthos acozine1 andriusb brampling funzo ganeshrn gundalow jtanner privateip samerd
+16:03:43 <gundalow> So looking at the agenda I don't see anything
+16:04:10 <gundalow> the HTTP connection proposal (https://github.com/ansible/proposals/issues/103) was agreed last meeting
+16:04:53 <gundalow> Anyone got anything?
+16:05:08 <gundalow> #topic Potential performance issue in 2.5.*
+16:05:13 <brampling> I just added some PRs I need reviewed
+16:05:51 <gundalow> brampling: Thanks, can do that next
+16:05:59 <gundalow> #info https://github.com/ansible/ansible/issues/38892
+16:07:17 <gundalow> #info We've been investigating a possible performance issue when running with many hundreds of network devices. Current investigation shows that during 2.5 development we've accidently introduced a global lock
+16:07:36 <gundalow> #info the linked issue has more details. We are working on a fix
+16:08:04 <gundalow> #info depending on when the fix is confirmed we will review if that means that 2.5.2 should be made earlier
+16:08:15 <gundalow> #info this issue only effects 2.5.*
+16:08:47 <trishnag> o/
+16:09:06 <ganeshrn> nitinkr: good to see you here
+16:09:53 <gundalow> #info this issue only effects persistent connection
+16:10:10 <gundalow> #chair nitinkr
+16:10:10 <zodbot> Current chairs: Qalthos acozine1 andriusb brampling funzo ganeshrn gundalow jtanner nitinkr privateip samerd
+16:10:21 <gundalow> Any questions on that?
+16:12:20 <nitinkr> Thanks @ganeshrn
+16:13:46 <gundalow> OK, will update once the fix is in
+16:14:58 <gundalow> #topic Infoblox NIOX feature PRs
+16:15:08 <gundalow> #link https://github.com/ansible/ansible/pulls/brampling
+16:15:37 <gundalow> brampling: I notice they have the `stale_ci` label, which means it's been over 7 days since CI (Shippable) run, so I've triggered a fresh run
+16:15:49 <brampling> Ok
+16:16:08 <brampling> We have a big joint customer looking for this functionality
+16:16:40 <gundalow> brampling: FYI provisional dates for Ansible 2.6 https://github.com/ansible/ansible/blob/devel/docs/docsite/rst/roadmap/ROADMAP_2_6.rst
+16:16:53 <gundalow> #info Ansible 2.6 provisional dates https://github.com/ansible/ansible/blob/devel/docs/docsite/rst/roadmap/ROADMAP_2_6.rst
+16:17:09 <brampling> Thanks, sooner than I'd expected
+16:17:22 <gundalow> Yup, we are keeping 2.6 as a smaller release
+16:17:57 <brampling> They need one or two more things, I'll try to get them in by mid-May
+16:18:05 <brampling> I'm happy to point them to devel
+16:18:27 <samerd> gundalow: thanks for posting the 2.6 roadmap, just wanted to ask about it
+16:18:38 <gundalow> samerd: :)
+16:20:18 <gundalow> brampling: Could you please raise a PR to add yourself to https://github.com/ansible/ansible/blob/devel/.github/BOTMETA.yml#L436 that way you will be notified on any issues/PRs for NIOS. Also your PRs will get label:owner_pr, which means we trust you are doing the right thing
+16:20:47 <gundalow> Also if their is anyone else in your team that you think it would be worth getting notified, feel free to add them
+16:21:34 <brampling> Ok, will do
+16:21:52 <gundalow> Thanks
+16:23:11 <gundalow> brampling: I've assigned them to justjais who will do a quick review and merge
+16:23:33 <brampling> Ok, thanks
+16:23:43 <gundalow> brampling: Anything else from your side?
+16:24:20 <brampling> Not right now, thanks
+16:24:31 <gundalow> Cool, shout out if there is
+16:24:35 <gundalow> #topic Open Floor
+16:24:39 <gundalow> #chair
+16:24:39 <zodbot> Current chairs: Qalthos acozine1 andriusb brampling funzo ganeshrn gundalow jtanner nitinkr privateip samerd
+16:24:45 <gundalow> Anyone got anything else?
+16:24:50 <ganeshrn> https://github.com/ansible/proposals/issues/104 <-- netconf generic module proposal, if no more review comments will move it to agreed?
+16:25:09 <gundalow> #info https://github.com/ansible/proposals/issues/104 <-- netconf generic module proposal, if no more review comments will move it to agreed.
+16:25:35 <gundalow> brampling: Do your modules return anything?
+16:26:19 <brampling> No, just make changes to Infoblox
+16:26:21 <gundalow> brampling: ie https://github.com/ansible/ansible/pull/37676/files#diff-30e479e3f6b8c57e15a4edde857c4ee3R164 does that return anything via `register:`
+16:26:26 <gundalow> cool, thanks
+16:26:33 <brampling> They're based on the nios_host_record module
+16:26:40 <brampling> That @privateip wrote
+16:28:14 <gundalow> brampling: cool. Actually I'll add you to BOTMETA and add a way so all your issues and PRs get labels, will make it easier for your to manage. Will ping you details via a PR (so you will get GitHub email)
+16:28:22 <brampling> Ok, thanks
+16:28:46 <gundalow> pffs: Hi, anything for the meeting?
+16:29:52 <gundalow> pffs: You may be interested in https://github.com/ansible/ansible/issues/38892 as I believe you manage many hosts
+16:31:05 <gundalow> Anyone got anything else, otherwise will close shortly
+16:36:42 <funzo> thx gundalow
+16:40:44 <indivisiblewalru> ok, how does one go about showing the output for of an individual task's time taken?
+16:45:22 <jtanner> indivisiblewalru: https://docs.ansible.com/ansible/2.5/plugins/callback/timer.html iirc
+16:48:05 <gundalow> brampling: https://github.com/ansible/ansible/pull/39310
+16:48:10 <pffs> gundalow: looks a lot like the issue I opened
+16:48:24 <pffs> although I also notice a pretty huge different in performance even on small scopes
+16:48:43 <gundalow> #endmeeting

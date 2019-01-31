@@ -1,0 +1,65 @@
+17:09:23 <gundalow> #startmeeting Ansible Testing working group
+17:09:23 <zodbot> Meeting started Thu Aug  2 17:09:23 2018 UTC.
+17:09:23 <zodbot> This meeting is logged and archived in a public location.
+17:09:23 <zodbot> The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+17:09:23 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+17:09:23 <zodbot> The meeting name has been set to 'ansible_testing_working_group'
+17:09:37 <gundalow> #chair sdoran bcoca
+17:09:37 <zodbot> Current chairs: bcoca gundalow sdoran
+17:09:52 <gundalow> #topic `passlib` for RHEL instance
+17:10:16 <gundalow> #info sdoran is adding some tests for `var_prompts`, which needs `passlib`
+17:10:29 <sdoran> It looks like the RHEL test instance is the only one that does not have the `passlib` library installed.
+17:10:41 <gundalow> sdoran: I guess because of how this works `passlib` needs to be installed *before* ansible-playbook is invoked
+17:11:01 <sdoran> I'm doing it in the `runme.sh` currently
+17:11:12 <gundalow> nice
+17:11:18 <sdoran> But since it's the only test instance that _doesn't_ have it, I figured it would good to add.
+17:11:30 <gundalow> Sure, let me look to see where that is defined
+17:12:13 <sdoran> I found something that looks like it's installing packages in `ansible/test/runner/setup/remote.sh`.
+17:12:20 <sdoran> But I'm not sure if that is only for remote shells or not.
+17:15:22 <gundalow> sdoran: Looking at the RHEL output in Shippable I can see `ec2-user@ec2-18-212-247-114.compute-1.amazonaws.com sudo -in bash -c ''"'"'chmod +x /tmp/remote.sh && /tmp/remote.sh rhel'"'"''`
+17:15:45 <sdoran> Ok, then that's the place.
+17:15:52 <gundalow> and just before that `test/runner/setup/remote.sh` being scp'd over
+17:16:01 <sdoran> If that's ok to add, I'll submit a PR.
+17:16:29 <gundalow> #action sdoran 1 )So in your PR you should be able to update `test/runner/setup/remote.sh` to install `passlib` 2) and remove from `runme.sh`
+17:16:44 <gundalow> (trying to remember to actually put stuff in the logs for a change :P)
+17:16:52 <gundalow> sdoran: Ace, if you have any issues shout out
+17:17:00 <sdoran> 👍
+17:17:16 <gundalow> Anything else on that, otherwise we can move onto bcoca's suggestion
+17:19:04 <gundalow> #topic automerge vs label:shipit with PRs with tests
+17:20:38 <gundalow> Just trying to find an example PR that has shipit and tests, everything so far also contains module_utils
+17:21:46 <bcoca> 2 tower_ module ones this mornign that didnt have module_utils but did have tests/
+17:22:44 <gundalow> cool
+17:23:10 <bcoca> i merged manually, but didnt see why they should wait when tests only affect the module itself and has shipits from maintainers
+17:23:39 <bcoca> i would understand if they are chaning how asnible-tests works or some of the 'shared' resources across tests .. but this seemed benigng
+17:23:39 <gundalow> Yup, totally
+17:23:46 <bcoca> er .. izpell
+17:24:02 <bcoca> wanted to consult with 'testing' before asking ansibullbot for feature
+17:24:37 <gundalow> So iff `test/integration/target/$modulename/` and `$modulename` is covered by shipit
+17:24:50 <bcoca> yep
+17:25:12 <bcoca> though eventually i think other plugins might do same, i.e lookup/cyberark
+17:25:21 <bcoca> but modules are most of the 'traffic'
+17:25:44 <bcoca> since we now require them to submit tests when possible, it basically invalidates 'automerge'
+17:26:53 <gundalow> +1
+17:27:23 <bcoca> matt out? do we have quorum enough to make decision?
+17:27:33 <gundalow> #agreed that we should honor `label:shipit` for PRs that also touch `test/integration/target/$modulename/``
+17:27:39 <gundalow> Matt's out, I've made a decision
+17:27:47 <bcoca> works4me
+17:27:52 <gundalow> You happy to raise an issue?
+17:27:57 <gundalow> against ansibullbot?
+17:28:13 <bcoca> yep, just didnt want to do it and then have you guys oppose it for 'reasons' which i didnt know
+17:28:25 <gundalow> #action bcoca to raise issue against ansibullbot
+17:28:30 <gundalow> Thanks for checking
+17:28:34 <gundalow> AUTOMATE ALL THE THINGS
+17:28:38 <gundalow> #topic Open Floor
+17:28:43 <gundalow> Any more for any more?
+17:28:45 <bcoca> gundalow++
+17:29:21 <abadger1999> also test/units/modules/$modulename
+17:29:31 <gundalow> #chair abadger1999
+17:29:31 <zodbot> Current chairs: abadger1999 bcoca gundalow sdoran
+17:29:41 <gundalow> Yup, that's a good idea
+17:30:18 <bcoca> https://github.com/ansible/ansibullbot/issues/808 <= no action
+17:32:10 <gundalow> #info https://github.com/ansible/ansibullbot/issues/808
+17:32:14 <gundalow> Thanks, added some more detail
+17:32:19 <gundalow> Anyone got anything else?
+17:37:22 <gundalow> Thanks y'all
+17:37:25 <gundalow> #endmeeting

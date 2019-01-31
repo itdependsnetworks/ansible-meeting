@@ -1,0 +1,143 @@
+19:11:47 <bcoca> #startmeeting ansible core irc meeting
+19:11:47 <zodbot> Meeting started Tue Jan 22 19:11:47 2019 UTC.
+19:11:47 <zodbot> This meeting is logged and archived in a public location.
+19:11:47 <zodbot> The chair is bcoca. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:11:47 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:11:47 <zodbot> The meeting name has been set to 'ansible_core_irc_meeting'
+19:12:03 * alongchamps is present
+19:12:12 <bcoca> #topic https://github.com/ansible/ansible/pull/50705
+19:12:14 <sdoran> o/
+19:12:25 <bcoca> federico?
+19:12:27 <sivel> I'm trying to get here, immersed in reading some cpython code to figure something out
+19:13:01 <bcoca> im late cause heater was 'giving up' so i had to shut it down
+19:13:07 <sivel> I think that 50705 is for the network meeting
+19:13:24 <bcoca> and he never appears in this meeting ...
+19:13:38 <sdoran> Yup.
+19:14:56 <bcoca> #topic https://github.com/ansible/ansible/pull/51030
+19:15:41 <bcoca> i think this brings 'correct behaviour' but the wrong one has been out for soo long i hesistate to push it through
+19:16:37 <sivel> I am interested in it
+19:16:49 <sivel> but yes, I agree, that changing it could cause backwards incompat issues
+19:17:06 <bcoca> oh, it will, the question is mostly, what is more painful?
+19:17:18 <bcoca> continue with bad sytnax, or force change of those using it?
+19:17:21 <sivel> I added 2 related issues to show what current problems are
+19:17:28 <bcoca> i saw
+19:17:34 * sdoran reading through them
+19:18:06 <sivel> I think that the current behavior, although sucky, is at least understandable, but it certainly isn't expected
+19:18:24 <sivel> and we have had a number of issues opened about it
+19:19:30 <sivel> but due to how long it's been like this, and although I'd love to see the change, I am positive it would break existing playbooks to change it
+19:20:21 <sivel> and seeing as how fundamental when is, it could cause a lot of problems for people
+19:20:26 <bcoca> me too, i just dont know how many .. if <1% .. im fine, if >25% ...er wont make the change
+19:20:52 <sivel> removing users, deleting dirs, hosing lots of systems.
+19:20:53 <bcoca> hence why i brougt it up here
+19:21:00 <sivel> I think it would be hard to guage the percentage
+19:21:31 <decentral1se> madcap scheme: you push a rule into ansible-lint which complains about bar vars and see how many tickets get raised ;)
+19:21:38 <bcoca> from our tests, i only had to fix 1 instance
+19:21:45 <bcoca> but no clue how representative that is
+19:22:09 <bcoca> actually, i was thinking 'push to devel'  and revert if pitchforks and torches abound
+19:22:25 <sivel> bcoca: I'd probably say not very. I'd guess the people with more issues with it aren't as knowledgable as us, and we aren't likely to hit those issues
+19:23:06 <sivel> like those using the string "false" as values for vars
+19:23:16 <sivel> meant to be the boolean false
+19:23:20 <bcoca> yep
+19:23:36 <sivel> suddenly, that becomes truthy with the change
+19:24:14 <bcoca> well, only if double interpreted, yaml will already make it false otherwise
+19:24:17 <sivel> I personally want it, but am uncomfortable with the potential of problems
+19:24:38 <bcoca> well, as i see it, we bite the bullet now or later
+19:24:48 <sivel> or never :)
+19:24:51 <bcoca> or we choose to ignore the bugs this creates?
+19:25:08 <sivel> I think we need more input regardless
+19:25:22 <bcoca> not sure how to get it aside from merging and letting users of 'devel' scream
+19:25:27 <cyberpear> does this change affect usage such as `when: enable_my_feature` -- 'enable_my_feature' being a boolean variable ?
+19:25:42 <bcoca> cyberpear: possibly
+19:25:55 <bcoca> specialy when its not really boolean
+19:25:58 <sivel> if `enable_my_feature` is actually the string "false" then yes
+19:26:16 <sivel> as opposed to boolean False
+19:26:19 <cyberpear> I see
+19:26:31 <bcoca> but unless its a 'double evaluated var' it should be boolean
+19:26:41 <bcoca> i.e myvar: 'false' <= will create a boolean
+19:27:09 <sivel> or `-e my_var=false`
+19:27:10 <bcoca> myvar: '{{ condition|ternary('true', 'false') }}' <= that might get you a string 'false'
+19:27:36 <sdoran> I think I understand this. I'm in favor of fixing this. Is it possible to warn so we can have a deprecation period?
+19:27:42 <bcoca> yeah, yaml definitions are safe, but ini are not, also double templating
+19:27:47 <cyberpear> how about usage such as `when: not enable_my_feature` ?
+19:29:28 <sdoran> This would definitely break some things. But the current behavior is quirky and confusing and should be fixed.
+19:29:29 <shertel> if enable_my_feature is a string 'false' that would be False. If it's the bool False that would be True.
+19:29:36 <bcoca> if C.CONDITINAL_BARE_VARS: ?
+19:30:06 <bcoca> and deprecation warning?
+19:30:21 <sivel> we could add a deprecation warning, just based on if we make it into that if statement
+19:30:28 <sivel> I'm not sure if we need a toggle though
+19:30:31 <shertel> +1 to a deprecation warning
+19:30:37 <sivel> just deprecation warning, and then switch over at the end
+19:30:43 <sdoran> Agree with @sivel. Warn but no setting.
+19:30:48 <bcoca> https://gist.github.com/bcoca/bcb344cd6bdb8e93c82c75b46079714a
+19:30:51 <sdoran> It's just gonna get fixed, so update your playbooks.
+19:31:21 <bcoca> well, toggle is nice so after we switch people can still go back
+19:31:33 <bcoca> and those that want 'new behaviour' can turn it on righ away
+19:32:30 <sdoran> I think the problem with that is supporting that behavior into the future.
+19:32:37 <shertel> would that mean the toggle would be deprecated? Otherwise no need for the warning, right?
+19:32:43 <bcoca> toggle would be temporary
+19:32:53 <sdoran> Ah.
+19:33:07 <bcoca> no, toggle is there to switch behaviour on/off, deprecation is about the behaviour itself (toggle can be deprecated/removed later after default switch)
+19:33:58 <bcoca> k, so if i add toggle (default current) and deprecation all ok on merge?
+19:34:11 <sdoran> Well, we'd just have to make sure the setting doesn't covey a sense of longevity, i.e., we're not just changing the default when this is deprecated, but we're removing the ability to use this behavior.
+19:34:28 <sdoran> Sounds good.
+19:34:32 <bcoca> well, first we change default, then we remove both behaviour AND toggle
+19:34:38 <bcoca> toggle description will say as much
+19:34:48 <sdoran> 👍
+19:35:07 <bcoca> #topic https://github.com/ansible/ansible/issues/35382
+19:35:58 <bcoca> seems like at one point we added 'blanket' state: absent if 'options included path'
+19:36:07 <bcoca> which assumes path is only for 'remote filesystem path'
+19:38:04 <bcoca> imho modules should return this themselves, this is not a 'global' we should take care of
+19:39:25 <sdoran> Seems the intent was to always return a `state` key.
+19:39:53 <sdoran> Rather than depending on the module to do it, maybe?
+19:39:55 <bcoca> yes, that is the intent, i just don't think that is valid across all modules and that the 'file specific' modules should handle this themselves
+19:40:18 <bcoca> it might had made mroe sense 5yrs ago when 90% of our modules were 'file related'
+19:40:43 <sdoran> I agree. This should be handled by the modules.
+19:40:58 * sdoran tries to imagine the ripple effects
+19:41:14 <bcoca> we just have to ensure the modules return 'state: absent' when path is missing
+19:41:25 <bcoca> mostly anything under files/
+19:41:33 <bcoca> but probably a few others
+19:42:12 <sdoran> Ok. I can work on a PR to fix this.
+19:43:23 <bcoca> sdoran++
+19:43:37 <bcoca> #topic https://github.com/ansible/ansible/issues/35382
+19:43:53 <bcoca> there was complaint about the name, but its same name of the existing feature
+19:44:24 <sivel> bcoca: that is the same topic, did you mean to grab a diff URL?
+19:44:26 <sdoran> I think we want https://github.com/ansible/ansible/pull/49219
+19:44:45 <bcoca> #topic https://github.com/ansible/ansible/pull/49219
+19:44:47 <bcoca> yep
+19:45:00 <sdoran> We are mind readers. :)
+19:45:37 <sivel> should we have a toggle, or would it make more sense for all input to be marked unsafe?
+19:46:17 <bcoca> idk, i thought about it but then there are people that might input a template
+19:46:25 <bcoca> i wouldnt' but  ... they are crazy out there ...
+19:46:42 <sdoran> If all values were unsafe, would that prevent variables for vars_prompt fields?
+19:47:02 <bcoca> would prevent you from using templates as input
+19:47:08 <sivel> it would just mean that values provided are not templatable
+19:48:48 <sdoran> I want to say that would be ok. I was thinking of templated the `vars_prompt` values, which is different.
+19:49:08 <sdoran> But, yeah, I imagine there are people who enter Jinja strings in the prompt.
+19:49:40 <sivel> that seems...odd
+19:49:44 <sivel> who would do that
+19:49:47 <cyberpear> I usually don't type template values into a prompt, so setting `unsafe: true` by default makes sense to me
+19:50:02 <sdoran> https://github.com/ansible/ansible/issues/32723
+19:50:02 * cyberpear does pass templated strings as `-e myvar={{ someothervar }}`
+19:50:09 <bcoca> its a change from current behaviour so i prefer to leave false as default for now
+19:50:10 <jtanner> hax
+19:50:28 <jtanner> btw, tower disallows jinja in extra/survey vars now
+19:50:30 <jtanner> by default
+19:51:00 <bcoca> vars_prompt was never meant for tower
+19:51:07 <cyberpear> would this affect pause-prompt usage? (vs vars_prompt)
+19:51:15 <bcoca> no, pause is not affected
+19:51:24 <bcoca> was thinking of adding toggle there also
+19:52:53 <sivel> I'm find either way with the unsafe change.  Just asking questions
+19:53:30 <sivel> I think we are about at time for today
+19:53:46 <bcoca> always ask, its better to repeat a question than to miss one that no one considered
+19:53:57 <bcoca> k, quick vote on merging unsafe?
+19:54:49 * cyberpear would vote +1
+19:55:26 <bcoca> can i assume no one else cares either way?
+19:55:33 <sdoran> +1 if you add tests :D
+19:56:01 <bcoca> we already test unsafe
+19:56:06 <bcoca> didnt want to deal with expect
+19:56:32 <sdoran> We have vars_prompt tests. Should be able to just add one pretty easily.
+19:56:53 <bcoca> k, will do
+19:57:02 <sdoran> Hopefully I already did enough messing with pexpect to make it easy to add a new test.
+19:57:44 <bcoca> eek, hardcoded cits in side intermediate test script ...
+19:58:01 <bcoca> k, that is all the time for today, one more item will have to wait till next
+19:58:03 <bcoca> #endmeeting

@@ -1,0 +1,145 @@
+19:07:24 <bcoca> #startmeeting ansible core public irc
+19:07:24 <zodbot> Meeting started Tue Jun 26 19:07:24 2018 UTC.
+19:07:24 <zodbot> This meeting is logged and archived in a public location.
+19:07:24 <zodbot> The chair is bcoca. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:07:24 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:07:24 <zodbot> The meeting name has been set to 'ansible_core_public_irc'
+19:08:05 <bcoca> #topic https://github.com/ansible/ansible/issues/12034
+19:08:33 <bcoca> -1, that is what script module is for (top of my head)
+19:09:14 <bcoca> anyone else on this issue? 'support multiline scripts in shell/command modules'
+19:09:23 <ryansb> "use script please"
+19:10:03 <sdoran> -1 use script module
+19:10:20 <jtanner> shell: "{{ lookup('file', mycoolscript.sh }}"
+19:10:29 <sdoran> I don't want to see playbooks with inline scripts as a thing.
+19:10:48 <abadger1999> Hello
+19:10:54 <jtanner> elloh
+19:11:08 <bcoca> #chair ryansb sdoran jtanner abadger1999
+19:11:08 <zodbot> Current chairs: abadger1999 bcoca jtanner ryansb sdoran
+19:11:09 <gundalow> -1 use `script`
+19:11:13 * abadger1999 is for using script
+19:11:13 <sdoran> Ansible is not opinionated on many things, but I'm ok with being opinionated on this point.
+19:11:16 <bcoca> #chair gundalow
+19:11:16 <zodbot> Current chairs: abadger1999 bcoca gundalow jtanner ryansb sdoran
+19:11:35 <bcoca> ok, so we all agree, support it on shell/command and sdoran will make it so?
+19:11:47 <jtanner> hah
+19:11:52 <jtanner> baitnswitch 101
+19:11:53 <sdoran> Wait, wah??
+19:11:59 <bcoca> kdding
+19:12:21 <bcoca> ok, seems no brainer, 'use script' is unanimous
+19:12:33 <bcoca> #topic https://github.com/ansible/ansible/pull/39656
+19:12:52 <farhan7500> Hi
+19:12:54 <bcoca> @farhan7500 you dont need to bring it up each meeting, you can continue with reviewers on ticket
+19:13:27 <farhan7500> Wanted to ask about the integration test
+19:14:03 <bcoca> ok, but fyi, we have testing group meeting that is more appropos, will try to answer here now what we can
+19:14:30 <farhan7500> The simulator that was mentioned in the last meeting has a static output on which the tests can be run, will that be okay as fas ar integration tests are concerned
+19:14:34 <farhan7500> *far
+19:15:07 <jtanner> it's better than nothing, imo
+19:15:16 <bcoca> ^ was going to say same
+19:15:29 <bcoca> static are not great, but much better than no test at all
+19:15:52 <farhan7500> okay, thanks
+19:16:07 <sivel> gah, I suck.  Got caught up in issue backlogs
+19:16:11 <farhan7500> And for the PR, the reviews gave been addressed
+19:16:33 <farhan7500> So, can that be +1'd/further reviewed?
+19:16:36 <jtanner> it's arguable that the static simulator is no different than unit testing, but having the whole system run through from playbook to module execution can uncover things the unit tests don't
+19:16:45 <bcoca> who was reviewing last? i only see dag
+19:16:54 <abadger1999> #chair sivel
+19:16:54 <zodbot> Current chairs: abadger1999 bcoca gundalow jtanner ryansb sdoran sivel
+19:16:55 <farhan7500> Yes, and pilou
+19:17:06 <bcoca> jtanner: its 'bigger unit' test
+19:17:18 <bcoca> k, just ping them in ticket
+19:17:24 <bcoca> cc @dag @pilou
+19:17:45 <farhan7500> Okay, thanks
+19:18:12 <bcoca> well, if that is all, can end meeting early
+19:18:28 <shertel> https://github.com/ansible/community/issues/317#issuecomment-400348330?
+19:18:30 <bcoca> #topic https://github.com/ansible/proposals/issues/121
+19:19:17 <abadger1999> A few of the core team members have discussed this and this is what we came up with.
+19:19:29 <bcoca> +1 for output encoding part, +0 on input, people are going to misinterpet that massively
+19:20:08 <bcoca> and this can get very tricky, template is the easy case, lineinfile, assemble, etc can have multiple encodings involved
+19:20:12 <jtanner> this is all transparent to the end user right?
+19:20:25 <bcoca> jtanner: not really, end user must set the option
+19:20:26 <abadger1999> jtanner: no
+19:20:27 <sivel> users would have to set encodings on a per task basis
+19:20:42 <bcoca> right now we hammer everything though the square peg of utf8
+19:20:45 <jtanner> the word "option" isn't in the proposal
+19:20:45 <abadger1999> They're standardized names and expectations for module parameters
+19:20:56 <jtanner> nor is there an example task
+19:21:06 <jtanner> therefore i had to ask
+19:21:09 <abadger1999> Hmm.. I used parameter everywhere instead of option.
+19:21:10 <sivel> > A module or plugin may add a parameter for input, a parameter for
+19:21:12 <sivel> output, or two parameters, one for input and one for output
+19:21:13 <bcoca> jtanner:  he uses 'parameter', but its a module optoin
+19:21:36 <jtanner> k, i see
+19:21:43 <bcoca> again, output is the easy one, single encoding all transformed to it
+19:21:54 <bcoca> the problem is that there is almost never a single input and encodings get mixed
+19:22:17 <abadger1999> lineinfile I think needs to have input_encoding and output_encoding... I was thinking if I had time for 2.7 I would both of those parameters to lineinfile in addition to template.
+19:22:32 <sivel> I am +1
+19:22:38 <bcoca> abadger1999: but it also takes 'input' from play in the form of 'random text to insert'
+19:22:42 <abadger1999> if we're only going to handle single encodings for files, input_encoding is easy.
+19:22:48 <jtanner> i'm not smart enough to vote on this one
+19:22:52 <bcoca> has to be very clear what encoding that is expected in (utf8)
+19:23:20 <bcoca> the 'original file encoding' is what input_encoding would cover in that case
+19:23:46 <abadger1999> As written in the problems not solved section, files with multiple encodings should be handled by modules which deal with "binary" content
+19:24:03 <bcoca> no, assuming file has single encoding
+19:24:10 <abadger1999> Yes, it is "encoding of the file I am reawding and then operating on"
+19:24:16 <bcoca> you still have issue that the 'text to insert' is in play, which is utf8
+19:24:21 <abadger1999> No we don't
+19:24:32 <bcoca> how not?
+19:24:33 <abadger1999> That's not a problem.
+19:25:07 <bcoca> until someone uses incompatible nonut8 in play and expects that you take it as the input_encoding, just saying we need to be very clear on 'which inputs' are affected
+19:25:22 <abadger1999> file is read in and decoded using the input_encoding.  It is then text.  You combine that with text from the play.  Then you write it out using the output_encoding.
+19:25:38 <bcoca> agreed, but text from play is utf8
+19:25:42 <abadger1999> Yes, the proposal is.
+19:26:30 <bcoca> ?
+19:26:35 <abadger1999> Making it obvious from the module parameter names, is harder.
+19:26:56 <bcoca> no, not asking that, i mean, you 'could' but 'original_file_to_replace_encoding' gets long
+19:26:58 <abadger1999> bcoca: "we need to be very clear on 'which inputs' are affected" abadger1999: "Yes, the proposal is."
+19:27:03 <bcoca> just need to stress very well in descriptions
+19:27:21 <bcoca> i seem to be missing that part, you dont talk about mixed inputs
+19:27:32 <bcoca> you talk about files with multple encodings
+19:28:30 <abadger1999> Vars files, inventory, playbooks, and other Ansible resources
+19:28:32 <abadger1999> This proposal makes no attempt to change the format of files and resources which are Ansible's to define the format of. These are still always encoded under utf-8.
+19:28:39 <abadger1999> For instance
+19:29:12 <bcoca> ah, wasnt clear to me from that sentence, caveat withdrawn
+19:29:32 * bcoca wants flashing red letters in all caps for users
+19:30:07 <abadger1999> If you have sample example text for the input_encoding descriptions, I can make sure that gets put into hte module guidelines.
+19:30:40 <bcoca> mostly describe exact scope, for lineinfile 'this is the encoding for the original file to be read and edited, nothing else'
+19:30:48 <abadger1999> <nod>
+19:31:25 <abadger1999> If I port lineinfile, then I could include its description in the examples in the coding guidelines
+19:31:34 <bcoca> just something to point at when someone complains their var in klingonese ISO is not properly translated cause utf8 pushes the codepoint to diff byte combo
+19:31:42 <bcoca> +10
+19:32:39 <bcoca> he .. just realized, diff encoding will now also means files change .. but the 'diff' in response can be very tricky to display ...
+19:32:59 <abadger1999> <nod> Yeah, but that's always been the case.
+19:33:20 <bcoca> cause we bashed everything into utf8
+19:33:23 <abadger1999> I've fixed bugs where the diff was not valid utf-8 before.
+19:33:31 <abadger1999> and caused tracebacks
+19:33:58 <abadger1999> Well, if there's no objections, I'll record the proposal as accepted and get to work on the documentation and implementation in the template module.
+19:34:21 <bcoca> andi would recomend 'replace' as 2nd module ... lineinfile i would leave for later
+19:35:05 <jtanner> abadger1999: go4it
+19:35:09 <abadger1999> Cool.
+19:35:16 <abadger1999> lininfile is core.  replace is community.
+19:35:19 <bcoca> another caveat, copy ... not sure we want to support it there, as normally it doesnt edit the file
+19:35:28 <abadger1999> It's in the proposal
+19:35:37 <jtanner> abadger1999: depending on the number you want to do, pull in webknjaz
+19:35:37 <bcoca> ^ that is soo wrong ... shoudl be reverse
+19:35:42 <abadger1999> copy should not have an input or output encoding.
+19:35:59 <abadger1999> because it just copies the raw file over the wire.
+19:36:07 <abadger1999> doesn't do any manipulation.
+19:36:09 <bcoca> abadger1999:  there is only 1 case , content= but i would then push people to temlpate
+19:36:14 <abadger1999> yep.
+19:36:29 <bcoca> i did see you mention copy, but not content
+19:36:32 <abadger1999> I thought of content and then thought... bcoca will love me if I leave that case out ;-)
+19:36:42 <bcoca> yes, yes i will
+19:36:46 <bcoca> ;-)
+19:37:07 <jtanner> keep in mind jinja native is gonna give you back what you gave it, instead of munging it into something else
+19:37:34 <abadger1999> <nod>  Strings will all still be text, though.  We won't give bytes to jinja2.
+19:37:58 <abadger1999> (although it might be harder to catch bugs in that case with native types on)
+19:38:02 <bcoca> its inputs are either utf8 direclty or unicode
+19:38:20 <jtanner> or int or bool or whatever they make
+19:38:29 <abadger1999> I believe it has to be text type or ascii.
+19:38:47 <abadger1999> At least on python2, I think that non-ascii (even utf-8) will cause a traceback in jinja2
+19:43:10 <abadger1999> Looks like python3 is even stricter, even ascii byte strings cause interesting things to happen (errors or reprs of the byte type)
+19:43:15 <abadger1999> anyhow :-)
+19:43:23 <abadger1999> Cool.  No more from me on this.
+19:45:07 <bcoca> #topic open floor
+19:46:22 <bcoca> closign if no business in 1min
+19:47:14 <bcoca> #endmeeting

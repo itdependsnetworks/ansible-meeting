@@ -1,0 +1,152 @@
+17:00:19 <gundalow> #startmeeting Ansible Testing Working Group
+17:00:19 <zodbot> Meeting started Thu Feb 15 17:00:19 2018 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+17:00:19 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+17:00:19 <zodbot> The meeting name has been set to 'ansible_testing_working_group'
+17:00:20 <zodbot> sivel: sivel 'Matt Martz' <matt@sivel.net>
+17:00:29 <gundalow> #chair evrardjp sivel mattclay
+17:00:29 <zodbot> Current chairs: evrardjp gundalow mattclay sivel
+17:00:33 * mikedlr wave
+17:00:37 <gundalow> #chair mikedlr
+17:00:37 <zodbot> Current chairs: evrardjp gundalow mattclay mikedlr sivel
+17:01:00 * Pilou wave
+17:01:08 * mattclay waves
+17:02:20 <gundalow> So, given
+17:02:37 <gundalow> * We are nearly at the end of 2.5
+17:02:43 <gundalow> * Ansible 2.6 will be a stability release
+17:02:59 <gundalow> * We have lots of great people that are interested in testing, and around today
+17:03:10 <gundalow> I though we could crowd source some ideas
+17:03:24 <gundalow> around
+17:03:26 <sivel> What a stability release means: https://github.com/ansible/community/issues/296#issuecomment-364482870
+17:03:38 <gundalow> 1) Fix existing issues identified by existing tests (listed in skip/ignore files)
+17:03:43 <abadger1999> Olá
+17:03:53 <gundalow> 2) Add more test - aka improve coverage & happyness
+17:03:58 <gundalow> 3) Improve test Stability
+17:04:03 <gundalow> #chair abadger1999
+17:04:03 <zodbot> Current chairs: abadger1999 evrardjp gundalow mattclay mikedlr sivel
+17:05:32 <gundalow> To that end we've got https://github.com/ansible/community/wiki/Testing:-progress-tracker that track those three sections
+17:06:36 <gundalow> So what I thought we could do is go through, section by section and add other things in to that. then if there is any rough priority within the three sections highlight that
+17:06:41 <gundalow> #chair Pilou
+17:06:41 <zodbot> Current chairs: Pilou abadger1999 evrardjp gundalow mattclay mikedlr sivel
+17:06:47 <gundalow> How does that sound?
+17:06:58 <gundalow> Also should I move it into an etherpad so we can group hack it?
+17:08:38 <mattclay> Works for me.
+17:09:13 <mikedlr> I'm for that, though what I wanted to discuss is getting requirements for tests codified a bit;  it's probably a separate documentation issue / PR towards the main development documents.
+17:09:21 <gundalow> https://public.etherpad-mozilla.org/p/gundalow-scratch-pad
+17:09:41 <gundalow> ALL ^ Please hack on ^, ignore formatting. I'll sort that out later
+17:09:47 <gundalow> mikedlr: hum, good point
+17:10:18 <gundalow> #info 1) Fix existing issues identified by existing tests (listed in skip/ignore files)
+17:10:25 <gundalow> #info 2) Add more test - aka improve coverage & happyness
+17:10:32 <gundalow> #info 3) Improve test Stability
+17:10:56 <gundalow> mikedlr: I think we can discuss that under (2), as we need to guide people how to write good test, that make sense?
+17:11:18 <gundalow> #topic 1) Fix existing issues identified by existing tests
+17:11:31 <evrardjp> thanks for the change of color.
+17:11:46 <gundalow> haha, yup, mattclay just pointed that out
+17:11:51 <mikedlr> yes; though it's more about an explicit requirement to new module contributors and especially reviewers that there _must_ be at least one full module test.
+17:11:57 <gundalow> it's going to look like unicorn vomit otherwis
+17:11:58 <gundalow> e
+17:12:52 <evrardjp> I think it's better to ask functional testing before new module inclusion indeed.
+17:13:08 <shaps> Hi
+17:13:13 <evrardjp> explicit requirement is fine
+17:13:21 <gundalow> mikedlr: OK, You want to add your throuughts into the new section around line 130. then we have something to discuss when we gt there
+17:13:26 <gundalow> #chair shaps
+17:13:26 <zodbot> Current chairs: Pilou abadger1999 evrardjp gundalow mattclay mikedlr shaps sivel
+17:14:24 <gundalow> OK, so the rest of us can start with Fix issues identified by existing tests
+17:14:56 <gundalow> Q: We we have any know issues that are not reacked by `test/sanity/*ignore.txt`?
+17:15:03 <gundalow> not tracked by*
+17:17:11 <gundalow> sivel: wondering if for fixing validating-modules we should break it down by Error#
+17:17:16 <gundalow> or if that's over kill
+17:17:32 <sivel> I think fixing per file is likely easiest
+17:17:49 <gundalow> file/dir yup
+17:18:13 <gundalow> Added
+17:19:11 <sivel> when we push this next change there will be 1369 modules listed in ignore.txt for validate-modules
+17:19:47 <gundalow> ack
+17:20:21 <gundalow> Pilou abadger1999 evrardjp gundalow mattclay mikedlr shaps sivel Feel free to shout out ideas here, or just add stuff directly into https://public.etherpad-mozilla.org/p/gundalow-scratch-pad Don't worry about formattin
+17:20:50 <gundalow> aim for (1) Fix existing issues identified by existing tests is to give people enough info so they can fix the issues already identified
+17:20:54 <evrardjp> ack.
+17:21:05 <gundalow> Do we have any Windows people here?
+17:21:14 <gundalow> next is: Sanity: Window's pslint
+17:26:14 <gundalow> hum, not sure if there is much else to way on "Fix existing issues"
+17:26:15 <gundalow> apart from
+17:26:27 <gundalow> Pilou: Amazing work clearing out all the borken imports :)
+17:27:48 <gundalow> OK, lets move on to section 2
+17:28:03 <gundalow> #topic 2) Add more test - aka improve coverage & happyness
+17:29:11 <sivel> This doesn't need to apply to just modules either.  We need test coverage everywhere
+17:29:19 <gundalow> oh, yes
+17:29:21 <gundalow> hum,
+17:29:51 <Pilou> gundalow: Ansibot will be able to import module and read metadata (DOCUMENTATION) directly :)
+17:29:52 <gundalow> 2.1) Test modules
+17:30:24 <gundalow> Pilou: Yup, saw a WIP PR about that for deprecation. What are you thinking of here
+17:30:37 <gundalow> sivel: mattclay wonder if (2) should be broken down to
+17:30:42 <gundalow> 2.1) Test modules
+17:30:47 <evrardjp> sivel: +1
+17:30:48 <gundalow> 2.2) Test module_utils
+17:30:55 <gundalow> 2.3) ...
+17:31:14 <gundalow> I think they they are separate topics and skill sets
+17:31:35 <sivel> We also track some other import issues not identified by the import tests in validate-modules.  Some modules try to use imports before AnsibleModule is instantiated, and raise exceptions instead of failing with module.fail_json
+17:32:04 <gundalow> sivel: Do we have a test for that? You want to add a section in (1) for that?
+17:32:08 <evrardjp> oh do you remember some like that sivel ?
+17:32:38 <evrardjp> maybe listing them would be a good idea, track patterns, improve them to the latest standards.
+17:32:41 <mattclay> sivel: Do you have an example of one of those?
+17:32:43 <sivel> gundalow: indeed, just didn't want anyone to think we weren't concerned with core
+17:32:58 <mattclay> gundalow: Yeah, splitting up tests for modules and module_utils makes sense.
+17:32:59 <sivel> evrardjp / mattclay: E321 Exception attempting to import module for argument_spec introspection
+17:33:06 <sivel> There are a number listed in ignore.txt
+17:33:32 <sivel> 13 modules fail with that
+17:33:43 <sivel> grep E321 test/sanity/validate-modules/ignore.txt
+17:33:57 <evrardjp> worth nothing on the etherpad, whatever the appropriate section is.
+17:34:38 <sivel> we have a validate-modules section, is it worth calling that specific one out directly?
+17:35:04 <evrardjp> sivel: my 2 cents, the core should be the most tested part -- As a user, it's something that's most painful to live with when we have change of behavior because it wasn't tested.
+17:35:32 <gundalow> evrardjp: I don't think anyone will object to that. if they do, send them my way :(
+17:36:19 <mikedlr> gundalow: do we have separate coverage for integration and unit tests available?  I think that much core code / util code should be exercised in integration tests but should only have it's own unit tests?
+17:36:27 <gundalow> sivel: How do you mean "calling that specific one out"? Feel free to create a new section if it's more of an involved fix for E321
+17:36:36 <mattclay> sivel: Ah, imports that are part of main, what would explain why the import sanity test doesn't catch those.
+17:36:56 <sivel> mattclay: correct, not just straight import error, requires calling main() to expose
+17:37:16 <gundalow> mikedlr: Yes, using the coverage webpage you can filter to show coverage for only unit or integration. Though only at the file leel
+17:37:18 <mattclay> sivel: I should extend the import test to handle those, since doing it correctly requires an empty venv, which the module validator doesn't have.
+17:38:16 <sivel> mattclay: yeah, it's kind of ancillary that validate-modules tracks it.  Just done to provide a reason why argument_spec wasn't inspected
+17:38:57 <mattclay> sivel: OK, I've got that on my list to implement as part of the import test.
+17:38:57 <sivel> there are actually modules that would fail in validate-modules, except it has some extra deps that satisfy the import errors
+17:39:08 <sivel> some azure modules specifically
+17:40:00 <sivel> I have a validate-modules venv, with only core ansible and validate-modules requirements that reports them, that CI doesn't
+17:47:44 <gundalow> Anyone got ideas on how to increase module coverage?
+17:48:32 <evrardjp> increase or track?
+17:48:47 <gundalow> either I guess
+17:49:16 <gundalow> Doesn't feel like we've got a defined list of things for people to get stuck into
+17:50:28 <sivel> I think anyone who goes looking can find themselves spending years just trying to increase coverage, or fix known ignores
+17:51:02 <gundalow> Do we need to giuide/set priority?
+17:51:18 <sivel> coverage can also be misleading.  It's a number to help guide you, but to get real coverage you need to be more diligent
+17:51:26 <gundalow> oh, sure
+17:51:54 <sivel> I could blow the whole 2.6 release on probably a handful of modules
+17:52:47 <sivel> personally I'd try for both 100% unit test coverage, and integration tests to supplement
+17:52:53 <alikins> the main thing that prevents me from doing much work on module tests is that I always exclude module tests when running 'ansible-test units'
+17:53:16 <alikins> and that is mostly just impatience / slow tests
+17:53:20 <gundalow> And for upported: core modules maybe we do need to really inrease both
+17:53:56 <gundalow> alikins: well for local runs you can do ansible-test units test/units/what/i/want/to/test and leave the rest to shippable
+17:54:20 <mattclay> A lot of our slow unit tests are very badly written. Many are really integration tests written in python instead of a playbook.
+17:55:33 <gundalow> nod
+17:55:46 <alikins> I haven't really looked into why something like test/units/modules/network/f5/test_bigip_sys_global.py  takes ~30s on a local test
+17:56:34 <evrardjp> I guess import big IP takes big time
+17:56:53 <gundalow> takes 1.06 seconds if you don't have f5-sdk installed
+17:57:26 <sivel> and no idea how large that fixture is, to load via json
+17:57:54 <evrardjp> oh yeah
+17:58:20 <evrardjp> 1kb shouldn't take long
+17:58:53 <sivel> seems we are coming up on our hour
+18:00:27 <alikins> I guess not that test module specifically, but like test/units/modules/network/f5 ("25.03s call     test/units/modules/network/f5/test_bigip_provision.py::TestManager::test_provision_one_module_default_level")
+18:01:04 <gundalow> #chair
+18:01:04 <zodbot> Current chairs: Pilou abadger1999 evrardjp gundalow mattclay mikedlr shaps sivel
+18:01:15 <gundalow> OK, how would people like to continue with this?
+18:01:50 <gundalow> Work on some specific areas/ideas/ and keep on updating the etherpad and we can review next week?
+18:02:39 <mattclay> Maybe move back to the wiki now? The etherpad works better for short-term edits. I'm not so sure about over a longer period.
+18:02:53 <gundalow> Yup agreed
+18:03:02 <gundalow> I'll tidy up the formatting and do that
+18:03:42 <gundalow> Not sure how well the wiki deals with people editing stuff
+18:05:48 <mikedlr> gundalow: as you go through see if there are other people (e.g. other working groups) that should maybe comment; there's nothing about writing tests for containers, for example.
+18:06:42 <mikedlr> somehow we have  to take the joy out beyond the testing working group to those that will have to deal with it in real life.
+18:07:17 <gundalow> mikedlr: good point. I know you lot in #ansible-aws have been work on this
+18:11:04 <mattclay> gundalow: Since we're over our 1 hour, lets save the rest of the agenda items for our next meeting.
+18:11:58 <gundalow> mattclay: Sure
+18:12:06 <gundalow> Thank you everybody
+18:12:36 <gundalow> I'll tidy up the etherpad and put it back on the wiki. If you have any other ideas feel free to ping me & mattclay in #ansible-devel or update the wiki directly
+18:12:55 <gundalow> If you don't have wiki permissions and would like them, just let me know
+18:13:49 <gundalow> Thanks!
+18:13:51 <gundalow> #endmeeting

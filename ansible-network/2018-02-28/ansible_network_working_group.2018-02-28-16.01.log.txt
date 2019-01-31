@@ -1,0 +1,133 @@
+16:01:06 <gundalow> #startmeeting Ansible Network Working Group
+16:01:06 <zodbot> Meeting started Wed Feb 28 16:01:06 2018 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:01:06 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:01:06 <zodbot> The meeting name has been set to 'ansible_network_working_group'
+16:01:12 <trishnag> hi
+16:01:27 <gundalow> #chair newswang_ jmcgill298 trishnag ganeshrn acozine
+16:01:27 <zodbot> Current chairs: acozine ganeshrn gundalow jmcgill298 newswang_ trishnag
+16:03:06 <gundalow> #chair mikewiebe
+16:03:06 <zodbot> Current chairs: acozine ganeshrn gundalow jmcgill298 mikewiebe newswang_ trishnag
+16:03:11 <gundalow> #chair sushil3
+16:03:11 <zodbot> Current chairs: acozine ganeshrn gundalow jmcgill298 mikewiebe newswang_ sushil3 trishnag
+16:03:15 <gundalow> Hi everybody
+16:03:23 <gundalow> Will just wait a few minutes for others to join
+16:03:25 <mikewiebe> Hello
+16:03:40 <jmcgill298> Hello
+16:05:29 <gundalow> #chair Anil_
+16:05:29 <zodbot> Current chairs: Anil_ acozine ganeshrn gundalow jmcgill298 mikewiebe newswang_ sushil3 trishnag
+16:05:35 <gundalow> #topic Core update
+16:06:35 <gundalow> #info Remaining 2.5.0 network items can be seen on https://github.com/ansible/ansible/projects/20
+16:07:17 <gundalow> #info If you believe their are any issues that need fixing that are not on that list please ping us in IRC (This close to 2.5.0 don't trust we will spot a comment in the sea of GitHub email)
+16:08:54 <gundalow> #info I'm not sure when 2.5RC2 will be, I'm waiting for confirmation
+16:09:24 <gundalow> #info Lots of docs updates: http://docs.ansible.com/ansible/devel/network/
+16:10:41 <gundalow> #info Platform specific guides (cli vs eos/nxapi vs netconf, enable/become) for eos, ios, junos, nxos is at final review https://github.com/ansible/ansible/pull/36814
+16:10:53 <gundalow> mikewiebe: You may wish to glance over the nxos part of https://github.com/ansible/ansible/pull/36814
+16:11:26 <mikewiebe> gundalow: Will do
+16:11:41 <dag> o/
+16:12:04 <dag> Congratz on the new docs !
+16:12:18 <gundalow> Massive thanks to acozine for alls
+16:12:49 <gundalow> I think that's all the updates from our side
+16:12:51 <gundalow> oh
+16:14:31 <gundalow> #info AnsibleFest Austin, TX - https://www.ansible.com/ansiblefest - Hope to see you there. We haven't confirmed the plan for Contributors Summit yet, though there will be something, possibly the day or two the main fest
+16:14:50 <gundalow> Any questions on any of the above, or anything else?
+16:15:30 <mikewiebe> gundalow: When will the 2.6 Roadmap be published?
+16:15:50 <itdependsnetwork> Had a question that is kinda relevant to slack convo that just happened, I added a comment to this issue, wanted to get feedback: https://github.com/ansible/ansible/issues/32724
+16:16:10 <itdependsnetwork> Basically, allow user to define where config is backed up
+16:16:18 <gundalow> mikewiebe: Not sure. There are discussions internally about if Ansible 2.6 will be a stability release (and what that means)
+16:16:35 <itdependsnetwork> The naming is imo, not intuitive out of the box.
+16:16:36 <gundalow> #topic backup path
+16:16:36 <mikewiebe> gundalow: Thnks
+16:16:44 <gundalow> #chair itdependsnetwork
+16:16:44 <zodbot> Current chairs: Anil_ acozine ganeshrn gundalow itdependsnetwork jmcgill298 mikewiebe newswang_ sushil3 trishnag
+16:16:57 <gundalow> #info https://github.com/ansible/ansible/issues/32724
+16:18:20 <gundalow> (Just reading the comments)
+16:18:35 <itdependsnetwork> just the last one :)
+16:18:38 <gundalow> ah, OK
+16:18:53 <gundalow> Where is that defined?
+16:19:02 <gundalow> is it in module_utils/basic.py/
+16:19:07 <gundalow> is it in module_utils/basic.py?
+16:19:51 <itdependsnetwork> no idea :)
+16:20:19 <itdependsnetwork> it produces something like: SW-04_config.2017-11-09@10:12:49
+16:21:52 <gundalow> ./plugins/action/ios_config.py _write_backup
+16:21:55 <itdependsnetwork> I would love to be able to define something like: {{ region }}/{{ cluster }}/{{ inventory_hostname }}.txt
+16:22:53 <gundalow> itdependsnetwork: Looks like it should be doable. let me ask
+16:23:15 <itdependsnetwork> ok, again, I could potentially code it, just want to make sure it will be accepted.
+16:23:38 <gundalow> #action gundalow to ask internally if we'd accept update that 1) Allow definition of backup directory 2) Allow
+16:23:47 <gundalow> itdependsnetwork: noted, makes sense
+16:25:01 <itdependsnetwork> Next one I have, I understand a few things were announced at last webinar, anyway to summarize for those who did not make it?
+16:25:23 <gundalow> #topic Open Floor
+16:26:39 <gundalow> #info Feb 2018 webinar will be made available on https://www.ansible.com/resources/webinars-training (you can filter by "Networking")
+16:27:16 <itdependsnetwork> I guess it's not so much the webinar itself, but a written documentation to refer to, to understand changes coming
+16:27:23 <gundalow> ah, OK
+16:27:28 <gundalow> I'll pass that on
+16:28:10 <itdependsnetwork> Even is # -- info'd it here would be fine for me
+16:28:25 <itdependsnetwork> if*
+16:29:07 <gundalow> Yup, great idea. let me see if I can get the points
+16:29:57 <mikewiebe> gundalow: Left a minor comment under under the nxos doc section for https://github.com/ansible/ansible/pull/36814 ... otherwise looks good
+16:30:43 <gundalow> mikewiebe: Thanks :)
+16:32:20 <gundalow> Anyone got anything else?
+16:32:34 <itdependsnetwork> I got one more, does that count? :)
+16:33:15 <gundalow> itdependsnetwork: Sure :)
+16:33:45 <itdependsnetwork> Would still like to entertain the idea of having a monthly virtual meetup, outside of IRC, to talk about direction/arch rather then PR focused IRC meeting.
+16:33:55 <gundalow> ah, yes
+16:35:07 <Anil_> gundalow : Should I consolidate all of my license changes to one PR ?
+16:35:27 <gundalow> Anil_: If you do that would allow me to cherry-pick them into `stable-2.5` which would be nice
+16:36:03 <gundalow> as it allows me to keep looking for differences between devel & stable-2.5, which is a good way for me to check for things that haven't been cherry-picked
+16:36:57 <Anil_> Gundalow: I did it once and met with few errors. May be I will do that again tommorrow in a single PR
+16:38:07 <Anil_> Gundalow: One more thing. Regarding your mail with subject - Network module docs improvements
+16:38:52 <Anil_> Gundalow:, what will be impact of those on lenovo modules ?
+16:40:54 <gundalow> Anil_: Regarding the licence PR if you raise the PR, even if it errors I can assist you with that
+16:41:39 <Anil_> Sure, May be I can revert the deleted PR
+16:42:51 <gundalow> Network module docs improvements - We've updated `validate-modules` to spot when the DOCUMENTATION and argspec are out of sync. For example when choices are defined in the argspec, but are not listed in documentation. The end result should be the module docs HTML page should contain more information and should be correct
+16:43:14 <Anil_> Not Now, later u can check 36840 and send me some comments on how to resolve
+16:44:59 <itdependsnetwork> also, on behalf of bdowling: https://github.com/ansible/ansible/pull/35817
+16:46:03 <bdowling> Thx, was just going to mention that.  (if ppl in office stop distracting me. ;)
+16:46:12 <gundalow> itdependsnetwork: ack, I've just asked ganesh to add some comments
+16:46:18 <gundalow> #chair bdowling
+16:46:18 <zodbot> Current chairs: Anil_ acozine bdowling ganeshrn gundalow itdependsnetwork jmcgill298 mikewiebe newswang_ sushil3 trishnag
+16:49:14 <gundalow> Anything else?
+16:49:26 <bdowling> With regards to #35817, do others see that they need to have a long command_timeout
+16:50:12 <gundalow> bdowling: I've not seen anyone else report that
+16:50:25 <itdependsnetwork> ^^ I agree with bdowling: this is a simple/elegant solution that should help out
+16:50:25 <gundalow> Getting other examples of how that fails would be useful
+16:50:53 <itdependsnetwork> @gundalow: I think it's hidden by network engineers expectation for failures
+16:51:07 <gundalow> ONCE AGAIN I AM SORRY ABOUT UNABLE TO OPEN SHELL
+16:51:11 <gundalow> *cough*
+16:51:45 <itdependsnetwork> lol, was not even referencing that
+16:51:58 <gundalow> I know, though I'm still sorry
+16:52:22 <itdependsnetwork> It's in the past, well as of 2.5 it is ;)
+16:52:41 <gundalow> bdowling: itdependsnetwork Asking on NTC if other people are seeing that may help
+16:52:47 <itdependsnetwork> I think neteng types expect %5 of devices to not connect, and just retry
+16:53:29 <gundalow> Anil_: run  ansible-doc -vvv enos_command
+16:53:42 <gundalow> Anil_: You've got a Non-ASCII character '\xc2'
+16:53:56 <bdowling> I'm ok with cherry picking it into my local branch, I just think that a lot of the debugging network_cli documentation is in part referencing this timeout issue.
+16:54:48 <gundalow> Anil_: It's the copyright character, use (c) instead
+16:55:09 <Anil_> oh ok.. will remove that
+16:55:19 <bdowling> As I mentioned, the virtual csr1000v I have takes > 30 seconds just to return a show config all, so I was surprised others don't see this all the time.
+16:55:39 <Anil_> Gundalow : Thank you
+16:56:24 <jmcgill298> I expect that people update their config files to higher values and forget about it. Longer times become the norm/expectation
+16:57:04 <gundalow> bdowling: itdependsnetwork jmcgill298 Do we need to document somewhere (_config modules & debug page) that when doing certain operations you may need to increase the timeout value?
+16:57:21 <itdependsnetwork> It's more than documentation though
+16:57:30 <itdependsnetwork> It's the solution is IMHO more elegant
+16:57:42 <itdependsnetwork> why have a global timeout, if I am still receiving data
+16:58:10 <itdependsnetwork> We have customers with 10's of thousands of line of configuration, it's just going to take a while
+16:58:33 <gundalow> Sure, that makes sense
+16:58:50 <gundalow> Leave it with me. Please keep on remind me about it
+16:58:51 <itdependsnetwork> increasing for device 300msec away, means that it takes longer to fail for device 300usec away.
+16:59:20 <gundalow> We don't currently have any automated tests for this stuff, which concerns me
+17:00:21 <bdowling> With the new prompt handling ganesh implemented there should be no output from the device during that loop, unless the device is responding to the last comand, so if he can comment on the PR I think that'd probably help.
+17:02:21 <bdowling> As an aside, re: testing, I notice the minutes mentioned talking about vcrpy -- is there archived discussion on that topic, I was interested in bringing that up as well.  A similar approach could be implemented for any I/O replay (cli) etc.
+17:04:11 <gundalow> bdowling: oh, yes let me find the PR
+17:04:22 <gundalow> Not something I've used before, though looks interesting
+17:04:24 <gundalow> You used it before?
+17:05:22 <gundalow> bdowling: https://github.com/ansible/ansible/pull/36468
+17:05:32 <bdowling> I have been using it in some personal projects recently.  Basically drops http/req/response into yaml and replays it next time.  It works great for that.
+17:06:09 <gundalow> Would welcome youre thoughts on that PR as someone that's used it before. If you notice anything that may cause us issues down the line, etc
+17:06:41 <bdowling> k, thx.
+17:06:50 <gundalow> Thanks
+17:07:02 <gundalow> Anyone got anything else?
+17:07:43 <bdowling> Good here.
+17:07:54 <gundalow> COol
+17:08:03 <gundalow> lots of good discussion here today. Thanks everyone
+17:09:44 <itdependsnetwork> thanks!
+17:10:11 <gundalow> #endmeeting

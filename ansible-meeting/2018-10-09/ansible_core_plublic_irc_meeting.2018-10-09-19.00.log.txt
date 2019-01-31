@@ -1,0 +1,156 @@
+19:00:53 <bcoca> #startmeeting ansible core plublic irc meeting
+19:00:53 <zodbot> Meeting started Tue Oct  9 19:00:53 2018 UTC.
+19:00:53 <zodbot> This meeting is logged and archived in a public location.
+19:00:53 <zodbot> The chair is bcoca. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:00:53 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:00:53 <zodbot> The meeting name has been set to 'ansible_core_plublic_irc_meeting'
+19:01:06 <MatrixCrawler> hi
+19:01:09 <felixfontein> hi!
+19:01:14 <sdoran> \o
+19:01:14 * gundalow waves
+19:01:14 * bcoca waves
+19:01:15 <sivel> .hello2
+19:01:16 <zodbot> sivel: sivel 'Matt Martz' <matt@sivel.net>
+19:01:24 <maxamillion> .hello2
+19:01:25 <zodbot> maxamillion: maxamillion 'Adam Miller' <maxamillion@gmail.com>
+19:01:29 <bcoca> #topic https://github.com/ansible/ansible/pull/42151
+19:01:52 <sivel> I just added a comment to that PR.  My feeling is that it should maybe be a lookup
+19:01:55 <abadger1999> Ola
+19:01:58 <bcoca> felixfontein: im caffeine free today ... so this might be just me being slow .. but i dont understand you rlookup
+19:02:04 <bcoca> also it looks more like it shoudl be a filter
+19:02:18 <sivel> cool, so bcoca agrees with me there :)
+19:02:30 <bcoca> you are reprocessing several data structures  into one?
+19:02:30 <felixfontein> I've thought a bit about it being a filter, but:
+19:02:45 <felixfontein> 1. I don't know how to access the templar from a filter
+19:02:50 <bcoca> filters manipulate data, lookups should query external data (not all do, but we are deprecating those)
+19:03:19 <felixfontein> 2. it feels strange that the first argument is treated differently than the others (which would be the case for a filter, at least the way I assumed first)
+19:03:28 <sivel> true, the filter would not template data, it is part of the template system, and should not do it's own templating
+19:03:36 <felixfontein> it's kind of a nested loop where the inner loops depend on the outer loop variables
+19:03:50 <bcoca> not sure i undesrtand why you are templating, this looks like a diff version of the 'template' lookup
+19:03:56 <bcoca> for a specific case
+19:04:08 <bcoca> why not just have a template that does this specific transformation and use template lookup?
+19:04:08 <felixfontein> since there are no lambdas in jinja2 (as far as I know), this doesn't work without templating itself
+19:05:29 <felixfontein> I don't see how I can do it in a nice way with the template lookup. especially if I want to access all the loop variables
+19:06:13 <felixfontein> we're using this lookup plugin a lot in our deployment system (and in some other places). there the loops look a bit like this:
+19:06:16 <felixfontein> for region in regions:
+19:06:24 <felixfontein> for product in products[region]:
+19:06:37 <felixfontein> for instance in instances[region][product]:
+19:06:48 <felixfontein> for container in instance.containers:
+19:06:55 <sivel> ouch
+19:06:56 <bcoca> ^ that translates easily into template
+19:07:01 <felixfontein> ... make sure configured container runs ...
+19:08:06 <felixfontein> bcoca: would you put the variable values formatted as json/... into one line, and then parse the resulting document as a json/... array? or how would you use the template lookup for that?
+19:08:51 <bcoca> neither, i would tackle the problem in very diff way, but either of those should work
+19:10:24 <felixfontein> how would you do it? (if you don't mind explaining)
+19:10:51 <bcoca> target the hosts/containers, use conditionals basedon products and use regions as groups to select the containers targetted
+19:12:04 <felixfontein> there's no fixed set of containers, though, so something else needs to unroll everything into a list of containers
+19:12:28 <bcoca> at one point you generate that list
+19:13:26 <ryansb> you can use json_query also, to loop over and flatten
+19:13:39 <felixfontein> yes; but I don't want to use an external program for that, and composing a json/yaml/... document as a template and then parsing that also sounds pretty strange to me :)
+19:13:45 <ryansb> like 'regions[].instances[]' so on
+19:14:53 <felixfontein> ah, I didn't knew that one... or the json_ scared me away. It does work with "regular" structured data in Ansible, doesn't it?
+19:15:33 <ryansb> I'd have to double check, but yeah I'm pretty sure it handles dicts as well. json_query uses JMESPath which has all kinds of nice goodies
+19:16:16 <felixfontein> the examples (https://docs.ansible.com/ansible/2.5/user_guide/playbooks_filters.html#json-query-filter) claim it works with dicts
+19:16:32 <MatrixCrawler> JMESPath is really mighty. We use it in several cases
+19:16:50 <felixfontein> I definitely have to look into that
+19:17:29 <felixfontein> still, it is sometimes nice to be able to simply write a nested loop :)
+19:19:00 <felixfontein> so I guess I understand it correctly that this PR doesn't really have a chance to get merged?
+19:19:26 <felixfontein> converting it to a filter doesn't work (because of the templating), so as long as there is no new plugin category which fits better, it has to stay a lookup plugin
+19:19:32 <ryansb> felixfontein: FWIW https://paste.fedoraproject.org/paste/Sp71zmNK4gMc3eFFpIMh2g
+19:19:53 <ryansb> that flattens out to a list with [stuff, other, more]
+19:20:58 <felixfontein> is there an easy way to get hold of the path which led to the result? i.e. for other, to also get the index in bar.foo[]?
+19:21:44 <abadger1999> felixfontein: I've been saying we need to replace lookup plugins  (long deprecation cycle) with a more generic jinja2_function plugin type.  However, I haven't written a proposal for that.
+19:21:45 <ryansb> hm, I don't know that
+19:22:29 <abadger1999> That answers half of your question about whether this could be merged.  But the other half is whether we want people to be able to do nested loops like that.  I do not know the answer to that one.
+19:22:54 <felixfontein> abadger1999: would jinja2_functions be able to access playbook state/...?
+19:23:17 <felixfontein> abadger1999: yeah, that's also a very interesting question, I've been asking myself that a lot :)
+19:24:12 <felixfontein> I think it is better than hacks like writing a template for a json or yaml document and then parsing the result
+19:24:42 <abadger1999> felixfontein: The object would be to replace lookups with something more generic.  Since lookups access certain things (like templar), the new plugin type would have to as well.  But like I say, I've not written a proposal so I don't know whether it would get approved or if approved, what it would look like in the end.
+19:24:43 <felixfontein> on the other hand, having it encourages people to use it and make things quickly too complex
+19:24:54 <abadger1999> <nod>
+19:25:34 <felixfontein> I'm curious: has anyone already made their mind up about this question?
+19:27:49 <felixfontein> and a totally unrelated questions: is CI still broken?
+19:28:49 <abadger1999> I have not.  bcoca, sivel, sdoran what do you think about nested loops?
+19:29:01 <abadger1999> felixfontein: yeah, CI is still broken... mattclay is working on resolving that.
+19:29:07 <bcoca> not sure what you mean by that
+19:29:22 <felixfontein> abadger1999: thanks!
+19:29:33 <sdoran> Nested loops in what sense?
+19:29:40 <sdoran> Nesting includes/imports?
+19:29:41 <bcoca> map( )| map() ?
+19:29:49 <ryansb> I'm a soft -1 on them on the grounds of "Ansible is not a programming language" but I understand the desire
+19:29:51 <bcoca> lookup('nested')?
+19:30:06 <ryansb> one alternative might be a `| flatten` or similar
+19:30:12 <abadger1999> sdoran: https://github.com/ansible/ansible/pull/42151    <=== this allows you to do things like
+19:30:14 <abadger1999> [12:06:16] <felixfontein> for region in regions:
+19:30:16 <abadger1999> [12:06:24] <felixfontein>   for product in products[region]:
+19:30:16 <felixfontein> something like nested loops, where inner loops can depend on outer loop variables, and where in the inside you have access to all loop variables
+19:30:17 <abadger1999> [12:06:37] <felixfontein>     for instance in instances[region][product]:
+19:30:18 <abadger1999> [12:06:48] <felixfontein>       for container in instance.containers:
+19:31:01 <bcoca> a template can do those 'nicely', less nice is using lookups + filters to achieve same as they already 'loop', map/zip/select/nested/etc
+19:31:11 <felixfontein> bcoca: map() | map() usually won't give you access to the loop metainfos from outer loops
+19:31:24 <ryansb> with `enumerate` it could
+19:31:33 <abadger1999> It's difficult to do otherwise in ansible because things like filters don't have access to all the variables you'd need.
+19:31:46 <bcoca> filters have access to what you give them
+19:31:54 <bcoca> lookups have access to that + task vars + templar
+19:32:09 <abadger1999> sdoran: that's the summary of what has been discussed so far
+19:32:09 <felixfontein> well, in some cases, it is possible, but it usually results in very complex expressions which are way more complex than if you would simply write down the loops
+19:32:29 <bcoca> which is why i suggested templates first
+19:32:54 <felixfontein> I'd consider templates (to create a datastructure in json/yaml/... and then to parse it to get the result) as a hack
+19:33:27 <bcoca> you dont even need to 'parse', using vars: varname: '{{ lookup ...  ' should do that for you automatically
+19:33:52 <bcoca> if it is a json structure, it will be read into data, unless you use |string or |to_json
+19:34:16 <felixfontein> bcoca: if you want to use {% for %} / {% if %} / ... in a nested fashion to compile the data, you need to do some composing and parsing
+19:34:49 <bcoca> same as you would do with python, just a 'set mainvar'
+19:35:00 <bcoca> and  {{ mainvar|to_json }} at the end
+19:35:40 <felixfontein> except that in Python, you don't have to write your loop into a JSON (or YAML) file first :)
+19:36:00 <bcoca> in this case you are not writing a file
+19:36:09 <bcoca> you are writing a string
+19:36:21 <bcoca> small diff, but you could say same of any language
+19:36:28 <felixfontein> yes, and that string is parsed. I know :)
+19:36:48 <bcoca> ansible is not meant to do complex data manipulation
+19:39:55 <felixfontein> ok. so no complex nested loops :)
+19:39:57 <sdoran> I know this is something folks ask for from time to time, the ability to have loops within loops that have access to the outer loop data.
+19:40:41 <sdoran> But this feels way too much like programming in playbooks.
+19:41:02 <bcoca> also factor in that until/retry is already a separate loop over loop/with_
+19:41:52 <felixfontein> bcoca: you can also combine loop with include to get nested loops. pretty ugly to maintain if you have more than two levels, though
+19:41:59 <bcoca> and play is alreayd 1 loop, i think that most of the data above should be looped at from the target pserspective not the other way around
+19:42:14 <bcoca> felixfontein: its ugly at 1 level
+19:43:33 <felixfontein> sdoran: indeed, sometimes such questions pop up on the ansible-project ML. in most cases there's a way to work around it, though it often gets pretty complicated. but then, that's a good discouragement to do something complex.
+19:43:37 <felixfontein> bcoca: indeed!
+19:45:26 <felixfontein> ok, thanks everyone! I guess I'll wait and see how that proposal which will show up somewhen in the future looks like ;)
+19:45:42 <bcoca> #topic open floor
+19:46:29 <Pilou> #39656 was started a long time ago, anybody would review ?
+19:47:39 <bcoca> dag: you still intereseted in hp stuff?
+19:47:49 * bcoca really  needs coffee
+19:47:51 <MatrixCrawler> And would anybody make a second review for https://github.com/ansible/ansible/pull/45781? akasurde already did one, but we need a second opinion
+19:48:07 <maxamillion> bcoca: +1 for coffee
+19:48:24 <maxamillion> I'm waiting on my press to finish steeping .... it's the longest 10 minutes ever
+19:48:34 <MatrixCrawler> hehe
+19:48:51 <bcoca> anyone have time to look at hp or sophos modules?
+19:48:55 <dag> bcoca: I no longer work for HP ;-)
+19:49:07 <bcoca> dag: so im assuming that is a NO
+19:49:41 <dag> bcoca: I only did hpilo out of necessity though, I don't know Sophos
+19:50:09 <bcoca> Pilou: there seem to be a bunch of maintainers in that category, have you tried pinging them?
+19:50:45 <Pilou> ok, i will try to ping namespace maintainers
+19:51:21 <Pilou> dag: as your last review has been taken in account, could you approve the PR ?
+19:51:51 <dag> Pilou: it doesn't work that way, I would need to re-review
+19:52:16 <bcoca> ^ was going to say that, just cause change was made does not mean it was right
+19:52:25 <bcoca> it always requires re-review
+19:52:52 <dag> I'll take a look tomorrow
+19:52:57 <Pilou> thanks for them
+19:52:58 <bcoca> thanks
+19:53:30 <bcoca> MatrixCrawler: i'll see if i can find someoen with time and willing to do sophos review
+19:53:46 <bcoca> if nothing else, closing in 1 min
+19:53:50 * abadger1999 is reviewing Sophos but only for code quality.
+19:54:00 <bcoca> that is something at least
+19:54:16 <MatrixCrawler> thanks abadger1999
+19:54:18 <abadger1999> If akasurde or someone else has reviewed for usability, then it will be okay to merge but otherwise, probably still needs someone to use it and make sure it works.
+19:55:30 <MatrixCrawler> We use it in our environment. Just thought some other people might benefit from our module (as there was a Request for that kind of thing)
+19:55:43 <bcoca> MatrixCrawler: the 'state=info' might be an issue
+19:57:06 <MatrixCrawler> yep.. i thought that...
+19:57:34 <MatrixCrawler> we can get rid of it. i don't really care
+19:58:03 <MatrixCrawler> maybe implement some kind of lookup plugin for that fnctionality
+19:59:02 <felixfontein> or something like utm_dns_host_facts :)
+19:59:18 <felixfontein> lookup plugins are always executed on the control node, not the remote nodes
+20:00:42 <MatrixCrawler> Normaly i would say, state=present should suffice. But there are some cases in the sophos api in which you really want to make sure NOT to change the object (i.e if you query the default network interface) As it is a firewall you really don't want to fuck that interface up
+20:01:43 <bcoca> ok, going to close meeting for now, we can check progress at next one
+20:01:46 <bcoca> #endmeeting

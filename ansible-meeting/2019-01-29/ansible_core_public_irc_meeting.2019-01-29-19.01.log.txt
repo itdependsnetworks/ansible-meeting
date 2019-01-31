@@ -1,0 +1,114 @@
+19:01:35 <bcoca> #startmeeting ansible core public irc meeting
+19:01:35 <zodbot> Meeting started Tue Jan 29 19:01:35 2019 UTC.
+19:01:35 <zodbot> This meeting is logged and archived in a public location.
+19:01:35 <zodbot> The chair is bcoca. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:01:35 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:01:35 <zodbot> The meeting name has been set to 'ansible_core_public_irc_meeting'
+19:01:58 <decentral1se> hi folks
+19:02:31 <bcoca> #topic https://github.com/ansible/ansible/pull/50035
+19:02:34 <bcoca> dag?
+19:02:36 <sdoran> hello
+19:02:36 <bcoca> @dag
+19:03:26 <shertel> Hi
+19:05:47 <bcoca> k, no dag, skipping
+19:06:02 <bcoca> @lwm?
+19:06:08 <decentral1se> yep
+19:06:11 <bcoca> #topic https://github.com/ansible/proposals/issues/39
+19:06:28 <bcoca> implementation PR https://github.com/ansible/ansible/pull/44983
+19:06:36 <decentral1se> yep, exactly. Saw that it's sitting around
+19:06:42 <decentral1se> I'd personally love to push arg_specs out for roles
+19:06:48 <decentral1se> wondering how to unstick it
+19:06:50 <bcoca> i believe this got mired in disagreements about the path forward
+19:07:33 <decentral1se> I saw the PR tries to do a lot. I just want to have arg_spec for roles
+19:07:41 <decentral1se> not bothered about tower integration and this ansible-role stuff
+19:09:03 <decentral1se> any notes/logs on disagreements?
+19:11:26 <bcoca> i believe they are mostly on the ticket
+19:16:22 <decentral1se> is there any merit in trying to break this PR out into smaller ones
+19:16:37 <decentral1se> or will this just end me up in limbo. I'm not sure what to do here
+19:17:06 <decentral1se> I suppose I should try and get in touch with this alikins person
+19:17:38 <bcoca> @alikins
+19:17:54 <bcoca> but i think @nitzmahone should weigh in since he is one of the disenting opinions
+19:24:32 <sdoran> I think the biggest challenge is "role_spec" means different things to different people. Trying to make it do all those things is what gets it stuck.
+19:25:05 <sdoran> I like the basic idea. But the possible entry points and scenarios balloon the requirements very quickly.
+19:25:42 <bcoca> in any case networking already has their own action plugin, this was an effort to standdarize that and also give 'discovery' to 3rd tools to enable them to provide 'runtime requirements' for roles
+19:26:39 <bcoca> as well as a simple way for role authors to validate before running ... vs dozens of 'assert/fail' statements
+19:27:23 <decentral1se> Right, that last one is the one I'm after
+19:27:36 <bcoca> that was main aim of my proposal
+19:27:48 <decentral1se> I am not quite clear on the 'multiple entry points' but I suppose I can ask about that another time
+19:27:51 <bcoca> but the other uses had 90% overlap, so we tried to do it in once shot
+19:28:16 <bcoca> 1 entry point is 'hardcoded into role execution', the others are 'users wanting to validate at arbitrary points'
+19:28:28 <bcoca> which can be for plays, subset of roles, includes, etc
+19:28:52 <bcoca> an action plugin served that well (imho) but others disagreed
+19:29:53 <decentral1se> Is there some non-contentious way forward here? The 'remove assert/fail statements' will be a huge boon for users
+19:30:45 <sdoran> I wasn't quite following the reason behind a new CLI tool that created an in-memory playbook object.
+19:31:01 <bcoca> i dont disagree, and i wish i had a way, but i would query the ones that had problems with the current approach
+19:31:01 <sdoran> That seemed a bit too much.
+19:31:26 <bcoca> sdoran: forget the tool, ansible -m import_role already works, that was aside from this feature
+19:31:42 <sdoran> 🆗
+19:32:37 <bcoca> even if the tool was added, the code loading the check would not be in the tool, but in the role execution code common to all ansible CLIs
+19:33:08 <bcoca> ansible/ansbile-playbook/ansbile-console/ansbile-doc would all consume it, just now need for each to have their own version of it
+19:33:18 <bcoca> since they all access lib/ansible/playbook/roles
+19:33:22 <nitzmahone> So what am I weighing in on? Was this about the explicit task for role validation vs implicit, or ?
+19:34:01 <bcoca> contributor wants to know if way forward is possible
+19:34:24 <sdoran> @nitzmahone  Yes, I think that was the main sticking point.
+19:35:19 <bcoca> i believe the main issue is you didnt want action plugin while rest of did
+19:35:29 <bcoca> implicit/explicit was more of a toggle
+19:35:56 <bcoca> existence of meta/'iforgetname'.yml for validation was already an explicit tag imo
+19:35:58 <nitzmahone> I think I was the one advocating *for* an action plugin- I was more concerned with the automatic behavior
+19:36:30 <nitzmahone> and that we're not reinventing the wheel but making sure we can use a YAML-serialized argspec to validate it
+19:36:44 <bcoca> the implementation was using arg_spec
+19:36:47 <nitzmahone> (that would be compatible with modules et al)
+19:37:12 <bcoca> it was using 'fake module' but that was concept, moving arg_spec itself to 'common usage folder' was also discussed as final face of it
+19:37:26 <decentral1se> so, this is referring to some work that was being done to make arg_spec available as a library
+19:37:46 <bcoca> https://github.com/ansible/ansible/pull/44983#issuecomment-428597910 <= this was peter responding to action plugin reservations
+19:37:53 <bcoca> which were in irc/slack iirc
+19:38:24 <bcoca> decentral1se: right now argspec is embeded in AnsibleModule so alikins' PR 'faked' a module to use it
+19:38:31 <bcoca> but factoring it out woudl be the ideal approach
+19:38:33 <sivel> sdoran is working on exploding the arg_spec parsing stuff out of basic.py
+19:38:37 <sivel> as an FYI
+19:38:45 <jtanner> was* ... i don't think he is anymore?
+19:38:46 <nitzmahone> Was gonna say, I thought that was happening in 2.8
+19:38:58 <sdoran> Which will make validating things a bit easier, in theory.
+19:39:15 <sivel> jtanner: afaik he has a few PRs in "motion"
+19:39:20 <bcoca> also lets me kill the 'config' validator
+19:39:34 <sdoran> jtanner: Yes, I'm still working on it.
+19:39:44 <jtanner> oh, well hrm
+19:39:48 <jtanner> i'm out of touch
+19:40:03 <nitzmahone> Yeah, I'm mostly worried that if we merge N impls of this with the promise that "we'll get back to it later" that they'll diverge in some incompatible way that we can't...
+19:40:24 <nitzmahone> (because we all know how those promises go)
+19:40:27 <bcoca> nitzmahone: there was never an implementation w/o using argspec, just a hacky one faking a module
+19:41:21 <decentral1se> so the first hurdle to a more agreeable approach is to extract argspec and use that as a basis for validation?
+19:42:20 <nitzmahone> Right, I'm actually OK with that part of the hack until argspec validation been lib-ified (since it's just an impl detail of the action); it's more having people building content against two mostly-overlapping impls of YAML deserialization
+19:42:47 <bcoca> sorry, what 2 yaml deserializations?
+19:42:55 <nitzmahone> config + now this
+19:43:12 * alikins hops in
+19:43:15 <bcoca> config not realy deserializer, all use dataloader
+19:43:31 <nitzmahone> (IIRC this converts the YAML doc to module argspec)
+19:43:35 <bcoca> config does have its own validation (which i planed to move to argspec once that is 'liberated')
+19:44:13 <bcoca> nitzmahone: no ... config reads from 'varaible' which we also use for doc, its not a diff deserialization, only diff is 'source' one is var, one is file
+19:44:29 <bcoca> this would be a file, just like the rest of our yaml
+19:45:05 <nitzmahone> Right, but it's not the same impl as https://github.com/ansible/ansible/pull/44983/files#diff-75adc2d2decfed7c448778c7d3aa7909
+19:45:36 <nitzmahone> So there are two different mostly-overlapping things that take YAML looking about like --^ and validating them.
+19:46:26 <nitzmahone> IIRC that's my only remaining concern with this- without merging/sharing those impls, we're at significant risk of them diverging to the point that we can't by people adding features to one or the other.
+19:46:32 <bcoca> not really, the validators take python data struct, that it happend to be yaml or python code in module does nto really matter
+19:46:51 <bcoca> config's validator is a subset of argspec and this does not add a new one
+19:47:02 <bcoca> and config's validator was alwasy temporary
+19:47:32 <bcoca> the only consideration YAML has in either case is for 'creating teh python dict'
+19:47:45 <nitzmahone> If you think you can use the extracted module argspec impl and are willing to do that when the time comes, I won't stand in the way on this
+19:47:58 <bcoca> the PR is already doing that
+19:48:14 <nitzmahone> The fake module is nastyish, but until argspec validation is extracted, a necessary evil
+19:48:24 <nitzmahone> I'm talking about for config
+19:48:31 <bcoca> yes, that is my only problem with PR .. and that is temporary
+19:48:48 <bcoca> nitzmahone: not sure what you mean, that this feature requires config to also use the fake module?
+19:49:39 <nitzmahone> no, just that the guts of config will get cut over to the extracted argspec validator instead of using its own
+19:49:51 <nitzmahone> (it's mostly orthogonal to this PR, really)
+19:49:54 <bcoca> that was indepenant of this PR
+19:50:03 <bcoca> yes .. so that is why im confused why that is an issue here
+19:50:14 <bcoca> this pr never introduced another validator
+19:50:18 <bcoca> nor new yaml parsing
+19:50:21 <bcoca> it reused existing
+19:52:52 <nitzmahone> shipit... We just need to merge/clean up as much of that stuff as possible once argspec is extracted
+19:53:12 <sdoran> 👍
+19:53:50 <bcoca> decentral1se: so .. seems no blockers to move forward anymore
+19:55:27 <bcoca> k, that was almost all our time for the meeting, so going to end now since dont really have time for other topics
+19:55:31 <bcoca> #endmeeting

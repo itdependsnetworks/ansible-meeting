@@ -1,0 +1,270 @@
+19:04:30 <bcoca> #startmeeting ansible irc core meeting
+19:04:30 <zodbot> Meeting started Tue Jun  5 19:04:30 2018 UTC.
+19:04:30 <zodbot> This meeting is logged and archived in a public location.
+19:04:30 <zodbot> The chair is bcoca. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:04:30 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:04:30 <zodbot> The meeting name has been set to 'ansible_irc_core_meeting'
+19:05:16 <bcoca> #topic https://github.com/ansible/ansible/issues/40913
+19:05:35 * ryansb waves
+19:06:03 * sdoran waves too
+19:06:06 <bcoca> #chair ryansb sdoran
+19:06:06 <zodbot> Current chairs: bcoca ryansb sdoran
+19:06:07 * shertel waves
+19:06:11 * jtanner multitasks
+19:06:13 <abadger1999> Olá
+19:06:16 <bcoca> #chair shertel jtanner abadger1999
+19:06:16 <zodbot> Current chairs: abadger1999 bcoca jtanner ryansb sdoran shertel
+19:06:21 <schmots_> that change raises an interesteing question.  When does a module change from preview to stable?
+19:07:14 <bcoca> schmots_: until now its only been core doing it, its mostly a commitment by maintainer to avoid backwards incompatible changes if possible and used the standard deprecation cycle if it is a must
+19:07:51 <bcoca> anyone else have questions or statements to add?
+19:08:40 <ryansb> yeah, it's pretty much "the core team/maintainers want to move to using the deprecation cycle and standardize the interface"
+19:08:43 <ryansb> no formal process as yet
+19:08:45 <jtanner> i think we should let maintainers decide whatever they want for the status field.
+19:09:07 <bcoca> jtanner: i was going to add follow up topi, should core even be invovled in this?
+19:09:20 <bcoca> for now, lets vote on this case, should we allow him to set to stable?
+19:09:27 <jtanner> i think we only need to be involved in a change to the "supported_by" field
+19:09:48 <jimi|ansible> o/
+19:09:55 <jimi|ansible> jctanner++
+19:09:58 <bcoca> #chair jimi|ansible
+19:09:58 <zodbot> Current chairs: abadger1999 bcoca jimi|ansible jtanner ryansb sdoran shertel
+19:10:15 <bcoca> so im counting both of you as +1 (implied in that its up to him)
+19:10:16 <jtanner> imo, if caphrim007 were to a do a PR, the shipit process would have allowed the change
+19:10:18 <bcoca> +1 from me
+19:10:26 <ryansb> yeah, +1 for maintainers to handle status
+19:10:30 <shertel> +1
+19:10:49 <bcoca> k, lets keep issues separate, otherwise i have no clue what vote goes where
+19:10:52 <jimi|ansible> +1 on the condition that they know it's irrevocable for at least 4 releases
+19:11:05 <bcoca> in this case, he knows
+19:11:08 <abadger1999> +1 to letting caphrim choose.  But --- fro mthe sound of it I would encourage him not to mark all of bigip* as stableinterface but only the ones that he has to.
+19:11:25 <caphrim007> i heard my name
+19:11:28 <jtanner> if we don't have automated enforcement, i don't know that we can really dictate anything
+19:11:35 <jtanner> shipit rules all
+19:11:39 <bcoca> @jtanner you have revert and all
+19:11:46 <jtanner> -if- we catch it
+19:11:53 <abadger1999> caphrim007: Hey :-) We're talking about the request to mark bigip* as stableinterface :-)
+19:12:03 <abadger1999> We seem to be on board with maintaier decides.
+19:12:09 <shertel> +1 for maintainers to decide the status field
+19:12:11 <abadger1999> I'm just worried about workload and continuity.
+19:12:42 <bcoca> #topic hijacking
+19:13:25 <caphrim007> can i ask for some clarification on what stableinterface means so i can make a decision on which ones i mark as such?
+19:13:46 <abadger1999> workload... stableinterface can require more work to maintain backwards compat and new-fangled goodness at the same time and it sounds like you're all alone from the f5 side.  Continuity... what if you move on?  Then we have modules that your replacement comes into and he may see things differently.
+19:14:02 <abadger1999> But those would be for your consideration, I think rather than ours.
+19:14:03 <abadger1999> Sure.
+19:14:19 <caphrim007> does it mean i cant add or remove things from the stable ones? or if i do, that i follow the 4 release cycle? or i thought 4 release cycle was for everyone?
+19:14:36 <bcoca> adding is ok, removing requires deprecation cycle
+19:14:44 <abadger1999> stableinterface means that you try not to break existing playbooks and when you have to, then you have to go through a deprecation cycle to make those types of changes.  In the meantime, you'd have to support both the new and old ways.
+19:15:11 <caphrim007> so if, today, i already follow the 4 release cycle, then there's not much change
+19:15:25 <abadger1999> (adding can have playbook-breaking effects so you have to think about those just in case they do)
+19:15:30 <abadger1999> Correct.
+19:15:32 <abadger1999> Although...
+19:15:48 <abadger1999> You should be trying harder not to do backwards incompatible things
+19:16:01 <abadger1999> "Trying harder" is not quantified though.
+19:16:08 <caphrim007> sure. i'm just imagining my company breaking their own apis
+19:16:15 <caphrim007> which they've done
+19:16:22 <caphrim007> one of them after we shipped a module
+19:16:30 <caphrim007> because the api had been stable for 10 years
+19:16:37 <caphrim007> and then a new team took over and changed it completely
+19:16:48 <abadger1999> Yeah.  If that were the case, the ansible module would need to try to shim in support for the old features using the new api.
+19:17:02 <bcoca> well, that is why the module interface is supposed to be an abstraction, when you tightly couple to api you run into those issues
+19:17:02 <caphrim007> and/or make different modules?
+19:17:06 <abadger1999> That can be a major cause of pain for fast moving apis *cough*docker*cough*
+19:17:17 <bcoca> if the module interface is good enough, you can mostly avoid those issues
+19:17:36 <bcoca> @abadger1999 docker module changed code a lot, but not the interface as much
+19:17:40 <abadger1999> @caphrim007 well, yes and no to that.... the real thing we're trying to achieve is "don't break user's playbooks if they're using a stableinterface module"
+19:18:15 <abadger1999> So making a different module and letting the old one stop working is contrary to that goal.
+19:19:05 <abadger1999> @bcoca I think you miss the point... the docker python module apis kept changing so the docker ansible module had to grow a lot of shim code to keep the same ansible interface onto all the different docker python module apis.
+19:19:09 <caphrim007> i'll have to continue to think about this and discuss it with my org then
+19:19:14 <abadger1999> Cool.
+19:19:21 <caphrim007> but if ansible is +1 to it, then that is fine
+19:19:32 <caphrim007> i'll just go tell my org that at least ansible is not -1
+19:19:44 <caphrim007> and then in my org i'll relay to them what you've mentioned here
+19:19:51 <ryansb> well, we're not -1 as long as you actually do the supporting piece
+19:19:51 <caphrim007> so that they know what they're getting themselves into
+19:19:54 <bcoca> @abadger1999 no, that is my point, user was safe from many of the changes, but it was due to maintainers commiting to it and taking the trouble of creating all those shims
+19:20:04 <abadger1999> And... you can break it... (/me can remember a few things that broke in core modules) but it should only be broken with great trepedition and a good amount of thought.
+19:20:19 <caphrim007> ryansb: i gotcha. i am willing to do the support if my mgmt accepts that overhead
+19:20:59 <ryansb> Ok, just important that you include that bit w/ the other bits
+19:21:07 <caphrim007> yep
+19:21:58 <bcoca> ok, think we can vote on it now:
+19:22:00 <bcoca> +1
+19:22:43 <bcoca> no one else?
+19:23:09 <abadger1999> +1 (voted previously)
+19:23:28 <bcoca> well, people have been voting on diff things intermixed, i want clear vote on THIS issue
+19:23:43 <abadger1999> #topic stableinterface for community modules
+19:23:45 <jtanner> surveymonkey.com
+19:24:11 <shertel> +1 (voted previously)
+19:24:23 <ryansb> +1 (stuffed ballot box previously)
+19:25:26 <bcoca> #topic https://github.com/ansible/ansible/pull/41078
+19:26:25 <bcoca> contributor wants to change default behaviour when syslog setting is present, vs current in which we default to journalctl and only use syslog setting if it is not present and we are using syslog directly
+19:27:04 <jtanner> fyi hideki works for us in support and is on japanese hours
+19:27:42 <bcoca> ah, new the hours, didnt know he works with us, issue still stands, this is a change of behaviour and i'm not against it, but i do think it needs an extra toggle
+19:27:48 <bcoca> knew
+19:27:52 <abadger1999> hhh
+19:28:28 <abadger1999> We use journal.send() either way.
+19:28:51 <abadger1999> The only difference is whether facility gets used or not.
+19:29:04 <bcoca> no, we use syslog module in other case
+19:29:16 <bcoca> syslog.syslog(syslog.LOG_INFO, msg)
+19:29:31 <bcoca> vs journal.send(u"%s %s" % (module, journal_msg), **dict(journal_args))
+19:30:10 <abadger1999> No...
+19:30:13 <abadger1999> +                        journal.send(MESSAGE=u"%s %s" % (module, journal_msg),
+19:30:15 <abadger1999> +                                     SYSLOG_FACILITY=facility,
+19:30:16 <abadger1999> +                                     **dict(journal_args))
+19:30:18 <abadger1999> +                    else:
+19:30:19 <abadger1999> +                        journal.send(MESSAGE=u"%s %s" % (module, journal_msg),
+19:30:21 <abadger1999> +                                     **dict(journal_args))
+19:30:24 <abadger1999> Both code paths end in journal.send()
+19:30:44 <bcoca> im looking at code now
+19:30:48 <bcoca> except IOError:
+19:30:49 <bcoca> # fall back to syslog since logging to journal failed
+19:30:51 <bcoca> self._log_to_syslog(syslog_msg)
+19:30:52 <bcoca> else:
+19:30:54 <bcoca> self._log_to_syslog(syslog_msg)
+19:31:04 <bcoca> the else is on no journalctl, the except is if journalctl.send fails
+19:31:16 <bcoca> and log_to_syslog, has syslog module
+19:31:24 <bcoca> ^ current devel
+19:31:36 <bcoca> its been like that a long time
+19:32:42 <bcoca> the change here makes a) using journalctl depend on having syslog available, b) introduce the facility to journalctl which was only used for syslog before
+19:32:47 <abadger1999> I Okay, obviously one of us is reading this code wrong....
+19:32:54 <abadger1999> I don't see any else on journalctl.
+19:33:18 <abadger1999> journalctl isn't present in the devel module_utils/basic.py code
+19:33:30 <bcoca> if has_journal:
+19:33:34 <bcoca> ^ else: syslog
+19:33:51 <bcoca> from systemd import journal
+19:33:52 <bcoca> has_journal = True
+19:33:53 <abadger1999> And that's still present with hideki's change.
+19:34:00 <bcoca> not saying its not
+19:34:27 <bcoca> please read what i posted above a) journalctl now depends on HAS_SYSLOG (didnt before his change) b) the syslog facility now affects journalctl
+19:34:42 <abadger1999> a) untrue.
+19:34:48 <abadger1999> b) true.
+19:34:49 <bcoca> if HAS_SYSLOG
+19:34:53 <abadger1999> b looks like a bugfix.
+19:34:56 <abadger1999> So what?
+19:35:04 <bcoca> ^ that is his first change
+19:35:09 <abadger1999> So what?
+19:35:12 <bcoca> changes journalctl to depend on HAS_SYSLOG
+19:35:18 <abadger1999> No it doesn't
+19:35:21 <bcoca> how not?
+19:35:30 <abadger1999> https://github.com/saito-hideki/ansible/blob/a3216fbdad9bef6f2fd60675b7cc2ed3e99619f2/lib/ansible/module_utils/basic.py#L2198
+19:35:46 <bcoca> ah, missed last else
+19:36:22 <bcoca> still, changes behaviour of logging, which can change the file where logs go to
+19:36:25 <abadger1999> That was what I posted above.
+19:36:33 <abadger1999> yes, but that's the point I think.
+19:36:36 <bcoca> thought you refered to the syslog else
+19:36:42 <jtanner> is this codepath tested anywhere?
+19:36:45 <abadger1999> It looks like a bugfix.
+19:37:01 <abadger1999> We provide confuration of the logging facility to use.
+19:37:08 <bcoca> he is changing a setting that previuoslly affected only syslog to also affect journalctl
+19:37:21 <abadger1999> We're currently not horing that configuration if logging goes through journald.
+19:37:34 <abadger1999> Thi sPR fixes that bug.
+19:38:28 <bcoca> i would argue that the config was for a specific system and that this change will suprise users by having the logs disappear from where they expect them
+19:42:20 <abadger1999> It won't surprise new users.  it could surprise existing users who have syslog_facility set and have been using it with systemd.  It won't surprise existing users who don't have syslog facility set.  It won't surprise existing users who are either switching over to systemd or are enabling syslog_facility for the first time.
+19:42:46 <abadger1999> this is one of those shims that we were talking about earlier.
+19:43:02 <bcoca> well, not yet
+19:43:24 <abadger1999> and the shim is supposed to abstract which backend syslog is in place so that the user gets the same behaviour either way.
+19:44:28 <bcoca> well they normally behave differently, though systemd has been comming closer to syslog
+19:44:38 <bcoca> and in this case the paramter woudl mirror across them
+19:45:00 <bcoca> i still think its a behaviour chagne and would requrie another toggle, but im not going to strongly opose
+19:45:02 <bcoca> -0
+19:46:03 <bcoca> ^ votes?
+19:46:10 <abadger1999> bugfix +1 to PR... should be added to the porting guide and changelog so that people know to remove the configuration if they don't want to log to a different location.
+19:46:34 <bcoca> abadger1999: since config is global, they cannot set per host/group
+19:46:53 <bcoca> so if they have mixed systemd/syslog .. they are going to have logs moved one way or the other
+19:47:15 <sdoran> Been trying to keep up and think this through.
+19:47:33 <bcoca> if it were host/group configurable, i would have less of an issue
+19:47:37 <sdoran> I think it feels like a bug: the `syslog_facility` should be unified regardless of the logging mechanism.
+19:47:53 <sdoran> So that it's different between journal and syslog seems wrong.
+19:48:14 * sdoran awaits thrashing :)
+19:48:42 <bcoca> abadger1999:  in the end you added teh feature as it is, so i'll defer
+19:48:47 <bcoca> sdoran: so vote?
+19:49:07 <abadger1999> bcoca: which is as it should be.
+19:49:15 <bcoca> sdoran: iirc systemd didnt' have facilities initially, so the diff is less of an issue today
+19:49:29 <abadger1999> You don't want to have half of your machines logging to one location and half to another.
+19:49:45 <bcoca> abadger1999: not saying I want that, its what people currently have
+19:49:52 <sdoran> I do see how if an existing user has gotten accustomed to/figured out that journalctl messages go one place and syslog another, that could be jarring.
+19:50:11 <bcoca> most people dont care about logs, but those that do .. care a lot
+19:50:27 * bcoca points at jtanner
+19:50:31 <sdoran> I vote +1 to merge, document it as bugfix/porting guide item.
+19:50:54 <bcoca> ok, i'll merge, you guys follow up with him to add docs/warnings/whistles?
+19:50:57 <jtanner> clint eastwood quote about logs and dead hands and cold weather, or something like that
+19:51:29 <bcoca> so going to add 'adhoc topic'
+19:51:39 <bcoca> #topic should core still controll status in metadata?
+19:52:12 <abadger1999> How is this different from what we already voted on?
+19:52:35 <bcoca> @abadger1999 we voted on particular case, now we are voting if we should have those cases at all in future
+19:52:57 <abadger1999> Hmm...
+19:53:16 <bcoca> why i insiste on not cross voting on topic, makes things unlcear
+19:53:19 <abadger1999> If we can dfer judgement, I'm willing to.
+19:53:30 <bcoca> dfer to what?
+19:53:32 <abadger1999> Proposal: Keep it ad hoc for now.
+19:53:46 <abadger1999> people continue to bring such changes to us.
+19:53:50 <bcoca> i'll make it an option
+19:54:01 <bcoca> but that implies we are still involved
+19:54:02 <abadger1999> If we get an upswell in requests revisit.
+19:54:19 <abadger1999> *requests, revisit.
+19:54:22 <bcoca> a) not involved anymore: update docs that say we are
+19:54:23 <jtanner> i have a feeling that we need to address some things internally in regards to metadata, and then come back to community when we figure out what is for what
+19:54:39 <bcoca> b) stay involved but tentatively revisit on volume: no changes
+19:54:56 <bcoca> c) stay involved and enforce :need to detect/prevent if community changes status
+19:55:23 <bcoca> d) defer vote till we get our stories straight?
+19:55:26 <bcoca> ^ jtanner
+19:55:29 <sdoran> We don't currently have anything in place to prevent metadata merges.  We would need something like that to really enforce it.
+19:55:38 <bcoca> sdoran: that ic c)
+19:55:44 <jtanner> +1 for "d"
+19:56:12 <bcoca> i was b/c ... but considering all new info i got today +1 for a)
+19:56:32 <bcoca> @jimi|ansible, @privateip_ @shertel ... allofrest?
+19:56:53 <bcoca> abadger1999: assuming you are for b)?
+19:57:26 <abadger1999> +1 b or d
+19:57:37 <bcoca> i'll put you down for 0.5
+19:57:53 <bcoca> or should we do rank choice voting?
+19:57:53 <abadger1999> i'm a full +1 to either one
+19:57:57 <sdoran> I don't want to dilute the meaning of the terms since they could be valuable in the future Galaxy.
+19:58:05 <sdoran> +1 for D
+19:58:06 <abadger1999> bcoca: approval voting
+19:58:11 <sdoran> More discussion needed.
+19:58:12 <bcoca> abadger1999: same thing
+19:58:17 <jimi|ansible> i think b) should be "not involved, but reserve the right to revisit on volume and/or complaints of non-stability"
+19:58:39 <bcoca> jimi|ansible: i think a-d all reserve that right
+19:58:49 <jimi|ansible> well we don't say that for any of them :)
+19:58:53 <jimi|ansible> in that case a) +1
+19:59:00 <bcoca> we currently have docs that say 'we do get involved'
+19:59:01 <abadger1999> bcoca: rank choice would be four options, assign each a separate weight for 0 to 3.  approval voting is four options, assign each either 0 or 1.
+19:59:19 * abadger1999 had to write the Fedora elections app so got exposed to a bunch of voting systems.
+19:59:55 <bcoca> i thought ranked was particular case of approval
+20:00:04 * bcoca sits corrected, but prefers ranked
+20:00:06 <abadger1999> And after I did, some group that wanted to convert the US to range voting kept trying to get us to release the voter's voting records....
+20:00:14 <abadger1999> ranked choice is a subset of range voting.
+20:00:50 <bcoca> nex topic: which voting method we use
+20:00:54 <abadger1999> ;-)
+20:01:17 <bcoca> ok, so a+2, b+0.5, c+1 d+1.5
+20:01:26 <abadger1999> I think it's 2 for a 3 for d
+20:01:28 <bcoca> abadger1999: im counting each person as single whole vote
+20:01:48 <abadger1999> *sigh*
+20:01:54 <bcoca> did i miss someone?
+20:01:57 <abadger1999> well, then I'll only vote for d
+20:01:58 <abadger1999> yes.
+20:02:02 <shertel> +1 for d too
+20:02:04 <abadger1999> you missed either sdoran or jtanner
+20:02:15 <bcoca> ok a+2 b+0,c+1 d+3
+20:02:23 <abadger1999> (no2 _4 for d)
+20:02:26 <abadger1999> *now
+20:02:29 <abadger1999> +4
+20:02:29 <jtanner> sorry, multitasking
+20:02:31 <jtanner> so many fires
+20:02:40 <bcoca> yes d+4 .. in the lead
+20:03:04 <bcoca> well, d basically means b for now, but to revise soon?
+20:03:18 <abadger1999> yep.
+20:03:31 <bcoca> ok, closing vote in 10s
+20:03:47 * bcoca really needs voting app in zoidbot
+20:03:56 <bcoca> #topic open floor
+20:04:14 <jimi|ansible> a+3, b+1, c+0, d+0
+20:04:26 <bcoca> jimi|ansible: an ACCURATE voting app
+20:04:33 <jimi|ansible> :)
+20:05:04 <schmots_> how do we mark an update for a 2.6.1 release and not a 2.7 release?
+20:05:33 <bcoca> you shouldn't
+20:05:40 <bcoca> everything should go thorugh devel 1st
+20:05:54 <schmots_> oh, even easier.
+20:05:58 <bcoca> then you cherry pick to a backport PR that points at stable-2.6
+20:06:05 <bcoca> AFTER the PR for devel was merged
+20:06:23 <schmots_> Thanks as always bcoca
+20:06:36 <bcoca> np, i just take your first born or beer as payment
+20:06:52 <bcoca> no new topics, so
+20:06:58 <bcoca> #endmeeting

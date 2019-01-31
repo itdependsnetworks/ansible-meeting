@@ -1,0 +1,144 @@
+15:02:59 <bcoca> #startmeeting ansible core public irc meeting
+15:02:59 <zodbot> Meeting started Thu Nov  8 15:02:59 2018 UTC.
+15:02:59 <zodbot> This meeting is logged and archived in a public location.
+15:02:59 <zodbot> The chair is bcoca. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:02:59 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:02:59 <zodbot> The meeting name has been set to 'ansible_core_public_irc_meeting'
+15:03:26 <bcoca> #topic https://github.com/ansible/ansible/pull/48068
+15:03:38 <bcoca> @sivel?
+15:05:34 <bcoca> anyone care to vote on the inclusion of this?
+15:06:44 * sdoran looking
+15:06:57 <sdoran> Oh, I remember this.
+15:07:52 <sivel> I don't think I am voting. I am looking for a vote to influence me
+15:08:10 <sdoran> Not voting is voting. 😜
+15:08:10 <sivel> what was the vote last time?
+15:08:10 <bcoca> mostly i wanted you to state the case
+15:08:27 <sivel> Oh, do we actually ahve anyone here other than the 3 of us?
+15:08:28 <bcoca> but i think you are going to get a 0/0 in this case
+15:08:51 <sivel> I think the last vote was like -1.9 to 3*0
+15:09:02 <bcoca> i would go with that
+15:09:17 <maxamillion> .hello2
+15:09:18 <zodbot> maxamillion: maxamillion 'Adam Miller' <maxamillion@gmail.com>
+15:09:41 <sivel> maxamillion: did you vote on the `run_once` inclusion for includes last time?
+15:10:03 <maxamillion> sivel: I honestly don't remember
+15:10:19 <sivel> Do you have an opinion? Would you like me to "state the case"?
+15:10:42 <maxamillion> sivel: if you don't mind stating the case, that would be helpful and appreciated
+15:11:04 <sivel> In 2.7 we added a whitelist for allowed keywords on include tasks
+15:11:07 <sdoran> I'd appreciate that too.
+15:11:16 <sivel> previously, some were used, some were just ignored, there was no telling what did what
+15:11:31 <sivel> We omitted `run_once` from that list in 2.7
+15:11:47 <sivel> The PR was submitted to add `run_once` to that whitelist
+15:12:32 <sivel> typing more...trying to word something
+15:13:02 <sivel> using run_once on an include does work, but maybe doesn't do what most people would expect
+15:13:23 <sivel> additionally, I personally feel it is a little limited, because you cannot influence which host is used with run_once when doing an include
+15:13:26 <bcoca> +0.9 now .. i had not realized this 'was' working at one point
+15:13:36 <sivel> since delegate_to does not work
+15:13:58 <sivel> I am on the fence about allowing it.  But I would be ok either way
+15:14:04 <sivel> it did work before
+15:14:07 <sivel> now it doesn't
+15:14:18 <maxamillion> hrm
+15:14:18 <sivel> so our vote is effectively -1 at this point
+15:14:20 <bcoca> we arbitrarily disabled it ... think we should restore
+15:14:23 <bcoca> even if not as useful
+15:14:58 <sivel> I keep going back and forth on whether to add it, and was roughly hoping that I could be swayed by the vote
+15:15:23 <sivel> I did add an integration test to the PR that "defines" the behavior
+15:15:24 <sdoran> Does `run_once` work with `import_tasks`?
+15:15:33 <sdoran> (I would assume so, but just asking)
+15:15:49 <bcoca> yes, but not same way
+15:15:49 <sivel> I haven't explicitly tested, but it would of course do something very different
+15:15:56 <bcoca> all keywords on 'import' are inherited
+15:16:07 <bcoca> its equivalent to inclue_tasks: apply: run_once
+15:16:28 <sivel> so if we do add it back, we do at least have a reference playbook describing behavior
+15:16:39 <sdoran> That's what I thought. Just wanted to make sure that was still the case.
+15:16:58 <sdoran> So it used to work with `include_tasks` prior to 2.7, or just with `include`?
+15:17:08 <sivel> sdoran: it worked with include_tasks prior to 2.7
+15:17:16 <sdoran> <ack>
+15:17:20 <sivel> although we did not realize it did
+15:17:26 <sivel> as evidenced by the fact it was omitted
+15:17:32 <bcoca> i dont think any of us did ...
+15:17:40 <sivel> based on those last 2 statements, I almost feel like we should restore it
+15:17:46 <bcoca> agreed
+15:17:53 <bcoca> full+1 now
+15:17:55 <sivel> it's just potentially an odd behavior, which makes me hesitate
+15:18:11 <sdoran> So what's the desired behavior? "Only include (and run) these tasks one time?"
+15:18:22 <sdoran> I suppose horse is out of the barn...
+15:18:24 <bcoca> sdoran: see example, too hard to explain
+15:18:26 <sivel> that is a tricky question there
+15:18:35 <sivel> I can tell you what it does, not what people expect
+15:18:59 <bcoca> its confusing, people should not use it .. but if they were and we removed it 'by accident' .. we should restore and document
+15:19:00 <sdoran> I'm not a huge fan of the UI. It seems to further complicate dynamic includes.
+15:19:02 <bcoca> ^ which pr does
+15:19:27 <sivel> what it does, is only process the include for a single host, which means that the included tasks only execute 1 time on 1 host later, not on 1 host for n hosts in the inventory
+15:19:27 <bcoca> if we dont like it and decide it should not work, that is diff issue
+15:19:31 <sdoran> But that it used to work kinda makes this a regression rather than something we can design.
+15:19:35 <maxamillion> if it worked and people used it, it makes sense to restore and document the behavior as it stands.... I guess my remaining question is, what doesn't work compared to how `run_once` used to work and is it possible to restore that back to the old behavior?
+15:19:52 <bcoca> sdoran: 'unknown' features are not regressions
+15:20:02 <bcoca> but it does work as i expect ...
+15:20:02 <sivel> maxamillion: it would still work just like it did before
+15:20:21 <sivel> adding it as allowed, brings behavior back to pre 2.7
+15:20:49 <sivel> it's just that the combo of run_once and includes is likely to be more confusing than how it works elsewhere
+15:20:54 <bcoca> which im fine with, its not bad behaviour
+15:21:14 <sivel> but it does work as bcoca and I would expect, based on what we know of how these things work
+15:21:16 <bcoca> just confusing ,but run_once and includes are already confusing
+15:21:19 <sdoran> bcoca: That's true. I more meant it seems like a regression from the POV of the user that was leveraging that "unknown feature".
+15:21:50 <bcoca> sdoran: i refuse to call those regressions, since using a spacebar as a heater was never the intention
+15:21:58 <sivel> so if someone else says +1 to add it, I'll merge that PR
+15:22:19 <bcoca> in this case .. its not an 'unintended' feature, but a logical consequence of how both systems work
+15:23:19 <bcoca> i think you have +1 *3 at this point
+15:23:36 <sdoran> bcoca: Also true. "Emergent behavior" type of thing. I see what you mean.
+15:24:14 <bcoca> sdoran: yeah, big difference, so i do consider this a 'unintended regression' because its is expected behaviour (once you thnk about it) and it was not disabled intentionally
+15:24:38 <sdoran> +1 to merge
+15:24:58 <sivel> In some of these cases it's like trying to discern the behavior of a wild animal, you just sit back and watch until you figure it out
+15:25:01 <sdoran> Though I feel we should document what this does, exactly, and potentially encourage folks not to do it that way.
+15:25:07 <maxamillion> I'm not the biggest fan
+15:25:11 <bcoca> sdoran: PR does it
+15:25:19 <sdoran> And maybe use a conditional instead.
+15:25:21 <dag> the bigger issues is that run_once does not guarantee it is run
+15:25:22 <maxamillion> but I think it makes sense to bring it back since we accidentally regressed
+15:25:23 <bcoca> document, no encouraging
+15:25:29 <maxamillion> I also think we need to document the behavior
+15:25:33 <dag> if the designated host is being ignored, it won't be run
+15:25:47 <bcoca> dag: but that is issue with the confusing naming of 'run_once'
+15:25:48 <bcoca> not this combo
+15:25:51 <dag> bcoca: maybe, or with the implementation
+15:25:51 <bcoca> this still works as 'run_once' normally works
+15:26:19 <bcoca> dag: that is dif fissue than discussed and has ' bypass host loop' implications
+15:26:26 <dag> I'd state: this still fails as 'run_once' normally fails :p
+15:26:34 <sivel> based on the expectations of how includes work, and how run_once work, when added together, they behave as I would expect
+15:26:36 <bcoca> its consistent, lets leave it at that
+15:26:52 <dag> very inconsistent, I would add ;-)
+15:27:01 <sivel> but not everyone understands these as well as bcoca and I may
+15:27:11 <bcoca> i dont want to understand it ...
+15:27:16 <sivel> but the integration test that I added, aims to be the documentation of how they interact
+15:27:43 <bcoca> dag: instead of chaning run_once behaviour and breaking existing plays, i was thinking of creating an alternative that actually works as 'run once reads'
+15:27:59 <bcoca> but that is offtopic
+15:28:24 <bcoca> #topic auto file locking
+15:28:27 <maxamillion> yeah, I'm not sure I fully understand it
+15:28:35 <bcoca> ^ did anyone get numbers on that since tuesday?
+15:30:59 <sivel> I've not done anything on that PR
+15:31:32 <bcoca> if no new input i'll skip
+15:31:39 <bcoca> #topic https://github.com/ansible/ansible/pull/45238
+15:32:28 <bcoca> ^ this is a tricky one, it used to be that file lookup would process yaml and json files into vars, but a it was changed (seems unintentionally) to only process json
+15:32:56 <bcoca> the pr restores it, but tests expect the 'new behaviour' ... so do i restore the original behaviour or keep the new one as the 'normal'?
+15:33:19 <sivel> bcoca: it did?
+15:33:25 <sivel> do we know when it stopped working?
+15:33:33 <bcoca> yes, i had a bunch of plays that used it
+15:33:39 <sivel> I'd like to know what caused it to stop working before merging
+15:34:26 <sivel> sorry, also having trouble focusing, being in 2 meetings
+15:34:46 <bcoca> and we lack quorum ... so should i just end meeting early?
+15:34:59 <sivel> I fear that this could also create unexpected outcomes by changing it now
+15:35:03 <bcoca> most people seem to be at internal RH meeting
+15:35:06 <sivel> without knowing when it stopped
+15:35:10 <bcoca> sivel: that is why i didnt merge
+15:35:44 <sivel> bcoca: ok.  I'd like to bisect to find out when it stopped working
+15:36:04 <bcoca> iirc #18355 was reason
+15:36:22 <bcoca> i should have kept notes
+15:36:41 <sivel> also I think the fact that it supports JSON currently is due to safe_eval
+15:36:51 <bcoca> it is
+15:36:57 <sivel> and not sure it would apply to jinja2 native
+15:37:22 <bcoca> tempted to just create a vars_file lookup to restore what i used before
+15:37:36 <bcoca> i was using file lookup as more versatile 'include_vars'
+15:37:42 <bcoca> as you could assign to var in any scope
+15:37:43 <sivel> ok, I guess since we have no quorum anyway, we can skip for now.  But I'll look at it as well
+15:37:47 <bcoca> k
+15:37:50 <bcoca> #endmeeting

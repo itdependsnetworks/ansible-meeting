@@ -1,0 +1,325 @@
+19:09:11 <bcoca> #startmeeting ansible core public irc meeting
+19:09:11 <zodbot> Meeting started Tue Nov 27 19:09:11 2018 UTC.
+19:09:11 <zodbot> This meeting is logged and archived in a public location.
+19:09:11 <zodbot> The chair is bcoca. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:09:11 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:09:11 <zodbot> The meeting name has been set to 'ansible_core_public_irc_meeting'
+19:09:47 <bcoca> #topic https://github.com/ansible/ansible/pull/46675
+19:10:09 <maxamillion> .hello2
+19:10:10 <zodbot> maxamillion: maxamillion 'Adam Miller' <maxamillion@gmail.com>
+19:10:16 <shertel> \o
+19:10:23 <sdoran> o/
+19:10:42 <mkrizek> \o
+19:11:07 <bcoca> @gundalow you seem to have been reviewing that one, you know why raj wanted it to be in meeting other than 'can i get re review'?
+19:12:20 * bcoca hugs a cricket
+19:12:40 <bcoca> #topic https://github.com/ansible/ansible/issues/48632
+19:13:33 * nitzmahone loathes overloading `state` even more
+19:13:42 <agaffney> indeed
+19:13:52 <abadger1999> Hola
+19:13:57 <sdoran> In favor of explicit params that are boolean?
+19:13:58 <bcoca> @maxamillion I really dont have strong opinion, not against adding ability to install builddep to package modules  ... but would create diff modules to actuall ybuild packages
+19:14:16 <maxamillion> yeah, I'm honestly on the fence about this one
+19:14:27 <bcoca> agreed, install_builddep=no|yes
+19:14:44 <maxamillion> I understand the desire to add the feature to the module but we are technically wrapping functionality from a different utility
+19:14:55 <nitzmahone> and that always ends well
+19:15:15 <sdoran> That makes this pretty dicey.
+19:15:26 * abadger1999 notes that some apt functionality depends on extra packages being installed
+19:15:27 <maxamillion> so the question then is, do we not overload state and have the yum/dnf modules be inconsistent with the apt module?
+19:15:39 <maxamillion> abadger1999: ah, good to know
+19:15:40 <sdoran> If it's not a common/default tool, we'd have to add error checking.
+19:15:51 <nitzmahone> or deprecate that on apt and change it to be consistent with something else? ;)
+19:15:52 <bcoca> apt has install_recommends boolean
+19:16:02 <Xaroth> I think keeping consistency with apt is better
+19:16:03 <bcoca> if we put builddep there as a state .. we did it wrong
+19:16:14 <maxamillion> sdoran: it's fairly common to have yum-utils and dnf plugins core/extras installed
+19:16:23 <bcoca> Xaroth: the apt module itself is inconsistent
+19:16:26 <abadger1999> builddep is a state there... it sorta makes sense (not in English but it does in computer-ese)
+19:16:30 <Xaroth> True that
+19:16:52 <Xaroth> But I've never had the mojo to start rewriting it :|
+19:16:59 <bcoca> abadger1999: yet install_recommends is boolean option? we are having it both ways ...
+19:17:02 <abadger1999> it's a state of the system which is keyed on a package name.
+19:17:39 <abadger1999> bcoca: Yeah, that could be a state too.
+19:17:52 <bcoca> @abadger1999 what happens when you want both?
+19:18:06 <nitzmahone> Does state: builddep imply anything about the state of the package itself?
+19:18:08 <nitzmahone> yeah
+19:18:11 <bcoca> state: recommands_and_build_dep?
+19:18:18 <Xaroth> Install recommend is a Boolean flag you pass to apt
+19:18:19 <nitzmahone> composite values suck
+19:18:21 <abadger1999> you don't.  builddep doesn't make sense with recommends.
+19:18:24 <bcoca> no, it implies the extra packages you include
+19:18:49 <Xaroth> So that makes sense as a Boolean flag for `apt`
+19:18:57 <gundalow> bcoca: link? On phone
+19:19:00 <bcoca> abadger1999: how not? immagine i want to develop (builddep) against optional backend of tool (recommends)
+19:19:11 <bcoca> gundalow: we'll revisit
+19:19:36 <abadger1999> bcoca: That's not how the tool is designed to be used to build packages.
+19:19:53 <bcoca> one of the main reason to build packages is customization
+19:19:54 <abadger1999> it would be a packaging bug if a package was built that way.
+19:19:58 <bcoca> which in many cases includes 'recommends'
+19:20:29 <bcoca> abadger1999: it would be intended use, not a bug, that is the whole point of allowing build your own package
+19:20:54 <abadger1999> Mmmm... nope.
+19:21:07 <bcoca> i.e i added custom sqlite backend to ldapd, needed both build deps and recommends
+19:21:28 <bcoca> as sqllite backend was in recommends, but i wanted to customize it, so needed both
+19:21:43 <sdoran> I think it'd be fine to add this, provided it's a separate parameter and we have good error checking for existence of the underlying tool.
+19:22:01 <sdoran> I don't want to overload `state`.
+19:22:08 <abadger1999> right, the package has separate builddeps and recommends metadata.
+19:22:24 <bcoca> abadger1999: also, if we make it a state, wouldnt we require to remove 'build deps' and 'recomend' when using present/latest?
+19:22:33 <abadger1999> when you install the build-deps you use build-deps.  When you install the recommends you install with reccomends on
+19:22:40 <sdoran> I don't think it's terribly important to have a consistent UI between different packaging modules. The tools work differently under the hood, so the UI will always look/feel/behave a bit differently.
+19:22:54 <abadger1999> bcoca: if we make what a state?
+19:22:57 <bcoca> abadger1999: but now its not 'state' anymore as it doesnt reflect the instaleld
+19:23:03 <bcoca> builddep/recommends
+19:23:14 <nitzmahone> If that's the case, since it's wrapping a completely separate tool, shouldn't it be a separate module?
+19:23:17 <abadger1999> those are two very different things.
+19:23:24 <abadger1999> builddep is definitely a state.
+19:23:36 <bcoca> abadger1999: but we dont treat it as such
+19:23:36 <abadger1999> recommends could be a state but also might not be.
+19:23:49 <nitzmahone> Curious what maxamillion thinks about impl, since he's been in the neighborhood recently
+19:23:54 <bcoca> unsure on that distinction, since both do basically same thing with diff lists, install extra packages
+19:24:06 <abadger1999> - state
+19:24:07 <abadger1999> Indicates the desired package state. `latest' ensures that the latest version is
+19:24:09 <abadger1999> installed. `build-dep' ensures the package build dependencies are installed.
+19:24:10 <abadger1999> (Choices: absent, build-dep, latest, present)[Default: present]
+19:24:27 <bcoca> recommends: ensures package recomendations are installed ?
+19:24:28 <nitzmahone> What does `state: absent` do to build deps?
+19:24:30 <abadger1999> - install_recommends [...]         type: bool
+19:24:36 <bcoca> nitzmahone: currenlty nothing
+19:24:37 <abadger1999> So we do in fact treat them separately
+19:24:42 <nitzmahone> That sucks too
+19:24:49 <bcoca> abadger1999: that is why i say we are being inconsistent
+19:24:51 <sdoran> @nitzmahone I assume it would be ignored.
+19:24:52 <nitzmahone> Irreversible changes made because the module UI was overloaded
+19:24:55 <abadger1999> nitzmahone: you can't do that
+19:25:04 <bcoca> and even state:builddep is not really being treated as a discrete state
+19:25:05 <abadger1999> nitzmahone: build-deps is a state and absent is a state.
+19:25:21 <maxamillion> nitzmahone: I'm unfortunately indifferent, but on the note of `absent` ... if you attempt to do an uninstall via build-deps with the yum-utils tooling or the dnf plugin, it doesn't support that ... builddeps is an install-only thing afaik
+19:25:34 <nitzmahone> abadger1999: right, I'm pointing out the impedance mismatch between those two things and suggesting we don't repeat it on another module
+19:25:34 <sdoran> @nitzmahone This particular tool, `yum-builddep`, is simple enough that integrating the behavior into the `yum` module could make sense.
+19:25:44 <abadger1999> nitzmahone: I don't know what you mean.
+19:25:46 <sdoran> But I yield to @maxamillion cuz `yum` is his baby currently. :)
+19:26:00 <abadger1999> nitzmahone: It's a state.... it means make sure that this group of packages is installed.
+19:26:01 <maxamillion> heh
+19:26:18 <bcoca> abadger1999: then present shoudl ensure they are not?
+19:26:22 <nitzmahone> abadger1999 basically that `build-deps` and `present` are effectively orthogonal things
+19:26:24 <abadger1999> bcoca: no .
+19:26:27 <bcoca> since its a diff state
+19:26:31 <abadger1999> because present is a different state.
+19:26:44 <nitzmahone> Both happen to source from the same package name, but that's about it
+19:26:51 <bcoca> yes, but if you do state=buidldeps in one task ans state=presetn in subsequent, you get the same system?
+19:26:54 <abadger1999> nitzmahone: Yes.  they are orthogonal :-)  And therefore they should be different states.
+19:26:58 <abadger1999> which is what they are in apt.
+19:27:05 <nitzmahone> Or different modules, is my point
+19:27:06 <bcoca> i'm saying apt is wrong
+19:27:09 <abadger1999> I also think we're on a tangent here.
+19:27:14 <nitzmahone> +1 to "apt did it wrong"
+19:27:31 <bcoca> nitzmahone: which way, cause it  does it both ways
+19:27:42 <abadger1999> The question is really... since they are not a part of the base tool, should they be a different module.
+19:27:42 <maxamillion> nitzmahone: yes, orthogonal ... one means "I want *this* installed" the other means "I want everything I need to build *this* installed" but both are install tasks so "present" states
+19:28:17 <abadger1999> build-dep is most similar to groups.
+19:28:22 <nitzmahone> abadger1999 that'd be my vote; the case for consistency with seems pretty specious
+19:28:25 <bcoca> im not disputing they are all 'states' , but really treating them as such would require 'present' to negate the exra files from builddep
+19:28:26 <abadger1999> Except that hte "group" name overlaps with package names.
+19:28:42 <nitzmahone> * with apt
+19:29:00 <bcoca> nitzmahone: we are prposing doing same in yum, but yeah, that is already an issue in apt
+19:29:03 <abadger1999> we do access them all via the same command line tool.
+19:29:10 <abadger1999> But the code is in separate packages.
+19:29:27 <nitzmahone> But really "yum" should be "yum_package"- that's the resource you're managing
+19:29:35 <nitzmahone> idem "dnf_package"
+19:29:54 <maxamillion> Proposal: add the functionality to dnf and yum, notating in the docs that the functionality requires the extra utils and follow how apt implemented the feature for consistency
+19:30:03 <nitzmahone> So from the perspective, builddeps is a different thing with the same key
+19:30:09 <maxamillion> (it's not my favorite, but I prefer consistency)
+19:30:26 <abadger1999> maxamillion: +1
+19:30:54 <abadger1999> (Note, that's not a -1 to separate modules.  It's just a +1 to you doing that if you think it's the best)
+19:31:21 <bcoca> -1 for following apt ... im in favor of consistency but not consistenly wrong
+19:31:38 <nitzmahone> -0.5, but don't have super strong feelings about it, esp not having been in the impl for a long time. Seems like integrating yet another cmdline tool into yum/dnf is setting us up for bad things though
+19:31:54 <abadger1999> nitzmahone: it's not a separete command line tool.
+19:32:05 <maxamillion> or, what about coming up with a "this is how we'd like to do it" and then patching apt to follow? (maintaining backwards compat until we decide to deprecate)
+19:32:16 <sdoran> I thought `yum-builddep` was a separate tool.
+19:32:18 <abadger1999> nitzmahone: it's a plugin to the current tool.
+19:32:27 <maxamillion> sdoran: it is
+19:32:35 <maxamillion> sdoran: comes from `yum-utils`
+19:32:37 <bcoca> sdoran: install the build-deps, not build the module
+19:34:02 <maxamillion> bcoca: that's what yum-builddep does, it installs the deps
+19:34:10 <maxamillion> it doesn't build
+19:34:21 <abadger1999> Ah, yeah, for real yum(TM) it is a separate tool. for dnf it is a plugin.
+19:34:54 <maxamillion> right
+19:35:02 <abadger1999> and the yum4/dnf-wrapper of yum on current systems will end up using a plugin.
+19:35:04 <maxamillion> which kind of makes the issue nuanced
+19:35:09 <maxamillion> bingo
+19:35:09 <larsks> Mostly lurking, but I do like maxamillion's suggestion, especially because I think the expected semantics of 'state: present' and 'install_buildeps: true' are unclear: would a person expect the named package itself to be installed? Or just the deps?  I think state: builddeps is more clear on that front. A separate module would be better I think than introducing those booleans.
+19:35:15 <abadger1999> because it just maps to dnf under the hood
+19:37:01 <bcoca> https://gist.github.com/bcoca/fed98a40d08e46602c2166ec6b90df4d <= my problem is this, the states are not states anymore and there is inconsisten behaviour depending on order
+19:38:23 <abadger1999> bcoca: One I think that's the way it should be and Two I don't think that your example is always correct.
+19:38:42 <bcoca> add an abset pkg/pkg2 on top
+19:38:50 <bcoca> and you'll always get changed in one pair, but not in the other
+19:39:04 <bcoca> i think that is inconsistent with what 'state' is
+19:39:10 <maxamillion> I don't think `yum-builddeps foo` will actually install `foo`
+19:39:11 <abadger1999> that's not inconsistent.
+19:39:19 <bcoca> how so?
+19:39:21 <maxamillion> but instead will install only the deps needed to build `foo`
+19:39:59 <abadger1999> if you run a specific task and then you run the specific task again and the second time it is changed=False, that is the consistency we're able to offer.
+19:40:14 <bcoca> look at the state= it is diff
+19:40:27 <abadger1999> if you run one task and hten you run a different task we cannot assure you that the different task will be changed==False
+19:40:32 <bcoca> but in one case it causes changes, in the other it does not
+19:40:36 <abadger1999> That would be madness.
+19:40:53 <abadger1999> You're bringing a machine into a certain state.
+19:40:58 <bcoca> its madness that a change in state is no change in one direction but it is in the other
+19:41:23 <abadger1999> Some tasks will cause changes and other tasks will not cause changes depending on the previous state of the machine.
+19:41:36 <sdoran> This is pretty messy. I can see how `build-dep` makes sense as a `state` option to `apt` since it's a subcommand. And that's build it is with `dnf`.
+19:41:43 <sdoran> But with `yum`, it's a separate command.
+19:41:45 <sdoran> Ugh.
+19:41:45 <abadger1999> the initial state of the machine and hte previous tasks will both affect that.
+19:42:10 <bcoca> see the 5 tasks, state of the machine is tottally predictable, but the reporting is confusing
+19:42:24 <bcoca> and 'predictable'
+19:42:32 <abadger1999> It's not.
+19:42:35 <maxamillion> just a sec ... checking something
+19:42:36 <bcoca> as soon as we say 'present' means 'also might have builddep '
+19:43:10 <maxamillion> wait, what?
+19:43:20 <abadger1999> bcoca: it does not.
+19:43:45 <bcoca> how so? the example shows that if you do state=buildep BEFORE state=present, state=present shows 'no change'
+19:43:55 <sdoran> It seems with `apt` and `dnf`, `builddep` is mutually exclusive with `install` and `remove`.
+19:44:01 <bcoca> while the reverse will show a change, as long as we don't modify present to mean 'no builddeps'
+19:44:24 <bcoca> if we look at it as commands, it makes sense, as state it does not
+19:44:29 <sdoran> In that case `state` essentially means "What subcommand to run".
+19:44:40 <bcoca> sdoran: my point exactly, its not state anymore
+19:44:44 <sdoran> It should be really be `action`.
+19:44:48 * sdoran ducks
+19:44:55 <abadger1999> you're argument is the same as [{yum: {name: pkg, state: present }} , {command: rpm -ivh pkg }]   is different than [ {command: rpm -ivh pkg }, {yum: {name: pkg, state: present }}]
+19:45:12 <abadger1999> To which I say, which is expected.
+19:45:19 <bcoca> abadger1999: no, since command is diff module and the states we are discussing are in the SAME module
+19:45:33 <abadger1999> sdoran: they'd states because they're idempotent.
+19:45:48 <bcoca> i dont expect modules to be congruent with other modules, but a states within the SAME module should be
+19:46:02 <abadger1999> sdoran: If you do yum: state=builddep  pkg=pkg followed by yum state=builddep pkg=pkg, it will report no change.
+19:46:14 <abadger1999> bcoca: No, it shouldn't necessarily be that way.
+19:46:28 <bcoca> then you we are not using the same definitions of 'state' nor 'congruent'
+19:46:58 <abadger1999> bcoca: yum: state=absent name=pkg, yum: state=installed name=pkg   can be different than the opposite.
+19:47:10 <abadger1999> and will leave the machine in a different state afterwards.
+19:47:30 <bcoca> im not saying tehy have to be opposites, but once you add builddep 'present' becomes a 'fuzzy' state
+19:47:39 <abadger1999> no it doesn't.
+19:47:39 <bcoca> and depending on order it might show change or not
+19:47:44 <abadger1999> is the package installed or not.
+19:47:47 <abadger1999> That's not fuzzy.
+19:47:55 <sdoran> It does become ambiguous. Seems like the tension lies in what does `builddep` equate to? `dnf builddep foo && dnf install foo`, or only `builddep`?
+19:47:56 <abadger1999> The module doesn't care how you get there.
+19:47:57 <bcoca> yes, but the buildeps are installed or not?
+19:48:06 <abadger1999> The module is reporting whether it had to make any changes to get there.
+19:48:26 <maxamillion> I think we're over complicating this ... `yum-builddep bash` is basically `yum install $LIST_OF_BUILDREQUIRES_FOUND_IN_SPEC_FILE`
+19:48:45 <sdoran> So it's not two separate commands?
+19:48:57 <nitzmahone> And IIUC it's not reversible, either, right?
+19:48:58 <sdoran> I've not used them, so I'm reading `man` pages and playing in a shell on the fly.
+19:49:03 <maxamillion> sdoran: it is two separate commands
+19:49:05 <bcoca> sdoran: might be separate command, but it ends up being 'yum install list'
+19:49:06 <abadger1999> the builddeps are installed when you do yum state: builddep. and the module will report whether it had to do anything to get to that state.
+19:49:09 <jtanner> builddep should be a new module, or the module accepts "name=<name>:builddeps" ... as a state, it makes no sense to me
+19:49:27 <abadger1999> nitzmahone: correct.  Just like yum install @group is not reversible.
+19:49:27 <maxamillion> sdoran: but the `yum-builddep` basically goes out to the repodata and parses the build deps required and then installs them
+19:49:30 <bcoca> abadger1999: then the present becomes a subset of builddep
+19:49:39 <abadger1999> bcoca: their otrthogonal.
+19:49:48 <bcoca> no, since they both install the actual package
+19:50:01 <bcoca> + dependencies, one just installs 'more stuff'
+19:50:32 <maxamillion> https://paste.fedoraproject.org/paste/4TZ4zscVKNTz0E0xjyd~HQ
+19:50:39 <maxamillion> it can easily be made idempotent also
+19:51:26 <abadger1999> bcoca: You are incorrect.
+19:51:32 <bcoca> how so?
+19:51:40 <bcoca> state=presnt == install package + deps
+19:51:55 <maxamillion> bcoca: they don't both install the actual package https://paste.fedoraproject.org/paste/0gzYB0RljWhrA9RidgfkpA
+19:52:10 <maxamillion> `yum-builddep foo` does not install `foo`
+19:52:13 <abadger1999> bcoca: https://gist.github.com/abadger/cc0d39c1650ce567eaeece744eeeeb76
+19:52:18 <bcoca> maxamillion: current apt builddep does
+19:52:24 <abadger1999> bcoca: neither yum-builddep nor dnf builddep install the package.
+19:52:27 <bcoca> installs package+ deps + build deps
+19:52:31 <jtanner> how do i say build deps should not be present?
+19:52:36 <bcoca> ^ since you are discussing making it 'same as apt'
+19:52:38 <maxamillion> jtanner: you don't
+19:52:41 <bcoca> that is what i was going from
+19:52:43 <jtanner> then it shouldn't be a state.
+19:52:46 <maxamillion> jtanner: the same way you don't from the command line tools
+19:52:49 <bcoca> if you are implementing diff, then yes, it makes more sense
+19:52:52 <jtanner> it should be a name or an identifier
+19:52:53 <abadger1999> jtanner: I disagree.
+19:53:05 <maxamillion> jtanner: the command line tools only offer install, I don't think it's our job to try and reverse it
+19:53:18 <abadger1999> jtanner: it should be a state if we can make it idempotent
+19:53:30 <abadger1999> reversability is a spearate issue.
+19:53:54 <jtanner> it's semantics but "state" implies a switch to me
+19:53:55 <abadger1999> (for instance, installing groups is not reversable)
+19:53:58 <jtanner> on or off
+19:54:22 <bcoca> abadger1999: i would argue, that is a failure of the tool , you should be able to remove groups the same as adding them
+19:54:22 <jtanner> groups can be uninstalled, just not easily
+19:54:32 <abadger1999> jtanner: It doesn't to me.
+19:54:40 <maxamillion> groups can not be uninstalled in the dnf module currently because of an upstream bug
+19:54:47 <abadger1999> a state is not necessarily binary
+19:54:51 <bcoca> agreed
+19:55:14 <bcoca> my issue was with current apt build-deb/present state, if build-dep does not overlap with present in yum .. im less opposed
+19:55:24 <bcoca> so you are not making it same as apt
+19:55:29 <maxamillion> I agree with abadger1999, a state says I want it to exist in this declared state ... the end. In my mind it has no implications of inherently being able to reverse that state but simply to place the system into that desired state
+19:55:41 <maxamillion> we don't have inherent rollback for all sorts of things
+19:55:53 <bcoca> maxamillion:  but i would add rollback for these cases if possible
+19:55:58 <bcoca> builddeps_absent
+19:56:00 <nitzmahone> The bigger beef with the state override is if you ever *can* reverse the state, you're painted into a crummy UI corner
+19:56:01 <sdoran> It's like a five position switch. :)
+19:56:18 <nitzmahone> s/override/overload/
+19:56:21 <abadger1999> the problem with both builddep and group absent is that no one actually wants it.
+19:56:27 <abadger1999> they want groups_absent_dwim
+19:56:52 <abadger1999> (builddep and group) * absent
+19:56:54 <maxamillion> heh
+19:56:54 <maxamillion> MOAR DWIM
+19:56:56 * bcoca runs from the shadows of dwim
+19:57:35 <abadger1999> I want you to remove all of the builddeps for this except the ones that I am actually using for some other reason that you, as the package manager, know nothing about.
+19:58:01 <nitzmahone> It feels like we're going in circles here a bit, anyway. Coming up on the hour bikeshedding this one. It sounds like we want the functionality somewhere, just unclear if it's a state overload, separate module, or new boolean arg
+19:58:05 <nitzmahone> If we ranked vote:
+19:58:23 <abadger1999> +1 to letting maxamillion do what he wants.
+19:58:28 <bcoca> the state overload seems to be only in apt, if they yum implementation is not the same, not as opposed
+19:58:32 <nitzmahone> 1) separate module
+19:58:32 <nitzmahone> 2) new state arg
+19:58:32 <nitzmahone> 3) new boolean
+19:58:42 <maxamillion> yeah, many people don't understand the depsolve transactional implications of "remove that group of packages" and it's often not what they want (this is mostly anecdotal evidence from years in Fedora and EPEL land as a packager ... but I've lived that pain enough)
+19:58:43 <nitzmahone> I'd vote 1,2,3
+19:58:52 <bcoca> -1, -0.5, +1
+19:58:59 <abadger1999> 2, 1
+19:59:06 <abadger1999> new boolean would just be wrong to me.
+19:59:10 <jtanner> +1,-1,-1
+19:59:23 <nitzmahone> (agreed, I'm -1 for #3, just ranking those choices)
+19:59:25 <bcoca> abadger1999: trinary vote plz
+19:59:35 <abadger1999> it's a hanging chad
+19:59:38 <maxamillion> 2,1,3 here ... purely for consistency of modules
+19:59:41 <jtanner> i think he meant 2,1,-1
+20:00:06 <bcoca> maxamillion: but it would be inconsistent if you are not going to implement it the same way
+20:00:07 <abadger1999> I was ranking but 3 is so far inferior to everything else, I'm pretending it doesn't exist.
+20:00:20 <jtanner> wait, are we voting in order or +1/-1 to each?
+20:00:24 <maxamillion> I'm ranking in preference
+20:00:28 <abadger1999> jtanner: in order
+20:00:35 <bcoca> jtanner: seems everyone is using their own voting system
+20:00:36 <maxamillion> yeah, in order
+20:00:38 <maxamillion> lol
+20:00:38 <abadger1999> that's the way nitzmahone did it at least.
+20:00:42 <maxamillion> bcoca: vote different!
+20:00:52 <maxamillion> there's a shitty apple computer commercial in there somewhere
+20:00:54 <jtanner> make voting great again
+20:01:00 <maxamillion> jtanner: well played
+20:01:05 <nitzmahone> IRV 4 eva
+20:01:49 <sdoran> -1, +0.5, +0.5
+20:02:07 <bcoca> im not reconciling 3 ways of voting
+20:02:26 <maxamillion> alright, so if I did math correctly, I think option #2 is winning with a net +0.5 right now after additions and subtractions are balanced out
+20:02:30 <sdoran> 🤣
+20:02:34 <abadger1999> Let me ask this... after we've talked this over and clarified how yum builddep works... does anyone feel that if maxamillion does whatever he wants that it would be a problem?
+20:02:42 <sdoran> Nope.
+20:02:45 <bcoca> so vote +- option, x,x
+20:03:13 <maxamillion> I DO WHAT I WANT! :P :P :P
+20:03:15 * abadger1999 puts his faith in maxamillion on this
+20:03:38 <jtanner> when maxamillion eventually burns out on yum/dnf module work, we all get to disentangle the overloaded state logic
+20:03:42 <bcoca> maxamillion: my count has em all in negative
+20:03:51 <bcoca> 2 with 'highest'; of -0.5
+20:04:20 <maxamillion> bcoca: ah ok, so I was a smidge off
+20:04:39 <maxamillion> alright, so option #2 is currently winning with the least amount of hate
+20:04:44 <maxamillion> fun
+20:05:09 <bcoca> its package management,  'least hated' is normally the winner
+20:05:24 <abadger1999> So package management is brexit?
+20:05:24 <bcoca> unlike service management, which 'most hated' wins
+20:05:48 <bcoca> abadger1999: that is just unbridled resentment badly directed
+20:05:58 <maxamillion> jtanner: it'll be fine, I've been fighting yum and dnf for a combined 15 years ... if I've not burned out yet, I think I'm in it for the long haul
+20:06:15 <maxamillion> wait ... 13 years? ... 15 ? .... I dunno
+20:06:22 <maxamillion> we'll just call it "over a decade" and move on
+20:06:25 <bcoca> maxamillion: you put the M in S&M
+20:06:44 <bcoca> think that is enough for today,
+20:06:46 <jtanner> dnf - decades needed [to] fix ... ?
+20:06:47 <maxamillion> ha!
+20:06:49 <bcoca> #endmeeting

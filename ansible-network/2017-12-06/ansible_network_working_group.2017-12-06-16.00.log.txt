@@ -1,0 +1,120 @@
+16:00:23 <gundalow> #startmeeting Ansible Network Working Group
+16:00:23 <zodbot> Meeting started Wed Dec  6 16:00:23 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:00:23 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:00:23 <zodbot> The meeting name has been set to 'ansible_network_working_group'
+16:00:36 * Qalthos 🌊🌊
+16:02:32 <kedarX> 👋
+16:03:48 * gundalow waits a few minutes for others to join
+16:08:37 <gundalow> #chair Qalthos dt-arista jmcgill298 kedarX Anil
+16:08:37 <zodbot> Current chairs: Anil Qalthos dt-arista gundalow jmcgill298 kedarX
+16:10:19 <gundalow> Hi everyone!
+16:10:47 <gundalow> #info Agenda as always https://github.com/ansible/community/labels/network
+16:11:50 <gundalow> #topic Open Floor
+16:11:57 <gundalow> Anyone got anything for today?
+16:13:28 <dt-arista> just a quick question regarding the upcoming network-cli connection changes
+16:13:32 <gundalow> Sure
+16:13:39 <dt-arista> and its very possible this is answered in the documentation and i have missed it
+16:13:49 <dt-arista> so i apologize for my lack of reading skillz in advance :)
+16:14:01 <gundalow> nps, we can always improve the docs
+16:14:28 <dt-arista> if you want to connect to a network mode using a non-cli method (lets say eapi for the sake of discussion) will this connection be local + provider cict?
+16:14:50 <Qalthos> For the time being, yes
+16:14:54 <gundalow> IN 2.5 yes
+16:15:15 <gundalow> in 2.6 it will be connection: network_<something> (maybe network_http)
+16:15:26 <Anil> any samples are in github which I can refer as a sample ?
+16:15:27 <gundalow> name needs bikesheading
+16:15:52 <dt-arista> ok
+16:16:05 <gundalow> Anil: For new platforms (which should only support network_cli) there are examples linked from https://github.com/ansible/community/blob/master/group-network/network_dev_network_cli.rst
+16:16:06 <dt-arista> one follow up
+16:16:22 <Anil> Sure i will refer that
+16:16:52 <gundalow> For examples on how to support provider & network_cli (for platforms that already existed in Ansible 2.4) see the existing Core Network modules (e.g. vyos)
+16:16:56 <gundalow> dt-arista: sure
+16:17:02 <gundalow> #chair skg-net
+16:17:02 <zodbot> Current chairs: Anil Qalthos dt-arista gundalow jmcgill298 kedarX skg-net
+16:17:11 <dt-arista> if you specifiy the provider dict in 2.5 but the connection == network_cli the provider dict is just ignored for modules that support network_cli?
+16:17:28 <Qalthos> dt-arista: yes
+16:17:36 <dt-arista> cool, thanks again
+16:17:56 <gundalow> You need to extend the code to print a warning
+16:18:53 <gundalow> #info warn on network_cli + provider: https://github.com/ansible/ansible/pull/33355
+16:19:20 <dt-arista> got it
+16:19:35 <gundalow> dt-arista: Which platform is this for?
+16:19:51 <dt-arista> eos/arista stuff
+16:20:02 <gundalow> We've done eos
+16:20:22 <dt-arista> ok, thought so, it was mainly for end users writing playbooks against it
+16:20:23 <gundalow> You thinking CloudVision?
+16:20:27 <dt-arista> and what the expected behavior is
+16:20:29 <dt-arista> and yes
+16:20:36 <dt-arista> for cloudVision too
+16:21:14 <dt-arista> what i am hoping to do is to get this new connection method in our automated test suite sooner than later so we can get ahead of any problems that our customers might hit
+16:21:22 <dt-arista> since thats been a bit problemmatic for us in the past
+16:21:40 <dt-arista> do you think the code in devel is at that stage? or is there a RC for 2.5?
+16:21:47 <gundalow> so Cloud vision is HTTP(s) so that will need to wait for the connection: network_http work in 2.6. Once that framework is in we will create some docs along the lines of https://github.com/ansible/community/blob/master/group-network/network_dev_network_cli.rst for that
+16:22:09 <dt-arista> cool
+16:22:20 <gundalow> I don't think there will be any changes to cv_server_provision_module in 2.5
+16:22:30 <gundalow> (from a connection point of view)
+16:22:38 <dt-arista> is it expected that we are on the hook for the transport:eapi or is that something you guys would be taking on
+16:22:46 <dt-arista> cool, that does clear that up
+16:23:12 <dt-arista> obviously nothing for 2.5
+16:23:25 <dt-arista> but when network_http comes out
+16:24:01 <gundalow> dt-arista: I *think* we (Ansible Core Team) will end up creating `connection: network_http` and we will update eos and nxos to use that and deprecate the provider/transport: eapi/nxapi
+16:24:19 <dt-arista> cool thanks
+16:24:27 <gundalow> #chair samerd
+16:24:27 <zodbot> Current chairs: Anil Qalthos dt-arista gundalow jmcgill298 kedarX samerd skg-net
+16:24:33 <dt-arista> i understand that is still under discussion
+16:24:45 <dt-arista> just trying to get an idea of whats coming down the line a bit
+16:24:51 <gundalow> Sure, totally understand
+16:25:23 <gundalow> Did you get an invite to the Network Partners call later this month, we will go though it in that
+16:25:30 <dt-arista> yep
+16:25:32 <dt-arista> i will be there
+16:26:04 <gundalow> cool
+16:26:16 <gundalow> samerd: Hi :)
+16:26:22 <gundalow> Anyone got anything else?
+16:26:24 <dt-arista> thats all i had
+16:26:28 <dt-arista> thanks for the responses
+16:26:39 <gundalow> no problem, good questions :)
+16:27:13 <samerd> gundalow: Hi, sorry for being late
+16:27:26 <gundalow> samerd: It's all good :)
+16:27:33 <gundalow> How you getting on?
+16:28:28 <samerd> great, I will push mlnxos_interface soon and will add some infra code
+16:28:41 <gundalow> ace
+16:28:52 <gundalow> good stuff on getting the network_cli port done
+16:29:16 <gundalow> as mentioned before, feel free to raise all the PRs at once for the remaining modules (one module per PR)
+16:29:17 <samerd> Thanks for the approval
+16:29:28 <gundalow> Anil Qalthos dt-arista gundalow jmcgill298 kedarX samerd skg-net Anyone got anything else?
+16:29:55 <samerd> I'll do that after the next PR that will contain some infra to avoid conflicts
+16:30:04 <gundalow> Sounds good
+16:30:05 <skg-net> nothing much from our side..the porting to the network_cli is going on for dellos* modules
+16:30:50 <gundalow> skg-net: Just to clarify, that's supporting provider & network_cli
+16:33:34 <skg-net> I just got that..we will support both..we were actually removing the provider support
+16:35:20 <gundalow> skg-net: well you can't remove provider for anything that existed in Ansible 2.4 as that's been released, you will need to give users time to update their playbooks to use `connection: network_cli`
+16:35:37 <gundalow> in Ansible 2.9 is when we will remove `provider:`
+16:36:59 <skg-net> got it..
+16:37:22 <gundalow> skg-net: Do you think you will support network_cli for 2.5?
+16:37:34 <gundalow> e.g. code merged by Jan 15th?
+16:37:41 <skg-net> yes for sure..
+16:37:45 <gundalow> Cool
+16:37:53 <skg-net> currently its with our testing team to validate the changes
+16:38:04 <gundalow> That's great
+16:38:16 <skg-net> we need to include the provider back..
+16:38:28 <skg-net> along with the warning..
+16:41:05 <ganeshrn> gundalow: we have not yet added deprecation warning for provider to be removed in 2.9
+16:41:17 <gundalow> ganeshrn: ah, OK
+16:41:19 <ganeshrn> deprecation warning is for to level args
+16:41:24 <gundalow> ah, yes
+16:41:28 <gundalow> sorry, was getting confused
+16:41:49 <ganeshrn> iirc we decide to add deprecation warning for provider in 2.6
+16:42:30 <gundalow> skg-net: We should get Dell into DCI (Distributed CI)
+16:43:05 <skg-net> sure..let me know what is needed from our end.. I sent you a Dell OS10 VM yesterday..
+16:43:29 <skg-net> I will send a Dell OS9 VM as well.
+16:43:48 <gundalow> #topic Distributed CI (DCI)
+16:43:57 <gundalow> Will give the steps here so others can beneffit
+16:45:16 <gundalow> #info Docs on DCI https://github.com/ansible/dci-partner-ansible
+16:45:35 <gundalow> Basically you run a dci-agent on RHEL7/CentOS 7 machine inside your lab
+16:45:52 <gundalow> and define an inventory which lists which machines you can test against
+16:46:06 <gundalow> I'll be doing a demo in the partner call
+16:47:08 <skg-net> okay.. I will get that started..send me a document or any info you have..
+16:48:04 <skg-net> oops missed the above link..Thanks..will go over those..
+16:48:07 <gundalow> :)
+16:48:23 <gundalow> I'll create accounts for you and send you an email with details in
+16:49:47 <gundalow> Anyone got anything else?
+16:50:20 <gundalow> Thank you for your time everbody
+16:50:24 <gundalow> #endmeeting

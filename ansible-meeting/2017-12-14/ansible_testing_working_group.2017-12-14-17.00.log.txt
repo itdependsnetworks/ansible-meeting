@@ -1,0 +1,256 @@
+17:00:27 <gundalow> #startmeeting Ansible Testing Working Group
+17:00:27 <zodbot> Meeting started Thu Dec 14 17:00:27 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+17:00:27 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+17:00:27 <zodbot> The meeting name has been set to 'ansible_testing_working_group'
+17:00:40 <gundalow> #chair mattclay
+17:00:40 <zodbot> Current chairs: gundalow mattclay
+17:00:44 * gundalow waves
+17:00:47 <gundalow> caphrim007: You around?
+17:00:58 <caphrim007> i am
+17:01:36 <alikins> assert adrian is here
+17:01:54 * mattclay waves
+17:02:31 <gundalow> woot
+17:02:37 <gundalow> #chair caphrim007 alikins
+17:02:37 <zodbot> Current chairs: alikins caphrim007 gundalow mattclay
+17:03:05 <gundalow> #topic Tests we (sort of) don't run in test/integration/targets/
+17:03:13 <gundalow> #info Should test that we can't run, but will be invoked via DCI/Zuul be moved into the main Ansible Repo?
+17:03:18 <gundalow> #info https://github.com/F5Networks/f5-ansible/tree/devel/test/integration/target
+17:03:43 <gundalow> I'm wondering if as we move more into DCI then into Zuul if this would be good
+17:03:52 <mattclay> When run by DCI/Zuul, who whose infrastructure will they be running on?
+17:03:58 <gundalow> allows feature work & test in same PR
+17:04:15 <gundalow> tests would be run in Network Partner's Lab
+17:04:25 <gundalow> Though when we have Zuul they would block CI
+17:05:47 <mattclay> It makes sense to keep the tests in the same repo as what they're testing. Otherwise we'd have to rely on Zuul's ability to combine multiple PRs together for testing.
+17:06:36 <mattclay> Whether that means moving the modules, or moving the tests.
+17:06:53 <gundalow> well the modules will continue to be shipped with Anisble
+17:06:56 <gundalow> Ansible*
+17:07:04 <mattclay> Since moving the modules isn't really an option yet, that leaves moving the tests.
+17:07:07 <gundalow> #chair rcarrillocruz
+17:07:07 <zodbot> Current chairs: alikins caphrim007 gundalow mattclay rcarrillocruz
+17:07:07 <rcarrillocruz> hey
+17:07:08 <caphrim007> mattclay: we eventually upstream all of that; sans the integration tests
+17:07:43 <mattclay> How long before we'll be running the tests using DCI or Zuul?
+17:08:25 <gundalow> NXOS is running already
+17:08:33 <caphrim007> thats a question for my test engineer. he's getting up to speed
+17:08:34 <gundalow> (in DCI)
+17:09:09 <gundalow> I believ F5 (caphrim007) have tests running locally and generating junit.xml, just not yet pushing the results to the DCIDB
+17:09:16 <maxamillion> what's DCI?
+17:09:26 <rcarrillocruz> i'm holding up on zuul, till is released
+17:09:28 <maxamillion> .hello2
+17:09:29 <gundalow> maxamillion: Distributed-CI
+17:09:29 <zodbot> maxamillion: maxamillion 'Adam Miller' <maxamillion@gmail.com>
+17:09:34 <gundalow> #chair maxamillion
+17:09:34 <zodbot> Current chairs: alikins caphrim007 gundalow mattclay maxamillion rcarrillocruz
+17:09:39 <maxamillion> gundalow: which is ... ?
+17:09:46 <rcarrillocruz> it works, but i have a hardcoded patch to make it work with network appliances
+17:09:53 <rcarrillocruz> i need to upstream that
+17:10:06 <alikins> I have no problem having tests in the repo that need special setup/infrastructure even if that infrastructure isnt in the repo
+17:10:16 <rcarrillocruz> and yeah, i would prefer if the test are in ansible
+17:10:22 <rcarrillocruz> rather than being on f5
+17:10:36 <gundalow> maxamillion: post-commit test results DB used by OpenStack for testing things that we don't have direct access to. In our case we can use it to remotly run tests in Cisco or F5's labs and report results back to us
+17:10:40 <rcarrillocruz> cos we can configure zuul to not trigger jobs on them if we don't have infra for F5
+17:10:55 <rcarrillocruz> but caphrim007  will
+17:10:55 <maxamillion> gundalow: rgr, thanks ... I'd never heard of the term
+17:11:16 <gundalow> maxamillion: ah, it's a Red Hat Tool, rather than an industry term
+17:11:22 <rcarrillocruz> so what's the issue for having those tests outside of ansible/ansible
+17:11:29 <rcarrillocruz> was it just a question or is there a legit reason for it
+17:11:32 <rcarrillocruz> caphrim007: ^
+17:11:35 <maxamillion> gundalow: noted, thanks
+17:11:42 <alikins> assuming the f5 folks can merge changes to their tests themselves
+17:11:43 <rcarrillocruz> sorry, just joined, i may have missed more context
+17:11:49 <caphrim007> rcarrillocruz we maintain a separate side-band repo for many reasons
+17:11:53 <sivel> whoa, hey, lost track of time
+17:12:01 <caphrim007> we upstream all of that work into ansible as a separate process
+17:12:09 * shertel too
+17:12:14 <rcarrillocruz> and by upstream, you mean code + tests
+17:12:16 <rcarrillocruz> or just code
+17:12:18 <rcarrillocruz> ?
+17:12:22 <caphrim007> i mean code + unit tests
+17:12:26 <caphrim007> not integration tests
+17:12:36 <gundalow> #chair sivel
+17:12:36 <zodbot> Current chairs: alikins caphrim007 gundalow mattclay maxamillion rcarrillocruz sivel
+17:12:46 <gundalow> #chair shertel
+17:12:46 <zodbot> Current chairs: alikins caphrim007 gundalow mattclay maxamillion rcarrillocruz shertel sivel
+17:12:48 <rcarrillocruz> what do you test against caphrim007 ,how many versions
+17:12:50 <rcarrillocruz> all VMs
+17:12:50 <caphrim007> i was going to do int tests in the past, but was told not to because redhat didnt have infra to test f5 stuff
+17:12:52 <rcarrillocruz> or also physical
+17:12:54 <rcarrillocruz> ?
+17:13:02 <caphrim007> both vm and physical
+17:13:09 <rcarrillocruz> reaosn i ask, is that eventually, we'll have cloud capacity
+17:13:13 <caphrim007> 2 of our modules require actual hardware
+17:13:22 <rcarrillocruz> and it would be interesting that at least we test a vm version
+17:13:31 <rcarrillocruz> in my view, vendors should test what we cannot possibly test
+17:13:35 <rcarrillocruz> specially, physical
+17:13:36 <gundalow> erm, seem to be drifting off topic a bit
+17:14:08 <rcarrillocruz> so if those int tests can be put, that'd be great... it would be hard for us to get a notification onn a PR
+17:14:10 <rcarrillocruz> coming from your CI
+17:14:13 <rcarrillocruz> saying a test failed
+17:14:17 <rcarrillocruz> from a repo we don't own
+17:14:21 <gundalow> Question is should tests be version along side what they are testing (modules, mod_utils, etc)
+17:14:22 <rcarrillocruz> or have visibility
+17:15:03 <gundalow> rcarrillocruz: Can Zuul trigger tests if a) ansible/ansible OR F5Networks/f5-ansible change?
+17:15:24 <rcarrillocruz> yes
+17:15:25 <gundalow> erm, I mean if either repo change we want to run the tests
+17:15:28 <rcarrillocruz> what we would need is
+17:15:34 <rcarrillocruz> to have a GH app
+17:15:38 <rcarrillocruz> added on f5 repo
+17:15:40 <rcarrillocruz> so their events
+17:15:43 <rcarrillocruz> are sent to our zuul
+17:15:49 <rcarrillocruz> then we run tests based on those events
+17:15:53 <rcarrillocruz> is other option
+17:16:05 <rcarrillocruz> it's what openstack call 3rd party CI
+17:16:11 <rcarrillocruz> we would be 3rd party CI of F5 repo
+17:16:17 <caphrim007> why trigger off of f5 repo?
+17:16:28 <caphrim007> its only really relevant to ansible when we send PRs to ansible
+17:16:51 <rcarrillocruz> gundalow: ^ yup, not sure why we'd want that
+17:17:06 <rcarrillocruz> the only reason we should be  a 3rd party would be to test stuff we depend on
+17:17:07 <rcarrillocruz> e.g.
+17:17:17 <rcarrillocruz> boto library for EC2
+17:17:30 <rcarrillocruz> it would make sense to trigger jobs on our side on their repo
+17:17:35 <rcarrillocruz> should our modules break on those tests
+17:17:41 <caphrim007> the ansible modules for f5 require the f5-sdk, but, again, f5 tests all that before we submit a PR
+17:17:42 <rcarrillocruz> but i doubt we depend on anything on F5 repos
+17:18:14 <rcarrillocruz> if you test ansible as part of sdk, then you're right, makes no sense we trigger on your repo events
+17:19:02 <caphrim007> by the time i send a PR to ansible, I've tested the module on all python versions and bigip versions that I support.
+17:19:08 <caphrim007> here's my upstream checklist
+17:19:20 <caphrim007> https://github.com/F5Networks/f5-ansible/blob/devel/.github/UPSTREAM_TEMPLATE.md
+17:19:42 <caphrim007> i do that before i send a PR to ansible
+17:19:53 <rcarrillocruz> so you run a test manually
+17:19:57 <rcarrillocruz> before you send PR, right?
+17:20:11 <caphrim007> "a test" ?
+17:20:24 <caphrim007> there are functional tests that run automatically
+17:20:46 <caphrim007> and some of those "does it exist" things are not scripted
+17:20:46 <gundalow> I guess I'm wondering how this might look in the future. I know for example caphrim007 has a good automated test setup internally that he uses before he even raises a PR against ansible/ansible
+17:20:57 <gundalow> not sure if that would be the case for all other partners
+17:21:17 <mattclay> It sounds like there isn't a reason to move the tests into the Ansible repo yet, but there might be in the future.
+17:21:28 <gundalow> This may all be a non-issue. though I was discussing it with funzo and privateip earlier and I wanted to mention it here
+17:21:41 <caphrim007> i made a PR in the past that included the functional tests "for completeness" in my PR
+17:21:44 <gundalow> mattclay: yup, I'm happy with that, just wanted to get other peoples views
+17:21:52 <gundalow> oh, wait
+17:21:54 <caphrim007> but was asked to remove the functional test part
+17:21:55 <gundalow> I rememeber the point
+17:21:58 <caphrim007> so i was like "ok"
+17:22:03 <gundalow> (need ot make betternotes)
+17:22:09 <alikins> +1
+17:22:28 <gundalow> Since Ansible 2.4 we *REQUIRE* new modules & functional changes to include tests
+17:22:48 <gundalow> today that means tests that will be run via Shippable, so generally unit tests
+17:23:00 <rcarrillocruz> caphrim007: would you be open in the future to have a zuul on your side which would trigger those jobs you have in your infra and have it automatically report on the PR green/red
+17:23:02 <rcarrillocruz> ?
+17:23:03 <shertel> gundalow where is that documented for new modules?
+17:23:19 <gundalow> shertel: that was network only
+17:23:36 <shertel> Ah, okay
+17:23:40 <caphrim007> rcarrillocruz: if i can codify that in a heat template, and it doesnt require an INBOUND connection into my company, sure
+17:23:44 <rcarrillocruz> like, zuul would put on the PR: F5-CI integration tests passed
+17:24:03 <gundalow> shertel: though we did discuss in Core Internal that from 2.6 we'd require tests for core supported code & modules
+17:24:14 <Pilou> maxamillion: about DCI you might be able to access video of this public meeting http://commons.openshift.org/events.html#event|dci-with-maria-bracho-red-hat|339 (otherwise: https://github.com/redhat-cip/dci-control-server)
+17:24:16 <shertel> <nod>
+17:24:20 <rcarrillocruz> k
+17:24:46 <gundalow> #chair Pilou
+17:24:46 <zodbot> Current chairs: Pilou alikins caphrim007 gundalow mattclay maxamillion rcarrillocruz shertel sivel
+17:24:47 <rcarrillocruz> maxamillion: long story short, it's a multitenant webapp which you can upload test results
+17:24:54 <rcarrillocruz> is not a CI perse
+17:24:56 <rcarrillocruz> no travis
+17:24:58 <rcarrillocruz> no shippable
+17:25:00 <rcarrillocruz> no jenkins
+17:25:03 <rcarrillocruz> there's no infra behind it
+17:25:14 <rcarrillocruz> it's a webapp to up results, and have a nice dashboard
+17:25:15 <gundalow> DCI = Distributed Cron no scheduler
+17:25:52 <sivel> gundalow: is it a requirement to have tests for all new modules? or just networking still?
+17:26:18 <maxamillion> rcarrillocruz: cool
+17:26:23 <maxamillion> Pilou: thanks
+17:26:28 <gundalow> sivel: There was some discussion in Jason's Tuesday meeting, though we need ot clearly document all that. Though that was for 2.6 onwards
+17:28:45 <gundalow> rcarrillocruz: Could you give an update of the Zuul 3 work
+17:28:51 <gundalow> just high level
+17:28:56 <gundalow> #topic Zuul
+17:29:37 <rcarrillocruz> so
+17:29:43 <rcarrillocruz> i've put up a POC of a zuulv3
+17:29:45 <rcarrillocruz> with nodepool
+17:29:53 <rcarrillocruz> and hacked up a patch to make it work with networking
+17:29:55 <rcarrillocruz> https://github.com/rcarrillocruz-org/ansible-fork/pull/18
+17:30:06 <rcarrillocruz> that's a test org , to not mess with ansible/ansible
+17:30:10 <rcarrillocruz> what that shows is
+17:30:16 <rcarrillocruz> you push a PR
+17:30:25 <rcarrillocruz> repo sends a webhook to zuul
+17:30:31 <rcarrillocruz> zuul gets node in nodepool
+17:30:34 <rcarrillocruz> zuul runs test
+17:30:37 <rcarrillocruz> it works
+17:30:49 <rcarrillocruz> howevre, i'm holding off on rolling this out till zuulv3 is officially released
+17:30:52 <rcarrillocruz> should be in a couple weeks
+17:31:03 <rcarrillocruz> i'm also working on containerizing this
+17:31:14 <rcarrillocruz> https://github.com/rcarrillocruz/zuul-ci-container
+17:31:24 <rcarrillocruz> which works very basic in openshift
+17:31:37 <rcarrillocruz> which is exciting, will be easier for folks to deploy it
+17:31:43 <rcarrillocruz> questions/
+17:31:45 <rcarrillocruz> ?
+17:31:49 <Pilou> that's great :) !
+17:32:17 <rcarrillocruz> that project ^ is via ansible-container btw
+17:32:21 <rcarrillocruz> ansible all things!
+17:33:00 <gundalow> Question about the GitHub integration. On https://github.com/rcarrillocruz-org/ansible-fork/pull/18 if you expand the "Show Checks" can we make that link to the results, like shippable does https://github.com/ansible/ansible/pull/33685 (Details)
+17:33:53 <rcarrillocruz> i brought that up to jeblair and mordred , i think that will come with the zuul-web refactor
+17:34:24 <gundalow> cool
+17:35:08 <gundalow> Zuul UI question. Is there a way to find all the results & details for rcarrillocruz-org/ansible-fork on the Zuul website?
+17:35:28 <rcarrillocruz> nope, cos i'm working on putting the dashboard on zuul-ci-container
+17:35:29 <rcarrillocruz> but
+17:35:35 <rcarrillocruz> you can get an idea on how it will look like
+17:35:44 <Pilou> Another entity (for example a cloud provider) would be able to plug with Zuul in order to run some tests on it's own infra ?
+17:35:49 <rcarrillocruz> https://zuulv3.openstack.org/jobs.html
+17:36:52 <rcarrillocruz> Pilou: yes, the idea is whatever vendor interested on testing our modules on more gear, they can install zuul on their premise. We configure ansible/ansible to send webhooks to vendor zuul, so vendor zuul kicks off job, reports back on PR whether vendor CI tests passed or not
+17:37:26 <rcarrillocruz> which is why is key to containerize zuul, to make it way easier to install it in openshift, docker, or kube
+17:37:35 <caphrim007> rcarrillocruz: this vendor doesnt allow incoming anything
+17:37:42 <caphrim007> is that going to be a problemo
+17:38:20 <rcarrillocruz> i think there are some relay webhooks projects around
+17:38:24 <rcarrillocruz> haven't played with them yet tho
+17:38:56 <rcarrillocruz> last night i googled http://www.ultrahook.com/ and related stuff
+17:39:58 <rcarrillocruz> there are also talks about getting a fedmsg driver
+17:40:03 <rcarrillocruz> but that's in the future
+17:40:22 <rcarrillocruz> hoping to get to openstack PTG to get an update in that front
+17:40:23 <gundalow> caphrim007: I'd be suprised if you were the first people with this requirement
+17:40:42 <rcarrillocruz> also, i want to talk there about a generic nodepool ansible driver
+17:41:03 <rcarrillocruz> right now, nodepool has drivers to create test nodes in OpenStack, and there's a patch about to land for static nodes
+17:41:33 <rcarrillocruz> but if we write an ansible driver, we can virtually make nodes available by using the ansible provisioning modules (aws, gce, vmware, digitalocean, etc etc etc)
+17:42:03 <rcarrillocruz> caphrim007: heat in there ^
+17:42:16 <rcarrillocruz> make the ansible driver to just use os_stack
+17:43:11 <rcarrillocruz> btw, i know it's a LOT of stuff, if people is cool/interested on a BJ session or something, maybe gundalow could arrange something to demo zuul and explain a bit the architecture
+17:43:15 <rcarrillocruz> happy to do so
+17:43:32 <gundalow> rcarrillocruz: Yup, I was thinking earlier next year
+17:43:39 <gundalow> Maybe in the 2nd Partners webinar
+17:43:55 <rcarrillocruz> yup
+17:44:10 <gundalow> As we should have a clearer picture on how it will work in practice
+17:44:17 <gundalow> Anyone got any other questions?
+17:44:26 <gundalow> mattclay: Anything else you'd like to know about Zuul?
+17:44:28 <gundalow> or anyone else?
+17:44:45 <rcarrillocruz> yeah, i don't understand stuff till i see/hack , so i figure me throwing stuff in IRC is not the best way for people to grasp how this can impact testing
+17:45:06 <mattclay> No questions from me.
+17:45:18 <gundalow> cool
+17:45:23 <gundalow> rcarrillocruz: Thanks for the details :)
+17:45:26 <rcarrillocruz> np
+17:45:33 <gundalow> #topic Open Floor
+17:46:14 <gundalow> #chair
+17:46:14 <zodbot> Current chairs: Pilou alikins caphrim007 gundalow mattclay maxamillion rcarrillocruz shertel sivel
+17:46:21 <gundalow> Anyone got anything else?
+17:46:25 <Pilou> yep
+17:46:52 <gundalow> Pilou: sure #topic :)
+17:46:52 <Pilou> There is this PR https://github.com/ansible/ansible/pull/26582 which was approved by the maintainer, but then tests have been added
+17:47:00 <Pilou> #topic https://github.com/ansible/ansible/pull/26582
+17:48:14 <Pilou> then 'shipit' state was reset (due to new commit adding tests)
+17:49:43 <gundalow> Sure
+17:49:48 <gundalow> How can we help?
+17:49:56 <Pilou> since the maintainer approved the fix, maybe tests could be reviewed by a member of this team ?
+17:52:54 <gundalow> sure
+18:01:12 <gundalow> #topic Open Floor
+18:01:19 <gundalow> Anyone got anything else?
+18:04:20 <abadger1999> Oh
+18:04:38 <abadger1999> I'm splittting the bsaic module_utils tests into piecesand porting some of it to pytest.
+18:05:03 <abadger1999> I'll try to get it merged asap so that anyone who wants to add module_utils/basic tests won't get conflicts.
+18:05:15 <abadger1999> I mean... anyone in the future ;-)
+18:07:34 <Pilou> #info module_utils/basic tests will be split into pieces, some parts will be ported to pytest
+18:08:00 <mattclay> abadger1999: Are you still waiting on fixes, or do you need to disable some of the tests?
+18:08:44 <Pilou> By the way: rhn_register/channel tests have been migrated to pytest (https://github.com/ansible/ansible/pull/33719) :)
+18:08:56 <abadger1999> mattclay:  The code has been fixed thanks to ganeshrn so I no longer need to disable something.
+18:09:29 <abadger1999> mattclay: I'm going to try to finish up porting test_argument_spec so that the whole file is pytest instead of a hybrid and then ask for you to review if that's okay?
+18:09:40 <mattclay> abadger1999: Sounds good.
+18:09:44 <abadger1999> cool.
+18:10:36 <mattclay> #info RHEL tests in CI have been moved from AWS to Azure. We're now running the RHEL tests split into 3 groups as we do with other platforms on CI.
+18:19:10 <gundalow> Thanks
+18:19:13 <gundalow> #endmeeting

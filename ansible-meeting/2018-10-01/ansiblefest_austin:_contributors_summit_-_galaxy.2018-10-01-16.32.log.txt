@@ -1,0 +1,110 @@
+16:32:52 <gundalow> #startmeeting AnsibleFest Austin: Contributors Summit - Galaxy
+16:32:52 <zodbot> Meeting started Mon Oct  1 16:32:52 2018 UTC.
+16:32:52 <zodbot> This meeting is logged and archived in a public location.
+16:32:53 <zodbot> The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:32:53 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:32:53 <zodbot> The meeting name has been set to 'ansiblefest_austin:_contributors_summit_-_galaxy'
+16:33:35 <gundalow> misc: bcoca felixfontein Going to do 30 minutes of Galaxy while we have everybody in the room
+16:33:57 <gundalow> #chair abadger1999 alikins bcoca jtanner mattclay maxamillion mordred nitzmahone Qalthos sdoran shepdelacreme sivel thaumos trishnag
+16:33:57 <zodbot> Current chairs: Qalthos abadger1999 alikins bcoca gundalow jtanner mattclay maxamillion mordred nitzmahone sdoran shepdelacreme sivel thaumos trishnag
+16:34:32 <felixfontein> and suddenly, my laptop started speaking to me...
+16:35:00 <sdoran> The mic works, whoever is tapping it to death.
+16:35:46 <gundalow> sdoran: sorry, it wasn't working in the room
+16:35:50 <gundalow> Can you hear Tim OK?
+16:35:53 <sdoran> Yup.
+16:36:04 <jtanner> he did synchronize
+16:36:08 <abadger1999> You can commit all you want to synchronize ;-)
+16:36:12 * sdoran wasn't going to say it
+16:36:16 <defionscode> bahaha
+16:36:18 <gundalow> #info Tim A is Product Manager for Galaxy Eco System
+16:36:36 <defionscode> Galaxy Eco System AND synchronize
+16:36:38 <gundalow> #info notes in https://etherpad.openstack.org/p/ansible-summit-october-2018-galaxy
+16:40:18 <tima> synchronize boo!
+16:41:45 <jtanner> collection example https://github.com/jctanner/mazer-example-1
+16:42:02 <ericsysmin> sweet, and when is this planned to work?
+16:42:37 <jtanner> code exists in various places, but https://github.com/jctanner/MAZER_DEMO tries to bring it all together
+16:42:46 <jtanner> it's a WIP, but i'm trying to make it cleaner
+16:42:51 <ericsysmin> ok
+16:42:53 <gundalow> #info WIP collection example https://github.com/jctanner/mazer-example-1
+16:42:54 <tima> @ericsysmin we are looking to start introducing some of the base functionality in v2.8 but will be proceding very cautiously.
+16:45:01 <tima> #info we don't want to break backwards compatibility and want to preserve the huge corpus of work out there.
+16:46:19 <ericsysmin> are we using modules/library along as in plugins?
+16:46:31 <ericsysmin> technically they are different are they not?
+16:47:19 <bcoca> modules are 'plugins' just ones that execute on remote
+16:50:47 <ericsysmin> bcoca: ok, I've just always thought it was like filters, or lookups were plugins and used it independently, thanks for clarifying
+16:51:50 <ericsysmin> can a user grab only 1 role from a namespace/collection
+16:52:02 <ericsysmin> if that role is one of many in a repo
+16:52:21 <jtanner> mazer install will bring down the whole collection only afaik
+16:53:07 <tima> correct @jtanner
+16:53:52 <maxamillion> nitzmahone: can we bikeshed on `core.file` a bit? :)
+16:53:54 <tima> we've talked about keeping things "coarse-grained" and minimize dependency hell.
+16:54:15 <ericsysmin> got it
+16:54:52 <ericsysmin> how about when making roles available into galaxy, will you still have to have separate github repositories
+16:55:06 <geerlingguy> ^^
+16:55:11 <sivel> maxamillion: fyi, I've just created a PR for namespace aliases for jinja2 tests/filters.  Like jinja2.random vs ansible.random vs random
+16:55:16 <alikins> @ericsysmin: Not really. The collection is the installable unit. A playbook could use only a specific role in that collection, but all would be installed at set.
+16:55:23 <maxamillion> sivel: +1
+16:55:27 <sivel> related, but not identical
+16:55:43 <maxamillion> sivel: I like the idea of everything that's buitin to have the `ansible` namespace
+16:55:55 <jhawkesworth_> +1 for ad hoc role execution
+16:55:59 <ericsysmin> ah, got it
+16:56:13 <sivel> 2.7 allows for adhoc role execution
+16:56:23 <jtanner> theoretically there's nothing stopping the roles in a collection repo from being git submodules
+16:56:27 <ericsysmin> so how would I allow a user to download one or all? do I have to have roles in the collection repo, and also in their own repo?
+16:56:31 <ericsysmin> got it
+16:56:37 <ericsysmin> jtanner: that's what I was getting at
+16:56:58 <sivel> jhawkesworth_: ansible all -m include_role -a name=foo
+16:57:00 <sivel> just fyi
+16:57:18 <sdoran> I screamed in horror when I was how Zuul is using symlinks to blacklist lookups.
+16:57:40 <jhawkesworth_> thanks sivel, I think I struggled to get that to work with windows connection for some reason, but let me check that
+16:57:41 <bcoca> i thought it was actually pretty smart ... but yeah total hack of 'alias system'
+16:57:59 <sdoran> After spending a good amount of time trying to figure out what was going on in the first place. :)
+16:58:00 <pabelanger> sdoran: there is a fair bit of testing around it, in zuul. But yah, not the best
+16:58:16 <bcoca> jhawkesworth_: it should be 'conneciton agnostic'
+16:58:28 <bcoca> but you need 'really recent' version
+16:58:36 <geerlingguy> FYI AWS session moving to Thurs Contributor Summit
+16:58:42 <jhawkesworth_> probably me typing without looking then :-)
+16:59:23 <bcoca> https://github.com/ansible/ansible/pull/44983
+16:59:26 <dag> Can the camera be restored, we see mostly ceiling now (no idea who is talking)
+16:59:41 <geerlingguy> sivel: `ansible all -m include_role -a name=foo` ++ :)
+17:00:14 <bcoca> sivel++ for making that possible, it was a looong overdue wishlist item and he had to do a lot of rework of core code that dealt with includes
+17:00:27 * sdoran lunch
+17:01:27 <felixfontein> can you mute the laptop's mic?
+17:03:10 <gundalow> felixfontein: I think I've killed it now
+17:03:13 <gundalow> Back in an hour
+17:03:16 <alikins> ericsysmin: Excellent question ;-> The current plan makes it difficult to manage a role as a 'traditional role' and as a role inside a collection at the same time. Some of that could be mitigated with finer grained collections and collection level requirements/dependencies, but not solved yet
+17:03:29 <felixfontein> gundalow: thanks!
+17:52:40 <gundalow> We will resume in 10 minutes, note that things as in separate IRC channels #ansible-network #ansible-awx and #ansible-galaxy
+17:53:50 <geerlingguy> I'll be a few min late joining the galaxy summit :( Have a client meeting
+17:54:13 <gundalow> Sure
+18:02:27 <defionscode> which room is which?
+18:03:00 <defionscode> gundalow? ^^
+18:04:21 <gundalow> 12:52 <BA1719@ gundalow> We will resume in 10 minutes, note that things as in separate IRC channels #ansible-network #ansible-awx and #ansible-galaxy
+18:04:24 <tima> @defionscode galaxy is in 4. i think the main etherpad doc has the room numbers in the schedule.
+18:04:37 <gundalow> 1: network 3 AWX 4 galaxy
+18:35:03 <jlk> knock knock knock
+18:35:49 <sivel> who's there?
+18:36:59 <jlk> slack notifications
+18:37:39 <sivel> slack notifications who?
+18:38:37 <jlk> slack notifications are echoing across the room
+20:02:12 <cybette> Zuul session in #ansible-network channel
+20:12:34 <jlk> Is there somebody from the Core that could pop into the Zuul room for a bit?
+20:12:44 <jlk> One of our topics could use some input
+20:13:15 <rcarrillocruz> abadger1999: any chance you could come to the Zuul R1 session?
+20:13:19 <bcoca> zuul room?
+20:13:39 <rcarrillocruz> there's an item that would be good to have someone from core to answer questions
+20:13:43 <rcarrillocruz> mordred, corvus ^
+20:14:21 <bcoca> joined online
+20:14:47 <rcarrillocruz> thanks
+20:36:23 <corvus> bcoca: still around?
+20:36:33 <bcoca> no
+20:36:37 <corvus> sweet
+20:36:41 * mordred hands bcoca a bunny rabbit
+20:51:39 <rcarrillocruz> mordred: https://github.com/ansible/ansible-runner/issues/117
+20:51:45 <rcarrillocruz> mattburt has it on his radar
+21:01:53 <mordred> rcarrillocruz: sweet!
+21:16:49 <gundalow> General reminder, please ensure actions are being tracked with `#info` or on Etherpad
+21:17:37 <gundalow> hum, should this have been `#endmeeting`'ed
+21:18:01 <misc> yeah, I was wondering too
+21:19:55 <corvus> jlk: can you join #ansible-network ?
+21:22:10 <gundalow> #endmeeting

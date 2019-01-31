@@ -1,0 +1,48 @@
+17:01:30 <mattclay> #startmeeting Ansible Testing Working Group
+17:01:30 <zodbot> Meeting started Thu Aug 30 17:01:30 2018 UTC.
+17:01:30 <zodbot> This meeting is logged and archived in a public location.
+17:01:30 <zodbot> The chair is mattclay. Information about MeetBot at http://wiki.debian.org/MeetBot.
+17:01:30 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+17:01:30 <zodbot> The meeting name has been set to 'ansible_testing_working_group'
+17:01:35 <mattclay> #chair gundalow
+17:01:35 <zodbot> Current chairs: gundalow mattclay
+17:02:10 <mattclay> #info Agenda: https://github.com/ansible/community/issues/248
+17:02:49 <mattclay> Pilou: Are you around?
+17:02:50 <Pilou> o/
+17:02:54 <mattclay> #chair Pilou
+17:02:54 <zodbot> Current chairs: Pilou gundalow mattclay
+17:04:03 <mattclay> #info We've migrated most of our Docker test containers from Docker Hub to quay.io for use in ansible-test and on Shippable. Only the default container remains to be migrated. The distribution specific test containers are here: https://github.com/ansible/distro-test-containers
+17:04:56 <Pilou> does that change something when using ansible-test command ?
+17:05:32 <mattclay> Pilou: In most cases, no, unless you've been using custom containers. Even then, in most cases, it will work as before.
+17:06:01 <mattclay> Pilou: The main thing you'll notice is you'll have to download the new containers when using `--docker` and running tests locally.
+17:08:04 <mattclay> Pilou: Did you want to discuss the items you put on the agenda?
+17:10:07 <Pilou> yep, about #44814: should we copy the vault tarballs on the aws host used for other binaries/tarballs
+17:10:33 <Pilou> on ansible-ci-files.s3.amazonaws.com
+17:10:42 <mattclay> #topic hashi_vault lookup: add integration tests (https://github.com/ansible/ansible/pull/44814)
+17:12:03 <mattclay> Pilou: Are you referring to this ZIP file? https://github.com/ansible/ansible/pull/44814/files#diff-99640b4d0ffa4ea3bc38e03a050646b4R6
+17:12:46 <Pilou> yes
+17:13:05 <mattclay> Pilou: Yes, can you put a list of the files to add to S3 in the PR and I'll upload them.
+17:13:21 <Pilou> ok, thanks
+17:13:53 <mattclay> Pilou: Thanks for thinking of that. Keeping the files in S3 goes a long ways towards reducing intermittent test failures due to issues downloading from external servers.
+17:14:24 <mattclay> Pilou: Anything else to discuss for this PR?
+17:14:36 <Pilou> nope
+17:14:53 <mattclay> #topic Integration test dependency installation
+17:15:04 <mattclay> Pilou: You had a second item on the agenda about integration test dependency installation.
+17:15:36 <Pilou> my 2nd point: "local" connection is used by integration tests, when some tests install python packages, ansible-playbook command needs to be restarted in order to take in account these packages
+17:15:58 <mattclay> Yes, that is a common issue when creating tests for plugins.
+17:16:35 <mattclay> There are currently two ways to resolve that: Use a script based test (runme.sh) or use aliases to declare a setup dependency, which ansible-test will run in a separate execution of ansible-playbook.
+17:16:51 <mattclay> Longer term I plan on integrating dependency handling into ansible-test, but that's not coming any time soon.
+17:17:30 <Pilou> "use aliases to declare a setup dependency" -> could you point me an example please :) ?
+17:19:10 <mattclay> Pilou: There are currently no tests using that feature. You need to add `setup/once/{target name}` to run once per ansible-test invocation, or `setup/always/{target name}` to run for each test target.
+17:19:42 <mattclay> Pilou: So if you have a test target named `abc` the you might create a `setup_abc` target and add `setup/once/setup_abc` to the aliases for the `abc` target.
+17:20:17 <mattclay> Pilou: But your current solution of using a runme.sh is probably just fine for now, if you prefer that approach.
+17:20:48 <mattclay> Pilou: However, it would be nice to have an example of the setup aliases -- as I've had several people ask about them but we've not merged (and retained) any usage of it.
+17:22:09 <mattclay> Pilou: Does that cover what you wanted to know?
+17:22:26 <Pilou> besides the setup_openssl target, current solution handles installation of hvac package which doesn't belong to any target
+17:23:04 <Pilou> mattclay: yes, thanks :) !
+17:23:47 <Pilou> openssl_certificate might be good candidate for an example of the setup aliases
+17:23:48 <mattclay> #topic Open Floor
+17:23:55 <Pilou> i will check that
+17:24:00 <mattclay> Pilou: Ok, thanks.
+17:24:01 <gundalow> Nothing from me
+17:29:06 <mattclay> #endmeeting

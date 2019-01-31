@@ -1,0 +1,288 @@
+15:00:17 <thaumos> #startmeeting ansible core
+15:00:17 <zodbot> Meeting started Thu Dec 14 15:00:17 2017 UTC.  The chair is thaumos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:00:17 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:00:17 <zodbot> The meeting name has been set to 'ansible_core'
+15:00:31 <eikef> good afternoon :-)
+15:00:35 <thaumos> gm
+15:00:36 * mikedlr waves
+15:01:31 <sivel> howdy
+15:02:20 <thaumos> #chair sivel
+15:02:21 <zodbot> Current chairs: sivel thaumos
+15:06:23 <jtanner> i'm here ... distracted by tech support
+15:06:31 * gundalow waves, just in another meeting at the moment, should be done in a few minutes
+15:06:51 <thaumos> #chair jtanner gundalow
+15:06:51 <zodbot> Current chairs: gundalow jtanner sivel thaumos
+15:06:57 <maxamillion> .hello2
+15:06:58 <zodbot> maxamillion: maxamillion 'Adam Miller' <maxamillion@gmail.com>
+15:07:00 <maxamillion> sorry I'm late
+15:07:03 <mkrizek> o/
+15:07:16 <thaumos> #chair maxamillion mkrizek
+15:07:16 <zodbot> Current chairs: gundalow jtanner maxamillion mkrizek sivel thaumos
+15:07:35 <abadger1999> Olá
+15:07:43 <thaumos> #chair abadger1999
+15:07:43 <zodbot> Current chairs: abadger1999 gundalow jtanner maxamillion mkrizek sivel thaumos
+15:07:50 <thaumos> ok, let's get started.
+15:08:19 <thaumos> @abadger1999 do we still need to cover the argspec key=true topic or we cool there?
+15:08:30 <sivel> That was covered as handled already in last meeting
+15:08:32 <abadger1999> We are cool there.  It's been reverted.
+15:08:41 <thaumos> I thought so, I just wanted to verify.
+15:08:43 <bcoca> thought we already voted on that
+15:08:46 <abadger1999> I found something new in argspec if we have time in open floor.
+15:08:47 <bcoca> overwhemlingly -1
+15:08:50 <thaumos> ok
+15:08:51 <thaumos> moving on
+15:09:03 <thaumos> #topic unexpected behaviour in when conditions
+15:09:09 <thaumos> #link https://github.com/ansible/ansible/issues/33306
+15:09:13 <sivel> It's me
+15:09:19 <thaumos> yesh
+15:09:31 <sivel> Gist: a user can explicitly type `when: []` in a playbook, and it passes as true
+15:09:34 <bcoca> ^ 'fix' is easy , just 'if self.when' added to conditional evaluation
+15:09:42 <sivel> this is because the default value for `when` is a empty list
+15:09:46 <bcoca> question really is 'do we want to allow this'?
+15:09:49 <sivel> there is no real use to doing what the user did
+15:09:58 <sivel> the user found it by just playing around
+15:10:07 <abadger1999> Principle of least surprise, it should be False.
+15:10:11 <sivel> Do we care to change that behavior?
+15:10:15 <bcoca> mostly that happens when debugging whne: [1,2,] ... start removing items and end up with when: []
+15:10:20 <abadger1999> so if the fix is easy I'd make hte fix.
+15:10:23 <bcoca> +1 to making it false
+15:10:32 <bcoca> i have pr
+15:10:37 <sivel> I personally don't care that much, but bcoca has the code ready
+15:10:44 <sivel> just need to add tests to verify that behavior
+15:10:45 <abadger1999> Cool. +1
+15:10:51 <thaumos> +1
+15:10:54 <sivel> I am +0
+15:10:56 <maxamillion> +1
+15:11:00 <sivel> which is why I brought it here
+15:11:11 <maxamillion> I'm with abadger1999 about "principle of least surprise"
+15:11:26 <sivel> Cool, bcoca proceed with your PR, and please add tests to validate
+15:11:49 <thaumos> #action bcoca to do a PR to make false.
+15:12:11 <thaumos> #topic review/merge of keycloak_clienttemplate module
+15:12:19 <thaumos> #link https://github.com/ansible/ansible/pull/33419
+15:12:19 <eikef> heya :)
+15:13:19 <bcoca> sivel:  our tets already assume this 'when = when or []
+15:13:52 <thaumos> who'd like to take the action to review eikef's module?
+15:13:58 <sivel> bcoca: yeah, I was just saying, right now all of our tests pass, make a test that fails due to it being true, apply the change, validate the test no longer fails
+15:14:30 <sivel> thaumos: I'll read through and provide some comments
+15:14:36 <thaumos> thx sivel
+15:14:39 <eikef> Thank you.
+15:14:45 <thaumos> #action sivel to start review of the pr
+15:15:02 <eikef> It should be fairly similar to the last one, and a bit shorter.
+15:15:13 <thaumos> #topic proposal to not warn on not matching 'all'
+15:15:20 <thaumos> #link https://github.com/ansible/ansible/pull/32806
+15:16:10 * thaumos is reading the issue
+15:16:25 <sivel> I want to test something before I comment
+15:17:23 <thaumos> I personally am for over-warning users.
+15:17:32 <jtanner> i don't see the point of taking it away
+15:17:39 <bcoca> i feel warning is redundant, since it can only occur when localhost is 'only available host'
+15:17:49 <sivel> I personally do not like the `all`, specifically when I have a playbook that specifically targets `hosts: localhost`
+15:18:00 <sivel> that warning is meaningless if I don't care about `all`
+15:18:01 <bcoca> lots of noise, it basically always happens in a group of 4 warnings, at that point user tunes out
+15:18:14 <thaumos> that is fair ^
+15:18:19 <maxamillion> sivel: +1
+15:18:22 <sivel> yeah, the warnings drive me crazy with implicit localhost
+15:18:33 <sivel> but I might be in the minority with using implicit localhost so much
+15:18:41 <thaumos> but if we make an assumption, a lot of people use all as a catch all
+15:18:44 <sivel> as that is the foundation fo 90%+ of my testing
+15:19:02 <bcoca> cloud/networking use it a lot also
+15:19:04 <sivel> I think the warning might be too early
+15:19:17 <abadger1999> -1
+15:19:23 <sivel> if it was in context of needing to use `all` it might be better
+15:19:24 <abadger1999> But I do think we should change the message
+15:19:31 <bcoca> issue is that no matter what 'play says' we ALWAYS do an 'all' search
+15:19:50 <sivel> bcoca: I haven't looked through the code, but what is the purpose of that?
+15:19:58 <sivel> I don't have familiarty with that
+15:20:24 <bcoca> sivel: we traverse all hosts in inventory to ensure they are in 'all', 'ungrouped' and meet other inventory requirements
+15:20:27 <bcoca> at least 1 time
+15:20:32 <maxamillion> I use implicit localhost a lot but don't mind the warning, but do agree they could be better and more explicit
+15:21:03 <sivel> bcoca: if there are no hosts to begin with, is that really a pertinent warning?
+15:21:23 <sivel> wouldn't it be covered by another warning?
+15:21:31 <sivel> I'm guessing you have the same questions
+15:21:40 <bcoca> the warning is generic for 'empty hostpattern'
+15:21:48 <bcoca> it happens to hit 'all' when 0 inventory
+15:22:08 <bcoca> ^ my patch only avoids the 'all' case
+15:22:57 <abadger1999> I think this warning is probably the most informative of the group of three.
+15:23:03 <abadger1999> So we definitely want to keep it.
+15:23:52 <abadger1999> No hosts matched seems redundant.
+15:24:03 <sivel> I get hit with 4 warnings on nearly every playbook run.  I'm just a +1 to reduce that
+15:24:09 <sivel> [WARNING]: Unable to parse /etc/ansible/hosts as an inventory source
+15:24:11 <sivel> [WARNING]: No inventory was parsed, only implicit localhost is available
+15:24:13 <abadger1999> Although probably that gets triggered when it's not part of this set of warnings?
+15:24:13 <sivel> [WARNING]: Could not match supplied host pattern, ignoring: all
+15:24:15 <sivel> [WARNING]: provided hosts list is empty, only localhost is available
+15:24:27 <abadger1999> So we'd need to keep it there.
+15:24:28 <sivel> So I get 2 warnings about implicit localhost
+15:24:43 <bcoca> abadger1999: only time that woudl be triggered w/o the other ones .. would not be with 'all'
+15:24:57 <bcoca> and that is the only exception im making, 'all'
+15:25:03 <abadger1999> The implicit localhost warning I could see getting rid of but it has a good chance of being the reason that all did not match anything so...
+15:25:28 <bcoca> abadger1999:  only reason 'all' does not match any hosts is that 'only implicit is available'
+15:25:52 <abadger1999> sivel: Hmm... you have two implicait localhost warnings.  That's definitely something to get rid of.
+15:26:02 * abadger1999 sees sivel already said the same thing
+15:26:06 <sivel> I would actually love if implict localhost worked in `hosts: all` as well, but maybe another topic
+15:26:23 <sivel> but again, minority here
+15:26:30 <sivel> probably not useful for most users
+15:26:33 <bcoca> sivel: that breaks many plays
+15:26:39 <abadger1999> bcoca: right.  Which means.  We need to say that 'all' does not match otherwise the user has no idea what's wrong with their playbook.
+15:26:42 <bcoca> im open to a toggle, but off by default
+15:26:55 <bcoca> abadger1999: the 'all' is not from the play, its internal
+15:27:16 <sivel> I am +0 on removing the warning, but +1 on making less warnings in general at that point
+15:27:17 <bcoca> we CAN agument 'implicit localhost' msg to indicate 'btw, it is not included in 'all'
+15:27:22 <abadger1999> bcoca: sorta untrue.
+15:27:30 <abadger1999> bcoca: I tested your patch with hosts: all
+15:27:39 <abadger1999> and your removes the warning there as well.
+15:27:56 <abadger1999> at least, IIRC... that was a month ago that I tested.
+15:28:01 <bcoca> abadger1999: only if no hosts in play
+15:28:23 <bcoca> 'all' is only a warning when impllicit is only host available
+15:28:37 <bcoca> we always use 'all' even if play does not
+15:28:57 <bcoca> i did not say that hosts: all would not be affected, the problem is that hosts: anything is
+15:29:01 <bcoca> even hosts: localhost
+15:29:08 <abadger1999> k
+15:29:10 <bcoca> cause we use 'all' internally
+15:29:37 <bcoca> so lets sayd this, remove the 'all' as pr does, but add ', this host will not match the 'all' group for selection in play' to 'implicit warning'
+15:29:44 <abadger1999> So if you fix the internal warning without changing the warning with explicit use of all then I think I'd be fine with it.
+15:29:53 <bcoca> jinkx?
+15:29:57 <abadger1999> But removing it when the user has specified all in the playbook is wrong.
+15:30:09 <abadger1999> <nod>
+15:30:16 <abadger1999> That would be fine, I think.
+15:30:18 <bcoca> we dont have a way to distinguish implicit vs explicit
+15:30:28 <abadger1999> Hmm...
+15:30:34 <bcoca> would have to add new param
+15:30:38 <maxamillion> +1
+15:30:47 <bcoca> or remove 'all' as default
+15:31:00 <maxamillion> errr, sorry, I was behind in reading ... +1 to the thing y'all jinx'd on :)
+15:31:09 <bcoca> abadger1999: you woudl still get a 'no hosts matched' from play
+15:31:10 <abadger1999> Heh.  I've always wanted localhost to be the default instead of all ;-)
+15:31:16 <bcoca> ha
+15:31:27 <abadger1999> (Knows that probably won't fly, though)
+15:31:49 <bcoca> hosts: has no default, 'all' is default for inventory queries
+15:31:54 <abadger1999> +1 to removing but adding note about all to the implicit localhost warning.
+15:31:56 <bcoca> really only used when called internally
+15:32:08 <bcoca> ok, i'll ammend PR to add that info to implicit warning
+15:33:22 <maxamillion> +1
+15:33:58 <sivel> Ok, are we good for open floor?
+15:34:16 <thaumos> #action bcoca to ammend the pr to add info about implicit localhost warning
+15:34:21 <thaumos> what sivel said ^^
+15:34:28 <thaumos> #topic Open Floor
+15:34:48 <gundalow> Is there a meeting next thursday?
+15:35:24 <thaumos> is that a holiday?
+15:35:36 * thaumos is unsure about shutdown days
+15:35:37 <sivel> I don't see why not, at least US holiday starts Friday (22nd)
+15:35:39 <gundalow> oh, no it's friday
+15:35:42 <gundalow> nm
+15:35:45 <thaumos> k
+15:35:48 <maxamillion> barely made it :)
+15:35:51 <thaumos> heh
+15:37:53 <abadger1999> #info There will be a meeting next Thursday per normal.
+15:37:54 <thaumos> any other topics?
+15:37:57 <abadger1999> So I was looking at AnsibleModule's arg_spec and found it has a check_invalid_arguments parameter which does this: https://github.com/ansible/ansible/blob/devel/lib/ansible/module_utils/basic.py#L1616
+15:38:16 <abadger1999> Basically, it allows a module to turn on or turn off checking for extra parameters.
+15:38:45 <bcoca> -1 ... how did that make it in?
+15:38:48 <abadger1999> I'd like to deprecate that and fix the three modules that use it to either deprecate the usage or remove it if it's in error.
+15:39:18 <abadger1999> uri, zfs, and bigpanda (probably using it accidentally) are the three modules
+15:39:18 <sivel> https://github.com/ansible/ansible/pull/27119
+15:39:22 <sivel> networking folks ;)
+15:39:26 <abadger1999> uri uses it for headers.
+15:39:32 <abadger1999> sivel: it's older than that.
+15:39:42 <bcoca> doesnt uri have a 'headers' arg?
+15:39:44 <abadger1999> networking folks just propogated it.
+15:39:52 <sivel> ah, yes I see
+15:40:02 <sivel> but yes, I don't like that -1
+15:40:02 <abadger1999> bcoca: it does now... there's a note in the code that the old way is deprecated.
+15:40:32 <bcoca> +1 to deprecate and fix modules to not use
+15:40:47 <abadger1999> zfs uses it essentially for "extra args to use with zfs"... I suppose for backwards compat we'd add a zfs_extra_args for that.
+15:40:50 <abadger1999> Cool.
+15:40:54 <abadger1999> I'll make a PR for it.
+15:41:23 <bcoca> iirc zfs maintainer gave up on keeping up with diff options, thought he had done extra_args already
+15:41:38 <bcoca> zfs keeps getting new options and they are diff across OSs
+15:42:00 <bcoca> and zfs implementations (though i think finally there is clear winner on linux side)
+15:42:43 <maxamillion> (there is?)
+15:43:07 <bcoca> i might be wrong
+15:43:50 <bcoca> i think someone in irc mentinoed that there is just 'one option' now .. but dont believe everything you read on the interwebs
+15:44:44 <bcoca> https://github.com/ansible/ansible/pull/33466 <= bikeshed on 'lookup short name'
+15:45:03 <maxamillion> there very well might be and I missed it, I don't follow ZFS very closely but it would be pretty cool if that was a "solved problem"
+15:46:19 <maxamillion> I commented in github, but I'll re-iterate here, I like the llookup idea since it's a little more explicity and might at least hint at what's going on ... but on the fliip side, it could either be a typo or considered a typo so I dunno
+15:46:41 <abadger1999> #topic alias for lookup to make it easier to use in loops https://github.com/ansible/ansible/pull/33466
+15:46:47 <thaumos> can we use ⚲
+15:46:59 <jtanner> no
+15:47:02 <thaumos> lol
+15:47:16 * thaumos was joking
+15:47:21 <maxamillion> thaumos: I can see the flamewar now
+15:47:22 <thaumos> i had to look that up
+15:47:22 <bcoca> nn^nn
+15:47:59 <abadger1999> 🐄
+15:48:22 <bcoca> GTFO
+15:48:26 <sivel> implementation aside, as I still believe we should just make lookup default to returning lists, I'm really not a fan of either L or llookup
+15:48:34 <sivel> llookup is going to always look like a typo
+15:48:48 <maxamillion> abadger1999: YEEEEEESSSSSSSSSS
+15:48:50 <bcoca> sivel: the new method defaults to wantlist=true
+15:49:04 <abadger1999> Are we okay to break backwards compatibility like that?
+15:49:06 <sivel> bcoca: yes, I am saying I want to original want to use wantlist=true by default
+15:49:13 <bcoca> it does not break backwards compat, its new
+15:49:21 <abadger1999> (I mean, sivel's idea)
+15:49:30 <bcoca> sivel: that breaks many things, i attempted that before i added wantlist
+15:49:42 <bcoca> i added wantlist because i could not change the default
+15:50:03 <sivel> L is not veryf self explanatory
+15:50:20 <bcoca> ^ as i introduced this topic, please bikeshed name
+15:50:36 <sivel> I'm thinking, I just got some weird phone call that distracted me
+15:50:40 <bcoca> but give USABLE suggestions, turd emoji is NOT usable
+15:51:34 <sivel> I tend to not give turd emoji suggestions
+15:52:12 <sivel> just thinking "out loud" here, and there was the comment yesterday that most lookups could be filters
+15:52:24 <sivel> since they are not really looking anything up
+15:52:32 <sivel> just manipulating data
+15:52:57 <sivel> like with_dict is basically |dictsort
+15:53:00 <bcoca> sivel: was not pointing at you with :turd: , just trying to stop every unicode char from being used like above
+15:53:19 <sivel> oh, I didn't see the cow, I do now
+15:53:21 <bcoca> sivel:  i am creating filters for 'transformation' lookups
+15:53:26 <bcoca> https://github.com/ansible/ansible/pull/33102
+15:53:43 <sivel> sweet
+15:53:49 <bcoca> but other lookups, i.e password/redis/sequence/pipe/etc do work AS lookups, but it would be nice to give a shorthand
+15:53:59 <sivel> maybe we could call it "query" ;) instead of lookup
+15:53:59 <bcoca> lookup('name', ...) is very cumbersome for most
+15:54:05 <bcoca> q()
+15:54:21 <bcoca> q('redis', ...)
+15:54:28 <sivel> I'm jst trying to think of a different term
+15:54:48 <sivel> honestly I'd be ok with `q` I think, but also have a `query` form too
+15:54:58 <thaumos> i kinda like that too
+15:55:37 <sivel> abadger1999: ?
+15:55:39 <sivel> maxamillion: ?
+15:55:40 <abadger1999> wfm
+15:55:50 <bcoca> q|query ?
+15:55:56 <sivel> bcoca: yes
+15:55:57 <abadger1999> yeah
+15:56:01 <bcoca> +10
+15:56:19 <bcoca> ^ we should hire that guy
+15:56:21 <maxamillion> yeah, I'm in
+15:56:24 <thaumos> yes, but just to confirm for those not following we will be keeping lookup as well for backwards compat
+15:56:42 <bcoca> yeah, never said i would remove lookup, though i expect people to use q()
+15:56:46 <thaumos> right i know
+15:56:59 <thaumos> but others that look at this chat and scroll through now see my statement
+15:57:36 <maxamillion> just to make sure I understand correct, q/query is the "new lookup" for things that aren't actually lookups ... yes?
+15:57:41 <maxamillion> correctly*
+15:58:12 <bcoca> no
+15:58:24 <bcoca> q/query are an alias to lookup that defaults to wantlist=true
+15:58:39 <bcoca> aside from that, i'll be adding 'filters' for 'non lookup lookups'
+15:58:52 <maxamillion> ah ok
+15:58:54 <maxamillion> then yes, +1
+15:58:55 <bcoca> like flatten/toghether/nested/items
+15:59:50 <sivel> and like I said dict can be achieved with dictsort
+15:59:53 <sivel> or even .items()
+16:00:22 <bcoca> i have to go over each one, create filter examples, then deprecate with example
+16:00:38 <bcoca> with_items == |flatten(levels=1)
+16:00:44 <bcoca> with_flatten == |flatten
+16:00:51 <bcoca> with_list == <nothing>
+16:01:18 <sivel> bcoca: I had an example for deprecating filters, using a closure if you are interested
+16:01:30 <bcoca> sivel: with_dict creates item.key/value, not sur ewe can do with items() but filter should be easy
+16:01:48 <bcoca> sivel: ???
+16:01:55 <sivel> true, but I question the real need, since item.key == item.0 and item.value == item.1
+16:02:14 <bcoca> that is indexed_items lookup, not dict lookup
+16:02:16 <sivel> bcoca: a closure you can wrap the actual lookup with, to emit the warning on use
+16:02:42 <bcoca> sivel: we already have deprecation facility, not sure why we need the closure?
+16:03:04 <sivel> bcoca: you are missing what I was saying, dict creates item.key/item.value whereas with dictsort it would be item.0/item.1
+16:03:21 <sivel> bcoca: we can chat later, it may not be useful for your need, but removed a lot of duplicate code when I was doing it
+16:03:28 <bcoca> k
+16:04:17 <maxamillion> I do love removing code :)
+16:06:50 <sivel> Ok, sounds like we are good here then?
+16:07:29 <thaumos> #action bcoca to create a q|query alias for lookup that defaults to wantlist=true
+16:07:43 <thaumos> kk
+16:07:50 <thaumos> thanks everyone for today's meeting!
+16:07:56 <thaumos> #endmeeting

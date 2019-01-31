@@ -1,0 +1,494 @@
+19:00:24 <bcoca> #startmeeting ansible core irc public meeting
+19:00:24 <zodbot> Meeting started Tue Aug 14 19:00:24 2018 UTC.
+19:00:24 <zodbot> This meeting is logged and archived in a public location.
+19:00:24 <zodbot> The chair is bcoca. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:00:24 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:00:24 <zodbot> The meeting name has been set to 'ansible_core_irc_public_meeting'
+19:00:37 <nitzmahone> o/
+19:00:53 <bcoca> #topic flip invalid_task-attribute_failed to true by default
+19:00:55 <sivel> .hello2
+19:00:56 <zodbot> sivel: sivel 'Matt Martz' <matt@sivel.net>
+19:00:58 <mkrizek> o/
+19:01:01 * shertel waves
+19:01:29 * gundalow waves
+19:01:31 <sivel> This topic is me, but I'll wait a few moments
+19:01:33 <bcoca> @sivel fine with me as long as msg adds that you can toggle to warning
+19:02:22 <sivel> basically, current funcitonality, is when applying a task arg, that is invalid.  Say "delegat_to", you get a warning, instead of an error
+19:02:29 <sivel> the toggle adds the ability to make it an error
+19:02:44 <sivel> I'm thinking it should probably be an error to begin with, toggled to be a warning
+19:02:55 <nitzmahone> +1
+19:02:59 <sivel> toggle is being added in 2.7
+19:03:08 <bcoca> we had it as error originally but too many people complained, its been a warning long enough, so we should change it
+19:03:13 <sivel> so this is all new for that release, as far as changing behavior
+19:03:30 <maxamillion> .hello2
+19:03:31 <zodbot> maxamillion: maxamillion 'Adam Miller' <maxamillion@gmail.com>
+19:03:34 <sivel> so, anyone against flipping it to be an error?
+19:03:38 <nitzmahone> Bogus module args are a failure, as are lots of other things, dunno why we should treat playbook grammar more lax
+19:03:39 <sivel> by default
+19:03:49 <mkrizek> +1
+19:04:22 * bcoca still has proposal for warning/error on keywords that are ignored by some actions
+19:04:22 <sivel> cool, we have at least +4, and no one against it
+19:04:30 <bcoca> who is against?
+19:04:37 <sivel> no one
+19:04:44 <sivel> or they haven't spoken up
+19:04:48 <shertel> +1
+19:05:07 <sivel> cool, then I'll info it
+19:05:29 <sivel> #info sivel will create a PR to swap invalid_task-attribute_failed to true by default, and indicate in the error it can be toggled to a warning
+19:05:55 <bcoca> #topic https://github.com/ansible/community/issues/329
+19:05:59 <gundalow> So for this like this: Clear docs (ensure all our examples are updated), maybe we need a way of informing people outside of Core of language changes, etc
+19:06:57 <bcoca> ^ i think the strategy is good, just need to settle on name, i would hate we dont merge this cause of bikeshed lock
+19:07:57 <bcoca> darn ...linkedwrongthing ...
+19:07:57 <nitzmahone> What are we pointing at? I'm just seeing recursive links to the agenda
+19:08:08 <sivel> Whoa, I'm confused.  about #329
+19:08:11 <bcoca> the 'currently' streamlined strategy
+19:08:14 <bcoca> looking for pr
+19:08:32 <maxamillion> yeah
+19:08:33 <bcoca> https://github.com/ansible/ansible/pull/39602
+19:08:50 <bcoca> #topic https://github.com/ansible/community/issues/329
+19:08:53 <bcoca> dammit ...again
+19:09:04 <bcoca> #topic https://github.com/ansible/ansible/pull/39602
+19:09:12 <bcoca> sorry ... rampant dislexia today ...
+19:09:56 <maxamillion> fwiw I like what's mentioned in this comment ... alias current free to free_task_first and make the new one free_host_first https://github.com/ansible/ansible/pull/39602#issuecomment-412346400
+19:10:16 <nitzmahone> I like that a lot better
+19:10:18 <maxamillion> it's a little verbose, but it's meaningful at face value
+19:10:18 <bcoca> but we need to keep 'free' for backwards compat, even if we deprecate the name
+19:10:23 <nitzmahone> yep
+19:10:29 <maxamillion> absolutely
+19:10:30 <bcoca> its really host_stick vs nowait
+19:10:35 <bcoca> host_sticky
+19:10:49 <bcoca> free_task_first is not really good name for current free either
+19:11:09 <bcoca> it will jumpt ot next host for current task, it just avoids going to next task if any hosts are still doing previous
+19:11:19 <bcoca> linear = lockstep, free = nowait
+19:11:31 <maxamillion> yeah, that's fair
+19:11:44 <bcoca> this new one is really 'fork_is_host_sticky'
+19:11:52 <maxamillion> +1 shipit
+19:11:58 <maxamillion> :)
+19:12:03 <bcoca> we rename all?
+19:12:38 <bcoca> well, can we agree for name of new one? we can tackle renaming others as diff task
+19:12:40 <maxamillion> eh, on one hand it makes sense to for the sake of clarity but on the other hand, it's not necessary
+19:12:48 <maxamillion> yeah
+19:13:26 <maxamillion> I'm fine with "streamlined" if people want to stick to that ... I think it's as meaningful as "free" at face value and as long as it's well defined in the docs, then whatever
+19:14:20 * abadger1999 likes the proposed name/alias
+19:14:22 <maxamillion> but I think "batch" or "free_host_first" is probably better
+19:14:29 <nitzmahone> I don't think streamlined is particularly decscriptive
+19:14:34 <maxamillion> nitzmahone: agreed
+19:14:39 * abadger1999 not a fan of streamlined
+19:14:42 <maxamillion> nitzmahone: but neither are any of the others
+19:14:43 <bcoca> so we have a)streamlined b)batch c) incumbent  d)atomic .. any other names?
+19:14:48 <nitzmahone> about as useful as fast_in_some_cases"
+19:14:57 <sivel> fork_host_affinity
+19:14:59 <ryansb> @bcoca bequeath?
+19:15:08 <maxamillion> sivel: oooo, I do like that
+19:15:19 <bcoca> ryansb: that worked for includes , but not strategy, but ++ for slipping it in
+19:15:19 <sivel> *shrug* I've mentioned several times I think the best name should indicate that the fork has an affinity for an individual host
+19:15:21 <abadger1999> free_task_first / free_host_first
+19:15:30 <maxamillion> abadger1999: +1
+19:15:34 <alikins> having to change free.py to implement 'streamlined' is a little weird, especially when it special cases streamline. maybe make get_workers_free() and post_step() in free.py and override?
+19:15:38 <bcoca> its free host, not task
+19:15:55 <jhawkesworth_> suggest host_afinity
+19:16:04 <bcoca> alikins: how would user choose behaviour?
+19:16:08 <bcoca> host_afinity
+19:16:14 <bcoca> ^ f)
+19:16:15 <nitzmahone> I think he's just talking impl
+19:16:17 <abadger1999> that was the last one in the ticket and it seemed like a winner to me.
+19:16:21 <nitzmahone> (IIUC)
+19:16:26 <jhawkesworth_> but tbh I'm not sure i have understood it
+19:16:33 <nitzmahone> host_affinity is not terrible
+19:16:40 <alikins> bcoca: huh? override in the streamline.StrategyModule class
+19:16:52 <bcoca> alikins: but still a separate plugin?
+19:16:58 <maxamillion> yeah, host_affinity is pretty good and it makes it shorter
+19:17:15 <bcoca> ok, so host_affinity is in the lead
+19:17:21 <maxamillion> the current "free" could become task_affinity and aliased
+19:17:29 <ryansb> +1 host_affinity
+19:17:30 <bcoca> not really task_Affinity
+19:17:40 <nitzmahone> Not sure task_affinity is much clearer than free
+19:17:42 <bcoca> as it still does hosts > tasks, it just doesn wait for all hosts to finish task
+19:17:47 <bcoca> clearer, but wrong
+19:17:48 <maxamillion> it also removes the "fork" from the name, because it might be threads in the future
+19:17:50 <abadger1999> afinity itself isn't that clear.
+19:18:01 <abadger1999> should look up synonyms to that word.
+19:18:19 <bcoca> host_pegged
+19:18:39 <abadger1999> pegged, pinned, [...]?
+19:18:51 <bcoca> affection, closeness,  rapport, leaning, fondness, sympathy
+19:18:53 <jhawkesworth_> favour_host ...
+19:18:56 <bcoca> host_sympathy ...
+19:19:03 <ryansb> host_fondness
+19:19:08 <ryansb> a++
+19:19:08 <zodbot> ryansb: Karma for sagy changed to 1 (for the current release cycle):  https://badges.fedoraproject.org/tags/cookie/any
+19:19:48 <maxamillion> I like pinned
+19:19:57 <maxamillion> host_pinned if we're anti-affinity
+19:19:59 <abadger1999> attraction bond
+19:20:05 <maxamillion> covalent?
+19:20:07 <bcoca> hostbonded
+19:20:09 <abadger1999> heh
+19:20:14 <bcoca> host_simpatico
+19:20:23 <maxamillion> bcoca: that's going to get us in trouble with networking folks ;)
+19:20:43 <abadger1999> partiality yerning
+19:20:46 <bcoca> there are more bonds in the world than interface bonds
+19:20:50 <mkrizek> host_pinned +1, host_affinity doesn't say much to me (non-native speaker)
+19:21:04 <bcoca> +1 for host_affinity
+19:21:21 <nitzmahone> +1.1 for host_pinned, +1 for host_affinity
+19:21:30 <bcoca> host_pinned 2, host_affinity 1, keep voting
+19:21:41 <sivel> +1 host_affinity
+19:21:44 <bcoca> 2/2
+19:21:46 <abadger1999> host_pinned +1
+19:21:50 <bcoca> 3/2
+19:22:08 <bcoca> anyone else?
+19:22:14 <gundalow> 0 from me
+19:22:15 <ryansb> host_pinned +1
+19:22:18 <bcoca> 4/2
+19:22:21 <bcoca> pinned in teh lead
+19:22:30 <maxamillion> I'm torn :/
+19:22:37 <bcoca> closing vote in 30s,
+19:22:39 <maxamillion> host_affinity +1
+19:22:49 <bcoca> 4/3
+19:23:01 <gundalow> "CPU affinity" is a term, though I think maybe "pinning" may be easier to understand
+19:23:02 <abadger1999> also, I'd be okay if host_affinity comes out as winner too... it's not terrible.
+19:23:12 <bcoca> host_pinned it is
+19:23:29 <maxamillion> yeah, that was a close second for me
+19:23:29 <bcoca> idc as long as we merge the feature and the name is not horrible, i can live with either
+19:23:33 <maxamillion> +1
+19:23:42 <bcoca> k, alikins you want to make implenetation comment on ticket?
+19:23:50 <bcoca> i'll break news on 'we got a name!'
+19:23:51 <maxamillion> I'm good with host_pinned
+19:23:54 <maxamillion> bcoca: :D
+19:24:09 <bcoca> #topic https://github.com/ansible/ansible/pull/43621
+19:25:08 <maxamillion> yo
+19:25:38 <abadger1999> I don't think there's anything controversial here, now... it would be nice to have a thorough review but the dnf maintainer probably is no longer around so....
+19:25:50 <bcoca> im fine with exception, we've made em before, but we should make clear rules instead of case by case
+19:26:04 <abadger1999> If we can get the licensing straightened out quickly, I'm kay with it.
+19:26:16 <bcoca> but then i would ask we do same for apt
+19:26:17 <maxamillion> so we have a situation where I've created a module_util that's derivative work of the yum module, which is GPLv3 and we're unable to get sign off from some of the maintainers because of $reasons ... I was hoping to have a public discussion about the situation and request an exception
+19:26:31 <abadger1999> I think the only exception we've made is for facts which predated a lot.
+19:26:41 <abadger1999> *but* we've had a lot of things get in by accident.
+19:27:04 <abadger1999> I don't think exceptions are good.
+19:27:13 <abadger1999> But a guideline would be good.
+19:27:42 <gundalow> Do we need CI enforced module_utils (with exception list) to stop more being added once we have confirmred that BSD should still be default?
+19:27:43 <bcoca> we had more initially but we've migrated many chunks
+19:27:53 <bcoca> gundalow++
+19:28:27 <abadger1999> I had a proposal of: "Something like module_utils that are for a specific, small set of modules are allowed to be under gplv3+ instead of BSD.  module-utils that are generic in nature (could be used with modules from more than one vendor or project) must be BSD.  If there's doubt as to which category a module_util falls into, have it discussed by the core team."
+19:28:44 <maxamillion> the thing I think is unique in this instance is that the original yum author is deceased (may he rest in peace) so I think it leads to a weird legal space attempting to re-license
+19:29:03 <maxamillion> abadger1999: I think that's good
+19:29:09 <gundalow> maxamillion: We make that  RH legals problem to solve
+19:29:47 <sivel> abadger1999: that causes issues with the original intent though potentially. The idea was that anyone could extend from any of the module_utils without having to bring along the GPL license
+19:29:49 <gundalow> Using the person abadger1999 or I mentioned internally
+19:29:51 <maxamillion> gundalow: fair, but then this has to wait for months for them to sort it out and I'd really like to make the 2.7 deadline
+19:30:07 <abadger1999> examples that i think should fall under that would be , this module_utils code, the apt module_utils code we discussed a few weeks ago, module_utils that are specific to a vendor's api for talking to their hardware/service.
+19:31:23 <maxamillion> abadger1999: +1
+19:31:24 <abadger1999> examples i don't think should fall under this: fetching of files from the interner (which is one part of this module_utils PR that would need to be relicensed), a retries decorator (Which we've been trying to get relicensed but will probably have to rop and relicense from scratch).
+19:31:42 <maxamillion> abadger1999: I think it makes sense and as long as we have good examples to help people sort it out, it's good
+19:31:49 <abadger1999> anything that ends up in the new common/ directory, things in network/common directory.
+19:31:53 <bcoca> abadger1999: which retry decorator? iirc i wrote the original
+19:32:11 <abadger1999> bcoca: yeah... you wrote it other people contributed.  we've not gotten sign off from everyone.
+19:32:33 <abadger1999> bcoca: we could go back to your original code and you put it under the bsd andthen other people fix it again.
+19:33:07 <bcoca> was mostly expanded to specific clouds and in aws case, teh api changed on a few things
+19:33:23 <bcoca> but i have not looked at it in a while , might not recognize it as this point
+19:33:40 <abadger1999> don't look otherwise you might not be able to participate in a reimplementation ;-)
+19:33:45 <bcoca> ha
+19:34:22 <abadger1999> @sivel yep.  that is the problem.
+19:34:51 <ryansb> oh. :/ yeah I've looked at that.
+19:35:05 <sivel> So in general, I am less flexible than saying, a small set of modules...I'd say, BSD unless you convince us otherwise
+19:35:15 <abadger1999> sivel: but we're having more and more difficulty here... are we willing to decide that the scales are different now and we should change?
+19:35:18 <gundalow> bcoca: FYI I added Contributors Summit to the agenda, would like to chat a bit about that at the end if there is time
+19:35:28 <abadger1999> sivel: I dislike that because it sets up up for a double standard.
+19:35:30 <bcoca> gundalow: saw it
+19:35:52 <gundalow> bcoca: :)
+19:35:55 <bcoca> sivel: it seems arbitrary, we should at least lay down some rules on when we would consider gpl
+19:36:01 <abadger1999> this yumdnf thing can use gpl because we need it but this apt thing or cisco thing or etc can't because.... well, we said no.
+19:36:16 <sivel> sure, but considering, should not be the same as agreeing to it
+19:36:20 <abadger1999> there should be something non-arbitrary
+19:36:28 <bcoca> i think that a) very specific usage b) already depends on GPL libs
+19:36:51 <jhawkesworth_> in this case, is an alternative implmentation of the module_utils a possibility?
+19:36:54 <bcoca> and for specific usage a) existing api for specific appliance/webservice
+19:37:13 <bcoca> i.e ok for slack interface, not ok for 'generic chat interface'
+19:37:15 <sivel> sure, I just want to point out, that our guidelines are a means to determine feasability to use GPL, not that we will blindly accept the code as GPL it it meets the requirements arbitrarily
+19:37:27 <jhawkesworth_> I guess someone who hasn't looked would have to implement it
+19:37:29 <sivel> like, I'm lazy and don't want to ask about relicensing
+19:37:43 <bcoca> jhawkesworth_: in some cases, yes, but hard for some of the simpler code to not look the same, in the case of apt its also the library imported
+19:37:45 <sivel> Anything in the guidelines should be super specific
+19:38:03 <abadger1999> I don't think that we should turn down licensing a thing as GPL if it meets the criteria... but we can decide whether it meets the criteria or not.
+19:38:13 <maxamillion> +1
+19:38:18 <sivel> 1) There is no potential way to have this relicensed from GPLv3 to BSD
+19:38:22 <sivel> I think that is about it
+19:38:34 <sivel> can add sub bullets about the meaning
+19:38:50 <maxamillion> +1
+19:38:50 <sivel> a) Death of an author
+19:38:53 <abadger1999> (for instance, a function named fetch_rpm_from_url may look like it's specific, but after reviewing it we might say "this code actually is fetch_file_from_url() so it isn't specific to rpm's at all"
+19:38:58 <bcoca> the thing, both yum and apt are used in many distros ... so we are really stretching 'narrow' in that case, but they are used by very few modules, which does apply
+19:39:28 <abadger1999> for this code, we'd have to send it to red hat legal, then.
+19:39:29 <bcoca> ^ and that, not all code that 'is specific' needs to be
+19:39:39 <abadger1999> as red hat legal could well have rights to relicense it.
+19:39:52 <bcoca> was andrew RH employee at time?
+19:40:11 <abadger1999> who is andrew?
+19:40:21 * bcoca might have name wrong ...
+19:40:26 <abadger1999> (maybe we're suddenly talking about different code?)
+19:41:01 <bcoca> no, meant seth ... no clue why i was thinking 'andrew'
+19:41:39 <abadger1999> yeah.  svidal was employed by red hat the whole time ansible was being created.
+19:41:47 <maxamillion> yeah
+19:41:58 <bcoca> so unless his contract stated it explicitly, its probably doable .. but it will take time
+19:42:04 <maxamillion> I'm alright throwing to RH Legal if we can get a decision back *soon*
+19:42:04 <abadger1999> yep.
+19:42:12 <bcoca> can/should we include as GPL until the lawyers resolve it?
+19:42:16 <abadger1999> and we don't know how long it will take.
+19:42:43 <abadger1999> I don't think we should knowingly add more gpl module_utils unless we've decided to change our rules.
+19:42:45 <bcoca> problem is subsequent contributions, must be monitored and always ask for relicence to bsd permissions
+19:43:19 <bcoca> well, the rule is there to allow 3rd parties to share/ship modules and rely on module_utils w/o having to reimplement
+19:43:28 <sivel> fwiw, in my view, this would be a time I would say that GPL is allowed. I indicated that in a disucssion earlier, saying I didn't believe relicensing would be feasible
+19:43:37 <bcoca> if we can do 'narrow' cases like this, im fine, dont see many modules reusing apt/yum internals
+19:43:47 <abadger1999> I think relicensing probably is feasible.
+19:44:01 <abadger1999> But it's not something we can do, it's something that red hat would have to look into.
+19:44:03 <bcoca> im ok with allowing gpl, but only on narrow focused shared code
+19:44:04 <sivel> feasible in the necessary time frame
+19:44:15 <abadger1999> that seems problematic.
+19:44:23 <bcoca> its problematic either way
+19:44:27 <maxamillion> agreed
+19:44:49 <bcoca> we either allow it or deny and make the code/fixes wait till lawyers get done
+19:44:51 <maxamillion> and really, the code as it stands right now is very specific to the use case, but I do agree with the concern of "what if that module_util grows over time"
+19:45:04 <abadger1999> $vendor hasa set of modules they want to get into 2.7  but they can't get the module_utils relicensed before freeze.
+19:45:09 <bcoca> if we allow, we have 2 options, plain allow gpl, allow 'for now' with views to move to bsd once laywers clear
+19:45:24 <maxamillion> bcoca: +1
+19:45:30 <abadger1999> that should then be allowed in under the same guidelines of "feasible in the necessary timeframe"
+19:45:37 <bcoca> abadger1999: im fine if module_utils is just for specific vendor api/appliance
+19:45:39 <maxamillion> I'm happy to relicense to BSD once RH Lawyers sign off
+19:45:51 <abadger1999> bcoca: I am too.. .thus, my proposal.
+19:46:06 <bcoca> maxamillion: the problem is that any contribution on the 'currently gpl' would have to require they singing off on future bsd relicence
+19:46:14 <abadger1999> but that's different than saying it's allowed because it's infeasible to relicense in $timeframe.
+19:46:15 <bcoca> ^ need to be very good at keeping tha tin mind
+19:46:25 <maxamillion> bcoca: I don't see how that's any different than right now
+19:46:44 <bcoca> right now we are already in trouble, doesnt mean we should keep adding logs to the fire
+19:46:46 <maxamillion> bcoca: I'm the "original author" of the module_util but it's derivative work
+19:47:10 <bcoca> so im ok with all 3 scenarios, but would prefer to include the code vs not include
+19:47:16 <maxamillion> I guess I just don't understand how it's different if we do it now or later from an inconvenience standpoint
+19:47:24 <maxamillion> +1
+19:47:31 <bcoca> a) forbid non gpl, b) allow gpl with narrow focus c) temp allow gpl with views of relicensing
+19:47:41 <bcoca> b) is my preference, but i can live with c and regret a
+19:47:43 <maxamillion> I dislike the idea of legal blocking development if we have an acceptable path forward from the legal perspective
+19:47:49 <bcoca> agreed
+19:47:59 <bcoca> which is why a) is my least fav
+19:48:05 <abadger1999> anyhow, I'm +1 on hcanging our guidelines, or +1 on continuing to say no to gpl code in module_utils.
+19:48:12 <maxamillion> yeah, I like B or C ... which ever the group prefers
+19:48:23 <abadger1999> I'm not okay on making an exception for this because it's convenient for us.
+19:48:24 <bcoca> so b) seems only common one to all?
+19:48:36 <bcoca> abadger1999: agreed, it has to be a general rule
+19:48:47 <jtanner> o/
+19:48:53 <bcoca> jtanner: inputs?
+19:49:00 <jtanner> bbias
+19:49:10 <bcoca> anyone else?
+19:49:36 <bcoca> so b wins, abadger1999 want to define the 'narrow focus' rules?
+19:49:53 <abadger1999> we should probably vote on the narrow focus rules.
+19:50:18 * abadger1999 wordsmiths what he said earlier
+19:50:19 <bcoca> im ok on that, want to propose them?
+19:50:22 <jtanner> c seems like a management pain
+19:50:33 <jtanner> too late for a i think
+19:50:36 <bcoca> c is a mangement pain, but its also a compromise
+19:50:45 <bcoca> well, a) is 'new'
+19:50:55 <bcoca> not old, that we should be working on changing/replacing
+19:51:14 <jtanner> the few we've relicensed seem to be a pita
+19:51:15 <abadger1999> module_utils that are for a small set of modules for a specific vendor's hardware or service are allowed to be under gplv3+ instead of BSD.  module-utils that are generic in nature (could be used with modules from more than one vendor or project) must be BSD.  If there's doubt as to which category a module_util falls into, the Ansible Core Team will decide..
+19:51:33 <maxamillion> +1
+19:52:22 <jtanner> are we able to make the call on gpl vs bsd in each case or do we need to involve legal?
+19:52:46 <bcoca> +1 on that 'ruleset'
+19:53:19 <abadger1999> I can't say for sure but I think we will be able to make the call in each case... legal probably would be happiest if we just made everything gplv3+.
+19:53:21 <maxamillion> jtanner: since we're not relicensing code, I don't think we would need to involve legal
+19:53:36 <jtanner> +1 -if- we have the freedom/capability to make the call in each case without too much back and forth with lawyers
+19:53:38 <bcoca> yeah, whole point is avoid to wait for legal for relicense
+19:53:42 <maxamillion> but we can give them a heads up about the guideline change and see what they say
+19:54:40 <abadger1999> +1 for this guideline from me.
+19:54:49 <bcoca> ok, so going to call vote on ^ @abadger1999 rules for allowing gpl in module_utils
+19:54:52 <bcoca> +1 from me also
+19:54:54 <jtanner> no wait
+19:55:03 <jtanner> i want jimi and nitz to vote one way or the other
+19:55:11 <nitzmahone> I'm +1 for that
+19:55:18 <abadger1999> jimi|ansible ^
+19:55:18 <maxamillion> jimi|ansible: what say you
+19:55:22 <jimi|ansible> reading...
+19:55:32 <bcoca> [15:51] <abadger1999> module_utils that are for a small set of modules for a specific vendor's hardware or service are allowed to be under gplv3+ instead of BSD.  module-utils that are generic in nature (could be used with modules from more than one vendor or project) must be BSD.  If there's doubt as to which category a module_util falls into, the Ansible Core Team will decide..
+19:55:34 <jimi|ansible> +1
+19:55:37 <bcoca> ^ voting on that
+19:55:38 <jtanner> works for me
+19:55:41 <maxamillion> \o/
+19:55:45 <bcoca> ok, overwhelming majority, passed
+19:55:49 <maxamillion> where in the docs should we put that?
+19:55:56 <bcoca> we already have bit on licensing
+19:56:03 <bcoca> we also have comments in module_utils iirc
+19:56:07 <jimi|ansible> i believe that's always been the unofficial stance, so good to make it official
+19:56:11 <jtanner> aside from docs, iirc we had some sanity checks enforcing bsd
+19:56:15 <maxamillion> https://docs.ansible.com/ansible/latest/dev_guide/developing_modules_checklist.html ?
+19:56:34 <bcoca> #topic contributor summit
+19:56:36 <maxamillion> jtanner: I think you're right
+19:56:38 <abadger1999> contributor guidelines I think.  which will be good because sivel pointed out early i nthe day that the BSD rationale isn't mentioned there either.
+19:56:41 <gundalow> Ignore the "where" acozine is working on moving those docs around
+19:56:52 <maxamillion> abadger1999: alright, I'll follow up off-meeting
+19:57:02 <abadger1999> I have a thing that needs a vote from last meeting too.
+19:57:16 <abadger1999> gundalow: ^ contributor summit is yours to announce :-)
+19:57:20 <gundalow> Thanks
+19:57:28 <jtanner> voting on contrib summit?
+19:57:33 * jtanner is lost
+19:57:42 <maxamillion> jtanner: disjoint topics
+19:57:58 <maxamillion> jtanner: abadger1999 needs a vote on something from last week *AND* gundalow is going to talk about contrib summit
+19:57:59 <gundalow> Just a reminder to add stuff to https://github.com/ansible/community/blob/docs-network-roles-process/group-network/roles_development_process.rst#new-role
+19:58:09 <gundalow> Bah, not that
+19:58:11 <bcoca> https://docs.ansible.com/ansible/latest/dev_guide/developing_modules_in_groups.html
+19:58:16 <gundalow> To https://etherpad.openstack.org/p/ansible-summit-october-2018
+19:58:21 <bcoca> ^ has bsd
+19:58:39 <maxamillion> gundalow++
+19:58:40 <zodbot> maxamillion: Karma for gundalow changed to 2 (for the current release cycle):  https://badges.fedoraproject.org/tags/cookie/any
+19:58:51 <gundalow> And if you are in a working group, *please* encourage people in that group to add ideas
+19:59:23 <jtanner> is that "+1+1+1" or "+N" ?
+20:00:06 <bcoca> anything else?
+20:00:06 <gundalow> Agenda is a little sparse at the moment, It's only 6 weeks weeks till Contributors Summit/AnsibleFest
+20:00:09 <gundalow> jtanner: ?
+20:00:21 <jtanner> doing a +1 in the etherpad
+20:00:21 <gundalow> nothing else from me, over ot abadger1999  if he had something to vote on
+20:00:32 <gundalow> jtanner: `+1+1+1` is fine
+20:00:46 <gundalow> If Etherpad is working we should see who's voted on things
+20:01:38 <abadger1999> So last week we talked about having a plan to add a toggle to file to deprecate how state=file handles nonexistent files..  The toggle would be added in 2.8 with the same default as now (do not create a nonexistent file).  In 4 releases, we'd change the default to create the nonexistent file.
+20:01:47 <gundalow> #topicfoo?
+20:01:50 <bcoca> #open floor
+20:01:55 <bcoca> #topic open floor
+20:02:11 <abadger1999> Current voting was at +2 (abadger sivel) to do that, -1 (bcoca) against.
+20:02:27 <bcoca> iirc sivel was on the part of touch and rest having diff defaults
+20:02:33 <jtanner> is that encapsulated in a proposal or pr ?
+20:02:33 <bcoca> but @sivel knows exactly
+20:02:52 <sivel> catching back up
+20:02:54 <sivel> one sec
+20:02:54 <bcoca> -1 jsut from user having to wait 5 versions to get the feature
+20:03:16 <bcoca> i still prefer having the new _time options default == None, which behaves differnetly for touch
+20:03:19 <abadger1999> It stemmed from the fact that the file module also has a state=touch argument which was added because state=file does not create nonexistent files.
+20:03:23 <bcoca> since touch already behaves differntly
+20:03:39 <jtanner> state=touch ... terrible.
+20:03:40 <abadger1999> but state=touch is not idempotent because it sets the timestamp to now.
+20:04:07 <bcoca> yes, its terrible and non idempotent, but i dont except touch to be idempotent, i dont think most users do either
+20:04:25 <sivel> users expect touch to do something different
+20:04:33 <jtanner> should be "touched=(True|False)" imo and  be an alternate for state arg
+20:04:35 <abadger1999> there' s a pr to add specifying timestamps (good, that part is approved) but the question there was whether to change the default so that it preserved the current timestamp (making it idempotent byt default)
+20:04:46 <bcoca> jtanner: yes, but shipp sailed and deprecation is long
+20:04:59 <jtanner> i know ... i rant pointlessly
+20:04:59 <bcoca> jtanner:  or a touch module even, since file already has 'non states' as state=
+20:05:05 <sivel> I was saying that touch, by default should still modify the timestamp, unless a timestamp was explicitly provided
+20:05:20 <sivel> to act just like the touch cli
+20:05:26 <bcoca> yes, we agreed on that
+20:05:31 <abadger1999> the argument was made that it should mimic /usr/bin/touch (which updates the timestamp) but my argument was that we should have at least one of state=touch or state=file do what msot users want.
+20:05:46 <maxamillion> jtanner: I think `touched=(True|False)` is reasonable
+20:06:06 <abadger1999> I'd be okay with state=touch doing what /usr/bin/touch does if we can change state=file to create nonexistent files after a suitable deprecation cycle.
+20:06:37 <bcoca> it would be redundant with touch _time=preserve
+20:06:47 <sivel> abadger1999: I think you and I agreed on that being the way forward last time
+20:06:50 <jtanner> but  file: state=file is also used for assertion scenarios right? users don't necessarily want to create
+20:07:02 <sivel> but I think there was talk of a toggle to add that functionality
+20:07:04 <bcoca> yep, it was 'stat' before 'stat'
+20:07:11 <abadger1999> sivel: yep.  So currently it's +2 in favor, -1 against.
+20:07:19 <bcoca> at this point i just want to rewrite it into dif fmodules
+20:07:23 <sivel> ok, was confused about what was happening :)
+20:07:25 <sivel> haha
+20:07:33 <gundalow> state=touched doesn't sound that idempotent
+20:07:34 <bcoca> sivel: but you also were +1 to use the diff defaults on touch
+20:07:34 <sivel> now that we are back in sync
+20:07:50 <gundalow> (I may have missed some discussion)
+20:07:52 <jtanner> separate modules makes the most sense, i just don't know how to weigh the validity of args that overload a parameter
+20:07:52 <bcoca> gundalow: it should have never been a state
+20:07:56 <bcoca> and its state=touch
+20:08:03 <sivel> I am +1 with this assertion: I'd be okay with state=touch doing what /usr/bin/touch does if we can change state=file to create nonexistent files after a suitable deprecation cycle.
+20:08:05 <sivel> but done on a toggle
+20:08:11 <bcoca> state=file < i find that wrong also, state=present/absent type=file/dir/link/etc
+20:08:18 <abadger1999> (in favor == add a creates parameter so that state=file creates=True would create nonexistent files and state=file creates=False would not create nonexistent files.  This would default to false for now and change to True after a deprecation cycle)
+20:08:30 * nitzmahone looks at horse running from barn in distance
+20:08:38 <jtanner> curious about the background  on  this
+20:08:43 <bcoca> sivel: but at that point, you already provide the functionality, there is no need to change file
+20:08:56 <bcoca> state=touch _timestamp=preserve == state=file as toshio wants it
+20:09:10 <bcoca> jtanner: pr to add mtime/atime to file module
+20:09:17 <jtanner> ok
+20:09:39 <sivel> bcoca: I was also saying there should not be shortcuts like "preserve"
+20:09:53 <bcoca> we already have those for mode/owner
+20:10:02 <bcoca> might not for owner,
+20:10:13 <abadger1999> @jtanner There's a loooong history of PRs and issues against file around state=file not creating files.  someone finally got a PR added that had the desired creation behaviour but for some reason they called it state=touch and added the timestamp changing as well.
+20:10:16 <sivel> None means update, or an explicit timestamp means to set that timestamp
+20:10:20 <abadger1999> Thus we are in the place we currently are.
+20:10:26 <sivel> anyway, we had these discussions last week
+20:10:34 <abadger1999> sivel: there has to be a preserve.
+20:10:34 <sivel> at this point, I'd be fine with just about anything :)
+20:10:40 <sivel> so sign me up
+20:10:42 <abadger1999> that's separate though.
+20:11:20 <bcoca> lets separate then, for short term we all agree on diff defaults solution?
+20:11:24 <sivel> there doesn't have to be a preserve.  Run stat first, register, use that in the file module
+20:11:28 <bcoca> for long term we can discuse state=file
+20:11:42 <abadger1999> One depends on the other for me.
+20:11:55 <bcoca> abadger1999: so if you dont do long term, there is no short term?
+20:11:55 <jtanner> if this has to be decided now, and we aren't getting enough votes ... it needs to be bdfl + thaumos making the call
+20:12:20 <abadger1999> I would much prefer the state=file creates=(True|False) solution but if that gets voted down, then I'm in favour of making state=touch do what users actually need.
+20:12:42 <bcoca> users also need touch as it works now
+20:12:59 <bcoca> the whole point is adding a togglel to add the missing feature, which is 'create a file if missing but dont change timestamp'
+20:13:03 <abadger1999> and they can do that.... but it shouldn't be the default.
+20:13:28 <bcoca> i disagree, using touch i would expect the default to be what it is, aside from breaking backwards compat ...
+20:13:35 <abadger1999> right.  that's what we need to eventually have as a default in the file module.
+20:13:52 <nitzmahone> `state: file_or_nonexistent` / `state: file` ?
+20:14:01 <abadger1999> nitzmahone: no
+20:14:02 * nitzmahone ducks
+20:14:11 <abadger1999> nitzmahone: oh... is that an alternate proposal?
+20:14:22 * nitzmahone is only half-serious
+20:14:26 <bcoca> state: file only checks, what toshio wants (and makes sense with other states) is for file to create if absent
+20:14:29 <abadger1999> nitzmahone: The problem with that is that we'd then have 3 states that do the same thing.
+20:14:33 <nitzmahone> I dislike adding more special-case args
+20:14:37 <bcoca> the problem is backwards compat
+20:14:38 <abadger1999> (file=present with minor variations)
+20:14:51 <bcoca> yes, i think we 'broke' file
+20:14:53 <abadger1999> creates is not entirely a special case, though
+20:15:02 <bcoca> why i think it should be 4-6 modules
+20:15:04 <nitzmahone> `state: file_create_if_missing`
+20:15:05 <abadger1999> it applies to all the states except absent
+20:15:36 <abadger1999> nitzmahone: ah, yeah, I didn't want to come flat out and say that was horrible but if you think so.... ;-)
+20:15:44 * nitzmahone is warming to the `creates` thing
+20:16:05 <bcoca> which is what 'touch' does, the contention, touch changes the timestamp
+20:16:09 <bcoca> by default
+20:16:23 * jtanner is curious how many playbooks out there in the wild are using state=touch
+20:16:29 <bcoca> a few
+20:16:37 <abadger1999> jtanner: both not many and not enough
+20:16:40 <bcoca> there is also a pr for state=create
+20:16:52 <nitzmahone> def -1 on that
+20:16:56 <maxamillion> jtanner: too bad we can't realistically catalog that kind of information, it would certainly make things easier in a lot of instances
+20:17:07 <abadger1999> because a lot of playbooks are likely buggily using state=file and they will fail when the user has to recreate that box from their playbooks.
+20:17:18 <bcoca> maxamillion: would require 'spying' on users .. they tend to not like that
+20:17:43 <bcoca> abadger1999: most state=file were 'stating', no one should really be using that anymore
+20:17:51 <bcoca> since we added actual stat module
+20:18:13 <jtanner> maxamillion: i have ways
+20:18:52 <maxamillion> jtanner: I would be interested in learning your specific brand of magic
+20:19:17 <jtanner> i spell "magic" g r e p
+20:19:21 <abadger1999> So, vote count again is +2 in favour of adding creates= with a deprecation to change the defualt, -1 against.... I brought it back to the meeting today because I felt that 2:1 was not enough to show consensus.
+20:19:32 <abadger1999> So we eiether need more votes or a vote from nitzmahone.
+20:19:55 * nitzmahone will be the decider if that's what you want
+20:20:14 <abadger1999> I mean, I prefer more votes... but I cna't force people to do that.
+20:20:20 <bcoca> really adding diff defaults creates teh full feature set w/o creating more ugly hacks in file interface
+20:20:45 <abadger1999> maxamillion, jtanner, gundalow: you three are obviously here for isntance, but haven't voted.
+20:20:58 <bcoca> how much better is file : state=file creates=true vs file: state=touch mtime=preserve?
+20:21:13 <nitzmahone> The first one is much easier to read IMO
+20:21:15 <abadger1999> bcoca: the idea is that it will be state=file
+20:21:22 <bcoca> nitzmahone: we are creating mtime anyways
+20:21:25 <bcoca> and atime
+20:21:29 <bcoca> this adds 3
+20:21:34 <abadger1999> creates won't be needed once the deprecation cycle is over.
+20:21:47 <nitzmahone> Though it does overload "creates" in a weird way with other modules that use it
+20:21:50 <bcoca> abadger1999: state=file requires deprecation and wont be availabel for a long time
+20:22:01 <maxamillion> jtanner: yeah, but how do you grep random people's playbooks from behind firewalls and things? or you just get sample sizes from public projects?
+20:22:09 <jtanner> public
+20:22:14 <maxamillion> jtanner: rgr
+20:22:15 <gundalow> copy of all Galaxy repos etc
+20:22:18 <jtanner> sufficient sample size for many things imo
+20:22:19 <bcoca> hit RH gitlab, also has tons of plays/roles
+20:22:21 <abadger1999> nitzmahone: I'm okay with a different name for the param if you can think of one.
+20:22:22 <maxamillion> jtanner: +1
+20:22:31 <bcoca> ^ not 'public' but i think its fine to look at for 'usage'
+20:22:59 <maxamillion> abadger1999: I'm pretty +0 to it all, sorry I didn't explicitly vote ... I'm not really a fan of the options but can't think of anything better so just whatever comes out the other end, I'm good with it as long as it's documented
+20:23:08 <abadger1999> 4 releases for a deprecation cycle.
+20:23:22 <bcoca> vs users having it 'now' with the diff defaults
+20:23:36 <abadger1999> which is much better than "never"  unless people are willing to vote to change state=touch.
+20:23:37 <gundalow> I like `state=file` `creates=(True|False)`, `update_timestamp=(True/False)`
+20:23:42 <alikins> I would lean towards state=file_exists given current mixed types of state, but maybe a weak pref for just changing meaning of state=file
+20:24:35 <abadger1999> alikins: <nod> That was the thing that nitzmahone joked about adding... the problem is that we'd then have three file states that all do almost the same thing.
+20:25:02 <bcoca> k, lets put this off, most people dont know the discussion and the options just multiply, we are way over meeitng time
+20:25:05 <nitzmahone> The nice thing about file_exists is that we don't have to break anybody
+20:25:20 <abadger1999> gundalow: (update_timestamp [from the PR title] was changed to adding timestamps).  Are you still +1 to the state=file creates=True portion?
+20:25:57 <gundalow> abadger1999: what's behavious for timestamp?
+20:26:08 <gundalow> spellingishard
+20:26:18 <abadger1999> nitzmahone: that is true.... but like I say, then we have state=file , state=touch, and state=file_exists which only differ in very minor ways (some only in the ir defaults)
+20:26:42 <alikins> I'd almost suggest a state_from=any/absent/exists
+20:26:43 <bcoca> ok, going to call the meeting, will send an email start thread so we can review on thursday's one
+20:27:05 <bcoca> #endmeeting

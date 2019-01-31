@@ -1,0 +1,42 @@
+16:01:02 <gundalow_> #startmeeting Ansible Network working group
+16:01:02 <zodbot> Meeting started Wed May 23 16:01:02 2018 UTC.
+16:01:02 <zodbot> This meeting is logged and archived in a public location.
+16:01:02 <zodbot> The chair is gundalow_. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:01:02 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:01:02 <zodbot> The meeting name has been set to 'ansible_network_working_group'
+16:01:11 * Qalthos 🌊🌊
+16:02:33 <gundalow_> #chair Qalthos
+16:02:33 <zodbot> Current chairs: Qalthos gundalow_
+16:04:05 <gundalow_> #topic open floor
+16:06:23 * Qalthos whistles
+16:10:06 <gundalow_> Quiet today
+16:10:23 <gundalow_> #info https://github.com/ansible/ansible/blob/devel/docs/docsite/rst/roadmap/ROADMAP_2_6.htm deadlines
+16:11:57 <trishnag> o.
+16:11:59 <trishnag> o/
+16:12:08 <pffs> had an issue in testing 2.5.3 against bastion yesterday on production, but couldn't duplicate it in my lab. I'll try playing with it more later to see if I can figure out if I'm doing something wrong or its an actual bug
+16:12:39 <Qalthos> pffs: right on, you know where to find us (:
+16:13:20 <pffs> should network_cli try to connect to devices even if there aren't actually any network modules being executed?
+16:13:37 <gundalow_> #chair trishnag pffs
+16:13:37 <zodbot> Current chairs: Qalthos gundalow_ pffs trishnag
+16:13:45 <pffs> my only task consisted of a debug: var=hostvars, and it was still connecting all the way into the device
+16:15:29 <jmcgill298> @pffs, network_cli connects before executing modules, I assumed it wouldn't matter if the device was reachable to run a debug, but was proven wrong
+16:15:46 <Qalthos> pffs: it propbably shouldn't, but with the way ansible-connection works, I'm not sure you could delay the actual connection until it is needed
+16:16:14 <jmcgill298> Ya, I assumed it was logic that sat above network_cli, so probably not adjustable
+16:16:41 <pffs> fair enough. It was odd enough I was curious if it was intentional or something that was just part of the way connections are spun up.
+16:19:17 <Qalthos> Alternately, if you want to delay until after some debug tasks or what have you, you should be able to specify connection: local on those tasks
+16:20:07 <pffs> hm, good point. I was just leaving ansible_connection in the group_vars without overriding it on the debug task
+16:20:59 <pffs> still sorta looks like it connects before it even gets to that task
+16:22:15 <Qalthos> That may well be if the connection is specified in vars
+16:22:46 <pffs> not really a big deal, I was just hanging on connect and was trying to see what variables were being used, but it would hang before it ever got to the debug
+16:22:56 <Qalthos> We do a similar thing in the integration tests, but we also don't care much if the connection process spins up early
+16:23:17 <pffs> I wouldn't imagine there are a lot of times when you would use network_cli and not actually want to connect to the device
+16:36:56 <jmcgill298> @Qalthos if I wanted to test ACI modules using httpapi, how would I go about integrating that?
+16:40:38 <Qalthos> jmcgill298: That is a good question that doesn't have a satisfying answer yet. The existing httpapi plugins aren't very much help because REST has a bit more going on than just POSTing data to a single URL
+16:44:59 <Qalthos> Broadly speaking, your httpapi plugin should have some methods which take whatever input you need and call connection.send(path, data, **kwargs) where kwargs are anything https://github.com/ansible/ansible/blob/devel/lib/ansible/module_utils/urls.py#L819 can take
+16:46:15 <Qalthos> I can put together something more concrete now that the release is winding down for you or anyone else that wants to try writing plugins for httpapi, but that will take a bit of time
+16:46:48 <jmcgill298> thanks @Qalthos, I will try to take a look; maybe have some time with the long weekend coming up
+16:51:29 <gundalow_> jmcgill298: let us know how you get on. Shout out here if you need any assistance.
+16:51:42 <jmcgill298> will do
+16:53:56 <gundalow_> Anyone got anything else?
+16:58:32 <gundalow_> #edmeeting
+16:58:42 <gundalow_> #endmeeting

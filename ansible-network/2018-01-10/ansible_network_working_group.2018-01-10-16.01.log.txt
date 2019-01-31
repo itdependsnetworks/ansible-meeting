@@ -1,0 +1,113 @@
+16:01:46 <gundalow> #startmeeting Ansible Network Working Group
+16:01:46 <zodbot> Meeting started Wed Jan 10 16:01:46 2018 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:01:46 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:01:46 <zodbot> The meeting name has been set to 'ansible_network_working_group'
+16:03:19 <funzo> o/
+16:03:20 <gundalow> #info Agenda https://github.com/ansible/community/labels/network
+16:03:45 <gundalow> #chair ganeshrn Qalthos kedarX funzo andriusb jmcgill298 samerd thaller__
+16:03:45 <zodbot> Current chairs: Qalthos andriusb funzo ganeshrn gundalow jmcgill298 kedarX samerd thaller__
+16:04:37 <gundalow> If you have anything to discuss please add it to the agenda
+16:05:33 <gundalow> #topic Arista EOS module doesn't properly parse vrfs #30250
+16:05:40 <gundalow> #info https://github.com/ansible/ansible/issues/30250
+16:05:48 <gundalow> ganeshrn: Do we have version check for eos now?
+16:06:52 <ganeshrn> gundalaw: i have not started work on this issue yet
+16:07:23 <rcarrillocruz> this is why we can't have good things :(
+16:07:39 <rcarrillocruz> different versions giving different format i assume, per skimming the issue title
+16:07:41 <rcarrillocruz> :/
+16:07:49 <gundalow_> Can someone please #chair me
+16:08:01 <Qalthos> #chair gundalow_
+16:08:01 <zodbot> Current chairs: Qalthos andriusb funzo ganeshrn gundalow gundalow_ jmcgill298 kedarX samerd thaller__
+16:08:08 <gundalow_> Other machine has locked up, thanks
+16:08:20 <ganeshrn> after the cliconf pugin changes are in...i can start work on it
+16:08:30 <ganeshrn> cliconf changes for eos*
+16:08:43 <gundalow_> #info version check is still on the to do list for 2.5
+16:10:06 <gundalow_> Thanks
+16:10:49 <gundalow_> #topic Open Floor
+16:11:23 <gundalow_> samerd: how you getting on?
+16:11:29 <gundalow_> Anyone got anything else?
+16:12:35 <samerd> gundalow_: Thanks, every thing is fine
+16:13:00 <samerd> I have another module to add: ospf support
+16:13:15 <samerd> also need to add support for networks in bgp module
+16:13:43 <gundalow> samerd: OK, will they be in by 15th Jan?
+16:14:13 <gundalow> #chair Anil
+16:14:13 <zodbot> Current chairs: Anil Qalthos andriusb funzo ganeshrn gundalow gundalow_ jmcgill298 kedarX samerd thaller__
+16:14:17 <samerd> gundalow_: sure, in 2 days at most
+16:14:28 <gundalow> Cool
+16:16:22 <Dustin> is the ospf module just for EOS ?
+16:16:36 <gundalow> #chair Dustin
+16:16:36 <zodbot> Current chairs: Anil Dustin Qalthos andriusb funzo ganeshrn gundalow gundalow_ jmcgill298 kedarX samerd thaller__
+16:17:10 <samerd> Dustin: I am adding support only for mlnxos
+16:17:34 <Dustin> ah ok
+16:18:26 <gundalow> Dustin: I see modules for ospf for nxos
+16:19:05 <Dustin> but thats only supported with nxos api
+16:19:39 <Dustin> that requires nsox 7.3 and higher unless something changed
+16:21:19 <gundalow> Not aware of anything changing there
+16:21:48 <gundalow> Dustin: Feel free to create a feature request: https://github.com/ansible/ansible/issues/new
+16:22:00 <gundalow> Not going to be done for 2.5, though we can look at it for 2.6
+16:22:39 <Dustin> ok thanks
+16:24:39 <gundalow> Anil Dustin Qalthos andriusb funzo ganeshrn gundalow gundalow_ jmcgill298 kedarX samerd thaller__ Anything else/
+16:26:37 <Dustin> no thats all i have
+16:28:01 <gundalow> Cool
+16:28:03 <gundalow> Anyone else?
+16:28:05 <itdependsnetwork> Qalthos: did you get a chance to look at comments on: 34101
+16:28:42 <Qalthos> itdependsnetwork: not yet, but I will get to that soon
+16:28:46 <itdependsnetwork> This PR seems from a distance, problematic
+16:28:50 <itdependsnetwork> ok
+16:29:44 <samerd> gundalow: I have general question about network devices.
+16:29:55 <Qalthos> itdependsnetwork: I actually agree with that, which is why I haven't moved more rpidly on that
+16:29:56 <gundalow> samerd: Sure, go for it
+16:30:13 <samerd> Are there modules for SW or image upgrade?
+16:30:28 <gundalow> SW?
+16:30:45 <samerd> Software
+16:30:48 <gundalow> oh, updating the switch OS
+16:30:52 <gundalow> I think NXOS have one
+16:31:05 <gundalow> nxos_install_os.py
+16:31:34 <ganeshrn> samerd: also junos_package module
+16:31:52 <gundalow> nxos_install_os.py: Install an operating system by setting the boot options like boot image and kickstart image and optionally select to install using ISSU (In Server Software Upgrade).
+16:32:41 <samerd> gundalow: Thanks a lot, If I have time I may add one for mlnxos
+16:32:51 <gundalow> Also cnos_image.py
+16:33:00 <gundalow> #chair skg-net
+16:33:00 <zodbot> Current chairs: Anil Dustin Qalthos andriusb funzo ganeshrn gundalow gundalow_ jmcgill298 kedarX samerd skg-net thaller__
+16:33:20 <Anil> Yes, I have added modules for config backup and upload as well
+16:33:47 <Anil> but thats utilizing cli commands internally
+16:34:02 <samerd> ganeshrn: Thanks, I will take a look
+16:34:05 <Anil> and u need to have a SFTP/FTP/SCP server also
+16:35:59 <gundalow> samerd: again, watch out for cut of dates for modules#
+16:36:06 <gundalow> :)
+16:36:13 <samerd> Anil: sure, the OS will be uploaded via scp
+16:36:56 <samerd> gundalow: sure I am aware of that, and the module will be added only I finished by time
+16:37:22 <gundalow> samerd: sorry, I go into repeat mode in the lead upto module/feature freeze :)
+16:37:35 <Anil> samerd : take a look at code there, any doubts shoot a mail at amuraleedhar@lenovo.com
+16:38:38 <samerd> Anil: Thanks, I'll do
+16:40:04 <gundalow> caphrim007: You got anything else?
+16:41:29 <gundalow> Will close the meeting shortly if not
+16:41:35 <ganeshrn> Anil: how is backup directory creation handled in enos_config module?...asking because i can't see enos_config.py action plugin
+16:41:41 <ganeshrn> backup and src options are handled in <platform-name>_config.py action plugin for other platforms
+16:44:35 <Anil> ganesh: my cnos code is pretty old and its directly using paramiko. So it dont have the latest design conventions . I will modify CNOS to latest styles in 2.6
+16:45:50 <Anil> Ganesh: The logic is simple, u invoke the CLI for image upload using paramiko and provide attributes in that CLI as variables
+16:46:22 <skg-net> gundalow: we will be submitting PR to support network_cli for dellos* modules shortly
+16:46:34 <ganeshrn> i am asking about enos_config module (not related to earlier discussion)
+16:46:34 <gundalow> skg-net: Ace
+16:47:29 <ganeshrn> Anil: the module doc states if backup is set to true " The backup file is written to the C(backup)
+16:47:29 <ganeshrn> folder in the playbook root directory."
+16:47:42 <Anil> ganesh: at the moment I have created it manually
+16:48:05 <ganeshrn> ah ok
+16:48:28 <ganeshrn> i think right approach would be to handle it in enos_config.py action plugin
+16:48:31 <skg-net> https://github.com/ansible/ansible/issues/32507
+16:48:46 <Anil> May be I should mention it in documentation or should add create folder logic..
+16:49:07 <Anil> ganesh : I will take it as an action item on me
+16:49:18 <ganeshrn> Anil: cool thanks
+16:50:51 <skg-net> for the above issue we handled multiple prompts we have changed prompt and answers to be list instead of string and handled in the common code.
+16:51:44 <skg-net> we can create a PR for the same, we were not able to validate the other platforms.
+16:52:27 <skg-net> is there way we can validate it or just running the unit test cases is sufficient
+16:55:55 <skg-net> gundalow:??
+16:56:28 <gundalow> skg-net: Changed the prompt in which file?
+16:56:40 <gundalow> Dell specific, or common across multiple platforms?
+16:56:52 <ganeshrn> skg-net: changing prompt and answers to list in network_cli will be a breaking change for other platforms
+16:56:56 <skg-net> common across all platforms
+16:57:31 <skg-net> it can take both list and string..
+16:58:24 <skg-net> to make sure we have backward compatible..
+16:58:55 <skg-net> we will raise a PR, take a look at the changes and let us know..
+17:01:36 <gundalow> cool
+17:01:40 <gundalow> Anyone got anything else?
+17:06:11 <gundalow> #endmeeting

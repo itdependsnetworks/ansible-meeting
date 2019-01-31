@@ -1,0 +1,107 @@
+16:00:26 <Qalthos> #startmeeting Network Working Group
+16:00:26 <zodbot> Meeting started Wed May 16 16:00:26 2018 UTC.
+16:00:26 <zodbot> This meeting is logged and archived in a public location.
+16:00:26 <zodbot> The chair is Qalthos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:00:26 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:00:26 <zodbot> The meeting name has been set to 'network_working_group'
+16:00:41 <gundalow> Oh, thanks Qalthos
+16:00:46 <Qalthos> #chair gundalow
+16:00:46 <zodbot> Current chairs: Qalthos gundalow
+16:01:06 <Qalthos> #chair funzo ganeshrn privateip rcarrillocruz trishnag
+16:01:06 <zodbot> Current chairs: Qalthos funzo ganeshrn gundalow privateip rcarrillocruz trishnag
+16:01:09 <gundalow> #info agenda https://github.com/ansible/community/labels/network
+16:01:59 <rcarrillocruz> o/
+16:02:31 <funzo> o/
+16:03:49 <gundalow> Anil_: Hi, Do you just want me to hit merge on https://github.com/ansible/ansible/pull/39955
+16:04:11 <gundalow> #topic Lenovo #39955
+16:04:30 <gundalow> #chair mikewiebe Anil_ andriusb samerd
+16:04:30 <zodbot> Current chairs: Anil_ Qalthos andriusb funzo ganeshrn gundalow mikewiebe privateip rcarrillocruz samerd trishnag
+16:05:32 <gundalow> mikewiebe: Hi
+16:06:03 <mikewiebe> gundalow: Hello
+16:06:51 <gundalow> mikewiebe: OK to discuss your PRs?
+16:07:01 <gundalow> #info will come back to Lenovo when Anil_ is around
+16:07:28 <gundalow> #topic NXOS PRs #40102 #39364 #40013
+16:07:30 <mikewiebe> gundalow: yes, that would be good.  I only have the one PR open for nxos_install_os
+16:07:35 <Anil_> I am here
+16:07:49 <Qalthos> mikewiebe: have you seen the latest comments from trishnag?
+16:09:07 <mikewiebe> Qalthos: I did see that.  If I update the nxos action plugin then that should work for both cli (local, network_cli) and nxapi correct?
+16:09:17 <Qalthos> mikewiebe: yup
+16:09:28 <Anil_> Gundalow : Its the replica of enos_facts, enos_command and enos_config. Only CLIs changes with respect to CNOS
+16:09:58 <mikewiebe> Qalthos: Would it be possible to set the timers in the action plugin for that module or can I only check them?
+16:10:00 <Anil_> Sorry, I will wait for my turn..
+16:10:31 <trishnag> mikewiebe: hi
+16:10:40 <mikewiebe> Qalthos: I would like to make the module as easy to use as possible
+16:11:20 <trishnag> mikewiebe: yes you can set the timer provided you are checking if the module is nxos_install_os, but I would rather leave it to the user.
+16:12:54 <mikewiebe> trishnag: Thanks.. I would prefer to check if the timer is set to a non-default value and leave it if it is.. assume the user set it but if it's default then set it to an ideal value
+16:14:24 <trishnag> mikewiebe: +1
+16:15:17 <mikewiebe> trishnag: Regarding https://github.com/ansible/ansible/issues/39364
+16:15:21 <Qalthos> If you do end up rewriting the timeout, make sure to add a note about it in the module notes section
+16:15:39 <mikewiebe> Qalthos: Will do.
+16:16:25 <mikewiebe> trishnag: I saw your note about setting up a testbed to try and recreate it.  Let me know if you have issues.
+16:16:57 <trishnag> mikewiebe: sure. hopefully I will be able to do it this week.
+16:18:08 <mikewiebe> Regarding https://github.com/ansible/ansible/issues/40013 . Has anyone else seen problems copying very large files to network devices using network_cli?
+16:18:39 <mikewiebe> It's an intermittent problem.  Often, If I just re-run the playbook the copy succeeds but we need a fix
+16:19:17 <gundalow> mikewiebe: Does the reunr always work, wondering if the file is getting cached
+16:19:46 <mikewiebe> gundalow: No.  Sometimes it will fail several times before it succeeds.
+16:21:02 <gundalow> OK
+16:22:11 <gundalow> #action gundalow to ask internally if anyone has seen similar to https://github.com/ansible/ansible/issues/40013
+16:22:31 <mikewiebe> gundalow: Thanks.  That is all for me
+16:22:35 <trishnag> mikewiebe: haven't tried copying large files. will check it out. FYI we recently have merged network_put module on devel for copying file over scp/sftp https://github.com/ansible/ansible/pull/39592
+16:23:05 <gundalow> mikewiebe: Does it fail quickly, always fail after the same amount of time (timeout issue?)
+16:23:07 <trishnag> It is on roadmap 2.6
+16:23:24 <mikewiebe> trishnag: Ok.  If it's available in 2.6 then I will try it out
+16:24:21 <trishnag> yes https://github.com/ansible/ansible/blob/devel/lib/ansible/modules/network/files/network_put.py
+16:24:28 <mikewiebe> gundalow: It does not fail quickly.  It does not appear to be an Ansible timeout issue.  I set the persistent connect and command timeout to 600 seconds which is much more then needed.
+16:24:54 <mikewiebe> It gets to a certain file size and then we see: File "/usr/local/lib/python2.7/dist-packages/paramiko/transport.py", line 1610, in _send_user_message     raise SSHException('Key-exchange timed out waiting for key negotiation')
+16:25:03 <mikewiebe> seems like a paramiko timeout of some kind
+16:26:04 <gundalow> I don't see that error message in the Ansible codebase, so I assume it's coming from Paramiko
+16:28:27 <gundalow> oh, it's line 182, string was just split
+16:29:07 <gundalow> mikewiebe: Changing that error message to say "transfered temp_size/file_size Bytes" maybe useful (for this case and just generally)
+16:29:37 <gundalow> which is already there
+16:31:05 <mikewiebe> gundalow: That would clarify it a bit more, agreed.
+16:31:53 <mikewiebe> gundalow: The permissions not set properly is incorrect.  Changing the permissions on the file has no impact on the issue
+16:32:02 <gundalow> mikewiebe: try changing line 172: scp = SCPClient(ssh.get_transport())
+16:32:03 <gundalow> to
+16:32:14 <gundalow> scp = SCPClient(ssh.get_transport(), socket_timeout=manyseconds)
+16:32:41 <mikewiebe> gundalow: I believe I tried that already, but I can give it another shot.
+16:33:43 <Anil_> i have faced this issue with my network element after I upgraded its image
+16:33:55 <Anil_> what i did is that
+16:33:58 <Anil_> export ANSIBLE_PARAMIKO_HOST_KEY_AUTO_ADD=True
+16:34:19 <Anil_> and then it stopped cribbing
+16:35:23 <Anil_> You may have to update it in ansible.cfg I guess..
+16:37:19 <mikewiebe> Anil_: I have that set 2.  Does not seem to make a difference in this case.
+16:39:14 <gundalow> mikewiebe: Can you get access to the exception that's been raised?
+16:40:15 <mikewiebe> gundalow: I am sure we could and stop it at that point.  What did you have in mind?
+16:40:44 <gundalow> except, e:
+16:41:04 <gundalow> module.fail_json(msg=str(e))
+16:41:20 <gundalow> repalcing line 172 and 182
+16:41:27 <gundalow> replacing*
+16:41:40 <gundalow> not sure if that's py2 & py3 compliant, would need to check
+16:41:53 <gundalow> no need to run though debugger
+16:42:32 <gundalow> I need to go now
+16:42:49 <gundalow> Qalthos: trishnag You OK to continue?
+16:43:40 <Qalthos> sure
+16:45:35 <Qalthos> mikewiebe: we can continue that in the issue, if you don't have anything else
+16:47:51 <Qalthos> Right then
+16:47:55 <Qalthos> #topic Lenovo #39955 (take 2)
+16:48:49 <mikewiebe> Qalthos: Sorry.. yes fine to continue :)
+16:49:07 <Qalthos> Anil_: I think gundalow was just loking to see if you were happy to merge
+16:49:34 <Anil_> yes, please merge it
+16:49:47 <Qalthos> That was easy then
+16:50:04 <Anil_> its the replica of enos_facts, command and config with changes in CLI from enos to cnos
+16:50:11 <Qalthos> #action gundalow merge #39955
+16:50:19 <Qalthos> #topic Open Floor
+16:51:44 <Qalthos> connection: httpapi will be landing Real Soon Now™ for anyone interested in the progress on that
+16:52:21 <jmcgill298> Do you have a PR in for it?
+16:52:31 <Qalthos> release will be tech preview, I expect some issues or missed features in the first pass
+16:52:43 <Qalthos> #link https://github.com/ansible/ansible/pull/39224
+16:53:55 <jmcgill298> thanks, I will try to take a look
+16:54:36 <Qalthos> https://github.com/ansible/ansible/pull/39224/files#diff-e91148b628ab2a0cde76f7421d0cf356 is the connection itself, there's a *lot* of eapi/nxapi related work in there, too
+16:55:44 <Qalthos> We're almost up for time, but if anyone has something they want to bring up, we can have a look
+16:56:24 <acozine1> branch for WIP docs changes to go with Qalthos' httpapi work is here: https://github.com/acozine/ansible/tree/httpapi_docs
+16:56:50 <acozine1> no PR yet, but feedback welcome
+16:58:13 <Qalthos> acozine1: sweet, you should be able to push that on top of my branch if you want to, otherwise we can deal with it later on
+16:58:45 <acozine1> qualthos: great - I've got a few more changes I want to add
+16:59:25 <Qalthos> acozine1: that's fine too
+17:00:04 <Qalthos> Thanks everyone for coming
+17:00:08 <Qalthos> #endmeeting

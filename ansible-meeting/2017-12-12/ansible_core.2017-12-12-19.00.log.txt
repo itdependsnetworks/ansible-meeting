@@ -1,0 +1,320 @@
+19:00:05 <thaumos> #startmeeting ansible core
+19:00:05 <zodbot> Meeting started Tue Dec 12 19:00:05 2017 UTC.  The chair is thaumos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:00:05 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:00:05 <zodbot> The meeting name has been set to 'ansible_core'
+19:00:13 <sivel> howdy
+19:00:21 * gundalow waves
+19:00:44 <mangel2> Hi!
+19:00:45 <thaumos> #chair sivel gundalow
+19:00:45 <zodbot> Current chairs: gundalow sivel thaumos
+19:00:50 <thaumos> hello all
+19:00:56 <aalexmonteiro> \o/
+19:01:10 <shertel> Hello
+19:01:15 <thaumos> #chair shertel
+19:01:15 <zodbot> Current chairs: gundalow shertel sivel thaumos
+19:01:15 <aalexmonteiro> hello
+19:02:49 <sivel> we should start doing mass pings ;)
+19:03:34 <thaumos> heh
+19:03:41 <maxamillion> .hello2
+19:03:42 <zodbot> maxamillion: maxamillion 'Adam Miller' <maxamillion@gmail.com>
+19:04:00 <thaumos> #chair maxamillion
+19:04:00 <zodbot> Current chairs: gundalow maxamillion shertel sivel thaumos
+19:04:08 <sivel> jtanner bcoca abadger1999 ;)
+19:04:15 <victorssilva_> hello
+19:04:16 <thaumos> sorry folks getting my bearings on where we are on the issue list
+19:04:20 <abadger1999> Hello
+19:04:27 <thaumos> #chair abadger1999
+19:04:27 <zodbot> Current chairs: abadger1999 gundalow maxamillion shertel sivel thaumos
+19:04:48 <thaumos> @gundalow, just to confirm, we're good for everything after 7 Dec's meeting, right?
+19:05:19 <maxamillion> can we trop the meeting agenda in the topic?
+19:05:48 <sivel> https://github.com/ansible/community/issues/286
+19:05:51 <gundalow> #info Agenda https://github.com/ansible/community/labels/core
+19:06:12 <jtanner> hi
+19:06:34 <thaumos> #topic interface discussion for fortios_cmdb module
+19:06:49 <thaumos> #chair jtanner
+19:06:49 <zodbot> Current chairs: abadger1999 gundalow jtanner maxamillion shertel sivel thaumos
+19:06:59 <gundalow> #link https://github.com/ansible/ansible/pull/33591
+19:07:08 <thaumos> is mamunozgonzalez present?
+19:07:14 <mangel2> yep, here!
+19:07:17 <thaumos> hi there
+19:07:50 <thaumos> so I am scrolling through the conversation in the PR, and I think you are wanting feedback from us on a preferred method of interface?
+19:07:52 <thaumos> am I correct?
+19:08:09 <sivel> Basically deciding if the arbitrary nature of the module is OK
+19:08:23 <sivel> #info https://github.com/ansible/ansible/commit/2d2f288e77eeaf75fb37d833434b21b134fd0575
+19:08:26 <thaumos> this goes back to do we want this to be general vs specific
+19:08:35 <thaumos> exactly
+19:08:40 <mangel2> yes, thomnico posted some arguments and we were waiting your answer
+19:08:52 <thaumos> okay so two things
+19:09:05 <thaumos> 1. have you tried discussing in #ansible-devel about this?
+19:09:18 <bcoca> +1 to doc update
+19:09:47 <sivel> (I don't think the docs have been pushed reently, so I just referenced the commit)
+19:09:52 <bcoca> nvmd ...
+19:09:54 <thaumos> 2. we strongly suggest having a module interface with a single endpoint.
+19:10:06 * bcoca should really take nap instead of confusing the issues
+19:10:08 <thaumos> The devel doc site has been pushed to
+19:10:21 <mangel2> thaumos, 1. Not yet, we were instructed to come to this meeting first
+19:10:22 <thaumos> bcoca, take rest
+19:10:47 <abadger1999> Okay, looking at this, I agree with sivel that this looks exactly like the kind of funcitonality that we were voting to break up into separate modules
+19:10:49 <thaumos> ok, cool.  just wanted to make sure that you weren't waiting from meeting to meeting to discuss with us :-)
+19:11:02 <thaumos> yes, separate modules is preferred practice.
+19:11:16 <thaumos> having a catch all module is confusing in the long run.
+19:11:20 <abadger1999> It doesn't have to be a 1:1 mapping of module to api endpoint but it definitely shouldn't be this big of an aggregate.
+19:11:28 <mangel2> thaumos, 2. Do you mean keeping the same structure that it already has but only with one endpoint? If so, we would need around 200 modules as the fortigate has many different endpoints
+19:11:36 <gundalow> Though in this case would that mean having 200 modules of almost the same options
+19:11:42 <gundalow> erm, what mangel2 said :)
+19:11:42 <thomnico> Splitting in 350  modules won't be an option for us
+19:12:26 <thomnico> the modules will be outdated rapidely and our customer use the Ansible provided with the distro
+19:12:31 <thaumos> can they be broken up into a higher level like firewall, or endpoint-control, router, log, etc?
+19:12:34 <abadger1999> I don't know what the endpoints do... but just looking at the names of the endpoints, things like log, firewall, and antivirus *might* be a suitable level of granularity.
+19:12:42 <thaumos> ^^
+19:12:46 <abadger1999> OTOH, in amazon we have what, 200+ modules?
+19:12:55 <thaumos> heh
+19:13:03 <sivel> maybe this is another indication about non-core external modules
+19:13:13 <shertel> < 200
+19:13:14 <bcoca> the granularity does not need to be to 'each endpoint' can be 'endpoint family' i.e firewall
+19:13:18 <thaumos> think of it as a service level interactions,
+19:13:20 <abadger1999> lambda_event, lambda_alias, lambda_policy.
+19:13:23 <bcoca> vs 'firewall auth-portal'
+19:13:24 <abadger1999> For isntance.
+19:13:24 <gundalow> cloud/amazon ~140 modules
+19:13:32 <thomnico> it is definetly a non core proposal aimed to our specific module
+19:13:50 <thaumos> thomnico and mangel2, would what we're all suggesting work?
+19:14:02 <abadger1999> So there could be more than one "firewall" module and more than one "antivirus" module as well... it depends on what all gets lumped into there.
+19:14:08 <thaumos> having a "family" based module, so to speak?
+19:14:18 <thomnico> endpoint family looks  a more raisonnable approach indeed
+19:14:23 <bcoca> there is leeway there, probably depends on specific 'family'
+19:14:36 <bcoca> some might need more than 1 module, others  will be fine with 1
+19:14:37 <thomnico> basically the first part of the list of endpoint
+19:14:46 <abadger1999> shertel, gundalow: thanks for looking up the numbers.
+19:14:49 <bcoca> not 'every api action' needs a module, just those that can be logically grouped
+19:14:51 <thaumos> yeah, where it makes sense; like bcoca said.
+19:14:57 <sivel> we also still need to be OK with that fact that we are still proposing an arbitrary argument that will not be well defined
+19:15:03 <thomnico> amazon have more than 200 developers (we don't)
+19:15:18 <thaumos> just to be clear, amazon doesn't write our modules either.
+19:15:20 <abadger1999> sivel: I think that revising that argument would be part of this.
+19:15:22 <bcoca> thomnico: amazon does not touch any of their moudles, they are mostly community
+19:15:25 <thaumos> that's neither here nor there.
+19:15:36 <sivel> In addition to a module doing too many things, I am a strong -1 on arbitrary module arguments
+19:15:40 <thomnico> ok point taken
+19:15:48 <thaumos> thomnico and mangel2, we're trying to make suggestions to you based on what we know the bulk of our users expect and use.
+19:16:12 <sivel> unless it is literally for arbitrary storage on the remote side (as in tags or metadata that doesn't impact funcitonality)
+19:16:31 <thomnico> indeed appriciated .. we try to share our approach based on configuring our products by our customers
+19:17:26 <thomnico> we are worried that generating a large code base by a split will result in hard to or not maintained code
+19:17:26 <sivel> Our next topic is a module with an arbitrary module argument to, fwiw
+19:17:35 <sivel> s/to/too
+19:17:50 <bcoca> thomnico: module_utils can keep most of the shared code
+19:18:01 <mangel2> well, even if we try to group by family I guess that will be a lot of modules
+19:18:05 <bcoca> thomnico:  it might end up that the modules are 90% documentation + validation
+19:18:14 <abadger1999> (side note and may go away with the refactoring... spaces in choices isn't user friendly.  It's not intuitive how to specify that as a CLI argument, for instance)
+19:18:20 <bcoca> ^ which will benefit users mostly, keeping code small
+19:18:21 <mangel2> I share thomnico's opinion, not sure if we will have resources to maintain it
+19:19:26 <maxamillion> potential tanget, but I think relevant ... are there documented recommendations for taking a module that's "grown" into something that's kind of general and splitting it out into many modules that are specific to their function? if not, should we?
+19:19:36 <bcoca> modules that are just 'api passthrough' tend to not be useful in ansible, as users that know the api that well already have their scripts, the point of a module is to abstract that and give users easier access
+19:19:45 <bcoca> let 'non programmers' also deal with your api
+19:19:48 <thomnico> the arguments will change ... and the code on stable Ansible will rapidely be outdated if we have to map the all paramaters to Ansible parameters
+19:20:08 <bcoca> thomnico: that will also break playbooks that use the module 'as is'
+19:20:10 <thomnico> we will also have to make revision
+19:20:22 <abadger1999> maxamillion: That is a tangent... We want to split and then deprecate the old modules if we can.  I think the aws working group has a few modules that they're working on making that transition.
+19:20:24 <shertel> maxamillion I don't think it's documented anywhere. You can check out the AWS RDS module that is undergoing that for 2.5.
+19:20:28 <bcoca> that is not good, here a  more 'fine grained module' can do the transformations internally and compensate for api changes, while keeping user iface same
+19:20:45 <sivel> Maybe it doesn't have to be shipped with ansible?  As we are moving closer to better external module support
+19:20:47 <thaumos> so thomnico and mangel2, is there anything more we can work with you on getting these to a point we all agree to?  From our perspective, we are not going to accept the module as is.
+19:20:56 <jtanner> sivel++
+19:21:00 <abadger1999> sivel: ^ Yeah, that's an option.
+19:21:05 <thaumos> exactly, what sivel is suggesting.
+19:21:27 <thaumos> we're working on that framework.  so when that time comes, we can work with you on that new framework and co-market accordingly.
+19:21:34 <bcoca> even if you ship externally, i would still recommend you follow our guidelines, they are meant to add to your user base
+19:21:44 <thaumos> I can take an action to keep you informed of that work as it progresses.
+19:21:51 <thomnico> the initial trend for proposing was that galaxy is no more and we were not aware of this external module handling
+19:22:06 <thaumos> Galaxy is not no-more.
+19:22:09 <abadger1999> bcoca: <nod>  But if their (paying) user base grows enough, then they can rewrite the modules at that time ;-)
+19:22:13 <sivel> bcoca: ++ but I suppose that is decision they can then make themselves
+19:22:20 <maxamillion> abadger1999: shertel: +1 - thanks, I'll follow-up off-meeting
+19:22:25 <aalexmonteiro> I agree with thomico, the maintenance of this becomes complex, in addition to affecting the users.
+19:22:25 <thomnico> thaumos, yes please
+19:22:38 <bcoca> its not like im mandating it, i used the word 'recommend'!
+19:22:51 <thaumos> Okay, so are we agreeing to handle this detached from Ansible, and we'll follow up with you on content management?
+19:23:08 <mangel2> bcoca, in some cases we need to adapt to ansible basically because the customer is already using it. They do not care about abstract concepts, they just want to have the fortigate working with ansible bcs the rest of their infrastructure is already using it
+19:23:25 <bcoca> mangel2: for some definition of 'working'
+19:23:45 <bcoca> for my definition, a 'passthrough' module is not working as you really sidestep all the benefits of using ansible
+19:23:59 <jtanner> having a module shipped with ansible does not provide functional gaurantee
+19:24:08 <thomnico> for this PR yes .. we will review with mangel2 what a split could be .. but the arbitrary param will remain or we will have to do code to generate the Ansible modules/params and versions ..
+19:24:55 <thaumos> I can ping you both directly sometime today or tomorrow.  I'll give  a high overview of the plans, and we can discuss offline your findings about splitting hairs so to speak ;-)
+19:25:11 <thaumos> #action thaumos to ping thomnico and mangel2 as a follow up to their PR.
+19:25:12 <thomnico> on passthrough : this module is declarative .. you get the parameters you asked for
+19:25:17 <bcoca> thomnico: most of the work would be documenting those params in module, keeping it arbitrary  ... really is just not 'integrating with ansible'
+19:25:38 <bcoca> thomnico: except module does not explain nor validate those parameters
+19:26:49 <bcoca> thomnico: i understand thsi module fixes your issue about having a 'deliverable' but does not really go with what the project aims for, easy to use modules that can abstract automation from actual APi knowledge
+19:26:50 <thomnico> indeed but my customers knows our products and don't expect Ansible to teach them
+19:27:07 <sivel> Ok, sounds like we have what we need for right now, as thaumos will follow up later
+19:27:11 <thaumos> yep
+19:27:19 <bcoca> thomnico: im not saying that is an invalid requirement, just that it does nto match ours
+19:27:22 <alikins_> may be worthwhile just adding an arg type for 'this is arbitrary data passed to another api' so documentation and tools that use the arg spec can deal with it
+19:27:40 <thomnico> understood .. i am explaining our approach and concerns
+19:27:55 <thaumos> okay, changing topics folks
+19:27:59 <thaumos> #topic arbitrary data discussion for HP modules
+19:28:03 <thomnico> sure thanks
+19:28:11 <thaumos> #link https://github.com/ansible/ansible/pull/32798
+19:28:21 <thaumos> Same thing here, @aalexmonteiro...
+19:28:21 <alikins_> lol
+19:28:28 <aalexmonteiro> yep
+19:28:34 <thaumos> Also, I responded to the email you sent the other day. did you see my response?
+19:28:44 <victorssilva_> wait, was I skipped?
+19:28:44 <aalexmonteiro> yep
+19:28:50 * victorssilva_ is confused
+19:29:01 <thaumos> @victorssilva_ yes, intentionally.  I will come back to you
+19:29:04 <thaumos> this should be quick
+19:29:06 <victorssilva_> oh, cool beans
+19:29:11 <thaumos> ;)
+19:29:20 <maxamillion> thaumos: gotta tell folks man! ;)
+19:29:22 <aalexmonteiro> I need a decision about it
+19:29:22 <thaumos> and I will only come back to you since we have the same last name
+19:29:57 <alikins_> But it is a pretty common scenario to run into, I kind of like the idea of the 'arbitrary' arg type to give those modules some option
+19:30:12 <thaumos> @aalexmonteiro, same as last discussion, we need to have specific endpoints to interact with.  Also, as I suggested in my email, please discuss with us in #ansible-devel, this topic doesn't need to sprawl multiple meetings.
+19:31:07 <aalexmonteiro> @thaumos I tried twice there and had no answer
+19:31:29 <aalexmonteiro> That's why I brought you here.
+19:32:04 <thaumos> okay, well I get the feeling we're not going to solve this here.
+19:32:06 <abadger1999> aalexmonteiro: I think one problem that we have with the argument in favor of keeping this (due to versions) is that ansible modules are generally an abstraction on top of the api.  ie, if the api starts accepting different information, then the ansible module has to figure out how to coerce the data they are given in the current parameters so that it will work with the new version of the api.
+19:32:12 <sivel> I think this basically falls into a simialr category of the last discussion
+19:32:16 <abadger1999> For the end user, their playbooks don't chnge.
+19:32:18 <sivel> more on the arbitrary argument side
+19:32:19 <abadger1999> but the module does.
+19:32:56 <aalexmonteiro> Yes sivel, it's good looking
+19:33:32 <aalexmonteiro> If we have to change the code, we'll have many changes. A change of this dimension will have a major impact on users who are already using it.
+19:33:49 <aalexmonteiro> We already have some modules integrated in the Ansible core and users that use our playbook.
+19:33:59 <abadger1999> some modules require a specific version of api, forcing the users to standardize on that (but i don't know if that works with how you do things)
+19:34:14 <sivel> I think this goes back to the same argument almost identically as the last.  This shoudl probably be a candidate for an external module, if it cannot be rewritten to fit our guidelines
+19:34:32 <bcoca> +1
+19:35:02 <gundalow> +!
+19:35:04 <gundalow> +1
+19:35:04 <aalexmonteiro> I have a proposal
+19:35:16 <aalexmonteiro> We could just document all the parameters and on the examples to put the main parameters, because the other parameters are optional.
+19:35:46 <aalexmonteiro> What do you think?
+19:36:02 <anlamannad> has https://github.com/ansible/ansible/pull/32104 been discussed yet?
+19:36:04 <abadger1999> Some modules, in their docs, specify that certain parameters are only valid on certain versions of the underlying library.
+19:36:07 <thaumos> @aalexmonteiro, as sivel suggested, we can work with you about the framework we're working towards.
+19:36:11 <thaumos> no anlamannad
+19:36:14 <sivel> aalexmonteiro: removing the arbitrary params, so that the module does validation and is documented?
+19:36:16 <abadger1999> aalexmonteiro:  ^ Would that work better for your needs?
+19:37:07 <aalexmonteiro> @abadger1999
+19:37:20 <aalexmonteiro> @abadger1999 yep
+19:37:49 <anlamannad> victorssilva_: were you planning on bringing that up this meeting?
+19:38:20 <abadger1999> So the plan would be, split the one generic parameter into specific parameters with docs.  And then specify in the docs "this parameter will only work if API version X.Y or above is installer".
+19:38:32 <aalexmonteiro> to change the documentation and to explain the parameters, can reduce major changes
+19:38:40 <victorssilva_> it's been intentionally skipped, anlamannad, I think it'll be brought up next/soon
+19:39:06 <aalexmonteiro> @abadger1999 yep
+19:39:24 <abadger1999> Cool.  sivel, bcoca: ^ that works for you too, right?  I think it addresses the concern you had.
+19:39:43 <sivel> yes, as long as the args can be properly validated and documented
+19:39:51 <bcoca> yeah, just look at old docker module for example of things that work only in x.x.x versions
+19:40:16 <sivel> yeah, docker suffered from this a lot, and still does to some extent
+19:40:17 <aalexmonteiro> it's great guys
+19:40:19 <bcoca> ^ its much better to be specific, than allow arbitrary args, that way user knows right away what they need to use the option
+19:40:33 <sivel> ++
+19:40:41 <bcoca> well, docker was moving target (freight train in middle of earthquake)
+19:41:30 <aalexmonteiro> but would the change only be in the documentation? and the argument would be maintained?
+19:41:47 <bcoca> er no, the point was also add validation
+19:41:52 <bcoca> so change the argsspec
+19:41:56 <bcoca> AND the docs
+19:42:00 <bcoca> to spell out the options
+19:42:01 <aalexmonteiro> ok
+19:42:28 <aalexmonteiro> how to do this validation?  any tips?
+19:42:41 <sivel> aalexmonteiro: argument_spec
+19:42:50 <aalexmonteiro> sivel ok
+19:43:01 <sivel> the same as with the other arguments to the module
+19:43:15 <thaumos> can we carry on this conversation in devel?
+19:43:21 <sivel> the argument_spec can be recursive
+19:43:24 <bcoca> you can check when arguemnts are set against lib version and return 'friendly error' .. again, see old docker module for many examples of this
+19:43:26 <sivel> thaumos: yes, +1 to move on
+19:43:27 <thaumos> I'd like to cover other topics
+19:43:41 <thaumos> ok, aalexmonteiro, please carry this over with sivel in devel
+19:43:50 <thaumos> #action conversation to continue in ansible-devel
+19:43:56 <aalexmonteiro> @thaumos ok, thanks
+19:44:09 <thaumos> #topic enable remote path for git/hg in galaxy
+19:44:12 <aalexmonteiro> thank you guys
+19:44:19 <thaumos> anlamannad and victorssilva_  this is your's
+19:44:27 <thaumos> #link https://github.com/ansible/ansible/pull/32104
+19:44:46 <thaumos> as I mentioned in DM to you victorssilva_, no one from the galaxy side is present right now.
+19:44:58 <thaumos> I will ping them in the PR as well as offline to get them to look at it.
+19:45:11 <victorssilva_> oh, all right, thanks
+19:45:11 <sivel> I feel like this goes with the multiple roles per repo thing that we have plans for
+19:45:18 <thaumos> yesh
+19:45:20 <thaumos> exactly
+19:45:39 <thaumos> #action thaumos to ping galaxy team about the PR.
+19:45:54 <victorssilva_> the issue that I solved for my company's use case exactly wasn't only multiple roles per repo but also having roles in a specific directory
+19:46:11 <victorssilva_> instead if just assuming they live in the $ROOT/roles directory
+19:46:17 <bcoca> ^ we've had that feature request for a while
+19:46:22 <victorssilva_> s/if/of
+19:46:30 <anlamannad> agreed, having a single role in the actual project is a common use case
+19:46:45 <bcoca> victorssilva_:  galaxy group is also workign on 'repo hosting multiple roles' so to be able to select all/subset of them, this might be in conflict with that
+19:46:49 <thaumos> that's great to hear! I am hoping we can reuse some of this code for sure.  It's timely since we've been having a lot of discussions about this subject.
+19:47:06 <sivel> cool, so I think we can move on here, sinec thaumos will work with galaxy folks on this
+19:47:18 <thaumos> It will also be serving the framework we were discussing earlier in the meeting as well.
+19:47:18 <victorssilva_> yeah, I found an old issue for it and linked it to the PR - https://github.com/ansible/ansible/issues/11418
+19:47:19 <thaumos> yesh
+19:47:24 <thaumos> thanks victorssilva_
+19:47:30 <thaumos> All of the data is helpful for me
+19:47:40 <thaumos> changing topics.
+19:47:46 <alikins_> victorssilva_: https://github.com/ansible/galaxy/issues/244 and https://github.com/ansible/galaxy/issues/245
+19:48:46 <thaumos> #topic discussion regarding pushing too much logic into arg_spec
+19:48:56 <thaumos> #link https://github.com/ansible/community/issues/286#issuecomment-350920949
+19:49:05 <thaumos> @abadger1999, not sure how much time we have here for this one
+19:49:06 <alikins_> re roles somewhere other than $ROOT/roles, one thing mentioned was recursing until a meta/main.yml is found. That has it's own problems, but one alternative
+19:49:13 <thaumos> @alikins_  we changed topics
+19:49:32 <sivel> thaumos: just to mention ahead of time, we can delay my topic until the next meeting
+19:49:39 <thaumos> thank you sir!
+19:49:59 <sivel> abadger1999: I am -1 on that implementation, it does feel magical.  Also https://github.com/ansible/ansible/pull/28446
+19:50:00 <abadger1999> thaumos: I think we've got htis mostly wrapped up, ganeshrn agreed to revert that aspect of the argument_spc change (but it means reverting some changes to the network modules as well).
+19:50:13 <sivel> abadger1999: I think that PR I referenced already does that manipulation in a filter
+19:50:31 <abadger1999> thaumos: nitzmahone, bcoca, jborean93 and I were -1 on doing that last night as well.
+19:51:09 <thaumos> okay, so is anything needed from anyone else here?
+19:51:23 <thaumos> I have faith in your discussions... I am sure it's all lost in scrollback somewhere
+19:51:32 <abadger1999> I'd suggest, unless someone wants to object and save the key=True feature, we can just go ahead with the plan to remove it.
+19:51:42 <sivel> abadger1999: +10 to remove
+19:51:49 <sivel> Not sure I can do that, but I did ;)
+19:51:56 <abadger1999> ;-)
+19:52:12 <thaumos> At first glance, I see no reason to retain it.
+19:52:19 <thaumos> so +1 to removal from me.
+19:52:43 <bcoca> -1 to remove k=v, its still very handy
+19:52:56 <sivel> I don't think that was the discussion
+19:53:22 <bcoca> ah, nvmd,  sorry .. having hard time keeping track while sick,  key= feature in argspec -1
+19:53:29 <sivel> :)
+19:53:31 <abadger1999> :-)
+19:53:33 <abadger1999> Cool.
+19:53:35 <thaumos> bcoca
+19:53:36 <abadger1999> Move along then.
+19:53:37 <thaumos> rest man
+19:53:39 <alikins_> "discussion regarding pushing too much logic into arg_spec" seems somewhat contradictory to "always specify args even for huge rest apis and across versions". Though can't really disagree with 'simple args and arg spec are better'
+19:54:03 <abadger1999> alikins_: it's not about pushing declarative information into argspec.
+19:54:09 <thaumos> @abadger1999 are there any actions to take, or can you tag some info?
+19:54:11 <abadger1999> It's about pushing logic into arg spec.
+19:54:14 <bcoca> alikins_: there is a balance, one serves the user by giving him info/good UI, the other is just overcomplicated implementation into argspec vs in module
+19:54:30 <sivel> cool, so I guess we're done for today?
+19:54:30 <abadger1999> key= is doing a data transformation.
+19:55:09 <abadger1999> "Give me a list and then I'll turn it into a dict using some arbitrary algorithm!"
+19:55:19 <thaumos> yep, we're done for the day
+19:55:29 <thaumos> #topic Open Floor
+19:55:38 <abadger1999> Doesn't belong as a new parameter to argspec to me.  Might belong as a custom type= but not as a new param.
+19:55:41 <thaumos> If there isn't anything more, we can endmeeting
+19:55:42 <sivel> abadger1999: yes, that is exactly what that PR I referenced does in filters, we accepted that one
+19:55:47 <sivel> abadger1999: have you seen those filters?
+19:55:56 <sivel> cast_list_to_dict and cast_dict_to_list?
+19:55:58 <sivel> shudders
+19:56:01 <alikins_> iirc, that key= thing isnt actually used by any modules we ship is it?
+19:56:18 <abadger1999> sivel: I have not... that is interesting.
+19:56:30 <sivel> abadger1999: I was a -1, but it was pushed through
+19:56:45 <sivel> https://github.com/ansible/ansible/pull/28446 to re-reference
+19:56:50 <abadger1999> alikins_: It was included to support networking modules.  I believe that commit is being reverted since we're saying key= is non grata.
+19:57:30 <sivel> abadger1999: if I understood that key= functionality, those "amazing" can probably do it
+19:57:34 <abadger1999> alikins_: If you have more thoughts, we can discuss out of meeting.
+19:57:40 <sivel> "amazing" filters
+19:58:32 <bcoca> @sivel i was against those filters, specially with the horrible names they have
+19:58:46 <sivel> if we want, we should rename them soon
+19:58:51 <sivel> I am +1 on renaming them now
+19:58:58 <sivel> I just don't have good names
+19:58:58 <bcoca> argspec should 'validate' and at MOST do 'type enforcement' ... data transforms .. too much
+19:59:41 <thaumos> kk, can we close for the windows group?
+19:59:43 <sivel> bcoca: I just added a topic for the next meeting to discuss renaming them
+19:59:45 <bcoca> sivel: i think they are 'too specific' and that we should have better ways of allowing data transforms (filter globbing? macros?)
+20:00:06 <bcoca> convert_list_to_listof_ficts_with_key_being ...
+20:00:06 <sivel> thaumos: yes
+20:00:11 <thaumos> #endmeeting

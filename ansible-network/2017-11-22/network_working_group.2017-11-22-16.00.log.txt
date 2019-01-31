@@ -1,0 +1,190 @@
+16:00:10 <gundalow> #startmeeting Network Working Group
+16:00:10 <zodbot> Meeting started Wed Nov 22 16:00:10 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:00:10 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:00:10 <zodbot> The meeting name has been set to 'network_working_group'
+16:00:50 <gundalow> #chair itdependsnetwork st8less jmcgill298 privateip
+16:00:50 <zodbot> Current chairs: gundalow itdependsnetwork jmcgill298 privateip st8less
+16:02:34 <caphrim007_> o/
+16:02:45 <gundalow> #chair skg-net caphrim007_
+16:02:45 <zodbot> Current chairs: caphrim007_ gundalow itdependsnetwork jmcgill298 privateip skg-net st8less
+16:02:49 <gundalow> Hello hello!
+16:03:08 <caphrim007_> i needed to re-adjust my calendar after daylight savings
+16:03:18 <caphrim007_> i've been an hour late the last couple weeks :p
+16:03:25 <gundalow> caphrim007_: You should be able to just add by URL the ics
+16:04:08 <gundalow> https://raw.githubusercontent.com/ansible/community/master/meetings/ical/network.ics
+16:04:21 <caphrim007_> oh goodie. thanks!
+16:04:28 <gundalow> #info Agenda https://github.com/ansible/community/labels/network
+16:04:46 <gundalow> Add by URL, if you download & add you will not get updates
+16:05:19 <gundalow> #chair Anil
+16:05:19 <zodbot> Current chairs: Anil caphrim007_ gundalow itdependsnetwork jmcgill298 privateip skg-net st8less
+16:05:27 <gundalow> #topic nmap Dynamic inventory
+16:05:50 <gundalow> #info nmap dynamic inventory https://github.com/ansible/ansible/pull/32857
+16:06:02 <gundalow> #info Maybe of useful to some of you, reviews welcome
+16:07:17 <gundalow> #topic Persistent Connection changes in 2.5
+16:08:05 <gundalow> #info Now that https://github.com/ansible/ansible/pull/32825 is merged the Persistent Connection socket will be closed at the end of every play. Previously the socket would be left open for $TIMEOUT seconds after an ansible-playbook run
+16:09:26 <gundalow> #info We are looking at including the PID of the main ansible process as part of the socket hash.
+16:09:51 <gundalow> #info connection: network_cli is in devel, this is a big change, we welcome testing
+16:09:56 <gundalow> Any questions on this?
+16:10:19 <gundalow> #info We are putting together some draft developer docs on `connection: network_cli`
+16:10:42 <Anil> I am testing it already...it works fine
+16:10:50 <gundalow> Anil: Excellent
+16:11:50 <Anil> off late I got some Authentication (publickey) failed.. any idea on that?
+16:12:05 <Anil> while connecting switch
+16:12:19 <Anil> I did export ANSIBLE_PARAMIKO_HOST_KEY_AUTO_ADD=True
+16:12:56 <gundalow> hum, I don't believe that should have changed
+16:13:10 <gundalow> Anil: did you notice that you get better error messages rather than `unable to open shell`
+16:13:11 <itdependsnetwork> will that include how non core modules can access ansible_username and password?
+16:13:39 <Anil> yes.. unable to open shell is no more there
+16:13:55 <gundalow> itdependsnetwork: How do you mean?
+16:14:11 <gundalow> oh the dev docs?
+16:14:15 <itdependsnetwork> yes, sorry
+16:14:16 <gundalow> SO the developer docs will
+16:14:25 <itdependsnetwork> thanks
+16:14:28 <gundalow> * Explain at a high level what network_cli is
+16:15:48 <gundalow> * Include an example of a platform that only supports network_cli (the end goal is to not have top-level nor `provider:` at all) <-- From 2.6 this will be the prefered(/required?) way that new *platforms* must be developed
+16:16:14 <gundalow> * Include details on extending provider (connection: local) to also support connection: network_cli
+16:17:11 <gundalow> itdependsnetwork: Does that give you what you need?
+16:17:26 <gundalow> Obviously difficult to tell to you see the words :)
+16:18:15 <gundalow> Plan for this is we will use the wiki to quickly get some docs together, and between us improve it when ever there are question. Once it's in a reasonable shape we will turn it into a formal doc RST under dev_guide in the main repo
+16:19:03 <itdependsnetwork> I'm going to guess that will be enough
+16:19:05 <gundalow> Any other questions on that?
+16:19:31 <skg-net> gundalow: that will help.. can it have migration steps for other platforms which is supported by community
+16:19:32 <itdependsnetwork> Still a little abstract for me, but I think this will be the place to document it one way or anther
+16:19:43 <gundalow> skg-net: Yup
+16:19:49 <gundalow> itdependsnetwork: Yup, I agree
+16:21:53 <gundalow> #topic Open Floor
+16:21:58 <gundalow> #chair
+16:21:58 <zodbot> Current chairs: Anil caphrim007_ gundalow itdependsnetwork jmcgill298 privateip skg-net st8less
+16:22:03 <gundalow> Anyone got anything else?
+16:22:12 <itdependsnetwork> Can I get recommendation for naming on this: https://github.com/ansible/ansible/pull/28446
+16:22:28 <gundalow> #info Holiday in USA Thu & Friday, so limited response over the next two days
+16:22:47 <gundalow> #topic Type manipulation #28446
+16:22:56 <gundalow> #info https://github.com/ansible/ansible/pull/28446
+16:23:50 <gundalow> itdependsnetwork: did you have any thoughts?
+16:24:02 <itdependsnetwork> list_to_dict :)
+16:24:06 <gundalow> hum, i though there were some ideas suggested before, though I don't see them
+16:24:16 <itdependsnetwork> intent_dict I think was one
+16:25:00 <itdependsnetwork> cast_list_to_dict
+16:25:02 <st8less> I'm trademarking "intent"!  :P
+16:25:25 <st8less> I like the cast name.
+16:25:55 <gundalow> If two people here can agree on a name then I'll merge it
+16:26:06 <itdependsnetwork> +1 from me too :)
+16:26:28 <gundalow> As we know naming things (Declaritive Intent, Aggregates/Collections) is really difficult
+16:26:46 <st8less> The second hardest problem in CS!
+16:26:56 <jmcgill298> what is the hardest?
+16:27:03 <gundalow> 2) counting
+16:27:11 <jmcgill298> +1
+16:27:12 <gundalow> 0) out by one errors
+16:27:22 <gundalow> (aka zero index)
+16:28:13 <gundalow> itdependsnetwork: cool update and ping me on IRC and I'll merge it
+16:28:21 <itdependsnetwork> thank you sir
+16:28:32 <gundalow> nah, thank you
+16:28:39 <gundalow> #topic Open Floor
+16:28:44 <gundalow> Any more for anymore?
+16:29:01 <itdependsnetwork> There was one more
+16:29:05 <gundalow> Sure
+16:29:28 <itdependsnetwork> legacy facts
+16:29:50 <gundalow> #topic Legacy Facts
+16:30:07 <gundalow> itdependsnetwork: Is that related to https://github.com/ansible/ansible/pull/31783
+16:30:46 <itdependsnetwork> don't think so, vlans was moved to legacy, trying to understand what the direction of facts is
+16:32:12 <itdependsnetwork> https://meetbot.fedoraproject.org/ansible-network/2017-11-01/network_working_group.2017-11-01-16.00.html
+16:32:23 <jmcgill298> is the goal to use gather_facts: yes for network modules?
+16:32:23 <itdependsnetwork> part 5 on that ^^
+16:33:13 <gundalow> hum, looks like that gundalow fellow isn't doing his actions
+16:33:21 <itdependsnetwork> lol
+16:33:25 <itdependsnetwork> next week?
+16:34:01 <gundalow> itdependsnetwork: right, it's on the Internal Network agenda
+16:34:22 <itdependsnetwork> thanks
+16:34:35 <gundalow> #chair rcarrillocruz
+16:34:35 <zodbot> Current chairs: Anil caphrim007_ gundalow itdependsnetwork jmcgill298 privateip rcarrillocruz skg-net st8less
+16:36:08 <gundalow> 1) is the goal to use gather_facts: yes for network modules?
+16:36:18 <gundalow> What other things would you like me to find out?
+16:37:11 <itdependsnetwork> me?
+16:37:27 <gundalow> me=gundalow
+16:37:48 <itdependsnetwork> lol, is question directed to itdependsnetwork
+16:37:54 <gundalow> yes
+16:38:02 <gundalow> It's been a long day
+16:38:16 <itdependsnetwork> https://meetbot.fedoraproject.org/ansible-network/2017-11-01/network_working_group.2017-11-01-16.00.log.html
+16:38:47 <itdependsnetwork> same as there, 16:26 -> 16:37
+16:39:37 <itdependsnetwork> but short of it, seemed like facts were actively being pulled out, but when I suggested a get method, was told to use facts
+16:39:37 <skg-net> https://github.com/ansible/ansible/commit/751eab187f51cdc58a4c112abcb4265b7112ef1b#diff-83a6bf7294d0c5ac59ee458de130f795R355
+16:39:48 <itdependsnetwork> these two seem in contrast with each other
+16:40:33 <itdependsnetwork> but again, that is my interpretation of what legacy means
+16:42:14 <gundalow> itdependsnetwork: That's great. want to make sure I ask the right questions
+16:42:42 <itdependsnetwork> good deal
+16:42:44 <gundalow> skg-net: Ah, good link, thanks
+16:42:50 <gundalow> Anything else on facts?
+16:44:02 <samerd_> Hi, I made a pull request, and it seems to be failing on docker exec
+16:44:10 <samerd_> can anyone help me with it?
+16:44:40 <samerd_> https://github.com/ansible/ansible/pull/33121
+16:45:03 <gundalow> samerd_: Hi welcome. This channel is about using Ansible to configure network devices. Could I direct you to #ansible-devel they will be able to help
+16:45:08 <gundalow> #topic Open Floor
+16:45:12 <gundalow> #chair
+16:45:12 <zodbot> Current chairs: Anil caphrim007_ gundalow itdependsnetwork jmcgill298 privateip rcarrillocruz skg-net st8less
+16:45:25 <gundalow> Anyone got anything else?
+16:45:25 <jtanner> gundalow: it's a networking PR
+16:45:32 <gundalow> jtanner: oh
+16:45:37 <gundalow> samerd_: appologies
+16:45:42 <jtanner> mellanox switch config
+16:46:04 <gundalow> samerd_: sorry, I though it was a docker PR I can help you with that
+16:46:46 <jtanner> "2017-11-21 09:26:58 ERROR: Timeout waiting for vyos/1.1.0 instance 3aef8a0a-915f-44bc-baa5-9b49d817b093."
+16:47:10 <gundalow> + yum issue, I've hit rerun
+16:47:54 <gundalow> #info There is an issue with VyOS 1.1.7 AWS image causing Shippable TEST=network issues to fail with a ssh key error. This is an AWS/VyOS bug. Fix is in flight
+16:49:14 <samerd_> gundalow: so the tests will be re-run again now?
+16:49:29 <gundalow> yup
+16:49:54 <samerd_> Thanks, will track it and see
+16:50:38 <samerd_> Actually this is my first PR in ansible, could you let me know about the process of the PR?
+16:51:15 <samerd_> I mean after the test passes
+16:55:17 <gundalow> samerd_: We will review and once happy merge. Just as a heads up we are part way though changing the connection framework in 2.5 so we are discussing internally about how new modules should work moving forward, so we may be in touch with some other details
+16:55:35 <gundalow> Though if we do, we will guide you through that process
+16:56:30 <jmcgill298> gundalow: I know a lot of modules use ssh, but I wanna make sure any differences in http is also included
+16:56:54 <gundalow> Good question, let me go into some more detail
+16:57:03 <gundalow> #topic 2.5 connection: network_cli
+16:57:22 <gundalow> #info Right now in 2.5 you can do `connection: network_cli` for the Core maintained network modules
+16:58:42 <jmcgill298> so no planned changes for http connections at this point?
+16:58:57 <gundalow> #info HTP(s) transports such as EAPI and NXAPI have not changed *yet*. It's likely that in 2.5 that they will not change, so you will still need `provider:\n  transport: eapi`
+16:59:23 <jmcgill298> ya, I was thinking about ACI, but same deal :)
+16:59:35 <gundalow> #info The aim is in 2.6 to add support for `connection: network_eapi` `connection: network_nxapi`
+16:59:39 <gundalow> etc
+17:00:08 <jmcgill298> hmm, is there enough difference for connection handlers to not have network_http?
+17:00:19 <gundalow> #info when using `connection: network_cli` you must use `become:` & `become_method`
+17:00:44 <gundalow> jmcgill298: oh, and the module does the switching, interesting idea
+17:00:53 <gundalow> s/module/connection plugin/
+17:01:08 <jmcgill298> just seems to make it simpler to use for the end users
+17:01:22 <gundalow> Aye, that's a good idea, not though of that
+17:02:32 <gundalow> We haven't fully designed the HTTP interfaces yet, for example, we are not sure how validate_certs would be specified
+17:03:37 <gundalow> #info User facing docs for network_cli are in https://github.com/ansible/ansible/pull/31807 which also details `become`
+17:03:55 <jmcgill298> how are other groups dealing with it? seems like that should be part of inventory like ansible_host
+17:04:17 <gundalow> "other groups"?
+17:04:38 <jmcgill298> windows, cloud, etc.
+17:05:52 <gundalow> Well for cloud you are always talking to a valid https server
+17:06:08 <jmcgill298> ya, I guess only network peeps are insecure
+17:06:32 <rcarrillocruz> well, some clouds you can make it with self-signed
+17:06:41 <rcarrillocruz> openstack modules there's a validate_certs no param
+17:06:50 <gundalow> jmcgill298: slow steps away from telnet
+17:07:08 <gundalow> rcarrillocruz: ah, good point. I wasn't thinking about on-prem cloud
+17:07:37 <privateip> sorry i got pull away
+17:07:45 <privateip> yes the idea is to have a single network connection for api
+17:07:48 <rcarrillocruz> openstack is not just on-prem, but yeah, i don't think there's any openstack public cloud out there that is not serious enough to have self-signed certs
+17:08:12 <privateip> most likely that will be a post 2.5 implementation
+17:08:31 <gundalow> privateip: Have we thought about how validate_certs would be specified?
+17:08:46 <privateip> with the new config stuff we will be able to add that as a property
+17:09:56 <privateip> was there anything else i missed?
+17:10:07 <gundalow> #topic Legacy Role
+17:10:11 <gundalow> itdependsnetwork: You still there
+17:10:18 <gundalow> privateip: will paste some lines in
+17:10:33 <gundalow> what is the status on facts? Based on this: https://github.com/ansible/ansible/commit/751eab187f51cdc58a4c112abcb4265b7112ef1b#diff-83a6bf7294d0c5ac59ee458de130f795R355
+17:10:41 <gundalow> Is the goal to use gather-facts: yes for network modules?
+17:10:51 <gundalow> seemed like facts were actively being pulled out, but when I suggested a get method, was told to use facts
+17:10:57 <gundalow> these two seem in contrast with each other
+17:11:06 <gundalow> but again, that is my interpretation of what legacy means
+17:11:10 <privateip> we are re-writing the entire facts system for network devices
+17:11:11 <gundalow> ^ From ken
+17:11:24 <privateip> that will be a 2.6 project
+17:11:31 <privateip> parts are going into 2.5 though
+17:11:45 <privateip> the underpinnings is getting the module_utils work done
+17:12:17 <privateip> but to answer the question, yes the goal is to support gather_facts: yes for network modules
+17:16:31 <gundalow> itdependsnetwork: jmcgill298 Nor sure if you are still around, though hopefully the above answers your questions
+17:21:43 <gundalow> Ok, will end now
+17:21:48 <gundalow> Thanks everybody
+17:21:51 <gundalow> #endmeeting

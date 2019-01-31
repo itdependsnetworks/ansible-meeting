@@ -1,0 +1,245 @@
+15:00:37 <gundalow> #startmeeting Ansible public Core
+15:00:37 <zodbot> Meeting started Thu Mar 29 15:00:37 2018 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:00:37 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:00:37 <zodbot> The meeting name has been set to 'ansible_public_core'
+15:00:41 <gundalow> Sieben_: Hi :)
+15:00:51 <sivel> .hello2
+15:00:52 <Sieben_> Hello gundalow
+15:00:52 <zodbot> sivel: sivel 'Matt Martz' <matt@sivel.net>
+15:01:01 <gundalow> #chair Sieben_ bcoca abadger1999 sivel
+15:01:01 <zodbot> Current chairs: Sieben_ abadger1999 bcoca gundalow sivel
+15:01:29 <sivel> trying to pull myself away from writing tests, I'll probably be a few more minutes, so that I can finish this one test
+15:01:37 <gundalow> ack
+15:01:47 * bcoca puts more tests on sivel's todo
+15:01:52 <gundalow> Sieben_: How you doing, did you have something to discuss?
+15:01:53 <alikins> blorp
+15:02:05 <Sieben_> Yes
+15:02:20 <Sieben_> https://github.com/ansible/ansible/pull/37638
+15:02:24 <shertel> hello
+15:02:27 <Sieben_> I would like to have this merged
+15:02:45 <maxamillion> .hello2
+15:02:46 <zodbot> maxamillion: maxamillion 'Adam Miller' <maxamillion@gmail.com>
+15:02:48 <gundalow> #topic Initial support for SSH key management on a Scaleway account #37638
+15:02:51 <Sieben_> I'm working on another module but this would be a nice start
+15:02:56 <gundalow> #chair shertel maxamillion
+15:02:56 <zodbot> Current chairs: Sieben_ abadger1999 bcoca gundalow maxamillion shertel sivel
+15:03:03 <gundalow> #info https://github.com/ansible/ansible/pull/37638
+15:05:43 <gundalow> Sieben_: Looks OK. If you end up having more modules, you may wish to move the common options & docs into a module_utils & docs fragments, http://docs.ansible.com/ansible/devel/dev_guide/developing_modules_in_groups.html goes through this process. No need to change in this PR, though something you may want to do in the next PR when you add the next module
+15:06:15 <Sieben_> Yes I would like to add more tests before refactoring
+15:06:25 <Sieben_> but yes I will do this :)
+15:06:29 <gundalow> Yup, no need to change in this PR
+15:06:34 <Sieben_> Perfect
+15:06:37 <shertel> You could also register the results from the check mode tasks
+15:06:48 <shertel> (to check that those are right)
+15:06:57 <Sieben_> How can I do this ?
+15:07:46 <shertel> below check_mode: yes have a line register: check_mode_results. And then you can assert that check_mode_results.changed is the expected value
+15:08:17 <Sieben_> Can this be in another PR ?
+15:08:39 <shertel> this pr looks good as-is
+15:08:50 <alikins> code looks mostly reasonable to me. I don't know anything about scaleway though so don't know it's utility
+15:09:03 <Sieben_> We are a cloud provider
+15:09:26 <alikins> there appear to be some unused methods in the http request class
+15:09:32 <agaffney> I'd think it's equivalent to ec2_keypair
+15:09:51 <agaffney> err, ec2_key
+15:10:11 <Sieben_> Yes they will be used in the next module that I'm currently putting together :)
+15:10:21 <Pilou> agaffney: i guess the whole class will be moved in module_utils/scaleway.py with the next PR
+15:10:26 <Sieben_> yes
+15:10:56 <alikins> Sieben_: ah, okay. And gundalow already mentioned possibly moving those to module_utils I see
+15:11:10 <sivel> We will also have a request like that in urls.py in the future. although without a _url_builder
+15:11:16 <sivel> Request class*
+15:11:38 <bcoca> ^ really sessions class
+15:11:40 <sivel> https://github.com/ansible/ansible/pull/37622
+15:12:05 <sivel> just an FYI, nothing to be done with that for this topic yet
+15:13:03 <Sieben_> I will work on it for the next PR
+15:15:13 <Sieben_> Is there something preventing it to get merged?
+15:16:34 <sivel> Sieben_: often for community modules, we ask that you have another community member, who has a need for that module, test it and provide usability feedback
+15:16:49 <Sieben_> I think Pilou tested it
+15:17:15 <sivel> I may have missed that in the comments
+15:17:33 <sivel> Pilou: if so, can you give a shipit in a regular comment?
+15:17:40 <Sieben_> pilou- approved these changes 3 days ago
+15:17:49 <Pilou> indeed :)
+15:18:27 <bcoca> needs 2
+15:18:37 <bcoca> once you are maintainer, you only need additional 1
+15:19:01 <Sieben_> sivel, If you reviewed does it count for 1 ?
+15:19:44 <agaffney> if you grease his palm sufficiently
+15:20:12 <sivel> I will not have the time this week to look at it. Someone else may be able to get to it before I do
+15:20:20 <Sieben_> If you come to France I can offer you beer/wine at the Scaleway bar
+15:20:32 <Sieben_> Pilou, it works for you as well :D
+15:22:41 <Sieben_> Ok if I get people from my team to test this module and leave a favorable comment does it works ?
+15:22:55 <Sieben_> I'm trying to figure out what my next step is
+15:26:42 <maxamillion> Sieben_: I missed the start of this discussion, what module or PR is this?
+15:26:58 <gundalow> maxamillion: #37638
+15:27:01 <Sieben_> https://github.com/ansible/ansible/pull/37638#pullrequestreview-108086214
+15:27:02 <maxamillion> gundalow: thanks
+15:27:38 <bcoca> Sieben_: requires someone with 'commit' to add a 'shipit', its normally hard for new service/api modules as no existing users normaly have 'votes' for adding a 'shipit'
+15:27:51 <bcoca> most of those that do, are remiss to add a shipit when unable to test against that service/api
+15:28:00 <bcoca> do you guys offer free/test accounts?
+15:28:07 <Sieben_> Yup we can
+15:28:23 <Sieben_> How could be set this up?
+15:28:32 <bcoca> ^ that will probably go long way to get a shipit faster and get the first one merged, after that YOU count as a commiter and as 1 vote
+15:28:33 <maxamillion> bcoca: +1
+15:28:55 <maxamillion> yeah, if we can get a test account that'd help a lot
+15:29:15 <Sieben_> How would you like to proceed
+15:29:20 <Sieben_> if you create an account
+15:29:23 <bcoca> ony reason aws/google got done quickly was the free accounts for testing ...
+15:29:40 <Sieben_> Create an account for ansible testing purposes
+15:29:56 <Sieben_> transmits the informations to me and I will make them work
+15:30:07 <maxamillion> Sieben_: once the code review is done (I see alikins has started it), if someone on the core team can test and verify things then we can merge pretty easily
+15:30:39 <maxamillion> Sieben_: what timezone are you in?
+15:30:43 <Sieben_> Perfect, I would like to be as cooperative as possible with the ansible team.
+15:30:47 <Sieben_> I'm in Paris
+15:30:50 <Sieben_> France
+15:31:10 <Sieben_> UTC+2
+15:31:50 <maxamillion> alright
+15:31:59 <Sieben_> What would be your need to have a test account ?
+15:32:19 <maxamillion> I was thinking it'd be nice to have someone in a similar timezone to be a point of contact but I don't want to volunteer anyone
+15:32:50 * bcoca is in his own timezone
+15:33:36 <maxamillion> Sieben_: the test account would just be needed to create resources using the modules to verify
+15:33:39 <Sieben_> I can be quite flexible time wise, worst case scenario we can move it to mail
+15:34:19 <Sieben_> maxamillion, no problem, create one that fits your need and I will grant it the right permissions
+15:34:23 <maxamillion> Sieben_: so if I make an account now and then tell you what my username is, can you give me a small amount of free resources or credit or whatever so I can test/review scaleway modules?
+15:34:46 <Sieben_> Indeed.
+15:35:20 <Sieben_> I would prefer to have an official email to make my case easier to defend
+15:35:41 <Sieben_> but I can make it work if it's not possible
+15:35:42 <maxamillion> Sieben_: admiller@redhat.com
+15:35:50 <maxamillion> Sieben_: that's me, I just signed up :)
+15:37:41 <Sieben_> Ok I will set it up with the rest of my team. Once this is done, what would remain before PR to be merged ?
+15:38:01 <maxamillion> Sieben_: need to finish the code review, then I'll test and merge
+15:38:17 <maxamillion> Sieben_: alikins has a few comments on the code that should be addressed
+15:38:55 <maxamillion> Sieben_: but feel free to CC me on any scaleway modules/issues/PRs from now on I'm maxamillion on github -> https://github.com/maxamillion
+15:39:09 <maxamillion> Sieben_: I'm happy to help from our end
+15:40:22 <gundalow> maxamillion: Thanks
+15:40:22 <Sieben_> Perfect :) I will ping you once this is setup
+15:40:27 <gundalow> Anything else on this PR?
+15:40:29 <maxamillion> Sieben_: sounds good
+15:40:50 <maxamillion> gundalow: certainly, I'm a sucker for the ARM architecture so this speaks to me ;)
+15:40:56 <Sieben_> <3
+15:40:56 <gundalow> #chair Qalthos
+15:40:56 <zodbot> Current chairs: Qalthos Sieben_ abadger1999 bcoca gundalow maxamillion shertel sivel
+15:41:01 <gundalow> :D
+15:41:08 <gundalow> Qalthos: over to you to #topic :)
+15:41:49 <Qalthos> give me a moment to context switch
+15:42:12 <agaffney> FYI, I'd like to discuss https://github.com/ansible/ansible/pull/22648 if there's time
+15:42:24 <gundalow> #chair agaffney
+15:42:24 <zodbot> Current chairs: Qalthos Sieben_ abadger1999 agaffney bcoca gundalow maxamillion shertel sivel
+15:42:26 <Qalthos> #topic new network connection plugin(s)
+15:42:36 <gundalow> agaffney: sure, after this
+15:43:21 <Qalthos> #info So as part of 2.6, the network team is looking to add a few new connection plugins to replace the remaining uses of `connection: local`
+15:43:26 <Qalthos> #link https://github.com/ansible/proposals/issues/102
+15:43:53 <Qalthos> That's the first proposal, a connection to support eAPI
+15:45:21 <Qalthos> There's a bit more work to be done to see if we can easily support multiple apis in one connection or if that will become cumbersome
+15:46:55 <Qalthos> Ideally we would like to have a generic HTTP transport connection, we will also need to support nxapi later and interest in ACI has already been raised by the community
+15:47:47 * Qalthos thinks that's about all the important details
+15:47:51 <abadger1999> Qalthos: Hmm.... It doesn't look like that would conform to our present connection plugin API?
+15:49:03 <abadger1999> nitzmahone or jborean93: winrm is currently the connection plugin that has the most struggle to fit into the ansible connection plugin API... do you see any ways that this might overlap with things you might have encountered?  (Maybe this gets us into the realm of shell?)
+15:49:12 <abadger1999> (shell plugins0
+15:52:18 <Qalthos> abadger1999: Can you be more specific?
+15:53:59 <abadger1999> Qalthos: The big three public API pieces of a connection plugin interface are put_file, fetch_file, and exec_command.... It looks like you want a method, send() which replaces all three of those?
+15:54:29 <Qalthos> Ah, I see
+15:55:43 <Qalthos> The networking plugins redirect those functions to local so that other modules can act as expected
+15:56:16 <abadger1999> Qalthos: I'm looking and see that netconf and network_cli already exist though, and seem to implement both (put_file, fetch_file, exec_command) and (send(), recv()).  So perhaps that's not a problem.
+15:56:35 <Qalthos> Yeah, the process is basically the same
+15:56:41 <privateip> abadger1999: we solved this problem with persistent connections
+15:56:42 * Qalthos can clarify that in the proposal
+15:57:08 <privateip> so we can now communicate with the connection pluign as an api from the module
+15:57:57 <abadger1999> <nod>
+15:58:40 <abadger1999> So ansible's module-invocation framework sees the standard API.  But the module/action plugin makes use of the extra methods of the connection plugin?
+15:59:47 <Qalthos> That is basically the case
+16:00:13 <abadger1999> K.
+16:00:17 <privateip> we pass the local domain socket path from the main process into the module fork and then reconstruct the connection
+16:00:27 <privateip> then treat it as an RPC
+16:00:42 <privateip> so the one caveat is that you can only pass objects that are text serializable
+16:00:47 <bcoca> i was thinking of doing that for most api plugins, allow a 'use api' vs having to run connection: local
+16:01:13 <bcoca> that  + the 'session' that @sivel has built could give us 'persistance' also for those
+16:01:16 <abadger1999> I think we should create a new abstract base class for network connection plugins that extends the standard connection plugin abc.  But I do not think that blocks this proposal (since this is going to mirror netconf and network_cli)
+16:01:29 <agaffney> privateip: that caveat is probably for the best, or things would start to get weird with the module process (and host) separation
+16:01:38 <privateip> agaffney: agreed
+16:01:43 <bcoca> @abadger1999 agreed, this might be worth new subclass, but i also think we might need to redo how connections are invoked
+16:01:57 <bcoca> ^ right now its 'action plugin', i think the task_executor or tqm should take over
+16:02:21 <abadger1999> Possibly... Proposal for 2.7.
+16:02:36 <bcoca> its kind of in between my 'auth plugins' and 'stackable connection plugins' proposals
+16:02:39 <privateip> bcoca: we already have some of that work done... it 2.5 executor now starts the connections
+16:03:04 <bcoca> privateip:  i know, i want 'all connections' there now, which would also allow us to do 'persistent' as a generic keyword
+16:03:08 <abadger1999> (Although, I shudder to push more work into task_executor.... the action plugin level is relatively easy to understand.  The executor is much harder)
+16:03:13 <privateip> ah makes sense
+16:03:42 <bcoca> abadger1999: i might disagree on that .. but fine with pushing it to another class that is just called by task_executor
+16:03:45 <bcoca> connectionmanager?
+16:03:47 <abadger1999> <nod>
+16:04:03 <abadger1999> yeah, something like that (but like I say, 2.7 proposal that doesn't interfere  with this)
+16:05:05 <bcoca> agreed, this can go in 'as is', just trying to find plan that makes this 'the rule' and not 'the exception'
+16:05:17 <abadger1999> Qalthos: No objection from me now that I understand the proposal better.
+16:05:21 * bcoca really dislikes that 1/2 of networking work is in the latter category
+16:05:48 <privateip> he's not the only one ;)
+16:05:49 <agaffney> bcoca: just apply a bit of apathy, and that exception will become the rule eventually :)
+16:05:54 <gundalow> #chair privateip agaffney bcoca
+16:05:54 <zodbot> Current chairs: Qalthos Sieben_ abadger1999 agaffney bcoca gundalow maxamillion privateip shertel sivel
+16:06:04 <abadger1999> Qalthos: Will you (networking team) be able to look into the larger question of solidifying an ABC for 2.7?
+16:06:24 <gundalow> I need to drop off now, after this topic I believe agaffney wanted to discuss https://github.com/ansible/ansible/pull/22648
+16:06:36 <agaffney> indeed
+16:07:00 <Qalthos> abadger1999: Can do, that sounds like a reasonable plan.
+16:07:04 <abadger1999> Cool :-)
+16:07:06 <abadger1999> Thanks
+16:09:14 <abadger1999> Qalthos: Do you have more or should we move on to agaffney's PR?
+16:09:40 <Qalthos> That's all from me
+16:14:09 <abadger1999> #topic https://github.com/ansible/ansible/pull/22648  Support for module param defaults
+16:14:13 <abadger1999> agaffney:  Floor is yours
+16:14:34 <agaffney> I'd originally put together this PR a little over a year ago, and then "abandoned" it due to some performance issues with the original implementation
+16:14:51 <agaffney> I reworked it a few weeks ago, and now it's much simpler and without the performance issues, as well as now having tests
+16:16:32 <agaffney> while this feature does have the capacity for causing some weird issues for people that use it, they would only turn up in cases where you set defaults at the play level and then use some third party role that uses a module you set defaults on
+16:16:33 <bcoca> +1 to the new form of it
+16:17:02 <agaffney> the tests in the PR show how it can be used and overridden at various levels of the play
+16:17:34 <agaffney> a suggestion was just made to add some debug/vvv output that shows when defaults are being applied to a task, but that should be trivial to add
+16:18:26 <agaffney> when looking at the PR, it's best to ignore the earlier comments, since they're from the original incarnation of this feature, which used variables rather than play/block/task directives
+16:20:06 <abadger1999> I just skimmed over dag's alternative PR... Is there any use case that either his or yours covers that the other does not?
+16:20:20 <bcoca> agaffney: they should already appear in the tasks
+16:20:39 <bcoca> when using -vvv as any data passed to the module appears in 'invocation' hash
+16:21:18 <agaffney> iirc, his alternative PR used vars, which cause more problems when debugging a playbook, where mine uses play/task attributes, which are right there in your face when you gist your playbook
+16:21:36 <agaffney> and the use cases that he claimed mine couldn't do, I showed how it could be easily done with mine in one of the last comments on my PR
+16:22:17 <bcoca> i do favor this implementation as more 'explicit', otherwise the playbook becomes very deceptive as it doesnt 'run as read'
+16:22:21 <agaffney> my original PR used vars, and bcoca convinced me that wasn't a good idea
+16:22:53 <bcoca> this can still get confusing with includes/imports/roles .. but at least you can see it when examining the context
+16:24:12 <agaffney> no matter how something like this is implemented, it's probably going to have that potential confusion when applying defaults at a "global" level and using includes/roles
+16:24:34 <agaffney> my implementation is the best for "clarity" to help avoid those situations, imo
+16:25:27 <agaffney> and it probably wouldn't be any more difficult than the "where the heck did I enable sudo?" questions that come up in #ansible from time to time
+16:25:55 <abadger1999> I think that I like the UX on this PR better than the proposal.  So if they both satisfy the same use cases I'm happy with this.
+16:30:09 <abadger1999> bcoca, agaffney: So what do we need here?  Should we just have a "any further objections?" period and then merge next week?
+16:31:48 <agaffney> sounds fine to me
+16:31:50 <abadger1999> Something like write to dag's proposal and mailing list, here's a PR implementing the use cases for module defaults; please bring up any use cases not solved so we know there's nothing blocking this.
+16:31:51 <bcoca> +1
+16:32:12 <abadger1999> agaffney: Would you be okay writing that little something to the proposal and mailing list?
+16:33:12 <agaffney> bleh, I suppose so
+16:34:46 <abadger1999> Hehe
+16:34:56 <agaffney> so...create an official proposal and then send an email to ansible-devel ML?
+16:34:58 * abadger1999 successfully shifts work to agaffney ;-)
+16:35:06 <bcoca> agaffney: nah, just post to existing proposal
+16:35:11 <abadger1999> Yes, that.
+16:35:33 <bcoca> "i gots dis, opposed?"
+16:35:38 <agaffney> heh, dag will just love that. he's not been a fan of my PR since the beginning
+16:35:43 <abadger1999> Give people a chance to post use cases (and I would emphasis use cases so we don't get too far into alternate UX) that aren't solved by this.
+16:36:11 <agaffney> does anyone have his proposal URL handy?
+16:36:21 <abadger1999> https://github.com/ansible/proposals/issues/81
+16:37:35 <alikins> +1 on soliciting use cases
+16:38:50 <abadger1999> #action agaffney to solicit use case feedback for next meeting.  We're generally in favor of the UX in this PR and will likely merge next week if there's no blocking use cases brought to our attention.
+16:39:05 <alikins> should be tons of potential use cases which is nice
+16:39:07 <abadger1999> #topic Open floor
+16:39:14 <bcoca> the only use case this doesnt really cover is the one in which 'the user does not want to modify play but still change the defaults'
+16:39:16 <abadger1999> Anyone else have something?
+16:39:20 <agaffney> commented on proposal #81, and I'll put together something for the -devel ML shortly
+16:39:42 <agaffney> bcoca: that's more UX than use case, imo
+16:40:20 <bcoca> agreed, but that is going to be the point of contention
+16:40:51 <Pilou> abadger1999: #38100, but it could be kept for the next meeting
+16:40:53 <agaffney> perhaps, but it's mostly been agreed that having magic variables that modify the behavior of playbooks in unexpected ways is generally a bad thing
+16:41:09 <agaffney> magic *hidden* variables, even
+16:42:03 <abadger1999> bcoca:  https://github.com/ansible/ansible/issues/38100
+16:42:36 <Pilou> i added some notes in the agenda
+16:42:36 <abadger1999> bcoca:  Do you want to jsut look at that and treat it as a bug that we should fix?
+16:43:28 <Pilou> i am willing to implement a fix but i would like to discuss what is the expected result
+16:43:54 <bcoca> abadger1999:  that is a 'missing feature'
+16:44:17 <bcoca> was plannign on swithc to add -all or -t plugintype plugin
+16:44:21 <bcoca> or both
+16:44:49 <abadger1999> Cool.  bcoca and Pilou if you talk a bit, I think we'll all profit ;-)
+16:44:59 <abadger1999> Do you want to do that outside the meeting?
+16:46:49 <Pilou> ok. bcoca i put some options there https://github.com/ansible/community/issues/296#issuecomment-377262087
+16:48:31 <alikins> #38100 is vaguely parallel to https://github.com/ansible/ansible/pull/37137/files
+16:49:09 <abadger1999> Okay, anyone else have a topic?
+16:49:15 <abadger1999> If not, I'll close in 60 seconds.
+16:51:10 <abadger1999> #endmeeting

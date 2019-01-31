@@ -1,0 +1,62 @@
+16:01:50 <gundalow> #startmeeting Ansible Network Working Group
+16:01:50 <zodbot> Meeting started Wed May  9 16:01:50 2018 UTC.
+16:01:50 <zodbot> This meeting is logged and archived in a public location.
+16:01:50 <zodbot> The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:01:50 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:01:50 <zodbot> The meeting name has been set to 'ansible_network_working_group'
+16:03:07 <gundalow> #info Agenda as always https://github.com/ansible/community/labels/network
+16:03:47 <gundalow> #chair acozine1 jmcgill298 Anil_
+16:03:47 <zodbot> Current chairs: Anil_ acozine1 gundalow jmcgill298
+16:05:06 <gundalow> #info Fix for NameError in cnos.py #39665
+16:05:16 <Anil_> yeap
+16:06:05 <gundalow> Anil_: Did that ever work, thought the tests would have caught that
+16:06:40 <Anil_> We were focussing on enos and this was never tested.
+16:06:46 <gundalow> ah, OK
+16:07:07 <gundalow> Wonder if it would be worth adding a basic unit test to ensure the modules load up OK?
+16:07:29 <Anil_> Now I started rewamping the code of cnos_facts, cnos_command and cnos_config in tune with how Ansible does it now.
+16:08:04 <Anil_> So this bug came up . And this time I am adding Unit test cases
+16:08:25 <gundalow> Ace
+16:08:33 <gundalow> Merged, I'll do the backport shortly
+16:08:44 <Anil_> All th new changes can be Ok to be in 2.6 but the 39665 has to ve in 2.5 as well
+16:08:51 <Anil_> Oh Thanks
+16:09:48 <Anil_> By this Friday i will be modifying all the cnos_facts, cnos_config and cnos_command and will raise a PR for that too
+16:10:35 <Anil_> Then I would like move away from paramiko and use persistent connection for all cnos modules
+16:10:49 <gundalow> Cool
+16:11:05 <gundalow> I assume that will be for 2.7 though, given the dates
+16:11:15 <gundalow> https://github.com/ansible/ansible/blob/devel/docs/docsite/rst/roadmap/ROADMAP_2_6.rst
+16:11:34 <Anil_> yes.. i have time till 17th of this month I guess
+16:11:46 <gundalow> Correct
+16:11:53 <gundalow> Merged by 17th
+16:12:10 <gundalow> oh
+16:12:11 <Anil_> yes.. I know..
+16:12:15 <gundalow> 2018-05-25 Community Freeze (Community Modules)
+16:12:28 <gundalow> bah
+16:12:31 <gundalow> 2018-05-17 Core Freeze (Core Engine and Non-Community Modules)
+16:12:35 <gundalow> You were right
+16:13:04 <Anil_> Yeah good I have more breathing space..
+16:14:14 <gundalow> https://github.com/ansible/ansible/pull/39916 I'll merge once green
+16:14:19 <gundalow> Anil_: Anything else?
+16:15:06 <Anil_> Gundalow: Thats all for me, but you will take care of back porting to 2.5 as well right ?
+16:15:44 <gundalow> Anil_: https://github.com/ansible/ansible/pull/39916 is the backport to stable-2.5 which I'll merge once Shippable goes green
+16:16:17 <gundalow> If you can make the integration tests so we can backport them to stable-2.5 (ie. no new module functionality included) that would be great
+16:20:22 <Anil_> gundalow: I have one more item to discuss with you
+16:20:27 <gundalow> Sure
+16:21:03 <Anil_> The CLIs of cnos is undergoing changes in line with ISCLI
+16:21:51 <Anil_> so our switches which works with 2.5 will still work for some more time
+16:22:44 <Anil_> but eventually that CLIs may get deprecated
+16:23:05 <Anil_> so should we always backport the changes in CLIs to it ?
+16:24:13 <Anil_> or will it be Ok that we put in document that u need to use CNOS 10.7 or lesser with Ansible 2.6
+16:25:09 <Anil_> what u suggest ?
+16:26:04 <gundalow> Anil_: I think so, let me ask people internally what they think.
+16:29:27 <gundalow> Anil_: Could you please drop me an email with that in, so I'll make sure I get back to you
+16:29:32 <gundalow> Anything else?
+16:30:05 <Anil_> sure.. I will mail you..And nothing else from my side
+16:30:12 <gundalow> Thanks
+16:30:15 <gundalow> #topic Open Floor
+16:30:21 <gundalow> Anyone got anything else?
+16:35:34 <Anil_> 39916 is green
+16:36:11 <gundalow> Merged
+16:36:26 <gundalow> ok, will close the meeting shortly
+16:38:01 <Anil_> sure.. Have a wonderful day gundalow
+16:38:28 <gundalow> Thanks
+16:38:32 <gundalow> #endmeeting

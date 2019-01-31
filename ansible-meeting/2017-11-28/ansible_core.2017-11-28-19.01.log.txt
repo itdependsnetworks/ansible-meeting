@@ -1,0 +1,200 @@
+19:01:58 <nitzmahone> #startmeeting Ansible Core
+19:01:58 <zodbot> Meeting started Tue Nov 28 19:01:58 2017 UTC.  The chair is nitzmahone. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:01:58 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:01:58 <zodbot> The meeting name has been set to 'ansible_core'
+19:02:16 <sivel> hello!
+19:02:21 <maxamillion> .hello2
+19:02:22 <zodbot> maxamillion: maxamillion 'Adam Miller' <maxamillion@gmail.com>
+19:02:35 <aalexmonteiro> Hy guys
+19:02:52 <nitzmahone> #chair sivel maxamillion
+19:02:52 <zodbot> Current chairs: maxamillion nitzmahone sivel
+19:03:02 <nitzmahone> #info agenda: https://github.com/ansible/community/issues/273
+19:03:10 <aalexmonteiro> hi
+19:03:59 <alikins> {{ blop }}
+19:05:44 <nitzmahone> #chair alikins
+19:05:44 <zodbot> Current chairs: alikins maxamillion nitzmahone sivel
+19:05:59 <nitzmahone> OK, looking through the agenda, let's start with:
+19:06:05 <nitzmahone> #topic https://github.com/ansible/community/issues/273#issuecomment-345932260 (new pylint rules)
+19:06:16 <nitzmahone> @mattclay, you here ?
+19:06:28 * mattclay waves
+19:06:35 <nitzmahone> #chair mattclay
+19:06:35 <zodbot> Current chairs: alikins mattclay maxamillion nitzmahone sivel
+19:06:54 <nitzmahone> @mattclay - want to explain the impact/rationale of the new rules?
+19:07:40 <mattclay> There are two pylint rules we're considering enabling: `len-as-condition` and `no-else-return`.
+19:08:12 <sivel> I am +1 on enabling them
+19:08:21 <mattclay> Since they're both mostly style related, we wanted to call a vote on whether or not to enable them.
+19:08:46 <maxamillion> I am +1 to enabling them as well
+19:09:35 <mattclay> As abadger1999 has mentioned on the related PR, `len-as-condition` catches a condition which could be considered a slight optimization to convert from `if len(something)` to just `if something`.
+19:09:46 <nitzmahone> Yeah- went to look at definitions to be sure, but +1
+19:10:21 <abadger1999> hello
+19:10:29 <nitzmahone> #chair abadger1999
+19:10:29 <zodbot> Current chairs: abadger1999 alikins mattclay maxamillion nitzmahone sivel
+19:10:32 <abadger1999> +1
+19:10:49 <bcoca> i think we have bigger issues .. idc either way
+19:10:57 <mattclay> We called a vote during the last meeting, but turnout was low so we decided to call the vote again during this meeting.
+19:11:05 <abadger1999> Like sivel I'm +1 to both
+19:11:12 <nitzmahone> Is this enough to call it a quorum?
+19:11:31 <nitzmahone> We've covered it in two different meetings, so ... :)
+19:12:04 <sivel> and last time it was in favor of doing so, same here
+19:12:07 <nitzmahone> @mattclay are you making the change
+19:12:09 <sivel> I say, yes, proceed
+19:12:09 <nitzmahone> ?
+19:12:20 <mattclay> nitzmahone: No, this came up as a result of a community PR.
+19:12:26 <sdoran> Do we need any updates to dev docs as part of this?
+19:12:30 <mattclay> https://github.com/ansible/ansible/pull/30764
+19:12:38 <sdoran> Just to let folks know about new style reqs?
+19:13:05 <nitzmahone> @mattclay Right, but are you enabling the new rules?
+19:13:06 <bcoca> there are cases in which len(x) is different than x ... specially when you consider Nonetype
+19:13:21 <maxamillion> sdoran: probably not a bad idea, where would be a good place to put them? the developer docs are kind of .... spread out
+19:13:46 <mattclay> nitzmahone: If we agree the rules should be enabled, I'll comment on the PR so they contributor can enable the rules in their PR and fix any remaining issues.
+19:13:56 <nitzmahone> The test rules are set in a file; I don't think we necessarily need/want to duplicate the pylint rule descriptions
+19:14:08 <nitzmahone> Sounds like we're go for enabling the rules
+19:14:12 <sivel> yep
+19:14:37 <nitzmahone> #action mattclay to poke contributor of #30764 to enable len-as-condition and no-else-return rules in that PR
+19:15:09 <abadger1999> len(None) is an error.
+19:15:15 <bcoca> abadger1999: exactly
+19:15:35 <abadger1999> so you'd see a try: except block around the code.
+19:15:39 <bcoca> yep
+19:15:43 <sdoran> maxamillion: Either in the module development section of the testing section.
+19:15:45 <nitzmahone> (or some other defensive practice)
+19:15:46 <abadger1999> and probably smack the programmer for doing it wrong.
+19:15:50 <sdoran> s/of/or
+19:15:57 <bcoca> which means the optimization would be wrong as it is trying to use 1 statement to handle both conditional and error
+19:16:12 <abadger1999> sdoran: We might just want to point at our pylint and pep8 configuration.
+19:16:27 <abadger1999> Could mention that we updated the tests that pylint checks for
+19:16:37 <abadger1999> in an ansible-devel mailing list post
+19:16:42 <nitzmahone> Skipping the next item; looks like @sivel's already done review for #33184 (thanks!)
+19:17:01 <abadger1999> but I think that's something that will churn a bit.
+19:17:02 <sivel> a partial review, targetted towards looking for a specific thing
+19:17:17 <sdoran> abadger1999: <nod>
+19:17:19 <nitzmahone> @abadger1999 +1 - we don't need prose descriptions of our style rules IMO
+19:18:14 <nitzmahone> OK, anyone else with zabbix familiarity feel like reviewing https://github.com/ansible/ansible/pull/33184 ?
+19:18:23 <abadger1999> bcoca: it's still right.  The code should be revisited and changed to an if variable is None:  X() elif variable: Y()
+19:18:44 <sdoran> sivel dropping the "no tests as filters" hammer — nice :)
+19:18:52 <nitzmahone> +1000
+19:18:54 <sivel> yes, I merged that yesterday
+19:19:09 <sivel> merged another today to fix recent change to integration tests
+19:19:09 <bcoca> abadger1999: that is less performant, if the whoel point is optimization ....
+19:19:48 <sivel> I think we are getting slightly off topic in regards to an edge case as opposed to the general problem that these will solve
+19:20:33 * abadger1999 has no zabbix kowledge.
+19:20:42 <sdoran> I know _of_ zabbix.
+19:20:48 <nitzmahone> agreed; if there are other assertions to be made about the type, they should be made indepdently
+19:21:11 <alikins> I know nothing about zabbix. Unless has something to do with chicken wings and 2.5d 80's arcade games
+19:21:15 <bcoca> i jsut find funny that the 'optimization' is less optimal
+19:21:40 <nitzmahone> alikins++ for dredging up zaxxon
+19:23:37 <nitzmahone> Sounds like we don't have anyone really qualified to review #33184 today
+19:23:56 <sdoran> Looks like they're installing the whole app for testing. DB and everything. Is that something we want?
+19:24:03 <nitzmahone> #topic https://github.com/ansible/community/issues/273#issuecomment-347612177 (HPE Openview module review)
+19:24:13 <sdoran> I've probably messed with it more than anyone recently. I can review it.
+19:24:54 <abadger1999> Hmm... is that zabbix one the one that had two community +1s already?
+19:25:10 <sdoran> Just wondering about stress of spinning up that whole app stack on our testing infra.
+19:25:19 <sdoran> abadger1999: yes
+19:25:54 <abadger1999> k.  Once sivel's targetted comments are addressed, I'd say we shipit then.
+19:26:05 <nitzmahone> WFM
+19:26:21 <sivel> The only question/concern I have with the HPE PRs is in regards to `params`
+19:27:42 <abadger1999> "data" ?
+19:27:46 <abadger1999> yeah, that's suboptimal
+19:28:23 <sivel> it basically a way to add arbitrary query var params to the request
+19:28:37 <sivel> I see the point, I just question the arbitrary nature
+19:29:23 <sivel> You have to know how to use the API to effectively use the module
+19:30:03 <abadger1999> <nod>
+19:31:39 <nitzmahone> Probably not the most friendly UX, but is there a saner way to do it that allows the same flexibility?
+19:32:29 <sivel> I think that is the problem, to allow for that level of flexibility, means you could basically just be hitting the API directly anyway
+19:32:47 <sivel> I don't think our modules should necessarily be infintely flexible
+19:33:21 <sdoran> They are more guided by nature. Hard to accommodate arbitrary flexibility.
+19:33:34 <sivel> They can be added to for explicit functionality, otherwise, if you have no familiarity with the API, it would be hard to use them
+19:33:41 <sdoran> Also, these "catch all" fields tend to bit us by exposing sensitive data.
+19:33:47 <sdoran> Don't know if that's the case here.
+19:34:27 <sivel> My personal feeling is that I don't like the arbitrary data fields, and would prefer to see that functionality be explicit options of the module
+19:34:46 <abadger1999> <nod>.  I prefer that way as well.
+19:34:51 <sdoran> Same here.
+19:34:53 <abadger1999> Not sure where to draw the line though
+19:34:53 <sivel> I don't know that I'll ever use these modules, but I would be -1 on the implementation
+19:34:57 <bcoca> -1 arbitrary data fields ... they make the user think we are lazy ... forces them to know underlying tool (why use ansible then?) ....
+19:35:33 <maxamillion> bcoca: +1
+19:35:37 <abadger1999> In the case ofa library API without a CLI, that's why they use the ansible module.
+19:35:42 <nitzmahone> The pagination is also problematic, as at first glance there don't appear to be result fields that would allow you to know there might be more data to fetch
+19:35:43 <sdoran> bcoca: well said
+19:35:45 <bcoca> abadger1999: curl!
+19:35:47 <abadger1999> If there was a CLI tool, then I'd say, just use command:
+19:35:54 <sivel> We'll get back to that one PR that you had to use `state: documentation` so that it could return docs for the action you wanted to perform, because it build the arg spec dynamically based on the action ;)
+19:35:58 <sdoran> or uri module
+19:36:14 <maxamillion> bcoca: however, at the same time ... ansible then becomes an API->JSON broker for adding a call to that API to their automation
+19:36:14 <abadger1999> but then you're diving even deeper.
+19:36:18 <abadger1999> they have a library.
+19:36:19 <maxamillion> so I'm kind of on the fence about that
+19:36:50 <bcoca> i have not looked at module, just saying that 'arbitrary data' fields should be minimized and mostly for 'companion data' not really for module main function
+19:36:56 <sivel> So there have been 2 -1 (sivel, bcoca)
+19:37:06 <bcoca> i.e 'user_data' in digital ocean, vs params in jenkins
+19:37:10 <aalexmonteiro> we use a python library made by us
+19:37:13 <alikins> I totally understand the appeal of the data arg, but it is kind of against the grain of typical modules
+19:37:35 <jtanner> Ansible can’t abstract everything for everyone. At some point people have to learn the underlying systems they’re trying to manipulate with ansible
+19:38:09 <sivel> abadger1999 sdoran alikins, are you giving a -1 ?
+19:38:22 <bcoca> jtanner: agreed, but there is a huge space in between
+19:38:24 <abadger1999> aalexmonteiro: Hey, so we hae some questions about hte data argument
+19:38:26 <maxamillion> I'm on the fence about it, I see why someone would want it because it allows for the inclusion into automation via playbooks but it does seem like an ansible antipattern
+19:38:35 <abadger1999> Are those just arbitrary values?
+19:38:39 <abadger1999> Could they be enumerated?
+19:38:40 <sivel> abadger1999: as well as params
+19:39:06 <maxamillion> jtanner: fair point, this is certainly true (to some extent) of many modules in existance today
+19:39:15 <bcoca> data: " List with Datacenter properties and its associated states" <=  i classify this as 'too generic to be useful'
+19:39:38 <sdoran> -1 for me
+19:39:43 <alikins> that 'api gateway' pattern is something that needs a solution long term, but there isnt one at the moment
+19:40:00 <abadger1999> sivel: ah... is that from the second PR?  Looks like documentation disagreement in there... it has both options and params... needs to standardize on one of those maybe.
+19:40:07 <bcoca> api gateway is a bad pattern for a module, it adds very little value
+19:40:17 <abadger1999> I'm not -1.  Depends on whether it can be done some other way.
+19:40:26 <bcoca> most value form modules comes in  form of documenting and validating the parameters needed
+19:40:31 <alikins> It would make more sense to me if the module was called 'oneview_datacenter_api' maybe.  Though also kind of against the grain
+19:40:36 <aalexmonteiro> Can you comments on the PR. So I see the questions. Please
+19:40:37 <sivel> abadger1999: The DatacenterModule has params, and options
+19:40:38 <bcoca> and then ensuring state, when all that is arbitrary ....
+19:40:59 <abadger1999> aalexmonteiro: It basically boils down to what is data?  What is params?
+19:40:59 <sivel> alikins: yeah, we have declined to accept generic API modules in the past, some pretty recently
+19:41:00 <maxamillion> bcoca: it does add the ability for either the action taken by the API to be added to a playbook or the return of the API call to be used in conditionals to drive a playbook
+19:41:05 <abadger1999> aalexmonteiro: Can they be enumerated?
+19:41:24 <abadger1999> Or is it storing an arbitrary bit of information decided upon by the user?
+19:41:36 <sivel> aalexmonteiro: Our preference is that they aren't arbitrary arguments, and instead are first class arguments to the option, explicitly enumerated
+19:41:53 <sivel> first class arguments to the *module*
+19:42:33 <aalexmonteiro> abadger: The param are data. I need to see with my team if this data could enumerated
+19:42:35 <bcoca> maxamillion: very little above using url module
+19:42:56 <maxamillion> bcoca: ah, fair
+19:42:59 <maxamillion> bcoca: +1
+19:43:02 <alikins> maxamillion: agreed. that pattern certainly has it's uses, even if not necessarily repr 'state' or idempotent
+19:43:52 <maxamillion> alikins: bcoca does have a point about the url module though ... if you have to know the API anyways, it does make sense to just interact with it curl-style
+19:44:10 <bcoca> 90% of module seesm to be auth management, just 1 call to offload 'data' to api  .... with 'add/remove' .. no checks for 'changed'  no update potential ...
+19:44:20 <sivel> abadger1999: would you like to update those PRs with this info? Asking to have data/options/params be explicitly enumerated?  Otherwise I can do it.  Assuming that is the ask
+19:45:07 <bcoca> sivel: i suspect you would want X modules, not one, as the data would vary depending on resource type
+19:45:31 <sivel> bcoca: that is very possible, but without understanding the underlying tasks, it's hard to say
+19:46:01 <bcoca> exactly ... i cannot say what this module does aside from call an api ... that itself makes me think  its not worth including
+19:46:41 <abadger1999> sivel: If you could, that would be great.  And yes, either explicitly enumerate or tell us why they cannot be enumerated.
+19:46:44 <aalexmonteiro> @bcoca: exactly
+19:46:50 <abadger1999> And we'll discuss more if the latter is the case.
+19:47:01 <sivel> abadger1999: great, I'll do that
+19:47:04 <alikins> how many things are in data? if it's just a view, maybe better just to split to multiple modules. If it covers multitudes (ala ec2 or vmware apis) then not sure
+19:47:21 <alikins> 'if it's just a few'  that is
+19:47:30 <bcoca> alikins: im infering from docs, any 'datacenter object'
+19:47:44 <bcoca> not sure what the objects are nor how many types there are
+19:47:54 <bcoca> from examples we know 'datacenter' and 'rack'
+19:47:54 <abadger1999> thanks sivel!
+19:48:18 <aalexmonteiro> I understand, that user thos module, should to know te oneview API
+19:48:43 <alikins> a general solution for that scenario should likely be a future roadmap candidate / proposal
+19:48:49 <bcoca> aalexmonteiro: in most cases users houdl only need to know what they want . a new dc, a rac, servers, etc
+19:49:13 <bcoca> having to know exactly the udnerlying api .. makes the module mostly an added layer that adds very little usefulness
+19:49:30 <bcoca> alikins: ?
+19:51:20 <aalexmonteiro> @bcoca: I understood. I need to talk with oneview team about it
+19:54:41 <nitzmahone> OK, we've got 5m left...
+19:54:45 <nitzmahone> #topic open floor
+19:55:53 <abadger1999> barring sudden new blockers, 2.4.2 final will be released tomorrow
+19:56:15 <alikins> bcoca: 'that scenario' meaning 'api gateway' style modules
+19:57:14 <sivel> the "tests as filters" deprecation PR went in yesterday, and I am trying to remember to run `hacking/fix_test_syntax.py` every so often, to address some older PRs that may get merged
+19:57:26 <sivel> but we should be on the lookout in reviews for the filter syntax
+19:58:41 <bcoca> alikins: most of our modules deal with external apis, i find 'thing api gateway modules' to be of very low value to the user and to us
+19:59:09 <sivel> bcoca: ++
+19:59:11 <bcoca> i would rather we make get_url a better 'curl replacement' for those cases
+19:59:40 <nitzmahone> I gotta jet to WWG meeting; can someone else wrap up here?
+20:00:13 <sdoran> Yup, I can wrap up.
+20:00:40 * bcoca goes in search for food .. .munching on nails is not sustaining
+20:02:25 <sdoran> #info 2.4.2 final will be released tomorrow provided no blockers show up between now and then
+20:02:59 <sdoran> #endmeeting
+20:03:14 <abadger1999> #info 2.4.2 final will be released tomorrow provided no blockers show up between now and then
+20:03:19 <abadger1999> #endmeeting

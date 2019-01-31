@@ -1,0 +1,60 @@
+15:08:19 <bcoca> #startmeeting core public irc meeting
+15:08:19 <zodbot> Meeting started Thu Apr 26 15:08:19 2018 UTC.  The chair is bcoca. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:08:19 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:08:19 <zodbot> The meeting name has been set to 'core_public_irc_meeting'
+15:09:11 <bcoca> nothing on the agenda, so
+15:09:16 <bcoca> #topic open floor
+15:10:23 <maxamillion> .hello2
+15:10:24 <zodbot> maxamillion: maxamillion 'Adam Miller' <maxamillion@gmail.com>
+15:10:30 <maxamillion> I'm failing at being on time for things today
+15:10:32 <maxamillion> sorry
+15:10:44 <maxamillion> oh, I had something for open floor
+15:10:47 <sdoran> o/
+15:11:10 <maxamillion> this has apparently been an issue forever, there was a really old issue that got closed and a newer issue filed https://github.com/ansible/ansible/issues/27262
+15:11:47 <bcoca> that sounds like easy fix
+15:11:50 <maxamillion> is there a reason it's not been looked into (like some weird complication to get a reasonable fix in) or has it just fell through the cracks?
+15:12:04 <maxamillion> bcoca: I thought so, but I figured I'd ask if maybe there's a history there I wasn't aware of
+15:12:09 <bcoca> 99% probablity triage person didnt nag abadger1999
+15:12:09 <sdoran> Time and attention are finite resources. :)
+15:12:14 <bcoca> would have been fixed
+15:12:16 <maxamillion> sdoran: ++
+15:12:19 <maxamillion> sdoran: don't I know that
+15:12:26 <maxamillion> bcoca: noted
+15:12:38 <bcoca> since he is not here, i propose we make work for him
+15:12:49 <bcoca> he was also dealing with template anyways,a faik
+15:13:34 <maxamillion> :)
+15:13:42 <maxamillion> I second the motion
+15:13:44 <maxamillion> MAKE IT SO
+15:13:50 <shertel> heh :)
+15:14:01 <bcoca> #action: drop on abadger1999's lap
+15:14:33 <maxamillion> bcoca: I just cc'd him on the issue ticket, will follow up later as well
+15:14:55 <bcoca> i assigned him
+15:16:57 <bcoca> anything else?
+15:18:06 * gundalow waves
+15:18:08 <bcoca> #topic https://github.com/ansible/ansible/pull/31783
+15:18:22 <bcoca> ^ adding as a prereq to platforms/profiles
+15:18:37 <bcoca> so people dont have to gather_Facts: no  on networking/windows/etc
+15:21:18 <sdoran> I'm very much in favor of this.
+15:21:23 <sdoran> Super handy.
+15:21:55 <bcoca> you can even add stuff like ec2_facts when using aws
+15:22:01 <maxamillion> oh, that's cool
+15:22:02 <bcoca> to the 'normal' fact gathering
+15:22:14 <maxamillion> yes please
+15:22:24 <sdoran> Removes the need to add a task for your custom facts modules also.
+15:22:28 <bcoca> yep
+15:22:37 <sdoran> As a facts module junkie, I like this a lot.
+15:22:59 <bcoca> and once we add platform/profiles, you can make this the default per type of host
+15:23:22 <bcoca> i.e ios hosts get ios_facts, ec2 ones get setup + ec2_facts ...
+15:23:46 <sdoran> Would that be done via group_vars or some other detection mechanism?
+15:24:02 <agaffney> the PR supports configuring it via var, so yes
+15:24:20 <sdoran> `ansible_facts_modules`. Yeah, this is sweet.
+15:24:20 <agaffney> as well as ansible.cfg
+15:24:22 <shertel> I like it
+15:26:07 <bcoca> ok, i'll run ci again (keeps failling on ubuntu deb mirriors)
+15:26:37 <bcoca> merge if no one opposes
+15:26:42 <bcoca> #topic open floor
+15:26:47 <bcoca> anyone/anything else?
+15:28:06 <gundalow> Nothing from me
+15:28:43 <bcoca> will end meeting in 1 min then
+15:30:56 <abadger1999> Hola
+15:32:11 <bcoca> #endmeeting

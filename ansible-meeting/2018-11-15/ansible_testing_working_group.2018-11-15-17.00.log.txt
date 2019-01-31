@@ -1,0 +1,41 @@
+17:00:07 <mattclay> #startmeeting Ansible Testing Working Group
+17:00:07 <zodbot> Meeting started Thu Nov 15 17:00:07 2018 UTC.
+17:00:07 <zodbot> This meeting is logged and archived in a public location.
+17:00:07 <zodbot> The chair is mattclay. Information about MeetBot at http://wiki.debian.org/MeetBot.
+17:00:07 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+17:00:07 <zodbot> The meeting name has been set to 'ansible_testing_working_group'
+17:00:11 <mattclay> #info Agenda: https://github.com/ansible/community/issues/248
+17:00:13 <mattclay> #chair gundalow
+17:00:13 <zodbot> Current chairs: gundalow mattclay
+17:00:28 <mattclay> There is nothing new on the agenda for today.
+17:00:31 <mattclay> #topic Open Floor
+17:07:46 <gundalow> mattclay: Retry for packages
+17:07:49 <gundalow> tasks
+17:08:03 <gundalow> I think we've talked about this before, though we are still seeing it a bit
+17:08:39 <gundalow> Wondering if we should run https://github.com/ansible/ansible-lint/pull/324 across `test/integration/targets/`
+17:10:15 <felixfontein> sounds like a good idea to me
+17:10:15 <mattclay> Instead of updating the package installation tasks to have retries I'd like to split out the requirements installation from the tests themselves, which could then include retries.
+17:10:56 <mattclay> Either solution would involve updating most of our tests that include package installs.
+17:11:20 <felixfontein> there are also other things which download stuff, such as docker containers being pulled
+17:12:00 <mattclay> felixfontein: Which test(s) are downloading docker containers, aside from the tests using ansible-test plugins?
+17:12:26 <felixfontein> some of the docker_* tests
+17:12:39 <felixfontein> they need some images to play with
+17:14:00 <felixfontein> I guess most cases can be replaced by something small kept nearby (maybe even loaded into docker from a tar file), except at least in one case, where we need a registry image to test pulling from and pushing to a registry
+17:14:20 <felixfontein> registry image = https://hub.docker.com/_/registry/
+17:15:27 <mattclay> For most cases where we need to download a file in the tests we've been putting them in our S3 bucket so we have reliable downloads.
+17:15:38 <mattclay> That doesn't work in all cases though.
+17:15:56 <mattclay> Have we been having failures in the docker_* tests due to download issues?
+17:16:10 <felixfontein> I can't remember
+17:16:25 <felixfontein> usually enough other things went wrong before it came that far ;)
+17:17:12 <gundalow> mattclay: Is that on the 2.8 roadmap, how much work would it be?
+17:19:40 <mattclay> gundalow: It isn't on the roadmap, and I haven't scoped it yet so I don't have a good idea of how much work it will be yet.
+17:21:40 <felixfontein> ah, something else: I created a PR which adds a docker API version / docker-py version check to the docker_* tests, and fails if not all tests can be run: https://github.com/ansible/ansible/pull/48620
+17:21:58 <felixfontein> (just had to rebase to get rid of a conflict, before that it was working fine ;) )
+17:24:07 <mattclay> felixfontein: Nice. Hopefully it won't be an issue in the future for CI, but it should definitely help for anyone running tests locally.
+17:25:01 <gundalow> I need to step out for a bit, nothing else from me
+17:25:41 <felixfontein> mattclay: I hope so too :) I think you requested the fail if not all tests could be run, BTW
+17:27:21 <mattclay> felixfontein: Yes, several of us actually asked for that. Having the tests fail is good, otherwise it would be too easy to think tests were passing when instead they were being skipped.
+17:28:24 <felixfontein> sounds good!
+17:34:29 <mattclay> Anything else?
+17:35:12 <felixfontein> not from me
+17:37:03 <mattclay> #endmeeting

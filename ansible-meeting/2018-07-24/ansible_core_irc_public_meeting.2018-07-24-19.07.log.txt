@@ -1,0 +1,260 @@
+19:07:12 <bcoca> #startmeeting ansible core irc public meeting
+19:07:12 <zodbot> Meeting started Tue Jul 24 19:07:12 2018 UTC.
+19:07:12 <zodbot> This meeting is logged and archived in a public location.
+19:07:12 <zodbot> The chair is bcoca. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:07:12 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:07:12 <zodbot> The meeting name has been set to 'ansible_core_irc_public_meeting'
+19:07:41 <bcoca> #topic https://github.com/ansible/ansible/pull/42513
+19:07:48 <jtanner> yo
+19:08:03 <shertel> hi
+19:08:06 <bcoca> i for one, would just remove it, if dev consideres traceback appropriate, he should include it in fail_json
+19:08:14 <bcoca> #chair dag jtanner shertel
+19:08:14 <zodbot> Current chairs: bcoca dag jtanner shertel
+19:09:14 * ryansb waves
+19:09:14 <abadger1999> I think the relative frequency is backwards.
+19:09:26 <abadger1999> It's most often appropriate and sometimes inappropriate.
+19:09:31 <bcoca> #chair ryansb abadger1999
+19:09:31 <zodbot> Current chairs: abadger1999 bcoca dag jtanner ryansb shertel
+19:10:04 <bcoca> i dont think it is inappropriate, when explicit, when implicit it is most of the time redundant
+19:10:20 <bcoca> when not misleading as teh case dag is trying to avoid
+19:10:25 <abadger1999> I do like the python3 check seems to be appropriate neraly 100% of the time but tracebacks are just too important for debugging for me to want to abandon them
+19:10:49 <dag> o/
+19:10:57 <maxamillion> .hello2
+19:10:58 <zodbot> maxamillion: maxamillion 'Adam Miller' <maxamillion@gmail.com>
+19:11:12 <abadger1999> So I think I'm -1 on this change.... it takes us back to debugging being awful as before bcoca added this.
+19:11:43 <bcoca> i added this? i was pretty sure i always thought it was not needed
+19:11:47 <dag> bcoca: I don't disagree, in any case providing a traceback that is unrelated to fail_json() must be avoided, that's why I would disable it at least for Python2
+19:11:51 <abadger1999> Yeah, you added it.
+19:11:57 <abadger1999> We all were happy when you did.
+19:12:15 <dag> abadger1999: This is not about removing it, it's about removing unrelated tracebacks (that don't even represent an error)
+19:12:40 <dag> abadger1999: Currently on python2 you get the last (caught) exception being provided with every fail_json
+19:12:42 <abadger1999> dag: You don't have a heuristic for when the traceback is unrelated.
+19:12:51 <abadger1999> yes.
+19:12:52 <dag> abadger1999: not in python2
+19:13:17 <dag> abadger1999: in python3 the traceback is only from the exception-block, so it will always be related
+19:14:06 <abadger1999> Right.... as I said, I like that yo've found that in python3 the traceback would always be related.
+19:14:14 <abadger1999> But it still removed the traceback in python2.
+19:14:40 <abadger1999> I think that the frequency of unrelated tracebacks :: related tracebacks is the opposite of what you think.
+19:14:55 <abadger1999> So I'd rather have a few unrelated tracebacks than not having it at all.
+19:15:01 <dag> abadger1999: I have been investigating module problems various times, and the incorrect traceback made it a confusing and timewasting experience
+19:15:17 <dag> abadger1999: *every* fail_json will have an unrelated traceback
+19:15:29 <dag> the traceback could be from anywhere in the previous code
+19:15:32 <abadger1999> <nod> Yeah.  But prior to bcoca adding this, we had much timewasting due to not having the traceback information.
+19:15:34 <bcoca> abadger1999: it was trishna, not me that added it
+19:15:40 <dag> so I would say, most will be unrelated
+19:16:12 <abadger1999> bcoca: Welll..... git log gives you the credit...
+19:16:18 <abadger1999> commit d5f4c2a54b713da84aa9a17eacb294b0e55cdc30
+19:16:19 <abadger1999> Author: Brian Coca <bcoca@users.noreply.github.com>
+19:16:21 <abadger1999> Date:   Wed Jun 28 10:08:38 2017 -0400
+19:16:22 <abadger1999> auto tb on vvv+ or debug (#26106)
+19:16:24 <abadger1999> 
+19:16:26 <abadger1999> * auto tb on vvv+ or debug
+19:16:27 <abadger1999> 
+19:16:28 <abadger1999> * updated as per feedback
+19:16:57 <dag> fail_json() doesn't mean there was an actual problem, why then even add a traceback
+19:17:08 <bcoca> that waas my point
+19:17:12 <dag> I don't understand why we would be confusing users (on python2) on purpose
+19:17:14 <bcoca> fail_json != exception
+19:17:32 <dag> in most cases where the exception is relevant, we should add the traceback ourselves
+19:17:38 <dag> and in various places that's done
+19:17:47 <abadger1999> dag: The majority of tracebacks are correct, so it helps us debug much quicker.
+19:17:59 <dag> abadger1999: I would contest that
+19:18:05 <abadger1999> Yes, we should add the tracebacks ourselves... but module authors have not done that.
+19:18:05 <dag> most of the tracebacks are incorrect
+19:18:20 <abadger1999> Which is why we have problems.
+19:18:34 <dag> which is why I have spend hours looking for the wrong thing
+19:18:37 <Pilou> traceback isn't always added but only when debug is enabled or vvv
+19:18:37 <dag> and gave up
+19:18:50 <bcoca> neither of you knows the exact ration tb to false positive, so i don think either assertion is correct
+19:19:05 <abadger1999> Pilou: that is true.  I would be okay with a higher v level....
+19:19:08 <dag> Pilou: true, we're talking about those cases
+19:19:21 <abadger1999> bcoca: rather... one of the assetions is correct but we don't know which one ;-)
+19:19:57 <bcoca> ok, rephrase, neither assertion is based on facts we can check, i suspect they are mostly based on personal experience, which does not help for the broad decision to be made
+19:20:16 <abadger1999> We could check.
+19:20:16 <dag> bcoca: adding incorrect information to an error is the wrong thing to do
+19:20:24 <Pilou> in the given example 'msg' allows to diagnose error
+19:20:26 <bcoca> i dont disagree
+19:20:36 <abadger1999> But someone would have to write the scripts.
+19:20:51 <abadger1999> msg only helps when msg is non-generic.
+19:21:08 <Pilou> using python2 a prefix could be added, something like: "this information might help to understand the failure"
+19:21:20 <abadger1999> People like to write catch-all error handlers, for instance, which makes the msg meaningless.
+19:21:27 <abadger1999> <nod>
+19:21:31 <bcoca> abadger1999: i believe my contribution was to gate it behind vvv
+19:21:46 * dag thinks this feature was designed with Python3 only
+19:22:06 <bcoca> abadger1999: those are bad modules and clearly stated against in our guidelines, it should be part of review ot avoid catchalls
+19:22:15 <dag> and there it works much better, because outside an except-statement it doesn't do anything
+19:22:28 <abadger1999> @bcoca Perhaps... I'd have to find the PR to see if it only shows you because it was squashed... in git log it just shows that you added all the relevant code.
+19:22:31 <bcoca> dag: iirc this was added mostly when py2 was our main target
+19:22:42 <abadger1999> @bcocaand yet we have them and we add more all the time.
+19:22:48 <dag> bcoca: that doesn't mean it was written and tested with python3 mostly
+19:23:02 <bcoca> abadger1999: then that is a problem with our enforcement, we should fix that, not ignore it
+19:23:07 <abadger1999> Getting tracebacks cuts debugging time down vastly.
+19:23:32 <dag> abadger1999: well, in my cases it made it impossible to understand the error
+19:23:37 <dag> so no, it does not cut down vastly
+19:23:41 <bcoca> dag: yes, at least my side was, but only with exceptions i forced, so i did not check if 'unexpected exceptions' were added as i didnt know py2 had that particular behaviour
+19:23:45 <dag> (unless on Python 3)
+19:24:13 <bcoca> very hard to test a case you are unaware of
+19:24:26 <abadger1999> dag: For the most part, it does cut down vastly.  You were confused by the side effects in a few cases.
+19:24:45 <abadger1999> That doesn't mean that we should throw the baby out with the bathwater.
+19:24:55 <dag> abadger1999: I always look at all the information provided with the error, especially if messages are meaningless (which they often are-
+19:25:01 * bcoca is not fan of babies, they cry and poop and cry again
+19:25:22 <dag> abadger1999: I don't want to throw it away, in fact I keep it in Python 3
+19:25:33 <bcoca> dag: again, that is a problem with the module quality and should be taken up in review, or even put as a bug against the module
+19:25:39 <dag> abadger1999: but *any* fail_json() with -vvv will gave a traceback
+19:25:40 <abadger1999> bcoca: https://github.com/ansible/ansible/pull/26106  so it was all you ;-)
+19:25:41 <bcoca> messages should be clear and helpful
+19:25:45 <dag> on python2
+19:26:01 <abadger1999> dag: not any
+19:26:10 <dag> abadger1999: try it
+19:26:26 <dag> abadger1999: if there was an exception-handling block prior
+19:26:37 <dag> and we have quite a few of them in module_utils code
+19:26:51 <bcoca> abadger1999: i ended up writing the version we merged, but source was not me, started in networking, also in aws 'exceptions' and the first attempt was adding it to EVERY return, so i added the -vvv and put the pr up
+19:26:55 <abadger1999> dag:  ansible localhost -m command -a '/bin/false' -vvv
+19:27:01 <dag> my first attempt to fix this was actually replacing try-except blocks with proper checks
+19:27:18 <dag> abadger1999: that's too simple a case, there's no parameter-type checking etc.
+19:27:35 <bcoca> ok, so im going to stop it now, i don think either of you is going to convince the other, lets hear the rest of the room
+19:27:41 <shertel> Most AWS modules use traceback appropriately. The ones that use AnsibleAWSModule and fail_json_aws() do by default.
+19:28:24 <dag> shertel: even if they do it properly, on python2 when you don't add traceback, the code will do it for you, something unrelated
+19:28:25 <abadger1999> dag: ansible localhost -m ping -a 'unknown_param=test'
+19:28:30 <abadger1999> dag: ansible localhost -m ping -a 'unknown_param=test' -vvv
+19:28:37 <bcoca> yes, but that is specific call, vs this one that applies globally to all with the  'mandated exit error method'
+19:29:03 <bcoca> ^ shertel, we are no discussing changing aws nor networking versions, just the general one
+19:29:48 <abadger1999> I think shertel is properly pointing out that a large number of modules do set traceback explicitly.
+19:30:19 * shertel nods
+19:30:20 <bcoca> or they call a function that does it for them
+19:30:30 <bcoca> vs fail_json which did not do this automatically until the change
+19:30:35 <bcoca> fail_json_with_tb
+19:30:44 <bcoca> ^ would be analogous in this case
+19:31:06 <abadger1999> yes, I lump those two (calling a function which does it and calling fail_json directly and doing it) together.
+19:31:37 <bcoca> im not and i dont think dag is either
+19:32:04 <abadger1999> Heh
+19:32:17 <abadger1999> Although, opened a random amazon module and it doesn't.
+19:32:24 <bcoca> not all do
+19:32:24 <abadger1999> except ClientError as e:
+19:32:26 <abadger1999> module.fail_json(msg="Can't authorize connection - " + str(e))
+19:32:32 <abadger1999> data_pipekline.py
+19:32:35 <bcoca> also many predate the function
+19:32:45 <bcoca> i don think anyone has gone back and handled all of those
+19:33:08 <abadger1999> Looks like that's been cargo culted around a lot.
+19:33:14 <ryansb> abadger1999: FWIW modern amazon modules do use `fail_json_aws` which includes traceback
+19:33:22 <ryansb> automatically
+19:33:28 <abadger1999> However, in most aws modules, authorization only happens in one place so it's not too bad.
+19:33:35 <abadger1999> ryansb: ahhh...
+19:33:41 <mattclay> What if we differentiate between an explicitly set traceback in Python 2 vs one that may (or may not) be unrelated, so at least when viewing it you know if it's possibly suspect.
+19:33:50 <ryansb> and in newer AnsibleAWSModule, the auth stuff is all in `module.client(....)`
+19:33:57 <ryansb> so it's now centralized, thankfully
+19:33:57 <bcoca> mattclay++
+19:34:01 <abadger1999> ryansb: Add... So that would mean that we're now relying on the automatic addition of traceback?
+19:34:19 <abadger1999> s/Add/Ahh/
+19:34:21 <ryansb> nono, AnsibleAWSModule.fail_json_aws will add it
+19:34:30 <ryansb> so we are not relying on it in fail_json_aws
+19:34:34 <abadger1999> <nod>  Cool.  that's what we thought before.
+19:34:41 <ryansb> but some other modules may, if they use fail_json, as you say
+19:34:42 <abadger1999> ?
+19:34:50 <abadger1999> Did you mean
+19:35:01 <abadger1999> so we are not relying on it in fail_json() ?
+19:35:16 <dag> abadger1999: ansible localhost -u dag -m stat -a 'path=/root/.bashrc' -vvvv
+19:35:24 <dag> gives me
+19:35:25 <dag> The full traceback is:
+19:35:25 <dag> File "/tmp/ansible_qQWM79/ansible_module_stat.py", line 476, in main
+19:35:25 <dag> st = os.lstat(b_path)
+19:35:43 <ryansb> all AWS modules that use `AnsibleAWSModule` do not rely on it. There *may* be older AWS modules that use basic.AnsibleModule and expect the traceback included
+19:35:58 <bcoca> abadger1999: the aws function predates the inclusion in fail_json, so it should have never relied on it
+19:36:17 <abadger1999> dag: Yes.  I know that you can get false poities... the question is whether the false positivies or the false negatives outweight each other.
+19:36:42 <dag> abadger1999: if you're providing error information that may be false, I wouldn't add it
+19:36:49 <dag> that's all I am saying
+19:36:55 <bcoca> i think matt brought up great point, just add another field when the exception is auto added 'exception_auto_added' true/false
+19:37:06 <bcoca> ^ that should at least HINT that it is not the dev doing explicitly
+19:37:33 <bcoca> would that 'split the baby'?
+19:38:16 <abadger1999> ryansb: Right... I think we're all saying the same thing but confusing each other.... If you call fail_json_aws() then it adds the traceback.  If you call fail_json() then it depends o nthe automatic addition to add the traceback.
+19:38:18 <abadger1999> Correct?
+19:38:27 <ryansb> Yeah, that's right
+19:38:38 <abadger1999> bcoca: yep, that would work for me.
+19:38:42 <bcoca> dag?
+19:40:02 <bcoca> anyone else have input?
+19:40:03 <shertel> abadger1999 It may depend on the automatic addition in fail_json if it's an older module. Newer modules should not and I haven't noticed any that do. Newer modules use fail_json when there isn't a traceback.
+19:40:20 <dag> ryansb: fine for me, but it may still be confusing, even if it adds 'hint'
+19:40:22 <shertel> s/modules/AWS modules/
+19:40:33 <bcoca> shertel: older do so too, only some of fail_json calls correspond to a traceback having happened
+19:41:07 <bcoca> dag: so if you add back the tb on py2 but use the code to add a field warning about the traceback might be unreleated, i think we can go forward
+19:41:49 <bcoca> or just add the hint to the traceback itself?
+19:41:59 <bcoca> to avoid 'non display of other field' issues
+19:42:43 <bcoca> "ansible automatically added this traceback, it might not be related to the current failure:'
+19:43:27 <abadger1999> shertel: <nod>
+19:43:47 <bcoca> ok, if nothing else, i'll close this issue
+19:44:24 <bcoca> #topic https://github.com/ansible/ansible/pull/39913
+19:44:37 <bcoca> @jimi|ansible want to revisit the past?
+19:44:48 <dag> bcoca: ok
+19:45:25 <dag> bcoca: the advantage is that python3 users won't be living in uncertainty either ;-)
+19:45:33 <abadger1999> #action PR to be updated to add warning that traceback may be irrelevant instead of omitting traceback
+19:45:38 <bcoca> abadger1999, dag one thing to note, you both seem to consider the module authors not giving good quality error messages, i suggest that we concentrate on catching those things on review
+19:45:46 <abadger1999> dag: <nod>, yeah, I like that.
+19:45:53 <bcoca> dag: why i thought the py2 detection was good place for this warning
+19:46:18 <bcoca> anyone want to review cobbler module?
+19:47:24 <dag> it was already reviewed by jimi-c in a previous meeting, and he privately asked me to change something (see last commit)
+19:48:46 <bcoca> dag: i'll try to get you hooked up, moving to next topic
+19:49:01 <bcoca> #topic https://github.com/ansible/ansible/pull/38325
+19:49:03 <bcoca> +1 from me
+19:49:14 <bcoca> not sure how we did not have this already
+19:49:27 <jimi|ansible> +1'd that cobbler_system module
+19:49:40 <jimi|ansible> dag: i added an "official" review now
+19:49:52 <dag> jimi|ansible: thanks !
+19:50:07 <bcoca> 'jimi-c approved these changes 12 hours from now'
+19:50:16 <bcoca> gimme back my tardis!!!
+19:50:39 <bcoca> anyone else on the 'finished' test?
+19:51:09 <agaffney> +1 on 'finished'
+19:52:15 <jhawkesworth_> I still think it looks good to merge :-)
+19:52:24 <bcoca> closgin vote in 10s +4,-0
+19:52:40 <bcoca> done!
+19:52:50 <bcoca> will merge once tests pass
+19:53:07 <bcoca> #topic https://github.com/ansible/ansible/pull/43128
+19:53:08 <dag> thanks everyone !
+19:53:13 <bcoca> thank you
+19:53:36 <bcoca> ^  PR that removes the need to use until+register and allow to do 'retries' directly
+19:54:09 <bcoca> mostly want to vote on functionality, we have some comments on implementation but not worth giving until we first decide on wanting teh feature at all
+19:54:28 <bcoca> https://github.com/ansible/proposals/issues/132 <= related proposasl
+19:54:52 <abadger1999> +1 finished
+19:55:19 <bcoca> +5, -0
+19:56:10 <jhawkesworth_> yeah I'd like this, I recall getting stuck on this same issue long ago (until sivel pointed out fix).
+19:56:11 <agaffney> being able to use 'retries' by itself makes a lot of sense
+19:56:35 <bcoca> anyone against?
+19:56:40 <jhawkesworth_> trying to think if it might break things
+19:56:53 <jimi|ansible> I'm +1 to the idea, though I said earlier I wasn't a fan of some of the internal changes to the retries counter
+19:56:55 <bcoca> my only concern is if people rely on until: '{{{ |default(omit)}}' might break
+19:57:00 <agaffney> one problem I see with that implementation is that anyone currently relying on the default of 'retries: 3' will no longer get retries
+19:57:02 <jimi|ansible> it was already hard to understand a bit, and this makes it worse
+19:57:19 <jimi|ansible> agaffney: i don't think so, because it still defaults to 3 if the value is None
+19:57:27 <bcoca> ^ i did check taht
+19:57:29 <agaffney> ah, yeah, just saw that
+19:57:34 <bcoca> but implementation aside, anyone against the 'feature'?
+19:57:51 <maxamillion> nope, I like it
+19:58:20 <bcoca> ok, giving featuer a go ahead (i'll update proposal_) and we can now nitpick the PR
+19:58:42 <dag> I am surprised nobody thinks this is magic, or too implicit ;-)
+19:58:45 <ryansb> 2 minutes until Windows Working Group is scheduled to meet
+19:59:17 <bcoca> abadger1999: want to announce ?
+19:59:18 <jimi|ansible> dag: well you still have to specify `retries:` on the task, but now people are going to want that on blocks too...
+19:59:22 <agaffney> dag: eh, I've always through it weird that you had to do 'until: foo is not failed', when that's a perfectly reasonably default for retrying a task
+19:59:28 <jimi|ansible> one of the few downsides I've thought of
+19:59:39 <dag> agaffney: I don't disagree :-)
+19:59:41 <bcoca> #topic schedule announce ment by abadger1999
+19:59:54 <dag> jimi|ansible: ;-)
+19:59:58 <abadger1999> Ansible-2.7 is going to come out on 10-04
+20:00:21 <agaffney> is that ~6 weeks?
+20:00:25 <abadger1999> We had a tentative schedule in the roadmap with freeze dates and such but it did not have an room for slippage.
+20:00:39 <agaffney> oh, no, 10 weeks
+20:01:20 <bcoca> @sylr?
+20:01:23 <abadger1999> I've now updated the dates to give us some time for extra rcs... unfortunately, this cuts two weeks off before the first freeze date.
+20:01:35 <dag> it's a problem for $CUSTOMER :-(
+20:01:43 <bcoca> ^ #ansible-devel and the ML should get notice also
+20:01:44 <abadger1999> https://github.com/ansible/ansible/blob/devel/docs/docsite/rst/roadmap/ROADMAP_2_7.rst#expected
+20:01:52 <dag> it means some stuff will have to wait for v2.8
+20:01:58 <abadger1999> 2018-08-23 Core Freeze (Engine and Core Modules/Plugins)
+20:02:09 <abadger1999> 2018-08-30 Community Freeze (Non-Core Modules/Plugins)
+20:02:21 <dag> due to holidays-season etc.
+20:02:39 <abadger1999> Some features that we've proposed for the 2.7 release may slip to 2.8 as well due to this.
+20:02:41 <bcoca> hopefully by then using custom content will also be much easier
+20:03:14 <abadger1999> We are going to have an internal meeting on friday to see if we can change the release date but so far all induications are that the releasze date is set in stone.
+20:03:48 <abadger1999> So look for Core Freeze on 8-23 and Community Freeze on 8-30.
+20:05:26 <abadger1999> That's all from me.
+20:05:28 <bcoca> with that, calling meeting to end, one item left, but it will be aved for thursday
+20:05:31 <bcoca> #endmeeting

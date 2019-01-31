@@ -1,0 +1,102 @@
+19:04:50 <bcoca> #startmeeting core public irc meeting
+19:04:50 <zodbot> Meeting started Tue Dec 11 19:04:50 2018 UTC.
+19:04:50 <zodbot> This meeting is logged and archived in a public location.
+19:04:50 <zodbot> The chair is bcoca. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:04:50 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:04:50 <zodbot> The meeting name has been set to 'core_public_irc_meeting'
+19:05:03 <bcoca> #topic https://github.com/ansible/ansible/pull/28561
+19:05:08 <sdoran> o/
+19:05:15 <Pilou> o/
+19:05:24 <nitzmahone> yo
+19:05:58 <bcoca> wanted more eyes on async revamp before doing rebuild_merge
+19:06:09 <bcoca> anyone see any red flags on that pr?
+19:06:40 <sdoran> I'm not familiar enough with how async works to comment.
+19:06:48 <sdoran> Always something to learn. :)
+19:07:26 <nitzmahone> +1; I screwed around with that a lot early on and always hated the sleep... This is a lot more like the way the Windows one works now
+19:08:49 <bcoca> yeah, my concern was the 'non friendly to ipc' kids  ... but tested those and it seems to work fine
+19:08:52 <nitzmahone> Now we just need to fix POSIX async to work with pipelining ;)
+19:09:05 <bcoca> #youcandream
+19:09:14 <nitzmahone> Hey it works great on Windows :)
+19:09:37 <bcoca> #topic https://github.com/ansible/ansible/pull/20078
+19:10:34 <bcoca> i really dont think roles should be picking files from outside the role, it kind of breaks expectations
+19:11:13 <bcoca> i might be convinced of subdirs .. but if you have that many files to choose inside a role, i think your role is way too big
+19:11:22 <sdoran> Oh yeah, that's crossing the streams hardcore.
+19:11:38 <abadger1999> I don't think this one is right
+19:11:39 <sdoran> That creates really nasty interdependencies.
+19:11:46 <nitzmahone> Yeah, I could see reasons for subdirs, but outside the roles is ... yikes
+19:12:37 <sdoran> I'm not sure that PR directly addresses the linked issue.
+19:13:01 <sdoran> I like the idea of accepting subdirs for tasks_from relative to the role dir.
+19:13:26 <bcoca> well, it does, but by overkill and allowing all dirs
+19:13:29 <nitzmahone> Yeah, the approach is incorrect
+19:13:33 <sdoran> Ok.
+19:13:55 <abadger1999> I think I would be okay with subdirs.
+19:13:59 <bcoca> i would even say subdirs seems too much, but that would be minimal i would need to consider this
+19:14:38 <nitzmahone> Seems like we're pretty well "-1 in current form, subdirs-only might be a point for discussion later"
+19:15:06 <sdoran> I'm ok with subdirs in a role. Since we now allow arbitrary entry points to a role, allowing folks to organize things into subdirs seems helpful.
+19:15:09 <bcoca> k, going to close this with note , leaving original ticket open
+19:15:21 <sdoran> I agree with what @nitzmahone said.
+19:15:35 <bcoca> sdoran: not totally opposed, but if you need subdirs to organize your role tasks ... i think you are doing roles wrong
+19:15:52 <bcoca> #topic https://github.com/ansible/ansible/pull/44428
+19:16:04 <bcoca> ^ changes inventory plugins priority to allow 'auto' a first crack
+19:16:06 <sdoran> touché
+19:16:52 <nitzmahone> Since no valid yaml or ini inventory should be readable by auto, I don't see a problem with this
+19:17:36 <bcoca> +1 from me also
+19:18:11 <bcoca> static inventories should be the last ones tried, since they can 'gulp' a lot 'partially valid' files
+19:19:01 <bcoca> if no one against, i'll do rebuild_merge on it
+19:19:05 <sdoran> +1
+19:19:10 <sdoran> Does it need a changelog entry?
+19:19:15 <abadger1999> yes
+19:19:22 <bcoca> #topic create ansible/ansible-baseline
+19:19:28 <abadger1999> Probably also porting guide entry
+19:19:45 <sdoran> Pilou: Can you add those items to the PR please?
+19:20:07 <Pilou> the changelog entry ? yes
+19:20:13 <nitzmahone> @abadger1999 really? (on the porting guide entry) - shouldn't be any user-visible changes beyond a different order of noise in a failure case
+19:20:15 <Pilou> and porting guide too :)
+19:20:19 <bcoca> porting guide should be 0
+19:20:27 <bcoca> maybe a note?
+19:20:41 <bcoca> hey, order changed, you should just see less noise
+19:20:44 <sdoran> Just a note since it may result in a change in behavior.
+19:20:48 <sdoran> Yes, less noise. :)
+19:21:00 <abadger1999> Will it lways be less noise or can it be more?
+19:21:00 <sdoran> Because unfortunately very few people read the changelogs.
+19:21:15 <nitzmahone> I think worst case it would be the same noise in a different order
+19:21:23 <nitzmahone> (and only then when nothing succeeded)
+19:21:26 <bcoca> i can only see more if auto plugin is broken
+19:22:04 <bcoca> #topic create ansible/ansible-baseline
+19:22:09 <bcoca> #topic create ansible/ansible-baseline
+19:22:16 <nitzmahone> You should only see noise at all on failure or if you have extra verbosity; in the extra verbosity case, you'd see less noise in success cases
+19:23:16 <bcoca> sivel: were'nt you creating baseline already?
+19:23:39 <bcoca> gundalow: you seem to have a item to move it to 'public sphere'
+19:23:41 <sivel> Yes, that exists under my name right now
+19:23:55 <bcoca> ah, Pilou unsure what the ask is then
+19:24:12 <bcoca> just the move to ansible/ ?
+19:24:15 <Pilou> yes
+19:24:26 <bcoca> @gundalow  i believe is working on that
+19:24:27 <sivel> I'll be working to get it under our org soon
+19:24:34 <bcoca> k, so 'in progress'
+19:24:39 <sivel> We need to more strictly define what it is first
+19:24:48 <sivel> because once it is "ready" it can never be modified again
+19:24:59 <gundalow> bcoca: I think sivel needs to in do the he remove move. Once moved I can do the community bit
+19:25:03 <sivel> only to address changes in features
+19:25:08 <bcoca> we can have a meeting about that .. but i'm going to close the topic then
+19:25:19 <sivel> yeah, it's still in my court right now
+19:25:21 <bcoca> #topic https://github.com/ansible/ansible/pull/46561
+19:25:37 <bcoca> ericzolf ?
+19:26:15 <abadger1999> Hmm.. different reason this should be porting guided... it will require people with an ansible.cfg to manually change the config setting to match our recommendations.
+19:26:16 <bcoca> -1 from me, i would create role with 3 tasks that does same (2 find, 1 assert)
+19:26:55 <bcoca> abadger1999: only if they deviated from defaults ... but we all seem fine with adding note already
+19:27:21 <bcoca> ^ deviation being why you wrote entry in .cfg
+19:28:38 <bcoca> eric not here, anyone want to advocate for this or should i postpone?
+19:29:09 <nitzmahone> punt
+19:29:14 <bcoca> ed
+19:29:19 <bcoca> #topic open floor
+19:29:45 <bcoca> @sivel basline being 'immutable' might not be best , we might want to make EACH entry immutable, but not the whole repo
+19:30:22 <abadger1999> I'm not sure if I'd allow that in in some way... but I think the current interface is too complex for us to want it as it.
+19:30:23 <bcoca> we might come up with diff tests later on, loads can vary a lot
+19:31:06 <abadger1999> (that == 46561)
+19:32:10 <sivel> bcoca: we can discuss it in more detail later, but further than just our own perf baselining, this will be used by support too.  Initial discussions mentioned that the project would be immutable once we decided it was golden
+19:32:45 <bcoca> i see why you want that, i doubt that is achievable considering 'cases' will crop up
+19:32:55 <bcoca> but ok, to discuss later
+19:32:56 <Pilou> sivel: about baseline, have you been contacted by dw ? it seems he was willing to contribute ?
+19:35:00 <bcoca> k, since nothing new, ending the meeting
+19:35:03 <bcoca> #endmeeting

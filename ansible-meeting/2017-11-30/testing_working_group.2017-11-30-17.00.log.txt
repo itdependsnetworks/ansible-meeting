@@ -1,0 +1,143 @@
+17:00:29 <gundalow> #startmeeting Testing Working Group
+17:00:29 <zodbot> Meeting started Thu Nov 30 17:00:29 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+17:00:29 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+17:00:29 <zodbot> The meeting name has been set to 'testing_working_group'
+17:00:39 <gundalow> #chair mattclay abadger1999 bcoca
+17:00:39 <zodbot> Current chairs: abadger1999 bcoca gundalow mattclay
+17:00:44 <ryansb> hi
+17:01:01 <gundalow> #info Agenda https://github.com/ansible/community/labels/testing
+17:01:04 <gundalow> #chair ryansb
+17:01:04 <zodbot> Current chairs: abadger1999 bcoca gundalow mattclay ryansb
+17:01:07 <gundalow> harro
+17:01:16 <abadger1999> óla
+17:01:23 <sdoran> bonjour
+17:02:10 <gundalow> #topic Clarification & next steps for unit tests
+17:02:48 <gundalow> #agreed new unit tests should be written to use pytest
+17:02:56 <gundalow> (as agreed last meeting)
+17:03:24 <gundalow> #info high-value porting to pytest 1) it's useful to be able to override things from the CLI.  Looks like for the option flags, that is by design..
+17:03:27 <gundalow> https://github.com/ansible/ansible/blame/e45c763b646e0609fb9c8d8b8cdf9c200985c313/lib/ansible/playbook/play_context.py#L262
+17:03:30 <gundalow> bah
+17:03:31 <gundalow> #undo
+17:03:31 <zodbot> Removing item from minutes: <MeetBot.items.Link object at 0x3bb66450>
+17:03:44 <gundalow> #info high-value porting to pytest: (1) grep -ri nose test/units
+17:03:56 <gundalow> #info high-value porting to pytest: (1) grep -r procenv test/units
+17:04:06 <gundalow> #info  (1) lets us drop the nose dependency
+17:04:21 <gundalow> #info lets us get rid of some of our code that pytest has good builtin support for
+17:05:03 <gundalow> I think that addresses bcoca's questions
+17:05:15 <gundalow> abadger1999: is there something around mocks that still needs addressing?
+17:05:27 <abadger1999> gundalow: afaik, nope.
+17:05:32 <maxamillion> .hello2
+17:05:32 <abadger1999> mock continues to be useful.
+17:05:33 <zodbot> maxamillion: maxamillion 'Adam Miller' <maxamillion@gmail.com>
+17:05:49 <abadger1999> Most tests that are ported to pytest can use the mocker fixture instead of importing mock directly, though.
+17:05:59 <gundalow> Are there different 1) Mock libraries 2) ways to mock
+17:06:15 <gundalow> ah, that's what I was thinking
+17:06:23 <gundalow> #chair sdoran maxamillion
+17:06:23 <zodbot> Current chairs: abadger1999 bcoca gundalow mattclay maxamillion ryansb sdoran
+17:06:32 <abadger1999> Everyone has standardized on michael foords mock library (named mock) which is also part of the stdlib in python3.
+17:06:55 <gundalow> Which is good as we know where he is :)
+17:07:03 <abadger1999> for (2) I use mocker to access it but it's just a light wrapper around the mock library.
+17:07:55 * resmo waves
+17:07:57 <abadger1999> Oh... and moved away from using mock.patch() as a context manager as, under pytest and mocker, the patch will unwind itself once it goes out of scope.
+17:08:42 <abadger1999> (That's style though)
+17:08:52 <abadger1999> Here's an example: https://github.com/ansible/ansible/pull/33387/files#diff-7d19c1624d0977d32233184491b27e1bL118    <==== old way
+17:08:55 <gundalow> I see mock.path() in https://github.com/ansible/ansible/pull/33387/files
+17:09:22 <abadger1999> New way ==>  https://github.com/ansible/ansible/pull/33387/files#diff-7d19c1624d0977d32233184491b27e1bR145
+17:09:44 <abadger1999> gundalow: Line number?
+17:10:48 <gundalow> hum, I'm probs not reading it correctly
+17:11:02 <Pilou> #info https://github.com/ansible/ansible/pull/33387/files#diff-7d19c1624d0977d32233184491b27e1bL118 (oldway)
+17:11:08 <gundalow> #chair Pilou
+17:11:08 <zodbot> Current chairs: Pilou abadger1999 bcoca gundalow mattclay maxamillion ryansb sdoran
+17:11:18 <gundalow> Pilou: might need to do that again
+17:11:26 <Pilou> #info https://github.com/ansible/ansible/pull/33387/files#diff-7d19c1624d0977d32233184491b27e1bL118 (old way)
+17:11:32 <Pilou> #info https://github.com/ansible/ansible/pull/33387/files#diff-7d19c1624d0977d32233184491b27e1bR145 (new way)
+17:11:42 <gundalow> abadger1999: oh, I just saw mocker.patch in the new code
+17:11:58 <abadger1999> Cool.  yep, that's the new way.
+17:12:41 <abadger1999> But like I say, that particular bit is style... deeply nesting via context managers feels harder to read but does the same thing.
+17:13:27 <gundalow> Do we have something that's the bets Ansible unit test ever that we can reference in the docs
+17:13:46 <gundalow> ie base your code on this and you will be 90% good
+17:14:16 <abadger1999> I don't know about that... I've ported a few tests from unittest over to pytest in the past few weeks (I think three PRS-worth)
+17:14:31 <abadger1999> Those can be used as examples but I'm not sure they're the best way to do it.
+17:15:00 * gundalow looks at commits to see who write tests
+17:15:05 <gundalow> *unit tests
+17:15:28 <abadger1999> I'm happy to walk through any of those PRs with someone who wants to turn them into documentation.
+17:15:45 <gundalow> So once those PRs are reviewed and merged we can reference them on http://docs.ansible.com/ansible/devel/dev_guide/testing_units.html
+17:16:24 <abadger1999> Yep
+17:16:29 <abadger1999> First two have been merged.
+17:16:38 <gundalow> oh, and examples on that page need updating: import unittest:
+17:17:05 <gundalow> #action gundalow work with abadger1999 to reference good tests from dev_guide/testing_units.html
+17:17:13 <gundalow> #action gundalow work with abadger1999 to remove unittest references from dev_guide/testing_units.html
+17:17:27 <gundalow> #action gundalow work with abadger1999 to add links to mock & pytest to dev_guide/testing_units.html
+17:17:39 <abadger1999> Cool.
+17:17:49 <gundalow> Anything else on that bit?
+17:17:59 <gundalow> Pilou: Anything else from you on this?
+17:18:20 <Pilou> nope, i didn't have time to switch an existing test
+17:19:08 <abadger1999> The nose high-value porting should be easy for a beginner to work on.
+17:19:32 <gundalow> Pilou: That's cool. Thanks for everything you've already been doing :)
+17:19:40 <abadger1999> The removal of procenv a little harder.  Once gundalow and I document some of hte pytest information that will be easier.
+17:20:22 <abadger1999> (that's all from me)
+17:20:31 <gundalow> cool
+17:20:38 <gundalow> #topic Unit test imports
+17:20:47 <gundalow> So, following on from teh above
+17:21:11 <gundalow> #info https://github.com/ansible/ansible/issues/33302 Unit tests failed without ncclient installed
+17:22:28 <gundalow> Think that just needs:
+17:22:32 <gundalow> except ImportError:
+17:22:42 <gundalow> raise SkipTest("F5 Ansible modules require blah")
+17:22:46 <gundalow> which needs documenting
+17:23:02 <Pilou> there is ncclient in test/runner/requirements/units.txt
+17:24:05 <abadger1999> gundalow: <nod>  But change SkipTest (from nose) to pytest.skip ( https://docs.pytest.org/en/latest/skipping.html )
+17:24:50 <gundalow> ah, thanks
+17:25:21 <gundalow> #action gundalow to document how to skiptest pytest.skip ( https://docs.pytest.org/en/latest/skipping.html ) (though should be added to test/runner/requirements/units.txt)
+17:26:23 <gundalow> Pilou: oh, that's a good point. Wonder if they are not installing from that before running tests, I'll aslk
+17:26:26 <mattclay> Although we have `test/runner/requirements/units.txt`, adding new requirements there is an indication the unit test is testing more than it should instead of using mock effectively.
+17:27:09 <gundalow> nod
+17:27:20 <ryansb> * placebo exception
+17:27:42 <mattclay> It's necessary for installing test infrastructure (pytest, mock, etc.) and for supporting existing unit tests, but we should carefully consider adding new requirements for unit tests.
+17:27:53 <ryansb> test/units/module_utils/aws/test_aws_module.py
+17:27:56 <ryansb> 21:from pytest import importorskip
+17:27:58 <ryansb> 29:importorskip("boto3")
+17:28:00 <ryansb> why not importorskip?
+17:30:03 <mattclay> That's fine if we decide it's OK for the tests to have those dependencies.
+17:30:45 <ryansb> I meant "instead of `pytest.skip`"
+17:30:50 <ryansb> two separate thoughts, sorry
+17:31:38 <rcarrillocruz> mattclay: a bit related, some of our network integration tests do stuff like 'pip install pexpect' and stuff like that, wondering if we should have a requirements.txt under folder test/* somewhere
+17:31:44 <Pilou> mattclay: indeed, it seems there is a problem with this test. it seems ncclient is not using mock properly
+17:31:50 <abadger1999> ryansb: that seems doable.
+17:32:08 <mattclay> rcarrillocruz: It's fine for the integration tests to use tasks to install their requirements.
+17:32:34 <abadger1999> https://docs.pytest.org/en/latest/skipping.html#skipping-on-a-missing-import-dependency
+17:33:19 <mattclay> rcarrillocruz: I considered adding requirements.txt support to integration tests, but then we'd still need to use tasks for requirements in more complex scenarios.
+17:33:59 <rcarrillocruz> I think at very least require to have those tasks in prepare roles
+17:34:22 <mattclay> That's entirely up to the test. Some tests need to install and uninstall requirements during the tests.
+17:34:53 <mattclay> If you have common requirements across multiple integration tests it makes sense to handle that in a prepare_* or setup_* role.
+17:36:20 <gundalow> rcarrillocruz: I think it's OK for tests to install what they need in targets/prepare_*
+17:39:11 <gundalow> https://github.com/ansible/ansible/blob/devel/test/units/modules/network/f5/test_bigip_device_trust.py#L22-L42
+17:39:52 <gundalow> So in that case i think pytest.skip is cleaner
+17:40:48 <gundalow> #topic Open Floor
+17:40:55 <gundalow> Anyone got anything else?
+17:41:00 <sdoran> o/
+17:41:09 <sdoran> I have a few general questions about some new tests I'm writing.
+17:41:19 <gundalow> sdoran: Sure
+17:41:31 <sdoran> Tests for include/import: I have five total "targets"
+17:41:45 <sdoran> I most likely want to share roles and/or tasks between them.
+17:42:16 <sdoran> Should I put them all in one target, or have five separate targets with a "clean" way to share resources between them?
+17:42:34 <mattclay> sdoran: What are the tests for?
+17:42:56 <sdoran> I didn't know if we had precedent for targets that share resources, and thus a common place to put things before I go making something up.
+17:43:21 <mattclay> sdoran: If they're all for include/import, put them in a single target.
+17:43:22 <sdoran> https://www.irccloud.com/pastebin/eXiPeenY/
+17:43:46 <sdoran> Yes, all are for import/include
+17:43:54 <mattclay> You can of course split up the role into as many different files as makes sense within that role.
+17:44:02 * gundalow has to ditch now
+17:44:35 <sdoran> I need to run playbook since I can't test everything inside a role. I'm using `runme.sh` to do that part.
+17:44:40 <mattclay> In the case of modules we generally want 1:1 relationship between target and module.
+17:44:49 <sdoran> Ok.
+17:45:00 <mattclay> For something like import/include put all the related tests in a single target.
+17:45:06 <sdoran> So it won't be too messy to have five tests worth of code at one target?
+17:45:20 <sdoran> Because it will most likely have a lot of playbooks.
+17:45:38 <mattclay> No, just organize your playbooks within the target so it's easier to work with.
+17:45:48 <sdoran> Ok.
+17:45:52 <sdoran> That's all I have.
+17:46:18 <mattclay> If the targets take a long time to run, that would be a reason to split them up, as a matter of convenience.
+17:46:18 <sdoran> Thanks, as always!
+17:49:42 <mattclay> Does anyone else have anything to discuss?
+17:56:24 <mattclay> Thanks for coming everyone!
+17:56:26 <mattclay> #endmeeting

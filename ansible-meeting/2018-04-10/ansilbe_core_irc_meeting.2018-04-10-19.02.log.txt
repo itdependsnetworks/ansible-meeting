@@ -1,0 +1,57 @@
+19:02:14 <bcoca> #startmeeting ansilbe core irc meeting
+19:02:14 <zodbot> Meeting started Tue Apr 10 19:02:14 2018 UTC.  The chair is bcoca. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:02:14 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:02:14 <zodbot> The meeting name has been set to 'ansilbe_core_irc_meeting'
+19:02:24 <bcoca> #chair agaffney
+19:02:24 <zodbot> Current chairs: agaffney bcoca
+19:02:43 <sdoran> o/
+19:02:47 <jtanner> .
+19:02:58 <bcoca> #chair jtanner sdoran
+19:02:58 <zodbot> Current chairs: agaffney bcoca jtanner sdoran
+19:03:06 <funzo> o/
+19:03:10 <bcoca> #topic https://github.com/ansible/ansible/pull/36357
+19:03:11 <sivel> .hello2
+19:03:12 <zodbot> sivel: sivel 'Matt Martz' <matt@sivel.net>
+19:03:23 <bcoca> #chair funzo sivel
+19:03:23 <zodbot> Current chairs: agaffney bcoca funzo jtanner sdoran sivel
+19:03:28 * shertel waves
+19:03:32 * agaffney looks up
+19:03:46 <abadger1999> Greetings
+19:03:52 <bcoca> #chair abadger1999
+19:03:52 <zodbot> Current chairs: abadger1999 agaffney bcoca funzo jtanner sdoran sivel
+19:04:27 <bcoca> so any arguments for/against the new feature?
+19:05:20 <sivel> It will add a lot more file stats
+19:05:29 * ryansb waves
+19:05:32 <bcoca> only if main/ is a dir
+19:05:37 <bcoca> #chair ryansb
+19:05:37 <zodbot> Current chairs: abadger1999 agaffney bcoca funzo jtanner ryansb sdoran sivel
+19:05:57 <bcoca> agaffney:  my only issue is dataloader relying on config now .. since we use dataloader to 'load the config'
+19:06:51 <jtanner> it needs integration tests.
+19:07:35 <agaffney> the PR adds integration tests
+19:07:53 <jtanner> i see unit but not integration
+19:08:03 <agaffney> oh, sorry, yes
+19:08:16 <agaffney> you're right
+19:09:01 <agaffney> bcoca: I understand that concern, but it's a dependency in a different code path than is used to load the config, so it seems "safe"
+19:09:27 <bcoca> still, seems like begging for circular import issue
+19:09:34 <bcoca> not a blocker
+19:09:58 <sivel> Overall I am "meh" on the idea of the feature. I don't have a strong opinion.
+19:09:58 <agaffney> that's not even an important part of the implementation. it's mostly there to prevent code duplication
+19:10:30 <bcoca> just nitpicking, that part can be outside of dataloader .. its more 'finder'
+19:10:34 <agaffney> I could have greatly simplified the PR by just copying some existing code to handle vars dirs
+19:10:50 <bcoca> but i do like it being in 1 place vs several
+19:11:00 <agaffney> right, it's better for long term maintenance
+19:13:22 <abadger1999> Not really familiar with the code but the discussion seems like the code should be split out to a new file which both current users can reference.
+19:14:05 <agaffney> I personally have no great need for this feature, but it's been requested often. I have no strong feelings about the implementation or the feature itself
+19:14:32 <agaffney> it's more of a code de-duplication with the side effect of a new feature :)
+19:16:17 <bcoca> vote?
+19:16:26 <bcoca> +1 (though i might want to move the common function later)
+19:17:10 <sivel> +/-0
+19:17:29 <abadger1999> +0
+19:18:38 <abadger1999> So that seems like it's approved.
+19:18:40 <agaffney> do I win something for the most "meh" proposed change ever? :)
+19:19:13 <jtanner> you get a meh from me
+19:19:28 <jtanner> meh.
+19:20:25 <bcoca> ok, so that was only agenda topic
+19:20:28 <bcoca> #topic open floor
+19:22:04 <bcoca> if nothing else i'm closing meeting in 1min
+19:23:24 <bcoca> #endmeeting

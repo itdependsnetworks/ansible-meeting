@@ -1,0 +1,133 @@
+16:00:57 <gundalow> #startmeeting Ansible Network Working Group
+16:00:57 <zodbot> Meeting started Wed Jul 18 16:00:57 2018 UTC.
+16:00:57 <zodbot> This meeting is logged and archived in a public location.
+16:00:57 <zodbot> The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:00:57 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:00:57 <zodbot> The meeting name has been set to 'ansible_network_working_group'
+16:01:00 * gundalow waves
+16:01:51 <Anil_> Hi
+16:02:21 <gundalow> #chair Anil_
+16:02:21 <zodbot> Current chairs: Anil_ gundalow
+16:02:46 * gundalow waits a few minutes for other to arrive
+16:02:52 * Qalthos 🌊🌊
+16:03:28 * dagrawal waves
+16:03:41 * ganeshrn waves
+16:05:11 * ikhan waves
+16:05:26 <gundalow> #chair Qalthos dagrawal ganeshrn ikhan
+16:05:26 <zodbot> Current chairs: Anil_ Qalthos dagrawal ganeshrn gundalow ikhan
+16:05:31 <gundalow> #topic Team Update
+16:05:37 <gundalow> #info Agenda https://github.com/ansible/community/labels/network
+16:05:46 <gundalow> #info Ansible 2.6.1/2.5.6/2.4.6 are now available, which include security fixes, see https://groups.google.com/forum/#!topic/ansible-announce/4tUBKNcH5fU for more info
+16:05:46 <gundalow> #info We suggest you subscribe to https://groups.google.com/forum/#!forum/ansible-announce to keep informed regarding releases
+16:06:02 <gundalow> #info This week we've been working on the following:
+16:06:02 <gundalow> #info * Zuul running VyOS integration tests on Ansible fork. Waiting for some upstream fixes in Zuul and Software Factory before work can proceed.
+16:06:02 <gundalow> #info * Work continues on NIOS features
+16:06:02 <gundalow> #info * working on ios_linkagg mode
+16:06:02 <gundalow> #info * Added support for task basis command_timeout setting for network_cli and netconf connection, continue work on cliconf refactor
+16:06:02 <gundalow> #info * Added support for commit label in iosxr_config. Working on Cisco FTD Ansible module
+16:06:07 <gundalow> ...
+16:06:12 <gundalow> Reviewing actions from previous meeting:
+16:06:12 <gundalow> #info https://github.com/ansible/ansible/pull/41985 (ipmath filter) has been merged
+16:06:12 <gundalow> #info https://github.com/ansible/ansible/pull/42500 (cnos_vlan) has been reviewed, awaiting updates
+16:06:28 <gundalow> If you have any questions on the above feel free to ask us
+16:06:58 <gundalow> #topic Add support for global IGMP configuration on onyx switches #42164
+16:07:06 <gundalow> #link https://github.com/ansible/ansible/pull/42164
+16:07:18 <gundalow> #info I've had a quick look over this and looks good. I'll merge
+16:08:15 <gundalow> #topic Support setting persistent command timeout per task basis #42847
+16:08:21 <gundalow> ganeshrn: :)
+16:08:29 <gundalow> #info https://github.com/ansible/ansible/pull/42847
+16:10:21 <gundalow> Anil_: itdependsnetwork: pffs caphrim007_ dag You may be interested in https://github.com/ansible/ansible/pull/42847
+16:10:25 <Anil_> Qalthos: I have incorporated your review comments in code
+16:10:54 <gundalow> ganeshrn: What's your plans for adding some tests as Qalthos suggested
+16:11:03 <Anil_> Yes, I am interested in that
+16:11:14 <ganeshrn> gundalow: yes i am working on that
+16:11:25 <itdependsnetwork> nice
+16:11:28 <Anil_> In my original code for cnos, I am using time out per command
+16:11:37 <gundalow> #chair itdependsnetwork
+16:11:37 <zodbot> Current chairs: Anil_ Qalthos dagrawal ganeshrn gundalow ikhan itdependsnetwork
+16:11:37 <pffs> I like it
+16:11:43 <gundalow> #chair pffs
+16:11:44 <zodbot> Current chairs: Anil_ Qalthos dagrawal ganeshrn gundalow ikhan itdependsnetwork pffs
+16:11:51 <gundalow> itdependsnetwork: pffs Ace, thanks :)
+16:12:15 <caphrim007_> gundalow: thx
+16:12:15 <Qalthos> Anil_: Will look through it after this meeting, thanks
+16:12:45 <Anil_> I have  done the changes for the comments of gundalow too.
+16:12:52 <Qalthos> #chair caphrim007_
+16:12:52 <zodbot> Current chairs: Anil_ Qalthos caphrim007_ dagrawal ganeshrn gundalow ikhan itdependsnetwork pffs
+16:13:17 <Anil_> Take a look and merge if possible. I have 15 more modules to be refactored in this line
+16:18:18 <ganeshrn> Anil_> In my original code for cnos, I am using time out per command
+16:18:38 <ganeshrn> is this comment wrt to PR #42847
+16:18:44 <ganeshrn> Anil_:  ^^
+16:21:00 <Anil_> Ganesh: Yes.
+16:21:40 <Anil_> Ganesh: I want it that way because if u execute config back up or restore we may need a better timeout
+16:22:01 <Anil_> Image upload in some cases can go upto 2 minuteds
+16:22:27 <ganeshrn> so for that type of task you can set timeout value in provider right?
+16:22:30 <pffs> yeah, that was my original reason for wanting it as well. Mostly the config save
+16:22:39 <Anil_> I think 30 seconds is the present default timeout
+16:23:04 <Anil_> which is inadequate
+16:23:32 <ganeshrn> Anil_: if i get it correctly you are setting the timeout value in cnos module code?
+16:24:28 <Anil_> yes, but the code is old and is in the process of changing it into persistence connection. I was using direct paramiko there and it has a timeout set up
+16:25:01 <ganeshrn> ah ok got it
+16:25:24 <ganeshrn> so after you move to persistent connection you don't have to set the timeout in module
+16:25:28 <Anil_> When I change the paramiko code to persistence connection, I need timeout as a configurable item
+16:26:11 <ganeshrn> yup that' the reason for PR #42847
+16:26:32 <Anil_> Suppose my image upload take 2 minutes, say in case my switch is in San Jose and scp server in bangalore
+16:27:09 <Anil_> Ganesh : Thats y I told I support that feature
+16:28:33 <ganeshrn> yup i got it....i am saying when you move to persistent connection you don't need to set timeout in module
+16:28:50 <ganeshrn> it can be deprecated from module code
+16:29:08 <ganeshrn> to be in sync with other platforms that support persistent connection
+16:29:49 <Anil_> Ok. Will look into that
+16:33:01 <Qalthos> Alright, does anyone have anything else to say about per-task timeouts?
+16:33:44 <gundalow> Nothing apart from +1 from me
+16:34:10 <gundalow> #topic Open Floor
+16:34:13 <gundalow> Anything else?
+16:34:49 <Qalthos> Anil_: your changes looked good, so I merged cnos_vlan
+16:35:33 <Qalthos> Hopefully that process will make the rest of the modules quicker
+16:39:23 <Anil_> Qalthos: I have seen that. Thanks.
+16:41:30 <gundalow> Anyone got anything else?
+16:43:22 <Anil_> Nothing from me
+16:44:05 <sts> I'm currently working on two new ASA modules asa_facts and asa_user.
+16:44:31 <sts> Since its my first contribution, I might need some help.
+16:45:14 <jrosser> nxos_file_copy docs say it checks file md5 and im not convinced thats true
+16:45:15 <gundalow> sts: Excellent, feel free to ask here at anypoint
+16:45:28 <gundalow> jrosser: Has an issue been created for that?
+16:46:06 <jrosser> not yet, i will if needed
+16:46:18 <jrosser> wasnt sure if it should or if the dics are just wrong
+16:46:40 <jrosser> it doesnt enev seem to check if the source/existing files are the same size
+16:46:56 <jrosser> *even
+16:47:53 <sts> Also while working on Ansible scripted Cisco ASA upgrades, I found that during a cluster failover, which results in a disconnect from the Cisco ASA side, and fires ansible.module_utils.connection.ConnectionError: Socket is closed, I'm unable to get Ansible to reconnect to the host to perform further operations.
+16:48:39 <sts> `ignore_errors: yes` seems to be ignored and meta:clear_host_errors or meta:reset_connection don't seem to work with network_cli
+16:49:18 <gundalow> jrosser: Not sure, would need to look. Either way it's a bug (in docs or missing functionality)
+16:49:24 <sts> The exception comes from https://github.com/ansible/ansible/blob/devel/lib/ansible/module_utils/connection.py#L149
+16:49:33 <jrosser> ok, i will create an issue
+16:49:48 <gundalow> #chair sts jrosser
+16:49:48 <zodbot> Current chairs: Anil_ Qalthos caphrim007_ dagrawal ganeshrn gundalow ikhan itdependsnetwork jrosser pffs sts
+16:50:04 <gundalow> #action jrosser to raise issue for  nxos_file_copy docs say it checks file md5
+16:50:07 <gundalow> Thanks
+16:50:11 <jrosser> this is off the back of trying to upload nxos firmware, which it turns out is horribly difficult atm
+16:50:23 <dagrawal> @jrosser you can also try platform independant module net_get/net_put
+16:50:38 <gundalow> jrosser: Yup, I think there has been some discussion with the NXOS team at Cisco about that
+16:50:49 <dagrawal> it does check for md5 of existing/src file
+16:51:34 <jrosser> ok, well if the upload fails and you get half a file, rerunning doesnt try again
+16:52:48 <jrosser> anyway, i'll stick this all in an issue
+16:53:47 <gundalow> jrosser: Thanks. I'll speak to Cisco to see if they have a good route for firmware update. What platform is this?
+16:54:05 <jrosser> n9k
+16:55:36 <pffs> cisco firmware updates are pretty painful in general. I ended up using netmiko instead of ansible for regular IOS
+16:56:08 <jrosser> i have something working now
+16:56:21 <jrosser> but its parsing dir bootflash:
+16:56:33 <jrosser> and using expect module and scp
+16:57:01 <pffs> parse the flash, check md5, purge old bin files if they aren't needed, etc
+16:57:04 <gundalow> trishnag: FYI ^, maybe something we can discus with MikeW tomorrow
+16:57:39 <pffs> We also typically host our IOS images on a remote server because SCP is abysmally slow on IOS, so we can pull via http or ftp
+16:57:40 <jrosser> can you get the md5 from the cli?
+16:57:46 <pffs> on IOS you can
+16:57:54 <pffs> not sure on nxos, but I think it's similar
+16:58:03 <pffs> IOS is verify /md5 file
+17:00:23 <jrosser> the semantics of nxos_reboot are very strange too
+17:00:41 <jrosser> as in it always fails
+17:01:29 <pffs> yeah, IOS I have to do a reload in 1 so that it gives it enough time to get the prompt back and properly exit out instead of the device dying
+17:01:35 <pffs> I would guess nxos is similar
+17:03:01 <pffs> would be handy if nxos_reboot had an option for scheduling to get around that. I don't think I have a nexus switch handy any more, but should be similar syntax
+17:04:16 <sts> @pffs does it also end the run with an ansible.module_utils.connection.ConnectionError? Same issue as with cisco asa after a `no failover active`?
+17:05:16 <pffs> sts: that would be something for jrosser. I could test if a reload via ios_command does the same, which is probably yes
+17:05:37 <gundalow> #endmeeting

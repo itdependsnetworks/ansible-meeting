@@ -1,0 +1,53 @@
+16:02:48 <Qalthos> #startmeeting Ansible Network Working Group
+16:02:48 <zodbot> Meeting started Wed Jan  9 16:02:48 2019 UTC.
+16:02:48 <zodbot> This meeting is logged and archived in a public location.
+16:02:48 <zodbot> The chair is Qalthos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:02:48 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:02:48 <zodbot> The meeting name has been set to 'ansible_network_working_group'
+16:03:08 <Qalthos> #chair pabelanger ganeshrn justjais trishnag
+16:03:08 <zodbot> Current chairs: Qalthos ganeshrn justjais pabelanger trishnag
+16:04:16 <Qalthos> #topic Core Updates
+16:05:12 <Qalthos> #info vyos provider 2.7.2 released
+16:05:18 <Qalthos> #info junos provider 2.7.2 released
+16:05:24 <Qalthos> #info yang role 2.7.0 released
+16:05:29 <Qalthos> #info new module junos_ping
+16:05:35 <Qalthos> #info new module vyos_ping
+16:05:42 <Qalthos> #info refactored ios and frr bgp work to use CliProvider model
+16:06:20 <Qalthos> #info added backup options in _config action plugins (#50702)
+16:06:36 <Qalthos> #info gather_facts for network roles work progressing
+16:07:02 <Qalthos> #info add list element type validation for module argspec (#50335)
+16:07:24 <Qalthos> #info refactor backup and src option handling within config action plugins (#50301)
+16:08:57 <Qalthos> #link https://github.com/ansible/community/labels/network is where the agenda can be found, as usual
+16:09:33 <Qalthos> #topic Lenovo PRs
+16:10:14 <Qalthos> Anil_Lenovo: I merged them both, thanks as always for being responsive with your PRs
+16:11:06 <Qalthos> Nothing else in the agenda today, so
+16:11:11 <Qalthos> #topic Open Floor
+16:11:37 <Federico87_> HellO! Happy new year guys! I have put in agenda PR ios_ntp module #50705 - probably is missed
+16:11:51 <Federico87_> anyway, I have added the test required :)
+16:13:19 <Qalthos> Federico87_: I don't see an open PR for that in the agenda, just the closed one from last month
+16:13:25 <Qalthos> Are you talking about https://github.com/ansible/ansible/pull/50705 ?
+16:13:41 <Federico87_> Yeap!  that one
+16:14:31 <Qalthos> Ah, looks like you put it on the wrong agenda
+16:14:43 <Qalthos> #topic ios_ntp module
+16:14:50 <Federico87_> Sorry, just back from holidays, my brain is struggling to get back on track :D
+16:15:10 <Anil_Lenovo> Qalthos: I have seen that. Thanks a lot for merging and Wish u a prosperous New Year
+16:15:51 <Qalthos> Federico87_: So you added tests, but they are failing
+16:16:19 <Federico87_> So, I have added the test required, however pipeline is now failing. I have put some comemtns so would be great if someone can have a look. Considering that I have never written test and I have tried to revere engineering somithing similar
+16:17:02 <Qalthos> Sure, give me a bit to take a closer look
+16:17:12 <Federico87_> Thankyou very much!
+16:18:28 <pabelanger> Qalthos: sorry for being late, I had somebody at door for a bit
+16:18:38 <pabelanger> back now
+16:19:33 <Qalthos> Federico87_: https://github.com/ansible/ansible/pull/50705/files#diff-f6b50283a1a1a05e6f099fef7b4b02a5R45 should just be load_config(), not a tuple of (0, load_config(), None)
+16:19:43 <Qalthos> pabelanger: thanks
+16:21:11 <Federico87_> ok, I' ll change it and see what s happen . I am still try to understand properly what the code is doing to be fair
+16:23:43 <Qalthos> That line is an old artifact from how things used to work some time ago. Not entirely sure where you got it from, but it should no longer be necessary
+16:24:22 <Federico87_> I have got it from an ios module...ios_logging probably
+16:24:47 <Qalthos> #action Federico87_ fix ios_ntp unit tests and report back
+16:24:52 <Qalthos> Moving on
+16:25:00 <Qalthos> #topic Open Floor
+16:25:22 <Qalthos> pabelanger: You should be able to take it from here
+16:25:36 <pabelanger> Qalthos: ack, thanks again for starting
+16:27:32 <pabelanger> We've be working on a zuul POC for 3pci over the last few weeks, we should be wrapping things up in the next week or two and decided how to proceed from it
+16:28:07 <pabelanger> http://zw01.poctron.xyz is the web interface, but no jobs are configured yet
+16:33:11 <pabelanger> and with that, lets wrap it up here. Thanks again Qalthos for driving
+16:33:14 <pabelanger> #endmeeting

@@ -1,0 +1,368 @@
+15:00:08 <thaumos> #startmeeting Ansible Core
+15:00:08 <zodbot> Meeting started Thu Nov 30 15:00:08 2017 UTC.  The chair is thaumos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:00:08 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:00:08 <zodbot> The meeting name has been set to 'ansible_core'
+15:00:19 <sivel> Hello
+15:00:44 <thaumos> #chair sivel
+15:00:44 <zodbot> Current chairs: sivel thaumos
+15:00:47 <thaumos> gm!
+15:01:21 <sivel> good morning, indeed. unemployeed for a couple of days, and get to relax :)
+15:01:23 <maxamillion> .hello2
+15:01:24 <zodbot> maxamillion: maxamillion 'Adam Miller' <maxamillion@gmail.com>
+15:01:30 * gundalow waves
+15:02:06 <gundalow> sivel: \o.
+15:02:09 <gundalow> sivel: \o/
+15:02:20 <thaumos> #chair maxamillion gundalow
+15:02:20 <zodbot> Current chairs: gundalow maxamillion sivel thaumos
+15:02:51 <thaumos> Enjoy the rest of your week!
+15:03:05 <thaumos> looking forward to seeing you next week
+15:03:17 <maxamillion> \o/
+15:06:18 <thaumos> everyone drags into thursday's meeting
+15:06:22 <sivel> Kind of light on attendees
+15:06:27 <thaumos> yep
+15:06:41 <thaumos> they all start stumbling in 10-15 after
+15:06:49 <maxamillion> lol
+15:06:53 <thaumos> which I find funny since I am up the earliest.
+15:06:56 <bcoca> also have interal meeting that conflicts
+15:07:02 <thaumos> oh yeah
+15:07:05 <thaumos> that's right
+15:07:10 <sivel> Seems something should be done about that
+15:07:14 <maxamillion> I'll add "not super punctual" to my new-hire notes ;)
+15:07:14 <thaumos> #chair bcoca
+15:07:14 <zodbot> Current chairs: bcoca gundalow maxamillion sivel thaumos
+15:07:35 <thaumos> agreed sivel,
+15:07:42 <maxamillion> sivel: +1
+15:07:48 <thaumos> I forget about that internal meeting because it isn't on my calendar.
+15:08:11 <gundalow> I'd just start and we can poke people as needed
+15:08:25 <thaumos> +1
+15:08:47 <thaumos> #topic To general apis or to not general apis, that is the question
+15:09:16 <sivel> I feel like we will likely have agreement here, but we'll have to decide if we have enough votes or we need more people
+15:09:31 <gundalow> privateip:
+15:09:35 <sivel> We've had a recent influx of "generic API" modules being submitted lately
+15:09:47 <sivel> I've declined one recently
+15:09:56 <sivel> I just noticed we had cnos_restapi yesterday
+15:10:12 <sivel> which honestly looks almost just like the `uri` module
+15:10:20 <thaumos> if possible, can you provide a couple of links to reference for others who'd be interested.
+15:10:29 <sivel> one moment
+15:10:39 <sivel> https://github.com/ansible/ansible/pull/33326
+15:10:44 <sivel> That is the one I found yesterday
+15:10:51 <bcoca> -1 on 'thin api wrapper modules'
+15:11:11 <bcoca> ^ iirc we already have a 'no thin wrappers' entry in developer guidelines
+15:11:36 <sivel> This is one that we declined: https://github.com/ansible/ansible/pull/30767
+15:11:41 <sivel> `fortios_api`
+15:11:49 * abadger1999 rolls out of bed
+15:12:05 <bcoca> @abadger1999 the trick is to bring computer to bed
+15:12:05 <thaumos> #chair abadger1999
+15:12:06 <zodbot> Current chairs: abadger1999 bcoca gundalow maxamillion sivel thaumos
+15:12:10 <sivel> bcoca: can you point me to that page, I can go find it likely, but if you know where it is
+15:12:11 <sivel> ?
+15:12:20 <thaumos> thanks @sivel
+15:12:24 <bcoca> im googling as we type
+15:12:32 <sivel> I am pretty sure we have a general agreement on no generic API modules
+15:12:37 <maxamillion> I'm a little bit split on this because I do see it a bit as it more or less allows to advertise to users that ansible can support those APIs "natively" but also, it seems like an anti-pattern and I'd rather just have a section of the docs that says something like "so you need to talk to a REST API from your playbook? here's how"
+15:12:40 <sivel> I just want to make sure we all agree, and it is official
+15:13:15 <sivel> the cnos_restapi, looks almost like the uri module.  Supports a url param, a body, a method...
+15:13:33 <sivel> Does anyone here need me to make any cases/arguments?
+15:13:33 <bcoca> i cant find anything in docs anymore ...'
+15:13:42 <sivel> or do we feel like we can vote?
+15:13:54 <gundalow> Do we have any good examples of what roles that cleanly wrap around URI that we can direct peoople to?
+15:13:55 <sivel> I feel like we can probably vote, but I can debate more if needed
+15:14:07 <thaumos> I think that's a safe bet sivel...
+15:14:26 <sivel> gundalow: unsure, I mean, use the `uri` module is a safe bet
+15:14:40 <maxamillion> I'm mostly leaning towards a -1 for 'thin wrapper api modules' but it's a -1 with strong feelings behind it, I'm open to opinions in support of allowing them but at this time I don't see the real benefit
+15:14:46 <sivel> if the `uri` module isn't meeting their expectations, we could investigate that and resolve
+15:14:49 <maxamillion> without *
+15:14:57 <maxamillion> sivel: +1
+15:15:02 <sivel> so we have 3 for -1 right now
+15:15:09 <thaumos> include me as a -1 as well
+15:15:11 <sivel> thaumos / gundalow / abadger1999 ?
+15:15:15 <sivel> 4 for -1 :)
+15:15:30 <gundalow> sivel: sorry, I mean get_url/url
+15:15:31 <maxamillion> how manay votes do we need to be considered quorum?
+15:15:32 <abadger1999> I think I am okay with api wrappers.
+15:15:40 <abadger1999> But I'm okay being outvoted.
+15:15:52 <maxamillion> abadger1999: oh? why so?
+15:16:00 <abadger1999> Things that api wrappers can do that uri cannot
+15:16:20 <sivel> maxamillion: unclear, we haven't defined that as of yet.  But my recommendation is majority of 5, which we have
+15:16:21 <abadger1999> authentication that isn't part of the url standard.
+15:16:21 <bcoca> abadger1999: its the 'thin' part sivel and I are against
+15:16:28 <abadger1999> mnemonics for any boilerplate
+15:16:42 <abadger1999> (urls, the authentication scheme, etc)
+15:16:45 <maxamillion> abadger1999: fair
+15:16:49 <sivel> I feel like most of these are probably just handling auth on the top layer
+15:16:51 <bcoca> abadger1999: if module only does authentication on top of rest api ... i think its not worth including, i would expand uri module to support other auth methods
+15:17:06 <abadger1999> Probably a few other things like that.
+15:17:14 <sivel> they could create a login module, but that wouldn't be much different than auth in one module, and use uri for the rest anyway
+15:17:26 <bcoca> ^ login module makes more sense to me
+15:17:27 <sivel> bcoca: ++
+15:17:27 <abadger1999> I think that it would be better to have more targetted modules.
+15:17:31 <abadger1999> But I would not demand it.
+15:17:36 <maxamillion> should we define what is and isn't allowed as an API wrapper? "To be an accepted module that wraps an API, it must clearly extend beyond what get_url does in a meaninful way ... etc, etc, etc ... wordsmithing goes here"
+15:18:03 <sivel> effectively I am more looking for a module designed to interact with a single facet of an API
+15:18:08 <maxamillion> errr rui
+15:18:09 <maxamillion> uri*
+15:18:10 <sivel> not just general interact with an API generically
+15:18:16 <abadger1999> If there was a cli tool then I'd be okay with saying don't give us this module, just use the CLI tool via command (or write separate modules mirroring each of the CLI tool's subcommands)
+15:18:27 <sivel> that is what `uri` is for, to interact with APIs generically
+15:18:48 <bcoca> this is not just for api, i would say it is same for cli interface/etc
+15:18:54 <bcoca> thin wrapper modules are not useful
+15:19:11 <bcoca> tar: args=' ' < bad tar module
+15:19:25 <sivel> Does anyone feel like our vote is insufficient in number to make this decision?
+15:19:47 <gundalow> Is what's a wrapper black & white, or grey?
+15:19:50 <bcoca> i believe this was always part of our criteria (just cannot find it)
+15:20:03 <sivel> bcoca: I felt so too, but I didn't see it either
+15:20:08 <bcoca> gundalow: all ansible modules can be considered 'wrappers' .. the issue is 'thin wrapper'
+15:20:55 <sivel> In both cases, these modules can pretty much do exactly what `uri` can do, in in the cnos_restapi case, it accepts nearly the same params
+15:21:06 <abadger1999> sivel: Are you only talking about rest API or also about python APIs?
+15:21:06 <maxamillion> and we can effectively classify "thin wrapper" as, "we can easily replace that module with the uri module"?
+15:21:22 <sivel> abadger1999: in this case, I am talking about http apis
+15:21:32 <bcoca> maxamillion: no,i would say that 'transparent passthrough' is a better definition
+15:21:33 <sivel> apologies for not being super clear on that
+15:21:50 <bcoca> cause a tar module that just has a 'args' option, is also a 'thin wrapper'
+15:22:03 <sivel> I mean, we have modules that are nearly empty, and use a python API to do it's work, because the python API is that robust
+15:22:06 <sivel> I'm not against that
+15:22:13 <bcoca> agreed
+15:22:17 <abadger1999> sivel: So... a python library that is a thin wrapper around the REST API would be okay?
+15:22:17 <maxamillion> bcoca: +1
+15:22:38 <sivel> abadger1999: yes, as long as it wasn't generic, like this module can do anything the API does
+15:22:42 <abadger1999> Cool.
+15:22:44 <bcoca> abadger1999: module has to have 'value added'
+15:22:48 <sivel> as opposed to being limited to 1 "facet"
+15:22:56 <maxamillion> abadger1999: yeah, that specific case is what makes things a little unclear to me
+15:22:59 <abadger1999> sivel: Mmm...
+15:23:06 <abadger1999> Wait, that's not quite what I was asking
+15:23:06 <sivel> like we wouldn't want an "openstack_all_the_things" module
+15:23:09 <bcoca> if you cannot use module at all w/o deep knowledge of the underlying system options .. i think module does poor job
+15:23:35 <bcoca> abadger1999: shell <= bad module, but needed as a fallback, i would argue url is same
+15:23:40 <sivel> abadger1999: I may misunderstand, but shade is a wrapper around a rest api, and the mudules are pretty thin
+15:23:43 <bcoca> we dont need other modules that do same
+15:23:47 <abadger1999> Say you have a python library that presents a generic python API to a service.  Then someone submits a python module that calls that generic python API... is that okay?
+15:23:54 <sivel> I am ok with that, just not if we created a `shade` module
+15:24:12 <bcoca> sivel: but openstack modules are pretty good at having detailed options, with good descriptions and validation, that most 'logic' happens in shade is ok
+15:24:13 <abadger1999> sivel: K.  So that's probably a better thing to target here than "thin api wrapper"
+15:24:30 <sivel> abadger1999: if it deals with ` "facet" of the API, and not the full API
+15:24:41 <abadger1999> sivel: Sounds like you'd be okay with a thin api wrapper that used a rest API.... the secret is in how much the module does.
+15:24:46 <sivel> part of this is due to arbitrary arguments, and not being able to be explicit and document
+15:24:57 <bcoca> i think you are boht focusing too much on API side vs 'value added' by module
+15:25:21 <sivel> I think I am failing on some of my argument, yes, but I feel like most of you understand my point :)
+15:25:29 <abadger1999> So a thin wrapper of the whole api is bad but a thin wrapper that only creates and deletes hosts in a cloud Api sounds like it would be okay, right?
+15:25:38 <sivel> abadger1999: yes
+15:25:41 <abadger1999> Cool.
+15:25:46 <sivel> because the module is targeted and understandable
+15:25:49 * mordred reads scrollback real quick
+15:25:50 <bcoca> abadger1999: not a thin wrapper as much as a good interface
+15:25:51 <abadger1999> I think we should define our rul along those lines then.
+15:25:56 <thaumos> lol mordred
+15:25:57 <abadger1999> Modules should not do too much.
+15:26:10 <bcoca> but also not do too little either
+15:26:14 <sivel> mordred: sorry, I am using shade and openstack in my arguments again ;)
+15:26:18 <thaumos> we have that defined already I thought, abadger1999
+15:26:22 <abadger1999> Modules should follow the unix philosophy of do one thing and do it well.
+15:26:27 <abadger1999> SOmething like that.
+15:26:31 <sivel> abadger1999: yes
+15:26:34 <mordred> sivel: totally fine - it's a good topic to discuss!
+15:26:41 <gundalow> ^ Good line to add to docs
+15:26:46 * mordred agree that Modules should follow the unix philosophy of do one thing and do it well
+15:26:53 <gundalow> #info Modules should follow the unix philosophy of do one thing and do it well
+15:26:55 <maxamillion> I think as long as this is well documented as "These are the criteria that define a Thin API Wrapper, they are not allowed in Anible, and users should use the uri module for such functionality" then I'm on board ... this might need docs in the development and the user facing sections, but I'd like to suggest we make it very clear somewhere so it's not up to interpretation
+15:27:05 <bcoca> but they should also 'add value' , there is little value to a module that is just a transparent passthrough
+15:27:16 <mordred> bcoca: ++
+15:27:24 <sivel> mordred: I was saying that many os_ modules are thin wrappers, because shade is robust, but we shouldn't have a "shade" module in ansible, that is generic and let's someone interface with a suite of services like that
+15:27:39 <mordred> sivel: 1000x yes
+15:28:08 <bcoca> sivel: yes, but the modules 'add value' by documenting/validating the options , its not a 'shade' module with args=
+15:28:40 <mordred> bcoca: ++
+15:28:48 <mordred> sivel, bcoca: *although* - I could see potential value in having a generic module as a compaion to the others as a "get out of jail" module that peopel could use in the case where we haven't implemented a better module yet
+15:28:49 <sivel> bcoca: yes, I was saying os_ are good and I'm fine with them as an example
+15:28:55 <abadger1999> I'm okay with thin api modules.
+15:29:19 <abadger1999> If we split the do-one-thing-well argument from thin api, then I actually become +1 on the first and a -1 on the second.
+15:29:21 <sivel> it's more around what the module targets, it just so happens a generic api module, doesn't target "one thing"
+15:29:35 <mordred> like, for most rest things, that's the uri module ... in the openstack case (to abuse the example) using the uri module would suck because you'd have to do a keystone auth token dance, so having an os_uri module that does that for you *might* be a useful utility module
+15:29:38 <abadger1999> Combining the two ideas together I'm a vague -0.75 or so on the combined arguments
+15:30:10 <mordred> (which is me agreeing with the sentiment but thinking there might be judgement-call cases where an argument could be made for an exception)
+15:30:11 <bcoca> mordred: that is more a case for 'login modules' than actual thin api wrapper
+15:30:11 <sivel> If I am failing at describing my argument I apologize, I feel like we almost got lost along the way
+15:30:20 <mordred> bcoca: yah
+15:30:50 <thaumos> gundalow: did you ever give your vote?
+15:31:05 <gundalow> thaumos: I'm +0
+15:31:10 <thaumos> k
+15:31:11 <abadger1999> To bcoca's point, I think that a pass through can add value
+15:31:27 <sivel> So, using the case of cnos_restapi (https://github.com/ansible/ansible/pull/33326) in that realm
+15:31:32 <bcoca> lets add 2 things (if not there alreaydd, i swear we had this discussion 2yrs ago)
+15:31:34 <maxamillion> abadger1999: in what way? (I'm not disagreeing, just curious what you mean by that)
+15:31:50 <abadger1999> If the rest api is well enough defined, having a module that's a thin wrapper around that can still be good.
+15:31:50 <gundalow> I don't actually care about having wrappers, as long as most of the code is pushed into module_utils, rather than different people reimplementing code badily in modules
+15:32:03 <bcoca> - modules should be of narrow focus, do one thing, do it well
+15:32:07 <abadger1999> But we'd have to look at individual cases to figure that out.
+15:32:23 <abadger1999> For instance, you could have a thin wrapper around an api with well-defined values.
+15:32:32 <bcoca> - modules shoudl 'add value', they dont need to have a lot of code, but they should not be 'transparent passthroughs' that require user to know all underlying options of api/tool
+15:32:47 <sivel> I understand at some level that cnos are switches, so a module would be like, cnos_switch_port or something
+15:32:53 <abadger1999> then one benefit of the ansible-module is that ansible-doc would have an explanation of the values you could give.
+15:33:03 <sivel> rather than just saying, go read API docs and use this module to do stuff with arbitrary arguments
+15:33:04 <abadger1999> That's not the case with the modules we looked at yesterday, though.
+15:33:11 <bcoca> abadger1999: yes, the 'thin wrappers' we were discussing dont even do that
+15:33:21 <thaumos> right, but to sivel's point. the module in question isn't doing that abadger1999
+15:33:35 <abadger1999> right.  But I want to separate baby from bathwater here.
+15:33:53 <bcoca> ^ see if my phrasing is sufficient
+15:34:09 <thaumos> there is no value to having a module named `foo` if the user is going to pass a url path of https://foo/api/bar
+15:34:17 <abadger1999> bcoca: I like the last part:  require user to know all underlying options of api/tool
+15:34:23 <abadger1999> bcoca: the rest muddles it for me
+15:34:28 <sivel> as well as building the API post body from scratch too
+15:34:42 <sivel> that module roughly gives us nothing
+15:34:43 <thaumos> I got lazy :-P
+15:35:17 <sivel> I think at this point we just need proper descriptions
+15:35:21 <thaumos> yes
+15:35:29 <sivel> bcoca: started a few comments above
+15:35:33 <maxamillion> abadger1999: yeah, I follow ... +1
+15:35:39 <sivel> - modules should be of narrow focus, do one thing, do it well
+15:35:43 <abadger1999> "modules should not require that a user know all the underlying options of an api/tool to be used.  For instance, if what the legal values for a required module parameter cannot be documented that's a sign the module would be rejected"
+15:35:50 <abadger1999> bcoca: ^ Something like that okay?
+15:35:53 <sivel> - modules shoudl 'add value', they dont need to have a lot of code, but they should not be 'transparent passthroughs' that require user  understand at some level that cnos are
+15:36:58 <sivel> abadger1999: I am fine with that, we'll have to run it by dharmabumstead in a PR and whatnot
+15:37:17 <sivel> Does anyone have any problems with that, or additions/suggestions?
+15:37:18 <maxamillion> abadger1999: yeah, I like that ... maybe add something like "the module should have a concise and well defined functionality"
+15:37:24 <sivel> maxamillion: ++
+15:37:41 <abadger1999> <nod>
+15:37:46 <abadger1999> Are those two different guidelines?
+15:38:02 <abadger1999> I'm +1 to both, though.
+15:38:17 <sivel> They are probably 2 bullet points
+15:38:25 <sivel> but go well with each other
+15:38:43 <abadger1999> * Modules should have a concise and well defined functionality.  Basically, follow the UNIX philosophy of doing one thing well.
+15:38:54 <abadger1999> * Modules should not require that a user know all the underlying options of an api/tool to be used.  For instance, if what the legal values for a required module parameter cannot be documented that's a sign the module would be rejected
+15:39:32 <jtanner> please do not use the phrase "add value" in ansible documenation
+15:39:36 <jtanner> i hate that phrase
+15:39:39 <bcoca> "eturn codes from modules are actually not significant" <= im finding that some of our docs are just wrong
+15:40:07 <sivel> Great, I'll handle updating the docs for this
+15:40:21 <gundalow> sivel: Thanks, ensure that dharmabumstead reviews before merging
+15:40:32 <sivel> gundalow: absolutely
+15:40:36 <gundalow> Thanks
+15:41:50 <maxamillion> jtanner: +1
+15:42:03 <thaumos> #action sivel to update docs with guidelines for modules
+15:42:14 <thaumos> #action sivel to sync with dharmabumstead for review.
+15:42:22 <gundalow> woot
+15:42:26 <thaumos> any last items for this topic?
+15:42:45 <gundalow> So this will be a rule for new modules from now
+15:42:52 <sivel> yes
+15:42:58 <gundalow> Do we want to do anything about existing modules?
+15:43:03 <thaumos> yep, even though I feel it's always been a rule.
+15:43:44 <thaumos> Do we know how many there are?
+15:43:52 <gundalow> sivel: probs worth adding to http://docs.ansible.com/ansible/latest/dev_guide/developing_modules.html#should-you-develop-a-module as well
+15:44:02 <maxamillion> gundalow: +1
+15:44:03 <gundalow> thaumos: not sure
+15:44:23 <thaumos> and by name?  I can look at analytics to guesstimate some usage
+15:44:50 <thaumos> I know it won't be accurate, but it's a data point
+15:45:07 <thaumos> I'll take that action to figure out what to do with existing
+15:45:19 <abadger1999> we didn't kick out aws.py ;-)
+15:45:36 <sivel> do we have an aws.py generic module?
+15:45:40 <thaumos> ec2.py you mean?
+15:45:47 <sivel> someone submitted a boto module and we declined that
+15:45:59 <thaumos> ec2 module almost was like this back in the day
+15:46:08 <thaumos> I recall that being a long back and forth discussion
+15:46:11 <abadger1999> yeah, ec2.py
+15:46:46 * abadger1999 doesn't use amazon for his cloud needs, can you tell?
+15:46:47 <thaumos> meh, we're effectively kicking it out with ec2_instance module
+15:47:01 <abadger1999> Well... deprecating/replacing.
+15:47:28 <thaumos> I think the ec2 module is a HUGE exception and legacy to this discussion. it was the basis of have modules do one thing well
+15:47:31 <abadger1999> I guess I'm just saying... we don't have precedent for removing a module that we think is coded wrong with no alternatives.
+15:47:56 <abadger1999> So we'll be breaking new ground :-)
+15:47:59 <thaumos> either way, I'll still take the action of what steps we should take.
+15:48:31 <thaumos> #action thaumos to figure out what to do with existing modules that do not follow the guidelines of do one thing well.
+15:48:49 <thaumos> anything else for this topic before I close it?
+15:48:58 <gundalow> FYI in networking there were was a whole dir of modules that just no longer worked (and hadn't in the previous release) so we just git -rm'd them
+15:49:22 <gundalow> stopped working at the remote system had changed so much (bad/no API versioning)
+15:49:23 <thaumos> @sivel, will you close the cnos pr?
+15:49:29 <sivel> thaumos: yes
+15:50:06 <maxamillion> gundalow: how do you handle that from an user facing perspective? ... like, what's the public-relations side of taking that kind of action?
+15:50:16 <sivel> I've got the tab open, just waiting for the meeting to end before running away
+15:50:26 <thaumos> most likely email project list
+15:50:32 <gundalow> maxamillion: In this case it was toally broken so we knew no one was using it
+15:50:58 <abadger1999> gundalow: were they community support status: preview?
+15:50:59 <gundalow> no one cared as we had no bugs reported about it nolonger working
+15:51:03 <gundalow> abadger1999: yup
+15:51:18 <thaumos> yeah, in this case it was a safe bet.  If anyone came back and said, why you take this away from me?! we could ask, "HOW THE HELL DID YOU GET IT TO WORK!?"
+15:51:20 <maxamillion> gundalow: fair
+15:51:25 <abadger1999> Did we try emailing the community members responsible for them?
+15:51:34 <gundalow> IT@S FINE
+15:51:59 <abadger1999> gundalow: the thing I worry a little bit about with that is... it's tons easier to get changes into an existing modules than to get a new module in.
+15:52:03 <gundalow> Just saying we have deleted stuff before
+15:52:17 <abadger1999> <nod>
+15:52:39 <gundalow> $network_partner will be creating new modules for the updated platform
+15:53:00 <gundalow> though they didn't want to maintain/update the old modules
+15:53:01 <gundalow> anyway
+15:53:04 <gundalow> </topic>
+15:53:13 <abadger1999> <nod>
+15:53:15 <gundalow> Just saying we have deleted stuff before, and giving that as an example
+15:53:15 <abadger1999> Cool.
+15:53:16 <gundalow> :)
+15:53:31 <thaumos> ok
+15:53:41 <thaumos> I am going to close the topic
+15:53:44 <gundalow> #topic Open Floor
+15:53:46 <thaumos> ...
+15:53:47 <thaumos> ..
+15:53:48 <thaumos> ..
+15:53:49 <thaumos> oh
+15:53:51 <gundalow> .
+15:53:51 <sivel> haha
+15:53:54 <thaumos> lol
+15:53:57 <abadger1999> 2.4.3 release
+15:54:08 <gundalow> #topic Ansible 2.4.3. release
+15:54:16 <abadger1999> We've been doing 1 release per month for 2.4.x
+15:54:26 <abadger1999> But the rate of bugfixes has slowed significantly.
+15:54:52 <abadger1999> And we have the Winter Holiday Season taking people out of work.
+15:55:03 <abadger1999> So I'm thinking of two changes for 2.4.3
+15:55:18 <abadger1999> (1) Release will be sometime in January (maybe mid-late January)
+15:55:34 <abadger1999> (2) Put out betas every two weeks instead of weekly.
+15:55:48 <gundalow> +1 +1
+15:55:49 <thaumos> both are totally fair.
+15:55:56 <thaumos> +1 +1
+15:56:08 <thaumos> with the obvious though, if we get an escalation, we may have to shift that
+15:56:14 <maxamillion> +1
+15:56:14 <abadger1999> Yep.
+15:56:16 <maxamillion> +1
+15:56:18 <gundalow> 2.5 Core Engine Freeze and Module Freeze: 15 January 2018
+15:56:18 <thaumos> the likelihood that happening is slim
+15:56:26 <maxamillion> errr ... +1 +1 ... however that should be notated
+15:56:44 <abadger1999> Cool.  I'll put out a tentative schedule when I email ansible-devel@googlegroups with the first beta.
+15:56:52 <thaumos> sounds good abadger1999
+15:57:00 <gundalow> \o/
+15:57:11 <thaumos> could you update mrike as well abadger1999
+15:57:49 <abadger1999> thaumos: Sure.  I'll talk to you in slack abot doing that.
+15:57:55 <thaumos> okie dokie
+15:58:02 <thaumos> I'll be happy to do it also, either way :-D
+15:58:15 <thaumos> #topic changing thursday's meeting time
+15:58:28 <thaumos> should we do this since it conflicts with an internal meeting?
+15:58:52 <sivel> or reschedule the internal meeting :)
+15:58:59 <gundalow> Stick a doodle pool on the agenda + email list and see if we should move this
+15:59:06 <gundalow> sivel: internal meeting is big & cross-department
+15:59:08 <abadger1999> +1 to move
+15:59:13 <gundalow> abadger1999: earlier?
+15:59:15 <gundalow> :P
+15:59:18 <sivel> i'd be +1 to later
+15:59:18 <abadger1999> It's too early for me anyways.
+15:59:20 <thaumos> make it one hour later?
+15:59:28 <sivel> this is 9am, which is already hard for me to make on time ;)
+15:59:32 <abadger1999> gundalow: thwap
+15:59:33 <thaumos> come on abadger1999 work est hours like I do!
+15:59:34 <sivel> well, starts at 9am
+15:59:56 <sivel> 9:30am CST or later :)
+16:00:01 <thaumos> lol
+16:00:21 <gundalow> So I think we should ask teh community
+16:00:27 <abadger1999> thaumos: Kids, school, other pieces of life ;-)
+16:00:44 <maxamillion> thaumos: internal meeting?
+16:00:46 <thaumos> aren't we the community?
+16:00:52 <thaumos> :-P
+16:00:58 <gundalow> thaumos: I mean the people without `@`
+16:01:07 <thaumos> I know what you meant
+16:01:11 <gundalow> :P
+16:01:14 <maxamillion> thaumos: I don't know about an internal meeting ... will nag offline
+16:01:18 <thaumos> just trolling you because I luffa you
+16:01:42 <gundalow> Also internal meeting is only once every two weeks
+16:02:52 <thaumos> still worth potentially moving back one hour because of that.
+16:02:56 <thaumos> just a thought
+16:03:09 <gundalow> nod
+16:04:39 <thaumos> will you raise the question for us gundalow?
+16:05:29 <gundalow> thaumos: sure
+16:05:34 <thaumos> thank you!
+16:05:46 <thaumos> #topic open floor
+16:05:55 <thaumos> anything else before I endmeeting?
+16:06:16 <thaumos> alrighty, thanks everyone!
+16:06:19 <thaumos> #endmeeting

@@ -1,0 +1,112 @@
+16:01:07 <gundalow> #startmeeting Ansible Network Working Group
+16:01:07 <zodbot> Meeting started Wed Jan 31 16:01:07 2018 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:01:07 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:01:07 <zodbot> The meeting name has been set to 'ansible_network_working_group'
+16:02:16 <gundalow> Who's here?
+16:02:47 <trishnag> o/
+16:02:48 <Qalthos> o/
+16:02:52 <gundalow> #topic Changes to running tests
+16:03:07 * privateip listening in the corner
+16:03:15 <gundalow> #chair trishnag Qalthos Anil mattclay jmcgill298 privateip andriusb
+16:03:15 <zodbot> Current chairs: Anil Qalthos andriusb gundalow jmcgill298 mattclay privateip trishnag
+16:03:37 * mattclay waves
+16:03:44 * IPvSean waves
+16:03:59 <gundalow> #info The top level yaml files (test/integration/{platform}.yaml are being deleted as they are not used by ansible-test which is how we should be running tests now
+16:04:23 <gundalow> #info this is done in https://github.com/ansible/ansible/pull/35553
+16:04:29 <gundalow> #info https://github.com/ansible/ansible/pull/35553 updates docs on how to run tests
+16:04:38 <gundalow> #chair IPvSean
+16:04:38 <zodbot> Current chairs: Anil IPvSean Qalthos andriusb gundalow jmcgill298 mattclay privateip trishnag
+16:04:53 <gundalow> hum, no Dell or NXOS people here :(
+16:06:13 <gundalow> #action gundalow to email Dell & NXOS regarding there top level yaml test files
+16:06:57 <gundalow> #topic Open Floor
+16:07:03 <gundalow> #info Agenda https://github.com/ansible/community/issues/247
+16:07:40 <gundalow> #topic Discuss use of VCR for acceptance test. https://pypi.python.org/pypi/vcrpy
+16:07:44 <gundalow> mattclay: You around?
+16:07:48 <mattclay> I'm here.
+16:08:26 <gundalow> (Just trying to find the PR)
+16:08:50 <gundalow> hum, maybe there wasn't one
+16:09:21 <gundalow> mattclay: the Avi Network team were wondering about using https://vcrpy.readthedocs.io/en/latest/
+16:09:40 <gundalow> I *though* there was a PR in flight showing this, but maybe I imagioned it
+16:09:59 <Qalthos> gundalow, not yet, they had it implemented in their fork
+16:10:08 <gundalow> Qalthos: aaaaaaaaah
+16:10:16 <gundalow> You know where that lives?
+16:10:20 <Qalthos> they were going to massage it into a PR and come back
+16:10:25 <mattclay> It looks promising. I'm interested in seeing their implementation.
+16:10:26 <Qalthos> last week's log?
+16:10:48 <gundalow> urgh, my memory is shot
+16:10:59 <gundalow> OK
+16:11:40 <gundalow> #info example https://github.com/avinetworks/avi_ansible_modules/blob/AV-32324/test/avi_healthmonitor_test.py
+16:12:17 <gundalow> #info Waiting for PR so we can review
+16:12:22 <gundalow> Qalthos: Thaks
+16:12:25 <gundalow> +n
+16:12:35 <gundalow> #topic Open Floor
+16:12:44 <gundalow> #chair
+16:12:44 <zodbot> Current chairs: Anil IPvSean Qalthos andriusb gundalow jmcgill298 mattclay privateip trishnag
+16:12:50 <gundalow> Anyone got anything else?
+16:13:29 <Anil> Few of my PRs are pending
+16:13:50 <Anil> they are primarily license text changes
+16:14:09 <gundalow> Anil: Ah, yes. Did they get sign off by everyone that's touched those files?
+16:14:37 <Anil> yes, I guess
+16:14:44 <Qalthos> Last I knew we were waiting on ganeshrn for most of those, will recheck
+16:17:03 <gundalow> Thanks
+16:17:07 <gundalow> Anyone got anything else?
+16:18:36 <gundalow> #chair skg-net
+16:18:36 <zodbot> Current chairs: Anil IPvSean Qalthos andriusb gundalow jmcgill298 mattclay privateip skg-net trishnag
+16:19:40 <gundalow> skg-net: Hi. Are you still using test/integration/dellos*.yaml ? I've deleted the others in  https://github.com/ansible/ansible/pull/35553
+16:20:51 <skg-net> yes, they are doing the final testing after the merge
+16:21:49 <gundalow> skg-net: OK, thought so. We can leave those files in place then. We should look at getting your using `ansible-test network-integration` at somepoint. Maybe when we integrate with Zuul
+16:22:30 <skg-net> yes, our test team is setting up the infra, will keep you posted
+16:22:38 <gundalow> Great
+16:22:47 <mattclay> Since those tests are not currently run through ansible-test, we should move them out of test/integration/roles/ into test/legacy/
+16:23:57 <mattclay> When it's time to run the via ansible-test they would then be moved into test/integration/targets/
+16:25:43 <skg-net> I'm fine with the above approach as well
+16:26:23 <mattclay> skg-net: Do you want to submit the PR to move the test roles, group vars and playbook into `test/legacy/` then?
+16:27:56 <skg-net> okay, will do it
+16:28:12 <mattclay> Thanks
+16:29:21 <gundalow> Thanks
+16:29:29 <gundalow> Anyone got anything else?
+16:31:20 <Anil> Nothing from my side, Thank you @Qalthos
+16:31:39 <Anil> for closing my PRs
+16:31:51 <skg-net> if we have new modules, can we raise PR in devel or will need wait till 2.5 branches off
+16:32:42 <gundalow> skg-net: still some time before Community freeze
+16:32:51 <gundalow> https://github.com/ansible/ansible/blob/devel/docs/docsite/rst/roadmap/ROADMAP_2_5.rst
+16:33:36 <skg-net> that's great, will try to get in ASAP..
+16:33:36 <gundalow> Though if they are for 2.6.0 wait till branch, will will be between beta1 & release candidate 1 time
+16:33:39 <bearrito> gundalow: does that freeze for core apply to bugs too? i've got one for eos save i need to wrap up soon
+16:34:02 <gundalow> #chair bearrito
+16:34:02 <zodbot> Current chairs: Anil IPvSean Qalthos andriusb bearrito gundalow jmcgill298 mattclay privateip skg-net trishnag
+16:34:27 <gundalow> bearrito: The "freeze" dates in https://github.com/ansible/ansible/blob/devel/docs/docsite/rst/roadmap/ROADMAP_2_5.rst refer to new functionality, but fixes can go in upto the release
+16:34:56 <bearrito> awesome, thanks
+16:35:11 <gundalow> though the closer we get to the release the greater the risk
+16:35:33 <skg-net> any doc pointers for writing a connection plugin
+16:37:57 <gundalow> skg-net: Have you seen https://github.com/ansible/community/blob/master/group-network/network_dev_network_cli.rst
+16:38:05 <gundalow> What are you trying to achieve?
+16:38:48 <skg-net> I have..
+16:39:16 <skg-net> For openswitch provides CPS api..
+16:40:05 <skg-net> currently it can be executed from inside box..
+16:40:31 <skg-net> I am debating to write a connection plugin or to provide cps_get and cps_set modules..
+16:41:14 <gundalow> privateip: Qalthos Any thoughts?
+16:41:22 <Qalthos> I have some notes about creating a connection plugin for use with persistent connections a la network_cli and netconf
+16:41:23 <skg-net> currently I have the second option in place.. but thought the correct way to implement is go with the connection plugin based on the recent chages to plugin
+16:41:40 <gundalow> If you are thinking for 2.5.0, that might be a bit much to fit in and get reviewed, though I'm not sure
+16:42:16 <privateip> skg-net: what is the underlying api transport?
+16:42:20 <Qalthos> I was planning on fleshing them out as the http_connection gets written for 2.6, but I can try to get them organized more quickly
+16:42:44 <skg-net> qalthos: Thanks, that will help
+16:43:13 <skg-net> privateip: its Unix Domain Sockets
+16:43:44 <privateip> can't you use the standard ssh connection plugin then?
+16:44:00 <skg-net> it is local to the box, no transport outside..much like how the servers are provisioned
+16:44:06 <privateip> right
+16:44:34 <privateip> so use the ssh connection plugin which will connect to the device and execute the module ... the module code would then implement the logic to talk to the UDS
+16:44:41 <skg-net> yes, I can use the ssh connection plugin. that was the second option, to write the cps_set and cps_get modules..
+16:45:50 <privateip> i suspect that would be the preferable option then instead of messing around with connection plugins
+16:45:53 <skg-net> but with recent discussion of eapi and nxapi connection plugin, I thought it would be better to overload ssh connection plugin with set and get construct
+16:46:05 <skg-net> and write DI modules instead
+16:47:29 <skg-net> okay..I will go with the module approach itself then..
+16:54:50 <gundalow> skg-net: cool
+16:54:54 <gundalow> Any other questions?
+16:55:00 <gundalow> Or does anyone else have anything?
+16:55:24 <skg-net> thats it from my side..
+16:55:44 <gundalow> Thanks
+16:55:49 <gundalow> Will close shortly then
+16:59:09 <gundalow> Ok, thanks everyone!
+16:59:11 <gundalow> #endmeeting

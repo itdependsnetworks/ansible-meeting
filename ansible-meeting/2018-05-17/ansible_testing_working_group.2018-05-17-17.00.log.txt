@@ -1,0 +1,59 @@
+17:00:01 <gundalow> #startmeeting Ansible Testing Working Group
+17:00:01 <zodbot> Meeting started Thu May 17 17:00:01 2018 UTC.
+17:00:01 <zodbot> This meeting is logged and archived in a public location.
+17:00:01 <zodbot> The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+17:00:01 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+17:00:01 <zodbot> The meeting name has been set to 'ansible_testing_working_group'
+17:00:08 <gundalow> #chair mattclay
+17:00:08 <zodbot> Current chairs: gundalow mattclay
+17:00:52 * mattclay waves
+17:01:53 <gundalow> #chair bob_cheesey
+17:01:53 <zodbot> Current chairs: bob_cheesey gundalow mattclay
+17:02:15 <bob_cheesey> thanks gundalow!
+17:02:34 <gundalow> #topic Memset Testing #40071
+17:02:50 <gundalow> #topic https://github.com/ansible/ansible/pull/40071
+17:05:28 <gundalow> bob_cheesey: So did you see the messages I think we need
+17:05:41 <mattclay> bob_cheesey: You mentioned in #ansible-devel that new API keys and scopes can be created through the API. Does that mean we could use a secretly held API key to create temporary a temporary API key + scope for each test run and then remove them when the test finishes to clean up all traces of the test run, while also keeping parallel test runs isolated from each other?
+17:05:43 <gundalow> * A away of creating temp tokens that are restricted
+17:07:42 <mattclay> I'm not familiar with memset, so I may be misunderstanding what scopes are used for.
+17:07:56 <bob_cheesey> sure, a master API key with scopes to create new API keys would be workable - I've not used those methods before but they're not particularly complex methods
+17:08:47 <bob_cheesey> scopes are just a list of api methods, if a key only has the scope of dns.reload then it has the ability to request dns reloads and nothing else
+17:09:08 <bob_cheesey> so yes, in short a master key could generate limited keys and then clean up after the tests have run
+17:09:40 <gundalow> cool
+17:09:43 <mattclay> All of those keys would be working in the same account though, right? So they'll all be able to manipulate the same resources?
+17:10:31 <bob_cheesey> that's correct, the key just applies to an account - i've created an account purely for the purposes of running these tests
+17:11:43 <mattclay> bob_cheesey: So once a test completes, how would we know which resources to clean up? (we can't rely on the test itself to do that)
+17:12:59 <bob_cheesey> keys can have a comment applied when they're created which is just a free-form text field - adding something to that would probably be the best method i think and then parsing that
+17:14:40 <mattclay> bob_cheesey: So say we have a private API key, which we use to create a temporary key A. The tests use key A to create resources. When the test is done we use our private API key to remove key A. How do we also remove everything created by key A (not just the key)?
+17:16:54 <bob_cheesey> right, i'm with you. to the best of my knowledge the API doesn't present any way of determining how a resource was created. the way i've structured the tests so far the last task will be to ensure the resources which were created are then deleted so the account is left in a clean state
+17:17:25 <mattclay> OK, that's what I thought from skimming the docs.
+17:17:27 <bob_cheesey> obviously that isn't going to work if there's an issue such as networking timeouts which cause an nearly run failure
+17:17:34 <gundalow> bob_cheesey: We often see tests stop part way through execution, so the clean up will not happen
+17:17:58 <gundalow> It's correct that the test *should* clean up after themselfs, just we need an extra clean up process
+17:18:07 <mattclay> In order for us to integrate tests like this into our CI system we need to have a way to both isolate parallel test runs from each other and to also clean up after the tests without cooperate from the tests.
+17:18:18 <mattclay> s/cooperate/cooperation/
+17:18:53 <mattclay> In many cases this means we must provision a temporary account (or equivalent) for each test and throw away the entire account when the test ends.
+17:19:07 <mattclay> s/each test/each test run/
+17:20:08 <mattclay> For example, when we run our Azure tests, we create a resource group and credentials (service principal) for each test run. When the tests are done we delete the resource group (which removes everything created within it) and the service principal.
+17:20:09 <bob_cheesey> sure, that's certainly the safest way of ensuring everything is removed. for various internal reasons you can't create accounts from the api so that is going to be a problem
+17:21:21 <mattclay> Unfortunately that means the tests will need to be run manually, rather than part of CI, since there is no way to create disposable accounts for executing the tests.
+17:21:22 <bob_cheesey> ok, so we have no way of doing anything along those lines as far as i can think at the moment
+17:21:38 <mattclay> The alternative is to use an API simulator, such as what we do for vmware/vcenter.
+17:22:23 <mattclay> You would run a service endpoint locally that provides the API to test against (perhaps in a docker container) and run the modules against that simulator instead of the real service.
+17:23:26 <mattclay> That has proven very effective for vmware/vcenter tests, cloudstack, and others.
+17:23:32 <bob_cheesey> right, so a mock api essentially?
+17:23:51 <mattclay> Yes, or the real thing (if you can run it in a container or as a local process).
+17:24:25 <mattclay> The one we use for vmware is a simulator, the cloudstack one uses the real services in a docker container.
+17:25:29 <bob_cheesey> right, i'm actually in our Ops team (not a dev), so I'd need to have a discussion with someone regarding what options we have
+17:25:54 <bob_cheesey> i'm not overly familiar with what options they have
+17:28:34 <gundalow> bob_cheesey: for the moment if you add the unsupported aliases we can merge your PR so the modules can get into Ansible 2.6
+17:29:08 <gundalow> test/integration/targets/{module}/aliases witha single line unsupported
+17:29:14 <mattclay> bob_cheesey: Once you've had a chance to talk with your devs we can hopefully come up with an option that will work for running the tests in CI.
+17:30:23 <bob_cheesey> ok sure, that I can do
+17:31:49 <gundalow> :)
+17:33:47 <bob_cheesey> ok, that's done and pushed
+17:34:10 <gundalow> Thanks
+17:35:33 <bob_cheesey> no probs!
+17:36:09 <gundalow> #topic Open Floor
+17:36:13 <gundalow> Anyone got anything else?
+17:40:02 <gundalow> #endmeeting

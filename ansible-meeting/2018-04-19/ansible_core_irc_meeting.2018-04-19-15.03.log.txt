@@ -1,0 +1,81 @@
+15:03:05 <bcoca> #startmeeting ansible core irc meeting
+15:03:05 <zodbot> Meeting started Thu Apr 19 15:03:05 2018 UTC.  The chair is bcoca. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:03:05 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:03:05 <zodbot> The meeting name has been set to 'ansible_core_irc_meeting'
+15:03:57 <sivel> .hello2
+15:03:59 <zodbot> sivel: sivel 'Matt Martz' <matt@sivel.net>
+15:04:10 <bcoca> #topic open floor
+15:04:12 <maxamillion> .hello2
+15:04:13 <zodbot> maxamillion: maxamillion 'Adam Miller' <maxamillion@gmail.com>
+15:04:16 <maxamillion> oh, bcoca beat me to it
+15:04:19 <maxamillion> :)
+15:04:41 <bcoca> maxamillion: seems like ive been handling most of the meetings lately, @thaumos ???
+15:05:37 <bcoca> soo, become plugins, everyone seen the PR? questions/opinions?
+15:05:55 <maxamillion> I have not seen it... or I don't remember
+15:06:05 <maxamillion> this other project has my brain all distracted/scrambled
+15:06:10 <bcoca> https://github.com/ansible/ansible/pull/38861
+15:06:59 <sivel> I have not looked at it as of yet.
+15:08:08 <sivel> so I can't say I have much of any question or opinion at this time
+15:08:20 <maxamillion> bcoca: just did a quick read over it, I like the idea ... I suspect we'd need a *lot* of testing :)
+15:08:42 <maxamillion> bcoca: also, are the DEFAULT_SUDO_* and DEFAULT_SU_* vars going away with this change?
+15:08:45 <bcoca> 90% of it is moving existing code, but yes
+15:08:59 <jtanner> hello (multitasking with bluejeans meeting)
+15:09:10 <bcoca> yes, but each can still keep their config/envvars/connection vars
+15:09:43 <bcoca> but constants will not have sudo/su entries (they were goint to be removed in 2.8 anyways)
+15:09:49 <maxamillion> bcoca: cool
+15:15:28 <bcoca> k, since no one seems to have anything .. going to close meeting
+15:16:23 <maxamillion> +1
+15:16:33 <sivel> I have something
+15:16:38 <sivel> didn't realize we were moving on yet
+15:16:53 <sivel> I found an oddity in subspec defaults yesterday.
+15:17:15 <sivel> if the top level is not required, and the sub options have defaults, they are never considered if you omit the top level option
+15:17:41 <sivel> My attention was drawn to it, due to workarounds that have been implemented to get around that
+15:18:00 <sivel> In one case, duplicating the defaults, and applying `default` to the top level arg
+15:18:21 <bcoca> sigh
+15:18:26 <sivel> I've submitted a PR, which ultimately brought me to adding a new argument option called `apply_defaults`
+15:18:33 <sivel> because so many people have worked around the issue
+15:18:38 <sivel> I can't just change how it works now
+15:18:46 <bcoca> *sigh*
+15:18:50 <sivel> because like every network module breaks
+15:18:54 <bcoca> why didnt they file bug??!?!
+15:18:59 <sivel> exactly!
+15:19:09 <sivel> So in any case
+15:19:09 * bcoca tempted to break it ... as a teaching exercise
+15:19:13 <sivel> here is the PR
+15:19:15 <sivel> https://github.com/ansible/ansible/pull/38967
+15:19:27 <sivel> As mentioned it adds a new `apply_defaults`
+15:19:42 <sivel> that can be used on the parent, to actually allow you to use `default` on subspec arguments
+15:19:43 <bcoca> can you add a 'deprecated' to apply_default=false?
+15:19:57 <sivel> bcoca: maybe
+15:20:13 <bcoca> that woudl make people fix their modules and we could remove the insanity
+15:20:15 <sivel> Apparently because this has been the way it worked for so long, people are actually relying on this behavior now
+15:20:29 <bcoca> hence deprecation vs outright error
+15:20:29 <sivel> Apparently people have weird expectations
+15:20:36 <bcoca> yes, yes they do
+15:20:59 <sivel> I'll play with it, but since this is a minimal change, I plan on adding to 2.6 if possible
+15:21:00 <bcoca> *mumble* xkcd .. keyboard as heat source ...*mumble*
+15:21:15 <sivel> so if I do add a deprecation, probably not in 2.6
+15:21:34 <sivel> I'd like to not add any deprecations in 2.6, due to "stability"
+15:22:11 <bcoca> i would consider current state unstable ...
+15:22:24 <sivel> I also know that none of these options have docs really.  So I may likely start some docs for the argument keys
+15:22:33 <bcoca> agreed
+15:22:36 <sivel> Yeah, seeing as though people have been actively working around it...
+15:22:46 <sivel> which annoys me.  Submit a bug.
+15:23:10 <bcoca> funny enough, networking folk actually did the full subspec implementation, i had started but didnt have time to finish
+15:23:28 <sivel> I talked to peter, and he believed it was an oversight due to rushed impl
+15:23:28 <bcoca> there is the expertise there to actually deal with the defaults issue
+15:23:43 <sivel> in anycase, here we are
+15:23:44 <bcoca> which is ok, but then dont reimplement fix on eveyr plugin ...
+15:24:19 <bcoca> +1 to merge .. i woudl deprecate right away, but fine if you do so in 2.7 ... add note to code and/or PR on 2.7 milestone?
+15:24:31 <sivel> Yeah, I'll get to it, after I write docs
+15:24:55 <jtanner> i know very little about subspecs or this problem ... +0
+15:26:03 <bcoca> jtanner: basically recursive argspec
+15:26:38 <bcoca> when 'top' level key was not getting set, we set default automatically, but then we didnt traverse down and set appropriate defaults for subkeys
+15:26:43 <sivel> If you look at the PR, I provide an example that should make it clear
+15:26:53 <bcoca> this fixes that ..  but has to allow for modules that were doing this themselves
+15:30:33 <sivel> That's it for me right now
+15:30:43 <jtanner> ah, i see now
+15:31:26 <jtanner> hopefully people don't  assume the existence of the key implies it was set
+15:32:57 <bcoca> anything else?
+15:33:26 <sivel> not from me
+15:34:13 <bcoca> #endmeeting

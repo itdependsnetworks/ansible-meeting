@@ -1,0 +1,69 @@
+16:03:44 <Qalthos> #startmeeting Ansible Network Working Group
+16:03:44 <zodbot> Meeting started Wed Oct 24 16:03:44 2018 UTC.
+16:03:44 <zodbot> This meeting is logged and archived in a public location.
+16:03:44 <zodbot> The chair is Qalthos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:03:44 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:03:44 <zodbot> The meeting name has been set to 'ansible_network_working_group'
+16:04:16 <Qalthos> #chair dagrawal ganeshrn gundalow justjais nilashishc privateip samccann trishnag
+16:04:16 <zodbot> Current chairs: Qalthos dagrawal ganeshrn gundalow justjais nilashishc privateip samccann trishnag
+16:04:26 <Qalthos> #topic Core Updates
+16:06:05 <Qalthos> #info 2.7.1 should be coming real soon
+16:06:11 <Qalthos> Look for it in all the usual places
+16:07:18 <pffs> bleh I still owe you guys some issues from last week
+16:07:33 <Qalthos> This week the team has been working on things like the following:
+16:07:57 <Qalthos> #info continued work on a network_configurator role for tower
+16:08:24 <Qalthos> #info adding configure_user support to cisco_iosxr provider
+16:08:59 <Qalthos> #info fixed nxos_facts bug in non-structured output
+16:09:23 <Qalthos> #info bugfix for network-engine repeat_for templating
+16:09:56 <Qalthos> #info Working with Cisco for firepower facts/install modules
+16:10:48 <Qalthos> #link https://github.com/ansible/community/labels/network is where you can always find the current agenda for this meeting
+16:11:15 <Qalthos> And there is one item on the agenda
+16:11:57 <Qalthos> #topic Pile of Onyx PRs
+16:13:12 <Qalthos> We (read: probably me) will go through these, though there are quite a few of them
+16:14:05 <lindsayhill_> Looks like there's a lot of them, although they're not too large. Needs rebase on some of them
+16:14:11 <Qalthos> Thanks for your contributions, just have a little patience as we go through them
+16:14:48 <Qalthos> Yeah, and at least one of them has been superceeded
+16:15:38 <Qalthos> I'll try to get anything small in quick and then we can see about any ones with issues
+16:16:15 <lindsayhill_> Sounds like your best plan of attack
+16:17:52 <Qalthos> #topic Open Floor
+16:18:03 <Qalthos> Anyone have anything else they want to bring up this week?
+16:18:41 <lindsayhill_> I have something - I have a PR for a new module, voss_config. I'm getting CI failures due to unrelated upstream things
+16:18:58 <lindsayhill_> Is there any easy way to just re-run failed jobs, or do I need to trigger all CI checks again?
+16:19:11 <lindsayhill_> (PR is https://github.com/ansible/ansible/pull/47533)
+16:20:52 <Qalthos> lindsayhill_: I don't think so. Because devel moves pretty quickly, we prefer to have a full run before a merge anyway, though a lot of things in shippable shouldn't have any interaction with network PRs
+16:21:28 <lindsayhill_> At least I'm not missing an obvious "click here to re-run failed CI jobs" button.
+16:22:10 <lindsayhill_> I want to tweak some of the docs wording in my PR, so I'll do that today, and fingers crossed the upstream CI issues don't come back
+16:23:06 <lindsayhill_> And FWIW, I deal with similar things with some other projects I work on. Very frustrating when failure is upstream, not due to changes
+16:24:14 <Qalthos> lindsayhill_: +1 I know the intermittent issues can be frustrating, though in my experience they've gotten much better in the past year or two
+16:24:52 <Qalthos> Hopefully we can keep getting them better
+16:25:25 <lindsayhill_> Liberal use of `retry` and `sleep` :D
+16:25:45 <lindsayhill_> It's all good - hopefully will be sorted soon, and PR will be ready for review
+16:26:58 <Anil_Lenovo> Qalthos: I have one request, I would like to backward integrate the PRs 46623 and 46949 to 2.7.1
+16:27:51 <Qalthos> Anil_Lenovo: AFAIK it's too late for 2.7.1, but we can look at them for the next 2.7 release
+16:28:06 <pffs> I vaguely recall a while back someone said that Fortinet was planning on contributing more modules as the current ones are a bit...lacking. Do you guys know if they're still planning on doing so?
+16:28:37 <Anil_Lenovo> Qathos :  Thats also fine. When will be 2.7.2 likely happen ? I will remind u by that that time
+16:29:56 <Qalthos> Anil_Lenovo: Best bet is to just open a backport PR and let the release manager merge it in when they're ready
+16:30:27 <Anil_Lenovo> Sure, I will doi that too
+16:30:27 <Qalthos> I really don't have any special power for backports (:
+16:30:54 <Anil_Lenovo> Thats Ok. I will raise a PR
+16:31:29 <gundalow> lindsayhill_: You only have a rerun button on Shippable if you have commit. Work around is close/reopen PR
+16:31:30 <Qalthos> pffs: I've seen lots of Fortinet PRs come in over the past few weeks, though I don't know the current status of them
+16:31:47 <gundalow> There is a known issue with one of the MySQL tests on py3
+16:32:27 <lindsayhill_> gundalow: makes sense, and sounds similar to CircleCI which I mostly use
+16:33:15 <pffs> Qalthos: good to know. It's probably our biggest vendor we support without any decent ansible integration right now
+16:34:27 * gundalow -> afk
+16:37:46 <Qalthos> Anyone else?
+16:39:55 <lindsayhill_> Only other question that springs to mind is: any idea on when change freeze for 2.8 will kick in?
+16:40:06 <lindsayhill_> I know it's a bit far out yet to know with certainty
+16:40:58 <Qalthos> That should show up on https://docs.ansible.com/ansible/devel/roadmap/ROADMAP_2_8.html when it's worked out
+16:42:18 <Qalthos> Which should be soon
+16:44:04 <Qalthos> As to when it will be, at a wild guess, probably not before January, given how December goes
+16:44:20 <pffs> glancing through the issues I have open, pretty sure https://github.com/ansible/ansible/issues/38067 can be closed now, right?
+16:44:27 <pffs> That was the locking issue when 2.5.0 came out
+16:45:36 <Qalthos> If that's fixed for you, I'm happy to close it
+16:46:20 <lindsayhill_> Qalthos: thanks - just trying to figure out what I should aim to get in 2.8, what will be 2.9
+16:49:19 <pffs> Qalthos: yeah, I think that specific issue got fixed, I'm still going to open an issue on general speed differences. Going to run a play that just does ios_facts against ~2000 devices locally and via bastion just for the time difference
+16:50:07 <Qalthos> pffs: +1 Having that should help a lot for tracking those issues
+16:57:23 <Qalthos> Alright, thanks everyone for coming
+16:57:52 <Anil_Lenovo> Thank You !
+16:58:00 <Qalthos> #endmeeting

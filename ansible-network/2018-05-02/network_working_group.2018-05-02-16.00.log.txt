@@ -1,0 +1,38 @@
+16:00:22 <Qalthos> #startmeeting Network Working Group
+16:00:22 <zodbot> Meeting started Wed May  2 16:00:22 2018 UTC.  The chair is Qalthos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:00:22 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:00:22 <zodbot> The meeting name has been set to 'network_working_group'
+16:00:33 <Qalthos> #chair ganeshrn gundalow privateip rcarrillocruz trishnag
+16:00:33 <zodbot> Current chairs: Qalthos ganeshrn gundalow privateip rcarrillocruz trishnag
+16:00:42 <Qalthos> #link https://github.com/ansible/community/issues?q=is%3Aopen+is%3Aissue+label%3Anetwork agenda as always
+16:01:13 <trishnag> o/
+16:02:01 <Qalthos> #topic Core Updates
+16:02:18 <Qalthos> Anyone on the team have updates on what they're working on?
+16:02:23 <Qalthos> #chair funzo
+16:02:23 <zodbot> Current chairs: Qalthos funzo ganeshrn gundalow privateip rcarrillocruz trishnag
+16:03:55 <Qalthos> For myself, the api connection work is continuing and supports simple commands to eos/nxos devices
+16:04:12 <Qalthos> Working on porting all the integration tests top use the new connection
+16:04:25 <rcarrillocruz> being working on bugfixes for 2.6 and the cloud-network-interconnect role, should have a basic working version by next week
+16:04:51 <rcarrillocruz> also took a stab at refactoring persistent connections to use config manager, instead of pulling vars from playcontext
+16:05:30 <Qalthos> trishnag: ganeshrn anything from you?
+16:05:33 <ganeshrn> working on cliconf plugin refactor (i/nx/jun/vy/e)os to support network_config and netowrk_command modules
+16:07:08 <trishnag> working on nxos enable mode - PR #39355, network_config module and network-engine.
+16:07:45 <Qalthos> Right then, agenda seems to be for a bunch of nios PRs, will see if those can get followed up on
+16:07:58 <Qalthos> #topic Open Floor
+16:08:48 <Qalthos> Anyone have anything they want to bring up?
+16:09:26 <smolz> ios_logging
+16:09:54 <smolz> getting an error when running about a KeyError: 'network_os_version'
+16:10:35 <Qalthos> Do you have an issue open for that?
+16:11:00 <smolz> just found it this morning, working on it
+16:12:34 <Qalthos> Right. If you could include the output of 'show version' when you do, that might help identify why it isn't getting picked up by the cliconf plugin
+16:13:36 <smolz> I am using several other ios_xxx modules and they are all fine.  It is just the ios_logging one that isnt
+16:14:51 <Qalthos> Well ios_logging does use the value of network_os_version to determine which commands to run, other modules may not need that information
+16:15:51 <smolz> and it gets that from the device it is connecting to, or the value of ansible_network_os?
+16:16:48 <Qalthos> The value is determined from reading the response to 'show version', hence why including that might help reveal what's going on
+16:16:57 <smolz> gotcha, will do
+16:17:39 <Qalthos> Right then, anyone else?
+16:20:27 <smolz> when do you think 2.5.3 will hit?
+16:24:50 <Qalthos> I'm not exactly sure, but the stated release schedule indicates mid-May
+16:28:26 <Qalthos> Unless anyone else has anything to bring up, I'll close the meeting in a few minutes
+16:31:33 <Qalthos> Thanks for coming
+16:31:39 <Qalthos> #endmeeting

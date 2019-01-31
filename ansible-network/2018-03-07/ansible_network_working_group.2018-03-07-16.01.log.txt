@@ -1,0 +1,132 @@
+16:01:37 <gundalow> #startmeeting Ansible Network Working Group
+16:01:37 <zodbot> Meeting started Wed Mar  7 16:01:37 2018 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:01:37 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:01:37 <zodbot> The meeting name has been set to 'ansible_network_working_group'
+16:02:27 <gundalow> #chair funzo
+16:02:27 <zodbot> Current chairs: funzo gundalow
+16:02:47 <funzo> o/
+16:02:57 <gundalow> #info Agenda as always: https://github.com/ansible/community/labels/network
+16:03:01 <gundalow> #chair gundalow_
+16:03:01 <zodbot> Current chairs: funzo gundalow gundalow_
+16:03:15 <gundalow> (preparing incase my internet drops out again)
+16:03:20 * mattclay waves
+16:03:28 <privateip_> hiya
+16:03:42 * Qalthos 🌊🌊
+16:03:46 <caphrim007> o/
+16:04:04 <gundalow> #chair mattclay andriusb caphrim007 privateip_ Qalthos
+16:04:04 <zodbot> Current chairs: Qalthos andriusb caphrim007 funzo gundalow gundalow_ mattclay privateip_
+16:04:11 * ganeshrn waves
+16:04:16 <gundalow> #chair ganeshrn
+16:04:16 <zodbot> Current chairs: Qalthos andriusb caphrim007 funzo ganeshrn gundalow gundalow_ mattclay privateip_
+16:05:09 * gundalow reviews the agenda and ~~strikethrough~~ done items while waiting for others to join
+16:06:33 <gundalow> I don't see grastogi23
+16:07:19 <grastogi> I am here
+16:07:35 <grastogi> ok, my id is grastogi instead of grastogi23
+16:07:45 <gundalow> ah, that's what confused me, applogies
+16:07:55 <gundalow> #topic Discuss use of VCR for acceptance test
+16:08:09 <gundalow> #info https://pypi.python.org/pypi/vcrpy https://github.com/ansible/ansible/pull/36468
+16:08:15 <gundalow> #chair thaller grastogi
+16:08:15 <zodbot> Current chairs: Qalthos andriusb caphrim007 funzo ganeshrn grastogi gundalow gundalow_ mattclay privateip_ thaller
+16:08:44 <grastogi> is there a way to do webshare or I can host one to show how it runs... pl. suggest best way to discuss the topic
+16:09:23 <mattclay> As I commented on the PR, I don't see the benefit of using VCR for these tests over an integration test.
+16:09:36 <gundalow> #chair privateip
+16:09:36 <zodbot> Current chairs: Qalthos andriusb caphrim007 funzo ganeshrn grastogi gundalow gundalow_ mattclay privateip privateip_ thaller
+16:11:26 <gundalow> grastogi: What was your idea for a more realistic scenario?
+16:11:28 <grastogi> VCR based tests allow fast integration test without requiring actual API endpoint to be live when ansible tests run.
+16:12:12 <grastogi> They also test the module logic and can be used for testing things like check_mode, changed, etc. beyond just checking the arguments
+16:12:22 <mattclay> grastogi: It's only an integration test when the VCR cassette is being recorded. When it's played back during a unit test run it's not testing anything that wasn't already tested when the recording was made.
+16:12:28 <grastogi> I have updated the test show more examples of tests that can be added here
+16:12:44 <grastogi> yes, true
+16:13:07 <grastogi> however, in this particular case you didn't need to have actual Avi Controller to run the tests
+16:13:38 <grastogi> let us say we changed something in the avi_ansible_api then without even running actual test vcr tests can flag errors
+16:13:58 <grastogi> that is a huge benenfit as compared to you always need to have a live end point to run tests
+16:14:02 <mattclay> Why isn't that part of the avi_ansible_api tests though?
+16:14:07 <grastogi> it is
+16:14:13 <grastogi> but we also want to make it part of ansible
+16:14:37 <grastogi> it is saying everytime ansible tests run you need to have Avi Controller endpoint setup
+16:14:47 <grastogi> how is that better than not having one
+16:14:49 <mattclay> What is the added benefit of testing it in Ansible? Nearly any change to the Ansible code will invalidate the VCR cassettes, requiring them to be recorded again.
+16:14:59 <grastogi> no that is not true
+16:15:07 <mattclay> Can you provide an example?
+16:15:12 <grastogi> VCR only records avi API
+16:15:30 <grastogi> not what happens in the python code which implements stuff like object compare, check mode, etc
+16:15:48 <grastogi> you need to record VCR only when API changes
+16:15:49 <mattclay> Unless I missed something, almost none of that code resides in Ansible.
+16:17:39 <mattclay> Nearly all the AVI modules have no logic of their own, they just call into the avi module_utils, which itself has nearly no logic. Almost everything is in the AVI SDK.
+16:17:50 <gundalow> Yup, and this is the main point of discussion here
+16:18:22 <gundalow> That as fair as I'm aware all the AVI code in GH/ansible/ansible is just very thing wrappers
+16:18:28 <grastogi> We bootstrapped the code such that we could update avi ansible integration without ansible update.
+16:18:29 <gundalow> #chair newswangerd Anil_
+16:18:29 <zodbot> Current chairs: Anil_ Qalthos andriusb caphrim007 funzo ganeshrn grastogi gundalow gundalow_ mattclay newswangerd privateip privateip_ thaller
+16:18:51 <grastogi> most of the avi customers are stuck in ansible 2.1 or 2.2. if the code resides only in ansible then there was no way to update them
+16:18:57 <mattclay> So I'm wondering what kind of changes could be made to those wrappers that would require testing that wouldn't invalidate the VCR recordings.
+16:19:07 <grastogi> so we have logic in ansible_utils which is provided via avisdk
+16:19:55 <grastogi> the changes in ansible_utils https://github.com/avinetworks/sdk/blob/master/python/avi/sdk/utils/ansible_utils.py
+16:20:00 <grastogi> does not invalidate vcr cassets
+16:20:06 <grastogi> cassesstes
+16:21:11 <grastogi> In course of last one year we have had to fix several bugs / enhancements that would not have invalidated VCR tests if they were there
+16:21:43 <mattclay> The code you referenced isn't in Ansible though, it's in the SDK.
+16:21:49 <grastogi> I see the argument as if avi is already doing tests on these modules elsewhere then no need to add it to ansible
+16:21:56 <grastogi> is that a fair characterization?
+16:22:37 <grastogi> so, avi does not need to provide any acceptance test as modules are light weight?
+16:23:31 <mattclay> I was looking at this specifically as being a good (or not) use case for VCR for Ansible unit tests in general.
+16:24:54 <grastogi> I think it is a good use case just because it removes dependence on live external API endpoints. if we take discussion beyond Avi modules (or even for some avi modules) I would use this capability rather than build mocks in unit tests
+16:25:01 <mattclay> For Ansible at least, the use of VCR doesn't give us much, if anything, over just running the tests against an actual controller. I can see how it would be useful for testing the SDK though -- but that's not part of Ansible. So for testing the Ansible modules it would be more appropriate to write integration tests using playbooks and run those against a real controller.
+16:25:46 <gundalow> grastogi: Maybe once we get Zuul up and running that's how we test the ACI modules
+16:26:09 <grastogi> Sure, we already run such tests internally.
+16:26:54 <rcarrillocruz> fwiw, we at openstack used a similar framework
+16:26:56 <rcarrillocruz> called betamax
+16:26:57 <gundalow> having not see seen any bugs or bugfixes against the ACI modules it's difficult for me to understand what testing would add
+16:26:59 <grastogi> but Avi Controller is a big dependency like ACI and quite heavy weight. we can publish those tests. In our own code we will still use VCR
+16:27:02 <rcarrillocruz> exactly to test
+16:27:03 <gundalow> rcarrillocruz: haah, nice
+16:27:04 <grastogi> as it simply speeds up tests
+16:27:22 <rcarrillocruz> 'oh, we want to do integration test against cloud FOO, but we can't have that in every job without paying money'
+16:27:30 <rcarrillocruz> it def. has it use cases
+16:27:37 <grastogi> instead of just doing integration I can run those tests in dev unit tests as well. so even when we have access to real controller vcr is preferred
+16:28:03 <grastogi> aggree with @rcarrillocruz
+16:29:51 <rcarrillocruz> i think for this particular makes sense, long term, i agree with gundalow , i rather work with Avi/$vendor and put 3rd party CI to do integration testing against real things vendor side
+16:29:56 <mattclay> If the module and module_utils logic resided within Ansible then VCR would be more appropriate for testing. In this case though it seems we would just be repeating the same testing done on the SDK, which wouldn't add any value.
+16:29:58 <rcarrillocruz> my 2 cents
+16:35:50 <gundalow> grastogi: Have their been any bug fixes to the Ansible modules?
+16:36:05 <grastogi> that would suggest that there is value in the test and using VCR. Your main objection is that the code it tests is not in ansible. If that is true, we will keep these tests out for the moment before we bring rest of the code into ansible
+16:36:09 <grastogi> yes
+16:36:43 <grastogi> you can see the history on ansible_utils.py to see those bugfixes. but lately they have been very stable and we are done with most of features planned
+16:39:03 <gundalow> I ask as I don't see anything in `label:avi label:bug` that would be caught by tests
+16:40:19 <grastogi> they were reported directly in Avi... not as part of core ansible.
+16:40:40 <gundalow> grastogi: OK, so where were the fixes applied?
+16:41:11 <grastogi> in ansible_utils.py
+16:41:27 <grastogi> https://github.com/avinetworks/sdk/blob/master/python/avi/sdk/utils/ansible_utils.py
+16:42:02 <grastogi> our customers would simply update avisdk to new version to get the fix
+16:42:06 <gundalow> ah, OK
+16:42:22 <gundalow> So I think this is best suited by Avi testing agains your own appliances
+16:43:46 <grastogi> yes, those issues entirely in how data is passed to modules and what happens as part of avi ansible module.
+16:44:16 <gundalow> #chair
+16:44:16 <zodbot> Current chairs: Anil_ Qalthos andriusb caphrim007 funzo ganeshrn grastogi gundalow gundalow_ mattclay newswangerd privateip privateip_ thaller
+16:44:21 <gundalow> Anyone got anything else
+16:44:29 <gundalow> I realise we've spent a while discussing this
+16:44:51 <gundalow> Which is useful, just wanted to make sure didn't block anyone else from raising topics
+16:48:48 <gundalow> grastogi: How would you like to progress?
+16:51:55 <grastogi> I believe decision is with the group. We are ok with either way.
+16:53:16 <grastogi> we are internally using VCR already as it allows us to use integration tests even in unit tests.
+16:53:26 <gundalow> So I guess lets stick with what we currently have and internally you test against `devel`, `stable-2.5` and `stable-2.4` (I believe your modules are in 2.4 as well)
+16:53:40 <gundalow> Once we have Zuul in place we can revisit this
+16:53:43 <grastogi> sure
+16:54:10 <gundalow> #agreed So I guess lets stick with what we currently have and internally you test against `devel`, `stable-2.5` and `stable-2.4` (I believe your modules are in 2.4 as well)
+16:54:17 <gundalow> #agreed Once we have Zuul in place we can revisit this
+16:54:22 <gundalow> #topic Core update
+16:54:39 <gundalow> #info 2.5.0RC2 should be tomorrow (Thursday 8th Marchh 2018)
+16:55:04 <gundalow> #info  https://github.com/ansible/ansible/projects/20 tracks remaining work, shout if you think anything else needs doing
+16:55:14 <gundalow> #topic Open Floor
+16:55:30 <gundalow> Anil_ Qalthos andriusb caphrim007 funzo ganeshrn grastogi gundalow gundalow_ mattclay newswangerd privateip privateip_ thaller Anyone got anything else?
+16:55:49 <jmcgill298> @Qalthos I was responding to #33291 when you closed it Monday
+16:56:43 <jmcgill298> That code seems to be missing a space before the | in the show command and errors out
+17:02:55 <gundalow> jmcgill298: I'll make sure he sees that
+17:02:59 <gundalow> Anyone got anything else?
+17:03:07 <jmcgill298> thanks @gundalow
+17:04:31 <Qalthos> jmcgill298: There was another issue with config that also solved that
+17:05:26 <Qalthos> jmcgill298: the string appended to is now 'show running-config ' with trailing space
+17:07:12 <jmcgill298> ok
+17:09:37 <gundalow> Cool
+17:09:41 <gundalow> Thank you all for your time
+17:09:45 <gundalow> #endmeeting

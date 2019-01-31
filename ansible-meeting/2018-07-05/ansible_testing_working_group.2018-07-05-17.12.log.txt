@@ -1,0 +1,35 @@
+17:12:47 <gundalow> #startmeeting Ansible Testing Working Group
+17:12:47 <zodbot> Meeting started Thu Jul  5 17:12:47 2018 UTC.
+17:12:47 <zodbot> This meeting is logged and archived in a public location.
+17:12:47 <zodbot> The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+17:12:47 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+17:12:47 <zodbot> The meeting name has been set to 'ansible_testing_working_group'
+17:12:54 <gundalow> #chair Pilou farhan7500
+17:12:54 <zodbot> Current chairs: Pilou farhan7500 gundalow
+17:13:16 <gundalow> #topic HPE StoreServ 3PAR device #39656
+17:13:27 <gundalow> #info https://github.com/ansible/ansible/pull/39656
+17:13:48 <gundalow> farhan7500: Could you mock the interface?
+17:14:37 <farhan7500> Will the static responsed from the API be good?
+17:14:38 <gundalow> I see you have unit tests that are mocking, what's missing?
+17:14:39 <Pilou> Could Zuul be used ? Like the OpenStack team does (https://github.com/ansible/ansible/pull/20974#issuecomment-361780552) ?
+17:15:04 <gundalow> Pilou: In the future possibly (I'm currently working on adding Zuul for networking)
+17:16:38 <farhan7500> We can add the mocked responses.
+17:17:10 <farhan7500> Should the integration tests be part of the same PR, or can those be done seperately
+17:17:43 <farhan7500> We plan to have 11 modules in total, this is just one of them. So mocking the entire API will be a bigger effort
+17:18:02 <Pilou> mocked responses imply unit tests, not integration tests, isn'it ?
+17:22:33 <farhan7500> Yes, those are unit tests. We already have those and can add to them if needed.
+17:23:17 <farhan7500> In that case, will the integration tests be required to get the PR merged after reviews are approved
+17:23:18 <farhan7500> ?
+17:23:21 <gundalow> worth thinking about what is tested where
+17:23:45 <gundalow> So I'm assuming in house you have good testing of the API that Ansible is using
+17:25:39 <farhan7500> Yes, our testing team have written extensive integration tests using Molecule
+17:25:49 <gundalow> Excellent :)
+17:26:05 <gundalow> So unit test with mocked API should be fine to cover the last bit
+17:26:41 <farhan7500> Okay, thanks. Should we provide any logs/results from the integration tests from our end?
+17:29:47 <gundalow> farhan7500: If you'd like, though we trust you, also if there are issues you are the ones that are going to be getting the issues :)
+17:30:05 <gundalow> Has BOTMETA.yml been updated?
+17:31:01 <farhan7500> Not yet, Will update that
+17:38:34 <Pilou> gundalow: please, could you append all commits from #41779 to #39857 ?
+17:42:45 <gundalow> Pilou: sorry, not following you, 41779 seems to be WIP PR
+17:51:36 <gundalow> Pilou: oh, you can create a PR that contains both, or add 39857 to your PR
+17:54:14 <gundalow> #endmeeting

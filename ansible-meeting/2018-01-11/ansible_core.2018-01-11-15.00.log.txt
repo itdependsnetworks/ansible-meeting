@@ -1,0 +1,350 @@
+15:00:05 <thaumos> #startmeeting ansible core
+15:00:05 <zodbot> Meeting started Thu Jan 11 15:00:05 2018 UTC.  The chair is thaumos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:00:05 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:00:05 <zodbot> The meeting name has been set to 'ansible_core'
+15:01:14 <abadger1999> Olá
+15:01:20 * gundalow waves
+15:01:22 <thaumos> #chair abadger1999
+15:01:22 <zodbot> Current chairs: abadger1999 thaumos
+15:01:28 <thaumos> #chair gundalow
+15:01:28 <andol> hello
+15:01:28 <zodbot> Current chairs: abadger1999 gundalow thaumos
+15:01:30 <thaumos> hello
+15:03:06 <sivel> hello
+15:03:07 <rcarrillocruz> o/
+15:03:17 <thaumos> #chair sivel rcarrillocruz
+15:03:18 <zodbot> Current chairs: abadger1999 gundalow rcarrillocruz sivel thaumos
+15:03:22 <thaumos> good morning
+15:03:40 <jtanner> morning
+15:03:47 <thaumos> #chair jtanner
+15:03:47 <zodbot> Current chairs: abadger1999 gundalow jtanner rcarrillocruz sivel thaumos
+15:03:51 <tdtrask> o/
+15:04:00 <thaumos> ok let's go
+15:04:05 <jtanner> fyi, core team has internal meeting to watch while this one goes on
+15:04:19 <thaumos> #topic filesystem module refactor merge request
+15:04:22 * mikedlr waves
+15:04:24 <thaumos> thanks for the heads up @jtanner
+15:04:32 <maxamillion> .hello2
+15:04:33 <zodbot> maxamillion: maxamillion 'Adam Miller' <maxamillion@gmail.com>
+15:04:36 <thaumos> #chair maxamillion
+15:04:36 <zodbot> Current chairs: abadger1999 gundalow jtanner maxamillion rcarrillocruz sivel thaumos
+15:04:58 <thaumos> #link https://github.com/ansible/ansible/pull/25519
+15:05:13 <thaumos> @gundalow I believe you asked people to review it again about a week ago.
+15:05:24 <gundalow> Correct
+15:05:31 <thaumos> seems like two people did, do we feel good enough to merge it now, or do you want someone else to pull that trigger?
+15:05:50 * gundalow looks
+15:07:46 <dag> o/
+15:07:51 <gundalow> thaumos: not sure
+15:08:09 <thaumos> okay, who should we wait on then to look at it? bcoca?
+15:08:14 <gundalow> Think so
+15:08:29 <gundalow> #action bcoca to do final review & merge on https://github.com/ansible/ansible/pull/25519
+15:08:36 <thaumos> thank you :)
+15:08:45 <thaumos> moving on
+15:09:00 <abadger1999> if we wait for bcoca we'll be waiting quite a while
+15:09:21 <abadger1999> he's on vacation and then will likely have a ton of catch up to do.
+15:09:29 <gundalow> abadger1999: fair point
+15:10:40 <thaumos> should we just merge it.  it is in preview status
+15:11:49 <gundalow> thaumos: yup, bcocas comments were docs only
+15:11:53 <thaumos> k
+15:11:54 <gundalow> abadger1999: think its OK to merge?
+15:12:28 <abadger1999> Yeah, I am reading it... supported_by comunity and preview...
+15:12:40 <gundalow> thaumos: ok, we can move on
+15:12:42 <abadger1999> So I mostly feel good about merging
+15:12:55 <dag> bcoca only had minor doc and nitpicking things
+15:13:04 <abadger1999> Pilou: is generally around and responsive to fix bugs.
+15:13:42 <thaumos> #topic Discuss a preferred method to handle playbook adjacent group_vars directories
+15:13:54 <gundalow> maxamillion:
+15:14:00 <thaumos> #link https://github.com/ansible/ansible/issues/33177
+15:14:19 <gundalow> #info In Ansible 2.3, it appears that the function _get_hostgroup_vars from the Inventory class handled the scenario of a playbook that included another playbook and kept the path of the original playbook in scope. However, in 2.4 with the transition to inventory plugins, the basedirs for the playbook are determined by the DataLoader which doesn't appear to have any knowledge of the original playbook that did the include/import. I would lik
+15:14:19 <maxamillion> gundalow: ?
+15:14:21 <maxamillion> oh right
+15:14:58 <maxamillion> yeah, so basically the question is .... "was this a bug that we 'fixed'?" or is this functionality we want to move into the future?
+15:15:15 <maxamillion> if it's something we want to support moving forward into the future, how do we want to fix it?
+15:15:43 <maxamillion> basically we'd need some book keeping for playbooks or playbooks need to be able to have parents
+15:16:05 <sivel> pre 2.4, it was only the initial playbook, and it was handled via Inventory
+15:16:14 <abadger1999> github having issues today :-/
+15:16:14 <maxamillion> I don't know the answer to this, but I think the book keeping would be easier but I'll admit I don't know the code well enough to know if I'm missing an implementation detail or not
+15:16:37 <maxamillion> I'd be interested in abadger1999, jimi|ansible, and bcoca's opinions on this
+15:17:31 * Pilou waves
+15:17:48 * misc waves too
+15:17:53 <abadger1999> Pilou: Going to merge your filesystem PR.
+15:18:02 <abadger1999> #chair Pilou misc
+15:18:02 <zodbot> Current chairs: Pilou abadger1999 gundalow jtanner maxamillion misc rcarrillocruz sivel thaumos
+15:18:13 <Pilou> thanks !
+15:19:17 <abadger1999> @jimi|ansible: https://github.com/ansible/ansible/issues/33177  I think this is a question for you (Is the behaviour change a bugfix or a bug?)
+15:19:31 * jimi|ansible looks
+15:19:37 <misc> mhh github block for me :/
+15:19:42 <misc> (I see the unicorn)
+15:19:43 <jimi|ansible> and i got an angry unicorn for looking...
+15:19:48 <jimi|ansible> ruh roh
+15:19:49 <abadger1999> Yeah, I had to hit refresh a couple times
+15:20:15 <dag> GitHub status page is saying everything A-Ok...
+15:20:21 <jimi|ansible> yep
+15:21:05 <abadger1999> 
+15:21:07 <abadger1999> 07:20 PST
+15:21:08 <abadger1999> We are investigating reports of service unavailability.
+15:21:10 <abadger1999> Just added
+15:21:35 <jimi|ansible> abadger1999: was that by chance an issue regarding includes and check_mode?
+15:21:41 <abadger1999> when including playbook, group_vars of original playbook are ignored
+15:21:49 * abadger1999 pastes 3 line
+15:21:51 <abadger1999> When including a playbook from different directory, group_vars (and possibly others) for the original playbook (which includes the other playbook) are ignored. This worked in ansible 2.3 and below, it doesn't work in ansible 2.4. The behaviour is the same with include and import_playbook.
+15:21:52 <jimi|ansible> oh that one
+15:22:17 <sivel> jimi|ansible: in pre 2.4, it was handled by Inventory via set_playbook_basedir (iirc), and only ever set to the parent
+15:22:25 <jimi|ansible> to me, that's working as expected, group_vars relative to a playbook dir are not going to be found when running playbooks out of other dirs
+15:22:25 <sivel> the 2.4 inventory refactor did not bring that feature along
+15:22:41 <sivel> only ever set to the initial playbook*
+15:23:13 <sivel> jimi|ansible: I can see it both ways. it sounds legit, but seems like pre 2.4 had that specific feature
+15:23:28 <jimi|ansible> it was working by accident
+15:23:43 <maxamillion> yeah, I'm on the fence about it because I also see how some people might have seen that as a feature
+15:24:04 <misc> well, if that's supposed to change, it should be communicated at least
+15:24:07 <sivel> reading the code, from pre 2.4 I agree that I think we failed to set a new playbook dir when it changed
+15:24:16 <maxamillion> but if that was effectively a bug that we fixed, then I'm all in ... so long as we document the intended behavior
+15:24:26 <maxamillion> misc: +1
+15:24:26 <sivel> so it was a bug before, but likely a really long standing bug that could be considered a feature
+15:24:29 <misc> (I do have a similar bug that did broke silently a few playbooks)
+15:24:49 <maxamillion> sivel: right
+15:24:50 <abadger1999> In the past we've felt free to say that things that people thought were features but aren't could be changed... But we might want to change that.
+15:25:48 <abadger1999> <nod>  Should go in porting guide if it's intentional
+15:28:06 <abadger1999> jimi|ansible: Like I say, I think the decision on this is yours.. only you and sivel (and bcoca who's on vacation) probably have a broad enough view to decide on this one.
+15:28:25 <maxamillion> I'm open to either option, I'd probably vote +0 to either one
+15:29:04 <jimi|ansible> it's not going to be a fix that's in soon, maybe if we do it it'd be in 2.5
+15:29:14 <jimi|ansible> if we fix it at all
+15:29:45 <sivel> I'm going to say -1 on fixing, but we should document the change
+15:30:08 <jimi|ansible> that's how i lean
+15:30:08 <jtanner> who killed github?
+15:30:18 <sivel> We are trying to move to a path of least surprise, and that honestly feels surprising
+15:30:30 <sivel> if you step back and look at it
+15:30:47 <sivel> only the first playbook is treated special in that case
+15:30:58 <sivel> and we considered the first playbook to effectively be part of inventory
+15:31:00 <maxamillion> sivel: jimi|ansible: if y'all are in agreement, I think that's what we should do ... no one else seems to have strong feelings about it, and I didn't know the right answer so wanted to ask the group
+15:31:02 <abadger1999> Cool.  So someone want to take an action to add it to the porting guide and explain it on the bug report?
+15:31:21 <sivel> I can take that
+15:31:25 <maxamillion> sivel++
+15:31:26 <abadger1999> Thanks sivel
+15:31:30 <thaumos> thanks sivel
+15:31:31 <maxamillion> @sivel++
+15:31:38 <maxamillion> oh right, wrong bot
+15:31:50 <sivel> #action sivel to provide an explanation in the issue, and update the porting guide for 2.4
+15:31:51 <abadger1999> #action sivel to document the playbook dir change in the porting guide and on the bug report
+15:31:54 <abadger1999> heh
+15:31:54 <sivel> :)
+15:32:00 <abadger1999> We're back in sync
+15:32:01 <sivel> I'm still waking up
+15:32:02 <thaumos> #action again as above
+15:32:10 <sivel> took me a while to type that out
+15:32:34 <thaumos> #topic LooseVersion comparison in py3 is subject to exceptions due to comparing int and str. DO weo go with that PR or do something else?
+15:32:47 <thaumos> #link https://github.com/ansible/ansible/pull/34427
+15:32:48 <sivel> hey, this is me
+15:32:52 <thaumos> yep
+15:33:13 <sivel> So, after a bit of discovery, I've come to believe that LooseVersion is "unsafe" on py3
+15:33:22 <abadger1999> sivel: If we feed it the right values, it works, right?
+15:33:23 <sivel> due to more strict type comparisons
+15:33:39 <jimi|ansible> splain please?
+15:33:42 <sivel> abadger1999: yes, it just needs to be well currated, which is sort of contrary to what LooseVersion tries to achieve
+15:33:46 <sivel> basically...
+15:34:03 <sivel> 'v1.1.0' and '2.0.0' can't be compared in py3 with loose version
+15:34:13 <abadger1999> I can't see the PR right now but I remember thinking we should wrap it and convert types before passing in.
+15:34:14 <sivel> or any mixture that doesn't aling integers and strings
+15:34:25 <abadger1999> I think we maybe should fail on that.
+15:34:28 <sivel> abadger1999: unfortuantely, you can't wrap before
+15:34:41 <sivel> as LooseVersion explicitly attempts int conversion
+15:34:42 <abadger1999> pass in '1.1.0' and '2.0.0'
+15:34:47 <abadger1999> 'v1.1.0' is invalid
+15:34:51 <sivel> abadger1999: sure, but it get's more complicated
+15:35:12 <sivel> 1.0.1a and 1.0.1.1 can't compare, and we have very little control over users in galaxy and elsewhere
+15:35:15 <maxamillion> yeah, I can't see it either ... github is having a bad day
+15:35:27 <sivel> we would have to do a lot of normalizing
+15:35:33 <abadger1999> If it's galaxy, then we should not support 1.0.1a
+15:35:56 <abadger1999> gregdek has been saying semantic versioning for galaxy things and I agree.
+15:35:57 <sivel> my "solution" in that issue, is to subclass LooseVersion, and ensure all preceeding non ints are remove, and then cast all the remaining to strings
+15:36:04 <abadger1999> We have control of the standard there.
+15:36:19 <sivel> well, this does extend past galaxy too
+15:36:38 <sivel> the hostname module, fails from this same issue too
+15:36:48 <sivel> there are a lot of places that LooseVersion is used, where this can fail
+15:36:52 <abadger1999> Okay, where is that failing?
+15:36:54 <sivel> such as the version_compare test
+15:37:15 <sivel> users, passing things into version_compare, are likely to not sanitize first
+15:37:38 <sivel> so it's more far reaching than even just a few places
+15:37:42 <gregdek> for the record, the only reason I've been saying semantic versioning is because lots and lots of users have been saying it.
+15:37:44 <sivel> the git module can fail too
+15:38:04 <gregdek> I have no idea how much work that would entail, or where it would leave legacy versioning.
+15:38:05 <sivel> I've found a lot of places where LooseVersion is used that can fail on py3
+15:38:25 <sivel> we can do a lot of fixing throughout the code, or come up with something "safer" for py3
+15:38:31 <abadger1999> it's less work to support semantic versioning
+15:38:44 <sivel> abadger1999: yes, in galaxy, but there are places we have no control over
+15:38:47 <abadger1999> as it is a spec; not random spaghetti
+15:39:01 <abadger1999> (for gregdek)
+15:39:25 <abadger1999> sivel: okay, so first question, I think is "should this fail".
+15:39:35 <abadger1999> For galaxy, I think the answer is yes.
+15:39:50 <sivel> the answer to which question?
+15:39:54 <sivel> should this fail for galaxy?
+15:40:29 <abadger1999> For other places, I'm not sure... we'll have to take a look and then make a decision as to how best to fix those... if there's enough places that deserve a failsafe, then we should have some common code to do that.
+15:40:39 <abadger1999> But I don't think that all things are going to fall in that camp.
+15:40:55 <abadger1999> sivel: For each place that's using LooseVersion, "Should this fail"
+15:41:10 <abadger1999> For versions in galaxy, I think the answer is yes.
+15:41:10 <sivel> abadger1999: ok, so I'll step back and we can handle it on a case by case basis
+15:41:19 <abadger1999> But the other places you mention, I don't know yet.
+15:41:41 <abadger1999> sivel: yeah... eventually I think we'll have enough places where it shouldn't fail that common code makes sense.
+15:41:51 <sivel> I'm not sure how to "fix" it for galaxy though
+15:42:16 <abadger1999> sivel: If it's versions of galaxy roles; fail and point at a version spec.
+15:42:24 <sivel> let it fail in our code? Make galaxy fix it?
+15:42:49 <abadger1999> would be good to get input from chouseknecht about versioning
+15:42:57 <sivel> abadger1999: I can try, the problem is we do [LooseVersion(), LooseVersion(), LooseVersion()].sort()
+15:43:06 <sivel> and I can;t easily tell which is the problem
+15:43:17 <sivel> I just get an exception that str and int can't be compared
+15:43:22 <jimi|ansible> >>> while len(l1.version) and not isinstance(l1.version[0], int):
+15:43:23 <jimi|ansible> ...     l1.version.pop()
+15:43:35 <jimi|ansible> where l1 = LooseVersion('v1.1.0')
+15:43:39 <sivel> jimi|ansible: it could be in any position though
+15:43:53 <sivel> 1.0.1a vs v1.0.1
+15:44:01 <sivel> 1.a.2
+15:44:13 <abadger1999> try:
+15:44:21 <jimi|ansible> >>> l1=LooseVersion('v1.1.0b2')
+15:44:21 <abadger1999> a = [LooseVersion(), LooseVersion(), LooseVersion()].sort()
+15:44:22 <jimi|ansible> >>> l2=LooseVersion('v1.1.0b3')
+15:44:24 <jimi|ansible> >>> l1 > l2
+15:44:25 <jimi|ansible> False
+15:44:28 <abadger1999> except:
+15:44:42 <sivel> I'll play around, just not immediately sure how to handle it, I'm sure I can figure something out
+15:44:56 <abadger1999> display.error('Versions ingalaxy roles must conform to [link o specification]")
+15:45:07 <sivel> Ok, I have action
+15:45:22 <jimi|ansible> ahh nm... damnit
+15:45:35 <jimi|ansible> they have to line up perfectly? who the hell decided this was a good change
+15:45:39 <sivel> #action we will address each LooseVersion failure on it's own for now
+15:45:55 <sivel> #action sivel will talk to chouse about galaxy versions, and documenting a spec
+15:45:59 <jimi|ansible> if l2 = LooseVersion('v1.1.0.0b3'), it fails again
+15:46:21 <abadger1999> jimi|ansible: alphabetical chars are full of meaninglessness.
+15:46:24 <sivel> #action sivel will update galaxy code to catch exception, and error to the user pointing to glaxy version spec
+15:46:31 <abadger1999> look at libjpeg, for instance.
+15:46:33 <jimi|ansible> abadger1999: sure, but at least with LooseVersion before you didn't care
+15:46:42 <sivel> pep440 has specific meaning for some letters, in some positions
+15:46:42 <jimi|ansible> now it throws an error
+15:46:46 <abadger1999> but you could get the wrong answer easier
+15:47:17 <sivel> That was alikins recommendation, use packaging.version for pep440 versioning
+15:47:31 * jimi|ansible starts writing our own version parser
+15:47:34 <sivel> which also includes a LegacyVersion that can handle pretty much anything
+15:47:36 <abadger1999> sivel: I don't think LooseVersion is menat to be pep440 compliant.
+15:47:42 <sivel> abadger1999: it is not
+15:48:03 <sivel> but the LegacyVersion (which is not pep440) is effectively a safer LooseVersion
+15:48:35 <sivel> In any case, we're going to avoid a big sweeping change right now
+15:48:50 <sivel> and handle the known cases individually for now
+15:49:03 <sivel> Unless you want to continue discussing for the future, we can move on
+15:49:07 <jimi|ansible> i mean, it shouldn't be that hard - just split on . or -, and on any transition from int->str or str->int
+15:49:26 <abadger1999> jimi|ansible: but then comparisons fail you.
+15:49:26 <jimi|ansible> (this is why i ended up writing a string parser instead of shlex... got sick of design choices in the stdlib)
+15:49:42 <jimi|ansible> abadger1999: not if they're all str comparisons
+15:49:45 <abadger1999> better to fail up front than when you try to compare them
+15:49:54 <sivel> Ok, github is back
+15:50:01 <sivel> if you want to see my SafeLooseVersion: https://github.com/ansible/ansible/pull/34427/files
+15:51:30 <jimi|ansible> sivel: yeah i agree converting each item to a native str is the way to go
+15:51:40 <jimi|ansible> avoids the str->int comparison error
+15:52:33 <sivel> So it sounds like we are still split here, but I am fine with my actions to not add a safe comparison, and handle it differently
+15:52:58 <sivel> keeping it as a failure condition, but catching the exception for galaxy
+15:53:04 <jimi|ansible> i don't think we're split, your change looks fine, i might have done the stripping of leading chars differently but that works
+15:53:32 <abadger1999> We're split
+15:53:34 <sivel> well, abadger1999 wanted to leave it as a failure condition, as opposed to making that chnage
+15:53:37 <abadger1999> -1 to do this for galaxy
+15:53:50 <abadger1999> For other code I think something like this might be okay.
+15:54:27 <sivel> jimi|ansible: want to rule on this?
+15:54:29 <jimi|ansible> "be tolerant of what you accept but strict about what you emit"
+15:54:30 <abadger1999> Last I heard talking to greg and house, galaxy versions are a thing that we can be opinionated about so we should specify what is valid there.
+15:54:48 <abadger1999> sivel: traditionally we don't have abdfl.
+15:54:50 <jimi|ansible> i do not want an error because of this underlying change
+15:55:03 <abadger1999> jimi|ansible: The change is in how we handle galaxy versions.
+15:55:04 <misc> we could at least get a warning ?
+15:55:11 <abadger1999> We shouldn't even be using LooseVersion.
+15:55:52 <sivel> Honestly, in this case it would be better if galaxy just told us what the latest version was, instead of us figuring it out
+15:55:59 <jimi|ansible> abadger1999: we let the users control their tag names for versions, we have to be tolerant of whatever someone could add there
+15:56:12 <abadger1999> Now after talking to house we might decide we want to allow free-form versions instead of strict specification versions.  In that case, we can revisit doing something like this.
+15:56:26 <sivel> and erroring to the end user, who doesn't own the role doesn't help too much
+15:56:27 <abadger1999> jimi|ansible: but we're talking about rejecting that if it doesn't conform.
+15:56:37 <abadger1999> sivel: Right :-)
+15:56:49 <abadger1999> (on galaxy making a decision)
+15:56:49 <sivel> abadger1999: what about all current versions in galaxy? That could cause a lot of problems
+15:57:00 <jimi|ansible> well that's fine, if galaxy filters it and provides a guarantee, it just never did before
+15:57:14 <abadger1999> sivel: it might.  But if we decide to specify, then we can cross that bridge in a different way.
+15:57:38 <abadger1999> sivel: like, nonconforming versions only suport equality.
+15:57:44 <abadger1999> not less-than greater-than
+15:58:10 <abadger1999> So for galaxy it boils down to whether we're going to press forward with a version spec or not.
+15:58:30 <thaumos> folks, I have to run to another meeting.  Can someone close this out when done?
+15:58:44 <abadger1999> I'll close
+15:58:51 <abadger1999> thaumos: will you still update the ticket?
+15:59:02 <sivel> abadger1999: ok, let me go talk to chouse, to get insight into versioning spec plans
+15:59:03 <thaumos> sure, but not right away :-)
+15:59:08 <abadger1999> Cool.
+15:59:22 <sivel> let's "pause" for a bit on this, and at least find out what the plans are for galaxy
+15:59:36 <abadger1999> #action sivel to talk to chouseknecht about plans for versioning specification of galaxy roles
+16:00:50 <sivel> Ok, it's time, so I suppose let's close it out for today
+16:00:57 <abadger1999> #topic Open floor
+16:01:09 <abadger1999> Is anyone here today that has something that they'd like to bring up?
+16:01:12 <misc> yes
+16:01:16 <abadger1999> (tdtrask are you here for instance?)
+16:01:22 <tdtrask> yes
+16:01:23 <abadger1999> go ahead misc
+16:01:31 <abadger1999> then tdtrask if we can squeeze it in
+16:01:35 <misc> https://github.com/ansible/ansible/issues/34272 since bcoca is in holiday, can I bring attention to that bug ?
+16:01:36 <gundalow> Would be good to get initial thoughts on https://github.com/ansible/proposals/issues/93 Provide standardized way to influence module return values
+16:01:38 <misc> (selfishly)
+16:01:58 <misc> that's related to "bugfix vs feature" discussion :)
+16:02:37 <andol> What about https://github.com/ansible/ansible/pull/31800, present in https://github.com/ansible/community/issues/291 ?
+16:03:11 <abadger1999> jimi|ansible: https://github.com/ansible/ansible/issues/34272  <=== do you agree with bcoca that it's intended?  If so, we should put this into hte porting guide as well.
+16:03:35 * misc would prefer deprecation period to not have to fix a ton of playbook
+16:03:50 <abadger1999> andol: We're out of time for the meeting today.  So that's why I'm trying to squeeze in things from people that are present.
+16:05:14 <abadger1999> #action abadger1999 will have jimi|ansible look into 34272 and then will write up a porting guide entry if it's really a bugfix.
+16:05:34 <abadger1999> tdtrack had this one: https://github.com/ansible/ansible/pull/34419
+16:05:38 * tdtrask wants to discuss https://github.com/ansible/ansible/pull/34419
+16:05:45 <abadger1999> basicaly, apk is a package manager
+16:06:21 <tdtrask> alpine linux apk does not allow you to directly install / remove a package
+16:06:34 <tdtrask> if the package is installed as a dependency of another package, it cannot be removed
+16:06:53 <tdtrask> so, what should happen if we try to remove it?
+16:07:17 <abadger1999> <nod>  It's marked as no longer being required on the system and the cli returns success but the files don't get removed from disk.
+16:07:18 <tdtrask> we can remove it as a top-level package, but it might not actually be uninstalled
+16:08:13 <jimi|ansible> abadger1999: sorry getting kids breakfast...
+16:08:20 <tdtrask> two options: 1) present / absent only cares about top-level packages and ignores dependencies
+16:08:35 <jimi|ansible> ahh ok so yes, name should never have been inherited
+16:08:51 <tdtrask> 2) present makes sure the package is installed as top-level and absent fails if cannot be removed (even as dependency)
+16:09:51 <tdtrask> (either way, current implementation is bad)
+16:09:54 <jimi|ansible> misc: the problem with deprecating that would be in detecting that the name value was inherited
+16:10:23 <jimi|ansible> that would require adding some hooks into _get_parent_attribute which would be _just_ for this one param
+16:10:33 <jimi|ansible> not a fan of doing that unfortunately :/
+16:10:56 <misc> yeah, i can see why the code would be bad, but I guess "not doing the change" is not gonna be accepted too
+16:11:36 <jimi|ansible> didn't we fix that a while back?
+16:12:23 <jimi|ansible> and was this something you were doing for blocks? that's the only time i could see it maybe making some sense to do
+16:12:51 <misc> in my example, i do have role that requires others roles, I use that as some kind of inheritence
+16:13:11 <misc> like, I have a generic role, and preset some variable in meta/main.yml
+16:13:13 <jimi|ansible> ahh bcoca only added that in december... feels so much longer ago than that
+16:13:48 <abadger1999> I'm ducking out for another meeting too... anyone else can close this meeting?  (If not, thaumos will check in)
+16:13:54 <misc> (I have some link on the bug report)
+16:14:17 <gundalow> abadger1999: ack
+16:15:01 <abadger1999> For tdtrask's issue, I can see it either way.  Not sure whether consistency between our modules or conformance to the system tool should take precedence here)
+16:15:18 <dag> I have 2 items on the agenda, but I guess they can wait for Tuesday's meeting
+16:15:29 <tdtrask> well, hopefully some people are now aware of the question, and we can discuss again
+16:15:54 <gundalow> dag: would be good todo the proposal today, at least get initial thoughts on it
+16:16:18 * andol still don't quite understand why his issue was skipped over in turn.
+16:16:20 <dag> sure
+16:16:59 <jimi|ansible> andol: was it on the agenda? or just mentioned above?
+16:17:17 <andol> https://github.com/ansible/community/issues/291#issuecomment-355960628
+16:18:48 <thaumos> I don't think it was deliberately skipped.  We're just over time and squeezing various things in
+16:18:56 <jimi|ansible> andol:  looks like akasurde was commenting on that, what were you wanting to discuss here?
+16:19:09 <gundalow> #topic  cloudflare_dns bugfix ansible/ansible#31800
+16:19:29 <andol> jimi|ansible: Needs someone else's approval to merge, and when bringing that up in #ansible-devel it was suggested that I took it to #ansible-meeting
+16:19:49 <andol> jimi|ansible: Partly related to the module's maintainer potentially being absent.
+16:20:30 <akasurde> jimi|ansible, yes correct
+16:20:59 <akasurde> andol, Would you like to be maintainer for that module ?
+16:21:18 <andol> akasurde: Wouldn't mind.
+16:21:38 <jimi|ansible> who's the maintainer, resmo?
+16:21:52 <akasurde> mgruener
+16:21:57 <jimi|ansible> ahh ok
+16:22:08 <gundalow> I have to ditch now, will be back in 45mins for Testing Working Group
+16:22:13 <jimi|ansible> akasurde: if you're ok with those changes, go ahead and merge it
+16:22:24 <jimi|ansible> beyond the syntax, i'm not clear on the functionality
+16:22:41 <akasurde> jimi|ansible, Cool
+16:23:02 <jimi|ansible> and andol if you do want to take that over, i think you'd want to ping jtanner about it
+16:23:18 <andol> jimi|ansible: Will do, thanks
+16:23:37 <thaumos> #action akasurde to merge PR
+16:23:47 <jimi|ansible> i was just typing the exact same thing thaumos
+16:23:54 * akasurde added rebuild_merge
+16:24:00 <thaumos> #action andol to reach out to jtanner about getting added to botmeta for maintainership of module
+16:24:22 <thaumos> cool, I think we've got enough in for today folks.  We're way over time :-)
+16:24:22 <thaumos> thanks all for attendance! Was a good meeting
+16:24:27 <thaumos> #endmeeting

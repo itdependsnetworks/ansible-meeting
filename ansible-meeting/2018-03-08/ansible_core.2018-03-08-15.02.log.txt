@@ -1,0 +1,77 @@
+15:02:11 <gundalow> #startmeeting Ansible Core
+15:02:11 <zodbot> Meeting started Thu Mar  8 15:02:11 2018 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:02:11 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:02:11 <zodbot> The meeting name has been set to 'ansible_core'
+15:02:18 <gundalow> #chair abadger1999 bcoca
+15:02:18 <zodbot> Current chairs: abadger1999 bcoca gundalow
+15:02:24 <gundalow> #topic Open Floor
+15:03:09 * akasurde waves
+15:03:12 * mrproper waves
+15:03:15 * bcoca hides in corner
+15:03:15 <sivel> .hello2
+15:03:16 <zodbot> sivel: sivel 'Matt Martz' <matt@sivel.net>
+15:03:16 <gundalow> #chair mrproper akasurde
+15:03:16 <zodbot> Current chairs: abadger1999 akasurde bcoca gundalow mrproper
+15:03:39 * Pilou waves
+15:04:21 <sdoran> \o
+15:04:22 <gundalow> #topic mutually_exclusive with option
+15:04:30 <gundalow> #chair sivel sdoran
+15:04:30 <zodbot> Current chairs: abadger1999 akasurde bcoca gundalow mrproper sdoran sivel
+15:04:45 <gundalow> mrproper: Want to outline your requirement here
+15:06:20 <mrproper> I'd like to have a feature within the AnsibleModule class which is a mixture of required_if and mutually_exclusive for parameter evaluation. In my situation, I want to have Ansible evaluate this..."State cannot be absent if org_name or org_id is also specified".
+15:07:02 <bcoca> at that point you just want expressions when a in ('x', 'y') and b != 13
+15:07:07 <bcoca> aka python code?
+15:07:41 <mrproper> Yes. That would accomplish the job. But I'm wondering if it makes sense to have it as a built in feature.
+15:08:05 <bcoca> i prefer to keep it simple, its already a bit bloated imo
+15:08:33 <mrproper> So your recommendation is to built it into my module or module_util instead of adding a feature?
+15:08:35 <bcoca> rember we copy this code for all modules, if most are not going to use it, its just increasing the copy size for no reason
+15:08:52 <bcoca> 'built as feature' would have it in module_utils anyways
+15:10:06 <abadger1999> We've added the ability to specify your own function for type validation.  Maybe we should add a way to register your own checkers for inter-parameter checking
+15:10:59 <abadger1999> Then we can ship the generic checkers in a subdirectory like the additional type validators are.
+15:12:39 <bcoca> and include them on a per module basis? +10
+15:13:11 <abadger1999> yep.
+15:14:26 <bcoca> abadger1999: are you going to do the basic separation in 2.6?
+15:14:52 <abadger1999> bcoca: I think it would get considered a feature.
+15:15:02 <abadger1999> it's definitely not stabilization
+15:15:43 <sivel> I was thinking 2.7 to pick that work up again
+15:16:13 <sivel> despite best efforts I'm positive something will end up breaking for someone
+15:16:14 <bcoca> you are not actually changing the code/function, just refactoring it to avoid the bloated packing
+15:16:21 <bcoca> but i can see it both ways
+15:16:28 <sivel> splitting the files will require refactoring
+15:16:47 <dag> mrproper: my implementation was denied: https://github.com/ansible/ansible/pull/28662
+15:16:53 <bcoca> sivel: change breeds uncertainty
+15:17:13 <sivel> we will have to change functionality slightly to not have access to `module`, and then import back into basic, and re-implement to use the new methods
+15:17:25 <abadger1999> mrproper: So for now, if you want to keep the checker i nthe module you can.  If you want to look at making it more generic, the way types was implemented is here: https://github.com/ansible/ansible/blob/devel/lib/ansible/module_utils/basic.py#L2038
+15:18:25 <sivel> My work thus far: https://github.com/ansible/ansible/compare/devel...sivel:categorization-of-basic
+15:18:46 <mrproper> abadger1999, That's fair, thank you!
+15:18:48 <abadger1999> It's not all applicable, though, because types has a single entry whereas the inter-param validators currently each have a parameter to AnsibleModule
+15:21:33 <dag> mrproper: we are stepping on the same toes lately ;-)
+15:32:00 <sivel> gundalow: looks like we have stalled. Should we close?
+15:32:36 <mrproper> dag, Yeah clearly! Without knowing either.
+15:33:12 * bcoca now suspects both accounts are the same user, using vpn to mask ip
+15:36:46 <dag> bcoca: now there's an idea ;-)
+15:36:58 <dag> I may get sufficient votes in next core meeting :p
+15:37:21 * bcoca checks if 13 aliaes is enough
+15:38:21 <gundalow> Anything else on this?
+15:38:37 <gundalow> #topic Open Floor
+15:39:07 <gundalow> #chair
+15:39:07 <zodbot> Current chairs: abadger1999 akasurde bcoca gundalow mrproper sdoran sivel
+15:39:16 <gundalow> Anyone got anything else?
+15:39:27 <mrproper> I'm set for now. Thanks.
+15:39:30 <gundalow> (I realise most of us are in another meeting at the same time)
+15:39:36 <dag> :-)
+15:39:41 <bcoca> https://github.com/ansible/ansible/pull/36788
+15:39:45 * dag is dedicated to this meeting
+15:39:48 <gundalow> mrproper: Ace, thanks for the discussion. Feel free to speak to us in #ansible-devel any anypoint
+15:40:05 <gundalow> bcoca: discussion/review?
+15:40:22 <bcoca> alloftheabove
+15:40:34 <rvgate> bcoca, that typo tho... *grumbles*
+15:40:37 <bcoca> i have 3 other meetings also at this time ... yet my calendar is mostly blank for the week ...
+15:40:56 <gundalow> #topic actual error reprting on failed galaxy clone #36788
+15:41:02 <gundalow> #link https://github.com/ansible/ansible/pull/36788
+15:41:57 * dag is out
+15:42:20 <gundalow> #info also allow debugging to see stdout/stderr from command. we were not being 'nice' by devnulling all this info.
+15:52:57 <gundalow> OK, guess we are done
+15:53:00 <gundalow> Thanks y'all
+15:53:02 <bcoca> https://github.com/ansible/ansible/issues/37148 < no, this
+15:53:02 <gundalow> #endmeeting

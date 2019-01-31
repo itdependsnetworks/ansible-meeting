@@ -1,0 +1,51 @@
+17:01:33 <mattclay> #startmeeting Ansible Testing Working Group
+17:01:33 <zodbot> Meeting started Thu Apr 19 17:01:33 2018 UTC.  The chair is mattclay. Information about MeetBot at http://wiki.debian.org/MeetBot.
+17:01:33 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+17:01:33 <zodbot> The meeting name has been set to 'ansible_testing_working_group'
+17:01:41 * gundalow waves
+17:01:57 <mattclay> #chair gundalow
+17:01:57 <zodbot> Current chairs: gundalow mattclay
+17:02:04 <mattclay> #info Agenda: https://github.com/ansible/community/issues/248
+17:02:13 <mattclay> There isn't anything on the agenda for today.
+17:02:17 <mattclay> gundalow: Do you have any updates?
+17:03:39 <gundalow> Nothing this week, next week I'll have some details about how we test gh/ansible-network repos using Zuul
+17:05:05 <mattclay> Nothing from me this week.
+17:05:08 <mattclay> #topic Open Floor
+17:05:22 <mattclay> I'll leave things open for a few minutes in case anyone else shows up with something to discuss.
+17:05:23 <gundalow> Pilou: sivel Anything from you?
+17:05:32 <mattclay> #chair Pilou
+17:05:32 <zodbot> Current chairs: Pilou gundalow mattclay
+17:05:43 <sivel> hey, sorry, just sat down, relocated from the cafe
+17:05:48 <mattclay> #chair sivel
+17:05:48 <zodbot> Current chairs: Pilou gundalow mattclay sivel
+17:06:14 <sivel> Other than my realization that we need to start validating the schema of argument_spec in validate-modules, nothing from me
+17:06:37 <sivel> unsure when I'll start on that
+17:06:42 <sivel> maybe at pycon
+17:07:58 <sivel> I've been seeing some odd failures in CI on a recent PR, but I'm re-running to see if it clears up. Primarily some 409 error codes with azure
+17:09:30 <Pilou> gundalow: not today :)
+17:09:40 <mattclay> sivel: If those continue, let me know so I can investigate.
+17:09:47 <sivel> mattclay: will do
+17:11:56 <gundalow> sivel: Out of interest, how were you thinking of validating argument_spec's Python code?
+17:12:20 <sivel> gundalow: we already do with the `--arg-spec` functionality of validate-modules
+17:12:33 <sivel> we compare arg_spec to docs
+17:12:40 <gundalow> ah, of course we do
+17:12:44 <sivel> would just need to add a voluptuous schema to match
+17:13:34 <mattclay> Pilou: Are you working on any more of the import failures?
+17:13:58 <mattclay> The list is quite small now, we're down to 10 files: https://github.com/ansible/ansible/blob/devel/test/sanity/import/skip.txt
+17:15:08 <gundalow> sivel: Cool. I haven't looked at the code that checks the argspec much. Mostly I've worked on voluptuous side
+17:15:54 <gundalow> FYI I'm thinking we will add a DOCUMENTATION.option.deprecated.(removed_in, why)
+17:16:36 <Pilou> not recently, I forgot this list !
+17:17:21 <mattclay> Pilou: You've done an excellent job of cleaning those up so far. I believe most of the files on the list are due to the more strict checking added to the import test after the initial version was implemented.
+17:17:34 <gundalow> Pilou: +1,000
+17:18:50 <mattclay> Yeah, I just checked, all but `lib/ansible/modules/cloud/webfaction/webfaction_site.py` are from the newer import test that runs main().
+17:19:28 <mattclay> That was added to make sure we were catching things that would prevent argspec checking in validate-modules.
+17:21:08 <mattclay> We still have a huge validate-modules ignore list too: https://github.com/ansible/ansible/blob/devel/test/sanity/validate-modules/ignore.txt
+17:21:12 <mattclay> Is anyone working on those?
+17:21:37 <mattclay> I know some of those are (or at least have been) due to issues with docs fragments.
+17:22:11 <gundalow> I've not looked at that list since Feb
+17:22:34 <gundalow> Let me kick of a run locally now to see if there are any simple fixes
+17:23:13 <mattclay> Our pylint list is looking much better: https://github.com/ansible/ansible/blob/devel/test/sanity/pylint/ignore.txt
+17:23:33 <mattclay> The main one left to deal with is ansible-format-automatic-specification, which is easy to fix.
+17:27:46 <mattclay> OK, does anyone have anything else?
+17:30:17 <gundalow> Nothing else from me
+17:34:02 <mattclay> #endmeeting

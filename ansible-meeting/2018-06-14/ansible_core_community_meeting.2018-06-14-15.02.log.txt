@@ -1,0 +1,310 @@
+15:02:04 <bcoca> #startmeeting ansible core community meeting
+15:02:04 <zodbot> Meeting started Thu Jun 14 15:02:04 2018 UTC.
+15:02:04 <zodbot> This meeting is logged and archived in a public location.
+15:02:04 <zodbot> The chair is bcoca. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:02:04 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:02:04 <zodbot> The meeting name has been set to 'ansible_core_community_meeting'
+15:02:10 <bcoca> #chair jtanner
+15:02:10 <zodbot> Current chairs: bcoca jtanner
+15:02:17 <abadger1999> Ol'a
+15:02:25 <bcoca> #chair abadger1999
+15:02:25 <zodbot> Current chairs: abadger1999 bcoca jtanner
+15:02:46 <bcoca> #topic https://github.com/ansible/ansible/pull/39656
+15:02:52 <farhan7500> Hi
+15:03:17 <farhan7500> The review comments for this PR have been addressed. I'm hoping we could merge it
+15:03:18 <jtanner> #chair farhan7500
+15:03:18 <zodbot> Current chairs: abadger1999 bcoca farhan7500 jtanner
+15:03:23 <bcoca> hi, seems dag still has not approved review?
+15:03:50 <eikef> Heya :)
+15:03:56 <bcoca> also you seem to have 'forgein' commits?
+15:04:01 <farhan7500> He suggested the module name change, but as I mentioned in the comment we do not waant the module name to begin with a umber
+15:04:19 * shertel waves
+15:04:24 * akasurde waves
+15:04:43 <farhan7500> That commit was due to incorrect squashing. It was addressed in the later squash
+15:04:55 <bcoca> you seem to have unrelated commits in PR
+15:05:03 <bcoca> ios_logging one from Qalthos for instance
+15:05:14 <bcoca> looks like bad rebase
+15:05:20 <jtanner> the later squash didn't remove them, which is what we would have expected
+15:05:25 <bcoca> #chair akasurde shertel
+15:05:25 <zodbot> Current chairs: abadger1999 akasurde bcoca farhan7500 jtanner shertel
+15:05:32 <bcoca> #chair eikef
+15:05:32 <zodbot> Current chairs: abadger1999 akasurde bcoca eikef farhan7500 jtanner shertel
+15:05:51 <farhan7500> Ummm, the files to be committed does not show the contents of the commit
+15:05:55 <abadger1999> Do we require gplv3+
+15:06:04 <abadger1999> (That module is gpl v3-only)
+15:06:28 <jtanner> odd, i thought sanity checked for gpl
+15:06:49 <bcoca> doesnt gpl3 have text to allow for future compat?
+15:07:00 <jtanner> well, that's a mixed message
+15:07:06 <jtanner> +# You should have received a copy of the GNU General Public License along
+15:07:06 <jtanner> +# with this program. If not, see <https://www.gnu.org/licenses/>
+15:07:15 <jtanner> +#     http://www.apache.org/licenses/LICENSE-2.0
+15:08:01 <abadger1999> That part looks like dual licensing (at your option you may use this under the terms of the gplv3 or the apache-2.0 license)
+15:08:06 <abadger1999> Which would be fine, I think
+15:08:31 <abadger1999> I just don't know if we require gplv3 *or later*  or if gpl v3-only is fine.
+15:08:56 <bcoca> farhan7500: can you rebase and 'clean' the commit history, i dont feel comfortable merging when i see 'stray commits'
+15:09:13 <abadger1999> bcoca: AFAIK, the future compat is opt-in opt-out.
+15:09:19 <bcoca> you can also squash before push to ensure we get exactly what you want
+15:09:37 <bcoca> @abadger1999 we should punt/ask legal
+15:09:37 <farhan7500> Sure will do that
+15:10:32 <bcoca> other than that looks fine, but i've only skimmed, relying on dag's review we should be able to merge
+15:10:35 <ryansb> hey folks (sorry, bouncer issues)
+15:10:49 <bcoca> /kick again ryansb
+15:11:08 <ryansb> oh no
+15:11:14 <abadger1999> farhan7500: Would licensing GPLv3 or later be a problem for you?  (If it is, we can ask legal... but that always takes a while)
+15:11:38 <farhan7500> I'll have to ask HPE legal
+15:11:51 <bcoca> he ... rock+hard place
+15:12:01 <farhan7500> :)
+15:12:24 <jtanner> farhan7500: also curious how you are testing these.
+15:12:34 <jtanner> obviously needs proprietary hardware
+15:12:53 <bcoca> includes unit tests, but no integration
+15:12:59 <thaumos> to have a module included with Ansible pkg the module has to be licensed as GPLv3
+15:13:06 <farhan7500> We have the unit tests, and we have tested it on actual HPE 3PAR hardware. This is one of 11 PRs we intend to get in
+15:13:19 <bcoca> @thaumos the question is gplv3 or gplv3+
+15:13:27 <thaumos> GPLv3
+15:13:30 <thaumos> not +
+15:14:23 <abadger1999> @thaumos Everything else is GPLv3+
+15:14:39 <thaumos> sorry, that's right
+15:15:14 <jtanner> i see the upstream sdk has a simulator: https://github.com/HewlettPackard/hpe3par_python_sdk#running-simulators
+15:15:24 <jtanner> is that useful for integration testing?
+15:15:35 <abadger1999> farhan7500: I guess ask HP legal and if they have a problem with GPLv3+, come back and talk to us again.
+15:15:45 <akasurde> jtanner, flask app :)
+15:16:05 <farhan7500> Sure, will get back on licensing issue
+15:16:09 <abadger1999> Cool.
+15:16:17 <jtanner> yeah, which makes it fit into the existing simulator models we are using
+15:16:34 <farhan7500> I'll also check on the simulator
+15:16:43 <jtanner> so theoretically, we could / should ask for integration tests
+15:17:13 <farhan7500> Okay
+15:17:23 <bcoca> so 1) rebase to remove forgein commits 2) gplv3+ issue 3) integration tests
+15:17:31 <jtanner> farhan7500: i dunno if fair to ask for that with this PR though
+15:18:03 <bcoca> we can take rest offline/on ticket
+15:18:04 <jtanner> here's an example https://github.com/ansible/foreman-test-container
+15:18:09 <bcoca> #topic https://github.com/ansible/ansible/pull/39602
+15:18:17 <bcoca> @backbord ?
+15:18:19 <backbord> Hi. :) I believe that the PR needs reviews. What can I do to further the PR?
+15:18:25 <farhan7500> Thanks
+15:18:36 <jtanner> akasurde: could you guide farhan7500 on what the integration test might look like (in the PR or on irc?)
+15:18:37 <bcoca> lgtm ... specially now that you took my bikeshed ...
+15:18:47 <akasurde> jtanner, sure
+15:19:20 <backbord> cool
+15:19:39 <bcoca> @jimi|ansible @sivel i think you guys should also give this PR a look, its a 'freer' version of free strat
+15:19:42 <jtanner> not sure i understand i
+15:19:43 <jtanner> t
+15:19:55 <jtanner> is it like free, but nicer to cpu?
+15:20:03 <bcoca> no, its 'sticky' on host
+15:20:27 <abadger1999> Hmm..
+15:20:31 <bcoca> linear: all hosts wait for previous hosts to finish task before new task
+15:20:49 <bcoca> free: hosts dont wait for host to finish task, but hosts dont get queued until all hosts attempt task
+15:20:52 <abadger1999> to bikeshed more, though.... streamlined isn't as meaningful as batch
+15:21:11 <sivel> I *just* got back home.  it will be a little while before I can look
+15:21:15 <abadger1999> batch, host_at_a_time, by_host, etc...
+15:21:32 <bcoca> streamline/batch/bikeshed: host continues running tasks w/o waiting/dealing with other hosts
+15:21:39 <abadger1999> streamlined is much like "faster"  or "better"
+15:21:51 <abadger1999> why wouldn't I always want to ru nthe "faster" strategy?
+15:21:59 <jtanner> backbord: what scenario prompted you to write this?
+15:22:34 <bcoca> its basically what a lot of people THINK free strat does
+15:22:37 <backbord> bc I don't want the play of a host to be interrupted by other hosts. I want the play to go as fast as possible from the host's perspective
+15:22:49 <sivel> fwiw, from memory, I thought it should be named something that indicates a host is effectively locked to a fork.  like host_per_fork
+15:22:59 <bcoca> its a 'non restrictive free+serial'
+15:23:16 <bcoca> sivel: 'sticky'?
+15:23:29 <jtanner> affinity
+15:23:35 <bcoca> backbord:  i knew the name bikeshed would be an issue ...
+15:23:40 <bcoca> ^ i like affinity
+15:23:48 <jtanner> we are best bikeshedders
+15:23:56 <bcoca> bestest!
+15:24:03 <backbord> I'm fine with all the suggestions but "batch" as it conveys a different meaning for me -- not a native speaker, though
+15:24:09 <backbord> ok, bikeshed it is.
+15:24:27 <jtanner> i think of affinity because of virtualization cpu pinning
+15:24:30 <bcoca> bikeshed as name? .... part of me wants it bad now
+15:24:50 <jtanner> maybe "pinned" too?
+15:25:21 <bcoca> name aside, i queued for review, but would like others too, @jtanner i'm guessing you also want too look at this closely
+15:25:24 <sivel> but I think it should self describe what is "pinned" or "affinity" like host_affinity
+15:26:06 <bcoca> so I expect a few of us to review and decide on merge for next meeting (bikeshed names on ticket)
+15:26:12 <jtanner> then i might want the value to accept a dict: "{'affinity': 'host'}"
+15:26:16 <bcoca> backbord: you'll get input from us soon
+15:26:51 <bcoca> #topic https://github.com/ansible/ansible/pull/41048
+15:26:58 <backbord> thanks! I'll leave the decision about the name to you too, ok?
+15:27:00 <bcoca> ^i also expect bikeshed on option name
+15:27:24 <bcoca> @backbord ihopenot .... mkhostymkafinityface
+15:27:45 <bcoca> @Im0
+15:27:47 <bcoca> ?
+15:28:16 <bcoca> +1 to the feature, i dont think we need _msg in option name .. but others might/will disagree
+15:28:37 <jtanner> so this would print a line for every item in the list?
+15:28:59 <jtanner> oh, no it's for the whole list
+15:29:03 <bcoca> no, like now its a msg per task
+15:29:06 <jtanner> why isn't task name sufficient?
+15:29:31 <bcoca> task names are same across hosts, this allows msg to deal with specific values of hostvars
+15:29:35 <jtanner> hrm
+15:29:53 <jtanner> okay, i can see that being useful
+15:30:06 <bcoca> if i could redesing msg woudl be on_fail and this would be on_pass
+15:30:14 <bcoca> or on_success
+15:30:27 <jtanner> don't think i knew "msg" was a valid arg
+15:30:34 <bcoca> its 'fail msg'
+15:30:41 <bcoca> fail and assert both have it
+15:31:12 <jtanner> well we should alias msg to fail_msg if we accept this PR
+15:31:15 <abadger1999> bcoca: You could return both names.
+15:31:24 <abadger1999> <nod>, what jtanner said
+15:31:43 <abadger1999> Hmm..
+15:31:49 <bcoca> agreed
+15:31:52 <abadger1999> Although msg apppears to be used for both fail and success?
+15:32:03 <abadger1999> ah
+15:32:04 <jtanner> that's the issue, it's ambiguous
+15:32:07 <abadger1999> but we're talking input
+15:32:13 <abadger1999> nevermind me.
+15:32:22 <bcoca> result['msg'] = 'All assertions passed <= we 'hardcode' msg for that case
+15:32:50 <bcoca> this just lets user override the default
+15:33:03 <abadger1999> yep +1 to feature and add alias.
+15:33:14 <bcoca> +1 also
+15:33:18 <jtanner> +1
+15:33:19 <abadger1999> bcoca if you want different names for the output, that's fine with me too.
+15:33:27 <abadger1999> s/output/parameters/
+15:33:28 <jtanner> should we ask submitter to make the alias?
+15:33:29 <bcoca> msg is fine, its just what we display in end
+15:33:40 <bcoca> we can do
+15:33:46 * abadger1999 needs to eat some breakfast so he thinks better before hitting [ENTER]
+15:33:56 <jtanner> YOLO.
+15:34:11 <bcoca> merged
+15:34:25 <jtanner> k, so we'll do alias?
+15:34:36 <bcoca> yes
+15:34:43 <bcoca> #topic https://github.com/ansible/ansible/pull/25573
+15:34:50 <jtanner> i can have zkhikang do it if nobody else wants
+15:34:56 <bcoca> go4it
+15:35:12 <bcoca> its on action plugin, so its good learning on that particular way
+15:36:28 <bcoca> ^ this PR tries to make 'meta' more 'scalpel' than 'axe', starting by "flush specific handler"
+15:38:50 <bcoca> @sean797 ?
+15:38:55 <jtanner> oh wait ... i volunteered zhikang for the fail_msg arg, not meta
+15:38:58 <sean797> bcoca, hi
+15:39:03 <bcoca> jtanner: i understood
+15:39:09 <jtanner> k
+15:39:35 <bcoca> sean797: hi, i think this is something we should include, just need to review and settle on a UI
+15:39:47 <bcoca> @jimi|ansible you are the 'other' that deals with meta, want to take look?
+15:40:05 <jtanner> seems like reasonable feature
+15:40:14 <bcoca> tempted to deprecate 'free_form' once this is in
+15:40:42 <jtanner> i can see people wanting regex/glob/substring matching though
+15:41:43 <sean797> jtanner, maybe.. do people generally have that many handlers?
+15:41:45 <bcoca> why i think filter might be can of worms
+15:41:54 <bcoca> @sean797 some people do ....
+15:42:28 <bcoca> and its not even handlers, with the listen event you can have multiple handlers or a handler dealing with multiple notifies .. which makes it a bigger issue
+15:42:48 <bcoca> filter wont' be on 'handler name' but on 'notification event'
+15:43:02 <bcoca> which CAN be handler name, but it is not restricted to it
+15:43:08 <jtanner> other question i guess: if some of the filtered handlers are run, what happens to remaining? executed at end of play?
+15:43:30 <bcoca> jtanner: the automatic 'meta: flush_handlers' at diff stages always gets triggered
+15:43:41 <bcoca> pre_tasks/roles/tasks/post_tasks
+15:43:55 <sean797> jtanner, yes no behavior change in that instance
+15:44:15 <bcoca> sean797: so the code only deals with 'handler names'  .. wont apply to 'listen:'
+15:44:17 <jtanner> should have a test though
+15:44:58 <jtanner> maybe need to move to runme.sh pattern to have entire playbook with 2 plays
+15:45:23 <jtanner> one to check filtered are run + non-filtered arent after flush, second to make sure the remaining were run
+15:45:55 <bcoca> jtanner: you can do in single playbook by just putting in diff stages (pre_tasks/post_tasks)
+15:45:59 <bcoca> er single play
+15:46:19 <sean797> bcoca, honestly I didnt know about listen, it should be fairly simple to add that
+15:46:51 <bcoca> sean797: kindof, its just 'another list' to check before going back to handler names
+15:48:10 <jtanner> ok, single play still implies moving to runme.sh pattern because it's not doable in only a role
+15:48:27 <bcoca> @sean797 enough feedback for now? i'll add it to my watch list so we make sure we go forward with this ... many people will be happy once added
+15:48:41 <bcoca> jtanner:  runme runs against play
+15:49:02 <jtanner> that's what i'm saying
+15:49:03 <sean797> i think so. thanks jtanner bcoca
+15:49:17 <bcoca> jtanner: which has 4 diff meta: flush_handlers automatically triggered
+15:49:26 <bcoca> you can do in role and/or in tasks
+15:49:28 <jtanner> intergration targets are just roles, unless runme.sh is in the dir
+15:49:48 <bcoca> @jtanner i'll help add test to ticket
+15:49:51 <jtanner> k
+15:49:58 <jtanner> i think i see your point now
+15:50:42 <bcoca> #topic https://github.com/ansible/ansible/pull/35844 https://github.com/ansible/ansible/pull/35558  https://github.com/ansible/ansible/pull/37776  https://github.com/ansible/ansible/pull/39515
+15:50:47 <eikef> Heya :-)
+15:51:45 <eikef> These have been PRs for a while; looking to move them along if possible
+15:52:01 <bcoca> so keycloak is a keyserver?
+15:52:09 <eikef> Keycloak is an Identity Provider
+15:52:12 <eikef> Think Single Sign On
+15:52:16 <eikef> it's the basis of Red Hat SSO
+15:52:26 <eikef> Implement OpenID Connect and SAML
+15:53:09 <bcoca> and we already have modules ... and you are only maintainer
+15:53:17 <bcoca> ^ anyone else have time to review?
+15:53:42 <eikef> yeah, there is keycloak_client/keycloak_clienttemplate
+15:54:08 <bcoca> who reviewed original?
+15:54:21 <eikef> there has been another module submitted by somebody different (keycloak_group) which is also still in a PR but which needs rebase and some CI fixes
+15:54:45 <eikef> various, @sivel did one, but I'm sad to say I do not remember the others atm, can look it up
+15:54:58 <bcoca> @alikins do you have time to look at these? you did original reviews
+15:55:04 <eikef> consensus was that review was only possible for code quality issues since nobody is using the software in the core team
+15:55:25 <shertel> I can code review if alikins doesn't have time
+15:55:34 * bcoca hugs shertel
+15:55:38 <eikef> thank you :-)
+15:55:43 <shertel> :-)
+15:55:44 <bcoca> thanks, let me know if you need hand
+15:55:50 <shertel> thanks
+15:56:06 <bcoca> eikef: sorry for delay, but core is normally overloaded ... hard to get time to do reviews specially for stuff we know little about
+15:56:39 <eikef> bcoca: I understand; when I can make time I come here to the meeting to try to move them along, but if there is no time there is no time
+15:56:58 <bcoca> well, shertel was kind enough to make time, so i'll leave you in her capable hands
+15:57:05 <eikef> Hoping somebody else jumps on the bandwagon, two community maintainers can work in tandem to make the whole thing easier :)
+15:57:15 <bcoca> #topic https://github.com/ansible/ansible/pull/41437
+15:57:17 <jtanner> eikef: you don't work at redhat, right?
+15:57:21 <eikef> jtanner: no I do not
+15:57:24 <jtanner> k
+15:57:45 <eikef> I had had contact with somebody working at RH who was also interested in them from an entirely different team, though that seems to have fizzled out
+15:58:08 <eikef> but I'm just a user of both ansible and keycloak :)
+15:58:17 <akasurde> I would like discuss documenting dependecies of Ansible dependencies
+15:58:33 <akasurde> Ansible -> paramiko -> pynacl -> libffi
+15:59:37 <bcoca> they are not direct dependencies ... i would prefer to link to instructions on the sites of the direct dependant, otherwise we'll end up with instructiosn for every lib out there
+15:59:55 <jtanner> maybe document a pip freeze output?
+16:00:11 <bcoca> jtanner: hard for those using yum/apt, whcih is what PR gives intstructions for
+16:00:18 <jtanner> true
+16:00:24 <jtanner> and doesn't show clibs anyway
+16:00:41 <akasurde> bcoca, I need to move them to pip rather that yum/dnf section
+16:00:58 <jtanner> akasurde: what would you see the documentation solving?
+16:01:05 <akasurde> because, package manager manages there dependencies
+16:01:21 <bcoca> akasurde: 'copy' ... if you are going to give instructions for 'problem deps of deps' they need to be in all install methods
+16:01:40 <bcoca> akasurde: but in this case, we know tis a problem even with the OS pkg mgrs
+16:01:45 <akasurde> We point people saying here are some known deps you go install it
+16:02:22 <jtanner> my typical pattern is 'yum install epel-release ; yum install ansible; rpm -e --nodeps ansible ; pip install ansible'
+16:02:29 <jtanner> solves 99% of dep issues
+16:03:09 <bcoca> most  dep issues have always been due to 'old pip' ... so i would ensure latest pip first
+16:03:55 <bcoca> jinja2 > markup safe and paramiko/crypto => openssl/other have been 99% of 'dependency issues'
+16:03:56 <jtanner> 'yum install epel-release ; yum install ansible python-pip; rpm -e --nodeps ansible ; pip install --upgrade --user pip; pip install ansible'
+16:04:12 <jtanner> 'yum install epel-release ; yum install ansible python-pip; rpm -e --nodeps ansible ; pip install --upgrade --user pip; pip install --user ansible'
+16:04:25 <akasurde> How about footnote like - https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html?#id5
+16:04:35 <akasurde> just libffi
+16:04:36 <bcoca> jtanner: epel is not available to all
+16:04:43 <abadger1999> bcoca: This is a problem with the boundary between OS packages (C header files) and python packages.
+16:05:13 <jtanner> well, this is why i'm curious what akasurde intends to solve
+16:05:18 <bcoca> abadger1999: among others, the 'old pip' issue is mostly phased out (long die RHEL5!!!)
+16:05:34 <jtanner> if the issue is just install, use the os package manager and don't futz with pip
+16:05:36 <abadger1999> bcoca: no... C header files
+16:05:58 <bcoca> markup safe was not header files, was pip not doing deps correctly
+16:06:00 <abadger1999> You need something like yum-builddep ansible python-paramiko python-cryptography ; pip install --upgrade --user ansible
+16:06:12 <abadger1999> To solve the issue that akasurde is pointing to in his PR.
+16:06:16 <akasurde> jtanner, I am thinking from enduser prespective to just heads up about known deps. and stop future issues
+16:06:18 <abadger1999> But I'm not sure we want to do that.
+16:06:55 <bcoca> akasurde: i would create a section on install of 'known issues' , starting with 'why we dont use homebrew'
+16:07:40 <bcoca> i would then point to the site for each of the 'parent dependency' for fixes (if they exist) otherwise we can add short blurb ourselves ... but this can grow exponentially once people start adding boto/winrm/docker.py/etc
+16:08:02 <jtanner> oh, i see the issues the PR links to
+16:08:31 <bcoca> and many more we've closed
+16:08:46 <bcoca> ^ not for libdfi, but for 'deps of deps' problems
+16:09:30 <jtanner> i don't think a doc would have helped https://github.com/ansible/ansible/issues/30732 ... i think that person probably never used ansible before, much less read the docs
+16:09:55 <bcoca> well, docs gives us something to point at
+16:10:07 <bcoca> as discussed the other day 'we dont expect people to read docs'
+16:10:08 <akasurde> bcoca, indeed
+16:10:29 <jtanner> this is an interesting class of problems though and i think the bot might be able to auto-resolve them
+16:11:13 <akasurde> so what is action plan here -
+16:11:17 <bcoca> akasurde: im not against documenting this, but i would not just document the 1 problem, there are many cases
+16:11:25 <akasurde> agree
+16:11:58 <akasurde> we have to maintain that page everytime there is new dep
+16:12:04 <bcoca> i would open a section in install doc, 'troubleshooting' and just start listing errors there and the solutions (hopefully linking to 'dependant' site solution)
+16:12:21 <bcoca> we keep 'core deps' to a minimum
+16:12:30 <akasurde> make sense to me
+16:12:35 <akasurde> I will add that section
+16:12:44 <jtanner> https://github.com/ansible/ansibullbot/issues/961
+16:12:45 <abadger1999> Or FAQ section
+16:12:53 <abadger1999> And link from install page to the FAQ page.
+16:13:19 <bcoca> yeah, FAQ entry 'asnible didnt install correct/dependency not working'
+16:13:32 <bcoca> and once we have page, bot can link to it and autoclose!!!
+16:13:37 <jtanner> yep
+16:13:40 * bcoca hugs akasurde and jtanner
+16:13:46 <akasurde> bcoca, thanks
+16:13:59 <akasurde> PR on the way !!!
+16:14:03 <bcoca> #topic  https://github.com/ansible/ansible/pull/18437
+16:14:28 <jtanner> i gotta run
+16:14:30 <jtanner> bbl
+16:14:47 <bcoca> @akasurde lots of rabbit mq, did you ping towerteam? they use these modules
+16:15:05 <akasurde> nope, I will do that
+16:15:21 <bcoca> k, that was easy
+16:15:23 <akasurde> PR looks good to me, just wanted another pair of eye to take look
+16:15:31 <bcoca> #endmeeting

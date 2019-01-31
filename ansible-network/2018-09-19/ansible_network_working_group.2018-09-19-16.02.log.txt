@@ -1,0 +1,77 @@
+16:02:47 <pabelanger> #startmeeting Ansible Network Working Group
+16:02:47 <zodbot> Meeting started Wed Sep 19 16:02:47 2018 UTC.
+16:02:47 <zodbot> This meeting is logged and archived in a public location.
+16:02:47 <zodbot> The chair is pabelanger. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:02:47 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:02:47 <zodbot> The meeting name has been set to 'ansible_network_working_group'
+16:02:58 <pabelanger> #chair gundalow pabelanger rcarrillocruz dagrawal ganeshrn privateip trishnag
+16:02:58 <zodbot> Current chairs: dagrawal ganeshrn gundalow pabelanger privateip rcarrillocruz trishnag
+16:03:33 <pabelanger> Greetings! I'm going to give it a shot around running the IRC meeting today, however I am likely to miss a lot of things.
+16:03:49 <pabelanger> will be looking for help this time around
+16:04:41 <pabelanger> I'll give it a few minutes before moving on to the next topic
+16:05:29 <pabelanger> #topic Core Team Updates
+16:06:27 <pabelanger> we have ansiblefest coming up soon, and gundalow wanted to remind us of the AnsibleFest Contributors Summit
+16:06:44 <pabelanger> we have 2 topics likely specific for this group:
+16:06:58 <pabelanger> #link Network Agenda: https://etherpad.openstack.org/p/ansible-summit-october-2018-network
+16:07:11 <pabelanger> # Zuul Agenda: https://etherpad.openstack.org/p/ansible-summit-october-2018-zuul
+16:07:14 <pabelanger> sorry
+16:07:21 <pabelanger> #link Zuul Agenda: https://etherpad.openstack.org/p/ansible-summit-october-2018-zuul
+16:07:44 <pabelanger> if you are planning on attending, please take some time and checkout the above etherpad
+16:07:57 <gundalow> Thanks
+16:07:59 <pabelanger> you are also encouraged to review and comment
+16:08:27 <pabelanger> gundalow: anything specific you'd like to point out?
+16:09:15 <pabelanger> I should also link the the top-level etherpad too
+16:09:15 <gundalow> Just to add comments
+16:09:24 <gundalow> +1
+16:09:25 <pabelanger> #link Top level Agenda: https://etherpad.openstack.org/p/ansible-summit-october-2018
+16:10:55 <pabelanger> Moving on, ansible 2.7rc2 was released last week. maybe gundalow can confirm if there is plans for an rc3 at this point
+16:12:06 <gundalow> I think what's in `stable-2.7` will most likely be 2.7.0. We are not currently merging anything else, unless there are critical bugs found, everything else is being held for 2.7.1
+16:12:14 <gundalow> Which I expect to be ~2 weeks after 2.7.0
+16:12:25 <pabelanger> okay great
+16:12:27 <gundalow> and each next release will be ~2 weeks after
+16:12:28 <gundalow> Thanks
+16:12:33 * gundalow -> afk
+16:13:23 <pabelanger> #topic Release of ansible-network roles
+16:13:53 <pabelanger> This week we also continued our release of ansible-network roles
+16:14:08 <pabelanger> #link https://galaxy.ansible.com/ansible-network/yang
+16:14:16 <pabelanger> yang released 2.6.0
+16:14:35 <pabelanger> #link https://galaxy.ansible.com/ansible-network/vyos
+16:14:49 <pabelanger> yvos released 2.6.0
+16:15:26 <pabelanger> and cloud_vpn tagged 2.6.3
+16:15:53 <pabelanger> I encourage everything interested in those roles keep an eye on galaxy for latest releases
+16:16:00 <pabelanger> #link https://galaxy.ansible.com/ansible-network/
+16:16:49 <pabelanger> #topic Zuul and ansible-network
+16:17:06 <pabelanger> This one if from me, mostly an update of things I've been doing over the last week.
+16:17:20 <pabelanger> #link https://ansible-network.softwarefactory-project.io/zuul/status.html
+16:17:42 <pabelanger> for people that are not aware, we've been using Zuul for some time in ansible-network, but only on a few projects
+16:18:19 <pabelanger> Over the last week, I've started spending a bit of time bringing online a new public cloud provider for running jobs, this is Vexxhost.
+16:19:07 <pabelanger> Most of the work has been around updating out base jobs to account for the new provider and infrastructure changes related to helping with outages
+16:19:42 <pabelanger> We are still a few weeks away from pushing more jobs with zuul and ansible-network, but foundation is getting better
+16:20:15 <pabelanger> I also plan on working on integration Amazon EC2 with nodepool, but that is a little harder since we don't have an official nodepool driver yet
+16:20:25 <pabelanger> mostly doing so to provide feedback to upstream
+16:21:18 <pabelanger> #topic open discussion
+16:21:44 <pabelanger> if there are any additional topics people would like to raise
+16:21:54 <pabelanger> or something I've missed
+16:22:22 * Qalthos 🌊🌊
+16:22:52 <Qalthos> nothing in particular to bring up, just realized that I've missed the first half of the meeting
+16:22:55 <Anil_Lenovo> I have one query on #link https://galaxy.ansible.com/ansible-network/
+16:23:23 <Anil_Lenovo> From Lenovo can I add Ansible roles here ?
+16:24:19 <pabelanger> Anil_Lenovo: that's a good question, I'm not sure myself. But I can find out
+16:24:41 <pabelanger> right now, i think only people in the ansible-network org have the ability to upload to it
+16:24:57 <pabelanger> so, I am not sure if that is only people at Redhat or if we are looking to open it up more to the community
+16:25:02 <Anil_Lenovo> Ok, let me know
+16:25:10 <pabelanger> I'll confirm wiht privateip, rcarrillocruz and follow up
+16:25:16 <pabelanger> let me take an action
+16:25:40 <Qalthos> Anil_Lenovo: The theory is that nothing there should need anything from you, rather you would create something like https://github.com/ansible-network/vyos for lenovo
+16:26:14 <Qalthos> And that would enable the existing roles to work on new devices
+16:26:14 <pabelanger> #action pabelanger Find out who is able to upload roles to https://galaxy.ansible.com/ansible-network/
+16:27:06 <Qalthos> It wouldn't have to be under the ansible-network name either
+16:27:23 <Anil_Lenovo> Qalthos: I have already upload spine - leaf roles etc to galaxy. But if its comes under same umbrella ansible-network, that would be great
+16:27:26 <pabelanger> yah, I would think, but I'm too new for ansible-network to know if we have anybody else our of the core ansible-network team working on the roles now
+16:28:31 <pabelanger> k, we'll give it another minute or so, but if nothing else we can wrap for today
+16:29:25 <Qalthos> Anil_Lenovo: If you are looking to submit new roles to ansible-network in this style, that is a thing I don't think we have a process for
+16:30:13 <Anil_Lenovo> Qalthos: Will wait, no issues..
+16:30:27 <pabelanger> we should definitely discuss and figure that out :) I'll have more info for next week
+16:31:09 <pabelanger> That is all I had for today, so lets wrap up here and see everybody next week
+16:31:16 <pabelanger> Thanks all!
+16:31:19 <pabelanger> #endmeeting

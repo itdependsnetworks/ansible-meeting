@@ -1,0 +1,86 @@
+15:02:12 <bcoca> #startmeeting ansible core irc public meeting
+15:02:12 <zodbot> Meeting started Thu Oct 18 15:02:12 2018 UTC.
+15:02:12 <zodbot> This meeting is logged and archived in a public location.
+15:02:12 <zodbot> The chair is bcoca. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:02:12 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:02:12 <zodbot> The meeting name has been set to 'ansible_core_irc_public_meeting'
+15:02:25 <bcoca> #topic https://github.com/ansible/ansible/pull/45824
+15:02:32 <bcoca> @Pilou ?
+15:03:43 <devyani7> .hello devyani7
+15:03:44 <zodbot> devyani7: devyani7 'Devyani Kota' <devyanikota@gmail.com>
+15:04:13 * ryansb waves
+15:04:18 <sdoran> \o
+15:04:35 <bcoca> #topic https://github.com/ansible/ansible/pull/44428
+15:05:06 <bcoca> ^ move 'auto' before 'ini', im not against this but worried about backwards compat (on surface looks ok)
+15:05:47 <bcoca> i would even make the case to put auto before yaml
+15:06:38 <ryansb> auto being first/near first seems reasonable to me
+15:07:32 <bcoca> @nitzmahone you on? as auto author would like you to weigh in
+15:07:59 <sdoran> I'm reading through auto.py, and it looks like it enables all the plugin types if enabled?
+15:08:08 <sdoran> I may be reading it wrong, though.
+15:08:15 <sdoran> I don't know this part of the code very well.
+15:08:35 <bcoca> it will load plugins that are not enabled if the 'yaml plugin config' calls for that plugin and that plugin exists
+15:08:56 <bcoca> so by default you can add aws_ec2.yaml file w/o having to explicitly enable the aws_ec2 plugin
+15:09:52 <bcoca> it only works for plugins that use the 'common inventory plugin yaml config format' as inventory source
+15:10:09 <bcoca> those that dont need to be enabled specifically
+15:10:49 <nitzmahone> The only issue I can think of with moving it forward is for constructed-backed plugins that might want to use stuff defined in yaml inventory
+15:11:00 * nitzmahone on pto today
+15:11:07 <bcoca> this is plugin order, that would require 'source order'
+15:11:10 <bcoca> they are not the same
+15:11:32 <bcoca> -i /to/yaml.yml -i /plugin/config.yml vs -i /plugin/config.yml -i /to/yaml.yml
+15:11:58 <bcoca> ^ that determines the order of soruces, the list in PR determines the order in which plugins will be tried for EACH source
+15:12:03 <nitzmahone> I'm thinking the  -i inventory/ case
+15:12:10 <bcoca> yep, this is not that
+15:12:18 <nitzmahone> Plugin order is followed in that case
+15:12:24 <bcoca> no
+15:12:27 <bcoca> directory order is
+15:12:57 * Pilou waves
+15:13:07 <bcoca> actually, its 'sorted order' ` for i in sorted(os.listdir(b_source)):` <= actual code
+15:13:32 <bcoca> plugin order never impacts the source order
+15:13:48 <bcoca> https://github.com/ansible/ansible/blob/devel/lib/ansible/inventory/manager.py#L232
+15:14:00 <bcoca> Pilou: we skipped ifrst PR, though i left comment
+15:14:14 <bcoca> currently i think we should put auto in front of yaml also
+15:14:23 <nitzmahone> Ah k, forgot about that, so yeah, that should be fine.
+15:14:27 <Pilou> ok
+15:14:54 <sdoran> +1 for putting `auto` in front of `yaml` and `ini`
+15:14:57 <bcoca> i keep forgetting we fixed the 'directory order' back in 1.3/1.4 to sorted ...
+15:15:32 <nitzmahone> Since auto would only dispatch a specific plug-in-backed yaml, I can't think of a legitimate case where that would cause a problem
+15:16:37 <bcoca> Pilou: so seems we agree on that one, if you make the change and promote it one more spot
+15:16:50 <bcoca> #topic https://github.com/ansible/ansible/pull/45824
+15:17:10 <bcoca> fixes to uri module, left comment about not 'dropping messages' but 'joining them' instead
+15:17:30 * nitzmahone back to pto :D
+15:18:26 <sdoran> nitzmahone: Thanks for chiming in. Enjoy your time off!
+15:18:28 <bcoca> @nitzmahone sorry, didnt realize, enjoy
+15:18:41 <nitzmahone> No worries, back tomorrow
+15:18:50 <bcoca> getofftheinterwebs!
+15:19:18 * nitzmahone fine, maybe I will! ;)
+15:20:03 <bcoca> anyone else have commetns on uri issue?
+15:20:07 <Pilou> joining seems a good idea :)
+15:20:30 <bcoca> i dont know how relevant the info is, but it seems we dont want to drop it
+15:21:19 <bcoca> no one/nothing else?
+15:22:18 <ryansb> joining them seems like the way to go
+15:22:41 <sdoran> I'd agree with that.
+15:22:58 <sdoran> Hanging on to messages is probably a good idea.
+15:23:00 <bcoca> k, calling it 'passed' then with the modification
+15:23:08 <bcoca> #topic https://github.com/ansible/ansible/pull/38269
+15:23:22 <bcoca> @devyanikota?
+15:23:23 <devyani7> bcoca, hello o/
+15:23:44 <devyani7> yes, so I worked on the suggested changes...
+15:23:46 <bcoca> gluster modules updates?
+15:23:58 <devyani7> and addressed the commnents
+15:24:27 <bcoca> iirc alikins_ was reviewing last time?
+15:24:50 <devyani7> um, I did mention the examples added in the documentation...
+15:25:05 <devyani7> and also added an example playbook to test
+15:25:20 <devyani7> for alikins^^ comment
+15:25:35 <bcoca> @alikins_ anything else needed on your side?
+15:26:05 <alikins_> looking
+15:26:15 <bcoca> devyani7:  didnt we give you 'maintiner status'?
+15:27:00 <devyani7> bcoca, yes, I didn't feel right merging my own PR :)
+15:27:40 <bcoca> we rarely do that, but you should just need 1 other vote from maintainer (you already count as one for the 2 shipits)
+15:28:50 <devyani7> so if I could get one more core team member vote?
+15:29:00 <alikins_> looks okay to me, asked if there are any tests. I can only assume there should be, but shrug.
+15:33:05 <bcoca> @alikins_ i'll leave up to you then, since you already did initial review
+15:33:35 <alikins_> it's okay with me
+15:34:13 <bcoca> #topic open floor
+15:34:24 <devyani7> alikins_, bcoca thanks.
+15:39:53 <bcoca> k if nothing else closing meeting in 1min
+15:42:53 <bcoca> #endmeeting

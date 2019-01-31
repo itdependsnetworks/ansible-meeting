@@ -1,0 +1,428 @@
+19:00:29 <thaumos> #startmeeting Ansible core
+19:00:29 <zodbot> Meeting started Tue Jan  9 19:00:29 2018 UTC.  The chair is thaumos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:00:29 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:00:29 <zodbot> The meeting name has been set to 'ansible_core'
+19:00:40 * gundalow waves
+19:00:44 <alikins> blurp
+19:00:51 <andol> o/
+19:00:53 * jtanner has arrived from HR violation land .. erm .. slack
+19:00:58 <thaumos> #chair sivel gundalow ryansb alikins jtanner
+19:00:58 <zodbot> Current chairs: alikins gundalow jtanner ryansb sivel thaumos
+19:01:05 <shertel> Hi
+19:01:27 <thaumos> #chair shertel
+19:01:27 <zodbot> Current chairs: alikins gundalow jtanner ryansb shertel sivel thaumos
+19:01:37 * resmo waves
+19:01:37 <thaumos> @gundalow: did you run the last meeting?
+19:01:49 <thaumos> I can't tell what was covered honestly.
+19:01:50 <gundalow> yip
+19:01:53 <gundalow> oh
+19:02:00 * gundalow checks logs
+19:02:04 <thaumos> I glanced at the meeting notes also
+19:02:11 <thaumos> But want to confirm with you
+19:02:28 <mkrizek> o/
+19:02:30 <funzo> o/
+19:02:31 <gundalow> Conjur Lookup Plugin #34280
+19:02:40 <gundalow> topic Filesystem: refactor, improvements, add tests #25519
+19:02:51 <gundalow> Only those two
+19:03:20 <sivel> I don't think anything on the agenda has been covered
+19:03:54 <gundalow> no, as we didn't have many core people in
+19:05:08 <gundalow> itdependsnetwork: Hi
+19:05:10 <itdependsnetwork> hi
+19:05:23 <maxamillion> .hello2
+19:05:24 <zodbot> maxamillion: maxamillion 'Adam Miller' <maxamillion@gmail.com>
+19:05:26 <maxamillion> sorry I'm late
+19:05:30 <gundalow> #topic gather_facts, current issue opened: ansible/ansible#34109
+19:05:35 <gundalow> #chair itdependsnetwork maxamillion
+19:05:35 <zodbot> Current chairs: alikins gundalow itdependsnetwork jtanner maxamillion ryansb shertel sivel thaumos
+19:05:41 <gundalow> #info Want to start back the conversations on gather_facts, current issue opened: ansible/ansible#34109
+19:05:49 <gundalow> #info https://github.com/ansible/community/issues/291#issuecomment-355016399
+19:06:03 <itdependsnetwork> So I have tried a few times to get this going, but there is a name space issue with the pypi standard setup.py and gather_facts
+19:06:04 <sivel> The issue here is name collision with setup.py (setuptools) and our setup (gather facts module)
+19:06:07 <gundalow> #info https://github.com/ansible/ansible/pull/20717
+19:06:33 <sivel> We started a change, but couldn't agree on anything, and just dropped it
+19:06:45 <thaumos> yeah, nothing has made it in for 2.5 that's for sure.
+19:06:53 <sivel> And no one is working on it
+19:06:57 <thaumos> this is a huge change that causes a lot of implications.
+19:07:10 <sivel> additionally, we'd need a deprecation cycle, for people who are purposefully overriding setup
+19:08:12 <itdependsnetwork> So how do I get this prioritized? It's not like the work had not already been done, the direction has to come from the core team.
+19:08:16 <sivel> bcoca was the person running with it on our side, and he's not here for a while
+19:08:21 <thaumos> It isn't a priority issue, itdependsnetwork
+19:08:32 <thaumos> it's on my list of things to consider from a product perspective.
+19:08:43 <thaumos> It's not a binary issue that can easily be resolved.
+19:08:50 <itdependsnetwork> So doesn't effect core == not a priority over last year?
+19:09:11 <thaumos> No, it affects customers, users, developers.... a lot of people.
+19:09:23 <jtanner> it affects core, it's just not a major blocker
+19:09:26 <thaumos> We have a lot to consider from a business perspective.  Aside from bikeshedding and other nonsense.
+19:09:26 <sivel> I'd guess if it was to be worked on, 2.6 would be earliest, but it would be hidden behind a feature flag even if so for 4 releases, so 2.10 before the change is switched
+19:09:51 <itdependsnetwork> But I will be back here in 4 months and be told the same thing
+19:10:10 <itdependsnetwork> So if I were to do all the work, it still would not get done
+19:10:18 <alikins> can you intentionally override the setup.py module?  (without removing default system/setup.py)
+19:10:27 <jimi|ansible> you can override any module
+19:10:31 <sivel> alikins: yes, just like all modules
+19:10:39 <sivel> and people do purposefully override it
+19:11:04 <itdependsnetwork> Just to clarify, this is not about work-arounds, it is about coming up with a final solution
+19:11:20 <dag> indeed
+19:11:27 <gundalow> #chair dag
+19:11:27 <zodbot> Current chairs: alikins dag gundalow itdependsnetwork jtanner maxamillion ryansb shertel sivel thaumos
+19:11:38 <abadger1999> Olá
+19:11:42 <sivel> itdependsnetwork: understood, the workarounds have been stated, and aliasing setup to gather_facts.py would be a start
+19:11:46 <alikins> probably wouldn't be too hard to make the name of the module invoke for gather_facts to be config/play var
+19:11:57 <sivel> but we would have to put it on a deprecation cycle to make gather_facts.py the default
+19:12:15 <dag> I'd prefer calling it facts, not gather_facts
+19:12:20 <itdependsnetwork> Understood, but again, it has to start some where
+19:12:22 <dag> none of our modules have a verb
+19:12:34 <itdependsnetwork> So $next_release is never
+19:12:34 <sivel> that is a bike shed for another time I think
+19:12:52 <thaumos> itdependsnetwork, we cannot commit to this for 2.6.  that's for sure.
+19:12:57 <maxamillion> sivel: question is "if not now, when?"
+19:12:58 <gundalow> Yes, please lets ignore what to call it for the moment
+19:13:02 <sivel> so maybe we put this on the roadmap for 2.6?
+19:13:05 <jimi|ansible> dag: not completely true, get_url
+19:13:12 <thaumos> not 2.6
+19:13:15 <dag> jimi: indeed, my mistake
+19:13:15 <itdependsnetwork> I was told that for 26
+19:13:18 <itdependsnetwork> 2.5*
+19:13:23 <dag> there is one ;-)
+19:13:39 <nitzmahone> Let's talk about why:
+19:13:46 <nitzmahone> it's not that 2.6 is too full
+19:13:56 <thaumos> well, here's the thing.  we have planned for 2.6 to be a maintenance release.
+19:14:11 <itdependsnetwork> thaumos: you indicated most likely non-issue in 2.5
+19:14:20 <thaumos> yes, I had.
+19:14:26 <jimi|ansible> itdependsnetwork: you're talking about changing something that has been a fundamental feature of Ansible since before I started working on it 4.5 years ago. This is not going to be a quick/easy fix
+19:14:34 <thaumos> However, we overloaded with other things that put it in the back burner.
+19:14:52 <thaumos> I have priorities to meet from a product management perspective, so things get juggled.
+19:15:10 <thaumos> there was a lot on my list for 2.5, and it got put back.  it's the way it goes.
+19:15:11 <gundalow> 1) Have we confirmed this is something that needs fixing
+19:15:17 <gundalow> 2) Do we know what that fix would look like
+19:15:20 <itdependsnetwork> Yea, but again, it was broke in 1 version, and then not fixed for 4 versions now
+19:15:21 <alikins> and could special case plugin loader/module loader for setup.py (or alias...) a module named 'setup' is fine, setup.py is the issue
+19:15:22 * dag would prefer to move this to a 3.0 release
+19:15:24 <itdependsnetwork> going closer to 10
+19:16:06 <dag> with a proper plan for facts, there's a lot more we could/should clean up IMO
+19:16:42 <dag> including the set of facts and flat namespace and duplicated content in the output
+19:16:42 <nitzmahone> that too
+19:16:45 <maxamillion> dag: that could be interesting
+19:17:11 <nitzmahone> Feels like taking that big a change just to resolve this conflict is a missed opportunity to fix lots of other things
+19:17:22 <dag> I'd rather get my facts from facts.hostname and facts.processor
+19:17:30 <abadger1999> dag: I would never purposefully target a feature at a "next major (2.0, 3.0, 4.0)" unless we've already started planning on their being such a  release.
+19:17:38 <alikins> ditching setup.py doesn't seem that complicated to me
+19:17:44 <sivel> So I think we are saying, not for 2.5, not for 2.6, maybe 2.7 (with a deprecation cycle), but the problem has far reaching consequences, so it could be delayed until a larger facts change
+19:17:48 <jimi|ansible> dag: that is being fixed, putting facts in a namespace out of the root for global vars
+19:18:11 <dag> abadger1999: true, but with 3.0 I mean, a big release with lots of user-changes
+19:18:12 * alikins be experiencing his once yearly burst of optimism
+19:18:15 <itdependsnetwork> alkins: that is what it seemed like to me too
+19:18:39 <sivel> do any of the core devs disagree with my statement?
+19:18:40 <itdependsnetwork> and there was a PR, just got caught up on naming the module
+19:18:49 <dag> jimi: regrettably
+19:18:54 <abadger1999> Not a lot to change in the code it loos like... Just have to decide that using facts.py is appropriate I think.
+19:18:56 <nitzmahone> There are other less-invasive ways we could fix the Python namespace collision
+19:19:05 <jimi|ansible> alikins / itdependsnetwork: it's not too complicated, but there are a few gotchas and rules we need to work out
+19:19:07 <abadger1999> Although I don't think there is a big problem here.
+19:19:14 <nitzmahone> (and kick the can on the official renaming)
+19:19:21 <jtanner> sivel: seems legit, based on recent 2.6 discussion
+19:19:24 <abadger1999> So I don't think "fixing" it is a big priority.
+19:19:49 <sivel> going once...
+19:19:54 <maxamillion> jimi|ansible: what are those gotchyas and rules?
+19:20:02 <itdependsnetwork> I get the feeling that since it doesn't effect core modules, not an issue
+19:20:04 <abadger1999> it's more like adding a new way to do something that already exists.
+19:20:14 <gundalow> Is this something someone could prototype and have a play with and report back?
+19:20:26 <maxamillion> I guess I don't get what the blocker here is (as someone who lacks historical context on this specific issue), everyone seems to agree it would not be hard to implement but there's "details" to be sorted
+19:20:32 <maxamillion> also, bike shedding
+19:20:33 <abadger1999> gundalow: https://github.com/ansible/ansible/pull/20717
+19:20:35 <jimi|ansible> maxamillion: if there are two options for gathering facts (setup vs. a_module_name_to_be_bikeshed_later), how do you go about picking one between user-defined modules vs. what we ship
+19:20:59 <abadger1999> gundalow: change the name there from gather_facts to facts and I think we had agreement from alikins and i that it would be okay.
+19:21:03 <abadger1999> and dag
+19:21:04 <jtanner> like if someone had library/setup.py?
+19:21:05 <sivel> jimi|ansible: we'd have to put it on a deprecation cycle, and default to setup.py still for 4 releases
+19:21:05 <itdependsnetwork> At ansiblefest it was indicated to me that the barrier for entry to get code in, was much less than to get the core team to code it.
+19:21:13 <itdependsnetwork> that does not seem to be the issue
+19:21:18 <jimi|ansible> because if there's a local setup.py, it may be a bad one that's not facts, but how do you tell that?
+19:21:20 <abadger1999> jtanner: that's fine as long as setup.py is overriding ouor setup.py
+19:21:24 <abadger1999> which it might.
+19:21:38 <abadger1999> itdependsnetwork: this is not about getting code in.  it's about design.
+19:21:43 <maxamillion> jimi|ansible: wait, people are overloading with a library/setup.py ?
+19:21:48 <abadger1999> this is an architectural change.
+19:21:49 <sivel> Ok, I think we should move on.  We are in agreement it's not happening right now
+19:21:56 <maxamillion> sivel: we are?
+19:22:03 <jimi|ansible> sivel: yeah we'd definitely have to deprecate it, and thankfully not too many people do override setup.py
+19:22:05 <abadger1999> I'm okay with it happening.
+19:22:15 <abadger1999> As loing as we can agree on name.
+19:22:23 <abadger1999> that's where we got stuck last time.
+19:22:25 <jimi|ansible> maxamillion: oh yeah, some people want custom fact gathering and do it by overriding setup.py via the local library
+19:22:27 <itdependsnetwork> I get it, it is a deprecate for 4 realases
+19:22:38 <maxamillion> jimi|ansible: I've never heard of such a thing ... TIL
+19:22:38 <abadger1999> I think everyone except bcoca agreed o nthe name but bcoca had been the one writing the PR?
+19:22:39 <jimi|ansible> i can drop the hammer on a name
+19:22:47 <itdependsnetwork> but 4 release is far better than $next_release +  4
+19:23:06 <maxamillion> +1 for jimis_awesome_fact_gathering ... shipit
+19:23:06 <jimi|ansible> but i tend to agree with making it match up with the playbook language, which is gather_facts (sorry dag)
+19:23:18 <jimi|ansible> since that's what happens with other modules
+19:23:29 <abadger1999> alikins, dag, and I were agreed on facts.py
+19:23:37 <dag> then we should have called the namespace ansible_gather_facts
+19:23:39 <sivel> I'd rather not try to rush it into 2.5, 2.6 it's not happening.  That PR isn't the full/proper solution 20717
+19:23:39 <dag> sigh
+19:23:40 <nitzmahone> Also much less likely to conflict with other things than facts.py
+19:23:51 <dag> can we agree that gather_facts was a silly name too ?
+19:23:51 <alikins> I don't think we need to deprecate setup.py as long as 'setup:' still works and any fact setup.py overriding folks are doing still works
+19:24:21 <sivel> alikins: people overriding setup.py expect that it will be run during gather_facts phase
+19:24:22 <jimi|ansible> dag: lol why is that? it's descriptive, it tells you what it's doing (at least until the tri-state stuff happened it was _really_ obvious)
+19:24:24 <maxamillion> I actually like gather_facts ... what were the alternatives and arguments in favor of them?
+19:24:33 <abadger1999> alikins: I think for the feature that itdependsnetwork wants, setup.py has to lose its special meaning eventually
+19:24:41 <abadger1999> maxamillion: facts.
+19:24:47 <abadger1999> Since it's the name of the subsystem.
+19:24:49 <alikins> sivel: right, as long as we make that work I dont see a reason to wait for deprecation
+19:24:57 <abadger1999> and only get_url is a verb.
+19:25:04 <maxamillion> oh
+19:25:04 <itdependsnetwork> have to run
+19:25:05 <maxamillion> hrm
+19:25:14 <gundalow> itdependsnetwork: Thank you for your time
+19:25:15 <jimi|ansible> there's also getent, but those were just the ones i looked for that started with get*
+19:25:23 <abadger1999> maybe other arguments that dag would recall
+19:25:25 <maxamillion> itdependsnetwork: cheers, thank you for getting this rolling again
+19:25:28 <sivel> alikins: how would you get by making it a config, that would still default to setup.py for the deprecation cycle, and then switching to gather_facts.py?
+19:25:40 <abadger1999> jimi|ansible: getent is a noun (the name of the getent command line tool)
+19:26:15 <sivel> alikins: it would take a deprecation cycle to alert users that setup.py will transition to gather_facts.py
+19:26:23 <nitzmahone> The override behavior is the worst problem to solve with just renaming the underlying module
+19:26:25 <sivel> and that their custom setup.py will no longer work
+19:26:34 <abadger1999> jimi|ansible: Since the keyword isn't the module, I would count the keyword being gather_fact as a con to the new name being gather_facts.
+19:26:50 <alikins> sivel: possibly, or just do both. Possibly with some plugin loader special casing to handle the library/random-non-ansible-code/setup.py issue
+19:26:50 <abadger1999> Like "static" in C.
+19:26:54 <maxamillion> I like gather_facts, but I'd be fine with facts also if there's enough support there
+19:27:01 <abadger1999> or "no_log" in ansible
+19:27:14 <jimi|ansible> abadger1999: but it's "get entries" ;)
+19:27:15 <sivel> jimi|ansible: you want to BDFL us here?
+19:27:20 <sivel> please :)
+19:27:24 <jimi|ansible> lets move on
+19:27:39 <thaumos> so what's the final decision then?
+19:27:45 <thaumos> we need an action or info.
+19:27:54 <jimi|ansible> we're not going to change this in 2.6, it's a maintenance release
+19:28:06 <jimi|ansible> same reason i'm not doing threading vs. forking in 2.6
+19:28:12 <dag> getent is a unix command
+19:28:24 <maxamillion> why not 2.5? isn't the code already written and just awaiting a name? or did I miss something
+19:28:34 <abadger1999> "I have gather_facts: subset=test why isn't it working?" [... long discussion...] "Oh, the one you're tyring to use should be gather_facts: True|False... for invoking gather_facts manually, you need to put it i nthe tasks list"
+19:28:51 <abadger1999> maxamillion: it's close.  needs name and deprecation cycle code.
+19:29:01 <gundalow> #agreed Current plan is that Ansible 2.6 is a maintence relese therefore assuming this isn't a simple low impact/risk fix it will not be going into 2.6
+19:29:28 <sivel> maxamillion: my view, is that 2.5 is too soon, and this has been a fundamental part of ansible since forever, that I'd rather not rush it in
+19:29:37 <nitzmahone> +1
+19:29:41 <jimi|ansible> assemble, copy, fetch, unarchive - the list goes on, if we're saying we never use a verb for a module name it's not true
+19:29:44 <thaumos> yeah, I don't want to do this at the end of 2.5.
+19:29:49 <dag> abadger: I agree, it's more confusion
+19:29:52 <maxamillion> sivel: right, but it's apparently been in discussion for roughly a year
+19:29:54 <jimi|ansible> that is simply not an argument against gather_facts
+19:29:59 <sivel> I'd like nearly a full dev release of testing
+19:30:05 <thaumos> it's been on and off discussion, @maxamillion
+19:30:12 <maxamillion> yeah, original PR was from January 26, 2017
+19:30:16 <sivel> maxamillion: understood, but that doesn't mean we should bypass safeties
+19:30:22 <thaumos> I want to err on the side of caution with this one.
+19:30:27 <gundalow> ************ OK that's been 30 minutes
+19:30:51 <sivel> potential for implementation in 2.7
+19:31:05 <abadger1999> <nod> /me would rather we get to the place where all features were in in the first month of a cycle... but knows that is a huge change to implement.
+19:31:21 <thaumos> #topic discussion and vote to deprecate "default)module_lang" and "DEFAULT_MODULE_SET_LOCALE. MODULE_LANG"
+19:31:21 <gundalow> abadger1999: +1
+19:31:25 <thaumos> k moving on
+19:31:28 <dag> we decided everything should be a proposal
+19:31:32 <maxamillion> for the record, I disagree but will go with the consensus
+19:31:38 <abadger1999> Although actually, that would be something we could try to get done while we are doing one of these maintenance releases
+19:31:48 <sivel> abadger1999: kick us off with locale?
+19:31:57 <abadger1999> So, this is something that we implemented in 2.2 I think.
+19:32:08 <abadger1999> But we didn't print a deprecation when we did it.
+19:32:36 <abadger1999> So I'd like to formalize it by starting to print a deprecation if those are manually set and get rid of them in four releases.
+19:33:00 <jimi|ansible> +1
+19:33:08 <thaumos> +1
+19:33:09 <sivel> +1
+19:33:16 <nitzmahone> +1
+19:33:17 <dag> +1
+19:33:35 <abadger1999> +1
+19:33:50 <thaumos> any against?
+19:33:53 <sivel> that seems sufficient to me :)
+19:33:54 <jtanner> not sure i understand it, so i don't vote.
+19:34:01 <jimi|ansible> that never stops me
+19:34:05 <jimi|ansible> ;)
+19:34:07 <sivel> haha
+19:34:08 <jtanner> jimi|ansible: =P
+19:34:10 <thaumos> #agreed print deprecation notice.
+19:34:23 <thaumos> #topic include interface info in ansible_interfaces
+19:34:32 <thaumos> #link https://github.com/ansible/ansible/pull/34395
+19:34:33 <jtanner> info?
+19:34:56 <jtanner> so from list to dict?
+19:34:58 <sivel> I don't like this change, well at minimum it cannot modify the existing data structure
+19:35:20 <jimi|ansible> -1 can't change it in place like that, needs to be a new variable name or it'll break things
+19:35:24 <sivel> I'd just stick with the jinja filters to get the info personally
+19:35:32 <dag> I think this ought to be part of a bigger facts change, there's a lot in facts that needs a overhaul
+19:35:41 <jtanner> there are ways to make it into a dict after the fact, but i'm sure changing the default will piss some people off
+19:35:46 <jimi|ansible> but this is something i've hated for a long time, because it makes getting facts about interfaces difficult
+19:35:53 <jimi|ansible> so i am in favor of fixing it
+19:36:04 <thaumos> I would agree with dag, we can add a note to this PR that this could be a part of a facts overhaul.
+19:36:07 <sivel> -1 to the current change, -0 to a new key with the duplicated data
+19:36:09 <jtanner> i write filters to munge it if it's that "hard"
+19:36:09 <dag> if we want to get rid of things in facts we need a way to deprecate the old facts
+19:36:16 <jimi|ansible> dag++ i'm fine with that
+19:36:35 <sivel> I'm just not a fan of duplicating the data and further inflating facts
+19:36:36 <thaumos> okay, so we cool with adding a comment to this issue/>
+19:36:37 <nitzmahone> I've been kicking around a way to actually get deprecation warnings for facts/module output
+19:36:41 <dag> the date-stuff is also awfull, we only need the date once and then have jinja filters
+19:36:57 <dag> sivel: agreed, so no change unless we can deprecate
+19:37:02 <jtanner> epoch time for you!
+19:37:03 <jimi|ansible> nitzmahone: you should be able to do it simply with the AnsibleModule stuff for messages
+19:37:04 <dag> at least there's an end to the madness ;-)
+19:37:06 <nitzmahone> If we had a way to deprecate and warn on these things, I'd be much more inclined to jump on it
+19:37:26 <nitzmahone> @jimi|ansible - not for module results and fact usages though
+19:37:30 <jimi|ansible> well, nm, i guess using it is a bit more difficult
+19:37:33 <jimi|ansible> yeah
+19:37:41 <sivel> I am +1 on adding functionality to deprecate facts, and adding a new key for this, without the deprecation, I am -1 on new key
+19:38:01 <alikins> the root of that problem is that the model/schema of facts info is... well it doesnt exist, so also no versioning of it, so changing it is often impossible
+19:38:03 <sivel> and -1 on the current implementation
+19:38:04 <jtanner> +1 for additional key with different data structure and not modifying the old key
+19:38:29 <dag> alikins: the root of the problem is that we had no clue what we were doing when we started to add stuff to setup.py ;-)
+19:38:41 <alikins> dag: been there before ;->
+19:38:41 <dag> alikins: we didn't had jinja filters back then
+19:38:51 <jtanner> had? i -have- that problem every day
+19:38:58 <sivel> Ok, so we are all -1 on current implementation.  SO our choices are 1) add deprecation functionality and add new key, 2) just add new key
+19:39:01 <dag> jtanner: :-)
+19:39:15 <thaumos> I have to say though, a good percentage of our users are not adept at writing jinja filters.
+19:39:17 <dag> (1) +1
+19:39:31 <jtanner> thaumos: writing OR using?
+19:39:39 <thaumos> both tbf
+19:39:42 <abadger1999> +0.25 if implemented via a new key
+19:39:44 <sivel> 1) +1
+19:39:51 <jimi|ansible> nitzmahone: create a wrapper class akin to AnsibleUnsafe and wrap things with that in facts.py, have it serialize and if AnsibleJ2Vars sees one of them when retrieving vars show a deprecation message?
+19:39:57 <jimi|ansible> simple, really
+19:39:58 <jtanner> many times it's actually easier to write one than to try to chain existing ones together
+19:40:07 <nitzmahone> @jimi|ansible: that's pretty much what I was thinking, though a couple nuances to solve
+19:40:21 <dag> jimi|ansible: yup, that's how I would do it
+19:40:22 <alikins> dag: if it makes you feel better, I've implemented 'facts' for 4 other projects (not including ansible) and always end up in the same boat
+19:40:26 <abadger1999> 1) definitely +1, 2) +0.25
+19:40:38 <sivel> anyone else have a vote on #1 or #2?
+19:40:39 <dag> alikins: it's like SNMP ;-)
+19:40:40 <maxamillion> 1) +1
+19:40:47 <sivel> 1) add deprecation functionality and add new key, 2) just add new key
+19:40:49 <jimi|ansible> i agree with abadger1999, an overhaul of facts is needed but as a stop-gap fixing it using a different name i'd be +1
+19:41:02 <jtanner> 2) +1
+19:41:07 <jimi|ansible> 2) +1
+19:41:25 <sivel> 1) +4, 2) +2
+19:41:30 <sivel> those are the running totals
+19:41:34 <dag> we already have interfaces twice in facts, are we going to add a third time ?
+19:41:40 <jtanner> nobody messes with my datastructures but me!
+19:41:45 <dag> and ip addresses we have even more
+19:41:53 <alikins> either for me, slight pref to 1) I suppose
+19:41:55 <abadger1999> config value as a stopgap?
+19:42:10 <nitzmahone> Urg, something else to deprecate later
+19:42:29 <jimi|ansible> if we can get the deprecation bit working quickly i'd prefer 1), i'm just not sure how easy it'll be to get right
+19:42:41 <jimi|ansible> yeah no config values for this
+19:42:56 <nitzmahone> Also not something I'd want to try for 2.5, but arguably at least getting the deprecation in place for 2.6 would be workable IMO
+19:43:01 <sivel> I honestly don't think we could get deprecation stuff done well for 2.5
+19:43:03 <abadger1999> The question is whether it can be done quickly...
+19:43:09 <sivel> and this is not a 2.6 thing
+19:43:14 <abadger1999> I don't think any of us are volunteering to get it done for 2.5?
+19:43:18 <jtanner> nitzmahone: is probably going to be pretty busy as 2.5 RM and i suspect have little time to get to fact deprecation
+19:43:26 <jimi|ansible> sivel: i was going to ask if we felt this was maintenance-y enough for 2.6
+19:43:27 <sivel> so if we want it before 2.7, it will likely need to just be a new key and no deprecation
+19:43:29 <jimi|ansible> i think it could be
+19:43:38 <nitzmahone> I'd be +0.5 for 2.6
+19:43:41 <sivel> jimi|ansible: that depends on teh deprecation stuff I think
+19:43:41 <gundalow> Core freeze is 22nd Jan...
+19:43:51 <jimi|ansible> it's not just bugs, it's cleaning stuff up, and fixing facts to me is maintenance
+19:44:02 <alikins> abadger1999: current facts should let you get pretty close to subseting fact-by-fact.. a config to set default gather_subset is doable
+19:44:05 <maxamillion> jimi|ansible: yeah, I think that's a fair classification
+19:44:11 <alikins> (or does it already exist...?)
+19:44:14 <sivel> jimi|ansible: I could be convinced, depending on the size of adding deprecation functionality
+19:44:22 <sivel> on the surface it sounds simple
+19:44:23 <nitzmahone> So long as the fact/result deprecation support isn't too invasive
+19:44:32 <abadger1999> alikins: <nod> In this case, though, it's sortof "output format"
+19:44:33 <sivel> nitzmahone: ++
+19:44:38 <jimi|ansible> sivel: i was being completely facetious with the "simple, really" comment :)
+19:44:42 <abadger1999> alikins: Or choice between alternative implementations.
+19:44:43 <nitzmahone> I think the hardest part there will be not getting false positives
+19:44:54 <jimi|ansible> the fact that you and nitzmahone were like "oh yeah that's what i was thinking" threw me a bit
+19:45:06 <sivel> jimi|ansible: In my head it seems simple, I just don't want a 500 line change to drop in 2.6 to add deprecations to this :)
+19:45:26 <nitzmahone> Yeah, I'd definitely take issue with that
+19:45:27 <jimi|ansible> nah it wouldn't be that bad, doing AnsibleUnsafe wasn't nearly that big and it was a lot more invasive
+19:45:45 <sivel> ok, so deprecations + new key for 2.6?
+19:45:55 <nitzmahone> @jimi|ansible - why did that throw you a bit?
+19:45:56 <dag> +1
+19:45:57 <abadger1999> Those things are invasive, though, in that they touch code that would be accessed everywhere.
+19:45:59 <nitzmahone> +1
+19:46:05 <abadger1999> not just in the facts gathering.
+19:46:16 <alikins> abadger1999: I would be -1 to a config option that changes what schema a given fact has, but +1 between selecting between options for different facts
+19:46:18 <sivel> I'll go with +1 for now, implementation of deprecations sigh unseen
+19:46:27 <sivel> sight*
+19:46:27 <dag> can we also make a list of other stuff we can do "right" (tm) in the same action ?
+19:46:28 <jimi|ansible> abadger1999: there's a difference between invasive and impactful, i think it would be the later, not the former
+19:46:39 <nitzmahone> @abadger1999: true, but other than potential false-positive, would be low likelihood of breakign stuff
+19:46:54 <nitzmahone> @jimi|ansible said it better than me
+19:47:22 <abadger1999> nitzmahone: I think I'll change the data type of every facts variable returned and inject processing that into the processing of every variable inside of a playbook?
+19:47:35 <abadger1999> The code might be small but it will be run a lot.
+19:47:57 <dag> in same cases we return strings for integer values, etc.
+19:48:06 <jtanner> fact adapters?
+19:48:20 <abadger1999> OTOH, if jimi implements it early in the 2.6 cycle, then it is fine by me.
+19:48:28 <jimi|ansible> abadger1999: sure it will, but if it's a small change overall the change for bugs is a lot less
+19:48:45 <nitzmahone> Yeah, fair enough- I guess I'd consider "invasive" if we're having to special-case for it in a lot of places- that's where I'd be more inclined to put the brakes on
+19:48:46 <abadger1999> what I hate about features getting into maintenance releases is that they get in at the normal time, late in the cycle.
+19:48:58 <alikins> abadger1999: could also add feature/version metadata about the facts to indicate their format... that would at least give playbook authors a fighting chance to pick the right one
+19:49:24 <jtanner> gather_facts: version: 2 ?
+19:49:25 <jimi|ansible> i was thinking the hard part would be the double-wrapping of the deprecated fact bit by AnsibleUnsafe, but I'm not sure we use AnsibleUnsafe for setup.py stuff?
+19:49:54 <abadger1999> alikins: Considering that we don't even have consistency between platforms, I'm not sure that we are at the point where a schema version makes sense.
+19:49:55 <jimi|ansible> alikins: in theory sure, but you'd have to put boilerplate around every jinja2 use in a playbook, which would be hell
+19:50:00 <nitzmahone> I don't think so off the top of my head
+19:50:04 <alikins> {'facts':{'ansible_hostname': 'bar', 'ansible_fact_meta':{'ansible_hostname
+19:50:19 <alikins> {'facts':{'ansible_hostname': 'bar', 'ansible_fact_meta':{'ansible_hostname': {'version': 1}}}}  or whatever
+19:50:33 <jimi|ansible> sure now try to use that fact simply in a task
+19:50:49 <jimi|ansible> {% if ansible_fact_meta.ansible_hostname.version == 1... %}
+19:50:50 <nitzmahone> oy, let's not get too far off into the weeds redesigning facts here
+19:50:51 <jimi|ansible> ick
+19:50:52 <abadger1999> also.... facts are probably large enough that size of the result data will matter.
+19:51:05 <sivel> ok, jimi|ansible are you going to handle this in 2.6?
+19:51:11 <dag> jimi: that was my objection to ansible_facts
+19:51:25 <dag> jimi: it should have been facts.hostname
+19:51:30 <alikins> jimi|ansible: I kind of want a controller side plugin to manipulate facts post collection, and that would be example of the kind of thing you could do with it
+19:51:42 <jimi|ansible> dag: we try and not collide with things, so anything we do we preface with ansible_
+19:52:00 <sivel> I'll accept that non-answer ;)
+19:52:03 <jimi|ansible> the problem to me isn't the extra characters, it's the fact that you have to do logic to use a variable
+19:52:08 <jimi|ansible> sivel: sure i can take it :)
+19:52:42 <jimi|ansible> depending on my availability for 2.6, but with you and nitzmahone as backup i'm sure we could knock it out quick
+19:52:46 <jtanner> alikins: "fact adapters"
+19:53:01 <thaumos> okay, can someone please write a short action on this?
+19:53:09 <jimi|ansible> action: fix stuff
+19:53:15 <thaumos> ....
+19:53:21 <alikins> then we can unweird facts with random names like 'ansible_eth0234234w3345'
+19:53:23 <thaumos> I guess I deserve that.
+19:53:26 <jimi|ansible> heh
+19:53:52 <maxamillion> what? you sure that's not a valid systemd ethernet device name?
+19:53:58 <jimi|ansible> action: implement a way to deprecate facts in 2.6 and do general fact cleanup/reorganization
+19:54:22 <jtanner> are we gonna have time to talk about relative var paths and playbook parents?
+19:54:23 <thaumos> also, can someone write this up so I can make sure it is highlighted as a maintenance fix for the 2.6 release when I write the roadmap.
+19:54:39 <thaumos> does anyone have something pressing after this meeting?
+19:54:45 <nitzmahone> WWG
+19:54:49 <thaumos> meh
+19:54:49 <jtanner> winderz
+19:54:50 <maxamillion> thaumos: the Windows Working Group
+19:54:50 <sivel> #action jimi|ansible to implement a way to deprecate facts in 2.6 and do general fact cleanup/reorganization
+19:54:53 <thaumos> meh
+19:54:54 <nitzmahone> (for some value of pressing)
+19:54:55 <thaumos> lol
+19:54:56 <maxamillion> thaumos: ;)
+19:54:59 <dag> jimi: that makes a lot of sense if there was no standard, but 'facts' could have well be the standard and a reserved keyword
+19:55:12 <thaumos> dag, the horse is pulp on that one I think
+19:55:49 <jimi|ansible> `ansible_` is our sledge hammer, if someone says "you're colliding with my variables" we can say "don't start them with ansible_"
+19:55:56 <alikins> am I going have mention then 2.7 enters the post-fact era?
+19:56:02 <jimi|ansible> that's our namespace, that's not going to change
+19:56:07 <dag> thaumos: and for facts that sledge hammer could have been 'facts'
+19:56:17 <thaumos> ..............
+19:56:17 <jimi|ansible> alikins-- for being too soon
+19:56:19 <dag> sorry jimi
+19:56:43 <jimi|ansible> sure, if we had decided that 4 years ago
+19:56:47 <jimi|ansible> bit late now
+19:56:49 <dag> if you have 3 facts on a when-line, you have 3x ansible_ in there for no good reason other than "we didn't think about namespaces when we should have)
+19:57:07 <dag> and now we use a sledge hammer because we think we're being smart now
+19:57:28 <jimi|ansible> not smart, careful, because we weren't smart before
+19:57:30 <dag> it's neither convenient nor efficient
+19:57:34 <maxamillion> I think it's more a case of "we use a sledge hammer because of the reality of the situation" but I might be arguing semantics
+19:57:48 <thaumos> since we are considering these changes for 2.6, should we include itdependsnetwork's concerns in 2.6 as well?
+19:58:02 <jimi|ansible> hindsight is 20/20 and all that
+19:58:11 <itdependsnetwork> I say yes, no idea what the context is, but yes
+19:59:07 <sivel> thaumos: no, I don't think so
+19:59:27 <thaumos> okay, just wanted to make 100% sure.
+19:59:48 <thaumos> I will be sure to touch on it again in the middle of the cycle as we complete this first fact exercise.
+20:00:10 <thaumos> alright, we are at time.
+20:00:19 <gundalow> Thanks all
+20:00:21 <gundalow> #endmeeting

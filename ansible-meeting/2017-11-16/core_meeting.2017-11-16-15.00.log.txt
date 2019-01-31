@@ -1,0 +1,83 @@
+15:00:07 <thaumos> #startmeeting core meeting
+15:00:07 <zodbot> Meeting started Thu Nov 16 15:00:07 2017 UTC.  The chair is thaumos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:00:07 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:00:07 <zodbot> The meeting name has been set to 'core_meeting'
+15:01:41 * gundalow waves
+15:02:35 <thaumos> #chair gundalow
+15:02:35 <zodbot> Current chairs: gundalow thaumos
+15:02:40 * thaumos waves back at gundalow
+15:03:05 * sdoran is in two other meetings
+15:03:15 * gundalow is only in one other meeting
+15:03:21 <gundalow> wonder if I'm missing out
+15:03:25 <thaumos> gosh dang
+15:03:32 <thaumos> sdoran is famous round these here parts
+15:03:52 <sdoran> No, just stretched.
+15:06:01 * Pilou waves
+15:06:06 <thaumos> #chair pilou
+15:06:06 <zodbot> Current chairs: gundalow pilou thaumos
+15:06:17 <thaumos> #topic Open Floor
+15:07:21 <Pilou> i would like to discuss about #31456 :)
+15:08:38 <gundalow> #topic Unit tests: share common code #31456
+15:08:42 <gundalow> Pilou: sure
+15:08:55 <gundalow> mattclay: sivel You around?
+15:13:25 <gundalow> Pilou: appologies, most of the Engineering team are in another meeting at the moment
+15:14:31 <Pilou> no need to apologise :)
+15:14:43 <gundalow> Testing working group is later on today
+15:15:13 <gundalow> Think it's a bit early for Matt and sivel. TWG later on today may be better
+15:15:17 <gundalow> Are you around for that?
+15:15:35 <Pilou> yep. i asked there because switch to pytest was made in this working group
+15:16:45 <Pilou> Anyway what is the policy regarding new unit tests ? Is pytest mandatory (meaning new unit tests based on unittests aren't accepted) ?
+15:18:50 <sivel> I am here'ish
+15:19:01 <sivel> well, here now
+15:19:21 <sivel> I'd forgotten about the time change
+15:20:04 <gundalow> #chair sivel
+15:20:04 <zodbot> Current chairs: gundalow pilou sivel thaumos
+15:20:05 <gundalow> nps
+15:20:40 <sivel> but does seem light on attendees :)
+15:22:33 <thaumos> heh, yeah.
+15:22:35 <thaumos> it's one of those days
+15:23:21 <gundalow> #action gundalow Discuss #31456 in particular the "correct way" of writing tests in Testing Working Group
+15:26:07 <gundalow> #topic Open Floor
+15:28:39 <sivel> I think I have something
+15:28:50 <gundalow> sivel: sure #topic at will
+15:28:51 <sivel> was just coming to mind as I was finishing up some things on https://github.com/ansible/proposals/issues/83
+15:29:07 <sivel> I have written a script to help convert tests as filter to jinja test syntax
+15:29:22 <sivel> (also I don't actually know how to use the bot)
+15:29:25 <sivel> :)
+15:29:37 <gundalow> sivel: oh, nice
+15:29:37 <sivel> I am about to update the porting guide
+15:29:45 <sivel> and my plans are to include this script in the hacking dir
+15:29:48 <gundalow> Can use that to bulk update the integration tests
+15:29:58 <sivel> Already did, and they are all passing :)
+15:30:09 <gundalow> You machine :)
+15:30:17 <sivel> My question, is whether I should even mention the script in the porting guide
+15:30:28 <sivel> as I know "support" will likely be using the script from time to time
+15:30:33 <thaumos> yes
+15:30:38 <thaumos> please do mention it
+15:30:56 <sivel> Ok, but I will include wording, that it isn't necessarily supported, and does have some limitations
+15:31:08 <thaumos> because there will be plenty of others out there that aren't supported customers that could use a pointer to that
+15:31:14 <sivel> I figured
+15:31:15 <thaumos> what wouldn't be supported?
+15:31:37 <sivel> Just saying that the conversion is best effort, and there are limitations to what it can do
+15:31:43 <sivel> I've documented the limitatios
+15:31:50 <sivel> within the script
+15:32:11 <gundalow> hum, hacking isn't distributed (AFAIK) though I still think that's the right place
+15:32:36 <thaumos> I think it's fair saying that it's best effort.
+15:32:49 <sivel> and although I touched like 326 files in intengration tests, it's not seen a whole lot of use
+15:32:57 <sivel> so it could do "the wrong thing"
+15:32:59 <sivel> :)
+15:33:01 <sivel> in some cases
+15:33:08 <gundalow> "it's not seen a whole lot of use"?
+15:33:41 <sivel> I'm sure there are scenarios of how people ahve written their jinja statements, that I couldn't conceive of, and that didn't exist in integration tests
+15:33:51 <gundalow> ah, gotcha
+15:33:55 <sivel> I can't guess as to how it might act on everyones playbooks
+15:34:19 <thaumos> well, think of it this way... if support issues are opened against this, and  the tool does the wrong thing, support will figure it out.
+15:34:23 <sivel> but, I'll try to incude some wording that the changes it makes should be evaluated for correctness
+15:34:55 <thaumos> I think that's fair.  No one can be expected to capture every weird corner case.
+15:35:22 <thaumos> as long as a disclaimer is there saying mileage may vary depending on the playbook.  this is a tool to help with best effort support.
+15:35:35 <sivel> great, thanks!
+15:36:16 <sivel> that is all from me for now
+15:42:19 <thaumos> alright well, I am going to endmeeting
+15:42:27 <thaumos> doesn't seem like much else to chat about.
+15:42:33 <thaumos> thanks everyone who came today!
+15:42:37 <thaumos> #endmeeting

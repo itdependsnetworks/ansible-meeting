@@ -1,0 +1,84 @@
+17:00:25 <mattclay> #startmeeting Ansible Testing Working Group
+17:00:25 <zodbot> Meeting started Thu Feb  1 17:00:25 2018 UTC.  The chair is mattclay. Information about MeetBot at http://wiki.debian.org/MeetBot.
+17:00:25 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+17:00:25 <zodbot> The meeting name has been set to 'ansible_testing_working_group'
+17:00:31 <mattclay> #info Agenda: https://github.com/ansible/community/issues/248
+17:00:39 <mattclay> #chair gundalow
+17:00:39 <zodbot> Current chairs: gundalow mattclay
+17:01:01 <mattclay> There isn't anything new on the agenda for this week.
+17:01:05 <mattclay> gundalow: Do you have any updates?
+17:01:11 <maxamillion> .hello2
+17:01:12 <zodbot> maxamillion: maxamillion 'Adam Miller' <maxamillion@gmail.com>
+17:01:15 <mattclay> #chair maxamillion
+17:01:15 <zodbot> Current chairs: gundalow mattclay maxamillion
+17:02:41 <mattclay> #info Windows integration tests for 2012, 2012 R2 and 2016 are now running on Azure instead of AWS.
+17:02:41 <gundalow> Nothing from me
+17:03:11 <mattclay> #topic Open Floor
+17:03:23 <mattclay> Does anyone have anything they'd like to discuss?
+17:03:23 <gundalow> Currently I'm working on network docs for 2.5,not anything testing related
+17:05:06 * abadger1999 wonders if 2.6 release could include a special push for increased testing (but not sure what that looks like either)
+17:05:54 <abadger1999> (For those who don't know, 2.6 is suppose to be a stabilization release rather than concentrating on new features)
+17:06:14 <gundalow> abadger1999: Yup. We have various lists of things to add.
+17:06:28 <gundalow> Which can easily be split up
+17:06:37 <gundalow> Into nice small chunks
+17:06:54 <mattclay> abadger1999: A few things come to mind there: 1) fixing issues identified by existing tests (ex: our pylint ignore list) and 2) adding more tests to improve coverage, particularly of supported modules and the core engine
+17:07:28 <abadger1999> <nod>  Yeah, those would be cool.  How do we get people to work on them?
+17:07:37 <gundalow> Bingo
+17:07:56 <mattclay> We have lists for #1, we can create a list for #2 -- Then we just need to advertise those in the relevant places to solicit help.
+17:08:05 <gundalow> I think showing that it's easy, and having walk though docs
+17:08:20 <mattclay> Yes, having docs to point to would definitely help.
+17:08:29 <gundalow> I'm planning on doing a blog post
+17:08:54 <gundalow> What is TWG, and how *you *can get involved
+17:09:25 <abadger1999> Cool :-)
+17:09:29 <mattclay> Having more tests from #2 makes #1 easier, since a lot of the issues on the lists for #1 don't have tests to verify the fixes are OK.
+17:10:21 <mattclay> Which means if we're not careful, we could actually destabilize things by fixing items on the lists from #1 if there are no tests.
+17:11:16 <mattclay> #chair abadger1999
+17:11:16 <zodbot> Current chairs: abadger1999 gundalow mattclay maxamillion
+17:14:26 <gundalow> I was thinking we could flesh out https://github.com/ansible/community/wiki/Testing%3A-progress-tracker
+17:14:33 <gundalow> a) what the issue is
+17:14:49 <gundalow> b) Where the list of remaining work is
+17:14:52 <gundalow> c) how to fix
+17:15:19 <abadger1999> <nod>
+17:15:24 <abadger1999> Sounds good
+17:16:36 <gundalow> oh. also there are load of PRs with tests that are not features/new-modules https://github.com/ansible/ansible/pulls?utf8=%E2%9C%93&q=is%3Aopen+label%3Atest+is%3Apr++-label%3Anew_module+-label%3Amodule++-label%3Afeature_pull_request
+17:17:54 <mattclay> Another area we could work on is making a list of unstable tests, so we can improve those.
+17:18:20 <gundalow> oh, good point, such as http(s) issues
+17:18:38 <gundalow> What do you think is the easiest place to start brainstorming this, on the bottom of that wiki page?
+17:18:48 <mattclay> Yes, often it's external resources, but it can also be bugs in modules or tests.
+17:19:28 <mattclay> Yeah, I'd put it on the wiki page. We'll have to maintain it manually for now, but eventually I plan on having some automated statistics collection on things like test stability for easy reporting.
+17:22:13 <gundalow> OK, I'll throw some stuff in now
+17:22:36 <mattclay> So we have 3 areas so far (not counting docs needed for all of these): 1) fix existing issues identified by tests, 2) add more tests, 3) improve test stability
+17:22:59 <Pilou> About external resources, would that make sense to use some cache ? something like Pulp ? I mean ansible-ci-files.s3.amazonaws.com could only host static files.
+17:23:11 <gundalow> #chair Pilou
+17:23:11 <zodbot> Current chairs: Pilou abadger1999 gundalow mattclay maxamillion
+17:23:44 <abadger1999> things like yum and dnf tests, we should create a small package repository hosted in httptester.
+17:24:53 <abadger1999> it's just a matter of testing the right things (I think dependencies and groups are two things we are especially testing for)
+17:24:56 <mattclay> If we can spin up an http server for a repo during the test, that is even better, as it avoids the docker dependency for the test due to httptester.
+17:25:53 <mattclay> Anything we add to httptester still has to work without it, so having the tests be self-contained makes the test more consistent.
+17:26:23 <abadger1999> <nod>
+17:26:56 <abadger1999> I think that a problem we have with the url tests is that the http server (pythons' SimpleHTTPServer) we spin up times out.
+17:27:10 <abadger1999> But perhaps we can make that type of code more robust?
+17:27:24 <abadger1999> maybe an explicit "stop serving" url?
+17:30:22 <mattclay> Yeah, I've seen errors before with our http server. I'm not sure what the cause is, but fixing that would definitely fall under making the tests more robust.
+17:31:51 <Pilou> Should 'retry:' used systematically with external resources ?
+17:34:12 <mattclay> I think retry should only be used when that's what is being tested. Otherwise we should fix the underlying issue with the test stability. That's why the retries we have in ansible-test result in unstable test results, not pass.
+17:34:49 <mattclay> I've seen numerous cases where a retry of a test results in a false pass, since the conditions have changed since the first run of the test.
+17:40:22 <mattclay> So, any action items we want to record?
+17:40:33 <gundalow> mattclay: I've reordered https://github.com/ansible/community/wiki/Testing:-progress-tracker by the three topics (existing, more, stability) and put in placeholders for what I think are the top existing issues
+17:41:01 <gundalow> Q1: Wasn't sure if pslint should be on that list
+17:41:19 <gundalow> Q2) Not added anything else about stability
+17:41:37 <gundalow> Q2 Not added anything else about stability, what else should be added?
+17:41:45 <gundalow> making that a question :P)
+17:41:46 <mattclay> Yes, pslint should be on the list.
+17:42:38 <gundalow> urgh, i hate RST (no dynamic headings) anyone object if I convert that to RST?
+17:43:43 <mattclay> It's MD currently?
+17:43:50 <gundalow> urgh
+17:43:57 <gundalow> I hate MD. Can I make it RST
+17:44:03 <mattclay> Fine with me.
+17:44:04 <gundalow> sorry, doing too many things at once
+17:44:14 <gundalow> little easier to manage
+17:44:25 <maxamillion> <3 RST
+17:49:51 <mattclay> OK, anything else before?
+17:50:55 <gundalow> How about next week we try and flesh out this doc?
+17:53:10 <mattclay> Sounds good.
+17:57:39 <mattclay> #endmeeting

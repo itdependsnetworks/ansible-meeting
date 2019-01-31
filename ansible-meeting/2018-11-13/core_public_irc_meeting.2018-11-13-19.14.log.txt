@@ -1,0 +1,107 @@
+19:14:01 <bcoca> #startmeeting core public irc meeting
+19:14:01 <zodbot> Meeting started Tue Nov 13 19:14:01 2018 UTC.
+19:14:01 <zodbot> This meeting is logged and archived in a public location.
+19:14:01 <zodbot> The chair is bcoca. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:14:01 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:14:01 <zodbot> The meeting name has been set to 'core_public_irc_meeting'
+19:14:29 <bcoca> #topic https://github.com/ansible/ansible/pull/48324
+19:14:41 <bcoca> @mattclay?
+19:15:11 <maxamillion> .hello2
+19:15:12 <zodbot> maxamillion: maxamillion 'Adam Miller' <maxamillion@gmail.com>
+19:16:15 <mattclay> I think the that change speaks for itself. Are there any objections?
+19:16:27 <bcoca> +1 from me
+19:16:53 <maxamillion> +1 from me
+19:17:08 <maxamillion> I think the resulting diff makes it obvious
+19:18:10 <jtanner> hi
+19:18:15 <gundalow> +1
+19:18:21 <mkrizek> +1, provided it doesn't break bot?
+19:18:42 <mkrizek> just a concern, not sure it would
+19:18:57 <bcoca> k, enough +1s .. if it breaks bot, mkrizek just volunteered to fix it
+19:18:58 <jtanner> it shouldn't but it can be fixed if it does
+19:19:16 <bcoca> closing vote in 10s
+19:19:54 <bcoca> #topic https://github.com/ansible/ansible/pull/25573
+19:21:01 <bcoca> @sean?
+19:21:45 <bcoca> not sure i like the option ... meta has many variants and filter is both generic name but only applies to one variant
+19:23:01 <bcoca> k, so if no one else up for discussing and proposer missed 2nd meeting, postponing
+19:23:12 <bcoca> @abond?
+19:23:21 <bcoca> #topic https://github.com/ansible/ansible/pull/36961
+19:24:16 <bcoca> k, nother noshow
+19:24:21 <bcoca> @mkrizek you are up
+19:24:32 <bcoca> #topic https://github.com/ansible/ansible/pull/47194
+19:24:40 <mkrizek> so this PR adds a new meta task, named skip_host in the PR, that is a per-host variation of end_play
+19:24:49 <mkrizek> as per bcoca's suggestion in the PR, the name probably needs bikeshedding, current proposals are: a) skip_host, b) remove_host_from_play, c) end_host
+19:24:52 <bcoca> ^ im partial to 'end_host' just for parity with end_play
+19:25:19 <bcoca> b) was mostly 'what it means' .. not really good proposal
+19:25:54 <mkrizek> +1 to end_host
+19:26:03 <maxamillion> I like option A but generally prefer consistency so I'll vote option C
+19:27:05 <bcoca> anyone else would like to propose paint for the shed?
+19:27:11 <jtanner> a
+19:27:33 <jtanner> the action under the covers appears to be setting tasks to "skipped"
+19:27:53 <bcoca> jtanner: no, tasks wont be even tried, so no skipped state, which is why i found it confusing
+19:28:03 <jtanner> ah, i read it wrong
+19:28:16 <jtanner> iterator._host_states[target_host.name].run_state = iterator.ITERATING_COMPLETE
+19:28:18 <bcoca> host = iterated (means it got to the 'end of tasks for that host'
+19:28:30 <bcoca> yep, exactly
+19:29:02 <jtanner> i guess end_host is fine then
+19:29:24 <bcoca> so C seems to win .. i expected someone figure out a better name .. but i can live with end_host
+19:29:59 <bcoca> #topic https://github.com/ansible/ansible/pull/39656
+19:30:02 <jtanner> dwim_host
+19:30:16 <bcoca> i  veto any further use of 'dwim'
+19:30:43 <bcoca> its always 'dwptsm' .. never 'dwim'
+19:30:43 <farhan7500> hi, this is regarding HPE 3PAR CPG module, the review comments have been addressed. Could this be merged?
+19:31:12 <maxamillion> dwim ... eyetwitch
+19:31:21 <jtanner> dag's review is for a commit that doesn't exist anymore
+19:32:47 <farhan7500> That peice of code has been moved to module_utils, for reusability
+19:32:57 <bcoca> mostly lgtm, i would use 'name' instead of cpg_name since the module already puts the context (just comment, not a blocker)
+19:33:54 <bcoca> farhan7500: does present not imply updates when it already exists?
+19:34:12 <bcoca> i see no path that updates existing one
+19:34:30 <bcoca> it assumes you are always creating
+19:35:47 <farhan7500> CPG update is hardly used, so we have excluded that in the module
+19:36:05 <farhan7500> For other module like volume etc, updates would be there
+19:36:22 <bcoca> i would say the module is incomplete then
+19:36:36 <bcoca> what happens when user reruns task when it alreayd exists?
+19:36:54 <bcoca> if im reading this correctly it fails 'create failed' ?
+19:37:34 <farhan7500> if not client_obj.cpgExists(cpg_name):
+19:37:57 <farhan7500> We are checking for existence, the CPG will only be created if it does not exist
+19:38:38 <farhan7500> else: return (True, False, "CPG already present")
+19:39:10 <bcoca> but if the data does not match, that would be incorrect
+19:39:17 <bcoca> i.e set_size was updated in task
+19:39:44 <farhan7500> What do you suggest in that case?
+19:40:11 <bcoca> either update + changed true or 'fail' as object already existed but with diff params
+19:40:17 <bcoca> i would prefer the 1st
+19:40:28 <bcoca> as that is what i expect from modules when state=present
+19:41:41 <farhan7500> ok. I will have another look. Thanks for the suggestion
+19:42:17 <bcoca> #topic open floor
+19:42:59 <stoned75> I'd like to push for https://github.com/ansible/ansible/pull/33230
+19:43:27 <stoned75> it won't be able to deploy my vm without it
+19:43:34 <stoned75> s/it/I/
+19:43:35 <bcoca> @aksasurde?
+19:43:50 <felixfontein> I'd like to talk about https://github.com/ansible/ansible/issues/48473
+19:44:21 <bcoca> one at time
+19:45:02 <felixfontein> just pased it before I forget the URL again :)
+19:45:02 <bcoca> stoned75: so there seem to be some outstanding comments that were not addressed
+19:45:26 <stoned75> the " Once you have 8 or more disks" part ?
+19:45:42 <bcoca> i would like to discuss with author
+19:45:52 <bcoca> i have not read them, i just see there are a couple and no response
+19:46:34 <stoned75> ok. I I think the handling of scsi id 7 issue had been addressed elsewere
+19:46:56 <bcoca> author has commit privs, so if he hasn't merged i would like to know from him
+19:47:03 <stoned75> understood
+19:47:05 <bcoca> but .. timezones ...
+19:47:12 <jtanner> akasurde will merge it when he gets to it.
+19:47:25 <bcoca> we'll let him know you are waiting for it
+19:47:42 <bcoca> #topic https://github.com/ansible/ansible/issues/48473
+19:47:57 <stoned75> many thanks
+19:48:28 <bcoca> felixfontein: that should not be hard to fix for 'simple types' .. it gets iffy when element=list
+19:49:38 <felixfontein> bcoca: yes, that's true. what I'm more worried about is that adding this verification could break some modules which (incorrectly) relied on this verification not being done
+19:49:52 <bcoca> any fix would have to go over those modules
+19:50:08 <felixfontein> what I'm even more curious about is whether this missing check is an intentional omission, or whether it has just been forgotten
+19:50:50 <bcoca> idk, would have to ask authors (there were several, i did initial try but got nowhere and others took over)
+19:51:12 <bcoca> it was never my intention but idk if they hit some wall and just skipped over that one
+19:52:10 <felixfontein> ok. is anyone interested in working on this? I don't mind not doing that, there are enough other things to do... :)
+19:53:21 <bcoca> afaik, we are fine if you tackle it, i've made note to those that might care, we'll get feedback withing the next 24h
+19:53:40 <bcoca> timezones x distributed teams
+19:54:16 <felixfontein> perfect, thanks! :)
+19:55:06 <bcoca> #topic open floor
+19:55:13 <stoned75> fyi I left a msg for @Akasurde
+19:55:26 <bcoca> me twos
+19:59:13 <bcoca> #endmeeting

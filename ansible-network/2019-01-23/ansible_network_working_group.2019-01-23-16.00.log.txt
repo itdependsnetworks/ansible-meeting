@@ -1,0 +1,64 @@
+16:00:34 <Qalthos> #startmeeting Ansible Network Working Group
+16:00:34 <zodbot> Meeting started Wed Jan 23 16:00:34 2019 UTC.
+16:00:34 <zodbot> This meeting is logged and archived in a public location.
+16:00:34 <zodbot> The chair is Qalthos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:00:34 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:00:34 <zodbot> The meeting name has been set to 'ansible_network_working_group'
+16:01:07 <Qalthos> #chair ganeshrn justjais trishnag IPvSean
+16:01:07 <zodbot> Current chairs: IPvSean Qalthos ganeshrn justjais trishnag
+16:01:21 <Qalthos> #topic Core Updates
+16:01:28 <Qalthos> #info vyos provider v2.7.3 released
+16:01:36 <Qalthos> #info Fixed ansible_connect_timeout being passed as extra vars
+16:01:48 <Qalthos> #info More work on network facts gathering for 2.8
+16:01:56 <Qalthos> #info Added terminal and cliconf plugins for Free Range Routing platform.
+16:02:01 <Qalthos> #info Added multiple public keys support for ios_user
+16:02:15 <Qalthos> #info Fixed cisco_ios provider issue - #86
+16:03:17 <Qalthos> #topic Last week's action items
+16:04:42 <Qalthos> Last week https://github.com/ansible/ansible/pull/50801 was brought up, and we asked that anyone maintaining a platform voice any thoughts on the change on the PR
+16:05:25 <Qalthos> There haven't been any complaints, so that's going to get merged this week, barring any last-minute objections
+16:05:46 <Qalthos> #action merge ansible/ansible#50801
+16:06:46 <Qalthos> Moving on, the agenda (as always) can be found at
+16:06:49 <Qalthos> #link https://github.com/ansible/community/labels/network
+16:07:24 <Qalthos> But we don't have anything on the agenda for today, so
+16:07:28 <Qalthos> #topic Open Floor
+16:07:40 <Federico87_> just add this on agenda
+16:07:41 <Federico87_> https://github.com/ansible/ansible/pull/50705
+16:07:50 <Federico87_> is ready to merge I believe :)
+16:08:18 <Qalthos> #topic ios ntp module
+16:09:54 <Federico87_> All test are passed. Is it good to merge it?
+16:11:16 <Qalthos> Other than the changes you've made, it would be nice to show an example of the module actually doing something... You don't have an integration test that tests changing the configuration (instead of removing it)
+16:11:35 <Qalthos> Also, you've put your unit tests in the integration test directory?
+16:12:19 <Qalthos> Wait, what
+16:12:35 <Federico87_> There is the 'absent' test that removes config. That could be ok?
+16:12:47 <Qalthos> Okay, your unit tests are in the integration directory and your integration tests are in the integration directory
+16:13:07 <Federico87_> Also, I have use it for production changes. Can I use that results as test?
+16:13:09 <Qalthos> No, hold on
+16:13:35 <Federico87_> ok
+16:13:37 * Qalthos takes another drink of tea in hopes of thinking more clearly
+16:14:40 <Qalthos> Okay, ignore everything I said about where things are, I apparently have been struck with a temporary madness
+16:15:20 <Qalthos> You should, however, add a test to show that if you change the configuration from what's in the fixture, the appropriate commands are sent
+16:15:44 <Qalthos> Removing the configuration is one thing, but being able to detect the correct changes and apply them is another
+16:16:22 <Federico87_> you mean return the commands list?
+16:16:23 <Qalthos> As for your integration tests... they don't test anything
+16:16:54 <Federico87_> great...just when I thought I started to understand something about test :'(
+16:16:58 <Qalthos> yes, similar to how your first test was set up, but with different config so that a change is detected
+16:17:16 <Federico87_> Ok, I' ll work on it...
+16:18:54 <Qalthos> Your integration tests run the module, great. But you don't do anything with the results... you're not verifying that certain output is found, or even if it returns changed=True or False
+16:19:23 <Qalthos> And I don't see you cleaning up device state at all, though I might not be seeing it
+16:19:40 <Federico87_> the return should be checked as pipeline failed in first instance because I put the wrong return
+16:19:40 <Qalthos> #action Qalthos distill all these comments into a PR review
+16:20:17 <Federico87_> anyway I ll have a look :)
+16:21:10 <Qalthos> Do you mean the second test failing because the first test ran improperly? That's what I mean by cleaning up state. These tests should be entirely independent of each other and of the initial state of the device
+16:21:34 <Qalthos> Otherwise they could fail for reasons entirely unrelated to the thing they are meant to be testing
+16:22:14 <Federico87_> o
+16:22:15 <Federico87_> k
+16:22:17 <Qalthos> You'll get the hang of it eventually
+16:26:44 <Qalthos> #topic Open Floor
+16:26:55 <Qalthos> Anyone else have anything they want to bring up?
+16:30:53 <ankitb_07> Guys, I wanted to know when would be the code freeze for ansible 2.8? I was going to do few pull requests for new modules. Thanks.
+16:32:10 <Qalthos> ankitb_07: https://docs.ansible.com/ansible/devel/roadmap/ROADMAP_2_8.html says late March
+16:34:33 <ankitb_07> Thank you Qalthos. So, I can make pull requests and follow the procedure for adding new modules? Just need the confirmation before I start working on it. Thanks.
+16:36:09 <Qalthos> Yup, new community modules need to be in before 2019-03-21, other than that, just follow the normal procedure
+16:37:01 <ankitb_07> Thanks. :)
+16:44:43 <Qalthos> Alright, then, thanks everyone for coming by, and have a good week
+16:45:01 <Qalthos> #endmeeting

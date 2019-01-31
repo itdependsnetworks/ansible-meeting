@@ -1,0 +1,460 @@
+19:04:04 <bcoca> #startmeeting ansible core public irc meeting
+19:04:04 <zodbot> Meeting started Tue Nov  6 19:04:04 2018 UTC.
+19:04:04 <zodbot> This meeting is logged and archived in a public location.
+19:04:04 <zodbot> The chair is bcoca. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:04:04 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:04:04 <zodbot> The meeting name has been set to 'ansible_core_public_irc_meeting'
+19:04:21 <nitzmahone> click
+19:04:56 <abadger1999> Olá
+19:04:58 <bcoca> #topic https://github.com/ansible/proposals/issues/148
+19:05:28 <defionscode> yep
+19:05:36 <defionscode> went back/forth with sdoran on this
+19:05:59 <sdoran> The main reason I wanted to bring this up is for input from other Core members.
+19:06:04 <defionscode> in a gist, allow fact modules that can also error if a user really wants to. make compliance a tad easier
+19:06:05 <bcoca> -1 on audit modules (scan facts and validate them) i prefer 2 modules at least, but would be nicer if validation would just use existing sytsems
+19:06:21 <sdoran> Auditing is a thing people want to do with Ansible, and what they generally create is painful and unpleasant.
+19:06:23 <abadger1999> Hmm... I haven't read the proposal's comments but I thought this was the kind of thing that people were already using molecule for?
+19:06:30 <sdoran> I'm wondering if there is a better way to solve this with Ansible.
+19:06:45 <bcoca> abadger1999: not validating ansible but 'security checklist' or similar 3rd party compliance
+19:06:47 <sdoran> Besides the register/assert dance.
+19:07:02 <defionscode> abadger1999: yes, what bcoca said
+19:07:03 <abadger1999> Isn't that still something that people use molecule for?
+19:07:08 <bcoca> sdoran: we can make assert better, the plugin alikins__ was working on is one way
+19:07:23 <abadger1999> "Assert that machine is in X State"
+19:07:25 <defionscode> abadger1999: more like testinfra, inspec, etc
+19:07:28 <bcoca> abadger1999: they could, not sure they do, but it might make more sense there
+19:07:28 <sdoran> And it ends up with a whole bunch of Jinja foo in the playbooks that is unwieldy.
+19:07:50 <defionscode> molecule allows for using those validator tools
+19:07:54 <defionscode> but it's not native ansible
+19:07:57 <bcoca> sdoran: vs actual code, which i think is more unwieldly for most users
+19:08:09 <bcoca> does it have to be native ansible?
+19:08:23 <bcoca> if molecule is already a tool for that kind of thing ...
+19:08:46 <defionscode> for many folks yes, b/c tower and tower worklows (but that's prob out scope for this)
+19:08:50 <shepdelacreme> I would like to run an audit check/scan against hosts as part of native ansible and not have to use molecule...yes
+19:09:04 <maxamillion> .hello2
+19:09:05 <zodbot> maxamillion: maxamillion 'Adam Miller' <maxamillion@gmail.com>
+19:09:07 <abadger1999> Hmmm... Okay, the molecule interface looks good for this but the molecule featureset leaves a little bit missing.
+19:09:09 <bcoca> ansible is a great tool, its not the only tool
+19:09:45 <defionscode> abadger1999: in the case of molecule i think it's overkill and it's not really designed to plug into a larger workflow/process
+19:09:51 <bcoca> i agree ansible is a bit cumbersome on the validation side, but that does not mean that modules should do everything in one shot
+19:10:01 <abadger1999> We really only need the verifier portion.
+19:10:09 <shepdelacreme> I don't think molecule makes sense for what the scap_facts module is trying to accomplish
+19:10:23 <sdoran> Molecule seems like the incorrect tool.
+19:10:25 <bcoca> several options i see are better than that: a) make ansilbe validation better b) create validation modules/action plugins c) encapsulate in roles
+19:10:39 <abadger1999> If we kept the driver and provider portion then we'd need to make sure it supports the same types of connection that we do.
+19:10:45 <sdoran> It's more about validating the state of a system compared to a security baseline.
+19:10:59 <bcoca> sdoran: those are kind of very close
+19:11:20 <bcoca> security baseline is derived by contrasting 'state of system' vs 'ruleset'
+19:11:35 <sdoran> Yeah, which is why it's elusive.
+19:11:41 <bcoca> which is kind of what molecule does
+19:11:44 <sdoran> It seems like something that can be easily solved with existing tools.
+19:11:55 <sdoran> But if you carry it out using existing tooling, the result is kinda ugly.
+19:12:07 <sdoran> I've written far too many hundreds of validation/audit tasks.
+19:12:14 <bcoca> depends on your definition of ugly
+19:12:23 <maxamillion> I wonder if we could craft a general use role for this
+19:12:30 <bcoca> main issue i have with current assert/fail modules is the lack of control over end of tests
+19:12:35 <maxamillion> that abstracts away the ugly and you just hand a var or something
+19:12:37 <bcoca> maxamillion: probably
+19:12:38 <alikins__> would it be possible to add a new plugin type that runs after fact collection and could validate/assert _after_ a task?
+19:12:50 <bcoca> alikins__: like another module?
+19:13:01 <defionscode> maxamillion: the problem is distribution
+19:13:14 <shepdelacreme> writing python snippets to verify ever rule of a compliance baseline is more work than writing a role that actually enforces all those rules
+19:13:18 <nitzmahone> What's wrong with `failed_when` for that?
+19:13:24 <defionscode> esp for compliance that is spec driven
+19:13:57 <nitzmahone> (well, I guess I can think of one thing: you're looking for *additive* failure handling, not replacement)
+19:14:00 <alikins> thinking controller side plugin, so you can write python to validate instead of having to do it in jinja or explicitly pass it to another task
+19:14:01 <bcoca> nitzmahone: you might still want task to fail in end, but run all the rules ... but yeah, i could write a failed_when that does both
+19:14:26 <nitzmahone> -100 to new plugin types
+19:14:32 <bcoca> failed_when: rsult is failed and item.index == items|length
+19:14:40 <nitzmahone> (right now)
+19:14:42 <alikins> more or less the 'post' equilivent of the implicit task spec validation
+19:14:48 <bcoca> X 100 to nitzmahone's -100
+19:15:03 <nitzmahone> Plugin types have been breeding
+19:15:21 <defionscode> alikins: i think that's almost too much
+19:15:36 <bcoca> i'm writting become plugins even though i've been against them for 4yrs .. but i dont see a choice now, other types i don't see a need right now
+19:16:00 <defionscode> the example module I have a PR for, uses XML generated by openscap (which is what does the validation) and ansibel is just parsing the XML and reporting the data as facts with the option of allowing for the task to fail
+19:16:56 <nitzmahone> Big picture: I'm not opposed to a module like this, but at a glance it does feel kinda "syntactic sugar-y"... I assume that the XML output you're parsing lives on the hosts after a scan, so collecting/running on the controller would be (relatively) wasteful compared to doing this as a module.
+19:17:04 <abadger1999> shepdelacreme: I'm not sure if I'm understanding you.  I think the proposal is asking for something that verifies compliance rather than enforcement.
+19:17:25 <bcoca> defionscode: the module is mostly fine as it just validates input, my issue is whith the proposal of the
+19:17:30 <bcoca> audit type, which would do both
+19:17:37 <defionscode> nitzmahone: correct
+19:17:38 <nitzmahone> Yeah, I think that's probably premature
+19:17:57 <maxamillion> defionscode: the problem is distribution of what?
+19:18:14 <shepdelacreme> abadger1999: my comment was about using molecule to verify a system meets the baseline. it would mean writing 200+ python snippets to verify each rule
+19:18:22 <bcoca> but the scoring seems overlap with validation you can do in failed_when
+19:18:30 <defionscode> maxamillion: of role vs module, it's easier to ensure users have the latest version of a module (vs a role)
+19:18:34 <bcoca> while failed_when is a lot more flexible
+19:18:56 <nitzmahone> Except that `failed_when` doesn't have a way to preserve the "default" error handling, so each task would have to redundantly add `or failed`
+19:19:17 <abadger1999> defionscode: Why couldn't we have a facts module that includes a summary of checklist items that failed and one simple assert afterwards?  ie:  scap-facts: returns a detailed dictionary of compliances and also two keys. scap_failed=[True|False] and failure_msg=""
+19:19:21 <bcoca> defionscode: actually, no, most users wont install latest module on older ansible, but will be happy to update a role
+19:19:26 <nitzmahone> bcoca: that was my first thought as well though
+19:20:25 <nitzmahone> If the scores were just returned as facts/return values (personally prefer the latter), then implementing any arbitrary scoring stuff on the controller is trivial; *except* for the DRY fail on the `task_result is failed`
+19:20:26 <defionscode> abadger1999: the module allows for that when simple checking is needed
+19:20:32 <abadger1999> defionscode: then you can have two more tasks, debug: msg=scap_facts['failure_msg'] when: scap_facts['scap_failed']    and an assert on the scap_facts['scap_failed'] key
+19:20:55 <bcoca> abadger1999: i find that a lot more limiting than failed_when, specially when the condition for failure means to be variable (module shows min_score/max_score/etc)
+19:21:11 <abadger1999> defionscode: Okay... so I think it's just a standard facts module at that point.
+19:21:21 <defionscode> bcoca: not max score
+19:21:23 <abadger1999> bcoca: can failed_when show the message?
+19:21:27 <defionscode> min score at different severity levels
+19:21:31 <bcoca> sorry min_high_score
+19:21:55 <bcoca> abadger1999: no, but that might be worth looking at making a better return from failed when allowing author to control failed message
+19:22:11 <bcoca> and instead of failed_when, they can use asser/tfail task, that does allow for controling the msg
+19:22:15 <maxamillion> defionscode: yeah, that's fair
+19:22:29 <defionscode> abadger1999: yes precisely why i summarize the propsal as a facts module that allows for for tunable failed states in other words
+19:23:02 <bcoca> defionscode: and that module will grow to allow diff tunables, while users could already do all that on assert/fail/failed_when
+19:23:10 <defionscode> but it wont
+19:23:13 * nitzmahone notes that `failed_when` silently ignores being passed a list
+19:23:26 <bcoca> nitzmahone: all conditionals take lists, implict and
+19:23:31 <defionscode> it covers the tunables that _probably_ most users need
+19:23:36 <bcoca> when: <= also a list
+19:23:41 <defionscode> if they need more tunables then they can do assert/failed_when etc
+19:23:59 <bcoca> defionscode: but why not then in the module? since you already added tunables there?
+19:24:00 <nitzmahone> bcoca: at least in 2.7.0, it's ignoring them for failed_when
+19:24:10 <bcoca> nitzmahone: hmm, that is bug then
+19:24:17 <bcoca> all _when:  are lists
+19:24:44 <nitzmahone> bcoca: Yeah, I was pretty sure that was true which is why I just tried it and was surprised that it didn't work
+19:25:04 <abadger1999> Sp O
+19:25:27 <bcoca> nitzmahone: puzzled, since i just tested when: today and they all use same code
+19:25:31 <bcoca> to evaluate
+19:26:01 <abadger1999> defionscode: I think you're misunderstanding one little point about what I was saying.... If you do that, then there's no need for any changes to ansible itself and no need for a proposal.
+19:26:05 <nitzmahone> It appears to only check the first one (empirically anyway, haven't gone into the code yet)
+19:26:08 <bcoca> hmm, debug ignores failed_when ... need new test
+19:26:34 <bcoca> nitzmahone: first failed should cut the chain, the list is an AND
+19:26:49 <abadger1999> There's no need for a new audit type as it's just an extra task or two in the role/playbook to look at what the facts module returned and fail based on that.
+19:26:53 <defionscode> abadger1999: i agree, it doesnt require any changes to ansible, sdoran's idea to bring it up here is because it's a different type of implementation for a facts module (b/c of the erorr piece)
+19:27:17 <nitzmahone> bcoca: ah there it is, I was thinking or
+19:27:39 <sdoran> It's more about 1) Getting a blessing to allow the module behavior is modules and 2) See if anyone has bette ideas on how to handle auditing with Ansible.
+19:28:01 <abadger1999> defionscode: Is the error piece this?
+19:28:03 <abadger1999> - name: Proper error
+19:28:04 <abadger1999> assert:
+19:28:06 <abadger1999> that: facts4 is failed
+19:28:18 <sdoran> Because PR #47980 is a new behaviour for modules/facts modules.
+19:28:33 <bcoca> its not really a facts module, its more of a 'parse xml file'
+19:28:47 <sdoran> Right. It's a hybrid thing.
+19:28:47 <bcoca> you 'could' say its 'local facts' .. but that is stretch imho
+19:28:52 <defionscode> bcoca: that's trivializing it, it's a specific, spec driven type of xml
+19:29:07 <bcoca> 'parse specific xml format file'
+19:29:24 <nitzmahone> That's why I asked about the controller thing; ultimately it's a projection
+19:29:27 <abadger1999> because I do not think that's proper.
+19:29:33 <defionscode> abadger1999: we attempted going down that path in that past, and it proved cumbersome enough that we abandoned that approach
+19:29:44 <nitzmahone> (which implies a J2 filter, but that's nasty if the file lives on the targets)
+19:29:50 <abadger1999> A facts module should fail if the module failed to do its job.
+19:29:57 <bcoca> nitzmahone: not with fetch/slurp
+19:30:12 <nitzmahone> bcoca: s/nasty/potentially wasteful/
+19:30:19 <abadger1999> The idiom above is attempting to overload that with return information instead.
+19:30:21 <nitzmahone> If the files are large (it's XML, of course they are)
+19:30:37 <bcoca> nitzmahone: that is not the part that bothers me
+19:31:00 <bcoca> im fine with module that reads data file and converts to 'ansible usable data structure' though i thnk it makes more sense as a lookup
+19:31:04 <bcoca> unless file is remote ...
+19:31:10 <defionscode> bcoca: file is remote
+19:31:19 <bcoca> then i can see it as module, but slurp + lookup would also work for me
+19:31:21 <defionscode> oscap cant be ran over ssh/other transport
+19:31:40 <bcoca> defionscode: it can, it shouldn't
+19:31:53 <defionscode> no, you still need oscap installed on the target machines
+19:32:02 <defionscode> oscap-ssh isnt really remote oscap
+19:32:05 <bcoca> i guess what you mean, oscap program is 'local' to the machine it runs on
+19:32:09 <defionscode> right
+19:32:20 <abadger1999> defionscode: Why was it cumbersome... It seems like you just agreed to it above....
+19:32:39 <bcoca> but it can be run over ssh (most do) and take the xml over ssh , just not good way of doing it (session dieing/corruption/etc)
+19:32:54 <defionscode> bcoca: yeah, agreed
+19:33:27 <nitzmahone> I don't even really care that much about the included scoring assertions in the module code; what I'm afraid of is the proliferation of assertions there instead of using something you get for "free" like `failed_when`
+19:33:50 <defionscode> abadger1999: before, we attempted to use Ansible to do 'audits' in tandem with remediation, it resulted in an explosion of yaml (In that instance we were not parsing xml from oscap evaluations though)
+19:34:01 <nitzmahone> It's just a slippery slope that could be pretty easily avoided by not including at all
+19:34:08 <bcoca> nitzmahone: that is why i think we should not do it that way, since now it become it's own rules engine
+19:34:17 <abadger1999> defionscode: It sounds like you were doing something different then.
+19:34:23 <bcoca> i do think we need a better native tooling for complex assertions in ansible
+19:34:24 <defionscode> similar but different yeah
+19:34:25 <abadger1999> So it's not applicable to what we're talking about here.
+19:35:48 <sdoran> @abadger1999 In practice, auditing and validating using tasks required an enormous amount of shell/command tasks, registers, and then tasks to do something with all the registered data. It was just very unpleasant.
+19:35:54 <sdoran> https://github.com/MindPointGroup/RHEL6-STIG/commit/d2e9dfc621d51088321268fbaf99ce268734f72a <= example
+19:35:59 <nitzmahone> I think it's premature to use this as the basis for a new "pattern" or whatever; most of the "audit style" plays implement the actual auditing in Ansible, for which I don't see how the proposed `audit` pattern helps
+19:36:39 <abadger1999> Yeah, I'm not saying to do it that way.
+19:36:42 <defionscode> nitzmahone: which audit style plays are your referring to
+19:37:04 <abadger1999> I'm saying module does what it does and returns values via exit_json() then a playbook or role has one extra task which uses those values to decide whether to fail or not and another extra task to print why.
+19:37:22 <bcoca> i had a few 'compliance' playbooks that did that kind of auditing ... but my prev employer owns those
+19:37:52 <abadger1999> using fail_json() is an abuse.  using an extra task or two after the module has processed the data seems fine to me.
+19:38:27 <abadger1999> @sdoran^ That was to your example, I think.
+19:38:30 <bcoca> separating 'gathering' from 'validation' also allowss you to mix/augument sources
+19:38:39 <defionscode> abadger1999: i think bcoca and nitzmahone agree with you, I'll conceed to make auditing a function of a fact(s) module + other tasks for assertion/failure
+19:38:46 <bcoca> imagine new module that runs openscap directly and returns the results w/o the xml step?
+19:38:54 <nitzmahone> defionscode: more like what Sam's talking about (stringing together a bunch of shell/lineinfile kind of search assertions)
+19:39:26 <defionscode> bcoca: i bow to whoever implements python-openscap in a proper module
+19:39:33 <abadger1999> :-)
+19:39:39 <nitzmahone> Doesn't it take a long time to run, too?
+19:39:53 <defionscode> nitzmahone: what? oscap?
+19:39:54 <defionscode> or?
+19:39:55 <nitzmahone> yeah
+19:40:00 <defionscode> depends
+19:40:03 <bcoca> defionscode: i've seen crazier things ... but think of it in general for this pattern suggested in teh proposal
+19:40:15 <defionscode> RHEL7 scan of classified profile takes about 2-4 minutes
+19:40:16 <bcoca> depends on ammount of rules
+19:40:17 <nitzmahone> I assume you're running that locally as a cron job or something then using Ansible to collect/process results
+19:40:24 <nitzmahone> Oh, that's not bad
+19:40:41 <bcoca> no, package manager cache update takes as long/longer in many cases
+19:40:45 <defionscode> nitzmahone: yeah, totally doable to have ansible/awx run it on the reg
+19:41:17 <defionscode> bcoca is right, ppl can do "tailoring" files which can strip it down further and it goes even quicker
+19:41:56 <sdoran> So to bring it back around, are we ok PR #47980, which mixes gathering with validation?
+19:41:56 <nitzmahone> OK, so where we at with this one?
+19:42:19 <bcoca> i would not add the validation, but i'm not hard pressed against the module
+19:42:21 <bcoca> -0.5
+19:42:23 <nitzmahone> I think the general consensus is we'd prefer sans validation
+19:42:27 <defionscode> sdoran: it sounds like no-ish
+19:43:01 <bcoca> good examples on failed_when conditions might be better than hardcoding just a couple of them
+19:43:03 <defionscode> side note, but related, having helpers similar to what is implemented with https://testinfra.readthedocs.io/en/latest/ would be dope as heck
+19:43:43 <defionscode> bcoca: ^ might help with complex assertions at the module level too but thats an off the cuff thought so ¯\_(ツ)_/¯
+19:43:46 <abadger1999> I'm okay with doing the validation as long as it's returned as information about the host.  I would probably consider returning both some sort of full info and a summary to be really true to a facts module (but I don't know if the overhead there is quite large for something that no one will ever use)
+19:43:51 <bcoca> defionscode: in my slides i show how to do the same with ansible
+19:44:15 <defionscode> bcoca: yeah i know it's doable in YAMLness
+19:44:16 <bcoca> abadger1999: that is more like 'calculations'
+19:44:24 <nitzmahone> abadger1999: it sounds like you're *not* ok with the validation
+19:44:36 <nitzmahone> ("validation" being that the module is implementing assertions directly)
+19:44:49 <defionscode> abadger1999: the module currently does provide summary/detail, it's relatively lightweight
+19:44:52 <nitzmahone> (which is what we're both -1 about)
+19:44:56 <sdoran> Yes. That's the main thing being discussed.
+19:45:21 <abadger1999> bcoca: yeah.  Both a pure value and a calculated value can be facts about a host.
+19:45:42 <abadger1999> bcoca: I'm okay with the module doing the calculation and returning that.
+19:45:44 <nitzmahone> Yeah, that's more reasonable; `scap_score` or some such
+19:45:52 <defionscode> nitzmahone: it's in there already ;)
+19:46:01 <nitzmahone> Yep, but leave the assertions to the controller
+19:46:01 <abadger1999> nitzmahone: I'm even okay with it returning "scap_failed".
+19:46:07 <sdoran> Ok. So sounds like "No" to hybrid/audit modules that combine facts+valiadtion.
+19:46:26 <sdoran> And nothing concrete on a new "audit" plugin/module type.
+19:46:32 <abadger1999> as long as the choice to fail or not is done on the controller (ie: module uses exit_json() to return whatever it does)
+19:46:33 <defionscode> sdoran: that's what it sounds like but not objection to a facts module handling calculations to make later assertion easier in ansible
+19:46:42 <sdoran> Yup.
+19:46:53 <nitzmahone> There have been proposals that could make that stuff easier (eg "this task" for conditionals)
+19:47:12 <sdoran> I think that settles this topic for now. You good, defionscode ?
+19:47:42 <defionscode> yep, other than the fact that i need to refactor my PR haha
+19:47:47 <sdoran> :)
+19:47:54 <nitzmahone> thanks for talking it out
+19:48:17 <sdoran> Thank you all for the input and discussion.
+19:48:20 <sdoran> Next
+19:48:22 <defionscode> mil gracias
+19:48:52 <bcoca> #topic https://github.com/ansible/ansible/pull/48150
+19:49:12 * nitzmahone registered +1 earlier
+19:49:17 <bcoca> +1 from me, i just wanted more people to look at it and make sure it doesn't break any assumptions, my only worry is no one from networking has responded
+19:49:36 <jborean93> I'm going to look at the code later to see what networking logs out and at what level
+19:49:43 <nitzmahone> It's probably something we'll need to deprecate at some point anyway
+19:49:46 <jborean93> I'm pretty sure their docs say to enable `ANSIBLE_DEBUG` anyway
+19:50:00 <nitzmahone> (in favor of more granular logging config)
+19:50:12 <abadger1999> basically +1 from me.  I asked that the documentation point out that ANSIBLE_DEBUG isn't quite equivalent because there acn be security implications
+19:50:30 <jborean93> will change the changelog and porting guide to what you posted
+19:50:44 <sdoran> +1
+19:51:03 <bcoca> actually, make this a config entry
+19:51:23 <bcoca> and make it info, let user then change to wtf they want
+19:51:48 <nitzmahone> also WFM
+19:52:04 <jborean93> so like `DEFAULT_LOG_LEVEL`?
+19:52:06 <bcoca> the real issue is that it is currently hardcoded
+19:52:08 <bcoca> yep
+19:52:14 <abadger1999> I'd wait on that since we aren't sure precisely what we want to do
+19:52:24 <nitzmahone> just figuring out the overlap with ANSIBLE_DEBUG
+19:52:46 <bcoca> make note in config description that DEBUG overrides this setting and sets to 'debug'
+19:53:01 <abadger1999> Make a minimal change for 2.8 then look at if we still want to let the user change when we do the changes to use a logging framework in 2.9 or so.
+19:53:14 <bcoca> then i would not change at all
+19:53:57 <bcoca> we either let users control it or leave the hardcoded value as is, if you want to revamp it in 2.9 neither are going to matter that much longer anyways
+19:54:11 <jborean93> the trouble I have is the hardcoded value is "wrong" to me
+19:54:18 <abadger1999> users can control it via ANSIBLE_DEBUG.
+19:54:29 <bcoca> not really, that is more than the log level
+19:54:52 <bcoca> it changes a lot of behavoiur, also serializes ansible and even makes engine work differently
+19:55:02 <jborean93> I'm just worried that adding a new config locks us into behaviour we may want to change in the future
+19:55:09 <bcoca> that seems not a good way of making the logs work as before the change
+19:55:15 <bcoca> config can be deprecated
+19:55:17 <jborean93> for instance maybe we will allow the json/yaml logging config in the future
+19:55:33 <bcoca> and i dont see 'log level' going away, but being added to
+19:55:41 <abadger1999> Anyhow... I'm +1 for 48150.  I'd be -1 to a DEFAULT_LOG_LEVEL at this time.
+19:56:00 <jborean93> what if you want more granluar levels, e.g. DEBUG for Ansible but INFO for x
+19:56:02 <bcoca> *-1 for me
+19:56:28 <bcoca> jborean93: then you can add those that override the general for the specific subsystems, but fallback to general entry by default
+19:56:36 <abadger1999> I think that DEFAULT_LOG_LEVEL would be a poor choice because ay of the logging libraries we can base on have a much richer set of config than log level.
+19:56:46 <maxamillion> wait, I'm confused ...
+19:56:59 <maxamillion> abadger1999: how can you be +1 to 48150, but -1 to DEFAULT_LOG_LEVEL change?
+19:57:06 <abadger1999> I'd expose that rather than DEFAULT_LOG_LEVEL
+19:57:06 <maxamillion> aren't they the same thing?
+19:57:18 <jborean93> no
+19:57:20 <bcoca> no, #48150 hardcodes the log level change
+19:57:31 <jborean93> 48150 currently defines the level based on `DEFAULT_DEBUG`
+19:57:31 <abadger1999> maxamillion: I don't want to expose a config key to users that allows them to specify the DEFAULT_LOG)_LEVEL.
+19:57:46 <maxamillion> why not?
+19:58:05 <abadger1999> maxamillion: because I think we should expose richer log config than that.
+19:58:19 <maxamillion> I guess I don't follow
+19:59:00 <bcoca> i think the LOG_LEVEL config is a good transitory measure, instead of waiting for a fully developed loggging framework and configuration options
+19:59:01 <abadger1999> handlers, levels, and emitters
+19:59:39 <maxamillion> oh
+19:59:42 <maxamillion> hrm
+19:59:43 <bcoca> but changing the current hardcoded value w/o giving users a toggle, seems bad (DEBUG as i said above is not a valid toggle as it has many sideeffects that are much bigger impact than logging)
+19:59:57 <abadger1999> ability to specify where a log ends up; ability to specify what goes to the log; ability to specify the format of the message.
+20:00:29 <bcoca> abadger1999: im not against those abilities (log_path is poor one, but exists) i'm against changging hardcoded values w/o toggles
+20:01:15 <abadger1999> yep, we just differ as to whether DEBUG is sufficient in that regard.
+20:01:40 <bcoca> i really disagree since it changes not only output but actual engine behaviour
+20:01:56 <bcoca> the log is teh least of it's effects, not the primary one
+20:02:23 <maxamillion> is it being proposed to change a hardcoded default here without a toggle? I didn't think that was the case
+20:02:35 <abadger1999> I'm +1 to jborean's change or +1 to no change for now.  I think we need nitzmahone, jborean93, and sdoran (those who voted before) to reconfirm what they'd be okay with.
+20:02:47 <abadger1999> maxamillion: currently the hardcoded default is loglevel debug.
+20:02:59 <abadger1999> maxamillion: the proposed change is to make it log leve info.
+20:03:15 <bcoca> i'm -1 to current change, either no change or a toggle
+20:03:40 <abadger1999> maxamillion: if someone wants to get loglevel debug, they'd have to set ansible_debug which willget them loglevel debug but also change certain code paths (for instance, outputting much more information than before)
+20:03:42 <bcoca> last thing i want as an SA is to have a change in my logs w/o the ability to configure it to go back to what i was using
+20:03:56 <maxamillion> abadger1999: ohhh ok
+20:04:04 <maxamillion> alright, I misunderstood the implications
+20:04:14 <jborean93> I am kinda leaning on `DEFAULT_LOG_LEVEL` now
+20:04:19 <jborean93> but still default to INFO
+20:04:49 <maxamillion> so if we set `DEFAULT_LOG_LEVEL` we then are not changing a hard coded default without an user toggle ... correct?
+20:04:50 <abadger1999> I'm still -1 on adding that because it will interfere with how we should be configuring logging i nthe near future.
+20:04:53 <bcoca> jborean93: im fine with changing the default, but not w/o allowing user to switch back
+20:04:58 <nitzmahone> abadger1999: would --^ paint us into any corners for logging changes?
+20:05:18 <bcoca> nitzmahone: we already have serveral logging configs, this would not increase the surface that much
+20:05:27 <bcoca> and we can easily deprecate ignore if we revamp the logging system
+20:05:31 <abadger1999> nitzmahone: it paints us into the corner of having conflicting config values that we'll have to set policy on.
+20:05:46 <bcoca> i would say ANSIBLE_LOG_PATH is a lot more limiting
+20:06:07 <abadger1999> DEFAULT_LOG_LEVEL overrides one aspect of the new thing?  Or the new thing overrides DEFAULT_LOG_LEVEL?
+20:06:10 <bcoca> DEFAULT_LOG_FILTER
+20:06:18 <sdoran> So I'm only +1 to merging if we have a way for the user to change the log level. Because someone somewhere is probably relying on the currently verbosity.
+20:06:23 <abadger1999> Yes, and we shouldn't be adding more stuff.
+20:06:24 <maxamillion> sdoran: +1
+20:06:56 <nitzmahone> We've lived with the suckage this long; I definitely don't want to add something we're gonna have to potentially deprecate in the next release
+20:06:57 <bcoca> so vote: A) pr as is B)pr + toggle C) no change
+20:07:00 <bcoca> b+1
+20:07:09 <bcoca> a-1b+1c+1
+20:07:19 <abadger1999> A+1, C+1 b-1
+20:07:39 <maxamillion> ugh, I'm torn
+20:07:51 <maxamillion> A-1, B+1, C+1
+20:07:52 <nitzmahone> A+1, C+1
+20:08:22 <nitzmahone> Anyone needing actual debug level logging probably knows how to deal with it anyway ;)
+20:08:33 <jborean93> A+1 C+1
+20:08:38 <jborean93> sorry C-1
+20:09:05 <bcoca> anyone else? a==1, b==1, c==3
+20:09:17 <bcoca> nitzmahone: knowing and being allowed to patch running ansible are not the same thing
+20:09:44 * nitzmahone was mostly kidding
+20:09:49 <jborean93> debug always seems to be a once off option anyway
+20:09:51 <maxamillion> nitzmahone: I don't know that's a fair assumption to make, though you're probably not wrong ... I just fear breaking people (we're known to do that too often already for my liking)
+20:10:10 <nitzmahone> This is a *really* small corner case
+20:10:34 <nitzmahone> (that changes only observability of internal glop, not operation of the tool)
+20:11:15 <bcoca> logs are disabled by default, mostly 2 kind of people enabled them, 1)devs trying to debug 2) SAs that want to record EVERYTHING
+20:11:32 <jborean93> or dag :)
+20:11:33 <bcoca> 3) person that enabled it cause dev is trying to debug remotely
+20:11:38 <bcoca> ^ dag is all 3
+20:12:03 <sdoran> Ugh. I'm so conflicted.
+20:12:15 <sdoran> B+0.5 C+1 I suppsoe
+20:12:36 <bcoca> so a/1 b1.5 and c/4
+20:12:39 <bcoca> c wins
+20:12:50 <bcoca> jborean93: sorry, but closing PR then
+20:13:09 <maxamillion> nitzmahone: right, but for Fedora Infrastructure, I know we use the logging through the message bus for $things (or at least we had planned to) ... so removing that information could actually break things
+20:13:24 <nitzmahone> PLEASE don't do that
+20:13:46 <jborean93> bummer but if that's the consensus
+20:14:30 <bcoca> nitzmahone: ^ unless you are reading vote differently
+20:14:36 <bcoca> is there option D?
+20:14:37 <sdoran> I think the consensus is we want to have a configurable option, done the "right" way, and avoid a half measure toggle or changing the current hard coded value.
+20:14:45 <nitzmahone> "do it right in 2.9"
+20:14:48 <sdoran> This should be 2.9 territory
+20:14:52 <bcoca> well, that is also C)
+20:14:53 <sdoran> nitzmahone:  +1
+20:15:04 <bcoca> close current PR in hopes of future dev
+20:15:24 <bcoca> #topic https://github.com/ansible/ansible/pull/48068
+20:15:39 <bcoca> ^ sivel is out to lunch, but last i talked to him he was against adding run_once feature
+20:16:12 <bcoca> im +0 .. this is confusing feature marrying weird corner case ... so wanted a vote to close/go forward
+20:16:34 <abadger1999> I'll agree with what sivel decides on this
+20:16:44 <bcoca> also there is workaround that is 'functionally similar' with only diff that it displays 'skipped'
+20:17:00 <nitzmahone> yeah, at a glance I was -0.9
+20:17:12 <abadger1999> currently he's against but maybe he'll have a eureka moment later that changes his mind ;-)
+20:17:32 <bcoca> he, im fine with postponing vote on this one, let people think about it
+20:17:57 <bcoca> just wanted to make sure everyone read on it now, this one is hard to know all implications at first glance
+20:18:04 <sdoran> I'm going to err on the side of -1 on this.
+20:18:05 <abadger1999> It's okay if people vote.
+20:18:38 <bcoca> k, we are -1.9 to (3 ambigous non votes)
+20:18:40 <sdoran> Since it's hard to know the implications, I'd rather keep `include_tasks` leaner/simpler for now since it's just recently getting to a somewhat stable place.
+20:18:42 <bcoca> anyone else?
+20:18:43 <abadger1999> I'm just saying, I'll vote with whatever sivel decides... he seems to have a good grasp of all the current information and he's the one that would likely discover any new information that changes his mind.
+20:19:08 * nitzmahone feels like there should be an imaginary number included in those results
+20:19:09 <bcoca> since he is not here, and your vote depends on him, i wanted to postpone
+20:19:22 <bcoca> 3 1^-2
+20:19:31 <maxamillion> yeah, I'm not really sure how I feel about this
+20:19:32 <bcoca> ^ unsure if that is 'i' for imaginary
+20:20:00 <bcoca> 3 * -1^1/2
+20:20:06 <bcoca> that is the correct notation
+20:20:46 <bcoca> ok, postponing then, jic some case appears that this magically fixes
+20:20:58 <bcoca> #topic https://github.com/ansible/ansible/pull/47322
+20:21:45 <bcoca> hmm iirc dag wanted a 'task level keyword' for this .. I think it might be a 'shared file editor option' for modules
+20:21:45 <sdoran> With this one I just wanted to get folks talking about this broader file lock capability.
+20:22:37 <dag> bcoca: no, I want this to be enabled with no options, but others worried about performance
+20:22:45 <dag> (which seems not to be a problem)
+20:22:50 <bcoca> i remember it was added to basic, but only the function, did we ever add a 'standard/common' option for modules?
+20:22:58 <sdoran> No.
+20:22:59 <bcoca> dag: yes, it will be a problem
+20:23:10 <sdoran> It's something modules have to leverage explicitly.
+20:23:18 <bcoca> i would make a 'locking_common_args' for use for lineinfile and replace, etc
+20:23:42 <bcoca> default=no as most modules dont have race conditions as they generally edit files on diff hosts exclusively
+20:23:55 <bcoca> this is really needed with delegate_to: <same host>
+20:23:56 <dag> what is the problem using flock() on the file being modified ?
+20:24:01 <dag> always
+20:24:32 <dag> and a backoff period (that is configurable but good default)
+20:24:37 <bcoca> dag: it only helps when other editors are doing exact same thing
+20:24:43 <dag> for all the cases where there are no issues, it shouldn't impact
+20:24:44 <bcoca> and locking is slow by nature
+20:24:45 <sdoran> That's the main discussion: making a module level arg vs just always doing it automatically
+20:25:03 <bcoca> i woudl not do always automatic, most of the times you dont need locks
+20:25:15 <bcoca> it wont prevent a user form doing vim/emacs on the file
+20:25:16 <dag> bcoca: you don't know when you need locks
+20:25:24 <dag> 2 playbooks could be running at the same time
+20:25:28 <bcoca> dag: i don't, but playbook author probably has good idea
+20:25:39 <bcoca> it depends on environment and context
+20:25:54 <dag> bcoca: correct, it doesn't help in *all* possible cases, but at least we can avoid ansible stepping on it's own toes
+20:26:10 <dag> bcoca: the author is not the person running it
+20:26:11 <bcoca> it can, the question is how often and is it worth the cost?
+20:26:19 <dag> could be cron, could be a human, could be tower
+20:26:22 <bcoca> author normally knows the context in which it is run
+20:26:36 <bcoca> if not, person taking from author shoudl be responsible enough
+20:26:38 <dag> so what is the cost, because I doubt flock() has a large overhead
+20:26:50 <abadger1999> I think making that a user choice is making ansible too much like a programming language.
+20:26:51 <dag> I doubt it will be noticable, unless you need it
+20:27:03 <abadger1999> It's implementation rather than functionality
+20:27:18 <bcoca> i disagree, flock gets expensive fast, specially when kernel is busy
+20:27:22 <dag> I don't mind a global switch to enable/disable so we can test this
+20:27:26 <dag> but not module parameters
+20:27:39 <cyberpear> would be good to see a benchmark...
+20:27:46 <bcoca> moduel parameters, then use module_defaults ?
+20:27:49 <cyberpear> could probably disable it for check-mode runs
+20:30:21 <dag> module_defaults is a mess if you have 10+ modules needing the same stuff
+20:30:57 <sdoran> So is that PR ok, or do we want to postpone it in favor of a broader/automatic locking of files?
+20:31:00 <bcoca> looking for compromise, i konw its not best one
+20:31:12 <bcoca> i prefer not to add such behaviour w/o a toggle
+20:31:13 <cyberpear> wasn't there some discussion about having "module groups" for module_defaults?  like, have a default apply to all os_* modules?
+20:31:18 <abadger1999> module_defaults is wrong... this shouldn't be exposed to users.
+20:31:22 <sdoran> That PR does fix some bugs in `set_lock()` and makes the locking transparent to the user.
+20:31:53 <abadger1999> bcoca: if you have something that we can use to test the speed degradation that would be good for settling this.
+20:32:05 <sdoran> But I'm not sure if how it's implemented in the module would interfere with what others are thinking for a broader solution.
+20:32:15 <bcoca> openstack installer is probably good test
+20:32:17 <dag> sdoran: for the implementation, locking in the user tempdir limits the use, I'd rather put a lock on the file being managed
+20:32:41 <bcoca> yeah, locking temp dir file does not seem useful
+20:33:12 <bcoca> that relies on using same temp .. which is by far not guaranteed
+20:33:20 <sdoran> Oh, duh. Ok, I'll give that feedback.
+20:33:45 <abadger1999> I don't want to remember all that stuff again...
+20:33:46 <sdoran> The purpose of the locking is to avoid multiple `atomic_move()` operations clobbering the real file.
+20:33:56 <sdoran> :)
+20:34:18 <abadger1999> But I believe platforms which emulate flock with fcntl.lockf won't work correctly if we try to lock on the file itself.
+20:34:26 <abadger1999> That's why there's a tempfile in there.
+20:35:11 <dag> abadger1999: I wouldn't trust this if it's not using flock(), does fcntl.lockf() leave permanent locks if they're not removed ?
+20:35:24 <abadger1999> the current implementation errs on the side of not detecting a lock rather than a malicious user being able to DOS access to a file via a lock and so forth.
+20:35:41 <abadger1999> dag: I don't think so, no.
+20:35:59 <dag> abadger1999: so the lock is gone of the process is gone ?
+20:36:12 <abadger1999> I think the kernel properly manages that for both flock and lockf.
+20:39:32 <bcoca> k, so seems things we need to know first 1) actual cost of locking implicitly 2) if the implementation makes sense for the problem cases in which we want automatic locking
+20:40:13 <sdoran> Ok. So is that PR ok to merge once I get the author to change the locking to be on the actual file not the tmp file?
+20:40:33 <bcoca> no, unless everyone else is ok with autolocks
+20:40:37 <sdoran> Or do we want to hold off for a decision on a broader solution after we have some data on the performance implications?
+20:40:40 <bcoca> right now i see 3/1
+20:40:46 <abadger1999> sdoran: no
+20:40:49 <sdoran> Ok.
+20:40:53 <abadger1999> sdoran: we don't want to make that change
+20:41:04 <abadger1999> we lock on a temporary file for reasons
+20:41:13 <sdoran> Ok.
+20:41:28 <sdoran> I'll get with you after for some clarity so I can respond intelligently.
+20:41:30 <abadger1999> What we're really not sure about is bcoca's (1).
+20:41:50 * sdoran brain is fading after this crazy long meeting :)
+20:41:51 <abadger1999> Who's run the openshift installer?
+20:41:51 <bcoca> im not sure #2 is settled
+20:42:06 <sdoran> I have run the OpenShift installer some, but not a lot.
+20:42:25 <bcoca> k, going to cut meeting here and postpone vote for when we have more info
+20:42:29 <abadger1999> sdoran: okay... so bcoca's proposed measure was to time the openshift installer with and without the patch applied.
+20:42:31 <bcoca> already 40mins over the hour
+20:42:35 <sdoran> I believe jimi-c and jctanner have run it the most.
+20:42:38 <bcoca> #endmeeting

@@ -1,0 +1,208 @@
+19:05:29 <bcoca> #startmeeting ansible core irc public meeting
+19:05:29 <zodbot> Meeting started Tue Apr 24 19:05:29 2018 UTC.  The chair is bcoca. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:05:29 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:05:29 <zodbot> The meeting name has been set to 'ansible_core_irc_public_meeting'
+19:05:57 <bcoca> #chair  abadger1999 Imo ryansb agaffney jtanner
+19:05:57 <zodbot> Current chairs: Imo abadger1999 agaffney bcoca jtanner ryansb
+19:06:04 <bcoca> choopra?
+19:06:10 <bcoca> chopraaa?
+19:06:13 <abadger1999> Olá
+19:06:22 <bcoca> ^ going to skip since its really a windows issue
+19:06:58 <bcoca> Im0 you want more reviews aside from  mine?
+19:07:05 <maxamillion> .hello2
+19:07:06 <zodbot> maxamillion: maxamillion 'Adam Miller' <maxamillion@gmail.com>
+19:07:14 <maxamillion> I have to leave shortly for physical therapy :(
+19:07:19 <jtanner> .hello2
+19:07:21 <zodbot> jtanner: Sorry, but you don't exist
+19:07:22 <Imo> bcoca, no.  All good thanks for your reviews.  I will adjust accordingly.
+19:07:32 <jtanner> f' you zodbot, i'm a real boy!
+19:07:33 <Imo> And update PR.
+19:07:41 <maxamillion> jtanner: zodbot is a Fedora thing... you need a Fedora account for that to work
+19:07:49 <jtanner> teasebot.
+19:07:55 <maxamillion> jtanner: https://admin.fedoraproject.org/accounts
+19:08:10 <bcoca> #topic tainted vars https://github.com/ansible/proposals/issues/109
+19:08:13 <Imo> bcocac, Dict or list/tuple.. not sure yet.
+19:08:31 <bcoca> Imo:  either works for me, or all? detect type
+19:08:34 <abadger1999> So this proposal came in the other day.
+19:08:36 <bcoca> list/tuple you can use same way
+19:08:41 <abadger1999> I think we want to refuse it.
+19:08:55 <bcoca> -1 from me
+19:08:57 <abadger1999> I can't think of any way that we could hope to implement it that won't leak like a sieve
+19:09:04 <sivel> -1 on 109
+19:09:05 <agaffney> the general idea isn't a bad one, but the needed implementation would be hell
+19:09:08 <Imo> bcoca, will give it a go.  Good one.
+19:09:14 <bcoca> the only way we can w/o leaking makes ansible unusable
+19:09:33 <abadger1999> So it's better to not attempt to implement than to implement and have a never ending stream of security fixes for it.
+19:09:37 <bcoca> if we rewrote ansible in diff language that had 'taint' management ....
+19:09:41 <jtanner> would no_log for the entire task suffice?
+19:09:55 <bcoca> jtanner:  the issue is associate it to vars, not taks
+19:09:57 <abadger1999> jtanner: I did write about that i na comment on the proposal.
+19:09:58 <bcoca> tasks
+19:10:10 <abadger1999> That would take care of my difficulty in leaking.
+19:10:19 <abadger1999> But there's definite performance impact there.
+19:10:35 <bcoca> would still not cover all output
+19:10:49 <abadger1999> We need to track tainting of variables and the only way I can think to do that in jinja is to template every variable twice.
+19:11:07 <bcoca> no_log with tasks is 'easier' casue we have a single point of output from task to controller, the 'results'
+19:11:08 <alikins> what does 'if running with debugging on' ? -vvvvv? ANSIBLE_DEBUG=1 ?
+19:11:13 <bcoca> doing it at var level ....
+19:11:29 <abadger1999> (The problem isn't python.... it's jinja...  If we wrote ansible to have real variables, we could probably do things like this)
+19:11:38 <jtanner> "Users who are able to consume log aggregation output can inadvertently be exposed to sensitive high-level account details" ... i have the impression that this workflow is not something we have designed into ansible.
+19:11:51 <jtanner> maybe it's a tower/awx rfe?
+19:12:12 <bcoca> abadger1999: you are looking at in only from template level, but we have much more outputs than templat4ed var
+19:12:24 <bcoca> we need it to taint any and all output methods
+19:12:30 <bcoca> otherwise its not really secure
+19:12:34 <abadger1999> bcoca: vars are templates.
+19:12:38 <bcoca> not all
+19:12:40 <abadger1999> bcoca: that's the problem.
+19:12:41 <bcoca> varname: value
+19:12:49 <abadger1999> bcoca: that's a template.
+19:12:59 <bcoca> ^ no templates involved, i still want it protected
+19:13:07 <sivel> I think we might be going to far down the rabbit hole, without any intention of addressing this
+19:13:11 <bcoca> abadger1999: template system actually skips that
+19:13:11 <sivel> s/to/too/
+19:13:19 <jtanner> are we mixing the concept of template and things that jinja will eval?
+19:13:36 <jtanner> any string could be a template
+19:13:38 <abadger1999> bcoca: well... we can taint that fine if that's all you want.
+19:13:55 <bcoca> could be .. but we dont process though template unless it is, is_template function takes care of that
+19:14:02 <sivel> jtanner: we basically need to track the full life of a variable and it's value, ensuring that regardless of re-assignments and modifications that it is never displayed
+19:14:15 <jtanner> i understand that part of the usecase
+19:14:20 <abadger1999> and re-assignments and modifications are templates.
+19:14:25 <bcoca> the first part 'might' be duable, the 2nd is almost ipossible in python
+19:14:31 <sivel> we lose the context as it is processed through jinja
+19:14:35 <abadger1999> It's all doable in python
+19:14:41 <bcoca> never displayed?
+19:14:50 <abadger1999> It's that we don't use python for this stuff.  We use jinja
+19:14:58 <bcoca> not w/o removing all possible output except the ones we control
+19:15:08 <jtanner> sivel: jimi tells me that it's "not lost" and that he "hacked jinja internals" to keep it
+19:15:10 <bcoca> abadger1999: remove jinja2 from teh equation, the problem still stands
+19:15:16 <abadger1999> Nope, it doesn't.
+19:15:27 <bcoca> jtanner: unsafe works that way
+19:15:38 <jtanner> i've not really looked at the unsafe code
+19:15:39 <bcoca> and we could make this work in jinja2, but i dont even see that as the problem
+19:15:57 <bcoca> template does wrap_unsafe(var) if ANY var used in template was unsafe
+19:16:00 * jtanner does wonder what happens when unsafe and native types start to mix
+19:16:02 <abadger1999> bcoca:  as you said, unsafe makes you skip templating... it does not make templating safe.
+19:16:03 <sivel> jtanner: how do you do `alias: "{{ (some_var|string)[:]}}"` and not lose the context
+19:16:04 <bcoca> ^ so we have a way to preserve in jinja2
+19:16:22 <jtanner> sivel: i don't think it's possible, but jimi says otherwise
+19:16:38 <sivel> I don't think it is
+19:16:46 <sivel> in simple scenarios maybe
+19:17:06 <abadger1999> Anyhow... I think we're all here to vote no?  (It's just that we disagree on why "no" is the right answer)
+19:17:13 <sivel> yeah, -1
+19:17:20 <abadger1999> -1
+19:17:21 <mattclay> -1
+19:17:41 <jtanner> i think it's premature to decide if we should take on the work, so -1 for now
+19:18:12 <bcoca> tempted to +1 just for being contrarian, but already gave my -1
+19:18:15 <jtanner> also have the sense that tower/awx could sanitize outputs
+19:18:38 <jtanner> let job template author mark vars/values as sensitive
+19:18:47 <bcoca> jtanner: safer there as they have 2 interfaces for output from ansible, they could scrub there
+19:18:59 <alikins> I don't really see any way to tell to who/what a variable value is being read by nor any way to prevent who/what from seeing it. (short of pki and using encrypted or placeholder values everywhere)
+19:19:01 <bcoca> stdout/err and callback
+19:19:38 <bcoca> alikins: that is my point, unless a language supports the 'taint' concept it is really hard to imlement such a protection
+19:19:58 <bcoca> specially when every/any plugin can do it's own output
+19:20:18 <jtanner> output+writes
+19:20:28 <bcoca> same diff
+19:20:31 <jtanner> i know
+19:20:33 <bcoca> output to file / tty
+19:20:42 <jtanner> just being redundant
+19:21:14 <bcoca> tower can limit the plugins  and has 2 streams from ansible itself ... so it could deal with this better, still .. any time you allow custom callback/any plugin .. you open the door
+19:21:33 <bcoca> @abadger1999 want to close the issue?
+19:21:36 <bcoca> vote is clear
+19:21:51 <bcoca> @sieben ?
+19:21:54 <jtanner> the usecase in the ticket really only makes sense for a user who didn't author playbook and can't edit ... which is not really part of our core story
+19:21:58 <bcoca> Sieben_:  ?
+19:22:01 <abadger1999> yep, could you officially count the votes so I can list it in the ticket?
+19:22:21 <bcoca> -4 , +0
+19:22:38 <sivel> I think -6
+19:22:53 <sivel> oh, -5
+19:23:04 <sivel> sivel abadger1999 mattclay jtanner bcoca
+19:23:21 <bcoca> i dont see jtanner's vote
+19:23:29 <jtanner> it was hidden in a sentence
+19:23:31 <abadger1999> [12:17:40] <jtanner> i think it's premature to decide if we should take on the work, so -1 for now
+19:23:38 <bcoca> ah, k, -5, 0
+19:23:47 <abadger1999> Cool.
+19:23:55 <abadger1999> I'll close out hte ticket
+19:23:56 <sdoran> I'm -1 to that too. Agree with what's been said.
+19:24:01 <bcoca> -6
+19:24:13 <bcoca> i can let meeting go longer ... but i think it will just be more -1
+19:24:17 <bcoca> alikins?
+19:24:22 <jtanner> i'd seriously add a note to file awx rfe
+19:24:31 <alikins> yeah, -1
+19:24:47 <alikins> would be lovely, but also almost impossible
+19:24:51 <bcoca> -7 .. i think this one is as close to unanymous as we'll get
+19:25:02 <bcoca> alikins: agreed
+19:25:40 <bcoca> but i could say the same about me marrying scarlet johanssen
+19:26:01 <jtanner> not with that attitude!
+19:26:17 <bcoca> #topic https://github.com/ansible/ansible/pull/38739 https://github.com/ansible/ansible/pull/38587
+19:26:18 <sdoran> 🤣
+19:26:35 <bcoca> @Sieben_ ^ wants more reviews?
+19:27:06 <jtanner> am i allowed to say "NO" if there aren't tests?
+19:27:16 <sivel> sure
+19:27:24 <bcoca> you can say many things
+19:28:59 <bcoca> k, since user isn't here I'll leave reviews for offline for any volunteers
+19:29:11 <bcoca> i forget who has the test account, maxamillion?
+19:29:17 <bcoca> #topic open floor
+19:29:28 <Imo> Side note during pause: shippable seems to be unstable on most pushes... not due to the code. Is that normal?
+19:29:43 <jtanner> there are known issues with apt tests
+19:29:52 <sivel> we are working on them
+19:30:18 <Imo> Ta.
+19:30:20 <sivel> I think we should talk about inherit vs apply.  j/k no we shouldn't
+19:30:21 <bcoca> and rhel tests and bsd test .... its mostly external resources being a pain
+19:30:31 <bcoca> inherit is incorrect, its bequeath
+19:30:37 <sdoran> Trolling!
+19:30:48 <bcoca> inheriting is done by the tasks, the include bequeaths
+19:30:49 <sivel> bequeath is the worst
+19:31:06 <bcoca> sivel: that is why i use it, anything else chosen will be great in comparission
+19:31:33 * sdoran looks up the definition of bequeath
+19:31:39 <jtanner> if we chose "bequeath" maybe fewer people would use it?
+19:31:45 <bcoca> +1
+19:31:47 <jtanner> then fewer bugs to fiz
+19:31:48 <sdoran> My thoughts exactly
+19:31:49 <jtanner> fix*
+19:33:07 <bcoca> at the very least it is a good english lesson
+19:33:25 <sdoran> And spelling lesson.
+19:33:31 <bcoca> no .. idont do those
+19:33:48 <bcoca> ok, so if no new issues closing in 1min
+19:33:58 <Imo> What's the deal with contributions and names of licensees on the code.  If submitting a PR on existing code, should a new contributor put their name on? (Or doesn't it matter)
+19:34:23 <bcoca> kind of the latter, but feel free to add your name if you feel your contribution is big enough
+19:34:25 <mikedlr> question: is anyone working on Galaxy strategy in the open?  Are there any good docs on that?
+19:34:31 <sivel> Imo: there is no definitive set of guidelines there
+19:34:33 <bcoca> licensing should follow the guidelines set in site
+19:34:55 <bcoca> mikedlr: check proposals, several there, also #ansible-galaxy
+19:35:01 <Imo> Ok.  Thanks.
+19:35:03 <sivel> Imo: as bcoca mentions, if it is big enough, you *can* add your name. But it's not required
+19:35:26 <jtanner> don't be suprised if you start getting emails
+19:35:28 <Imo> Yep, not contributed anything substantial yet.. just wanted to make sure.
+19:35:28 <mikedlr> Imo: definitely, from discussion with gregdek a little while ago  individual developers should put name on modules and stuff.
+19:35:40 <bcoca> licence is GPl3 for most of the probject, exception is module-utils/ which is BSD or compatible so 3rd party modules can reuse freely w/o distro issues
+19:36:24 <bcoca> mikedlr: technically you can claim copyright on a single char .. practically it should be meaningful enough to convince a judge
+19:36:25 <sivel> but adding your name, I tend to go with the arbitrary definition of "substantial"
+19:36:31 <mikedlr> in case where you wrote a substantial part;  otherwise the license at the top of file isn't correct because "ansible project" actually means redhat.
+19:36:45 <jtanner> does it?
+19:36:49 <bcoca> no, it doesnt
+19:36:54 <sivel> I should go dig up what I found about adding a copyright to an existing file
+19:36:59 <bcoca> ^ we checked with lawywers internally
+19:37:32 <bcoca> ansible project is broad umbrella that includes contributors and maintainers to the project
+19:37:47 <maxamillion> bcoca: sorry, I'm at physical therapy (using IRC on my phone). I have the that account for scaleway, I'll review. I'm also happy to share that account if anyone else wants access
+19:37:52 <bcoca> governance of the project is now mostly by RH employees .. but that is not direclty tied
+19:37:56 <mikedlr> bcoca: is there an external statement of that - the "Ansible" trademark belongs to RedHat.  It's something I think youg et to define.
+19:38:06 <bcoca> trademark is diff
+19:38:13 <abadger1999> technically, you cannot assert copyright on a single char....
+19:38:39 <bcoca> abadger1999: depends on the local laws, people have tried ... even single tones
+19:38:50 <mikedlr> abadger1999: unless it's an entirely new and artistic character -
+19:38:50 <abadger1999> a work has to show "originality" (non-legal term).
+19:39:04 <Imo> Sorry for opening the can of worms.
+19:39:09 <bcoca> abadger1999: mostly, in the end it 'depends on the judge'
+19:39:15 <sivel> > You are not required to claim a copyright on your changes. In most countries, however, that happens automatically by default, so you need to place your changes explicitly in the public domain if you do not want them to be copyrighted
+19:39:31 <abadger1999> mikedlr: yes.  If I make up a new alpha bet I could probably copyright the new chars in there and the combination of the new chars with the existing chars I borrow from an existing language.
+19:40:05 <abadger1999> But trying to copyright something like "a".... Not going to fly.
+19:40:43 <bcoca> but i put the 'a' in  'do a thing' ... modifying existing work and adding value
+19:41:00 <bcoca> ^ not saying it would pass muster, but people have tried worse
+19:41:18 <mikedlr> in case of a project like this, the main problem is that if we get the wrong info in the file then people can maliciously claim to be mislead/confused - so basically it's best if any record is correct.
+19:41:35 <abadger1999> <nod> yes, then you might be able to copyright it.  But you'd be copyrighting the new work, not the single character "a"
+19:41:39 <bcoca> git is good enough a record for most cases
+19:42:36 <bcoca> http://www.magnus-opus.com/ <= these guys copyrighted all combinations of telephone tones, so every telephone number is theirs
+19:42:59 <bcoca> ^ they did in protest for austrialian law being too draconian
+19:43:01 <abadger1999> git is the record that we have to use.  The information in the headers is informational but not sufficient for doing anything beyond using the work under the listed license agreement
+19:43:36 <bcoca> but in the end, none of us are lawyers and even a lawyer will tell you ... depends on the judge
+19:43:46 <bcoca> #endmeeting

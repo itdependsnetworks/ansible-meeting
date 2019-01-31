@@ -1,0 +1,210 @@
+14:56:34 <gundalow> #startmeeting Ansible Core
+14:56:34 <zodbot> Meeting started Thu Feb 22 14:56:34 2018 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+14:56:34 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+14:56:34 <zodbot> The meeting name has been set to 'ansible_core'
+14:56:46 <gundalow> #chair bcoca rvgate abadger1999 funzo dmsimard
+14:56:46 <zodbot> Current chairs: abadger1999 bcoca dmsimard funzo gundalow rvgate
+14:57:00 <shertel> \o
+14:58:24 <abadger1999> Bon jour
+14:59:41 <gundalow> #chair shertel
+14:59:41 <zodbot> Current chairs: abadger1999 bcoca dmsimard funzo gundalow rvgate shertel
+15:01:22 <gundalow> #info Agenda https://github.com/ansible/community/labels/core
+15:01:44 <gundalow> #topic Open Floor
+15:01:53 <gundalow> rvgate: Did you have a question?
+15:02:08 <sdoran> o/
+15:04:24 <dmsimard> I guess I can mention something so the meeting doesn't look as empty :D
+15:04:48 <gundalow> dmsimard: Sure
+15:04:54 <gundalow> #chair sdoran dmsimard rvgate
+15:04:54 <zodbot> Current chairs: abadger1999 bcoca dmsimard funzo gundalow rvgate sdoran shertel
+15:05:08 <dmsimard> There was a thread on ansible-outreach recently: https://groups.google.com/forum/#!topic/ansible-outreach/bcHy7_rF9Qc and it sparked this thing: https://github.com/ansible-community/
+15:05:14 <rvgate> a few meetings back there was a discussion about implementing a flag/config to suppress some warnings or merging them together to only get it once.. specifically the allow_world_readable_tmpfiles config flag... i wonder how much of this is still on track
+15:05:41 <dmsimard> It seemed like there was a need for a non-official Ansible github org to put stuff in them, so far it's just meetups but it could be more than that, I dunno.
+15:07:14 <bcoca> rvgate: warnings already get deduped
+15:07:42 <bcoca> the allow world readable was removed as a host flag, so only global is left, not sure how that relates
+15:08:16 <abadger1999> allow_world_readable happens post-fork, so it's not getting deduped.
+15:08:37 <abadger1999> I remember that was the problem but I don't remember what we settled on as a mitigation.
+15:08:54 <gundalow> dmsimard: oh, that's really cool. Thanks
+15:09:04 <abadger1999> dmsimard: Cool.  You just want to get visibility for that?
+15:09:17 <rvgate> abadger1999, i think it was adding a "silent" value to the flag, supressing the warning completely
+15:09:29 <rvgate> or something like that
+15:09:45 <dmsimard> abadger1999: not really expecting anything, just thought I would mention it
+15:10:00 <gundalow> dmsimard: Can you please give me powers and I'll create the ansible-london-meetup Had an event yesterday with 127 people
+15:10:12 <dmsimard> If we want to advertise it as being a thing, we probably want to think about how to organize things, set up permissions, etc
+15:10:36 <dmsimard> gundalow: sure
+15:10:52 <abadger1999> rvgate: okay, so a config option to turn off that particular warning?  I'll see about that.  too late for 2.5 but I'll check if it can fit in with the 2.6 series or not (2.6 is a bugfix/stabilization release... this isn't exactly stabilization but it should be small)
+15:11:01 <gundalow> dmsimard: Yup, maybe we can discuss more in #ansible-community ?
+15:11:10 <dmsimard> abadger1999: I organize the Ansible Montreal meetups so I needed a place that wasn't github.com/dmsimard basically .. and then it kind of took off I guess
+15:11:19 <abadger1999> <nod>
+15:11:23 <dmsimard> gundalow: I'll join that
+15:11:28 <gundalow> dmsimard: Ace, I've been thinking similar things :)
+15:11:58 <rvgate> abadger1999, that would be the easy win/fix, and was also proposed in the meeting back then (cant recall the logs)
+15:12:14 <sivel> Hey all, sorry.  running late this morning
+15:12:36 <rvgate> abadger1999, the better solution would be to only show the warning once, but as you mentioned, thats a lot more trickier to do
+15:12:58 <bcoca> solution goes by 'post fork' not using display direclty, but passing info back to parent via queue
+15:13:07 <bcoca> ^ working on that anyways for callbacks
+15:13:20 <rvgate> cool
+15:14:17 <abadger1999> ah that was the thing... we got into a debate about whether that could be ready in time to make adding a config option extraneous.
+15:14:51 <bcoca> it came back to me
+15:15:11 <bcoca> had forgotten 'post fork display' uses diff list of warnings
+15:15:24 <abadger1999> I'll whip up a config-based  PR and we can decide on timing then.
+15:15:38 <bcoca> 2.7 at this point?
+15:15:50 <abadger1999> I'll have to ask mattclay.
+15:15:53 <bcoca> probalby can have the across fork coms done by then
+15:16:00 <abadger1999> I think technically it would need an exception to get into 2.6
+15:16:02 <bcoca> the toggle is actually quite simple
+15:16:11 <bcoca> but ^ that
+15:16:23 <abadger1999> yeah.
+15:16:38 <bcoca> also, we want to avoid a toggle 'per wanring/error'
+15:16:43 <abadger1999> I will ask for the exception since it's simple but I don't know if it will be granted
+15:17:00 <bcoca> its tiny and very simple, im not gonig to oppose
+15:17:41 <rvgate> it would greatly help with the output we get currently.. since in most cases we are forced to use world readable files
+15:18:20 <bcoca> worst part it is a global setting so it affects hosts that dont require it also
+15:19:51 <rvgate> bcoca, doesnt it try other methods first before consulting the world readable files? even if its set to allow it?
+15:20:35 <bcoca> depends, some cases like chown we cannot rely on success as on somep latforms it reports it as such even when it fails
+15:20:55 <abadger1999> rvgate: yes it does.
+15:21:05 <bcoca> that code is a stack of special cases
+15:21:44 <abadger1999> rvgate: if you have posix acl support it won't create a world readable tmp file.
+15:22:47 <bcoca> iirc it goes 'try acl', 'try chmod unless world readable', do world readable if set
+15:23:10 <abadger1999> If the administrative account (root in most cases) is one of the two accounts or you are not becoming at all, then it will not create a world readable tempfile.
+15:23:32 <abadger1999> the current setting only happens if all other choices have been exhausted.
+15:23:33 <bcoca> ^ yes, that only happens if non admin, as i said its stack of special cases
+15:24:16 <bcoca> abadger1999: funny enough, 'root' might 'not be admin' in cases of nfs mount with root_squash
+15:24:48 <abadger1999> bcoca: yeah.  Although nfs for the system temporary directories is itself a very small special case.
+15:25:21 <bcoca> not really as default is ~/.ansible/tmp and /home is popular for nfs mounts
+15:25:22 <abadger1999> (Even when I did thin client, we used local temp dir.)
+15:25:37 <bcoca> abadger1999: remember we dont switch to system temp 'if admin user'
+15:25:46 <bcoca> ^ which creates the problem with root
+15:25:53 <abadger1999> bcoca: we do.
+15:26:17 <abadger1999> bcoca: because admin user just means that we know we can run things like chown.
+15:26:24 <bcoca> no, we switch to system temp if becoming 'non admin'
+15:26:34 <abadger1999> bcoca: it doesn't mean that the becomed user can access that location.
+15:26:44 <bcoca> we do assume that
+15:26:45 <abadger1999> bcoca: ah... I'm thinking of the other direction.
+15:26:48 <bcoca> yes
+15:27:01 <abadger1999> remoate_user=root, becomed user=postgres.  (as an example)
+15:27:11 <bcoca> there is corner case that user can now 'fix' by removing root from admin_users config
+15:27:16 <abadger1999> I'd have to look, though, it might be the same in both directions.
+15:27:25 * rvgate has the feeling the subject changed, or is simply not following it
+15:27:29 <abadger1999> I think that's outside of fixup_perms so I may not have looked at it.
+15:27:30 <rvgate> :D
+15:27:33 <bcoca> no, if become_user in admin_users, we dont switch
+15:27:49 <bcoca> abadger1999: its in setting system_tmp var when passing to mkdtemp
+15:28:15 <bcoca> but now we have way for user to configure that!
+15:28:32 <bcoca> before 'root' was hardcoded so there was no workaround
+15:28:48 <bcoca> well, remote_tmp=/var/tmp was teh workaround, now its a 'nicer one'
+15:29:12 <bcoca> in the end both require using system temp ....
+15:30:01 <abadger1999> <nod> So if we want to fix that bug, we need to fx it in _make_temp_path, not in fixup_perms.
+15:30:39 <bcoca> i dont think either can fix it other than giving user the ability to remove 'root' from admin_users
+15:30:58 <abadger1999> because the root squashing will likely be a problem at a higher level directory than fixup_perms should be accessing.
+15:31:15 <abadger1999> ie, you wouldn't want it to change permissions on /home/remote_username
+15:31:37 <bcoca> wouldnt matter, the 'fix' would be remounting w/o root_squash
+15:31:47 <bcoca> permissions on the mount point 'go away' once you mount
+15:31:51 <abadger1999> bcoca: it can be fixed in make_temp_path... If become: use_system_temp.
+15:31:54 <bcoca> the mount command deterines those permissions
+15:32:09 <abadger1999> bcoca: Rather than if become and become_user in admin_users: use_system_temp
+15:32:19 <bcoca> abadger1999: that fix goes too far the other way, now you are using system temp for things that dont need to be there
+15:32:37 <bcoca> you want to avoid system temps when possible
+15:32:50 <bcoca> we only use it when we have no other choice
+15:33:03 <abadger1999> bcoca: Not saying it is the right tradeoff... Just saying that's where and how we'd have to fix it if we valued the root-squash cornercase that highly.
+15:33:38 <bcoca> im not suggesting code change, but something like faq entry for this case
+15:33:52 <abadger1999> <nod> yep.
+15:34:03 <bcoca> 'if permisisons failure during become as root on nfs mount .. this migh tbe cause .. this is solution '
+15:37:19 <rvgate> sorry for opening pandora's box
+15:39:42 <abadger1999> rvgate: Are you also rvgate on github?
+15:40:00 <rvgate> abadger1999, yes, im rvgate everywhere
+15:40:18 <abadger1999> Cool,  I'll cc you on the PR when I open it.
+15:41:08 <rvgate> nice, ill be checking/testing it :)
+15:43:30 <rvgate> i forgot my second question
+15:45:06 <abadger1999> Anyone else have anything?
+15:45:33 <rvgate> ahh yes... its regarding this: https://github.com/ansible/ansible/issues/35718 i understand the reason why inventory file extensions might be a bad idea, but i can also see how it could be a good idea... i wonder if there might be a way to control this
+15:46:22 <rvgate> maybe introduce an inventory config to enforce file extensions to be fed to specific modules for parsing the inventory
+15:48:50 <abadger1999> bcoca: Can we tell enough about a file to fail instread of passing it to the next inventory plugn in some cases?  For instance, if a file succeeds at yaml parsing, can we then fail the file if the file's schema is wrong?
+15:49:48 * shertel has had problems with this too
+15:50:41 <rvgate> abadger1999, that would cause a conflict between yaml and ini
+15:50:58 <rvgate> i think ini is the bad boy here
+15:51:34 <abadger1999> rvgate: <nod>  Yeah, a config to enforce file extensions for inventory might be doable as well. that way we could have both backwards compat and something that gives better errors.
+15:52:34 <abadger1999> rvgate: yeah, I see what you mean.  A simple ini compatible list of hosts does parse as valid yaml
+15:53:43 <rvgate> to extend the problem, lets assume this config exists to enforce it... how would it interpret an executeable myinventory.yml ?
+15:54:17 <rvgate> maybe going a bit too far already into implementation details
+15:55:01 <bcoca> abadger1999: if schema is wrong, file will fail yaml parsing
+15:55:19 <bcoca> ^ yaml invnetory plugin parsing
+15:55:31 <abadger1999> bcoca: yeah, but then move on to try the ini plugin.  I think that's the issue.  (moving on prevents us from giving a good error message)
+15:55:46 <bcoca> if the parsing of the inventory fails at any point, the plugin should return ansibleparsererror, next plugin tries
+15:56:11 <bcoca> abadger1999: sadly that has always been teh case, when they were all hardcoded, now you can at least remove ini as one of the plugins to look at
+16:00:32 <abadger1999> bcoca: do you see any blockers to adding a config option to make parsing stricter?  (rvgate is suggesting a config option to toggle inventory plugins targetting certain file extensions).
+16:02:29 <bcoca> each plugin can restrict that, new plugins do this, we did not do this on ini cause ... legacy
+16:02:42 <bcoca> idem with script
+16:03:29 <bcoca> since our default is /etc/ansible/hosts ... hard to say all plugins sources must have extensions
+16:04:34 <bcoca> tempted, just for this issue, to make --- host illegal in ini plugin ...
+16:04:38 <abadger1999> Okay, so if some plugins do already... A config option i nthe ini plugin that makes it look at extensions?
+16:04:40 <bcoca> but --- is not required in yaml anyways
+16:05:19 <bcoca> abadger1999: easy to add, but also just as easy to remove from 'enabled plugins list' if you are not using it
+16:05:32 <abadger1999> rvgate: ^
+16:05:42 <bcoca> at this point the former would have to wait till 2.7 while the latter works since 2.4
+16:06:09 * rvgate looks up the enabled plugins list
+16:06:33 <bcoca> i.e plugins that will be fed the 'inventory source' IN ORDER to attempt to parse it
+16:06:41 <bcoca> first one to succeed, ends attempts
+16:07:21 <rvgate> bcoca, but if i keep only ini in there, it will still parse yaml as valid...
+16:07:32 <bcoca> abadger1999: the 'verify_file' method plugins implement is where most 'extension matching' happens, easy to add to ini, but we cannot make it the default
+16:07:47 <bcoca> rvgate: IF the yaml passes as valid ini
+16:07:49 <bcoca> for example
+16:07:57 <abadger1999> yeah.
+16:08:00 <bcoca> a file that just contains 'myhost' in one line
+16:08:03 <abadger1999> agreed it can't be default
+16:08:07 <bcoca> ^ can be parsed by several plugins 'correctly'
+16:08:13 <bcoca> for yaml, it will be a group
+16:08:17 <bcoca> for ini it will be a host
+16:08:24 <bcoca> its both valid yaml and ini
+16:08:40 <bcoca> and if the file is /etc/ansible/hosts ... wth do we know which you meant?
+16:09:33 <bcoca> ^ this problem is not new to inventory plugins, has existed since .. inventory, normally it was script vs ini as people had 'executable ini files' cause of samaba/cifs/windows/virtualbox
+16:09:40 <rvgate> so be default you guess (like it works now), and if someone enforces it, it should have some extension or treat the default as xxx
+16:09:49 <bcoca> when i added yaml inventory, it just extended teh possible conflict surface
+16:10:06 <bcoca> rvgate: i left the default to be what it always was
+16:10:25 <shertel> bcoca Should https://github.com/ansible/ansible/blob/devel/lib/ansible/plugins/inventory/constructed.py#L82 be happening in BaseInventoryPlugin instead? I don't think most of the inventory plugins are checking for extensions. Definitely an oversight for aws_ec2.
+16:10:31 <bcoca> we can create options to handle your case, basically just requires ini plugin to declare the config
+16:11:25 <bcoca> shertel: check verify_file, afaik most of the plguins (the ones i wrote and openstack one) do check .. i didnt look at aws_ec2 one
+16:11:44 <bcoca> but iirc, it does require 'valid yaml' + a field that says to use aws_ec2 plugin
+16:12:10 <bcoca> if path.endswith('.aws_ec2.yml') or path.endswith('.aws_ec2.yaml'):
+16:12:36 <bcoca> ^ you are doing it iin 'parse' method .. which is wrong, you should just expose a verify_file method
+16:12:56 <shertel> yes. That's how openstack/virtualbox/openshift do it too.
+16:13:00 <bcoca> it 'still works' but one check is quick (on name) and this check now happens after loading file
+16:13:34 <bcoca> no, just looking now to ensure ii remember correclty, virtualbox HAS a verify_file method
+16:13:36 <shertel> Okay. Better to have the extension configurable though than hardcoded to something like .vbox.yml?
+16:13:48 <shertel> so does aws_ec2
+16:13:53 <bcoca> no
+16:14:02 <bcoca> it has _validate_config, which is only called from parse()
+16:14:17 <bcoca> in _validate_config you DO call the super.verify_file
+16:14:37 <shertel> ah, I must have renamed that for some reason...
+16:14:56 <shertel> anyway, sorry for derailing the conversation. I wasn't aware extensions should be configurable.
+16:15:00 <bcoca> not sure why, doesnt make sense to me
+16:15:15 <bcoca> shertel: they CAN be, 'should' is a matter of convinience
+16:15:28 <shertel> okay
+16:15:34 <bcoca> i hardcoded vbox.yml/vbox.yaml for virtualbox, dont think anyone will care too much
+16:15:44 <bcoca> if it ever arrises, easy enough to add config optoin with default
+16:16:04 <bcoca> ini is a problem cause it was 'existing method'
+16:17:03 <shertel> yes
+16:17:06 <bcoca> shertel: its a tiny performance diff, but it would be very noticable if someone had many sources/plugins enabled
+16:17:23 <bcoca> the file will eventually be opened anyways
+16:17:41 <bcoca> unless it never matches paths for any of the enabled plugins
+16:17:56 <bcoca> also the 'auto' plugin makes it very unlikely for 'long list of enabled plugins' to evern exist
+16:20:12 <bcoca> rvgate, abadger1999 the one i dont see a way around is the 'no extension' as we do have `if no ext` as part of most tests
+16:20:22 <bcoca> .ini , .cfg are easy to restrict
+16:20:27 <bcoca> so is .yml
+16:23:59 <rvgate> bcoca, i dont have enough knowledge of the internals, especially the tests, to help you with this :(
+16:24:48 <bcoca> at this point it is mostly choosing the number of users to piss off, cause one way it breaks for this group, the other way it breaks for the other
+16:25:10 <bcoca> one group is going to be pissed off if we make the other happy
+16:25:33 <bcoca> right now those using 'current behaviour' seem like the larger group, hence i left it this way
+16:25:44 <rvgate> wait a minute... what about a mix...
+16:26:13 <rvgate> if it has no extension, behave as is... if it does have an extension, use the specific plugin...
+16:26:50 <rvgate> or am i thinking too simple here ?
+16:27:18 <rvgate> or even better, is that already the case?
+16:29:31 <bcoca> alreayd the cse for those plugins that 'declare an extension'
+16:29:38 <bcoca> some wont accept 'no ext'
+16:29:50 <bcoca> the problme is the 'grandfatherd ones' script, ini and yaml
+16:32:57 <rvgate> i see what you mean...
+16:36:21 <abadger1999> Okay, any more here?
+16:37:16 <sivel> nothing from me.  Sorry I was absent today.  Showed up late, and then got sucked in by something
+16:37:24 <abadger1999> No worries.
+16:37:31 <abadger1999> Okay, I'll close the meeting in 60s
+16:40:03 <abadger1999> #nedmeeting
+16:40:07 <abadger1999> #endmeeting

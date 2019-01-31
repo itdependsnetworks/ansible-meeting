@@ -1,0 +1,95 @@
+16:01:55 <gundalow> #startmeeting Ansible Network Working Group
+16:01:55 <zodbot> Meeting started Wed Jan  3 16:01:55 2018 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:01:55 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:01:55 <zodbot> The meeting name has been set to 'ansible_network_working_group'
+16:03:02 <caphrim007> yo
+16:04:19 <gundalow> hey caphrim007
+16:04:58 <gundalow> #topic Open Floor
+16:05:03 <samerd> gundalow: Hi, Can I add a new topic
+16:05:12 <gundalow> #chair caphrim007 samerd
+16:05:12 <zodbot> Current chairs: caphrim007 gundalow samerd
+16:05:14 <gundalow> Sure just do
+16:05:21 <gundalow> Sure just do #topic $foo
+16:05:30 <IPvSean> :)
+16:05:35 <privateip> happy new year everyone
+16:05:43 <samerd> #topic bug life cycle
+16:05:53 <gundalow> #chair privateip IPvSean
+16:05:53 <zodbot> Current chairs: IPvSean caphrim007 gundalow privateip samerd
+16:06:33 <samerd> could you explain please how to open, assign and close bugs?
+16:07:15 <IPvSean> @samerd you open bugs with the ISSUES tab on github.com/ansible/ansible
+16:07:56 <gundalow> samerd: Issues & PRs can only be assigned to people people with commit powers on ansible/ansible (which is generally Ansible Staff)
+16:08:13 <gundalow> because of that, and to allow notifications we use https://github.com/ansible/ansible/blob/devel/.github/BOTMETA.yml
+16:08:22 <funzo> http://docs.ansible.com/ansible/latest/community.html#i-d-like-to-report-a-bug
+16:08:32 <gundalow> #chair funzo
+16:08:32 <zodbot> Current chairs: IPvSean caphrim007 funzo gundalow privateip samerd
+16:10:08 <samerd> @gundalow, @IPvSean: If I open a bug regarding my modules, is it assigned to me?
+16:10:26 <gundalow> samerd: no, though Ansibot will notify you
+16:10:48 <gundalow> samerd: example: https://github.com/ansible/ansible/pull/34398#issuecomment-355040072
+16:11:28 <gundalow> because: https://github.com/ansible/ansible/blob/devel/.github/BOTMETA.yml#L455
+16:11:37 <gundalow> and https://github.com/ansible/ansible/blob/devel/.github/BOTMETA.yml#L1201
+16:12:35 <gundalow> along with BOTMETA.yml the `author:` field will be attempted to be parsed in the module
+16:14:14 <samerd> @gundalow: thanks a lot, two other questions can I create a PR regarding this bug fix, and when this bug will be closed?
+16:14:57 <gundalow> samerd: PR for?
+16:16:41 <samerd> PR for fixing the bug
+16:17:02 <gundalow> Sure. That directory is owned by you
+16:17:07 <gundalow> Anyone can raise a PR
+16:18:03 <gundalow> though your stamp of approval (shipit) will be needed if the change is to your files
+16:18:44 <gundalow> e.g. lib/ansible/modules/network/mlnxos/ or your module_utils libraries
+16:19:12 <samerd> gundalow: Great, Thanks so much for the clarification, and sorry for asking such basic questions.
+16:19:40 <gundalow> samerd: I can assure you that everyone else has asked similar question before
+16:20:01 <gundalow> https://github.com/ansible/ansibullbot/blob/master/ISSUE_HELP.md explains the Ansibullbot workflow
+16:20:54 <gundalow> samerd: You may wish to raise a PR to update BOTMETA.yml and add entries for lib/ansible/modules/network/mlnxos/ and whatever other directories you have (module_utils, plugins,etc)
+16:21:11 <gundalow> And you can also list other people to be notified
+16:22:05 <samerd> gundalow: thanks, I will check if anything need to be changed there.
+16:22:19 <caphrim007> speaking of other people being notified gundalow
+16:22:27 <caphrim007> is there a bug in the bot again?
+16:22:30 <gundalow> Cool. Feel free to ping in here if you have any questions
+16:22:45 <caphrim007> because i had people be notified in some prs which very clearly are marked no-notify in meta
+16:22:47 <gundalow> caphrim007: https://github.com/ansible/ansibullbot/issues/837
+16:22:58 <gundalow> ^ Don't set labels or mention people on broken merges
+16:23:00 <gundalow> That issue?
+16:23:24 <caphrim007> an example
+16:23:25 <caphrim007> https://github.com/ansible/ansible/pull/34207
+16:23:39 <caphrim007> i dont think that one was busted at the time
+16:24:29 <gundalow> oh, so wojtek0806 is listed in ignored
+16:24:37 <caphrim007> yeah
+16:24:38 <caphrim007> https://github.com/ansible/ansible/blob/devel/.github/BOTMETA.yml#L471
+16:26:09 <gundalow> hum, which was added 4 months ago. I'll raise a bug now
+16:26:12 <caphrim007> i seem to remember there being a former issue with ignores not working
+16:26:23 <caphrim007> but i thought it was fixed/i havent been tracking it
+16:27:42 <caphrim007> i'll have more prs over the next couple of days, so i'll see if it happens again
+16:27:48 <caphrim007> if you want to forward the issue #
+16:27:58 <caphrim007> i can list examples
+16:28:07 <gundalow> caphrim007: https://github.com/ansible/ansibullbot/issues/840
+16:28:32 <gundalow> If you see it again can you add a comment on the PR bot_status (comment by itself) that should give a bit more info
+16:28:40 <caphrim007> ok
+16:30:31 <gundalow> samerd: Any other questions?
+16:32:02 <gundalow> samerd: I think we've reviewed all your PRs. The comment from trishnag on argspec may apply to multiple PRs, and possible some modules that have already been merged. If its easier to merge what we have then go back and raise one PR that fixes all the argspec issues in one go we can do that, otherwise feel free to update the PRs that are already in flight
+16:35:27 <gundalow> Anyone got anything else?
+16:35:35 <gundalow> #topic Open Floor
+16:35:37 <caphrim007> nothing from me
+16:35:56 <gundalow> #info Everyone should have received an email with a link to the recording & slides from the partners webinar
+16:36:06 <samerd> gundalow: thanks, I am reviewing the comments.
+16:36:42 <gundalow> Anil: Hi :)
+16:36:45 <gundalow> #chair Anil
+16:36:45 <zodbot> Current chairs: Anil IPvSean caphrim007 funzo gundalow privateip samerd
+16:36:50 <Anil> Hi
+16:37:26 <gundalow> Anil: You got anything? We've just been talking about the bug work flow (stuff you already know)
+16:37:47 <Anil> No. I dont have anything to discuss
+16:39:04 <Anil> Our code freeze will be on Jan 15 right ?
+16:39:09 <gundalow> Correct
+16:39:21 <gundalow> only bug fixes after then
+16:39:23 <gundalow> samerd: ^
+16:39:25 <gundalow> FYI
+16:39:55 <samerd> gundalow: regarding the comment of trishnaguha, I will fix it for all open PRs, and will raise one PR for merged modules
+16:40:08 <gundalow> samerd: Sounds good
+16:40:37 <Anil> gundalow: Lenovo QA is waiting for that to do rigorous testing after that. So just want to confirm
+16:40:48 <gundalow> Ace
+16:42:52 <gundalow> #info 2.5 freeze for new functionality is 15th Jan
+16:43:06 <gundalow> If there isn't anything else I'll close the meeting shortly
+16:44:18 <Anil> ok
+16:47:45 <gundalow> indivisiblewalru: Hi :0
+16:47:50 <gundalow> :) even
+16:48:02 <gundalow> Did you have anything for the meeting?
+16:51:16 <gundalow> Thanks everyone
+16:51:18 <gundalow> #endmeeting

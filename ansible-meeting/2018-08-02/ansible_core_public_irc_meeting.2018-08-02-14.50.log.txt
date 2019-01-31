@@ -1,0 +1,38 @@
+14:50:32 <bcoca> #startmeeting ansible core public irc meeting
+14:50:32 <zodbot> Meeting started Thu Aug  2 14:50:32 2018 UTC.
+14:50:32 <zodbot> This meeting is logged and archived in a public location.
+14:50:32 <zodbot> The chair is bcoca. Information about MeetBot at http://wiki.debian.org/MeetBot.
+14:50:32 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+14:50:32 <zodbot> The meeting name has been set to 'ansible_core_public_irc_meeting'
+14:57:10 * Pilou waves
+14:58:14 <bcoca> #topic open floor
+14:58:31 <bcoca> #chair Pilou
+14:58:31 <zodbot> Current chairs: Pilou bcoca
+14:59:32 <Pilou> There are some PR with shipit label which aren't merged: should they mentionned here ?
+15:00:03 <bcoca> possibly, but those most likely touch a 'core' supported file and wont be automerged .. i believe the same is true with tests
+15:01:40 <maxamillion> .hello2
+15:01:41 <zodbot> maxamillion: maxamillion 'Adam Miller' <maxamillion@gmail.com>
+15:01:50 <sivel> .hello2
+15:01:50 <Pilou> then: #43215 (tower_project, bugfix), #39809 (tower modules, improvements), #40489 (Filesystem, new fs) :)
+15:01:50 <zodbot> sivel: sivel 'Matt Martz' <matt@sivel.net>
+15:05:55 <bcoca> Pilou: those i'm going to refer to the author as he works on teh tower team
+15:06:43 <bcoca> any other business?
+15:08:35 <sdoran> o/
+15:09:01 <sivel> nothing from me
+15:09:05 <bcoca> #topic https://github.com/ansible/proposals/issues/17
+15:11:12 <bcoca> ^ anyone have any thoughts?
+15:12:42 <bcoca> k, seems dead today , just going to end meeting
+15:12:47 <bcoca> in 1min
+15:13:00 <sdoran> I'm in favor of a fact gathering framework, a way to allow custom fact gathering/target specific fact gathering that doesn't require adding tasks to the play.
+15:13:23 <sdoran> But this ends up turning into the "redo the entire setup/fact gathering framework" conversation.
+15:13:35 <sdoran> To make it more pluggable.
+15:13:55 <bcoca> well, 2 diff frameworks, autofact gathering and the 'setup module'
+15:14:08 <bcoca> i think we only want to tackle the first
+15:14:16 <sdoran> I may be conflating the two.
+15:14:23 <bcoca> they are related
+15:14:49 <bcoca> and currently hardcoded, so i think if we separate and expand the first, the 2nd can be dealt with later and in easier way
+15:15:31 <bcoca> keep it as default, but make it configurable to allow, specially 'non unix' machines, to work better w/o having to gather_facts: no + sepcific fact task in every play
+15:16:27 <sdoran> It does need to be OS/inventory related. Since Ansible gathers data on many non *nix OSs today. And I agree that disabling fact gathering on everything but Linux is odd.
+15:19:37 <bcoca> let me try again on tuesday, seems we dont have enough people here for quorum
+15:19:44 <sdoran> Agreed.
+15:20:06 <bcoca> #endmeeting

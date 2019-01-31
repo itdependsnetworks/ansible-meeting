@@ -1,0 +1,169 @@
+17:00:06 <gundalow> #startmeeting Testing Working Group
+17:00:06 <zodbot> Meeting started Thu Nov  9 17:00:06 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+17:00:06 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+17:00:06 <zodbot> The meeting name has been set to 'testing_working_group'
+17:00:33 <gundalow> #info Agenda https://github.com/ansible/community/labels/testing
+17:01:08 * gundalow waits to see if anyone else joins
+17:01:23 * bcoca joins
+17:02:07 <gundalow> woot, coca time
+17:02:11 <gundalow> #chair bcoca
+17:02:11 <zodbot> Current chairs: bcoca gundalow
+17:02:32 <bcoca> https://github.com/ansible/ansible/projects/14 <= started this for myself, wonder if it makes sense for WG
+17:02:58 <gundalow> #topic GitHub project for tests
+17:03:07 <gundalow> #info bcoca created https://github.com/ansible/ansible/projects/14
+17:03:28 <gundalow> bcoca: So is this meant to be an easy way of tracking things we should test?
+17:04:26 <gundalow> #info We also have https://github.com/ansible/community/wiki/Testing%3A-progress-tracker
+17:04:42 <gundalow> I guess the GitHub project is nice as it gives you a prioritised list
+17:05:02 <gundalow> though only people with Commit on ansible/ansible can add things
+17:06:11 <bcoca> bot has commit!
+17:06:44 <gundalow> You thinking !this_needs_a_test
+17:06:48 <bcoca> but i gues syou need more people
+17:07:16 <bcoca> my other question was 'how do i enable requiring docs for lookup and other plugins that now support docs'?
+17:07:19 * gundalow generally spends his time on infrastructure, rather than wrigin tests
+17:07:34 <bcoca> gundalow: idem, but im trying to be better about writing them
+17:08:21 <gundalow> ditto
+17:08:53 <gundalow> OK, so how about we invite Core to add notes in https://github.com/ansible/ansible/projects/14 if during their travels then find issues
+17:09:04 <gundalow> and we can revisit in $future?
+17:09:46 <gundalow> bcoca: That sound reasonable?
+17:10:39 <bcoca> yeah, im also fine with closing it and keeping my list elsewhere if it bothers people, just started doing it publicly in case someone wanted to start picking up my slack
+17:10:51 <gundalow> Nice idea, hope it works :)
+17:10:58 <bcoca> then thought .. this might be useful for others  too!
+17:11:18 <gundalow> #agreed Lets test out using https://github.com/ansible/ansible/projects/14
+17:11:44 <gundalow> #topic CI for docs for lookups and ither plugins that now support "docs"
+17:12:28 <gundalow> #info The validation of the DOCUMENTATION block is done in validate-module in test/sanity/validate-modules/schema.py
+17:12:54 <Pilou> unfortunate that everybody wouldn't be able to update https://github.com/ansible/ansible/projects/14
+17:13:13 <gundalow> #info running ansible-doc is done in test/runner/lib/sanity/ansible_doc.py
+17:13:43 * mattclay waves
+17:14:11 <gundalow> #chair Pilou mattclay
+17:14:11 <zodbot> Current chairs: Pilou bcoca gundalow mattclay
+17:14:13 <gundalow> Hi :)
+17:14:26 <gundalow> bcoca: So we need
+17:14:57 <gundalow> 1) Update/extend the test in test/runner/lib/sanity/ansible_doc.py (do we need to specify the type?)
+17:15:24 <gundalow> 2) update test/runner/lib/classification.py so that changes to the plugins would trigger the right test
+17:15:36 <bcoca> yes, some types, as not all pugins are 'documetnable' .. yet
+17:17:09 <gundalow> Are the names of plugins and modules globally unique?
+17:17:18 <gundalow> (all plugins)
+17:18:39 <mattclay> gundalow: There are plugin names which overlap with modules, such as template.
+17:18:46 <gundalow> ah, yes
+17:18:50 <bcoca> unique per type, not globally
+17:19:19 <bcoca> template is a lookup, action plugin and module
+17:19:45 <mattclay> Which is why we'll probably end up changing the naming convention for test targets at some point.
+17:19:54 <gundalow> mattclay: What do you think would be the best way to start testing docs in the other plugins?
+17:20:01 <bcoca> i thought you already had plugins/ namespace
+17:20:16 <bcoca> test/units/plugins/
+17:20:22 <bcoca> ^ that seems fine
+17:20:27 <bcoca> or its integration?
+17:20:27 <mattclay> bcoca: I was referring to integration test targets.
+17:20:58 <bcoca> yeah, we should do the 'non module' ones inside a plugins dir
+17:21:08 <bcoca> might not be worth moving modules at this point
+17:21:19 <mattclay> gundalow: We should either extend validate modules to handle plugins, or split out the docs validation from the module validation so we can run docs validation on modules and plugins.
+17:22:21 <mattclay> sivel: Are you around?
+17:22:36 <sivel> I am
+17:22:44 <sivel> kinda :)
+17:22:54 <mattclay> sivel: Any thoughts on validating docs for plugins?
+17:23:13 <bcoca> mattclay: ansible-doc handles them currently, if you are already using it for modules, easy enough to extend
+17:23:23 <bcoca> -t <plugintype> would be needed for 'non modules'
+17:23:26 <bcoca> -t modules is the default
+17:23:50 <sivel> we get more advanced schema validation though with what validate-modules has
+17:23:55 <mattclay> bcoca: The docs validation performed by the module validator is different from what ansible-doc provides. I think we'll want to run both.
+17:24:05 <sivel> I haven't looked closely enough at the schemas, to understand if they are different
+17:24:28 <sivel> we could move around the functionality in valdiate modules, to allow that to work, that would probably be what I would do
+17:24:42 <bcoca> so we can 'start' with ansible-doc?
+17:24:52 <mattclay> Yeah
+17:25:14 <mattclay> We need both, so we can start with whichever lands first. :)
+17:25:18 <bcoca> it will show "UNDOCUMENTED" for those that have no docs, other errors if docs have sytntax issues
+17:25:29 <sivel> Right now doc validation is part of the module valdiator, we could make a new class for plugin validator, and move docs validation there
+17:25:38 <mattclay> bcoca: How many do we have that are undocumented?
+17:25:44 <bcoca> 1
+17:25:53 <mattclay> 1 plugin, or one type of plugin?
+17:25:54 <bcoca> which is why i realized we needed tests
+17:26:00 <bcoca> 1 plugin
+17:26:25 <mattclay> Ah, good. So we can add the missing docs and make them required.
+17:26:27 <bcoca> let me rephrase, there are several types of plugins that are still not 'documentable', but of those that are, we recently added 1 plugin with out docs
+17:26:58 <bcoca> so we got aws_ssm that is a new lookup, but has no docs, lookup support docs since 2.4 (i ensured all existing plugins were documented)
+17:27:06 <mattclay> Does ansible-doc just silently skip over the ones that are undocumentable?
+17:27:13 <bcoca> just need to ensure any new 'documentable plugins' are documented
+17:27:24 <bcoca> mattclay: it will say that type is not suported
+17:27:58 <mattclay> OK, so we'll need to make an exception for that.
+17:27:59 <bcoca> ansible-doc -t terminal eos
+17:28:04 <bcoca> ansible-doc: error: option -t: invalid choice: u'terminal' (choose from 'cache', 'callback', 'connection', 'inventory', 'lookup', 'module', 'strategy', 'vars')
+17:28:51 <bcoca> ansible-doc -t lookup -l |head -n 1
+17:28:54 <bcoca> aws_ssm             UNDOCUMENTED
+17:29:14 <bcoca> ^ otherwise it shows short description
+17:29:22 <mattclay> I'll put the ansible-doc plugin validation on my task list, since I need to figure out some conventions for how to organize integration and other non-unit tests for plugins.
+17:29:25 <bcoca> chef_databag        fetches data from a Chef Databag
+17:29:34 <bcoca> thanks!
+17:29:42 <bcoca> for now i'll just be extra observant on new plugins
+17:30:03 <bcoca> also in 2.5 i hope to expand the above list to most plugins
+17:30:20 <bcoca> actions and 'fragments' will probably never make the list
+17:30:30 <bcoca> but rest should, though tests/filters are hard
+17:32:04 <gundalow> mattclay: Thanks :)
+17:33:31 <gundalow> That will ensure that plugins have docs without major syntax errors. Rest will wait on schema.py
+17:34:12 <gundalow> oh, on module docs can we make validate modules detect the case of description being a list of single characters
+17:34:17 <bcoca> fyi, plugins have 'extended' schemas that i have not nailed down yet
+17:34:28 <gundalow> which we see occasionally in broken webdocs
+17:34:32 <gundalow> bcoca: Thanks for the heads up
+17:35:06 <bcoca> type:  and config options ini/env/vars/yaml being the ones that stand out in my head
+17:35:23 <gundalow> Required('description'): Any(list_string_types, *string_types),
+17:35:29 <gundalow> is what we have at the moment
+17:36:56 <gundalow> People know the case I'm talking about?
+17:37:42 <mattclay> gundalow: Yeah. I think we'll have to write code for that case -- I'm not sure schema validation can catch that one.
+17:37:46 <mattclay> sivel: ^
+17:37:59 <bcoca> for a in string_that_we_expected_as_list: print a\n
+17:38:17 <bcoca> actually, we should 'catch' that in rst generation, not hard
+17:38:29 <bcoca> we do it in ansible-doc
+17:38:56 <gundalow> CI doesn't currently fial
+17:38:59 <gundalow> fail*
+17:39:17 <sivel> Is there a question I was being asked?
+17:39:22 <bcoca> module should be able to use string OR list on description:
+17:39:31 <bcoca> ^ i'll look into fixing rst generation
+17:39:51 <bcoca> probably issue is in plugin template
+17:41:09 <gundalow> sivel: We were discussion the case when `description:` is set to a list of single characters. Often show in module docs online as a list of bullet points under `description` each one character. Wondering how we can detect that in validate-modules
+17:41:17 <mattclay> bcoca: So instead of treating it as an error we want to change the rst generation to allow either?
+17:41:29 <bcoca> https://gist.github.com/bcoca/432421a045153648edba8fd82455254c
+17:41:40 <bcoca> mattclay:  we do so on ansible-doc side
+17:41:41 <gundalow> Not sure if it could be done directly with voluptuous or would need someting custom
+17:41:51 <bcoca> actually in general 'list types' accept string as 'one element'
+17:42:06 <bcoca> ^ that should fix rst/template
+17:42:08 <gundalow> oh, just accept it, rather than render crap, nice
+17:42:17 <sivel> gundalow: I'd need to see an example of a place where it is breaking, and should be able to fix it
+17:42:30 * bcoca looks for more 'description cases'
+17:42:36 <gundalow> sivel: Thanks
+17:42:56 <sivel> I've seen it before, but seeing it again would help
+17:43:06 <bcoca> {% if v.description is string %} <= he, we already did for 'not module level descriptoin'
+17:47:27 <gundalow> OK
+17:47:33 <gundalow> Anything else on docs?
+17:47:47 <bcoca> https://github.com/ansible/ansible/pull/32757
+17:48:45 <gundalow> bcoca: Ace :)
+17:48:47 <gundalow> Thanks
+17:49:05 <gundalow> #topic Distributed CI code coverage
+17:49:25 <gundalow> #info Coverage is live for DCI Network runs: https://codecov.io/gh/ansible/ansible/tree/4443da2d79afc0daea6790d3aa81ade83a5455e7/lib/ansible/modules/network
+17:49:58 <gundalow> Not running via cron yet, I'm just in the process of doing a manual run against all the platforms
+17:50:18 <gundalow> this is against a different commit to the 0700UTC job as I had to fix an issue in ansible/ansible
+17:50:25 <gundalow> mattclay: FYI
+17:50:32 <mattclay> gundalow: So you don't have it synced yet to the Shippable runs?
+17:50:56 <gundalow> mattclay: I have the code to do that and it works. I just hardcodedthe SHA for ^ run
+17:51:29 <gundalow> from tomorrow it will be in sync (though not run automaticaly)
+17:51:45 <gundalow> Where in the codecov.io UI do you select the labels?
+17:52:18 <mattclay> To see where the coverage came from? You do that when viewing coverage on individual files.
+17:52:33 <gundalow> ah, OK
+17:52:51 <gundalow> Ah, yes I see it, thanks
+17:53:11 <mattclay> gundalow: Any plans to add a python 3.5 or 3.6 pass to DCI?
+17:54:06 <gundalow> It's on the list
+17:54:26 <gundalow> I think i need to tweak how I'm tracking results in DCI
+17:54:55 <gundalow> split out the RemoteCI to be per HW platform, for where like NXOS there are actually 5 different HW platforms
+17:55:14 <gundalow> and something similar for Python Version
+17:56:13 <mattclay> gundalow: We can discuss more after the meeting to make sure it's being tracked correctly so it will show up in properly in the coverage reports.
+17:56:34 <gundalow> Yup, that would be great
+17:56:54 <gundalow> Wasn't sure whatever checks we think are sensible before I run agains the same SHA as shippable
+17:58:17 <mattclay> gundalow: As long as the coverage results show up with the correct flags, I think it's ready to run with the same SHA.
+17:59:33 <mattclay> Well, and making sure each job (whatever the DCI equivalent is) is labeled correctly when uploading to codecov.io.
+18:00:22 <gundalow> I've gone for dci-$platform, e.g. dci-ios, dci-vyos
+18:00:28 <mattclay> gundalow: I wonder if there is a DCI build number we can add to codecov.io so it doesn't show "None": https://codecov.io/gh/ansible/ansible/commit/4443da2d79afc0daea6790d3aa81ade83a5455e7/build
+18:00:43 <gundalow> oh, that's a good idea
+18:06:41 <gundalow> mattclay: You happy with dci-$platform for -n "${test}"
+18:08:06 <mattclay> gundalow: The Shippable runs use `/` for a separator. Perhaps we should use `dci/$platform` instead?
+18:08:37 <gundalow> Will do
+18:10:52 <gundalow> Anyone got anything else?
+18:11:56 <gundalow> Thanks everyone
+18:11:58 <gundalow> #endmeeting

@@ -1,0 +1,82 @@
+19:00:19 <thaumos> #startmeeting ansible core
+19:00:19 <zodbot> Meeting started Tue Feb  6 19:00:19 2018 UTC.  The chair is thaumos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:00:19 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:00:19 <zodbot> The meeting name has been set to 'ansible_core'
+19:00:23 <alikins> blorp
+19:00:28 <thaumos> #chair alikins
+19:00:28 <zodbot> Current chairs: alikins thaumos
+19:00:48 <sivel> .hello2
+19:00:49 <zodbot> sivel: sivel 'Matt Martz' <matt@sivel.net>
+19:00:54 <thaumos> #chair sivel
+19:00:54 <zodbot> Current chairs: alikins sivel thaumos
+19:01:20 <sdoran> o/
+19:01:23 * shertel waves
+19:01:27 <sivel> no idea why it's hello2, I just type that because others do :)
+19:01:28 <maxamillion> .hello2
+19:01:29 <zodbot> maxamillion: maxamillion 'Adam Miller' <maxamillion@gmail.com>
+19:02:17 <maxamillion> sivel: I'm actually not sure either
+19:02:37 <maxamillion> nirik: ping - do you happen to know why it's .hello2?
+19:03:11 <agaffney> maybe .hello was taken and engineers are terrible at naming things :)
+19:03:22 <thaumos> #chair sdoran maxamillion
+19:03:22 <zodbot> Current chairs: alikins maxamillion sdoran sivel thaumos
+19:04:11 <thaumos> .hello2
+19:04:12 <zodbot> thaumos: thaumos 'Dylan Silva' <thaumos@gmail.com>
+19:04:18 <thaumos> nifty
+19:04:22 <sdoran> That is pretty neat
+19:04:34 * thaumos realises he needs to change the email associated to irc handle
+19:05:03 * gundalow waves
+19:05:05 <gundalow> .hello2
+19:05:06 <zodbot> gundalow: gundalow 'John Barker' <john@johnrbarker.com>
+19:05:12 <gundalow> eek
+19:05:40 <thaumos> heh
+19:05:48 <thaumos> So I am not sure what's on the agenda folks
+19:05:48 <gundalow> Not sure who John is
+19:05:54 <bcoca> do we have anything in queue or should i go make lunch?
+19:05:56 <thaumos> I apologise for missing the past couple of days.
+19:06:02 <sivel> at least it didnt call you bungalow
+19:06:04 <thaumos> I don't think so...
+19:06:39 <bcoca> sivel: did you see my comment on 'inventory pathing with ,'?
+19:06:51 <sivel> bcoca: yes, and no
+19:07:04 <bcoca> ^ some inventory_hostnames might be paths, so for chroot, your patch might create problems, just fyi
+19:07:10 <bcoca> i think it 'should' be mostly ok
+19:07:17 <sivel> although I'd be surprised if someone had a chroot that had a `,` in the path to the chroot
+19:07:21 <bcoca> but had similar issue with varsmanager and chroot hosts
+19:07:41 <bcoca> sivel: i still want to slap anyone witha  , in ANY path
+19:07:59 * bcoca goes to his happy place
+19:08:15 <maxamillion> yeah, a ',' in a path seems odd
+19:08:16 <sivel> well, it worked in 2.3 with commas, so we'll see where this gets us
+19:08:29 <sivel> Like I said, windows users... ;)
+19:08:38 <bcoca> thought it was OS X user ...
+19:08:49 <bcoca> /Users <= not a windoez thing
+19:08:52 <thaumos> my opinion, if someone does do that... we can say, "Sorry, out of scope."
+19:09:04 <sivel> he may have been using osx...
+19:09:05 <thaumos> we can't conceivably cover every use case.
+19:09:10 <bcoca> thaumos:  fix is alreayd in, ticket is 2 weeks old, just caught it in 'catching up'
+19:09:12 <bcoca> after PTO
+19:09:14 <thaumos> \,\h\g\j\m,\f\nj\h
+19:09:21 <thaumos> that's how all dumb osx paths look
+19:09:31 <bcoca> thaumos: so you read the ticket?
+19:09:38 <thaumos> I did before
+19:09:48 <bcoca> moving on, anything else we got?
+19:09:49 <thaumos> It was another thing that I had a spike in blood pressure from
+19:09:49 <sivel> the way it worked in 2.3 was unexpected, but it worked.  this should be less unexpected if you read the code
+19:09:58 <sivel> we can look to handle edge cases if it comes to that
+19:10:10 <bcoca> sivel: im shocked it worked in ANY version
+19:10:20 <maxamillion> same
+19:10:22 <thaumos> but yeah, anyone have anything?
+19:10:24 <bcoca> probably by accident
+19:10:34 <thaumos> if not we can end in a few minutes and give some time back to everybody.
+19:10:53 * bcoca puts apron on
+19:10:57 <sivel> bcoca: it worked in 2.3, because we recorded the dirname of the inventory file before doing any processing, and then we both exluced it because it had a comma, but later included it due to the recorded dirname
+19:11:33 <sivel> if it was a real path we recorded the dirname*
+19:11:39 <bcoca> sivel: we did a lot of weird things i removed, i find it much simpler now
+19:11:41 <alikins> can also have hostnames like /looks/like/a/path
+19:11:54 <bcoca> but with 'simpler' you also get 'quirky things that used to work now fail'
+19:12:05 <bcoca> alikins: chroot connection uses those
+19:12:16 <maxamillion> thaumos: doesn't look like there's anything ... light the fuse when you're ready :)
+19:12:16 <bcoca> ^ why i brought this up
+19:12:22 <thaumos> ....
+19:12:23 <thaumos> .....
+19:12:24 <thaumos> .....
+19:12:25 <thaumos> .......
+19:12:28 <thaumos> #endmeeting

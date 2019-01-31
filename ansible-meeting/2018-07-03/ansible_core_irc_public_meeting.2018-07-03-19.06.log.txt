@@ -1,0 +1,259 @@
+19:06:08 <bcoca> #startmeeting ansible core irc public meeting
+19:06:08 <zodbot> Meeting started Tue Jul  3 19:06:08 2018 UTC.
+19:06:08 <zodbot> This meeting is logged and archived in a public location.
+19:06:08 <zodbot> The chair is bcoca. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:06:08 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:06:08 <zodbot> The meeting name has been set to 'ansible_core_irc_public_meeting'
+19:07:17 <jhawkesworth_> hey
+19:07:22 <abadger1999> Hello
+19:07:36 <bcoca> #topic https://github.com/ansible/ansible/issues/42041 backporting rewriets
+19:08:36 <bcoca> @fabianvf ?
+19:08:41 <bcoca> @sdoran
+19:09:10 <bcoca> @nitzmahone
+19:09:16 <abadger1999> So this is specifically about backporting a new module for 2.6
+19:09:18 <abadger1999> ?
+19:09:21 <bcoca> ^ since you are 2.5 RM you might want to weigh in on it
+19:09:24 <abadger1999> You want mattclay
+19:09:30 <bcoca> abadger1999:  a rewrite of an old module
+19:09:31 <abadger1999> oh wait.
+19:09:33 <abadger1999> it's in 2.6
+19:09:43 <abadger1999> yeah, so nitzmahone
+19:09:50 <abadger1999> It looks like a new module to me.
+19:10:07 <abadger1999> With the old modules aliased to the new module or calling out to them from an action plugin or something.
+19:10:11 <bcoca> its a rewrite, so yes ...
+19:10:13 <abadger1999> (from the comments on the bug)
+19:10:25 <sdoran> It is indeed a new module that fixed this issue.
+19:10:42 <sdoran> So I'd say just use Ansible 2.6 rather than backport a new module to a previous release.
+19:10:52 <bcoca> agreed
+19:11:01 <bcoca> backporting new/rewrite is not something i recommend
+19:11:11 <jhawkesworth_> if you really need in 2.5 presumably you can copy to your /library
+19:11:12 <nitzmahone> Yeah, same
+19:11:19 <fabianvf> It's a new module with a near identical interface, but the changes are significant
+19:11:29 <sdoran> The issue was closed by the original author.
+19:11:37 <sdoran> He seemed happy with using Ansible 2.6.
+19:12:32 <abadger1999> Yeah, with no one saying they need it, I think we go with the default for now (just upgrae to Ansible-2.6)
+19:12:40 <bcoca> understood, and i see good effort in keeping backwards compat to avoid breaking playbooks, but i dont think we want to backport changes of this magnitude
+19:12:48 <sdoran> Agreed
+19:12:52 <fabianvf> Makes sense to me
+19:12:59 <bcoca> dont even think we need vote on this one.
+19:13:16 <bcoca> # topic https://github.com/ansible/ansible/pull/39794 to GPL or not to GPL on module_utils
+19:13:27 <bcoca> #topic  https://github.com/ansible/ansible/pull/39794 to GPL or not to GPL on module_utils
+19:14:06 <bcoca> im fine with adding as an exception, but  would like more 'caution tape' .. just not sure what that would look like
+19:14:46 <abadger1999> -1
+19:14:52 <abadger1999> There's not a good justification for htis.
+19:15:03 <bcoca> the library it imports is gpl2
+19:15:12 <abadger1999> yes, but that isn't a problem.
+19:15:20 <bcoca> ???
+19:16:08 <bcoca> afaik bsd=>gpl is fine but gpl=>bsd is not
+19:18:15 <abadger1999> When using the ansible module, the work as a whole will be GPLv3+.
+19:18:42 <abadger1999> But, if someone takes the module_util code and modifies it to not rely on a GPL library, then they will be able to use it as BSD.
+19:19:17 <bcoca> i dont see anyone reimplementing the apt interface
+19:19:18 <abadger1999> For us, that becomes most important when talking about people copying code from one module_utils to another
+19:19:36 <abadger1999> (rather than someone rewriting the python-apt module).
+19:20:03 <bcoca> i dont think we can legally republish as bsd this file even if we use with our modules in gpl3
+19:20:25 <abadger1999> We also just told someone to relicense one or two weeks ago (when they were dual licensed) so I don't think precedent supports us consciously allowing GPL code in here.
+19:20:30 <abadger1999> We can.
+19:20:34 <bcoca> and yes, the copypasta is what worries me and i would like more caution tape .. but unsure how to do
+19:20:51 <abadger1999> You're confusing a license on individual bits of code with the license on the work as a whole.
+19:21:14 <bcoca> both are applicable,depending on how you bind to it, module_utils is something we expose to 3rd parties
+19:21:23 <bcoca> if code there is importing gpl code .. its gpl
+19:21:29 <abadger1999> No it's not.
+19:21:44 <bcoca> pretty sure a direct code import makes it so
+19:21:46 <abadger1999> The work as a whole has to be GPLv3+.
+19:22:06 <abadger1999> But someone can take that code to another context and it can then fall under the BSD license.
+19:22:24 <bcoca> that makes no sense to me, but IANAL
+19:22:47 <abadger1999> It's pretty simple...
+19:23:06 <abadger1999> Since you don't surrender copyright, you can choose to license your work under any terms that you want.
+19:23:23 <bcoca> i dont think it is, you are saying it is fine to relicense a particular file as long as the 'whole' follows teh original license
+19:23:31 <abadger1999> If two works are licensed undr different but compatible terms, they can be released under a license that satisfies both.
+19:23:39 <abadger1999> No.
+19:23:41 <bcoca> yes, i understand that, but for that it requires the python-apt guys to relicense
+19:23:45 <abadger1999> We're not talking about relicensing.
+19:24:08 <abadger1999> basic.py is licensed BSD.  Ansible is licensed GPLv3+
+19:24:21 <bcoca> yes, as i said, that direction is not a problem
+19:24:24 <abadger1999> When used from within Ansible's controller code, the work as a whole is GPLv3+.
+19:24:34 <bcoca> but reverse it, and we have an issue
+19:24:40 <abadger1999> When used from within a module, the work as a whole can be licensed as BSD or something else.
+19:24:57 <bcoca> if the work didnt depend on gpl libs imported .. yes
+19:24:57 <abadger1999> no.
+19:25:25 <abadger1999> Anyow, the argument in the issue is invalid.
+19:25:35 <abadger1999> So it should be relicensed to BSD.
+19:25:36 <bcoca> if i write code that imports gpl libs, license it as bsd .. im violating it
+19:26:20 <abadger1999> No.  You aren't violating the license until you claim that the work as a whole is BSD.
+19:26:28 <abadger1999> the snippet of code that you wrote can be BSD.
+19:26:42 <abadger1999> But the work as a whole must comply to the GPL which means that it needs to be GPL.
+19:26:42 <bcoca> but i cannot distribute it as such, since i import gpl
+19:27:01 <bcoca> both are 'distribution licenses' not really 'writing code license'
+19:27:08 <abadger1999> Someone can take the snippet of code from the work as a whole and use it in a BSD program.
+19:27:18 <bcoca> i cannot distribute bsd code that imports a gpl license as bsd
+19:27:19 <abadger1999> That's why the license on the individual piece of code matters.
+19:27:37 <bcoca> only if they remove the hard dep that is the gpl lib underneath
+19:28:58 <abadger1999> You're incorrect.
+19:29:13 <abadger1999> But apparently no amount of examples will prove it so you'll just have to ask fontana
+19:29:28 <bcoca> afaik this is the 'infectious' part of the gpl
+19:29:38 <bcoca> if you import it .. you are also required to distribute as gpl
+19:29:53 <bcoca> even if he licenses it to US as bsd, once we distribute it it has to be gpl
+19:30:03 <sdoran> I don't understand the various licensing nuances enough to comment. We should get another set of eyes on it.
+19:30:14 <sdoran> Lawyer eyes. For better or worse. :)
+19:30:21 <bcoca> #info put to lawyers
+19:30:59 <bcoca> #topic actually use 'type' in docs ... to describe type https://github.com/ansible/ansible/pull/42033
+19:31:07 <bcoca> ^ module docs, config docs already do this
+19:31:13 * gundalow waves
+19:31:22 <bcoca> @sdoran ^
+19:31:40 <abadger1999> -1 for now.
+19:31:54 <sdoran> Would be nice to use type in docs to actually state data type.
+19:32:04 <abadger1999> When we do go down this path we will need to support more than simple types
+19:32:09 <sdoran> Or at least do something with it to make it less ambiguous
+19:32:19 <gundalow> From a user point of view all that `documention.options.FOO.type = bool`does is expands to `choices: yes/no`
+19:32:19 <abadger1999> subspecs will come into play.
+19:32:27 <bcoca> which are dicts/lists
+19:32:32 <bcoca> well, subspec is dict
+19:32:33 <abadger1999> containers, yeah.
+19:32:40 <sdoran> But I don't understand exactly why it's behaves the way it does today, so I figured I bring it up.
+19:32:52 <bcoca> +1 to using it to document types
+19:33:04 <abadger1999> I do think we could expand it in the future... but we're not really ready for it yet.
+19:33:26 <bcoca> unsure what you think we need that we dont already have?
+19:33:26 <sdoran> The original issue wanted to use it for type validation for syntax highlighting in their IDE.
+19:33:40 <abadger1999> Have them use the argspec.
+19:33:56 <bcoca> we want users to 'know' the types also, its nice for when they input the data
+19:34:03 <jhawkesworth_> argspec is great.  just wish we could use for windows modules
+19:34:20 <sdoran> Not sure if we want to address their issues directly, but it started the conversation about that field in docs.
+19:34:29 <abadger1999> I think nitzmahone and jborean93 were figuring out how to replicate the framework for powershell.
+19:34:34 <bcoca> the current state 'type: boolean' is only 'valid type, seems bad
+19:34:34 <sdoran> abadger1999: That's what I told them to do. Hopefully they'll go with that.
+19:34:54 <bcoca> sdoran: that still leaves the current state, which is bad imo
+19:35:15 <sdoran> So why does it behave this way today?
+19:35:23 <nitzmahone> I've built most of it a few times, but keep hoping we'll get functional controller-side argspec so we won't have to maintain a separate PS copy of it
+19:35:34 <sdoran> Seems we should either expand it, or just pull from the arg spec to show that data in the documentation.
+19:35:41 <sdoran> Rather than having to repeat yourself.
+19:35:48 <jborean93> PowerShell does support types currently, just not as advanced as basic.py
+19:36:38 <bcoca> sdoran: docs are already a huge repeat of argspec, including default/required/choices/etc
+19:37:01 <bcoca> im not against unifying, im against having a 'type' field in docs that ONLY works for 1 type and errors for others
+19:37:12 <sdoran> I got enticed yesterday when I found out the docs for callbacks actually provide defaults. :)
+19:37:13 <bcoca> so we either remove type or implement it
+19:37:45 <bcoca> sdoran: i kept it so we have single source there, i learnt from modules and havinig dupe info all over
+19:39:34 <bcoca> so we have 3 options a) implement ful type: docs, b) remove type: c) leave current 'hybrid' state
+19:39:40 <bcoca> im really -1 to c) fine with the other 2
+19:39:44 <abadger1999> We can get rid of the type field and go back to using choices.  But then we'd have to implement more complex docs-parsing logic to normalize those.  The one-off for booleans is very useful.
+19:39:53 <abadger1999> If you want, you could rename it, though.
+19:40:01 <sdoran> I'm in favor of remove it or implement it. Seems really confusing to users currently.
+19:40:03 <abadger1999> s/types: boolean/boolean: True/
+19:40:14 <abadger1999> Remove it and replace with booleans: True.
+19:40:25 <abadger1999> It doesn't confuse most users because it is internal.
+19:40:31 <bcoca> i woudl prefer implementing, so to give docs to users
+19:40:32 <abadger1999> You have to look at the source code to see it.
+19:40:45 <bcoca> abadger1999: no, you see it in docs
+19:41:17 <abadger1999> Ugh, well that should be changed.
+19:41:26 <abadger1999> oh well.
+19:41:36 <sdoran> abadger1999: Do you mean if we changed to `booleans: True` we could omit that from the `ansible-doc` output?
+19:41:39 <bcoca> - validate_certs
+19:41:41 <bcoca> When set to "no", SSL certificates will not be validated for boto versions >= 2.6.0.
+19:41:42 <bcoca> [Default: yes]
+19:41:44 <bcoca> type: bool
+19:41:45 <bcoca> version_added: 1.5
+19:41:47 <bcoca> ^ example
+19:43:06 <abadger1999> sdoran: Right now, we can spell this as choices: [True False]  instead of types: boolean
+19:43:16 <abadger1999> because that's really all it's useful for.
+19:43:35 <bcoca> yes/no on/off also work, so its a small ie
+19:43:38 <bcoca> lie
+19:43:40 <abadger1999> I was speaking because of: [12:32:19] <gundalow> From a user point of view all that `documention.options.FOO.type = bool`does is expands to `choices: yes/no`
+19:43:52 <gundalow> back, was in another meeting
+19:43:54 <bcoca> i think he means html docs
+19:43:59 <gundalow> yup
+19:45:23 <gundalow> Last year when I was doing mass tidy up of module DOCUMENTATION I found loads of typos and junk in there, so I spent a load of time tidying it up and enforcing it all via https://github.com/ansible/ansible/blob/devel/test/sanity/validate-modules/schema.py#L43-L55
+19:46:09 <bcoca> gundalow: we were discussing 3 opts a) allow the basic types, b) remove type: c) leave current 'hybrid'
+19:46:10 <gundalow> in the Jinja2 that generated the module docs `type: bool` gets expanded to `choices: yes,no`
+19:46:24 <bcoca> not true/false?
+19:46:38 <gundalow> If we allow other types
+19:46:45 <jborean93> I think at least we should be validating the types currently and throw an error if it is an invalid type
+19:46:46 <gundalow> 1) what would that data be used for
+19:46:58 <bcoca> @jborean93 modules do that via argspec
+19:47:06 <sdoran> That already happens.
+19:47:09 <jborean93> that's argspec I'm talking more doc validation
+19:47:12 <bcoca> the issue here is docs, right now ONLY None or bool are allowed
+19:47:22 <gundalow> 2) I think we should extend `validate-modules` to ensure that docs.type match argspec.type. Currently that validation only occurs for type bool
+19:47:52 <gundalow> Or put another way, is their any use for supporting other documentation types apart from IDE auto completion?
+19:48:02 <bcoca> well, 2 steps, a) allow types other than bool, b) validate against argspec
+19:48:18 <bcoca> gundalow: users normally like to see the type expected
+19:48:34 <sdoran> @gundalow Just general info for the user. It would be nice to know the data type of a field.
+19:48:39 <gundalow> ok
+19:48:39 <bcoca> myoption: < wtf to i feed this, type: list <= makes it a lot clearer
+19:49:07 <bcoca> gundalow: check the docs for lookups, they have types, makes it clear what is expected
+19:49:10 <gundalow> ok, I'm happy with that IFF `validate-modules` is updated to ensure the type in DOCUMENTATION matches the type in docs
+19:49:12 <gundalow> ffs
+19:49:17 <gundalow> ok, I'm happy with that IFF `validate-modules` is updated to ensure the type in DOCUMENTATION matches the type in argspec
+19:49:54 <abadger1999> I think we should have someone work on controller-side argspec and just use that.
+19:49:59 <bcoca> funny, we have full types on 'return' but not on input?
+19:50:15 <abadger1999> return is train wreck
+19:50:36 <bcoca> how so?
+19:50:50 <abadger1999> sdoran: Do you want to take up controller -side argspec as a feature?
+19:51:18 * gundalow doesn't see a proposal for docs from argspec, though I'm sure it's been discussed a few times
+19:51:22 <bcoca> gundalow: if im reading this correctly? just adding the types to the code you showed enables them?
+19:51:32 <bcoca> gundalow: yes, it has
+19:52:49 <gundalow> bcoca: oh https://github.com/ansible/ansible/blob/devel/docs/templates/plugin.rst.j2#L121  may "just work"
+19:53:07 <bcoca> it just works for ansible-doc also
+19:53:11 <gundalow> noice
+19:53:22 <bcoca> that might be simplest solution
+19:53:38 <abadger1999> inconsistent, incomplete, no way to validate that the docs match the code, underspecified format for the entries that leave authors wondering how to speicfy things like nested levels and variable output....
+19:53:43 <gundalow> Yup, now that we have the improved html table for module options
+19:54:00 <gundalow> abadger1999: You talking about RETURNS?
+19:54:06 <abadger1999> gundalow: yep.
+19:54:10 <gundalow> cool
+19:54:22 <sdoran> @abadger1999 Sure! I have no idea what that is, but I'll learn.
+19:54:23 <bcoca> format is specific, last i looked, the subentries for dict/list can themselves also specify type
+19:54:54 <bcoca> only problme i see with types in returns is 'complex' < -=totally my fault, it should just have been dict
+19:55:14 <gundalow> hum, so if we add this `validate-modules` will find lots of issues, so we need to either 1) Add `DOCUMENTATION.OPTIONS.foo.TYPE` to everything (prefered) or 2) add a load of `ignored.txt`
+19:55:17 <abadger1999> sdoran: Cool.  I think that's the proper way to address this (and nitzmahone jhawkesworth_ and jborean93's needs for a structure for powershell, and finally gets rid of our having multiple canonical locations for the information)
+19:55:47 <bcoca> gundalow: 'adding this' means updating validate modules to add those as valid type fields
+19:55:55 <bcoca> seems like that should 'just work'tm
+19:56:04 <bcoca> just in 2 spots, options and suboptions defs
+19:56:10 <sdoran> I'll need some guidance/input, but I'd be happy to implement it.
+19:56:26 <gundalow> bcoca: sure, though will find loads of bad module docs that will need updating
+19:56:43 <bcoca> how so? currently it is not allowed
+19:56:53 <bcoca> so they'll all match 'None' by default
+19:57:02 <abadger1999> sdoran: <nod> nitzmahone has probably thought the most on this.
+19:57:08 <gundalow> oh, sorry, I meant when we ensure that the type in docs match the type defined in argspec
+19:57:13 <abadger1999> sdoran: I've done a little thinking too.
+19:57:24 <sdoran> I believe it. :)
+19:57:27 <bcoca> gundalow: well, when people start adding them, PRs will error out
+19:58:00 <gundalow> validate-modules will need to continue to pass on the existing modules
+19:58:07 <abadger1999> sdoran: there's two foundations to it: (1) single point of informaton about a module's args for all consumers.  (2) make this information efficiently available to the controller, not just to the modules.
+19:58:17 <bcoca> existing modules should not have type: unless its boolean, as it currently complains if they do
+19:58:31 <gundalow> validate-modules change part 1: Allow other types in schema.py (this is fine)
+19:59:14 <gundalow> validate-modules change part 2: Ensure type in DOCUMENTATION matches argspec - This will throw up loads of errors as most module args haven't got type defined
+19:59:27 <sdoran> But then we need to fix the thing that's using the `type` field so it doesn't blow up with something besides `bool` in there.
+19:59:49 <bcoca> sdoran: we looked at plugin.rst, it should work fine
+19:59:51 <gundalow> part 2 includes: and argspec.foo.type matches documentation
+19:59:54 <sdoran> Could `type` be optional?
+19:59:59 <sdoran> @bcoca roger
+20:00:01 <bcoca> yes, default is string
+20:00:04 <bcoca> just like argspec
+20:00:05 <gundalow> hum, so could do
+20:00:45 <gundalow> part 2 (alternaive) iff DOCUMENTATION.option.foo.type exists, ensure it matches argspec
+20:00:56 <gundalow> ^ Will allow current modules to pass
+20:01:22 <gundalow> though ensure someone doesn't add missmatched type in argspec
+20:01:57 * gundalow isn't sure if he's being clear about part 2 vs part 2 (alternative)
+20:02:28 <abadger1999> gundalow: rather than that.... write a script to add the information.
+20:02:43 <gundalow> That would be great if someone could do that
+20:02:48 <abadger1999> you have argspec with types.  Just push that information into the module documentation.
+20:03:07 <gundalow> ooooooook
+20:03:18 <bcoca> part 3
+20:03:47 <gundalow> so sounds like we are agreed that schema.py should be updated and just do a quick docs build to ensure types are presented OK. That should fix the #topic issue
+20:03:47 <bcoca> #topic open floor
+20:03:54 <abadger1999> anyhogun-1
+20:03:56 <bcoca> anything else? over time alreayd, so you have 1 min
+20:03:57 <abadger1999> gundalow: -1
+20:04:09 <bcoca> gundalow: +1
+20:04:14 <abadger1999> I'm +1 for controller side argspec. -1 to messing with docs.
+20:04:28 <abadger1999> messign with docs will be lots of churn that we'll just throw out anyways.
+20:04:44 <bcoca> +1 for docs, will work now, controller side argspec is much bigger project
+20:04:50 <abadger1999> becaues we'll be throwing it out to implement controllerside argspec.
+20:04:52 <gundalow> Does someone want to put together a proposal for controller side argspec?
+20:05:04 <bcoca> abadger1999: not really since 3rd party already relies on current docs and how it works, specially for non ppython modules
+20:05:05 <nitzmahone> Not for 2.7 :)
+20:05:07 <abadger1999> I think we volunteered sdoran above ;-)
+20:05:10 <gundalow> nitzmahone: exactly
+20:05:17 <sdoran> I suppose that would be me since I volunteered to do it.
+20:05:23 <gundalow> sdoran: :D
+20:10:16 <bcoca> so both? vote?
+20:11:53 <bcoca> #endmeeting

@@ -1,0 +1,46 @@
+15:07:03 <bcoca> #startmeeting ansible core plublic irc meeting
+15:07:03 <zodbot> Meeting started Thu Oct 11 15:07:03 2018 UTC.
+15:07:03 <zodbot> This meeting is logged and archived in a public location.
+15:07:03 <zodbot> The chair is bcoca. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:07:03 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:07:03 <zodbot> The meeting name has been set to 'ansible_core_plublic_irc_meeting'
+15:08:15 <bcoca> #topic https://github.com/ansible/ansible/pull/46148
+15:08:29 <bcoca> jdelaros1 ?
+15:08:51 <jdelaros1> Need this PR merged
+15:09:25 * ryansb waves
+15:09:35 <bcoca> ryansb: is that you volunteering?
+15:09:40 <jdelaros1> You can view discussion in PR itself, but 'shipit' commands not doing it
+15:10:01 <ryansb> to see what shipit is failing to do
+15:10:32 <jdelaros1> community supported module, I am owner and one of 4 maintainers, but 'shipit' not working because it's in module_utils
+15:10:40 <ryansb> ah, I see
+15:11:01 <bcoca> yeah, modules will work with shipit, module_utils being 'shared code' does not
+15:11:22 <ryansb> thank you for bringing it to our attention, I'll double-check where this gets used, but it's redfish  scoped so it should be fine
+15:12:00 <jdelaros1> so can exceptions be made for specific modules? Hate to bother you guys every time a PR is submitted against it
+15:12:50 <ryansb> not at the moment, because I don't believe the bot is smart enough to delineate between "module_util used only in XYZ modules" vs. "module_util used everywhere"
+15:13:00 <jdelaros1> only 3 modules use it (for now), in modules/remote_management/redfish
+15:13:30 <jdelaros1> will it make sense to move it then?
+15:13:50 <ryansb> yeah, I see that. I'll merge this one
+15:14:12 <ryansb> ah, rebuild_merge because stale_ci
+15:14:31 <ryansb> there isn't really a place we have for module shared code other than module_utils
+15:15:38 <maxamillion> +1
+15:15:40 <bcoca> do we have FR on bot to support this?
+15:16:37 <jdelaros1> you mean https://github.com/ansible/ansibullbot/pull/1046?
+15:17:08 <bcoca> that is PR which is more than i hoped
+15:18:32 <jdelaros1> FR? If that is something I can submit, happy to, with some direction.
+15:18:36 <bcoca> feature request
+15:18:42 <ryansb> feature request, on the ansibullbot repo
+15:18:52 <bcoca> but that is to get someone to do a PR (pull request) since we have the latter, no need for former
+15:19:10 <bcoca> ok, so going to move on, ryansb you'll review/merge this one?
+15:19:57 <ryansb> already done, just waiting CI
+15:19:59 <bcoca> #topic open floor
+15:20:05 <jdelaros1> Thanks all
+15:20:08 <ryansb> :)
+15:20:30 <mavit> Hello, could someone have a look at reviewing and merging
+15:20:30 <mavit> https://github.com/ansible/ansible/pull/44113?  It fixes fact-gathering aborting on old versions of Solaris, and I believe should be uncontroversial.
+15:29:07 <bcoca> mavit: you can pass optional paths to get_bin_path, no need to construct yourself
+15:31:59 <bcoca> you also assume it is there, which might not be the case
+15:33:58 <bcoca> put comments on ticket
+15:34:04 <bcoca> anythign else?
+15:38:42 * ryansb doesn't have more topics
+15:40:40 <bcoca> k, that is enough time so
+15:40:42 <bcoca> #endmeeting

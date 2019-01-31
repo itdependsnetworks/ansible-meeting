@@ -1,0 +1,493 @@
+15:00:10 <thaumos> #startmeeting ansible core
+15:00:10 <zodbot> Meeting started Thu Nov  9 15:00:10 2017 UTC.  The chair is thaumos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:00:10 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:00:10 <zodbot> The meeting name has been set to 'ansible_core'
+15:02:02 <jimi|ansible> o/
+15:02:08 <thaumos> #chair jimi|ansible
+15:02:08 <zodbot> Current chairs: jimi|ansible thaumos
+15:02:12 <thaumos> gm
+15:02:35 <eikef> hello :-)
+15:04:21 <thaumos> hi there.
+15:10:20 <bcoca> thaumos: we has some items from tuesday we didnt get to?
+15:10:34 <thaumos> yep, but there's only three of us here.
+15:10:41 <thaumos> not including myself that is
+15:10:46 <thaumos> #chair bcoca
+15:10:46 <zodbot> Current chairs: bcoca jimi|ansible thaumos
+15:11:34 <jimi|ansible> west coasters... >_<
+15:11:37 <thaumos> heh
+15:11:55 <thaumos> i just noticed that the notification for the meeting didn't go out.
+15:12:05 <jimi|ansible> wait you're still west coast aren't you? they have no excuse!
+15:12:12 <thaumos> yep, I am!
+15:12:36 <alikins> blorp(sorta)
+15:14:36 <jtanner> oh hai
+15:14:57 <thaumos> #chair alikins jtanner
+15:14:57 <zodbot> Current chairs: alikins bcoca jimi|ansible jtanner thaumos
+15:14:58 * shertel waves
+15:15:06 <thaumos> #chair shertel
+15:15:06 <zodbot> Current chairs: alikins bcoca jimi|ansible jtanner shertel thaumos
+15:16:18 * gundalow waves
+15:17:01 <thaumos> #chair gundalow
+15:17:01 <zodbot> Current chairs: alikins bcoca gundalow jimi|ansible jtanner shertel thaumos
+15:17:50 * sdoran waves
+15:18:07 <jtyr> 17 mins gone, let's start some meeting-related discussions ...
+15:18:10 <thaumos> #topic keycloak_client new module review request
+15:18:27 <thaumos> jtyr, I am aware of that
+15:18:37 <thaumos> but it's taken some time for people to get here.
+15:18:45 <thaumos> #chair sdoran
+15:18:45 <zodbot> Current chairs: alikins bcoca gundalow jimi|ansible jtanner sdoran shertel thaumos
+15:18:52 <eikef> Yay, hi :) That's my request.
+15:18:55 <thaumos> eikef: this one is your's.
+15:19:22 <thaumos> #link https://github.com/ansible/ansible/pull/31716
+15:19:34 <thaumos> anyone interested in providing eikef some initial feedback for this one?
+15:19:36 <eikef> I've started developing modules for ansible which use the Keycloak REST API. Keycloak is an SSO plaform providing OpenID Connect and SAML. It is productized as Red Hat SSO as well.
+15:19:55 * bcoca wonders if it works for RH internal SSO
+15:20:01 <eikef> I'm looking for some initial feedback so I don't go down the intirely wrong road
+15:20:15 <eikef> bcoca: it might, though I don't have a way to test it. There are no keycloak-specific hardcoded strings
+15:20:22 <bcoca> eikef: license would need to be GPL
+15:20:23 <eikef> and I suspect the API will be the exact same
+15:20:45 <bcoca> also see 'short form' we now use
+15:21:31 <eikef> bcoca: is that true for the module_utils-file as well? (those seem to be licensed differently)
+15:21:37 <thaumos> utils is bsd
+15:21:40 <thaumos> you have it correct
+15:21:53 <bcoca> ah,yeah ... sorry, started reading code w/o realizing mutiple files
+15:22:55 <eikef> Yeah, I split it up so that future modules will reuse code (this one does client configurations in Keycloak, but there are at least 3 more (_realm, _user, _scopes) which would reuse the API class
+15:24:17 <gundalow> eikef: If you plan for there to be multiple modules I'd move the common arguments (credentials) into module_utils. See http://docs.ansible.com/ansible/latest/dev_guide/developing_modules_in_groups.html in particular "Your First Pull Request"
+15:24:55 <eikef> gundalow: The handling thereof? (I already put the docstrings in a centralized place).
+15:25:12 <gundalow> eikef: the argspec
+15:25:36 <alikins> the code looks good to me, but I don't know anything about the keycloak api. The main module has a lot of args, but I suppose that is the nature of the beast.
+15:25:43 <bcoca> idem
+15:25:54 <gundalow> eikef: eg https://github.com/ansible/ansible/blob/devel/lib/ansible/module_utils/f5_utils.py#L32-L71
+15:26:01 <bcoca> same comment as gundalow, you might want to centralize same args you are using doc fragments for
+15:26:03 <eikef> gundalow: thank you, an example rocks. :)
+15:26:06 <bcoca> but that is not blocker
+15:26:17 <bcoca> but probably first thing you do with 2nd module submitted
+15:27:10 <eikef> alikins: yeah, it is a bit unwieldy (moreso even in the _realm case). Almost all the options are optional though.
+15:28:17 <thaumos> is it possible to not have a catch all module, and break it down even further eikef?
+15:29:40 <eikef> thaumos: in the realm case possibly, in the client case it is all client configuration, so it does make sense from the API standpoint. There is another module in the works for scopes which apply to clients and client templates, so there is some breakup already, but it is closely aligned to the API endpoints
+15:30:02 <thaumos> i guess not in th...
+15:30:09 <thaumos> yeah, i see what you mean eikef
+15:30:54 <thaumos> ok well, do you have enough to go with for a first pass?
+15:31:29 <bcoca> thaumos: please, no 'catch all's .. they tend to be bad
+15:31:37 <eikef> yeah, I will move common argspec to module_utils. Thank you for the comments and review.
+15:31:48 <thaumos> @bcoca, I said NOT have a catch all
+15:31:58 <eikef> Should I ping anybody once that is done?
+15:32:04 <thaumos> I would never suggest a catch all
+15:32:24 <thaumos> feel free to ping in #ansible-devel eikef
+15:32:29 <eikef> Yeah, I specifically enumerated all options in the API not to have a catch-all
+15:33:03 <thaumos> okay cool
+15:33:16 <thaumos> #topic Open Floor
+15:33:30 <thaumos> oh
+15:33:32 <thaumos> nvm
+15:34:06 <thaumos> #topic unify wording and formatting of all include and import modules
+15:34:16 <thaumos> #link https://github.com/ansible/ansible/pull/31938
+15:34:23 <thaumos> I see why jtyr was pushing now
+15:34:31 * jtyr is here
+15:34:53 <jtyr> just fixing tests ... should pass now
+15:35:15 <jtyr> that's actually for the send PR
+15:35:35 <jtyr> anyway, the first PR is just working corrections
+15:35:51 <jtyr> reviewed by dharmabumstead
+15:36:14 <thaumos> yep, I have the first PR as the topic now
+15:36:45 <jtyr> ok, then that should be ready to merge ... ;o)
+15:38:22 <thaumos> does anyone have any further input on this documentation update?
+15:38:34 <jtanner> no, my english is poor
+15:39:17 <gundalow> It's had english review. Is the technical content correct?
+15:39:42 <thaumos> At my first glance, there wasn't anything technically added.
+15:39:46 <thaumos> it was just a rewording
+15:40:08 <thaumos> and a change of yml to yaml
+15:40:24 <gundalow> mkay
+15:40:36 <sdoran> Is "the Ansible Engine" a term we use now?
+15:40:43 <thaumos> yes
+15:41:10 * bcoca waits for Ansible Wheels
+15:41:19 <jtanner> i'm a bit torn on that
+15:41:44 <gundalow> Not defined on https://github.com/ansible/ansible/blob/devel/docs/docsite/rst/glossary.rst
+15:41:45 <thaumos> even before the product name came out, I always called it the engine
+15:41:53 <jtanner> the project is upstream and engine is a product which will possibly diverge slightly one day
+15:42:02 <thaumos> no plans on that as of yet
+15:42:06 <bcoca> thaumos: i've heard 'core core'
+15:42:09 <thaumos> divergence that is
+15:42:11 <bcoca> so not against 'engine'
+15:42:37 <jtanner> let's rename to ngin
+15:42:50 <jtanner> >=]
+15:42:51 <thaumos> ok, are we cool to merge this then?
+15:42:57 <jtanner> yeah, it's fine
+15:43:49 <thaumos> ok
+15:43:55 <thaumos> #action PR to be merged.
+15:44:13 <thaumos> #topic making options of type list
+15:44:49 <thaumos> #link https://github.com/ansible/ansible/pull/32706
+15:45:02 <jtyr> yeah, that's a bugfix which we didn't catch earlier although covered by tests ... basically, tests were wrong ... ;o)
+15:45:09 <thaumos> jtyr, you're just updating yum_repository module to have the list option
+15:45:16 <jtyr> yes
+15:46:22 <thaumos> seems straight forward enough. Anyone want to give a thumbs up to merge this one/
+15:49:09 * jtyr is giving a thumbs up
+15:49:37 <jtanner> what happens when the param value is a string?
+15:49:56 <jtyr> the result is the same ...
+15:50:01 <jtanner> k, shipit
+15:50:04 <jtyr> this is how type='list' works ...
+15:50:04 <sdoran> Should be a single item list, giving same end result
+15:50:18 <bcoca> jtanner: we auto convert 'single string' into element of 1 when type=list
+15:50:33 <bcoca> into 'list of 1 element'
+15:50:36 <jtanner> as long as it's tested i'm okay with it
+15:50:47 <jimi|ansible> lgtm
+15:50:52 <sdoran> +1 to merge
+15:51:10 <thaumos> #action pr to be merged
+15:51:21 * jtyr is happy
+15:51:26 <thaumos> #topic Open Floro
+15:51:30 <thaumos> >.<
+15:51:43 <thaumos> anything else to discuss?
+15:52:36 <bcoca> i believe abadger1999 wanted to talk about callbacks
+15:52:43 <thaumos> he's not on
+15:52:47 <abadger1999> Hey.
+15:52:51 <thaumos> oh hai
+15:52:57 <bcoca> ^ i disagree with your assesment
+15:52:58 <thaumos> ok
+15:52:58 <abadger1999> Sorry, I just got up.
+15:53:07 <abadger1999> Do we have enough people to discuss callbacks?
+15:53:14 <thaumos> yes, but do we have enough time?
+15:53:14 * bcoca goes offline
+15:53:21 <sivel> I am here-ish
+15:53:26 <sivel> probably not enough to participate
+15:53:42 * gundalow is here, but doesn't know much about callbacks
+15:53:44 <jimi|ansible> anyone have something going on after this?
+15:53:52 <jtanner> lunch?
+15:54:03 <sdoran> Nope.
+15:54:16 <abadger1999> There's two parts to callbacks... "What do we want the future to be?"  and "What should we do/not do now in light of the future?"
+15:54:18 <thaumos> I think if we're all cool to continue the discussion, we have an hour before the testing working group
+15:54:31 <thaumos> #topic callbacks discussion
+15:54:33 <gundalow> Hour *should* be enough
+15:54:38 <abadger1999> ;-)
+15:54:39 * sdoran wonders if that's enough time 😉
+15:54:44 <bcoca> gundalow: optimist!
+15:54:52 <abadger1999> Let's start with what's going on now.
+15:54:52 <jimi|ansible> abadger1999: so what is lacking from callbacks that we need to consider in the future?
+15:54:56 <thaumos> #link https://github.com/ansible/ansible/pull/32480
+15:55:06 <bcoca> jimi|ansible: several things
+15:55:28 <abadger1999> We have callback plugins.  they get nofied when an "event" happens nad are passed some data structures that they can do things with.
+15:56:00 <abadger1999> In our tree, we use them for a combo of displaying "ui" (feedback to the user of what's going on) and "logging"  (in ansible, this is very similar to the ui).
+15:56:16 <bcoca> and notifications
+15:56:32 <abadger1999> Ive heard that people outside of our tree are using them to do arbitrary things (like modifying tasks and so forth)
+15:56:48 <jtanner> eww
+15:56:51 <bcoca> abadger1999: only 2 cases i've foudn do arbitrary things, only 1 of those modifying tasks
+15:56:59 <bcoca> the other is jhawks 'kinit' hack
+15:57:00 <abadger1999> bcoca has been working to make callbacks fit the UI/Informational role.
+15:57:13 <jimi|ansible> well any plugin has a lot of access to internals, that's not necessarily a bad thing
+15:57:39 <bcoca> jimi|ansible: i would like to separate callbacks to be 'output/3rd party integration' and leave any 'play/task modification' to strategy
+15:57:40 <abadger1999> By making the objects that we pass to the callbacks data-only (tldr; removing the methods from the classes that we pass to them).
+15:57:42 <jimi|ansible> i know jlk was abusing callbacks at one point as well to do something
+15:57:55 <abadger1999> I think this is a backwards compatible change but perhaps it's the direction we want to go.
+15:57:58 <jtanner> he was doing lots of hacks to make realtime output
+15:58:06 <abadger1999> *backwards incompatible
+15:58:27 <abadger1999> That's the immediate question.
+15:58:37 <jimi|ansible> yeah it'd definitely be backwards incompat
+15:58:42 <jimi|ansible> v3_...
+15:59:11 <bcoca> but im fine with it as they should not be modifing plya from callback
+15:59:14 <jimi|ansible> so for another thing, I did add a method to playbook.Base to dump a Base object to a dictionary
+15:59:17 <jimi|ansible> could always use that
+15:59:22 <alikins> my general callback thoughts...  freeze the current plugins/callbacks/ api as is so existing callbacks continue to work. Add a new 'output_callback' plugin. Make sure those get passed read-only data. Make sure new api passes the callback method type as arg. Make sure new api methods requires supporting keywords.
+15:59:23 <bcoca> actually some people have complained when they accidentally did so
+15:59:32 <nitzmahone> I can live with that- just because we've abused callbacks to do ... interesting things (not display/notification) related in the past doesn't mean we need to preserve that behavior.
+15:59:50 <abadger1999> The more long term question (maybe 2.6... but I think more like 2.7) is that I'd like to revamp callbacks + utils.display so that there's a clear ui-plugin (basically, what we currently use stdout callbacks for) and logging (certain other callbacks that we ship + display.debug/warn/info/v/vv/vvv/vvvv(etc)
+15:59:57 <bcoca> nitzmahone: did you change tasks/plays?
+16:00:30 <abadger1999> alikins: Yeah, that's basically what I was thinking too
+16:00:45 <nitzmahone> No, but I also don't think you should be able to...
+16:01:06 <bcoca> i dont see the need of separation nor new api, i would like to extend the current events and make the 'play objects safe'
+16:01:17 <nitzmahone> Anything that relies on that sort or behavior is just asking to be broken.
+16:01:20 <abadger1999> s/extend/neuter/
+16:01:44 <bcoca> its fine that callbacks take 'actions' like send an email or trigger 3rd party tool, i just dont want them modifying plays as it becomes very hard to audit the play itself
+16:02:02 <bcoca> abadger1999: no, i do want to extend the number of events and the coverage
+16:02:04 * jtanner has no opinions on this topic. Just please don't break tower/awx
+16:02:15 <abadger1999> I feel like it's backwards incompatible enugh that we should deprecate the current API (since we don't like it giving this much insight) and add a new API that we like.
+16:02:24 <bcoca> i DO want to neuter the current ability to change resutls and play and task objects
+16:02:49 <bcoca> abadger1999: i think the api is fine, its passing 'live objects' into it that i find wrong
+16:03:01 <abadger1999> jtanner: I think some of hte things I'm talking about longer term will break them but I've been talking with them about what I could do now that won't break them and how the new API would work better for them in the future.
+16:03:08 <bcoca> callbck should be able to query play/task objects to get all the info they need, they should NOT be able to modify them
+16:03:10 <nitzmahone> If we're going to limit visibility/depth, agree that we need a new version, but if we're just cutting off mutation, well, shouldn't have been doing that anyway.
+16:03:12 <abadger1999> bcoca: passsing live objects in is part of hte API.
+16:03:20 <jtanner> coordinated "breaking" is fine too
+16:03:22 <nitzmahone> Mental jinx bcoca
+16:03:23 <alikins> existing callback api is already full of weird compat hacks. I don't see any point in adding another layer of compat requirements to it that would only be used by new code
+16:03:24 <abadger1999> bcoca: You're really saying "I think the event names are fine"
+16:04:03 <bcoca> i dont have issues with the event names, i want to add more
+16:04:11 <abadger1999> right.
+16:04:22 <abadger1999> but an API is more than event names.
+16:04:28 <bcoca> :confused:
+16:04:37 <abadger1999> The data that's passed in to the functions is part of the API.
+16:04:53 <bcoca> yes, i want to change the api or 'correct it' to not allow something we never meant to do , which is change play flow from callback
+16:04:55 <jimi|ansible> abadger1999: i am not a fan of having to use a callback to do display or logging output
+16:05:02 <alikins> so I think being able to support adding event names, and at least adding args to existing (future) event handlers is a requirement
+16:05:08 <jimi|ansible> there are a lot of places in the code where that would make things very difficult
+16:05:12 <bcoca> data is fine, mutating it is the problem
+16:05:15 <jimi|ansible> namely anything that happens on the worker side
+16:05:15 <abadger1999> jimi|ansible: In the long term plan, I want to split those.
+16:05:23 <jimi|ansible> they are already split
+16:05:33 <jimi|ansible> we have the Display class which callbacks can use
+16:05:48 <bcoca> jimi|ansible: you have not seen my display hack?
+16:05:49 <abadger1999> They have separate code but they aren't split.
+16:06:00 <abadger1999> Display does both logging and ui.
+16:06:00 <jimi|ansible> o_O
+16:06:07 <abadger1999> callbacks also do both logging and UI.
+16:06:19 <bcoca> jimi|ansible: in any case, the 'right way' would be creating additional queue and handler on both sides to send events to master
+16:06:20 <jimi|ansible> callbacks do it through the Display though
+16:06:30 <abadger1999> stdout callbacks are UI.   but, for instance, the json callback is logging.
+16:06:32 <alikins> jimi|ansible: "i am not a fan of having to use a callback to do display or logging output" - I agree about logging. User facing stdout output should be through a callback though.
+16:06:33 <jimi|ansible> because they're just handling events, which typically leads to output or logging
+16:06:54 <jimi|ansible> alikins: maybe, but like i said it's not practical in a lot of places
+16:07:02 <alikins> debug logging in particular shouldn't need to use a callback. It should just use 'logging'
+16:07:06 <abadger1999> .v(), .info() .debug(), etc are logging.  But prompt() and many uses of Display.display() are  UI
+16:07:19 <jimi|ansible> not to mention that callbacks are loaded via TQM, so any output done before that's created (if it's created at all) makes that completely impractical
+16:07:21 <bcoca> i see callbacks are 'the reporting system' .. report to user (ui/display) report to 3rd party tool( slack/mail/etc) report to logs (syslog_json, logger)
+16:07:37 <bcoca> jimi|ansible: see my hack, it preloads over tqm
+16:07:47 <jimi|ansible> abadger1999: i've never liked having prompting done through callbacks, that was a hold over from 1.x
+16:07:52 <jimi|ansible> i would be fine removing that in the future
+16:07:56 <bcoca> abadger1999: i would dispute that v is logging
+16:08:02 <jimi|ansible> ditto
+16:08:03 <abadger1999> jimi|ansible: bcoca has changes to loaad that sooner.  I like that portion of his changes.  I just don't like the API-changing portion.
+16:08:08 <jimi|ansible> .v / .debug is not logging
+16:08:24 <abadger1999> bcoca, jimi|ansible: those are both logging.
+16:08:26 <bcoca> abadger1999: api change is diff PR, the one that 'mocks play/tasks'
+16:08:41 <jimi|ansible> abadger1999: i disagree, it's output, output is not necessarily logging
+16:08:50 <jimi|ansible> or if so, all output is logging
+16:08:56 <nitzmahone> Like pointing and laughing at poorly written ones?
+16:08:58 <bcoca> depends on how you define 'logging' all output CAN be 'logging'
+16:08:59 <abadger1999> Mmm.. Could you post the link to the PR that you think doesn't change API?  I'm pretty sure it does change API as well as globalize the callback mechanism.
+16:09:00 <bcoca> even UI
+16:09:11 <abadger1999> jimi|ansible: In ansible much of outr output is logging.
+16:09:27 <abadger1999> jimi|ansible: because of the nature of what we are and do.
+16:09:39 <jimi|ansible> abadger1999: i just mean at a conceptual level, all output is logging, whether it's to the screen or to a file
+16:09:44 <abadger1999> jimi|ansible: That made it hard for me to see the underlying pattern for a while.
+16:09:55 <abadger1999> jimi|ansible: But the difference is there.
+16:09:59 <jimi|ansible> which is why Display does both
+16:10:04 <abadger1999> jimi|ansible: not true when you say all.
+16:10:18 <abadger1999> jimi|ansible: For instance, a prompt is not logging.  It's ui.
+16:10:34 <jimi|ansible> a prompt isn't output, it's input
+16:10:45 <abadger1999> jimi|ansible: the headers to each task are also ui (although the data they contain may also belong in logs)
+16:10:57 <jimi|ansible> o_O
+16:11:02 <abadger1999> jimi|ansible: "Type Your Password: "  <=== that's output
+16:11:05 <bcoca> https://github.com/ansible/ansible/pull/32280 <= my insane hack to allow callbacks to do 'all output'
+16:11:05 <alikins> when I say 'logging' I mean using the python 'logging' module the way it is intended.  not quoted logging is the generic concept of logging.  I'll say 'stdlib logging' instead.
+16:11:34 <bcoca> i find the current callback concept sufifcient to handle all 3 purposes
+16:11:43 <bcoca> jsut need specific plugins to do each type as needed
+16:12:21 <abadger1999> bcoca:  So when I look at 32280, I like the changes everywhere except in the plugins/callback directory.
+16:12:30 <bcoca> ^ my PR above was 'temporary hack' to enabled callbacks to deal with all output as they wish vs going through every use of 'display' and turning them into events (which shoudl be final/long term solution)
+16:12:35 <abadger1999> bcoca: that's where we start conflating logging and event handling/display.
+16:12:47 <alikins> doing stdlib logging from a callback loses some of the more useful benefits of stdlib logging  (per module loggers, having the module/method/lineno in the log record in particular)
+16:12:50 <bcoca> abadger1999: no, we already do that, it just made it more obvious
+16:12:51 <abadger1999> bcoca: oh, and display.py as well
+16:12:54 <jimi|ansible> i think we're starting with a good idea (don't allow callbacks to modify internals) and taking it to a place it doesn't need to go
+16:13:17 <abadger1999> bcoca: so get rid of those and create real events, and I'd be fine with that.  using v() debug() etc as fake events is wrong.
+16:13:23 <bcoca> jimi|ansible: well, that is why abadger1999 said there are 2 discussions
+16:13:28 <abadger1999> <nod>
+16:13:31 <alikins> jimi|ansible: agreed, it is separate (but related) ideas
+16:13:32 <jimi|ansible> but they're being conflated
+16:13:42 <jimi|ansible> #2 is being treated as a solution to #1
+16:13:51 <abadger1999> So the reason I bring both of them up...
+16:13:59 <bcoca> abadger1999: i was not looking to imlement my PR as is, wanted a 'quick way' to enabled callbacks while we did the other work, which will take long time
+16:14:00 <abadger1999> is that I don't think we should change the callback API
+16:14:15 <abadger1999> (We can add to the events, but we shouldn't change the existing ones)
+16:14:32 <abadger1999> Because I think we should do a large redesign of them for the future.
+16:14:38 <alikins> I don't think stdlib logging is a solution to read-only callbacks. It is just generally useful ;->
+16:15:04 <bcoca> abadger1999: i see current 'live objects' as a bug, not as intended api, im fine with breaking callbacks that modify play in runtime (only know of 1 at the time)
+16:15:13 <abadger1999> I think that ship has long sailed.
+16:15:23 <abadger1999> I do not think we should change that.
+16:15:43 <abadger1999> Oh!  Also when I say add events... I mean real events like on_program_start()
+16:15:45 <bcoca> not sure which ship nor where it went, but for me its almost a security issue
+16:15:48 <abadger1999> Not vvvv()
+16:15:55 <bcoca> abadger1999: YES
+16:16:19 <bcoca> that is long term solution, nothing otuside callbacks or some cli (doc/vault) should call 'display'
+16:16:23 <abadger1999> So those are the two things I think we have to decide soonish.
+16:16:42 <bcoca> so lets just talk about 'play safety' first
+16:16:48 <abadger1999> Because they are part of the thing that bcoca is doing.
+16:17:00 <bcoca> 2 diff PRs
+16:17:02 <alikins> I would also like to see the new callback api/events split up some. For ex, into: general app, playbook, play, task, block, role, other.
+16:17:08 <abadger1999> PLay safety is nice but we need to deprecate current callback API and create a new one for it.
+16:17:11 <abadger1999> That's my view.
+16:17:39 <bcoca> abadger1999: i disagree, i see current 'live objects' as a bug that needs fixing, the 'api' itself should not change for 99% of callbacks not using this 'exploit'
+16:17:50 <alikins> abadger1999: real events like on_program_start()   +1 yup
+16:18:14 <abadger1999> bcoca: the api changes for everyone.  You might be able to say it doesn't break 99% of the uses but it changes for everyone.
+16:18:40 <bcoca> https://github.com/ansible/ansible/pull/32633 <= another callback related PR, i remove dupes/unused and make notes of those we 'need to implement' , also i 'moved' some  display to actual callback
+16:18:44 <jimi|ansible> bcoca i'm still not sold on the idea of a global callback to handle all stdout
+16:18:51 <jimi|ansible> seems wildly unecessary
+16:18:53 <bcoca> abadger1999: we 'change' the api with every single bugfix
+16:19:22 <bcoca> jimi|ansible: see the issues by the 'json' output people, my 'globalize callback' PR modifies the json calblack so 'all otuput is inside json'
+16:19:30 <bcoca> jimi|ansible:  it is a frequent request from users
+16:20:11 <bcoca> that PR is mostly 'proof of concept' .. but it does horrible stuff to 'get the job done'
+16:20:49 <abadger1999> bcoca: but that's not the right way to fix things for them.
+16:21:05 <jtanner> doesn't seem like everyone is on the same page in terms of what's "wrong" with callbacks
+16:21:05 <abadger1999> I'd go so far as to say it's the wrong way.
+16:21:11 <alikins> not really sure I understand the term 'global concept', but https://github.com/ansible/ansible/pull/32633 seems reasonable to me, although I'm also in the 'freeze current callback api, add new output specific one' camp
+16:21:14 <jtanner> is there a proposal to outline the faults?
+16:21:19 <bcoca> so i say a) take a vote on 'callback safety' if we consider ti a bugfix or need to switch to new API, b) vote on 'globalizing' callbacks c) kill callbacks and create 3 new plugin types
+16:21:29 <abadger1999> what coginfloyd wants is logging  in a json format.
+16:21:35 <nitzmahone> Especially if we want to encourage people NOT to call our internal APIs (instead to call our command line), I'd argue we need something like that.
+16:21:47 <abadger1999> (c) is not ready yet.
+16:21:56 <bcoca> abadger1999: no, as he wants it as the main output, we ALREADY have syslog_json for logging in json format
+16:21:59 <alikins> and/or new 'general app event handler' callback as well
+16:22:10 <abadger1999> (b) has to be split up.  I am for globalizing callbacks and I am against adding v() etc to callbacks.
+16:22:16 <abadger1999> bcoca: that's incorrect.
+16:22:20 <bcoca> abadger1999: but voting on c) will give us overview of future direction
+16:22:25 <abadger1999> bcoca: I talked it over with him and my split works
+16:22:32 <abadger1999> bcoca: It also makes tower's usage better too.
+16:22:38 <jimi|ansible> abadger1999: how are we going to add all output to callbacks but not .v* or .debug?
+16:22:46 <bcoca> abadger1999: unsure what your 'split' is
+16:22:59 <abadger1999> bcoca: I think you don't understand what I'm planning because you weren't on irc/didn't read the backlog for that.
+16:23:10 <alikins> er, s/" not really sure I understand the term 'global concept'"/ "not really sure I understand the term 'global callback',"
+16:23:11 <bcoca> yep, and i dont read minds
+16:23:18 * bcoca does pretend he can sometimes
+16:23:25 <jtanner> (that annual training!)
+16:23:34 <bcoca> alikins: by 'global' i mean 'handle all output'
+16:23:54 <abadger1999> bcoca: you haven't hooked espdiff up to your satellite dish yet? ;-)
+16:24:10 <bcoca> abadger1999: not until i find the alien that stole it!
+16:24:43 <bcoca> abadger1999: one case aside, it is a frequent request from many that callbacks GET and handle all information that ansible can output, which leads me to 'everything should use events instead of dispaly'
+16:24:59 <bcoca> ^ hence 'globalize callback' .. but my PR was mostly a 'shortcut' to get there
+16:25:06 <abadger1999> jimi|ansible:   Okay... so this is my idea for a long term redesign:
+16:25:11 <alikins> to me, the new callback apis need to be able to send events that are read-only and serializeble, possibly to another process
+16:25:41 <bcoca> alikins: they can do that already
+16:25:48 <bcoca> see syslog_json
+16:25:53 <abadger1999> jimi|ansible: make ui-plugin callbacks.  They receive events like the current callbacks do (we change API here, as it's a greenfield).
+16:26:15 <abadger1999> jimi|ansible: user can configure a null ui-plugin if they want to go "headless"
+16:26:37 <abadger1999> jimi|ansible: All events as well as our current usage of .v(), .debug(), etc get logged.
+16:26:54 <abadger1999> jimi|ansible: Logging plugins can choose format and where output should go to.
+16:27:21 <bcoca> abadger1999: my issue is that all that is currently possible w/o having to create new plugin type
+16:27:24 <abadger1999> jimi|ansible: So for coginfloyd's use case (and probably tower too), they can choose null-ui and json logging to stdout.
+16:27:43 <alikins> jimi|ansible: I would absolutely use stdling logging for debug output.  current .v output is fuzzier (some should be display callbacks, some should be stdlib logging)
+16:29:14 <abadger1999> bcoca: My feeling is that we already need a new plugin type because we have to deprecate and replace the current callback plugins to change the API for "safety".
+16:29:52 <abadger1999> bcoca: but if we don't care about backwards compat and are happy to neuter them in-place, we can do that too.
+16:30:03 <bcoca> https://gist.github.com/bcoca/bce3120400735117fec8d82bab90421d <= null callback
+16:30:25 <bcoca> abadger1999: that is were we disagree, the 'live objects' can be fixed w/o considering it an api change, but a bug fix
+16:30:49 <abadger1999> bcoca: for my long-term thoughts, it's really only adding a (non-disabl-able) callback which will push all events into the logging system.
+16:31:22 <alikins> bcoca: re syslog_json, there is data that gets passed to callbacks that is not json serializable currently  (Role's being one of them).  syslog_json also only dumps the dumps_results string into syslog
+16:31:31 <bcoca> abadger1999: that was my plan for 'ansible.log' change current implementation (harcoded in display) to use alikins' logging callback
+16:31:50 <abadger1999> bcoca: So there's no need to change or not change callbacks there.
+16:31:56 <abadger1999> bcoca: that's the wrong way round.
+16:32:03 <bcoca> alikins: callback itself can take care of 'non serializable data'
+16:32:21 <abadger1999> logging and callbacks are two separate things.
+16:32:30 <bcoca> i see one as subset of the other
+16:32:56 <abadger1999> callbacks are almost a subset of logging (because of how ansible is designed) but not quite.
+16:33:01 <bcoca> callbacks == event consumers for output purposes, logging, ui, notification are all 'output'
+16:33:27 <bcoca> he, was thinking of the reverse, just that we are currently using 'display' as a hybrid 'hardcoded' event handler
+16:33:40 <abadger1999> right.  That's where you're going wrong.
+16:33:48 <bcoca> abadger1999: no, tha tis what i want to correct
+16:33:53 <abadger1999> callbacks are not display drivers.
+16:33:56 <alikins> "<abadger1999>| logging and callbacks are two separate things."  +1
+16:34:17 <jimi|ansible> no, callbacks are event handlers
+16:34:21 <abadger1999> callbacks are not there to handle all the logging information.
+16:34:21 <jimi|ansible> they just may display something
+16:34:25 <abadger1999> jimi|ansible: Exactly right.
+16:34:26 <bcoca> jimi|ansible: i said event consumers
+16:34:47 <bcoca> s/said/typed/
+16:34:48 <abadger1999> Much of what we log is not an "event",
+16:35:03 <bcoca> we log very little, depending on your def of logging
+16:35:03 <jimi|ansible> i think it was the rest of what you said that got us there ^^^
+16:35:15 <alikins> stdlib logging from callbacks is an improvement from current, but it is not as useful as proper stdlib logging. And can do both.
+16:35:23 <jimi|ansible> "event consumers for output purposes", not always
+16:35:53 <bcoca> alikins: i would use stdlib logging to implement callbacks as a consumer, but you face strong oposotion on it's use in generalized fashion
+16:36:50 <bcoca> jimi|ansible: mostly output, they can (and should be able to) interface with 3rd party tools for other actions (kinit is example, bad one imo, but it worked)
+16:36:54 <alikins> bcoca: I'm divided on that myself. I don't like using stdlib logging for app logic, but if the app logic is just 'display this thing', then that line gets blurry
+16:36:59 <bcoca> what i dont want callbacks to do is modify play itself
+16:37:46 <alikins> agreed
+16:37:53 <bcoca> so the only 'category' we seem to at least agree on as 'it is a category' is the current' safe/unsafe' usage of the api?
+16:37:55 <jimi|ansible> i think we can all agree on that
+16:37:59 <bcoca> can we vote on that?
+16:38:06 <abadger1999> What are you asking?
+16:38:17 <abadger1999> Because I don't agree that the current PAI should be changed.
+16:38:23 <jimi|ansible> i don't think anyone is against that, we just all disagree on the degree to which we should change callbacks to prevent it
+16:38:24 <abadger1999> But I do think it should be replaced
+16:38:28 <bcoca> abadger1999: to vote on a) change the ojbects passed in current api to be safe b) create new api with safe objects
+16:38:33 <bcoca> +1 a
+16:38:37 <abadger1999> (a) -1
+16:38:41 <abadger1999> (b) +1
+16:38:46 <bcoca> -1 b
+16:38:51 * jimi|ansible votes with abadger1999
+16:39:07 <jimi|ansible> changing the objects now would break every callback in the wild
+16:39:23 <bcoca> jimi|ansible: no, objects can be same, jsut a copy, not a reference to 'live one in play';
+16:39:24 <alikins> that said, I could also see the utility of a callback-like api that is 'read-write'.  yum plugin api being an example here (of all the good and bad things that means)
+16:39:25 <jtanner> i'm not qualified to vote on this one
+16:39:41 * jtanner goes to lunch
+16:39:53 <jimi|ansible> bcoca: well sure, that's not exactly a change in the object per-se, but there is the risk of introducing slowness
+16:39:58 <alikins> b +1
+16:40:14 <jimi|ansible> all object copies (especially when it's a very nested task in multiple blocks) can be slow
+16:40:17 <bcoca> jimi|ansible: yes, which is why i was exploring diff 'shim ojbects' to allow for api not to break yet keep them safe
+16:40:34 <bcoca> jimi|ansible: from_args in task could solve most of the issues, need same for play/role/blocks though
+16:41:05 <alikins> a +1 iff it doesn't require doing obscene things to objects dynamically (ie, a copy() is okay, reparenting all of the methods to another object is not...)
+16:41:15 <bcoca> jimi|ansible: though 'shallow copies' shoudl also be fine, with just ref to parent uuid (some events alreayd do this)
+16:41:18 <jimi|ansible> bcoca: it's in Base, from_args is available to all those already
+16:41:27 <jimi|ansible> but yeah it doesn't dump parents
+16:41:32 <bcoca> jimi|ansible: ah, had not realized, then we might already have good solution
+16:41:45 <abadger1999> it's when we started talking about there being cases where people are using isinstance(passed_in_object) in the wild that I realized that the shim objects are breaking the API as well.
+16:41:46 <bcoca> jimi|ansible: just need uuid for parent
+16:41:59 <abadger1999> bcoca: you should have just let me be ignorant of that fact ;-)
+16:42:08 <bcoca> abadger1999: that is whhy i was testing 'Chameleon' object
+16:42:17 <jimi|ansible> not sure if a deep from_args is any better than a copy, because really you'd be doing a call to __getstate__ and __setstate__ at that point
+16:42:18 <abadger1999> bcoca: Chameleon objects are worse.
+16:42:23 <bcoca> abadger1999: no, now we can pass 'actual objects' just with copy of the data
+16:42:25 <abadger1999> bcoca: because they violate the guarantee
+16:42:28 <bcoca> ^ from_Args
+16:42:46 <abadger1999> a Play object would not be a real Play object if your chameleon strategy worked.
+16:42:58 <bcoca> abadger1999: yes, i've been naughty with objects lately ... doing bad bad things to them .. but just trying to arrive to solution and have it work for everyone
+16:43:06 <abadger1999> <nod>
+16:43:08 <jimi|ansible> bcoca_hr_violations++
+16:43:21 <bcoca> jimi|ansible: that only works in slack
+16:43:22 <alikins> I think use of instance() on objects passed to callbacks is ok to break in 2.5. But also likely a good indicator of something that needs to be improved in the callback api
+16:43:25 <abadger1999> I think I'm still -1 on changing the API.
+16:43:54 <bcoca> alikins, abadger1999, no need to break, the from_args in base fixes the issue as they will be 'real objects'
+16:43:57 <abadger1999> But less so with a copy than with a shim.
+16:44:27 <alikins> bcoca: pointer to from_args?
+16:44:45 <bcoca> i'll redo PR with copy, that should be seamless for everyone not modifying play run itself, and those modifying it .. i WANT it to break
+16:44:53 <bcoca> alikins: lib/ansilbe/playbook/base.py
+16:44:54 <abadger1999> bcoca: it's an API change if you can't mutate the data anymore.  But it reduces the risk enough that I am not as much against it.
+16:45:07 <bcoca> abadger1999: you CAN mutate the data, it just won't affect the play
+16:45:16 <abadger1999> bcoca: Right.  and that's an API change.
+16:45:29 <bcoca> abadger1999: every bugfix is an api change
+16:45:34 <abadger1999> bcoca: If jimi|ansible is actively for the copy, then I'll be +0 on it.
+16:46:04 <jimi|ansible> i'm not a fan of the copy route, but it would fix the problem for the time being without requiring any changes
+16:46:09 <jimi|ansible> to callbacks i mean
+16:46:12 <abadger1999> <nod>
+16:46:40 <bcoca> jimi|ansible: the fix has to be before callbacks in any case, in 2.5 we already avoid 'result mangling' from callbacks
+16:47:05 <bcoca> ^ i had users report bugs that their callbacks were modifying the results .. which they felt it shouldn't  .. which led me down thsi path for task/play/etc
+16:47:30 <jimi|ansible> yeah i agree, there were problems sometimes in _process_pending_results with that
+16:47:40 <alikins> bcoca: I see no from_args in devel/. You mean from_attrs() ?
+16:47:50 <jimi|ansible> yes from_attrs
+16:47:53 <bcoca> alikins: probably, im not the greates with names/spelling
+16:48:28 <abadger1999> Hmm... this copy is a shallow copy, though?
+16:48:35 <bcoca> ^ we use it currently in loops to keep 'original_task' from 'per item task'
+16:48:59 <bcoca> abadger1999: depends on how you got the data
+16:49:01 <jimi|ansible> we do a very shallow copy there right now i think
+16:49:05 <abadger1999> I think that might be worse UX.
+16:49:15 <bcoca> jimi|ansible: no for tasks in items
+16:49:37 <jimi|ansible> original_task = found_task.copy(exclude_parent=True, exclude_tasks=True)
+16:49:39 <abadger1999> because users who are changing the information will end up with toplevel changes thrown away but deeper level changes sticking.
+16:49:50 <abadger1999> That could be an inconsistent state.
+16:49:52 <jimi|ansible> ^ the excludes make it not recursive
+16:50:07 <jimi|ansible> but for callbacks, it can't exclude the parent, which can be slow
+16:50:23 <bcoca> jimi|ansible: we can, we just need uuid
+16:50:53 <bcoca> only lookup i've ever seen query the parent is tower, and they do it to get uuid
+16:51:03 <jimi|ansible> bcoca then we need to provide a way of looking up the object based on the uuid, and then once the user has that in the callback they can modify it just like they can now
+16:51:06 <gundalow> Testing Working Groupis in 10 minutes, though last few have been empty. So if you want to continue call back discussion here so it's logged I'll use #ansible-devel for TWG
+16:51:36 <bcoca> jimi|ansible: user should have gotten parent in previous callback (actually parent is not what tower queries it is _play iirc)
+16:51:55 <jimi|ansible> the only safe thing is to flatten the object (and parent tree) into a dict like we do in dump_attrs
+16:51:58 <bcoca> jimi|ansible: i'll dig into it deeper when i redo PR
+16:52:17 <bcoca> ^ that was first place i was going to look
+16:52:17 <abadger1999> gundalow: I think we're at a reasonable stopping place.
+16:52:45 <abadger1999> We're not done but bcoca is going to redo the PR so that gives us a natural break and come back next week to look more.
+16:52:49 <bcoca> so kindof tie on a) .. no agreement on b or c should be or if we need up to f
+16:53:14 <bcoca> #action redo 'safety PR' and rediscuss after using 'real objects' but not the 'live ones'
+16:53:49 <abadger1999> #topic Open Floor
+16:53:52 <bcoca> abadger1999: should i make PR for null.py callback?
+16:53:56 <alikins> or we could fix callback api so tower doesnt need to lookup the uuid
+16:54:17 <bcoca> alikins: ?
+16:54:34 <thaumos> I think it's safe to close out the meeting
+16:54:40 <abadger1999> bcoca: you can... it won't become useful until we decide to go ahead with making logging useful to tower and coginfloyd.
+16:54:47 <thaumos> No sense in carrying it on for 6 more minutes. we're over time anyways.
+16:55:01 <abadger1999> bcoca: but having the code not get lost in the meantime by being in a PR is always useful ;-)
+16:55:23 <abadger1999> #action bcoca to PR the null.py callback.
+16:55:27 <alikins> bcoca: that was a my weird way of saying if tower needs to do odd things in current callback api, we should consider that in design of new callback api
+16:56:05 <bcoca> alikins: i think we mostly need to extend current one to more events, they do some things with capturing stdout to compliment callbacks , part of what 'globalizing' callbacks would solve
+16:56:32 <bcoca> they use uuid to keep track of parent child, which is fine, allows them to track events asyncronouslly
+16:56:49 <abadger1999> alikins: <nod>  I think you might have read the #eng_internal talk we had with the tower folks.... I think they'd be happier to consume events via json logging entries if we can link all the logs together via a UUID or some such.
+16:57:39 <abadger1999> the callback plugin isn't really what they need at all.
+16:57:54 <alikins> abadger1999: yeah, I run into some of the same issues with my stdlog.py callback
+16:58:40 <alikins> the callbacks api require the callback tracks a lot of state to get good context
+16:59:25 <abadger1999> yep.
+16:59:30 <abadger1999> Okay.
+16:59:35 <abadger1999> letting TWG take over.
+16:59:39 <abadger1999> #endmeeting
+16:59:44 <thaumos> #endmeeting

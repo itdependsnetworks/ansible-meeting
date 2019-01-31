@@ -1,0 +1,201 @@
+15:01:43 <sdoran> #startmeeting core public irc meeting
+15:01:43 <zodbot> Meeting started Thu Nov 15 15:01:43 2018 UTC.
+15:01:43 <zodbot> This meeting is logged and archived in a public location.
+15:01:43 <zodbot> The chair is sdoran. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:01:43 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:01:43 <zodbot> The meeting name has been set to 'core_public_irc_meeting'
+15:02:23 <sdoran> #topic https://github.com/ansible/ansible/pull/48608 Adding temporary functionality to mount module
+15:03:31 <zodbot> bcoca: Error: Can't start another meeting, one is in progress.
+15:04:04 <bcoca> igothijacked
+15:04:13 <sdoran> I was trying to be helpful. :)
+15:04:26 <sdoran> #chair bcoca
+15:04:26 <zodbot> Current chairs: bcoca sdoran
+15:04:31 <bcoca> sdoran: no, you just put your item on top of agenda, please go in order
+15:04:34 <kushal> :)
+15:04:48 <abond_> Hello abond is here
+15:04:53 <bcoca> #topic https://github.com/ansible/ansible/pull/25573
+15:04:58 <bcoca> @sean ?
+15:05:31 <sdoran> bcoca: Opps, I missed that. Apologies.
+15:06:07 <bcoca> you also missed the other 3
+15:06:32 <sdoran> Yeah, I started looking after the last meeting summary. I should have looked further back.
+15:06:55 <bcoca> k, skipping this again, 3rd no show, so im going to strike it out
+15:07:15 <bcoca> #topic https://github.com/ansible/ansible/pull/36961
+15:07:26 <bcoca> @abond_ you gots the floor
+15:07:51 <abond_> For this issue I just need additional eyes to review and approve. I'm currently not the maintainer for the digital_ocean.ini file
+15:08:17 <abond_> So an additional shipit from core members would be required.
+15:08:17 <bcoca> we are moving to inventory plugins and dont really want to continue adding to the scripts ... but there isn't a do inventory plugin yet ...
+15:08:39 <bcoca> abond_: not really, any maintainer shipit should work there
+15:08:45 <abond_> Correct. I have the plugin creation on my list of tasks.
+15:09:27 <abond_> I'm fine with killing this issue and moving it into the inventory plugin.
+15:09:49 <sdoran> That would be better, especially if you're already planning to create a plugin.
+15:10:09 <abond_> Sounds good to me!
+15:10:22 <bcoca> #topic https://github.com/ansible/ansible/pull/33984
+15:10:51 <bcoca> i thought there was already a droplet module ...
+15:10:52 <abond_> This PR is a new module for DO that replaces the legacy digital_ocean module.
+15:11:26 <bcoca> then it should also deprecate the old one
+15:11:30 <abond_> The legacy module requires an external dependency (dopy) that has fallen really far behind.
+15:12:01 <abond_> I have a PR for the dep https://github.com/ansible/ansible/pull/47272
+15:13:37 <abond_> Can those be two different commits or should I reach out to gurch101 to have him include the deprecation changes also?
+15:13:53 <bcoca> its fine as long as they get done in quick succession
+15:14:06 <abadger1999> sdoran: Use #meetingname to set a new meeting name after the meeting is started
+15:14:37 <sdoran> It's fine if they are two different PRs, so long as they get merged close together.
+15:14:44 <abond_> I'll make sure that occurs after changes are made based on your comments
+15:15:02 <bcoca> that was quick scan, but i'll put on my list for review
+15:15:20 <abond_> bcoca: Thank you!
+15:15:24 <bcoca> anything else on this topic?
+15:15:27 <abond_> Nope
+15:15:42 <bcoca> #topic https://github.com/ansible/ansible/pull/48608
+15:15:48 <bcoca> 'the  future of mount'
+15:16:30 <bcoca> actually bbyhuy seems to want to move this to next meeting?, that fine with you sivel?
+15:16:39 <sean797> bcoca, you marked by PR off.. I missed the start of this meeting. I was here last time, but you guys decided to skip it because you were "all doing dual-meetings" i think
+15:16:42 <sean797> Anyway, mind if we roll back to it at the end?
+15:16:49 <sivel> bcoca: yes
+15:16:59 <sivel> it was just added to the agenda based on triage
+15:17:12 <bcoca> sean797: no, last time was tuesday and you didnt show
+15:17:24 <abadger1999> (Regarding striking things out.... we don't demand that people who write tickets show up to meetings.... should be able to discuss things if they aren't around as long as decision makers are around.  To be fair, we should let them know to respond to any concerns we have if it looks like we would be voting against it)
+15:17:26 <bcoca> prev thursday we did skip, i can put you in now
+15:17:59 <bcoca> abadger1999:  the ticket alone is not normally enough, i would like people to make their arguments
+15:18:15 <bcoca> at laest in the post if not in ticket itself, if i dont see either and they dont show, i skip
+15:18:26 <abadger1999> bcoca: I would like that too but we can't demand that
+15:18:28 <bcoca> #topic https://github.com/ansible/ansible/pull/25573
+15:18:36 <abadger1999> because meeting times don't work for everyone.
+15:18:50 <bcoca> agreed, but then they still can post their argument in ticket
+15:18:55 <abadger1999> It's most efficient if they are here but there are other ways to get information from them if they can't make it.
+15:19:38 <bcoca> https://github.com/ansible/community/issues/393#issuecomment-436984986 < only had link to ticket, which is a PR, but im unsure of the ask here, is it direction? review? etc?
+15:19:40 <abadger1999> They can only post arguments if they know that there are things about their change that prevent it from being merged.
+15:19:43 <sean797> i didn't we have this on Tuesday also.. thanks :-)
+15:20:13 <bcoca> sean797: i normally only strike it out after 3 meetings and no info from person proposing discussion
+15:20:54 <sean797> regarding direction.. what more need to happen to get this in? i assume more reviews?
+15:22:07 <bcoca> i understand what you want, but im unsure this option should be added, meta: has many keywords and adding an option for only one and generically named 'filters' at that seems wrong to me from UX perspective
+15:23:17 <bcoca> the other part, which has to do more with the functionality requested, is why not just execute the tasks vs executing a task to execute specific task? seems like a misuse of handlers
+15:25:19 <sean797> bcoca, to avoid duplicate tasks, one as a handler, one as a task with when: results.changed
+15:25:34 <bcoca> seems like an include_tasks would do same
+15:25:38 <sdoran> This seems like a rather confusing UI.
+15:25:50 <bcoca> that is my first issue with it
+15:27:11 <abadger1999> <nod>  If we like the feature who can we ask about UI?  Perhaps docschick's team?
+15:27:30 <abadger1999> (They deal mostly with GUI, but perhaps someone there would be interested in textual UI)
+15:27:50 <abadger1999> Anyhow... first, do we like the feature...
+15:28:05 <sdoran> I'm not sure I like the feature. Seems a rather convoluted way to granularly control handler execution.
+15:29:39 <sdoran> I understand the desire to reduce duplicate tasks and reuse handlers, or only run specific handlers, but there are other ways to do that.
+15:30:16 <sean797> sdoran, if i have a task that requires something else, for example..
+15:31:25 <sean797> a task writes and answer file. another runs an installer (or something that requires that answer file) as a handler - because we don't want to always run the installer
+15:31:52 <sean797> then i have another task that requires the installer is always ran, but i dont want to run all other handlers
+15:32:04 <sean797> maybe i have confused people even more..
+15:32:13 <sdoran> No, it's tricky to explain.
+15:32:36 <bcoca> only notified handlers run, so the need is immedaite running of handlers vs deffered?
+15:33:26 <sdoran> There are ways to do that with conditionals and/or a block of tasks.
+15:33:27 <sean797> bcoca, immediate running of some handlers if they have been notified
+15:34:11 <sdoran> Yes, they would potentially be duplicates of handler tasks, but inline tasks with a conditional would be much more straightforward that meta with a filter applied.
+15:34:30 <bcoca> agreed
+15:34:32 <sdoran> I think this would make playbooks a bit harder to read.
+15:35:26 <sean797> IMO lots of when statements make playbooks hard to read
+15:35:48 <sean797> but i do get your points
+15:35:58 <bcoca> i find lots of when statements to indicate you need reformatting your approach
+15:37:06 <sdoran> sean797: I think part of the difference in our thinking is I don't mind redundant tasks at the cost of easier comprehension of what's happening in the playbook.
+15:37:42 <sean797> maybe a real world example would make more sense https://github.com/sean797/ansible-role-foreman_installer/blob/master/handlers/main.yml
+15:37:51 <bcoca> with includes, you dont even need the redundancy .. in any case the meta: task seems to just be a placeholder for a task that should not be a handler in this case
+15:38:07 <sean797> there are 2 handlers write answers file & rewrite answers file
+15:38:43 <bcoca> set_fact:
+15:38:44 <bcoca> dont_save_answers: False
+15:38:49 <bcoca> ^ why  not just set vars: ?
+15:39:29 <sdoran> Yup. If a set of tasks need to be run at a specific time in the play but only under certain conditions, that seems better handled by existing mechanisims, e.g., block, conditional, include_tasks.
+15:41:01 <sdoran> Even though it seems compelling to leverage the tasks that already exist in handlers/main.yml.
+15:41:30 <bcoca> anyone else have input? seems like we have -2 currently
+15:41:57 * abadger1999 doesn't know enough about handlers to evaluate the need for the feature.
+15:42:00 <abadger1999> +0
+15:42:21 <abadger1999> I can put in input about UX if we decide that we want it.
+15:43:15 <sean797> In June we spoke about it and jtanner seemed positive about it
+15:43:28 <sean797> as did bcoca but people change their mind :-)
+15:43:59 <abadger1999> jtanner: ^
+15:43:59 <sdoran> I, for one, never change my mind about anything, ever. 😉
+15:44:05 <bcoca> i dont recall, but i've been against adding specific hosts to meta_refresh for a while, i might have told you i didnt know if others shared my opinion
+15:44:07 <jtanner> sorry i forgot to open irccloud
+15:44:38 <jtanner> i'm not sure what i agreed to
+15:44:51 <bcoca> meta: refres_handlers optoin=specific,hosts,list
+15:44:59 <bcoca> er specific,handlers,list
+15:45:13 <sean797> jtanner, i wouldn't say you agreed, but you defiantly didn't disagree
+15:45:17 <jtanner> doesn't ring a bell
+15:45:20 <sean797> https://meetbot.fedoraproject.org/ansible-meeting/2018-06-14/ansible_core_community_meeting.2018-06-14-15.02.log.html#l-168
+15:45:44 <sean797> if anyone cares, totally fine closing this PR if thats the ask  :-)
+15:45:49 <sivel> I'm not even sure what refresh_handlers would do?  I feel like I am lost right now
+15:46:46 <sivel> oh, flush_handlers
+15:46:49 <bcoca> s/refresh/flush/ .. sorry im word dislexic
+15:47:12 <jtanner> sean797: i guess i did comment ...
+15:47:28 <jtanner> i'm probably too far removed at this point to make a valid opinion
+15:48:10 * sean797 will close it then
+15:48:19 <sdoran> @sivel The PR being discussed adds a feature to `meta: flush_handlers` to control which handlers get run rather than running all handlers that are set to run at that point.
+15:48:47 <jtanner> sean797: i'm curious what usecase it solved for you
+15:49:05 <sivel> I can see a benefit I suppose, but am really +0.  Rather than individually targeting specific handlers, I had always had a thought in my mind about a way to flush handlers for a single role
+15:49:23 <sivel> I don't necessarily agree with single handler targeting for flushing
+15:49:26 <sean797> jtanner, to avoid duplicate tasks, one as a handler, one as a task with when: results.changed
+15:49:58 <bcoca> sivel: the issue with that is handlers are 'play level' so even if you did for the role, other roles/tasks might have triggered other handlers or handlers outside of role (since they can overwrite each other by name)
+15:50:02 <jtanner> do you have an alternative way to achieve what you want without this PR?
+15:50:09 <sean797> right now i have "rewrite answer file" & "write answer file" in https://github.com/sean797/ansible-role-foreman_installer/blob/master/handlers/main.yml
+15:50:17 <bcoca> jtanner: yep, sdoran explained above several ways
+15:50:37 <jtanner> k, well i'll go back to my phb hole now
+15:50:38 <sean797> jtanner, there are alternative ways, it just requires duplicate tasks
+15:50:44 <sivel> bcoca: yeah, I didn't think in depth about it, but we put a flush_handlers at the end of every role with handlers at previous $job
+15:50:48 <sivel> which was sufficient for me
+15:51:08 <sdoran> And I'd rather have duplicate tasks than the complexity of filtered handlers. But that's my opinion.
+15:51:18 <bcoca> or use include_tasks instead
+15:52:03 <sivel> or use a completely different task with `debug` + `changed_when: true` + `notify` that can notify your handler
+15:52:04 <sean797> yes or include_tasks, but then i think you have your tasks split into different files?
+15:52:08 <sivel> a dummy task for notifying a handler
+15:52:20 <sivel> based on a condition
+15:52:39 <sean797> TL;DR - there are lots of other ways ;)
+15:53:32 <sean797> want to be close or leave it open to think about?
+15:53:57 <jtanner> if it is closed, it might help to list out some of the workarounds in a comment for the next person to see
+15:54:09 <bcoca> lets take vote
+15:54:11 <bcoca> -1
+15:54:19 <sdoran> -1
+15:55:29 <sivel> -1
+15:55:33 <mkrizek> -1
+15:56:00 <bcoca> sean797: sorry, seems like a close, @sdoran want to detail the alternatives in ticket?
+15:56:08 <sdoran> Yup.
+15:56:14 <bcoca> we might want 'faq' entry and point at that from ticket?
+15:56:24 <bcoca> #topic https://github.com/ansible/ansible/pull/46138
+15:56:37 <sean797> thanks anyway guys :-
+15:56:38 <sean797> )
+15:56:41 <bcoca> i've had this for 5yrs .. dont know if its good idea in core
+15:57:27 <bcoca> any opinions?
+15:58:25 <Xaroth> I understand the idea, but it also smells a bit like a security thing
+15:58:42 <bcoca> same security as include_vars or include_tasks
+15:58:48 <abadger1999> Instinctively, I don't like it.  What other ways are there to achieve the same sorts of things right now?
+15:58:53 <bcoca> yep
+15:59:00 <jtanner> the description doesn't help me comprehend
+15:59:02 <bcoca> but not inside vars file
+15:59:09 <bcoca> jtanner: include for vars files
+15:59:34 <jtanner> but why?
+15:59:51 <bcoca> abadger1999: a 2nd include_vars would work just fine, that is why i was hesitant to add, a lot of people have asked for this , but im not really excited about it
+16:00:04 <bcoca> ^ jtanner
+16:00:18 <abadger1999> <nod>  if a second include_var will do the trick, I feel like we should just tell people to do that.
+16:00:22 <bcoca> im fine with closing it and 'reasons'
+16:00:30 <bcoca> just wanted more opinions than my own
+16:00:56 <Xaroth> +1 on telling people to use include_vars
+16:01:00 <bcoca> jtanner: summary has example of importing another vars.yml from a vars.yml
+16:01:18 <abadger1999> If it was really hard to do some other way or there was something you couldn't do without this then it would make more sense to consider
+16:01:38 <bcoca> agreed, i actually wrote this before include_vars existed
+16:01:59 <bcoca> but since people still ask for it, though it was worth 'showing' and voting on it
+16:03:04 <bcoca> k, we are over time, @kushal can you make tuesday?
+16:03:32 <abadger1999> He just wants https://github.com/ansible/ansible/pull/47034#pullrequestreview-170738927  merged.
+16:03:36 <abadger1999> I just went through it.
+16:03:40 <kushal> bcoca, I will chat with abadger1999 asyncly :)
+16:03:51 <abadger1999> There's only one thing in there that might need to be changed and it is waiting on us.
+16:03:55 <bcoca> ok, works4me, last i looked lgtm
+16:04:08 <abadger1999> @bcoca What exception should a connection plugin raise?
+16:04:22 <bcoca> iirc ansibleconnectionerror
+16:04:22 <abadger1999> (Right now it's raising RuntimeError but I'm not sure if that's correct or not)
+16:04:38 <abadger1999> https://github.com/ansible/ansible/pull/47034/files#diff-148d82bbcedbe22b3096ebd3a8b22af9R145
+16:04:42 <abadger1999> Cool.
+16:04:42 <bcoca> AnsibleConnectionFailure
+16:04:58 <kushal> So, just one update in the failure cases?
+16:05:07 <abadger1999> kushal: ^ Change those RuntimeErrors to AnsibleConnectionFailure and let me know and I'll merge it.  (There's two uses of RuntimeError)
+16:05:19 <bcoca> as long as it is related to the connection itself, some other ansible error can be used if bad config/etc
+16:05:38 <kushal> abadger1999, Yup, thank you.
+16:05:42 <abadger1999> raise RuntimeError('Failed to put_file to {0}'.format(out_path))    and                     raise RuntimeError('Failed to fetch file to {0}'.format(out_path))
+16:05:59 <kushal> From where to import that error?
+16:06:00 <abadger1999> So I think connection failure will work there.
+16:06:06 <abadger1999> ansible.errors
+16:06:12 <kushal> Thanks
+16:06:14 <bcoca> all errors are in same place .. ^ that one
+16:06:24 <bcoca> #endmeeting

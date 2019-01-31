@@ -1,0 +1,102 @@
+16:00:09 <gundalow> #startmeeting Ansible Network Working Group
+16:00:09 <zodbot> Meeting started Wed Jan 17 16:00:09 2018 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:00:09 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:00:09 <zodbot> The meeting name has been set to 'ansible_network_working_group'
+16:00:21 <gundalow> eyes down look in
+16:00:37 <gundalow> (I used to be a bingo called in a previous life)
+16:00:45 * Qalthos 🌊🌊
+16:00:55 <gundalow> #info Agenda
+16:01:02 <gundalow> #info Agenda https://github.com/ansible/community/labels/network
+16:01:07 <gundalow> acozine: Welcome :)
+16:01:25 <gundalow> #chair funzo Qalthos acozine jmcgill298 samerd
+16:01:25 <zodbot> Current chairs: Qalthos acozine funzo gundalow jmcgill298 samerd
+16:01:34 <funzo> acozine: welcome!
+16:01:55 <acozine> Thanks! my irc skills are rusty, let's see if I can remember how this works . . .
+16:02:18 * privateip waves and sits in corner
+16:02:19 <trishnag> o/
+16:02:41 <gundalow> #chair privateip trishnag
+16:02:41 <zodbot> Current chairs: Qalthos acozine funzo gundalow jmcgill298 privateip samerd trishnag
+16:02:57 <gundalow> #topic Ansible 2.5 Status
+16:03:29 <gundalow> #info Core Engine Freeze and Module Freeze: 22 January 2018
+16:04:10 <gundalow> #info That means no feature_requires for Core modules or core code after 22nd Jan
+16:04:42 <gundalow> #info Community Module Freeze: 7 February 2018
+16:04:49 <gundalow> #inf oRelease Candidate 1 will be 21 February, 2018
+16:04:52 <gundalow> #info Release Candidate 1 will be 21 February, 2018
+16:04:59 <gundalow> #info Target: March 2018
+16:05:33 <gundalow> #info Not sure yet if we will branch (stable-2.5) at Beta 1 or Release Candidate 1
+16:06:19 <gundalow> itdependsnetwork jmcgill298 samerd You got any other PRs in flight/
+16:06:43 <jmcgill298> I need to, but haven't had time
+16:06:57 <samerd> gundalow: I do not have any PR, but I am still testing
+16:06:58 <gundalow> jmcgill298: At a high level, what's it for
+16:06:59 <jmcgill298> might be in 2.6
+16:07:16 <jmcgill298> cleaning up how booleans are treated in aci modules
+16:07:38 <jmcgill298> would like to standardize all aci booleans to be actual booleans, and then do the necessary conversion in the modules
+16:07:52 <gundalow> samerd: cool. Can accept bug fixes any anypoint. Though after RC1 it's a risk vs benefit analysis
+16:08:20 <gundalow> jmcgill298: ah, nice.
+16:08:58 <jmcgill298> there are also murmers about netconf_rpc, but i think that is a separate agenda item
+16:09:09 <samerd> gundalow: Thanks, I Think testing will be done by this week, or at most the begining of next week
+16:09:43 <gundalow> jmcgill298: We can come to that next if you'd like?
+16:09:50 <gundalow> samerd: Sounds good
+16:09:52 <jmcgill298> sure
+16:10:38 <privateip> fyi we have 5 infoblox modules in flight that will land this week as well
+16:11:10 <gundalow> nice
+16:12:18 <gundalow> Anything else before we move on to netconf_rpc
+16:12:21 <gundalow> ganeshrn: you around?
+16:14:02 <gundalow> #topic netconf_rpc
+16:14:10 <gundalow> jmcgill298: Floor is yours
+16:14:30 <jmcgill298> Currently the only module for Netconf is netconf_config
+16:15:11 <jmcgill298> There are a couple of issues with how that is implemented (no option to set locking or timeout)
+16:15:50 <jmcgill298> and it only provides the config option, when there are several other netconf operations
+16:16:09 <jmcgill298> we would like to see something similar to the uri module for netconf
+16:16:29 <privateip> the plan for post 2.5 is to add more generic netconf modules
+16:16:44 <privateip> @ganeshrn is putting together the proposal to do so right now
+16:16:46 <jmcgill298> @privateip is that meant to be plural?
+16:16:49 <privateip> yes
+16:17:00 <jmcgill298> can you expand then?
+16:17:07 <privateip> we know that we need a more robust netconf implementation
+16:17:17 <privateip> and will be adding the modules necessary to do so
+16:17:20 <jmcgill298> uri doesn't have uri_post, uri_get, uri_patch,, etc
+16:18:07 <privateip> the initial goal will be a more robust netconf_config (to include options for locking and timeout) as well as adding netconf_get
+16:18:26 <privateip> both will be done using the persistence framework
+16:18:55 <privateip> as @ganeshrn gets the proposal done, that will be the best place to iterate the conversation
+16:19:21 <jmcgill298> I don't know what ncclient offers off the top of my head, but why not 1 generic one that lets you specify and calls the appropriate method?
+16:19:35 <jmcgill298> what if I want to do get_config istead of get?
+16:20:17 <privateip> as we have stated in the past as a project, we no longer will accept generic API wrapper modules around libraries .. this was an Ansible project wide decision that was made in the core meeting
+16:20:26 <gundalow> ^^^^^^^^^^^^^^^^^^^^^^^
+16:20:49 <gundalow> #info as we have stated in the past as a project, we no longer will accept generic API wrapper modules around libraries .. this was an Ansible project wide decision that was made in the core meeting
+16:20:50 <privateip> no reason we cannot add get_config ... lets talk about that once we get the propsal done
+16:21:18 <jmcgill298> just seems like a lot of duplication
+16:21:59 <jmcgill298> It makes sense not to allow an additional http wrapper, but this is a completely different protocol, for which no generic wrapper exists
+16:22:49 <privateip> i understand what you are saying but we have already hashed this out to death in the core meeting and these are guidelines that were decided on as a project
+16:25:04 <jmcgill298> is there specific document to look at? Not going to keep arguing the point, but curious about the wording
+16:25:32 <itdependsnetwork> yea, ssh, uri, command, and shell are core components for a reason
+16:25:38 <gundalow> jmcgill298: https://github.com/ansible/ansible/commit/2d2f288e77eeaf75fb37d833434b21b134fd0575#diff-bb8c397a46cd9d5aa0986f2598fe52e0
+16:26:14 <gundalow> @hubot-- DO WHAT I SAY
+16:26:16 <gundalow> eeerm
+16:26:20 <itdependsnetwork> also @gundalow, you have a PR for infoblox? I wrote a module hosted on infoblox already
+16:26:22 <gundalow> http://docs.ansible.com/ansible/devel/dev_guide/developing_modules.html
+16:26:52 <gundalow> #info Policy for modules vs wrappers see bullet points on http://docs.ansible.com/ansible/devel/dev_guide/developing_modules.html
+16:27:03 <itdependsnetwork> sorry, @privateip
+16:30:34 <privateip> itdependsnetwork: i should have the PR up soon and would be interested in your feedback
+16:31:59 <itdependsnetwork> k, not sure if you saw: https://github.com/infobloxopen/infoblox-ansible
+16:32:28 <privateip> i hadn't but will take a look .... thanks
+16:36:13 <gundalow> Anything else on this?
+16:36:29 <gundalow> #topic Open Floor
+16:36:42 <gundalow> #action privateip to ping itdependsnetwork with link to infoblox PR once created
+16:36:45 <gundalow> #chair
+16:36:45 <zodbot> Current chairs: Qalthos acozine funzo gundalow jmcgill298 privateip samerd trishnag
+16:36:51 <gundalow> Anyone got anything else?
+16:37:50 <gundalow> on any topic
+16:39:41 <samerd> I have a question regarding the timeline of 2.6
+16:40:13 <samerd> do you already have something?
+16:40:31 <gundalow> samerd: Only a start date :)
+16:41:08 <gundalow> Though I believe 2.6.0 should be ~4 months after 2.5.0 based on previous releases
+16:42:22 <samerd> gundalow: start date is OK, I need to start scheduling my time for adding new modules/features
+16:43:08 <gundalow> samerd: As soon as we branch `stable-2.5` the `devel` branch will become 2.6, so new modules and features can be merged into devel
+16:43:20 <gundalow> That branching will happen ~ 2.5.0 beta1/RC1
+16:43:58 <samerd> gundalow: cool, thanks a lot.
+16:44:36 <gundalow> Most welcome
+16:44:41 <gundalow> Any more for any more?
+16:47:34 <gundalow> Will close then
+16:47:44 <gundalow> Thank you all for your time
+16:47:46 <gundalow> #endmeeting

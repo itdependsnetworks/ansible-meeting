@@ -1,0 +1,362 @@
+19:00:11 <thaumos> #startmeeting ansible core
+19:00:11 <zodbot> Meeting started Tue Dec 19 19:00:11 2017 UTC.  The chair is thaumos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:00:11 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:00:11 <zodbot> The meeting name has been set to 'ansible_core'
+19:01:27 <maxamillion> .hello2
+19:01:28 <zodbot> maxamillion: maxamillion 'Adam Miller' <maxamillion@gmail.com>
+19:02:07 <sivel> pong
+19:02:15 <thaumos> #chair maxamillion sivel
+19:02:15 <zodbot> Current chairs: maxamillion sivel thaumos
+19:02:18 <thaumos> hola
+19:03:39 <maxamillion> o/
+19:04:02 <abadger1999> Olá
+19:04:19 <thaumos> #chair abadger1999
+19:04:19 <zodbot> Current chairs: abadger1999 maxamillion sivel thaumos
+19:04:25 <thaumos> talofa
+19:04:30 <ryansb> hey team
+19:04:33 <ryansb> who's talofa
+19:04:35 <thaumos> #chair ryansb
+19:04:35 <zodbot> Current chairs: abadger1999 maxamillion ryansb sivel thaumos
+19:04:42 <thaumos> talofa == hello in Samoan
+19:04:50 <ryansb> TIL
+19:05:11 <bcoca> i thought it was a new fusion dish 'taco chalupa'
+19:05:47 <thaumos> #chair bcoca
+19:05:47 <zodbot> Current chairs: abadger1999 bcoca maxamillion ryansb sivel thaumos
+19:05:53 <sivel> WHO IS KAFKA?! TELL ME
+19:06:05 <thaumos> heh, taco bell would call something like that
+19:06:12 <maxamillion> sivel: isn't that an apache project?
+19:06:16 <thaumos> I think we have enough to start, ish.
+19:06:19 <sivel> who wins the quote game? Where is that line from?
+19:06:21 <sivel> ;)
+19:06:32 <maxamillion> oh, no idea
+19:07:02 <thaumos> #topic adding a lock state and other functionality to pkg manager modules
+19:07:06 <sivel> Congo (1995)
+19:07:09 <bcoca> https://www.youtube.com/watch?v=4MshXgbzcXs
+19:07:14 <thaumos> #link https://github.com/ansible/ansible/pull/31438
+19:07:24 <thaumos> the link is one example
+19:07:45 <bcoca> im ok with adding the plugin, jsut need to clearly document a) requires plugin b) its 'always changed'
+19:07:57 <maxamillion> #topic adding a non-native package manager plugin to a module
+19:08:27 <sivel> When do we decide that the package modules have grown sufficiently, that plugins should be in their own module?
+19:08:29 <abadger1999> bcoca: it's a n addition to the current module.
+19:08:31 <thaumos> so... I have two feelings, one this doesn't really make sense to me as a function... 2) if we do add it, I would make it a separate function since it's a separate plugin than the core manager.
+19:08:49 <maxamillion> I'm on the fence about it, ultimately I'm not against allowing the fuctionality so long as it provides a meaningful error if it's not installed
+19:09:03 <bcoca> a yum_locked module?
+19:09:07 <sivel> Like yum_lock or yum_lock_package
+19:09:09 <maxamillion> yeah
+19:09:20 <thaumos> yeah
+19:09:24 <bcoca> yum_lock: name= version= state=present/absent to create/remove locks?
+19:09:28 <maxamillion> I was going to propose yum_versionlock module but whatever, bikeshed away
+19:09:29 <bcoca> +1
+19:09:30 <thaumos> yes
+19:09:33 <thaumos> exactly that
+19:09:36 <sivel> The state can become huge if we keep adding plugins
+19:09:41 <sivel> the same with apt
+19:09:46 <maxamillion> sivel: +1
+19:09:46 <thaumos> same with all
+19:09:52 <abadger1999> On reflection, separate module makes more sense to me too.
+19:09:59 <sivel> yay!
+19:10:00 <thaumos> okay, so we're in agreement then?
+19:10:02 <maxamillion> +1
+19:10:05 <maxamillion> I think so
+19:10:06 <maxamillion> GO TEAM
+19:10:06 <thaumos> cool,
+19:10:09 <thaumos> moving on
+19:10:27 <thaumos> same for the second one...
+19:10:37 <thaumos> amiright @maxamillion
+19:10:39 <abadger1999> As part of hte yum module, people will want to do package: name=foo state=locked and then wonder why it fails on all their ubuntu machines
+19:10:39 <maxamillion> thaumos: no
+19:10:40 <thaumos> yum clean
+19:10:45 <thaumos> k
+19:10:51 <maxamillion> thaumos: this is about idempotency
+19:10:57 * jtanner walks in the door
+19:11:10 <sivel> I'm not sure that yum clean should attempt idempotency
+19:11:19 <thaumos> #topic how to best determine desired state when output from an api does not provide clear guidance
+19:11:21 <maxamillion> are we alright with options being added to modules that are unable to be idempotent?
+19:11:29 <maxamillion> thaumos++
+19:11:29 <zodbot> maxamillion: Karma for thaumos changed to 1 (for the f27 release cycle):  https://badges.fedoraproject.org/tags/cookie/any
+19:11:32 <maxamillion> heh
+19:11:35 <abadger1999> wibble wobble.
+19:11:40 <maxamillion> <3 zodbot ... silly fool
+19:11:49 <thaumos> #link https://github.com/ansible/community/issues/286#issuecomment-352553549
+19:11:49 <bcoca> abadger1999: the package module should include a 'nelson muntz' HAHA for those occasions
+19:11:49 <jtanner> abadger1999: dubstep?
+19:11:50 <abadger1999> What's the URL?
+19:11:55 <thaumos> hey, I have 1 karma!!!!
+19:12:01 <thaumos> patience young badger
+19:12:03 <sivel> I think checking idempotency of a `yum clean` would be more effort than it is worth
+19:12:09 <maxamillion> thaumos: and you now have a cookie in https://badges.fedoraproject.org/
+19:12:17 <thaumos> I am just on my laptop atm, so lacking enough screens to move fast enough for the group
+19:12:22 <jtanner> i don't know what idempont yum clean would be useful for
+19:12:27 <thaumos> \o/
+19:12:38 <bcoca> sivel:  not all actions on all modules need to be so, its fine if some by their very nature are not
+19:12:48 <sivel> Yeah, I agree there
+19:13:05 <thaumos> that's why I think this should be it's own module... this is something that is likely adhoc
+19:13:07 <abadger1999> I think yum clean is idempotent.
+19:13:17 <abadger1999> It just doesn't report "changed" correctly.
+19:13:19 <sivel> but how do you report that in a module?
+19:13:23 <abadger1999> yeah.
+19:13:33 <thaumos> if yum clean returns nothing, it's ok?
+19:13:40 <sivel> SO effectively determining a change in state
+19:13:46 <abadger1999> Should yum clean be part of a different command?
+19:13:46 <sivel> as opposed to idempotency
+19:13:50 <abadger1999> s/command/module/
+19:13:51 <jtanner> i think this is a case where the "easy user interface abstraction" has gone too far
+19:13:55 <abadger1999> yum_cache
+19:13:56 <jtanner> - shell: yum clean all
+19:14:04 <bcoca> might need to always report 'changed'
+19:14:05 <thaumos> why I say desired state and not idempotency
+19:14:05 <sivel> jtanner: ++
+19:14:16 <sivel> for all this is going to do, the abstraction isn't useful
+19:14:19 <abadger1999> <nod> if there's no value add....
+19:14:23 <bcoca> thaumos: not as much idempotency here as correct 'state' information feedback
+19:14:24 <thaumos> lol
+19:14:33 <thaumos> jtanner: you're favourite phrase
+19:14:39 <sivel> Ok, I've decided -1 on adding this at all
+19:14:42 <thaumos> thus desired state report
+19:14:45 <thaumos> -1 from me as well
+19:14:50 <jtanner> sprinkle, sprinkle
+19:14:52 <thaumos> no value add for a playbook run
+19:15:05 <thaumos> :)
+19:15:05 <abadger1999> Can we remove yum from the list that command complains about? ;-)
+19:15:06 <maxamillion> thaumos: agreed
+19:15:08 <sivel> well, other than command/shell my complain
+19:15:12 <sivel> abadger1999++
+19:15:13 <abadger1999> sivel: jinx
+19:15:19 <abadger1999> we think alike today :-)
+19:15:26 <bcoca> i would remove the feature, always felt it was too much handholding
+19:15:32 * jtanner tends to ignore those playbook complaints
+19:15:38 <sivel> bcoca: I agree there too
+19:15:40 <bcoca> or at least have a config toggle
+19:15:47 <sivel> bcoca: I think we do
+19:15:52 <maxamillion> I'm +1 to having the playbook complaints be a config toggle
+19:16:00 <thaumos> I like the config toggle idea,
+19:16:07 <maxamillion> anyhoo ... tangent
+19:16:10 <thaumos> yeah
+19:16:13 <thaumos> ok
+19:16:14 <abadger1999> We'd have to pass that to the modules.
+19:16:17 <thaumos> so let's vote
+19:16:22 <sivel> COMMAND_WARNINGS
+19:16:27 <abadger1999> That's the only problem I can see with a config toggle.
+19:16:28 <thaumos> yay or nay on yum clean module
+19:16:31 <thaumos> -1
+19:16:32 <maxamillion> -1
+19:16:33 <sivel> nay
+19:16:37 <abadger1999> -1 on this change.
+19:16:50 <bcoca> -0
+19:16:52 <sivel> Boom! agreed
+19:16:54 <maxamillion> what about non-idempotent changes in general? is that a case by case thing?
+19:17:01 <sivel> maxamillion: I would say yes
+19:17:08 <sivel> case by case
+19:17:11 <abadger1999> maxamillion: case-by-case.  Or perhaps... module-by-module
+19:17:15 <maxamillion> fair enough
+19:17:18 <bcoca> we can have em (shell/command) but they should be the exception, not the rule
+19:17:20 <sivel> some people just do it to be lazy
+19:17:29 <bcoca> file: state=touch ...
+19:17:32 <abadger1999> I'd have to think about it but maybe everything within a module should be idempotent.
+19:17:36 * bcoca should PR the touch module
+19:17:42 <sivel> Can we do a sidebar about the command warnings?
+19:17:48 <maxamillion> sivel: +1
+19:17:52 <thaumos> at the end, if we get through the list
+19:17:56 <sivel> boo ;)
+19:18:03 <thaumos> I still luffa you sivel
+19:18:06 <maxamillion> ugggghhhhh.... fiiiiiiiinnnneeeee thaumos
+19:18:07 <abadger1999> bcoca: Well.... if you could specify a timestamp and the timestamp didn't need to be updated....
+19:18:10 <maxamillion> >.>
+19:18:14 <maxamillion> thaumos: what's next?
+19:18:23 <bcoca> abadger1999: you can do that in my touch module
+19:18:24 <thaumos> only because I got called out a bunch because I didn't go through the list and not let people know
+19:18:33 <thaumos> who's going to close the PR?
+19:18:38 <thaumos> need an #action
+19:18:42 <sivel> maxamillion: is that you?
+19:19:00 <abadger1999> or jtanner
+19:19:15 <thaumos> i love that jtanner got pulled into this
+19:19:19 <maxamillion> sivel: thaumos: I'll comment/close the yum PRs
+19:19:23 <thaumos> thanks
+19:19:25 <thaumos> #action maxamillion to close the PR
+19:19:28 <sivel> I'm too busy eating brisket and creamed corn
+19:19:44 <abadger1999> Party at sivel's house! ;-)
+19:19:52 <thaumos> #topic more concise messaging on smart quotes
+19:20:01 <thaumos> #link https://github.com/ansible/ansible/issues/33044
+19:20:19 <sivel> gundalow ?
+19:20:58 <gundalow> hi
+19:21:03 <gundalow> oh, yes
+19:21:06 <thaumos> #chair gundalow
+19:21:06 <zodbot> Current chairs: abadger1999 bcoca gundalow maxamillion ryansb sivel thaumos
+19:21:14 <thaumos> I think this may be an escaping issue, right?
+19:21:20 <gundalow> thaumos: correct
+19:21:31 <gundalow> Just wondered if we could/should give a better message?
+19:21:36 <sivel> The users are using smart quotes in their playbooks, which aren't quotes YAML cares about
+19:22:04 <sivel> I'm unsure the error is really reflective of that, regardless of encoding
+19:22:07 <thaumos> well, if I read their comment, they're saying we're restricting it, when we really aren't.
+19:22:11 <sivel> but we should probably fix the encoding problem
+19:22:15 * bcoca mutters about using MS Word to edit playbooks ...
+19:22:21 * thaumos shudders
+19:22:27 <ryansb> ansible-playbook.yml.docx
+19:22:31 <ryansb> A++
+19:22:33 <gundalow> bcoca: yup, or copying from websites without codeblocks
+19:22:36 <thaumos> ....gdrive
+19:22:36 <sivel> We need to run args through to_native there I think
+19:22:40 <abadger1999> are the quotes embedded in the string?
+19:22:41 <gundalow> ansible-playbook.yml.docx.df
+19:22:44 <gundalow> ansible-playbook.yml.docx.pdf
+19:22:50 <abadger1999> If so, that's fine.
+19:22:55 <abadger1999> It's a valid bug.
+19:22:56 <sivel> abadger1999: no, I think the quotes are surrounding the args
+19:23:06 <sivel> so they are included as part of the args
+19:23:08 <abadger1999> okay, then yes.  Not a bug
+19:23:09 <gundalow> fail:  msg="have running Application.Please stop the application first, then attempt patching.”
+19:23:21 <sivel> abadger1999: but we should probably handle the encoding error there right?
+19:23:24 <sivel> to prevent a trace
+19:23:33 <gundalow> msg=$normal_double_quote ... $SMART_QUOTE
+19:23:46 <jtanner> is that first quote a smart one too? i can't tell on this screen
+19:23:48 <abadger1999> I think so... we should spit a different error
+19:24:00 <sivel> abadger1999: probably, as the current error isn't super useful
+19:24:29 <abadger1999> gundalow: okay... so I think we should spit an error that says unbalanced quotes.
+19:24:45 <abadger1999> alternately, msg will contain both the quote characters.
+19:24:52 <sivel> THe real exception we are raising says:
+19:24:54 <sivel> raise AnsibleParserError("failed at splitting arguments, either an unbalanced jinja2 block or quotes: {}".format(args))
+19:25:02 <gundalow> jtanner: first quote is normal, end quote is funky_smart quote
+19:25:08 <gundalow> It's in the bug
+19:25:12 <gundalow> s/bug/issue/
+19:25:15 <sivel> so that is kinda correct, but we are failing because of encoding
+19:25:22 <abadger1999> sivel: Cool.  We can fix that.  Needs to be a u"" stirng
+19:25:28 <gundalow> So maybe two issues
+19:25:30 <abadger1999> AnsibleParserError(u"failed at splitting arguments, either an unbalanced jinja2 block or quotes: {}".format(args))
+19:25:34 <abadger1999> heh
+19:25:38 <sivel> also, that should probably be {0} too right?
+19:25:39 <abadger1999> And for python-2.6 compat
+19:25:46 <abadger1999> AnsibleParserError(u"failed at splitting arguments, either an unbalanced jinja2 block or quotes: {0}".format(args))
+19:25:47 <sivel> lol
+19:25:51 <sivel> stahp it
+19:25:52 <abadger1999> jinx again
+19:25:53 <abadger1999> :-)
+19:26:04 <bcoca> should be % to avoid .format issues
+19:26:16 <abadger1999> bcoca: you get different issues with %
+19:26:29 <maxamillion> I'm not completely conviced that abadger1999 and sivel aren't controlling the same keyboard and just messing with us right now
+19:26:55 <bcoca> maxamillion: i made one nick the alias to the other
+19:27:20 <abadger1999> bcoca: as long as I^Wwe still get two votes.
+19:27:54 <abadger1999> I'll take this bug report.
+19:27:54 <gundalow> abadger1999: three if you count abadger2000
+19:28:00 <gundalow> abadger1999: Thank you :)
+19:28:13 <bcoca> @abadger1999 no, only i get 2 votes!
+19:28:42 <abadger1999> I'll fix the unicode problem, test, and then close the bug with an explanation of the behaviour he should now be seeing.
+19:28:49 <maxamillion> :)
+19:29:12 <maxamillion> I don't want two votes, sounds exhausting
+19:29:39 <bcoca> maxamillion: specially when you vote against yourself
+19:29:48 <thaumos> sorry, got sidetracked by the boss... are we having a vote?
+19:29:59 <bcoca> no, fait acompli
+19:31:04 <abadger1999> thaumos: You can assign me an action as above
+19:31:16 * thaumos reads scrollback
+19:31:52 <thaumos> #action abadger1999 to spit an error that says unbalanced quotes. ;)
+19:31:59 <maxamillion> bcoca: :)
+19:32:04 <thaumos> oversimplified, I know
+19:32:13 <thaumos> k, move to next topic?
+19:32:41 <thaumos> #topic eikef asking for feedback follow up on pr
+19:32:42 <gundalow> nod
+19:32:48 <thaumos> #link https://github.com/ansible/ansible/pull/33419
+19:32:55 <thaumos> @eikef, are you present?
+19:33:15 <thaumos> does anyone recall eikef coming into #ansible-devel asking for a follow up?
+19:34:03 <thaumos> I'll take that as a no
+19:34:06 <sivel> Looks like I do have a ping from Fri, 15 Dec 2017
+19:34:10 <thaumos> and it seems eikef is not here.
+19:34:10 <sivel> in #ansible-devel
+19:34:31 <sivel> There is the addition of a new `dump` param
+19:34:43 <thaumos> okay, so they at least tried to get in touch with us there...
+19:34:45 <sivel> value for state*
+19:34:58 <sivel> which is effectively state=list which we don't accept
+19:35:05 <sivel> I'll try to take another look
+19:35:13 <thaumos> thanks @sivel
+19:35:21 <thaumos> #action sivel to follow up with eikef's pr
+19:36:17 <thaumos> #topic config toggles for playbook complaints
+19:36:56 <sivel> Ok, we do already have a toggle for this
+19:36:58 <sivel> COMMAND_WARNINGS
+19:37:01 <thaumos> so I am personally all for more configs where applicable... I wonder why this one doesn't fall under warning
+19:37:09 <sivel> It defaults to True currently
+19:37:22 <sivel> - By default Ansible will issue a warning when the shell or command module is used and the command appears to be similar to an existing Ansible module.
+19:37:24 <sivel> - These warnings can be silenced by adjusting this setting to False. You can also control this at the task level with the module optoin ``warn``.
+19:37:41 <thaumos> oh well, there we go
+19:37:44 <sivel> other than the spelling error, who would like to change the default to False?
+19:37:57 <thaumos> I think it's fine to keep it true
+19:38:18 <maxamillion> I don't know that I'd vote to change it the default to False, but would like a config file option to set it to false
+19:38:27 <thaumos> maybe add to the warning saying, "If you'd like to stop this meessage, set command_warnings to false
+19:38:28 <sivel> Ok, well it is there
+19:38:38 <sivel> - {key: command_warnings, section: defaults}
+19:38:45 <sivel> So maybe we just move on then
+19:38:51 <abadger1999> thaumos: +1 to adding how to disable to the warning message
+19:38:53 <thaumos> yeah..
+19:39:04 <thaumos> I like overinformation
+19:39:36 <bcoca> just add note to module
+19:39:46 <maxamillion> sivel: oh, I did not know that
+19:39:48 <maxamillion> nvm me
+19:39:52 <abadger1999> Oh wait...
+19:40:03 <abadger1999> COMMAND_WARNINGS seems to silence all warnings?
+19:40:07 <abadger1999> bcoca: ^
+19:40:13 <sivel> abadger1999: was just noticing that
+19:40:18 <sivel> it doesn't match the description
+19:40:20 <maxamillion> thaumos: +1 - I actually really like the warning messages because at times it's alerted me to a module I didn't know about
+19:40:28 <maxamillion> oh
+19:40:29 <maxamillion> heh
+19:40:43 <sivel> _handle_warnings will skip all warnings if COMMAND_WARNINGS is False
+19:40:57 <sivel> not just from shell/command
+19:41:17 <bcoca> eek
+19:41:47 <bcoca> think that got confused with SYSTEM_WARNINGS
+19:41:50 <sivel> Seems to ahve been changed in 7e6758873c4
+19:42:25 <sivel> actually maybe before, that just reworked some code
+19:43:25 <bcoca> ive moved it around and rearranged it, dont think i originally authored it
+19:43:43 <sivel> No, and I'm guessing there was confusion, so I think we need to sort that logic
+19:43:51 <thaumos> so... do we have an action to fix this at a later date?
+19:44:08 <thaumos> doesn't seem like something that is critical enough to fit into this release cycle, amright?
+19:44:13 <bcoca> that code looks like it should be SYSTEM_WARNINGS, command warnings should be in action plugin?
+19:44:25 <bcoca> the correction to system_warnings is trivial
+19:45:05 <bcoca> hmm, we use system_warnings in display aalready ... that code might just be a noop
+19:45:08 <bcoca> or badop
+19:45:16 <bcoca> or just need 'actoin == command'
+19:46:05 <abadger1999> probably should be changed this cycle.
+19:46:10 <bcoca> :q
+19:46:22 <abadger1999> as right now toggling command_warnings will disable all warnings from the module
+19:46:27 <bcoca> actualy, just change the text of config 'this toggles warnings from modules on/off'
+19:46:32 <abadger1999> but doesn't have to be a 100% fix.
+19:46:42 <bcoca> vs system_warnings which affects warnings from ansible core engine
+19:46:50 <abadger1999> bcoca: I'd rename it too.
+19:46:50 <bcoca> and we can remove references to command module
+19:47:01 <bcoca> yeah, action_warnings
+19:47:02 <abadger1999> module_warnings
+19:47:12 <abadger1999> action_warnings is fine too.
+19:47:15 <abadger1999> Cool.
+19:47:36 <abadger1999> Sounds good.
+19:48:04 <thaumos> okay to sumarise, we're changing the wording on command_warnings to no longer reference / call out command and shell and say it works for all modules
+19:48:08 <abadger1999> For the command module nannying I'll add to the warning message to use the warn parameter of hte command module to get rid of the warning.
+19:48:14 <thaumos> we're also renaming it to action_warnings
+19:48:24 <abadger1999> Would like something global but we can do that some other time and some other way.
+19:48:26 <thaumos> is that a good summary?
+19:48:37 <abadger1999> yep.
+19:48:45 <thaumos> who has the action to make that change?
+19:50:00 <thaumos> #action don't all clammer at once
+19:50:02 <maxamillion> I can take it if no one else wants it or otherwise has the cycles, it'll be an interesting learning experience for me anyways
+19:50:19 <maxamillion> I've not mucked around in most of those code paths so it'll be fun :)
+19:50:23 <bcoca> done
+19:50:50 <bcoca> created action warnings and changed that for callback, fixed command warnings to actually afffect shell/command
+19:51:20 <thaumos> are you saying you did it already bcoca?
+19:51:29 <bcoca> yep, testing, will push pr
+19:51:31 <thaumos> k
+19:51:42 <thaumos> #action bcoca to rename  command_warnings to action_warnings and change working to all modules as opposed to calling out command and shell specifically.
+19:51:45 <maxamillion> bcoca: oh, ok :)
+19:51:48 <thaumos> #topic Open floor
+19:51:55 <thaumos> any other things to cover?
+19:51:59 <abadger1999> 2.4.3-beta2 will come out tomorrow.
+19:52:05 <thaumos> I will mention, there is no meeting on Thursday this week.
+19:52:16 <maxamillion> ah, good to know
+19:52:18 <bcoca> not rename, new action_ that does current command_, fix current command_ to do what it says it does
+19:52:34 <thaumos> how about next week as well
+19:52:59 <abadger1999> We should cancel those... I don't think any of us will officially be around.
+19:54:00 <thaumos> since most of us will be out, I am thinking that we should cancel meeting
+19:54:01 <thaumos> yeah
+19:54:03 <thaumos> kk
+19:54:41 <thaumos> #info The meetings on 21-Dec, 26-Dec, and 28-Dec are cancelled.
+19:55:28 <thaumos> any more topics?
+19:55:33 <thaumos> if not ill #endmeeting
+19:56:29 <thaumos> k
+19:56:34 <thaumos> thx everyone!
+19:56:37 <thaumos> see you in 2018
+19:56:40 <sivel> later!
+19:56:41 <thaumos> #endmeeting

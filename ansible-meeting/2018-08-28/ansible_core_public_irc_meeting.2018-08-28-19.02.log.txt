@@ -1,0 +1,217 @@
+19:02:56 <bcoca> #startmeeting ansible core public irc meeting
+19:02:56 <zodbot> Meeting started Tue Aug 28 19:02:56 2018 UTC.
+19:02:56 <zodbot> This meeting is logged and archived in a public location.
+19:02:56 <zodbot> The chair is bcoca. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:02:56 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:02:56 <zodbot> The meeting name has been set to 'ansible_core_public_irc_meeting'
+19:03:02 <jhawkesworth_> hey
+19:03:06 <nitzmahone> o/
+19:03:20 <bcoca> #chair jhawkesworth_ nitzmahone
+19:03:20 <zodbot> Current chairs: bcoca jhawkesworth_ nitzmahone
+19:03:27 <bcoca> #topic https://github.com/ansible/ansible/pull/42163
+19:03:43 <bcoca> ansible-playbook module ...
+19:03:54 <bcoca> @abadger1999 did you get more feedback from jlk?
+19:04:08 * ryansb waves
+19:04:19 <bcoca> #chair ryansb
+19:04:19 <zodbot> Current chairs: bcoca jhawkesworth_ nitzmahone ryansb
+19:05:57 <sivel> I'm here, but may have to step away soon while my irrigation system gets repaired
+19:06:16 <bcoca> go with the flow
+19:06:22 <maxamillion> .hello2
+19:06:23 <zodbot> maxamillion: maxamillion 'Adam Miller' <maxamillion@gmail.com>
+19:06:27 <bcoca> anyone else on ansible-playbook?
+19:06:42 <maxamillion> ?
+19:06:43 <jhawkesworth_> still reading the PR
+19:06:52 <nitzmahone> still -1 from me
+19:07:36 <bcoca> im still -0.5, implementation needs work but unsure that it is right path as module
+19:07:47 <maxamillion> what changed from last time we discussed this?
+19:08:48 <bcoca> @abadger1999 was getting extra feedback from jlk , i got into conversation initially, was wondering if more info was gathered
+19:08:55 <bcoca> also, some time to think is always good
+19:09:19 <bcoca> but since absent, just going to skip for now
+19:09:35 <bcoca> @Sieben_ ?
+19:10:16 <bcoca> ok, skipping his stuff, unless someone wants to volunteer on looking at scaleaway modules?
+19:10:19 <maxamillion> I'm +1 to the idea, but -1 to the implementation ... it's not that it's bad but I agree that the current approach doesn't add much beyond just using jinja templating to craft a command for either the command or shell module and thing that this comment is heading the direction I'd like to see https://github.com/ansible/ansible/pull/42163#pullrequestreview-149035425
+19:10:30 <maxamillion> bcoca: I'll do it
+19:10:35 <bcoca> thanks!
+19:10:48 <bcoca> #topic https://github.com/ansible/ansible/pull/37645
+19:10:51 <maxamillion> bcoca: I told him I'd be a point of contact but then life happened to me so I fell off the map a little, but I'll get back on that
+19:10:51 <bcoca> @dag
+19:10:59 <bcoca> maxamillion: understandable
+19:12:01 <dag> o/
+19:12:18 <bcoca> hmm, i would like to rework pull to distinguish between 'arguments to pull' vs arguments to playbook
+19:12:23 <dag> Somehow I was added as reviewer, but unsure why, so not really involved :)
+19:12:25 <bcoca> right now it mixes/matches both
+19:12:56 <bcoca> dag:  no clue, i think author just 'gamed' you into it
+19:13:37 <bcoca> anyone against?
+19:13:39 <dag> but it seems valid, and "in demand"
+19:13:45 <bcoca> +2/0 at this point
+19:13:50 <sivel> for what?
+19:13:55 <nitzmahone> +1
+19:14:02 <sivel> --diff for ansible-pull?
+19:14:11 <bcoca> sivel: not really, to pass to ansible-playbook
+19:14:13 <jhawkesworth_> yeah seems low risk +1
+19:14:28 <maxamillion> Sieben_: can you +1 this one when you get a chance? https://github.com/ansible/ansible/pull/44342
+19:14:51 <sivel> yeah, sure whatevs, I still think of ansible-pull as a toy
+19:14:55 <bcoca> he
+19:15:03 <nitzmahone> sivel: +1 to that as well ;)
+19:15:06 <bcoca> +4/0/+idontcare
+19:15:08 <nitzmahone> Usually the wrong choice
+19:15:19 <bcoca> it has its uses
+19:15:22 <dag> +sivel
+19:15:41 <bcoca> #topic https://github.com/ansible/proposals/issues/57
+19:15:47 <bcoca> ^ kustodian offered to implement
+19:16:45 <sivel> shouldn't we get feedback from mazer/galaxy folks too?
+19:16:47 <bcoca> at this point i would want to refine my propsal since i think we can have 'roles: python: package: etc' as requires for a role, not just 'roles'
+19:17:07 <bcoca> @alikins ?
+19:18:29 <sivel> might want to ping them on the proposal also
+19:18:53 <alikins> you rang?
+19:19:03 <bcoca> its an old one, might update first, only reason i brought up is to discuss/refresh before i answer kustodian
+19:19:11 <sivel> https://github.com/ansible/proposals/issues/57 - standard location for requirements file for roles
+19:19:21 <bcoca> contributor wants to implement it
+19:20:00 <sivel> unsure how it interplays with work being done in mazer.  Maybe not needed...dunno
+19:20:11 <bcoca> at very least there is overlap
+19:20:20 <nitzmahone> ... and potential collisions
+19:20:22 <bcoca> though this was done with ansible-galaxy in mind
+19:20:27 <nitzmahone> (or at least mismatches)
+19:20:33 <bcoca> and that is what contributor is thining of, since mazer is 'on the side'
+19:20:59 <nitzmahone> I don't think we should make any of that stuff more of a moving target than it already is
+19:21:42 <nitzmahone> Once mazer stuff is settled, we might want to revisit, but depending on capability, mazer might want it at the "repo" level, not role level
+19:21:42 <alikins> I'd like to see the proposal be clearer on what kind of requirements and for what (a playbook? a role? a repo of roles/modules/plugins?)
+19:22:25 <bcoca> its a role, it was initially just meant for 'roles i depend on', but i've thought of expanding to os packages/python/language libs
+19:22:37 <nitzmahone> I like the basis of using "meta" directory for it, but the contents of that dir and how they interact with others things is a big meatball
+19:22:45 <agaffney> nitzmahone: I think role level requirements is still necessary for third party roles from galaxy
+19:22:47 <bcoca> as kustodian mentions, it would be a way to deal with include_role/import_role
+19:23:22 <bcoca> this is basically last feature needed to deprecate the existing 'dependencies' entry
+19:23:48 <nitzmahone> Yeah, just trying to keep the universe from shifting around mazer- the problems to solve there are plentiful already, and making sure we do this in a way that doesn't make that even harder is not something I really want to think about right now
+19:24:06 <alikins> I do like the idea of a general WHATEVER/meta/requirements.yml
+19:24:22 <bcoca> alikins: that is part of my long term thinking
+19:24:30 <bcoca> but this is basically just doing it for roles
+19:24:33 <nitzmahone> Not saying we shouldn't do it, just saying we shouldn't do it right now
+19:24:50 <bcoca> nitzmahone: the issue is we have 'implementer willing' right now
+19:24:53 <sivel> nitzmahone: +1
+19:25:12 <nitzmahone> Great, but he's changing foundational stuff about things we're trying to build stuff around
+19:25:16 <bcoca> i dont disagree that the timing with mazer is 'off' but having a willing implementer is rare enough
+19:25:16 <alikins> meta/requirements.yml isn't real general until we support multifile modules and plugins
+19:25:36 <bcoca> nitzmahone: which is why i brougt it up for discussion instaed dismissing outright
+19:25:49 <nitzmahone> alikins: exactly; that's something we really need to do as well
+19:26:18 <nitzmahone> I'm just worried we're going to create "role deps v2" and it'll be immediately broken by the mazer/namespacing changes
+19:26:23 <bcoca> one reason i thought we could start with roles, we have well defined limits and complexity is low
+19:26:32 <nitzmahone> which means we get to do v3 or compromise design on other things to work around it
+19:26:55 <bcoca> nitzmahone: only way that happens is if we make the current role loading incompatible, im more worried about dupe effort
+19:27:31 <nitzmahone> and/or duplicate code paths that do effectively the same things in ways that we can't "put it back in the box"
+19:27:36 <alikins> nitzmahone: I've experimented with it a bit and it didnt seem too hard for the modules I tested. Lots of pluginloader/module_utils/anziballz stuff to verify though
+19:27:59 <nitzmahone> It's great that someone's willing to work on it, but I don't think we have a full picture of what it should do yet, so it's still premature IMO
+19:28:20 <bcoca> i think we can make a picture for roles, also will let us get experience on pitfalls/features
+19:29:05 <bcoca> i really dont want to dismiss outright because of 'what the future might bring' , but start a conversation on how we can do this and be able to leverage it later
+19:29:32 <bcoca> if we layout the plan, its a lot easier to predict the future
+19:29:51 <nitzmahone> conversation's fine, but just know there's a big chunk of the map that's pretty fuzzy right now
+19:30:11 <bcoca> agreed, and this could be a good way to explore and see how things turn out
+19:30:24 <bcoca> its a small defined scale, discreete, just roles
+19:30:26 <nitzmahone> so long as "explore" != "ship it and figure it out later"
+19:30:31 <jhawkesworth_> perhaps direct contributor towards mazer?  Or just present contributor with the risk that a PR may be superseded/incompatible?
+19:30:37 <nitzmahone> (which it sounds like what you're proposing)
+19:31:04 <bcoca> nitzmahone: kind of, its not always clear how things will be used, sometimes you need to just put the user in charge and let them guide you
+19:31:14 <bcoca> if we cannot do anything till everything is perfect, nothing will get done
+19:31:37 <bcoca> sometimes you need to throw pasta at wall and see what sticks, but not what im saying here, its more middle ground between 2 extreems
+19:31:51 <nitzmahone> we're still cleaning a lot of pasta off the wall ;)
+19:31:59 <bcoca> lets 'design a small feature set' then see if we can implement, how it goes and then expand to the 'full' as needed
+19:32:14 <jhawkesworth_> design by pasta flinging.  I guess it worked for Jackson Pollack :-)
+19:32:45 <bcoca> not everything has to be pasta on wall, not saying this shold be either, but also not to be scared of it, sometimes we need it, then we learn, clean up and make that roast
+19:32:51 <nitzmahone> Not opposed to that if people have time to spend, but would be opposed to devel merge until the mazer prereqs are built and merged
+19:32:52 <alikins> not entirely sure I understand what a role specific meta/requirements.yml would gain over the existing role requirement mechanisms
+19:33:08 * nitzmahone is wondering that as well
+19:33:28 <bcoca> alikins: we dont have one that works automatically like dependencies does
+19:33:33 <jtanner> i just want modules in galaxy before i loose the rest of my hair =(
+19:33:46 <bcoca> jtanner: this is very tangential to that
+19:33:51 <nitzmahone> "automatically" when? when the role runs? when it's installed?
+19:33:55 <jhawkesworth_> ^ made me think the proposal was about playbook level rather than role
+19:33:56 <bcoca> installed
+19:34:01 <alikins> works automatically... when/where?
+19:34:12 <bcoca> dependencies get parsed and installed when you install a role
+19:34:19 <bcoca> which does not work for include_role/import_role
+19:34:21 <nitzmahone> To what- localhost?
+19:34:30 <bcoca> to wherever you installed roleA
+19:34:31 <nitzmahone> N hosts from my inventory? Everything?
+19:34:43 <bcoca> nitzmahone: how do you normally install a role?
+19:34:45 <nitzmahone> local role deps are a much smaller problem than remote IMO
+19:35:02 <bcoca> ansible-galaxy install rolename, < = this goes over dependencies: and installs those roles also
+19:35:24 <nitzmahone> right, but that only works for local deps- we don't install roles on remotes
+19:35:34 <bcoca> the proposals is adding meta/requirements.yml to do same, which allows for include/import_role
+19:35:44 <bcoca> nitzmahone: no one has mentioned remotes except u
+19:36:24 <nitzmahone> don't get me wrong, I'm not a fan of autoexec-arbitrary-stuff-on-install at all, esp not for remotes (we've discussed that before, which is where I assumed this was headed)
+19:36:44 <bcoca> nope, this is much smaller scope
+19:36:51 <bcoca> this ONLY has to do with 'local role installation'
+19:37:11 <bcoca> it can expand to THAT, but that is MANY steps aways and not a requirement for THIS feature
+19:37:29 <jhawkesworth_> worth clarifying in the proposal then, I think
+19:38:33 <bcoca> proposal is a bit vague since it was done long ago and there was only the 'role' consideration back then, so there was no need to be specific
+19:39:43 <nitzmahone> so what is it you're after today?
+19:40:08 <bcoca> ^ said it before 'autoinstall dependant roles, just like dependencies does'
+19:40:08 <alikins> kind of exists with ansible-galaxy -r meta/requirements.yml
+19:40:37 <bcoca> alikins: yes, but dependencies gets done when you do ansible-galaxy rolename, but you cannot include import/include_role roles there
+19:40:54 <bcoca> its a small convinience, yes, but it is one users seem to enjoy
+19:41:06 <agaffney> it sounds like meta/requirements.yml would be like 'dependencies' in meta/main.yml except without the "automatically run this role" behavior
+19:41:14 <bcoca> exactly
+19:41:33 <agaffney> which is what 'dependencies' really should have been originally, but there was no include/import_role functionality then
+19:41:34 <nitzmahone> Got that, but what's the next step you're seeking?
+19:41:43 <bcoca> that is the step
+19:41:44 <agaffney> so the concepts got conflated
+19:42:04 <nitzmahone> "ship it"? -1
+19:42:37 <bcoca> there is no PR yet
+19:43:02 <alikins> I'm confused... I thought this was at install time?  installed deps at run time from import/include_role is way different
+19:43:08 <bcoca> jhawkesworth_: rereading proposal, its clear its only for 'dependant roles'
+19:43:12 <bcoca> at lesaat to me
+19:43:26 <sivel> yeah, there is a completely separate proposal for auto installing roles
+19:43:30 <bcoca> alikins: install time, since dependencies: does 'both' but include/import-role dont
+19:44:03 <bcoca> sivel: yes, but this is basically needed for autoinstall on runtime, but again, does not require that to be useful
+19:44:47 <sivel> we should limit this discussion then. I don't think mention of include/import_role really applies to this specifically
+19:44:48 <alikins> gotcha... meta/main.yml:deps influence both how ansible-galaxy installs, and how they get loaded at runtime in roles:
+19:45:09 <bcoca> so there are many related issues, going to try to be clear as possible, ONLY have an INSTALL TIME requirements so when installing A role its dependant ROLEs are also installed
+19:45:20 <bcoca> when those roles are not referenced via 'dependencies:'
+19:45:28 <nitzmahone> There's a huge overlay onto mazer there though- now it has to be able to run playbooks, which it didn't before.
+19:45:39 <bcoca> ?A?!?!?
+19:45:46 <nitzmahone> s/playbooks/roles-ansible-content-whatever/
+19:45:59 <bcoca> i really dont see how that is needed
+19:46:03 <jtanner> "collections" i think
+19:46:16 <sivel> no, this is basically look at each role you install, for a requirements.yml, and install whatever is in there too
+19:46:21 <alikins> it wouldnt hurt to have seperate concepts of install time and run time deps for roles
+19:46:29 <nitzmahone> ah, nm- I keep seeing you guys talking about include/import role, but now I get what you're after
+19:46:35 <bcoca> just like we do now with 'dependencies: ' this is really not that new of a feature
+19:46:50 <bcoca> alikins:  this is exactly that
+19:47:05 <sivel> I think the mention of include/import_role is that a role need not be listed as a dependency, for a role to call another role
+19:47:15 <alikins> that proposal is pretty vague, I wouldn't say it is exactly anything
+19:47:16 <sivel> dependencies is only for automagical running of a dependent role
+19:47:46 <bcoca> alikins:  i think it states what it is for, unsure how to be clearer, maybe a file example?
+19:47:58 <nitzmahone> yeah, ok, now I get it- this is just "dependent role installation metadata"
+19:48:02 <bcoca> New 'standard' file: meta/requirements.yml, that can exist at either role or adjacent to play (role already has meta/ dir).
+19:48:03 <bcoca> The file structure would be the same as current role requirements.yml, as it now lives in a 'predictable' place we can chain then when doing role installs.
+19:48:09 <alikins> maybe a use case or two and some examples
+19:48:10 <bcoca> ^ short, but unsure how that is not clear
+19:48:36 <nitzmahone> I was thinking you were talking about arbitrary deps (not just other roles), like Python deps and whatnot, further confused by the import/include_role talk
+19:48:36 <bcoca> use case 'is' the proposal ... install dependant roles that are not in dependencies:
+19:49:00 <bcoca> nitzmahone: no, i said i had thought about expanding that way, but that is not what we were discussing
+19:49:22 * nitzmahone feels much better about this then
+19:49:43 <bcoca> the proposal also mentions plays, but i think that can be 2ndary to just getting roles working
+19:49:55 <bcoca> awx/tower already does that with roles/requirements.yml
+19:50:22 <bcoca> which ALSO chains into 'dependencies' , but currently also has to compensate for lack of include/import_role 'install time'
+19:51:15 <bcoca> i can adjust proposal to ingnore plays for now
+19:51:18 <bcoca> if that is main concern
+19:53:10 <alikins> are you making a distinction between requirements and depenencies?
+19:53:17 <bcoca> there is one already
+19:53:31 <bcoca> dependencies include runtime considerations
+19:53:51 <bcoca> requirements are currently 'install only' but we dont do them automatically when installing a role
+19:54:11 <bcoca> unlike dependencies which get installed automatically, kustodian just wants to 'remedy' that disparity
+19:54:47 <bcoca> also requirements.yml is not expected in a specific place by ansible/ansible-galaxy (roles/ is where awx/tower expects it but that is per project)
+19:57:45 <bcoca> my hope is that we eventually remove dependencies as this is last part of feature set (auto install dependant roles on install) that we are missing on the other options
+19:58:53 <bcoca> alikins: arent dependant role installations something you need for mazer anyways?
+19:59:22 <nitzmahone> Not role-based though, repo-based
+19:59:26 <bcoca> s/dependant/required/ ... as in ansible they have diff meanings
+19:59:36 <bcoca> nitzmahone: but yet, for dependencies, we do follow and install those
+19:59:48 <nitzmahone> I'm talking the way mazer will do it
+20:00:05 <bcoca> mazer currently does so, last i looked it just called current galaxy code
+20:00:36 <nitzmahone> Right, but that's for "legacy" content
+20:00:57 <nitzmahone> The new stuff has a much broader scope, not individual roles
+20:01:23 <bcoca> agreed, but i dont see us removing the feature, otherwise people will stick with dependencies
+20:01:25 <nitzmahone> and you might not necessarily be able to do an "absolute" ref (eg to an arbitrary git repo), not sure yet on that
+20:01:45 <bcoca> you can now
+20:02:35 * nitzmahone -> WWG
+20:03:00 <bcoca> its time to end the meeting, will bring this back up next one after we've had time to mull it over.
+20:03:05 <bcoca> #endmeeting

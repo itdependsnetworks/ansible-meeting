@@ -1,0 +1,92 @@
+16:00:21 <gundalow> #startmeeting Ansible Network Working Group
+16:00:21 <zodbot> Meeting started Wed Jul 11 16:00:21 2018 UTC.
+16:00:21 <zodbot> This meeting is logged and archived in a public location.
+16:00:21 <zodbot> The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:00:21 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:00:21 <zodbot> The meeting name has been set to 'ansible_network_working_group'
+16:00:38 <gundalow> #chair ganeshrn Qalthos trishnag
+16:00:38 <zodbot> Current chairs: Qalthos ganeshrn gundalow trishnag
+16:01:11 * fxfitz waves.
+16:01:53 <gundalow> #chair rcarrillocruz
+16:01:53 <zodbot> Current chairs: Qalthos ganeshrn gundalow rcarrillocruz trishnag
+16:01:55 <rcarrillocruz> o/
+16:01:57 <gundalow> #chair fxfitz
+16:01:57 <zodbot> Current chairs: Qalthos fxfitz ganeshrn gundalow rcarrillocruz trishnag
+16:02:03 <gundalow> #topic Team Update
+16:02:34 <gundalow> #info Agenda https://github.com/ansible/community/labels/network
+16:03:40 <gundalow> #info Ansible 2.6.1/2.5.6/2.4.6 are now available, which include security fixes, see https://groups.google.com/forum/#!topic/ansible-announce/4tUBKNcH5fU for more info
+16:04:10 <gundalow> #info We suggest you subscribe to https://groups.google.com/forum/#!forum/ansible-announce to keep informed regarding releases
+16:05:44 <gundalow> #info This week we've been working on the following:
+16:06:08 <gundalow> #info * Fixing ios integration tests and some internal network connection cleanup work
+16:06:08 <gundalow> #info * Continue work on cliconf refactor, fix junos integration test failure and couple of bug fixes
+16:06:08 <gundalow> #info * Updated on nios_test_container to support new nios modules tests, and bug fixes
+16:06:08 <gundalow> #info * This week finished changes to net_get and net_put modules for idempotency and handling binary files
+16:06:08 <gundalow> #info * Working on ios_linkagg, ios_vlan bugs.
+16:06:08 <gundalow> #info * Got Zuul running on ansible-fork for VyOS. Need to ansible-test respect --changed so we only run the correct set of tests
+16:06:08 <gundalow> #info * Working on net_config module and integration tests, link to the PR #42413.
+16:06:09 <gundalow> #info * Fixing bgp issues on csr, looking at azure rm documentation.
+16:06:31 <gundalow> If you have any questions on any of the above feel free to ask in here
+16:06:58 <gundalow> #topic Adds an ipmath filter #41985
+16:07:05 <gundalow> #link https://github.com/ansible/ansible/pull/41985
+16:07:08 <fxfitz> :-)
+16:07:11 <gundalow> fxfitz: Thanks for adding this
+16:07:40 <fxfitz> You're welcome! We're using it internally. :-)
+16:07:54 <fxfitz> It takes forever for CI to actually pass on that sucker though.
+16:07:57 <gundalow> I've just triggered a rerun of CI
+16:08:28 <fxfitz> Test #11 is my worst enemy.
+16:08:37 <gundalow> hehe
+16:08:40 <gundalow> #chair Anil_
+16:08:40 <zodbot> Current chairs: Anil_ Qalthos fxfitz ganeshrn gundalow rcarrillocruz trishnag
+16:08:52 <gundalow> I think it would be useful
+16:09:01 <gundalow> Anyone got any review comments, otherwise I'll merge shortly
+16:10:11 <fxfitz> One of our guys was doing a rough `some_ip.split('.')[0] + some_ip.split('.')[1]) ... etc` and... well... it was rough.
+16:10:28 <fxfitz> So, `ipmath` was born.
+16:11:34 <gundalow> I'll merge it later today
+16:11:43 <gundalow> #action gundalow to merge https://github.com/ansible/ansible/pull/41985
+16:11:55 <gundalow> fxfitz: Thanks :)
+16:12:15 <fxfitz> Great! Thanks gundalow
+16:13:02 <gundalow> #topic Persistence connection for cnos_vlan #42500
+16:13:10 <gundalow> #info https://github.com/ansible/ansible/pull/42500
+16:13:13 <Anil_> Yes, thanks
+16:13:26 <gundalow> #info CNOS Modules were originally using Paramiko. Here this is an attempt to change from paramiko to persistence connection of Ansible. More over along with this I am taking care of the new CLI changes happend on CNOS. I am adding UT cases for this module also along with
+16:13:28 <gundalow> Hi Anil_
+16:13:42 <Anil_> In this PR I am removing the legacy code dependency on Paramiko
+16:14:07 <Anil_> And I am bringining in persistence connection network_cli here
+16:15:00 <gundalow> `response.lower().find("Error-101")` Not sure if I'm reading that right, If you've done `response.lower()` would we ever find `Error-101`?
+16:15:01 <Anil_> All the plugins required are added in as part of 2.6 itself, so its  just a formality to modify code to take on network_cli
+16:15:48 <Anil_> I am just trying to make all lower so that comparison never fails
+16:16:25 <gundalow> Don't you need `response.lower().find("error-101")``
+16:16:28 <Anil_> The error 101 is pertaining to device errors upon executing any CLIs
+16:16:47 <Anil_> I can change it
+16:18:03 <Anil_> In the response from device I parse for strings like "error" "invalid" and few more keywords like that and brand them as Error 101
+16:18:59 <Qalthos> Right, that's fine, but var.lower() will never match a string with a capital letter
+16:19:00 <Anil_> In these modules, long back I have introduced the concept of error code
+16:19:06 <Qalthos> That's all
+16:19:12 <Anil_> Ok
+16:19:33 <Anil_> I will fix that issue
+16:20:20 <Anil_> Good catch, Thanks
+16:21:18 <gundalow> would someone please be able to review the conversion from Paramiko to persistent connection?
+16:21:57 <Qalthos> I can take a look at that
+16:22:16 <Anil_> One query I have to Gundalow is that " I have the full set of end to end Functional test code with me. But as device is not there I am not introducing it into target folder
+16:22:40 <gundalow> #action Qalthos to do technical review of the conversion from Paramiko to persistent connection" on Persistence connection for cnos_vlan #42500
+16:23:28 <Anil_> They are very much tested and works fine too. I can give demo if required. I need some place to park this integration test code for the benefit of customers
+16:24:58 <gundalow> Sure, let me think if they should be added into ansible/ansible (and marked disabled) or stored in one of Dell's GitHub repos
+16:25:30 <Anil_> We have those in Lenovo github.
+16:25:56 <gundalow> erm, sorry, I meant Lenovo
+16:26:36 <Anil_> No issues.
+16:26:58 <gundalow> I'll get back to you shortly about where to store the tests
+16:27:43 <gundalow> Work is progressing with Zuul, so in the future we will be able to run these tests :)
+16:28:12 <Anil_> Thanks. Nothing more, waiting to review comments from Qalthos
+16:28:45 <gundalow> cool
+16:28:50 <gundalow> #topic Open Floor
+16:29:33 <gundalow> #info AnsibleFest Austin Contributor Summit agenda, feel free to add items to https://etherpad.openstack.org/p/ansible-summit-october-2018
+16:30:01 <gundalow> #info Contributor signup form is being worked on
+16:30:05 <gundalow> Anyone got anything else?
+16:37:12 <gundalow> Anil_: You can add the tests into the ansible/ansible repo
+16:37:48 <gundalow> Anil_: add the `unsupported` aliases, see https://docs.ansible.com/ansible/devel/dev_guide/testing/sanity/integration-aliases.html
+16:37:58 <gundalow> You should still be able to run via ansible-test
+16:38:50 <Anil_> ok
+16:39:28 <Anil_> I will try it out tommorrow morning my time
+16:39:34 <gundalow> Ace thanks
+16:39:41 <gundalow> Will close the meeting shortly
+16:47:43 <gundalow> #endmeeting

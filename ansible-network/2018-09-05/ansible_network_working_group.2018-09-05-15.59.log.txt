@@ -1,0 +1,67 @@
+15:59:59 <Qalthos> #startmeeting Ansible Network Working Group
+15:59:59 <zodbot> Meeting started Wed Sep  5 15:59:59 2018 UTC.
+15:59:59 <zodbot> This meeting is logged and archived in a public location.
+15:59:59 <zodbot> The chair is Qalthos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:59:59 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:59:59 <zodbot> The meeting name has been set to 'ansible_network_working_group'
+16:00:50 <Qalthos> #chair dagrawal ganeshrn gundalow privateip rcarrillocruz trishnag
+16:00:50 <zodbot> Current chairs: Qalthos dagrawal ganeshrn gundalow privateip rcarrillocruz trishnag
+16:01:07 <Qalthos> #topic Core Team Updates
+16:01:43 <Qalthos> #info 2.7 is branched, devel is now 2.8
+16:02:22 <Qalthos> #info 2.7rc1 is tomorrow, by last report
+16:03:18 <Qalthos> From the core team, we have been working on fixes for 2.7, so not a lot of updates this week
+16:03:31 <Qalthos> But here's a sample of what's gone in:
+16:03:49 <Qalthos> #info * fixing issues with ios_user
+16:03:59 <Qalthos> #info * working on issues related to asa_config/asa_acl/asa_command
+16:04:15 <Qalthos> #info * vyos provider role WIP
+16:04:26 <Qalthos> #info * configure_user task updates for eos & nxos
+16:05:21 <Qalthos> #link https://github.com/ansible/community/labels/network is our agenda as always
+16:06:02 <Qalthos> But there doesn't appear to be anything left on the agenda today
+16:06:04 <Qalthos> So
+16:06:10 <Qalthos> #topic Open Floor
+16:06:25 <Qalthos> #chair Anil_Lenovo caphrim007_
+16:06:25 <zodbot> Current chairs: Anil_Lenovo Qalthos caphrim007_ dagrawal ganeshrn gundalow privateip rcarrillocruz trishnag
+16:06:59 <Anil_Lenovo> Hi
+16:07:13 <caphrim007_> o/
+16:07:49 <Qalthos> Anyone have anything they want to talk about this week?
+16:07:50 <Anil_Lenovo> I have been reviewing and testing the modules from Lenovo this week. No much updates from me
+16:08:42 <Anil_Lenovo> I have identified 2 minor issues in the templates, where in CLIs are in old CNOS. I would like to change them.
+16:09:04 <Anil_Lenovo> Can I raise a PR in this regard? What is the process ?
+16:09:54 <Anil_Lenovo> Basically in test/integration/targets/cnos_conditional_template/templates/demo_template.j2 and test/integration/targets/cnos_template/templates/demo_template.j2
+16:10:37 <Qalthos> Yeah, you should raise a PR if there's an issue with the test files
+16:11:08 <Anil_Lenovo> sure thanks.. will do so. Any tentative date planned for RC1 ?
+16:11:56 <Qalthos> [12:02:22] <Qalthos> info 2.7rc1 is tomorrow, by last report
+16:12:33 <Anil_Lenovo> ok. Great !. Nothing more from me
+16:12:52 <Qalthos> Anil_Lenovo: 👍
+16:13:34 <Qalthos> Anybody else?
+16:14:27 <lindsayhill_> I've been working on a voss_config module (It's _almost_ working). This will be for 2.8 now. With the branching of 2.7, do we submit PRs for 2.8 against devel, or wait until 2.7 ships?
+16:14:50 <Qalthos> #chair lindsayhill_
+16:14:50 <zodbot> Current chairs: Anil_Lenovo Qalthos caphrim007_ dagrawal ganeshrn gundalow lindsayhill_ privateip rcarrillocruz trishnag
+16:15:05 <Qalthos> You can make a PR against devel like normal
+16:16:41 <lindsayhill_> Cool. Will do so once it's ready. VOSS does some *very* annoying things with config parsing...
+16:18:05 <Qalthos> lindsayhill_: Good to hear, will look forward to seeing that PR show up.
+16:19:01 <lindsayhill_> I thought I had it just about ready the other day. Then realized that VOSS does weird stuff with the config parser, showing ipv4 & ipv6 configs in different parts of the config
+16:19:09 <lindsayhill_> ...but underneath the same parent line
+16:24:56 <lindsayhill_> Anyway, I think I know how to solve it now, so it's just a matter of getting the time, and writing test cases. No rush now, since 2.8 is a while away
+16:28:07 <Qalthos> lindsayhill_: Nice. Let us know when it's ready
+16:28:12 <Qalthos> Anyone else?
+16:31:57 <bcoca> :wq
+16:33:43 <Qalthos> bcoca: You can't escape us that easily
+16:35:11 <Qalthos> Right, I'll still be around, but if there's nothing else, I'll close the meeting at :40
+16:35:31 <bearrito> is there an intended way to handle prompts with the config modules? the command modules can take in a dict of command, prompt, answer. that doesnt not appear to be the case for the config modules though
+16:36:53 <Qalthos> bearrito: at present, no
+16:37:59 <Qalthos> I don't know that there are any current plans to add that functionality either
+16:38:07 <bcoca> Ctrl+C
+16:39:52 <bearrito> @Qalthos ok. thanks!
+16:40:19 <Qalthos> At present, either the plaform-specific _command modules, or the new-in-2.7 cli_command module should work for individual config changes needing prompts
+16:44:38 <bearrito> ah, didnt know about the new cli_command module. as for platform-specific _command modules, will those be allowed to run config commands in the future too like the cli_command module?
+16:45:43 <lindsayhill_> Good point - most of those (today) have code matching & blocking config commands.
+16:45:50 <bearrito> at the moment, most _command modules check that only show commands are being ran
+16:46:00 <Qalthos> ios_command definitely does, I'm not sure of the status of the other platforms
+16:47:00 <bearrito> eos, aireos, aruba, vyos, nxos, iosxr and probably more
+16:47:48 <bearrito> oh wait, nvm. some of those are only for check_mode
+16:48:05 <Qalthos> bearrito: The checks for only show commands is specific to check mode
+16:49:27 <Qalthos> Yeah, that's a slightly different thing as we don't want to execute anything potentially state-altering when in check mode
+16:57:30 <Qalthos> It looks like most of the core-supported command modules have had that check removed now... though there are a few issues I'll fix later today regarding that
+17:01:44 <Qalthos> Alright, thanks everyone for coming
+17:02:02 <Qalthos> #endmeeting

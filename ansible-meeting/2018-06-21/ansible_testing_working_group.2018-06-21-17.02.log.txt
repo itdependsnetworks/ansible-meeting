@@ -1,0 +1,37 @@
+17:02:12 <mattclay> #startmeeting Ansible Testing Working Group
+17:02:12 <zodbot> Meeting started Thu Jun 21 17:02:12 2018 UTC.
+17:02:12 <zodbot> This meeting is logged and archived in a public location.
+17:02:12 <zodbot> The chair is mattclay. Information about MeetBot at http://wiki.debian.org/MeetBot.
+17:02:12 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+17:02:12 <zodbot> The meeting name has been set to 'ansible_testing_working_group'
+17:02:20 <mattclay> #info Agenda: https://github.com/ansible/community/issues/248
+17:02:26 <abadger1999> jtyr:  agaffney wrote the module_defaults feature... you guys could discuss in #ansible-devel
+17:02:27 <mattclay> There are no new items on today's agenda.
+17:02:37 <mattclay> #topic Open Floor
+17:02:51 <agaffney> whatever it is, I didn't do it!
+17:03:34 * mattclay waits to see if anyone has something they'd like to discuss
+17:06:27 <nitzmahone> Update on F27/F28 in CI?
+17:07:10 <mattclay> It's still on list to resolve that. I just haven't had free time to get to it.
+17:07:15 <nitzmahone> (and quasi-related from an internal discussion this morning: any reason not to update the nightlies to push for F26/F27/F28/rawhide?)
+17:07:24 <mattclay> s/on list/on my list/
+17:07:54 <abadger1999> I guess we should mention we're working on defining (then implementing) test for changelog in PRs.
+17:08:34 <mattclay> nitzmahone: As for the nightlies, someone just needs to update the job. I don't think we should do nightlies for rawhide though, just released versions of Fedora.
+17:08:38 <nitzmahone> @mattclay if you don't care that they're not sync'd up, I can go ahead and update the nightly RPM jobs to push those
+17:08:53 <nitzmahone> OK- I'll set them for F26-F28 then
+17:08:57 <mattclay> nitzmahone: I have no problem with them being out of sync.
+17:09:33 <maxamillion> is there anything that can be done about the transient network timeout issues in shippable? like an issue ticket filed with them or something? ... I've not been able to get consistent passing tests in about a week
+17:10:33 <mattclay> #info We're working on implementing a sanity test for requiring changelog fragments for PRs. The conditions under which they will be required are still being considered.
+17:11:35 <mattclay> maxamillion: It depends on which tests are failing. Some of them can probably be updated to use local resources (local repo, simulator, etc.) -- but for others its not so easy.
+17:12:32 <maxamillion> mattclay: yeah, most of them seem to be pulling from s3 or public linux distro package repos ... but I did have one test fail the other day waiting on a RHEL7 instance to spin up so I dunno what's going on
+17:12:42 <mattclay> For some tests that depend on remotely hosted static files we've had improved reliability by hosting those files in our own S3 bucket.
+17:12:42 <maxamillion> (I assume it was waiting on a container)
+17:13:30 <mattclay> maxamillion: Waiting for a RHEL 7.4 CI instance? That's an intermittent CI infrastructure issue I haven't had time to investigate.
+17:14:35 <mattclay> maxamillion: If you have time to assist with improving test reliability, I'm sure I can find some things for you to work on. :)
+17:20:05 <maxamillion> mattclay: unfortunately I don't, though I wish I did because I'm sure your TODO list is absolutely insane
+17:20:31 <mattclay> If someone is looking for some easy sanity test fixes to make, there are still some `ansible-format-automatic-specification` failures to resolve: https://github.com/ansible/ansible/blob/devel/test/sanity/pylint/ignore.txt
+17:21:03 <maxamillion> mattclay: most of my issues seem to be transient network timeouts, which I figure are shippable's problem more so than they are ours
+17:21:11 <mattclay> Pilou: In the past I know you've done quite a bit of sanity test cleanup. Any interest in these? ^
+17:22:18 <mattclay> maxamillion: Shippable is running in AWS, so most of the network issues tend to be either with AWS or the services we're connecting to.
+17:25:43 <mattclay> Does anyone else have anything testing related to discuss? If not, I'll end the meeting in a few minutes.
+17:28:02 <maxamillion> mattclay: fun :)
+17:29:59 <mattclay> #endmeeting

@@ -1,0 +1,96 @@
+14:59:27 <bcoca> #startmeeting ansible core irc public meeting
+14:59:27 <zodbot> Meeting started Thu Aug 30 14:59:27 2018 UTC.
+14:59:27 <zodbot> This meeting is logged and archived in a public location.
+14:59:27 <zodbot> The chair is bcoca. Information about MeetBot at http://wiki.debian.org/MeetBot.
+14:59:27 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+14:59:27 <zodbot> The meeting name has been set to 'ansible_core_irc_public_meeting'
+14:59:39 <bcoca> #topic ansible/ansible#42163
+15:00:01 * gundalow waves
+15:00:50 <maxamillion> .hello2
+15:02:09 <bcoca> seems author is looking at runner as altnerative, any one else have something related to this?
+15:02:48 <bcoca> k, closing then
+15:02:58 <bcoca> #topic ansible/proposals#57
+15:03:21 <maxamillion> hrmmm... the bot isn't awake
+15:03:43 <gundalow> .hello2
+15:03:51 <bcoca> alikins: i believe you are now partial to having meta/requirements.yml ?
+15:03:53 <gundalow> can't remember, do we need to be `#chair`?
+15:04:08 <bcoca> we can, im still unclear what it actually does
+15:04:12 <zodbot> maxamillion: maxamillion 'Adam Miller' <maxamillion@gmail.com>
+15:04:15 <sdoran> I had to rejoin all my channels so maybe they changed something due to spam and the bot needs to rejoin.
+15:04:25 <maxamillion> I think people with `#chair` can set topics and stuff
+15:04:26 <bcoca> probably
+15:04:30 <zodbot> gundalow: gundalow 'John Barker' <john@johnrbarker.com>
+15:04:36 <sdoran> There is goes.
+15:04:48 <sivel> .hello2
+15:04:51 <zodbot> sivel: sivel 'Matt Martz' <matt@sivel.net>
+15:06:54 <alikins> bcoca: I like the idea, but cant speak for galaxy in general
+15:07:32 <bcoca> i just saw
+15:08:03 <bcoca> ok, going to shelve till we can discuss more with rest of galaxy team, i'll give kustodian a ping that we are discussing it as it might impact other plans
+15:08:23 * bcoca hates wasting willing 'free' developer time
+15:08:32 <bcoca> #topic open floor
+15:10:41 <gundalow> #topic Fixing GitHub labels (BOTMETA.yml) #44903
+15:10:45 <gundalow> :(
+15:11:02 <gundalow> bcoca: Can I have a #chair ?
+15:11:14 <bcoca> #b ench gundalow
+15:11:20 <bcoca> #chair gundalow
+15:11:20 <zodbot> Current chairs: bcoca gundalow
+15:11:30 <gundalow> #topic Fixing GitHub labels (BOTMETA.yml) #44903
+15:11:36 * ryansb waves
+15:11:39 <gundalow> #info https://github.com/ansible/ansible/pull/44903
+15:12:08 <gundalow> Currently https://github.com/ansible/ansible/labels?q=support isn't accurate, lots of things are marked incorrectly
+15:12:28 <bcoca> ^ my only comment, defaulting to community for many of those dirs makes future maintenance easier imo, otherwise core will support any new plugins/module_utils by default
+15:12:55 <sivel> yeah, I think defaulting to community is a good idea
+15:13:03 <gundalow> Sure, I can do that and explicitly add support: core
+15:13:24 <gundalow> I think that makes sense for `module_utils`
+15:13:36 <gundalow> Not sure about the other `plugin/` directories
+15:14:50 <bcoca> modules/module_utils have the most traffic, but  users do add to other plugins also, lots less, but it does happen
+15:15:26 <gundalow> `lib/ansible/modules/` is generally driven by `ANSIBLE_METADATA`, so that should allbe community
+15:15:28 <sivel> many lookups are community
+15:15:32 <maxamillion> +1 to default to community
+15:15:49 <bcoca> callbacks also
+15:15:53 <ryansb> yeah, pretty much the sensible way to go
+15:15:55 <ryansb> +1
+15:16:10 <bcoca> vars_plugins has 1 , but once i create a couple more i also expect community to start contributing more
+15:16:40 <gundalow> I'm not bothered about this being 100% right, just want to improve it a lot for high traffic areas of the codebase
+15:16:49 <gundalow> a) I'll change module_utils to be community by default
+15:17:04 <bcoca> agreed, im just saying it might save us work in future to default to community
+15:17:08 <gundalow> b) looks to be community by default - which looks are supported by core?
+15:17:22 <bcoca> callbacks also, most are community
+15:17:25 <gundalow> s/looks/lookups/g
+15:17:28 <bcoca> we probalby have to go through list
+15:18:13 <sivel> we don't have much of those documented as to what are core, but most of us can point them out as needed
+15:18:51 <bcoca> callbacks default/minimal/tree would be only ones core , top of my head
+15:18:53 <gundalow> OK, I might just fix the support:network stuff in that PR and do a follow up PR. Need to get those labels fixed before Network can do backlog review
+15:19:02 <gundalow> I'll do googlesheet for others
+15:19:03 <gundalow> Thanks
+15:19:22 <bcoca> maybe profile_X
+15:19:32 <bcoca> and junit, cause ansible-test uses is
+15:19:32 <gundalow> ?
+15:19:39 <bcoca> profile_roles/profile_task callbacks
+15:19:44 <gundalow> ah
+15:19:53 <bcoca> an, oneline, used by -o in ansible
+15:20:15 <gundalow> bcoca: ack, will do this in Google docs at somepoint in $future
+15:20:19 <gundalow> as I'm out a bit next week
+15:20:34 <bcoca> k, was thinking of just doing it in PR
+15:23:33 <bcoca> TIL we have a 'null' callback
+15:23:44 <gundalow> fair point, I'll see where I get to
+15:23:45 <bcoca> anything else?
+15:23:49 <gundalow> #topic Open Floor
+15:25:15 <Pilou> gundalow: not sure that BOTMETA "support" key is propagated to subpaths
+15:25:19 * ryansb nothing going on
+15:25:39 <bcoca> closing in 1 min if no other items
+15:25:52 <acozine> I'd welcome feedback on my Developer Guide WIP PR
+15:26:05 <ryansb> link?
+15:26:21 <acozine> https://github.com/ansible/ansible/pull/44098
+15:26:25 <bcoca> #topic developer guide revamp https://github.com/ansible/ansible/pull/44098
+15:26:46 <acozine> the HTML version is published at http://docs.testing.ansible.com/ansible/latest/dev_guide/index.html
+15:29:12 <acozine> it's a big changeset, so it may take a while to read - if you see stuff that could be improved, post it on  github or ping me with comments/ideas
+15:33:50 <acozine> If there's no immediate feedback, we can move on.
+15:34:11 <bcoca> #topic open floor
+15:34:18 <bcoca> acozine: probably need a longer read from most
+15:34:30 <acozine> yep, absolutely
+15:34:41 <acozine> just wanted to get it out there
+15:36:08 <gundalow> acozine: When do you need feedback by?
+15:36:40 <acozine> gundalow: I'd like to merge by Monday if possible - the PR has had a long run already
+15:36:49 <gundalow> nod
+16:04:10 <bcoca> #endmeeting

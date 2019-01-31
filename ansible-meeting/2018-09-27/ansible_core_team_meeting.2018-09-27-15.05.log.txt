@@ -1,0 +1,161 @@
+15:05:10 <ryansb> #startmeeting Ansible Core Team Meeting
+15:05:10 <zodbot> Meeting started Thu Sep 27 15:05:10 2018 UTC.
+15:05:10 <zodbot> This meeting is logged and archived in a public location.
+15:05:10 <zodbot> The chair is ryansb. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:05:10 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:05:10 <zodbot> The meeting name has been set to 'ansible_core_team_meeting'
+15:05:24 <sdoran> \o
+15:05:31 <ryansb> Hey folks, sorry for the delay
+15:05:36 <bcoca> #topic https://github.com/ansible/ansible/pull/45853
+15:05:39 <bcoca> dag?
+15:06:14 <dag> hey
+15:06:16 <nitzmahone> o/
+15:06:18 <dag> at last :)
+15:06:21 <ryansb> Also, Agenda: https://github.com/ansible/community/issues/347
+15:06:47 <dag> bcoca: Not sure if there's anything that need doing for that PR
+15:07:18 <bcoca> ok, its been on agenda for last 3 meetings, but i think we discussed in other channels already
+15:07:23 <bcoca> was unusre if you needed anything else
+15:07:52 <bcoca> #topic https://github.com/ansible/ansible/pull/45902
+15:08:05 <bcoca> decentrallize?
+15:09:01 <bcoca> well, seems he could not make this one either
+15:09:06 <bcoca> #topic open floor
+15:09:19 <nitzmahone> mind the gap
+15:09:30 * bcoca gets ready to push
+15:09:35 <dag> let me check
+15:09:50 <dag> https://github.com/ansible/ansible/pull/45883
+15:09:50 <bcoca> nitzmahone: remind me to tell you funny story about 'open floors' and a disco in ibiza
+15:10:00 <nitzmahone> This sounds like a winner
+15:10:12 <ryansb> #topic Contributor Summit
+15:10:25 * dag is prepared for bikeshedding, shields up
+15:10:26 <ryansb> Please add anything you'd like discussed to the Etherpad https://etherpad.openstack.org/p/ansible-summit-october-2018
+15:10:27 <bcoca> dag: lgtm, but bot probably needs updating
+15:10:34 <ryansb> or to the sub-session agendas
+15:10:36 <bcoca> ryansb: one topic at time
+15:11:00 <ryansb> sorry. went to find etherpad when we jumped to open.
+15:11:05 <ryansb> #topic open floor
+15:11:18 <bcoca> #topic https://github.com/ansible/ansible/pull/45883
+15:11:43 <bcoca> ^ any one else want to weigh in on github template proposed changes?
+15:12:18 <dag> Ok, if there's no other feedback we can start looking at the required modifications for ansibot
+15:12:20 <agaffney> no more all-caps frustration titles? -1 from me (just kidding)
+15:12:24 <nitzmahone> Looks ok to me
+15:12:28 <dag> the PR itself shows how the PR template would look like
+15:12:42 <ryansb> I prefer the YELLING titles ;)
+15:13:01 <nitzmahone> WHY?! ;)
+15:13:18 <ryansb> makes sure you know we're serious about CONFIGURATION and ISSUE TYPE
+15:13:23 <dag> some people wondered why we still need the Ansible version for pull requests (since they are done to a branch already)
+15:13:51 <bcoca> they always were, i believe that was a copy/paste from 'bug reports'
+15:14:04 <agaffney> yeah...ansible version for PRs don't make a lot of sense, since PRs are generally against devel
+15:14:21 <bcoca> well, they  might, it can tell you 'this fixes a problem that exists in these versions'
+15:14:30 <bcoca> so we can determine backporting or not
+15:14:39 <bcoca> so not required, but sometimes useful
+15:14:44 <nitzmahone> Although some way of saying "this should be backported to ..." would close a hole.
+15:14:47 <dag> right, a PR might also report a new issue, and we're not longer asking all the questions for a PR
+15:14:57 <dag> nitzmahone: that's a good suggestion
+15:15:14 <dag> We could add a hint for this
+15:15:23 <bcoca> not sure i would add that, cause i'll end up autoclosign PRs when they include 1.9
+15:15:24 <nitzmahone> Though if it's that, maybe "lowest Ansible version this applies to" or a list would make more sense.
+15:16:00 <dag> Yep, I think that's better
+15:16:06 <bcoca> unsure, since problem/fix might apply to diff versions
+15:16:24 <bcoca> problem might exist in 2.3, but fix is different for 2.3/2.4 as code changed in 2.5
+15:16:42 <nitzmahone> I still don't know if that really helps solve the problem of "things needing backport that haven't gotten it" though (and we specifically don't want RMs dealing with that)
+15:16:49 <sdoran> I use "Ansible Version" as "version this applies to" even though it's really meant more for issue reporting so we know more about the environment.
+15:16:52 <bcoca> so i would really try to separate 'problem exists versions' for 'fix can be applied versions'
+15:16:56 <sdoran> So it's become a misnomer for PRs.
+15:17:01 <sdoran> +1
+15:17:14 <bcoca> sdoran: except for PRs that 'also report the problem'
+15:17:27 <sdoran> Well, then it's both. :)
+15:17:29 <bcoca> im not sure i want to require issue ticket for each PR
+15:17:29 <nitzmahone> Yeah, in its current form I'd say it's more a trip hazard on PRs
+15:17:39 <sdoran> Agreed.
+15:17:46 <bcoca> im fine with removing it and let people update summary/addtional info
+15:18:04 <nitzmahone> (leaving on issues though, right?)
+15:18:09 <sdoran> Yes
+15:18:17 <nitzmahone> WFM
+15:18:21 <sdoran> For issues, we definitely want `ansible --version` output.
+15:18:23 <bcoca> and +100000 to 'no summary' ... since i always have to copy/paste it to top
+15:18:41 <bcoca> yep, i would 'require' it on issues
+15:20:03 <sdoran> +!
+15:20:06 <sdoran> +1
+15:20:08 <sdoran> :)
+15:20:17 <bcoca> almost tempted to add a 'this fixes: ' header so people stop putting the number of issue in subject .. were it doesnt link nor have any effect on closing
+15:20:42 <sdoran> Yeah, I've fixed a few of those.
+15:21:39 <ryansb> since `Fixes:` triggers actual closing, maybe just go with `Related to: ....`
+15:21:40 <bcoca> its the most time i spend during triage, renaming subjects to something that makes sense and can be used to easily know if you want to look at ticket or not
+15:21:48 <ryansb> in case it turns out to not actually fix the issue
+15:21:49 <bcoca> ryansb++
+15:22:14 <bcoca> also autoclose any PR with subject that is just 'fixes #number'
+15:23:30 <bcoca> k, i think we are in full 'bikeshed' mode at this point, dag i think you have enough agreement to go forward and we can debate other changes in -devel as needed
+15:23:52 <bcoca> #topic upcomming contributor summit
+15:23:58 <bcoca> https://etherpad.openstack.org/p/ansible-summit-october-2018-Core-update
+15:24:01 <bcoca> ^ ryansb?
+15:24:17 <ryansb> ah, yes
+15:24:29 <ryansb> Main etherpad: https://etherpad.openstack.org/p/ansible-summit-october-2018 has links to all the sub-sessions
+15:24:36 <ryansb> for core stuff, https://etherpad.openstack.org/p/ansible-summit-october-2018-Core-update
+15:25:23 <ryansb> add discussion items, and if you're remote there's both Bluejeans and IRC options
+15:26:00 <bcoca> we should limit to one ... its hard to keep up with 'live + 1 chat' but 2 chats .. tend to get lost
+15:26:21 * bcoca looks for irc/bj bridge
+15:26:25 <ryansb> maybe do IRC as only chat? gundalow ^
+15:26:32 <nitzmahone> Yeah, etherpad chat should be ignored
+15:26:39 <nitzmahone> And BJ
+15:26:47 <ryansb> etherpad chat already has a "Please don't use this" warning
+15:27:00 <bcoca> i have that on 'etherpad' itself ...
+15:27:14 <nitzmahone> I think we can disable bluejeans chat also when the meeting is created
+15:27:19 <ryansb> bluejeans doesn't show new participants past chats, so we can't do the same for bluejeans
+15:27:23 <gundalow> No chat in bluejeans or etherpad
+15:27:30 <bcoca> irc doesnt either
+15:27:49 <bcoca> mostly jabber and commercial offerings like slack/hipchat do
+15:27:50 <gundalow> I added the Etherpad warning
+15:28:33 <ryansb> yeah, but in IRC we don't need to add a "DO NOT USE" warning
+15:28:50 <gundalow> IRC or bluejeans voice
+15:28:53 <abadger1999> irc will be recorded (provided we use zodbot)
+15:29:02 <gundalow> They are the only two options
+15:29:13 <gundalow> Zodbot is in all the channels we will be using
+15:29:30 <bcoca> this channel for the main contributor meeting?
+15:29:33 <abadger1999> yeah... I mean, provided we remember to startmeeting ;-)
+15:29:48 <gundalow> And each etherpad starts with `#startmeeting Ansible... `
+15:30:05 <gundalow> Each etherpad lists which IRC channel to use
+15:30:41 <bcoca> Join on BlueJeans:
+15:30:43 <bcoca> FIXME
+15:30:44 <bcoca> ^ LOL
+15:30:49 <gundalow> Has everybody looked at the top level and the Core breakout
+15:31:09 <ryansb> action(bcoca) fix bluejeans
+15:31:48 <gundalow> It's the bluejeans of the chair
+15:32:01 <gundalow> I'll be review the breakout etherpad tomorrow
+15:32:30 <bcoca> ryansb: everyone forced to sound like a chipmonk
+15:32:49 <gundalow> nitzmahone: at what point can you disable bluejeans chat? When you start it, or does it have to be a scheduled meeting?
+15:33:29 <nitzmahone> I don't recall- I could be making it up. Might also only be for primetime BJ, but we can do those too
+15:33:55 <bcoca> we can still leave the Q&A feature, the upvoting is nice way to see interest in questions
+15:33:56 <gundalow> What else?
+15:33:59 <bcoca> irc tends to be chaotic
+15:34:10 <gundalow> Voting will be done in etherpad
+15:34:43 <bcoca> that means you require new questions to go into etherpad ?
+15:36:03 <gundalow> Etherpad is structured, irc is as you said chaotic. So.usijt etherpad for as much as possible I think would help
+15:36:33 <bcoca> not sure i agree with first part of that statement
+15:36:49 <gundalow> Well, more structure than irc
+15:36:52 <gundalow> Ok
+15:36:58 <bcoca> he, low bar, but i accept that
+15:37:17 <gundalow> How well did this work last time, what challenges do we want to fix?
+15:37:34 <bcoca> i found we had people duplicating questions/items all over
+15:37:47 <gundalow> We should have better audio in the breakout rooms now, which I think will help
+15:38:01 <bcoca> for setting the agenda it seems ok, as people can take their time, for live questions ... if foudn it lacking
+15:38:15 <gundalow> OK, so will see if we can disable bluejeans
+15:38:39 <gundalow> Maybe on etherpad we need a place for people to dump thoughts as they go along
+15:41:15 <bcoca> possibly, i just found the 1 useful feature of bj prime was the Q/A section
+15:42:05 <dag> gundalow +1
+15:43:44 <ryansb> just a heading like "Scratch" or "Live notes" might be sufficient for the Etherpad
+15:43:51 <ryansb> gundalow: ^
+15:43:58 <gundalow> ryansb: sounds like a plan
+15:44:33 <gundalow> I'll add that
+15:46:13 <ryansb> ok, anything else about contrib summit ?
+15:46:20 <gundalow> https://etherpad.openstack.org/p/ansible-summit-october-2018-Core-update line 78
+15:46:56 <bcoca> unrelated, but could someone fix the ether pad to not say 'you require login' when using cursers based browsers?
+15:47:06 <bcoca> its just bad 'no js' redirection
+15:47:32 <gundalow> bcoca: no idea, no login is required. Use a sensible browser. ENOTABUG
+15:47:49 <bcoca> lynx is sensible!
+15:47:49 <gundalow> Any other questions about Contributors Summit?
+15:48:42 <agaffney> bcoca: I might have agreed 15-20 years ago
+15:49:09 <ryansb> looks like not
+15:49:12 <ryansb> #open floor
+15:49:16 <ryansb> #topic open floor
+15:54:06 <ryansb> closing this out since we seem to have covered everything
+15:54:08 <ryansb> #endmeeting

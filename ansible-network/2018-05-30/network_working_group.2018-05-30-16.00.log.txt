@@ -1,0 +1,95 @@
+16:00:29 <Qalthos> #startmeeting Network Working Group
+16:00:29 <zodbot> Meeting started Wed May 30 16:00:29 2018 UTC.
+16:00:29 <zodbot> This meeting is logged and archived in a public location.
+16:00:29 <zodbot> The chair is Qalthos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:00:29 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:00:29 <zodbot> The meeting name has been set to 'network_working_group'
+16:01:27 <Qalthos> #chair funzo ganeshrn privateip rcarrillocruz trishnag acozine caphrim007 mikewiebe
+16:01:27 <zodbot> Current chairs: Qalthos acozine caphrim007 funzo ganeshrn mikewiebe privateip rcarrillocruz trishnag
+16:01:28 <merlincorey> morning meeeting
+16:01:35 <trishnag> hi
+16:01:38 * ganeshrn waves
+16:01:42 <caphrim007> o/
+16:01:44 <mikewiebe> hello
+16:02:24 <Qalthos> #info 2.6 rc1 is... tomorrow
+16:03:02 <Qalthos> #link https://github.com/ansible/community/issues/247 is the agenda
+16:03:49 <Qalthos> We're nearly there, not a lot left to report from the team
+16:03:54 <Qalthos> So on to the agenda
+16:04:19 <Qalthos> #topic NX-OS output truncated
+16:04:51 <Qalthos> trishnag: just managed to reproduce the issue minutes ago
+16:05:06 <mikewiebe> Qalthos: Excellent
+16:05:06 <Qalthos> I'm going to be looking into it after this meeting
+16:05:25 <Qalthos> mikewiebe: is there any more information that might help that you have right now?
+16:05:43 <funzo> o/
+16:05:54 <mikewiebe> Qalthos: No, I have already posted everything in the issue
+16:06:03 <bearrito> o/
+16:06:27 <mikewiebe> Qalthos: Let me know if you want me to capture anything else
+16:06:31 <Qalthos> #chair bearrito
+16:06:31 <zodbot> Current chairs: Qalthos acozine bearrito caphrim007 funzo ganeshrn mikewiebe privateip rcarrillocruz trishnag
+16:06:33 <trishnag> mikewiebe: I thought I fixed this one https://github.com/ansible/ansible/issues/40902 with https://github.com/ansible/ansible/pull/40806
+16:06:44 <Qalthos> can do
+16:07:28 <merlincorey> if I have a non-topic related question will there be time at the end for that?
+16:07:50 <Qalthos> merlincorey: we'll have time for that right after this
+16:07:52 <merlincorey> it's actually not any particular issue just a regular question - I can wait if need be
+16:07:55 <mikewiebe> trishnag: I recreated the No JSON object could be decoded issue 5 mins ago and pulled latest devel
+16:08:32 <mikewiebe> trishnag:  It only happens for httpapi
+16:08:50 <Qalthos> mikewiebe: neat. I'll make sure to take a look as well, then
+16:09:11 <trishnag> mikewiebe: yes, I have been getting that for nxos_facts also. but it got fixed with the commit. Qalthos or I will be looking into it.
+16:09:25 <mikewiebe> Qalthos: Let me know if you are not able to recreate it.  I have several Ansible servers but I can't recreate it on all of them :(
+16:09:45 <Qalthos> Ooh, extra fun
+16:09:58 <mikewiebe> Qalthos: On my 6 servers.. it's happening on 3 :)
+16:10:03 <Qalthos> mikewiebe: anything else you want to mak sure one of us sees?
+16:10:53 <mikewiebe> Qathos:  Not at the moment no.  The two issues I have filed right now *might* be masking others, but hopefully not.
+16:11:13 <Qalthos> #topic Open Floor
+16:11:25 <Qalthos> merlincorey: You had something to bring up?
+16:11:49 <merlincorey> if I am developing a network module for Ansible that I intend to submit to core, what repository/branch should I be forking/pull requesting against?  context is I am going to work the existing or potentially make new fortios modules because the ones right now don't seem to make use of inventory properly
+16:11:59 <merlincorey> so there is a basic question
+16:12:05 <merlincorey> and I am alluding to a probably known issue
+16:12:34 <merlincorey> s/to work the/to work on the/
+16:13:09 <Qalthos> merlincorey: if it's going to core, then ansible/ansible is the one you want to fork
+16:13:28 <merlincorey> excellent and I think I heard something about a dev branch - so I imagine that'll be the one?
+16:13:52 <Qalthos> devel is where current work is
+16:14:05 <merlincorey> `devel` got it and put into my notes, thanks for your guidance there :)
+16:14:24 <bearrito> on that note, are all new modules 2.7 now since stable-2.6 has been branched?
+16:14:59 <Qalthos> at this point, yes
+16:16:13 <acozine1> Changing the subject . . . have folks seen the new "settings by platform" grid at http://docs.ansible.com/ansible/devel/network/user_guide/platform_index.html?
+16:16:21 <acozine1> Feedback welcome.
+16:16:29 <acozine1> Additional rows especially welcome!
+16:17:16 <merlincorey> acozine1: well the fortios modules are doing their own thing not using any of those methods so... I imagine that is why they are not on there?
+16:17:39 <merlincorey> oh but I see F5 is in the same boat apparently
+16:17:44 <acozine1> merlincorey: I've added the platforms for which I have full info
+16:17:47 <merlincorey> well there's one you could add if you wanted :P
+16:19:03 <acozine1> merlincorey: thanks - if you don't want to open a PR, send me the info that should go in the fortios row(s) and I will add it when I can
+16:19:12 <acozine1> acozine@redhat.com
+16:21:31 <Qalthos> Right, if no one else has anything to bring up in the next few minutes, I'll close the meeting
+16:22:08 <merlincorey> acozine1: I will likely do that Soon(TM) -- I'm planning to work on the modules tomorrow during my work hours so I'll be able to do that then I believe; however, in lieu of that, I believe it is similar to the F5 rows in that it has a method to talk to them but it is not using any of the ansible plugin APIs (I think that's what httpapi, netconf, and network_cli represent)
+16:22:18 <bearrito> if i could get a review on https://github.com/ansible/ansible/pull/40681 at some point that'd be helpful
+16:22:48 <caphrim007> merlincorey: the f5 modules are not using those because f5 doesnt want to commit to interfaces that are changing with every release
+16:22:55 <caphrim007> when they become stable, then f5 will commit to them
+16:23:01 <merlincorey> caphrim007: fair enough :)
+16:23:15 <caphrim007> but 1 developer supports ~100 ansible modules, so he (me) only wants to work with mature code
+16:23:53 <merlincorey> caphrim007: please let me know what I can do to help make the process with these fortios modules as smooth as posisble for you to review and test, etc
+16:24:15 <caphrim007> merlincorey: i dev the f5 ones. fortios is nada me
+16:24:17 <merlincorey> I just mean like if there's any guidelines I can follow or something :)
+16:24:27 <merlincorey> caphrim007: ah yeah the F5 ones I noticed there are a ton of modules xD
+16:24:41 <merlincorey> didn't realize it was over 100!
+16:25:05 <merlincorey> caphrim007: well I will accept any protips you have for a new network module maintainer
+16:26:15 <caphrim007> merlincorey: the f5 ones are also externally developed from the other ones like eos, nxos, etc which are maintained by the ansible networking team
+16:26:35 <caphrim007> f5 works in partnership with redhat to upstream f5's work into ansible core
+16:26:46 <caphrim007> so its a slightly different situation
+16:27:33 <merlincorey> indeed
+16:28:24 <merlincorey> so tl;dr I should get Fortinet pay me and/or provide internal resources, as well as coordinate with RedHat -- nice protip :P
+16:28:44 <merlincorey> s/Fortinet pay/Fortinet to pay/\
+16:28:51 <merlincorey> I need coffee >_<
+16:28:54 <Qalthos> bearrito: re 40681: are you planning on removing the `save` parameter in the future?
+16:29:45 <Qalthos> It looks fine, just wondering if there were plans for deprecation like the rest of the modules that added save_when have done
+16:30:17 <bearrito> wasnt planning on it since it's not core. if that's where core is going to then sure, i can deprecated it
+16:30:48 <bearrito> ill add the deprecation today
+16:31:22 <Qalthos> I don't know that you need to, as you say it isn't core, but removing `save` would reduce confusion, and adding some notice of that would be friendly
+16:32:01 <bearrito> np, it's a quick change
+16:32:27 <Qalthos> bearrito: right, I'll get it in when I see that's done then
+16:32:35 <Qalthos> Anyone else?
+16:41:36 <Qalthos> Right, then
+16:41:43 <Qalthos> Thanks to everyone for showing up
+16:41:53 <Qalthos> Have a good rest of your day
+16:41:55 <Qalthos> #endmeeting

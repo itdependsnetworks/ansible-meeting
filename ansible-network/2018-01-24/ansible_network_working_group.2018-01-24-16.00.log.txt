@@ -1,0 +1,77 @@
+16:00:30 <Qalthos> #startmeeting Ansible Network Working Group
+16:00:30 <zodbot> Meeting started Wed Jan 24 16:00:30 2018 UTC.  The chair is Qalthos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:00:30 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:00:30 <zodbot> The meeting name has been set to 'ansible_network_working_group'
+16:00:45 <Qalthos> #info Agenda https://github.com/ansible/community/labels/network
+16:01:40 <Qalthos> #chair funzo gundalow gundalow_ kedarX trishnag ganeshrn
+16:01:40 <zodbot> Current chairs: Qalthos funzo ganeshrn gundalow gundalow_ kedarX trishnag
+16:01:58 * kedarX 👋
+16:03:12 <Qalthos> And just as I was about to call open floor, we get a topic
+16:03:18 <Qalthos> #chair grastogi
+16:03:18 <zodbot> Current chairs: Qalthos funzo ganeshrn grastogi gundalow gundalow_ kedarX trishnag
+16:03:47 <Qalthos> #topic Discuss use of VCR for acceptance test
+16:04:07 * gundalow waves
+16:04:36 <Qalthos> gundalow: If you have anything you want to mention, feel free
+16:04:50 <Qalthos> I forget most of the nice reminders you have at the top
+16:05:10 <gundalow> Qalthos: oh, just remind people of https://github.com/ansible/ansible/blob/devel/docs/docsite/rst/roadmap/ROADMAP_2_5.rst :)
+16:05:12 <grastogi> We were exploring how to add acceptance tests to Avi Network modules. we came across vcr
+16:05:57 <grastogi> We would like to contribute our tests using vcr but were not sure of implications of dependency it would bring to the ansible core
+16:06:41 <grastogi> The main benefit we see is that we can run the networking as a unit test rather than actually having a test setup were APIs are called. This is easy to maintain as well as fast.
+16:07:05 <Qalthos> grastogi: Adding deps for tests is easier than adding them for core AFAIK.
+16:07:15 <grastogi> we only need to add deps in test
+16:07:24 <grastogi> because these are strictly test cases
+16:07:39 <Qalthos> Right, that's why I mention it
+16:08:04 <trishnag> o/
+16:08:18 <grastogi> here is an example https://github.com/avinetworks/avi_ansible_modules/blob/AV-32324/test/avi_healthmonitor_test.py
+16:08:32 <grastogi> if this is ok, then we will create a pull request for review
+16:08:43 <grastogi> we can adjust it based on the feedback from the group
+16:09:09 <Qalthos> That sounds like a fine plan
+16:09:18 <grastogi> cheers!
+16:09:25 <gundalow> mattclay: Not sure if you are online
+16:10:06 <Qalthos> I don't see anything immediately wrong, but we can always come back to that in the PR if need be
+16:10:16 <Qalthos> #chair mattclay
+16:10:16 <zodbot> Current chairs: Qalthos funzo ganeshrn grastogi gundalow gundalow_ kedarX mattclay trishnag
+16:10:20 <grastogi> ok, we will do a test drive with a single module test
+16:10:27 * mattclay waves
+16:10:35 <gundalow> grastogi: appoloiges I'm in another meeting at the moment, so can't give this my full time. Looks interestng. Will need to chat with mattclay about what would be the right way of adding this new testing framework
+16:11:19 <Qalthos> mattclay: thoughts on using https://pypi.python.org/pypi/vcrpy for tests
+16:12:12 <mattclay> Is this for unit tests? Or is there interest in trying to make it work for integration tests?
+16:13:20 <grastogi> This is for integration test but without actual network service behind it. Basically, you can run the test against a real setup. It would record all network (HTTP) APIs. Later one can simply run the tests without the real API endpoint.
+16:14:19 <grastogi> so to the ansible test, we will submit the VCR cassette that is a recorded list of AVI API calls. Once the recording is available the whole thing runs as a unit test.
+16:15:40 <mattclay> It looks useful. We'd need to figure out how to make it work with modules if we wanted to use it in integration tests instead of just unit tests.
+16:17:12 <grastogi> Yes, we have found it quite useful. We will do a pull request and may be again visit this next week for discussion.
+16:17:28 <Qalthos> grastogi: Excellent
+16:17:54 <Qalthos> #topic Open Floor
+16:18:38 <Qalthos> I've been told to remind people about https://github.com/ansible/ansible/blob/devel/docs/docsite/rst/roadmap/ROADMAP_2_5.rst
+16:19:29 <Qalthos> Anyone have any other pressing matters to discuss?
+16:20:50 <gundalow> Nothing else from me
+16:21:40 <Qalthos> Right, short meeting this week, I think
+16:21:58 <Anil_> Qualthos:
+16:22:09 <Qalthos> Anil_: Howdy
+16:22:34 <Anil_> I have few PRs pending for your apporval
+16:23:35 <Anil_> Qalthos: They are basically change in license doc from BSD to GPL
+16:24:57 <Anil_> Qalthos: 34888, 34889, 34909, 34910
+16:25:31 <Anil_> Qalthos: If u can look at them once, it will great
+16:26:15 <Qalthos> I can take a look over them and see what there is to do
+16:26:57 <Anil_> Qalthos:May be, Just need to see the change in license information and say looks good and approve
+16:28:46 <Qalthos> There's some external contributors (including myself) on some of these files and I'd like to see visible approval on these PRs for a license change
+16:29:10 <Qalthos> That said, I don't think it should be too hard, going by 34888
+16:29:45 <Anil_> Qalthos: You may do it in leisure, let the discussion here keep going..
+16:30:06 <Qalthos> Anyone else?
+16:30:06 <Anil_> Qalthos: Thats all from me
+16:30:52 <bdowling> @ganeshrn:  Are you trying to confuse me on #34723 ?  You had a code comment this morning, then a minute later you approved it and I can't seem to see the comment anymore online. :)
+16:31:25 <ganeshrn> bdowling: sorry about that comment, i didn't checked the referenced issue
+16:31:37 <ganeshrn> bdowling: PR looks good
+16:32:06 <Anil_> @ganeshrn: I have one PR 34793 pending for your approval
+16:32:40 <ganeshrn> bdowling: and it's merged now
+16:32:58 <bdowling> I had thought about sending the wrong password..  It's a valid comment.  But this is perhaps no worse than previous where it sent multiple new line characters.  (On some devices not sure if the newline would trigger bad password attempts and cause a lockout, but still)
+16:33:10 <ganeshrn> Anil_: yup i added a comment sometime back
+16:33:50 <Anil_> Ganesh: Yes, just Now I saw it, will change it by tommroow . thanks
+16:33:51 <bdowling> A feature to improve that would be to have a maxhits on subprompt or something, if it is again seen a second time, it is considered a failure..
+16:34:33 <ganeshrn> bdowling: currently i think it will result in command timeout
+16:36:54 <ganeshrn> bdowling: if you can raise a feature request we can look into ways of improving this behavior
+16:41:47 <Qalthos> Right, anyone else have anything?
+16:46:50 <Qalthos> Alright, if there's nothing else, closing the meeting
+16:46:56 <Anil_> sure
+16:47:07 <Qalthos> Thanks everyone for your time, and have a good week
+16:47:11 <Qalthos> #endmeeting

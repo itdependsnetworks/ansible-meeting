@@ -1,0 +1,233 @@
+15:06:52 <bcoca> #startmeeting ansible core public irc meeting
+15:06:52 <zodbot> Meeting started Thu Sep 20 15:06:52 2018 UTC.
+15:06:52 <zodbot> This meeting is logged and archived in a public location.
+15:06:52 <zodbot> The chair is bcoca. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:06:52 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:06:52 <zodbot> The meeting name has been set to 'ansible_core_public_irc_meeting'
+15:07:31 <maxamillion> .hello2
+15:07:32 <zodbot> maxamillion: maxamillion 'Adam Miller' <maxamillion@gmail.com>
+15:07:39 <devyani7> .hello
+15:07:39 <zodbot> devyani7: (hello <an alias, 1 argument>) -- Alias for "hellomynameis $1".
+15:07:52 <devyani7> .hello devyani7
+15:07:53 <zodbot> devyani7: devyani7 'Devyani Kota' <devyanikota@gmail.com>
+15:08:01 <bcoca> #topic https://github.com/ansible/ansible/pull/38269
+15:09:10 <maxamillion> devyani7: the floor is yours, what would you like to discuss about the PR?
+15:09:32 <devyani7> bcoca, so the PR add the remove-brick functionality...
+15:09:40 <devyani7> ... to the existing gluster_volume module
+15:09:46 <bcoca> @jtanner so rosmo is author and has shipit, but it did not seem to count
+15:09:47 <devyani7> for the Glusterfs storage
+15:10:01 <devyani7> and I tried mailing rosmo, but didn't quite get a response
+15:10:17 <bcoca> he gave you a shipit
+15:10:23 <devyani7> I would like to know the next steps :)
+15:10:26 <devyani7> bcoca, correct.
+15:10:46 <bcoca> ah, but you have commits after that
+15:10:52 <devyani7> the counter was reset for 2.6 release
+15:10:55 <bcoca> that invalidates it
+15:11:07 <devyani7> right.
+15:11:57 <devyani7> I got it re reviewed by the gluster community folks
+15:12:31 <bcoca> would you and sac be interested in being 'maintainers' for the gluster module space?
+15:13:01 <maxamillion> bcoca: what's the precedent here, can core team members step in to review/merge or is that considered bad form?
+15:13:02 <devyani7> bcoca, yes, we both are currently working on gluster ansible efforts.
+15:13:31 <maxamillion> devyani7: awesome! :)
+15:13:42 <devyani7> maxamillion, :)
+15:13:44 <bcoca> maxamillion: we are ALSO part of the community
+15:13:55 <bcoca> not bad form, mostly we dont have the bandwith
+15:15:27 <bcoca> so my reading of this is that when you dont specify some bricks as part of the cluster you normally dont remove them, this flag would allow removal?
+15:16:00 <devyani7> um, basically, remove operation was not working, as in:
+15:16:07 <devyani7> it doesn't work with the existing module
+15:16:12 <devyani7> bricks can only be added
+15:16:14 <devyani7> and not removed
+15:16:24 <devyani7> I have added support for the remove operation
+15:16:46 <devyani7> which needs to be followed by heal, in order to keep the cluster working.
+15:16:49 <bcoca> does it make sense to add the fix to removal w/o the option?
+15:16:53 <maxamillion> bcoca: right, but we're not module owners in this respect
+15:17:31 <bcoca> maxamillion:  permission go up, so  '/storage/' maintainers can also shipit, we are '/' maintainers ...
+15:18:23 <devyani7> bcoca, the option triggers the removal operation...
+15:18:29 <bcoca> it goes 'module' > folder > category > core
+15:18:43 <devyani7> ...when absent, it is add-bricks operation by default
+15:19:02 <bcoca> devyani7:  normally i woudl expect bricks=1,2,3 when existing bricks is 1,2,3,4 to remove 4
+15:19:18 <bcoca> so the code seems fine, i question if the option is needed as i would expect the removal to happen normally
+15:20:07 <devyani7> bcoca, no, without the option, removal won't be triggered, rather its just skipped
+15:20:41 <maxamillion> bcoca: +1
+15:21:03 <bcoca> devyani7: that is my point, it shouldnt
+15:21:09 <maxamillion> bcoca: also for clarification, I meant "core team" as everyone in the core community group on GitHub
+15:21:25 <bcoca> maxamillion: that is my meaning also
+15:21:44 <bcoca> that includes non RH employees
+15:22:21 <bcoca> devyani7:  instead of a feature, this looks like a bugfix to me, which makes the option 'not needed', just remove the bricks when required
+15:22:52 <devyani7> bcoca, remove operation doesn't work as of now though^^
+15:22:53 <maxamillion> bcoca: +1
+15:23:04 <devyani7> like in the existing module.
+15:23:07 <bcoca> devyani7: i know, but you can fix that w/o adding the new option
+15:24:05 <devyani7> bcoca, so suggestion is: remove option, just use remove_bricks as a list of bricks instead of a flag option
+15:24:23 <bcoca> no
+15:24:40 <bcoca> most modules are 'this is the fulls tate' so bricks=1,2,3 says there should be THESE 3 bricks
+15:24:54 <bcoca> if a brick is missing, it should be added, if extra bricks exist they should be removed
+15:25:10 <bcoca> no need for other options as you are already stating 'i want it to have THESE 3 bricks'
+15:25:19 <maxamillion> agreed
+15:25:26 <devyani7> that might cause issues, as bricks that are not intended to be removed , might accidently be removed
+15:25:51 <devyani7> so, the intention was to use 'bricks' option to handle both addition and removal operations
+15:25:59 <shertel> This looks a lot like the purge_ boolean options for AWS
+15:26:04 <devyani7> absence of the remove_brick flag = addition, and
+15:26:09 <bcoca> but why would you not specify  bricks you must have
+15:26:10 <devyani7> with the flag = removal
+15:26:50 <bcoca> devyani7: that is an imperative voice, we want to have a declarative one, the diff between 'add these 2 things' vs 'it must have these 3 things' (add or remove as needed)
+15:27:09 <bcoca> user should not care as much about actual operation as about the 'expected state'
+15:27:24 <maxamillion> exactly that ^
+15:27:29 <bcoca> like if i want the 'light to be on' i might have to turn the swithch on or not, but the real ask is 'i want light'
+15:27:36 <maxamillion> think about it like a transaction model
+15:27:53 <shertel> Usually for declarative the purge option defaults to True. But it looks like you've defaulted to False to maintain backwards compat.
+15:28:55 <bcoca> we shoudl really avoid such optoins unless it become phohibitive to add the full list every time
+15:29:11 <bcoca> its kind of usermod -G 'group1, group2'
+15:29:51 <devyani7> um, ok. I can check that again, and get back. thanks bcoca maxamillion and shertel :)
+15:30:15 <maxamillion> +1
+15:30:35 <bcoca> in any case, open a PR against BOTMETA and we can add you to the maintiners foro the 'gluster' folder
+15:30:40 <maxamillion> devyani7: anytime, please don't hesitate to discuss in #ansible-devel as you continue working through it
+15:30:46 <bcoca> will make it easier for you to merge thins in future
+15:31:03 <devyani7> bcoca, ok. will do. thanks.
+15:31:23 <devyani7> maxamillion, sure thing. thank you.
+15:31:30 <bcoca> dag ?
+15:32:28 <bcoca> devyani7: i understand it is a bit of a shift from those used to api/commands, but one of the reasons we try to use a declarative voice is to allow users to think about 'what they want' vs 'how to get what they want' .. makes playbooks easier to read and understand
+15:33:11 <bcoca> alikins_ ?
+15:33:34 <alikins_> ?
+15:33:35 <devyani7> bcoca, yup. sure, will keep in mind for upcoming modules.
+15:33:46 <bcoca> #topic https://github.com/ansible/ansible/pull/44983
+15:33:51 <sdoran> "desired state" is what modules describe
+15:34:19 <bcoca> alikins_: my comments are still the same about the new params, we had agreed to just use the tasks file name
+15:34:56 <bcoca> and that hte name was spec.yml, not arg_spec .. but that is bikeshedding, which we might want to create a friendlier user name and not base it on implementation internals
+15:35:10 <bcoca> 'validate_arguments' or similar
+15:35:49 <alikins_> possibly
+15:36:10 <Sieben_> Hello acozine :)
+15:36:13 <bcoca> rest of teh code seems fine, a bit more than what i had put in spec, but guessing that we would have grown to this complexity eventually (since we actually did on module side)
+15:36:33 <acozine> Hello!
+15:36:36 <alikins_> for the most part, users shouldn't see the action name. Though there is a module/action that would show up
+15:36:56 <alikins_> but not tied to 'validate_arg_spec' at all
+15:37:35 <bcoca> i know, its also a minor detail, but since users CAN call it directly and it will appear in their display on runtime, i think it should be a bit friendlier name
+15:37:54 <bcoca> what that name is, i'll let others decide since i suck at naming
+15:38:34 <bcoca> arg_spec is fine for programmers, but not all of our users are programmers
+15:38:44 <alikins_> I wouldn't mind avoiding 'spec' in user facing names
+15:38:52 <alikins_> pretty meaningless word
+15:39:11 <bcoca> and i would not spell it out, no one wants to type specification if they can avoid it
+15:39:11 <acozine> we're talking about 45805?
+15:39:30 <bcoca> no, topic ic 44983
+15:39:35 <acozine> thanks
+15:40:58 <bcoca> though i understand the confusion, this is 'variable input validation for roles' .. which got based on existing module 'arg_spec' code and that brought with it the same name
+15:41:46 <bcoca> alikins_: bigger issue for me is the departure from 'file matching' to having user have to suply diff names to access diff validation sets
+15:42:26 <chouseknecht> how about 'role_validate'
+15:42:38 <chouseknecht> or 'validate_role'
+15:42:46 <bcoca> works4me
+15:43:11 <alikins_> well, @privateip wanted support for multiple named argument specs in a single file so this provides a path to that
+15:43:43 <bcoca> but we had that already, it just matched the file name of the tasks/ file, which would then work automatically instead of requring user to manage it
+15:44:26 <alikins_> even though it is hardcoded to 'main' at the moment, enabling it is mostly a matter of deciding how alt names would be provided
+15:44:49 <bcoca> we did decide, dylan made the call at the meeting, iirc
+15:45:08 <bcoca> as i was fine with leaving it for future develepment, but he insisted that we just decide then
+15:46:06 <bcoca> unless we have a use case that doesn't cover, im confused as why we didnt follow that decision
+15:47:09 <maxamillion> chouseknecht: +1 for validate_role (fwiw)
+15:47:21 <maxamillion> or role_validate ... which ever
+15:47:22 <alikins_> maxamillion: not just for roles
+15:47:43 <bcoca> alikins_: i thought this was a role specific feature, confused now
+15:47:52 <maxamillion> alikins_: I'm confused then, the ticket explicitly states roles
+15:48:02 <bcoca> proposal was also role specific
+15:48:46 <alikins_> validate_arg_spec is not role specific. The pr enables using validate_arg_spec for roles automatically.
+15:49:12 <bcoca> what other use cases are you contemplating?
+15:50:12 <maxamillion> ^
+15:50:14 <alikins_> could use it to enforce a subset of the way a task is called
+15:50:29 <bcoca> not really, since you cannot validate options
+15:50:30 <maxamillion> I don't follow
+15:50:58 <bcoca> you can validate variables exist, option validation would not be possible unless you inject them in normal.py (or corresponding action plugin)
+15:51:23 <alikins_> could also be used by other tooling to validate a set of args directly, without required a role to be loaded/included
+15:51:25 <bcoca> but i would consider that a diff feature
+15:51:35 <bcoca> so play validation?
+15:51:41 <chouseknecht> i'm confused. i thought the point was to validate roles.
+15:51:45 <bcoca> it was
+15:51:49 <bcoca> seems the point was expanded
+15:51:53 <alikins_> wrap a task with a block that includes a validate_arg_spec call
+15:52:12 <bcoca> alikins_: that would still not validate the task options, only the variables available to it
+15:52:58 <alikins_> chouseknecht: It does that. But the arg spec stuff is not role specific. Role loading uses the non-role specific validate_arg_spec to validate how they called.
+15:53:11 <bcoca> alikins_: i can see it as a more general play/include validation, but then user woul dhave to specify 'validtion spec file'
+15:53:53 <chouseknecht> yeah, i'm sure there are other fun things we can do with it in future iterations. i'm just hoping we can focus on the role piece, and move it forward for that use case.
+15:53:59 <dag> owh, I missed the meeting
+15:54:00 <alikins_> not a file, just the arguments_spec dict
+15:54:01 <bcoca> im not against it expanding the feature to cover more 'play objects' , im just trying to understand your thinking and how it applies to actual plays
+15:54:16 <bcoca> alikins_: butin the role case it is a file
+15:54:25 <alikins_> yes
+15:54:28 <bcoca> couldnt we have meta/spec.yml play adjacent?
+15:54:40 <bcoca> meta/validate.yml
+15:54:45 <bcoca> whatever we want to name it
+15:54:58 <bcoca> dag: we can come back to it, i skipped for now
+15:55:12 <bcoca> dag: but we probably need abadger1999 here for that
+15:55:17 <alikins_> bcoca: play adjancent? for what use?
+15:55:32 <bcoca> validating play input .. i thought you just proposed that above?
+15:55:34 * abadger1999 is here
+15:55:38 * bcoca waves
+15:56:05 <alikins_> I mentioned task/blocks as a possibility
+15:56:26 <dag> bcoca: fine, I can discuss with abadger privately as well
+15:56:41 <alikins_> not sure where/what validating play args would mean
+15:56:55 <bcoca> same as validating a role, make sure you have the vars needed for execution
+15:57:20 <bcoca> we can do it before a task, but it still does not validate options as you mentioned above, which is why im a bit confused
+15:57:28 <alikins_> yeah, suppose you could inject the validate_arg_spec task in a similar fashion for a play
+15:57:38 <abadger1999> dag: I took a brief look at that earlier... I'm not sure that I want to make a decision on my own... jimi|ansible worked on that code the most... I'm torn between.... "this is better overall" and "maybe people depend on the old behaviour"
+15:57:56 <bcoca> ^ he, my stance also
+15:58:16 <bcoca> i remember we arrived to the decision to 'use script module instead' ... but i really dont remember the arguments
+15:58:18 <dag> abadger1999: the old behaviour that mistreats the input ? really ?
+15:58:29 <bcoca> dag, abadger1999 lets wait till topic change?
+15:59:33 <bcoca> alikins_:  i would modify it to still do role tasks/file automatically, i would like to know more use cases for covering other play ojbects and discuss the interface then, not sure the 'name' works or we should just point at a file or inline data structure
+15:59:37 <bcoca> or all of the above
+16:00:14 <bcoca> or we can just do the role for now and expand the feature set as we see usage
+16:01:41 <alikins_> validate_arg_spec gets an inline datastructure. The code that creates and injects the validate_arg_spec task before role includes uses the arg_spec_name to choose which arg spec data structure to use from those provided in roles meta/argument_specs.yml
+16:01:47 <abadger1999> .. Why is this a module/action plugin?
+16:02:33 <bcoca> we looked at making it a 'meta' action, but thought action plugin might be better allowing for user reuse and overrides
+16:02:58 <bcoca> i.e users dont care about validation and make it a noop
+16:03:07 <abadger1999> Can you give me a concrete scenario?
+16:03:22 <abadger1999> that sounds more like a boolean should be set somehwere.
+16:03:24 <bcoca> users want to expand validation
+16:03:44 <abadger1999> validate_role_spec=[True|False]
+16:05:25 <abadger1999> That sounds like it needs to be a plugin into the validation system rather than a replacement module.
+16:06:12 <abadger1999> (which is something we've been half-reaching towards... I think sivel's work that he found was reaching for too much in one change had elements of that)
+16:06:40 <alikins_> it's up to the role author to provide an argument spec to be enfoced when a role is ran (similar to how modules provide and enforce their own arg spec)
+16:06:51 <bcoca> possibly, we were just looking at the role validation feature, i was leaning into hardcoding this but in the meetings we decided action plugin was most flexible approach
+16:07:12 <nitzmahone> I think we should stick with that plan
+16:07:15 <sivel> abadger1999: yes, and I *think* we might be working on that for 2.8 too
+16:07:36 <sivel> separating out the validator stuff into a separate class
+16:07:49 * sdoran ears start burning
+16:07:52 <alikins_> we have a validation system?
+16:07:58 <bcoca> that is one thing that would benefict config also, currently it uses a 'stripped down' validator
+16:07:59 <nitzmahone> If there's a lot of appetite for elevating some of this to play syntax or to things other than roles, we can look at expanding later, but we've got a clear and concrete use case that we need to cover...
+16:08:08 <bcoca> alikins_: args_spec
+16:08:15 <nitzmahone> This was just so we could use it from other plugins
+16:08:24 <nitzmahone> (the extraction thing)
+16:08:35 <alikins_> bcoca: elaborate on 'args_spec' ?
+16:08:36 <nitzmahone> eg, so actions aren't having to hand roll validation
+16:09:10 <bcoca> alikins_: argument specification validator, what we use for modules, what you are using now to implement this validator? im unsure what you are asking otherwise
+16:09:10 <abadger1999> nitzmahone: yeah.... which to me implies a python module, not an ansible module... correct?
+16:10:01 <nitzmahone> abadger1999: the impl, sure, but wrapping it in an action/module as an explicit task for role validation seems like the simplest approach for now that will meet the usecase we need to solve
+16:10:13 <alikins_> bcoca: yes, why did you say just 'args_spec' ?
+16:10:17 <nitzmahone> rather than trying to plumb in something much deeper
+16:10:23 <bcoca> ok, since this was an 'early  look' request and this seems to be going off in several tangents, going to close the topic on teh meeting and move on, can discuss in other venues
+16:10:34 <bcoca> alikins_: short naem we all use?
+16:10:43 <alikins_> but what did you say it
+16:10:45 <alikins_> why
+16:10:47 <bcoca> #topic https://github.com/ansible/ansible/pull/45853
+16:10:56 <bcoca> alikins_: [12:07] <alikins_> we have a validation system?
+16:10:57 <abadger1999> nitzmahone: I'm kinda confused why that would be the simplest approach...
+16:11:11 <bcoca> dag, abadger1999 we can now discuss the command changes
+16:11:26 <bcoca> we are already 11 mins over meeting time
+16:11:51 <alikins_> not sure I would count the thing used by only AnsibleModule and my pr as a 'validation system'
+16:12:16 <abadger1999> dag: https://xkcd.com/1172/    ;; string parsing always seems to fall into that xkcd scenario :-(
+16:12:37 <bcoca> alikins_: considering the extensive use of ansiblemodule, i would, specially if we refactor cause config could also use it
+16:14:35 <abadger1999> I think right now I would say, toggle with deprecation period (because to me, dag's change makes things more logical and easier to understand).
+16:14:51 <abadger1999> So I think we would want to get there eventually.
+16:14:54 <bcoca> dag: i would avoid string concatinationi fpossible, seems like processing as a list might be better and avoid unexpected tranformations
+16:15:10 <alikins_> bcoca: definately, if/when the AnsibleModule arg spec validation code is extracted
+16:15:28 <bcoca> abadger1999, dag my only caveat .. people will do shell heredocs in plays .. which i hate, but its not a technical reason
+16:15:33 <abadger1999> dag: I wouldn't change the documentation, though... I think the script module should still be preferred to inline scripts.
+16:15:46 <bcoca> ^ agreed
+16:15:55 <abadger1999> bcoca: pseudo-jinx.... That's my justification for keeping the documentation the same too.
+16:15:59 <bcoca> hehe
+16:16:30 <bcoca> part of me wants to randomize the 'jinaj2 start block' aka '{%' to avoid peple doing tempating heredocs in plays ..
+16:17:38 <bcoca> though random might break too many things ... setting to backspace or vertical tab ...
+16:18:31 <bcoca> tangent aside, im not opposed to the technical fix, i dont think any of us are, but would still prefer not to encourage users to use shell: with multiline
+16:20:03 <bcoca> jimi|ansible ?
+16:21:27 <bcoca> abadger1999: is the code py2/py3 safe? woldnt we need to_native in this case?
+16:22:35 <bcoca> *crickets*
+16:23:02 <bcoca> ok, if im only one left here im going to close the meeting, we can continue discussions elsewhere and/or decide on the next one.
+16:23:06 <bcoca> #endmeeting

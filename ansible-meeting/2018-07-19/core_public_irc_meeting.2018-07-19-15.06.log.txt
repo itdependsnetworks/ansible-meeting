@@ -1,0 +1,111 @@
+15:06:23 <bcoca> #startmeeting core public irc meeting
+15:06:23 <zodbot> Meeting started Thu Jul 19 15:06:23 2018 UTC.
+15:06:23 <zodbot> This meeting is logged and archived in a public location.
+15:06:23 <zodbot> The chair is bcoca. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:06:23 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:06:23 <zodbot> The meeting name has been set to 'core_public_irc_meeting'
+15:06:46 <bcoca> #topic https://github.com/ansible/ansible/pull/42513
+15:06:50 <bcoca> @dag_?
+15:07:54 <bcoca> movnig on then
+15:07:58 <bcoca> @fabianvf ?
+15:08:12 <bcoca> #topic backport featurs for k8
+15:08:33 <bcoca> @dag?
+15:08:46 <fabianvf> sorry, another meeting ran over
+15:08:49 <fabianvf> bcoca: here now
+15:09:14 <bcoca> we normally dont backport features, this will be available for 2.7, but for 2.6.x releases we only put in bugfixes
+15:11:12 <fabianvf> yeah, just figured I'd try and see if I could get these approved since they do fix behavior that will appear to be bugs to users. Particularly the third PR with the merge_type parameter, at the moment the module is not idempotent because of that (running a CR task twice will fail)
+15:12:55 <maxamillion> .hello2
+15:12:56 <zodbot> maxamillion: maxamillion 'Adam Miller' <maxamillion@gmail.com>
+15:13:01 <maxamillion> sorry, running late
+15:13:11 <sdoran> I've been looking through these and they seem to be "bugfix features".
+15:13:27 <fabianvf> sdoran: yeah, that's an accurate description
+15:13:43 <sdoran> Or the feature PRs also added new features. Would it be possible to fix the bugs sans adding features?
+15:13:45 <bcoca> but they are new features/code even new required libraries
+15:13:53 <sdoran> I believe that would be preferred, if possible.
+15:13:56 <bcoca> yes
+15:14:10 <maxamillion> agreed, it's a weird grey area of classification because on one hand there are features added in the mix, but they also resolve bugs (including idempotent nature of the module)
+15:15:09 <sdoran> I've had to do this on occasion: fix the bugs directly in the stable branch since the commit in `devel` can't directly be backported because it contains extra features.
+15:15:36 <dag> I am here now
+15:15:52 <bcoca> @dag we'll get back to you after current  topic is done
+15:16:09 <sdoran> It's a pain, but adding new features to a past release can inadvertently bring with it other problems. :/
+15:16:30 <bcoca> ^ if you want to backport the bugfxies, im ok with that, its the new features/requriements that i would have an issue with
+15:16:42 <sdoran> +1
+15:16:48 <bcoca> so merge_type option should not be backported, other fixes in same PR are fine
+15:16:53 <jtanner> fabianvf: sorry, coming in late. what's the driver for wanting this stuff backported?
+15:16:55 <fabianvf> sdoran: I don't think that would be possible with these PRs, the bugs are sort of caused by the lack of the feature. For multidocument yaml files, we need to add a way to accept multidocument yaml files, and for the idempotency we need to be able to change the merge strategy for a resource (which requires functionality we needed to add to the client)
+15:17:21 <bcoca> since backport would not be cherry pick, it should at least reference the PR/devel commit to allow release manager to easily verify changes are in devel already
+15:18:52 <bcoca> fabianvf: reading multidocument yaml file just require changing 1 method name to another, the problem comes to how you deal with the data from those then
+15:18:53 <sdoran> fabianvf: Yeah, that makes it very sticky. Can't have one without the other...
+15:19:48 <fabianvf> bcoca: no, we need to change the parameter type as well, currently we accept dictionaries not strings, the PR updates to allow dictionary or string, and if string is passed then it will attempt to parse it as yaml
+15:20:27 <bcoca> that just requies changing type=dict to type=raw and dealing with types yoruself
+15:20:54 <bcoca> im not going into the details to why are you using multdoc yaml strings ...
+15:22:10 <fabianvf> multidoc yaml strings are commonly used in the kubernetes ecosystem, and are generally the recommended way to group collections of resources that should be acted on together. We would want to accept them to ease the migration from existing kubernetes automation to ansible
+15:22:46 <bcoca> i probalby see a lookup as a better alternative, not usre a  multidoc yaml string can 'surivve' normal ansible processing
+15:23:06 <bcoca> possibly update the 'file' lookup
+15:25:55 <fabianvf> bcoca: not sure what you mean? multidoc yaml strings are about as easy to parse as single document strings, just not supported by the from_yaml filter. Regardless, it sounds like these backports are probably 👎, so I'll just work on documenting some workarounds to point users at until 2.7
+15:27:00 <bcoca> the filter can be fixed,
+15:27:23 <bcoca> the issue is that yaml is normally 'auto translated' by ansible at many points, but ansible itself does not support multidoc yaml internally
+15:27:47 <maxamillion> I'm not anti-backport, but I think others might be
+15:27:52 <bcoca> which is why i think there might be more issues than the module accepting it, but it 'transitioning' correctly across ansible itself
+15:28:07 <fabianvf> bcoca: yes, this would be primarily to support existing files or templates being read in as strings, not parsed by Ansible and never in-lined
+15:28:18 <maxamillion> I'm happy to classify this as a bugfix backport since it happens to fix a number of bugs, but it does happen to have a feature in the middle of it so it's a weird case
+15:28:45 <bcoca> that is why i think dict is fine, but just update a lookup/filter to deal with those
+15:29:23 <bcoca> otherwise you woul d really have to take a  'path' and that would be actually a diff option, one that takes data directly , the otherr takes a file name (we have this in other modules0
+15:30:30 <bcoca> but i think this is a tangent at this point
+15:30:55 <bcoca> what we are discussing is backporting the 3 PRs with features, which i think most of us oppose, but we are open to PRs that backport the bugfixes
+15:31:11 <bcoca> just to note, a module 'not being idempotent' is not considered a bug
+15:31:35 <fabianvf> well it's also broken, in that the patch attempt will fail
+15:31:51 <bcoca> ?
+15:32:48 <fabianvf> The default merge strategy is a strategic merge patch, which is not supported on resources defined by CustomResourceDefinitions. Any attempt to patch a CustomResource will result in an API exception
+15:33:45 <maxamillion> fabianvf: from the k8s side?
+15:34:44 <bcoca> wouldnt fix be to change merge type for custom resources in code?
+15:35:02 <bcoca> i understand why the parameter is a 'bettter option' but its a feature, not a bugfix
+15:35:18 <bcoca> the feature lets user work aroudn teh bug, but the bug is that the default is not 'right' for all types
+15:37:21 <fabianvf> yeah, I'm still trying to find a good way to tell if a resource is defined by a CRD or not and get better default behavior in the client. Unfortunately they just look like every other resource
+15:38:32 <bcoca> won't the API error give you that info? can't you retry with the 'correct default strategy' then?
+15:39:11 <fabianvf> bcoca: yeah, that should be fine
+15:40:18 <bcoca> we have the rule to avoid big suprises to users in a x.y.z release, so we are pretty loathe to break it, but bugfixes should be fine
+15:40:22 <fabianvf> won't be able to backport that without bumping the client version though, customization of the merge strategy was added in 6.2
+15:40:36 <bcoca> it would also help if we could run k8 tests easily, we dont seem to have the setup nor resources for that
+15:40:59 <bcoca> so the client itself always errored out on this case?
+15:41:13 <fabianvf> bcoca: I think there are already tests for the k8s resources
+15:41:21 <fabianvf> bcoca: correct, the client did not support this
+15:41:44 <bcoca> then that points even more to 'not a module bug' but a limitation of the client at the time
+15:42:06 <bcoca> i would not backport taht then, just add a documentation note and that it is fixed in 2.7
+15:42:12 <fabianvf> bcoca: https://github.com/ansible/ansible/blob/devel/test/integration/targets/k8s/tasks/main.yml
+15:42:15 <fabianvf> bcoca: makes sense
+15:42:56 <bcoca> i see the tests, i just dont think we have a k8 env setup, nor the resources to set one up currently (but our test master is out this week, so i'll have to sync next monday)
+15:43:43 <fabianvf> bcoca: we do, we spin up an openshift master api server and run those tasks against it
+15:44:25 <bcoca> define 'we'
+15:44:48 <fabianvf> ansible
+15:44:52 <fabianvf> bcoca: https://github.com/ansible/ansible/blob/devel/test/runner/lib/cloud/openshift.py
+15:45:04 <fabianvf> if you submit a change that breaks the modules shippable will fail
+15:45:36 <bcoca> we ahve plenty of code that 'works with cloud apis' to setup tests, does not mean our CI infra runs them, they require accounts/auth
+15:45:52 <bcoca> and idk which ones we have running, i have to ask
+15:46:43 <fabianvf> I know that these tests run, I've had to fix them when I submit PRs that break the k8s module. chouseknecht set them up initially I think, it doesn't require accounts or anything because it spins up an openshift master api server locally in a docker container
+15:47:34 <bcoca> ok, gtk
+15:47:35 <maxamillion> +1
+15:47:52 <chouseknecht> yep
+15:51:09 <bcoca> anything else on this topic? @fabianvf are you clear on how to proceed?
+15:52:03 <fabianvf> bcoca: not totally, I know the merge_type PR is not a candidate for backporting but not sure about the other two
+15:53:17 <bcoca> you are changing the types to allow for aditional resources to pass, i would classify that as a feature
+15:53:26 <bcoca> also not sure the 1st one is best way to do that
+15:54:17 <bcoca> and the 2nd ... list_dict_str type seems wrong ... iirc we have 'elements' or suboptions to allow you to define complex types correctly
+15:55:20 <fabianvf> any docs on those? I didn't find anything when I was looking
+15:55:50 <bcoca> i believe suboptions has docs, but im not sure
+15:56:08 <bcoca> developer docs have gotten much better, but we are still lagging a lot
+15:56:47 <gundalow> fabianvf: have a look at `azure_rm_securitygroup` or `os_ironic_node` for suboptions examples
+15:57:07 <sdoran> fabianvf: I can help you with suboptions if we don't have good docs. I've done it a few times.
+15:57:26 <bcoca> sdoran++
+15:58:13 <bcoca> i'll also look at updating file so you dont have to do multidoc yaml support overloaded on a dict field, normally other modules have separate 'path' and 'data' fields for that
+15:58:27 <bcoca> overloading types is not normally a good UI
+15:59:07 <maxamillion> sdoran++
+15:59:11 <bcoca> anything else?
+15:59:13 <dag> I need to go, ttyl
+15:59:27 <bcoca> @dag i was just getting to you!  tuesday then?
+15:59:42 <maxamillion> brb
+15:59:50 <dag> bcoca: PRs need review, so you don't need me ;-)
+16:00:02 <bcoca> well, first one needs discussion at least
+16:00:17 <bcoca> the 2nd looked fine at a glance
+16:01:12 <bcoca> with that, im ending this
+16:01:16 <bcoca> #endmeeting

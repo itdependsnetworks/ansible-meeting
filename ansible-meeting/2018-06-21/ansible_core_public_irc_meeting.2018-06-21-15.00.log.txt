@@ -1,0 +1,366 @@
+15:00:55 <bcoca> #startmeeting ansible core public irc meeting
+15:00:55 <zodbot> Meeting started Thu Jun 21 15:00:55 2018 UTC.
+15:00:55 <zodbot> This meeting is logged and archived in a public location.
+15:00:55 <zodbot> The chair is bcoca. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:00:55 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:00:55 <zodbot> The meeting name has been set to 'ansible_core_public_irc_meeting'
+15:01:56 <bcoca> #chair ryansb jtyr shertel
+15:01:56 <zodbot> Current chairs: bcoca jtyr ryansb shertel
+15:02:08 * shertel waves
+15:02:08 * ryansb waves
+15:02:10 <sac> o/
+15:02:10 <bcoca> #topic defined/undefined conditional behaviour
+15:02:14 <bcoca> #chair sac
+15:02:14 <zodbot> Current chairs: bcoca jtyr ryansb sac shertel
+15:02:32 <sivel> .hello2
+15:02:33 <zodbot> sivel: sivel 'Matt Martz' <matt@sivel.net>
+15:05:23 <bcoca> so, sevearl issues, #1 seems myvar: '{{undefvar}}' then 'when: myvar is defined' fails as myvar is attempted to be tempalted (since it appears defined) but then we get undefined error on it's value so the conditional ends in error
+15:05:42 <maxamillion> .hello2
+15:05:43 <zodbot> maxamillion: maxamillion 'Adam Miller' <maxamillion@gmail.com>
+15:05:49 <bcoca> is myvar supposed to be 'undefined' at this point? (i think most of us agree it should, but it really is not internally)
+15:06:42 <bcoca> i think jinaj2 is doing the wrong thing here and it is a bug
+15:07:19 <agaffney> it seems like a matter of semantics. technically, 'myvar' is defined, just with a value that will not properly template
+15:07:45 <jtyr> myvar is defined by an empty string
+15:07:48 <bcoca> it is semantics, clearly
+15:07:52 <agaffney> on the surface, it seems like jinja2 is doing the right thing
+15:08:03 <bcoca> jtyr: it is not, it is defined by a 'template' which itself errors on undefined
+15:08:25 <jtyr> I se
+15:08:26 <jtyr> e
+15:08:39 <sivel> jinja2 has an Undefined class, and any undefined var is represented by that class
+15:08:45 <sivel> So you have defined it as an undefined var
+15:08:52 <bcoca> so jinja2 detects this as 'defined' but then tries to template it and hits undefined error, which is not captured by 'is defined' 'is not undefined'
+15:09:05 <sivel> one problem is we don't know that it will always be such, because of lazy eval.
+15:09:10 <bcoca> not really, myvar=Undefined <=would be jinja2 way
+15:09:19 <sivel> In python that would have been a NameError early
+15:09:25 <bcoca> sivel: exactly, but this is during an evaluation
+15:09:29 <sivel> yep
+15:09:41 <sivel> because of that, I think the only sane thing is to treat it as undefined
+15:09:48 <agaffney> perhaps what we really want is a 'will_template_cleanly' test, but that also seems like a bad solution
+15:10:26 <bcoca> it gets tricky when myvar={ 'k1': 'defined', 'k2': '{{ undefinedvar}}' }
+15:10:39 <agaffney> but ansible could also override the 'defined' test to checked for defined-ness *and* try to template the value
+15:10:42 <bcoca> ^ cause now the myvar will give same error, but only one of its 'contained' is undefined
+15:10:47 <agaffney> but then that deviates from expected jinja2 behavior
+15:11:07 <bcoca> agaffney: i was thinking of 'sttrict/deep/_defined/_undefined'
+15:11:14 <bcoca> to use in parallel with jinja2
+15:11:35 <bcoca> cause overriding 'defined/undefined' would fix this, but as you say, depart from expected jinja2 beahviour
+15:11:41 <agaffney> that seems reasonable...a "parallel" test to defined/undefined that has the additional semantics we want here
+15:11:45 <bcoca> #chair agaffney akasurde
+15:11:45 <zodbot> Current chairs: agaffney akasurde bcoca jtyr ryansb sac shertel
+15:12:16 * akasurde waves
+15:13:15 * jtyr waves back
+15:16:36 <bcoca> def test_undefined(value):
+15:16:37 <bcoca> """Like :func:`defined` but the other way round."""
+15:16:39 <bcoca> return isinstance(value, Undefined)
+15:17:06 <bcoca> ^ this is actual jinja2 code, which does an object test, the problem is that then it tries to template the var itself, since it is not an 'undefined' and finds the undefined value
+15:17:58 <shertel> having a strict_defined/undefined test seems reasonable
+15:20:16 <bcoca> just unsure how to do those, since tests dont have access to templating engine
+15:20:24 <bcoca> nor other vars
+15:20:47 <bcoca> can it be we are overdoing templating on conditional checks?
+15:20:51 * bcoca needs to reread that code
+15:20:57 <sivel> Maybe it means a change in how we template to begin with
+15:21:05 <sivel> a special case of `Undefined`
+15:21:14 <bcoca> we special case Undefined many ways
+15:21:44 <sivel> Well, i was referring to a subclass that still meant undefined, but tracked the original template, so that we could still do lazy eval later
+15:21:53 <sivel> but if all lazy evals failed, it would still be undefined in the end
+15:23:00 <bcoca> the problem is doing that pre conditional eval since that is first time we are evaling the vars in this case
+15:26:38 <sivel> I was meaning that the moment that we parse `myvar: '{{undefvar}}'`, when we eval that, if it fails, we make myvar=TrackedUndefined
+15:26:41 <sivel> or something like that
+15:26:51 <bcoca> so looking at code ... i keep thinking this is a jinaj2 issue, conditional handling tries to 'guess' if it was undefined/defined error with regexes that jinja2 doesnt handle the way we want
+15:26:58 <sivel> but would require a fair number of changes to support that
+15:27:38 <bcoca> @sivel the issue is that many vars are undefined initially, i.e host: {{ inventory_hostname}}.fqdn
+15:27:56 <bcoca> those would be false positives when hitting the conditional
+15:28:12 <bcoca> and that would also requore we have all vars and tempalting engine built into yaml parser
+15:28:32 <bcoca> even register: myvar <=- any use of myvar will be undefined at that point, though we clearly will have it at runtime
+15:29:17 <agaffney> doing var evaluation at parse time seems like a terrible idea for many reasons
+15:29:48 <sivel> we do it already
+15:30:08 <agaffney> in what context?
+15:30:12 <bcoca> not really, we let yaml evaluate, which means those vars point at 'strings' .. which happen to be templates
+15:30:28 <bcoca> so yes, they get evaluated, but for diff meaning of the word
+15:30:44 <sivel> sorry, not parse time of the YAML, but once we parse the actual ds, post_validate does templating of all of the FieldAttributes
+15:31:14 <bcoca> no, it does not deep validate vars
+15:31:26 <bcoca> specifically for the reason they might not be available
+15:31:51 <sivel> yes, I'll stop my discussion, like I said it would require a lot of changes to how we do things.
+15:31:53 <sivel> just an idea
+15:32:49 <bcoca> understood, but i see it causing more problems than its sovles, enforcing strict definition times
+15:33:27 <sivel> it was more, default all variables to undefined, but track the original template, so that it could be evaluated later, potentially being replaced by the real value
+15:33:40 <bcoca> not that i have a good solution, i would like the alternate tests, but i dont see easy way to implement
+15:33:41 <sivel> undefined until otherwise defined
+15:34:05 <bcoca> sivel: but then all vars with template would be undefined at test time
+15:34:23 <bcoca> unless we also tokenize/parse the test before hand and test each var
+15:34:30 <bcoca> by templating it
+15:34:55 <bcoca> which we can still do w/o preemptive 'undefined' marking
+15:35:02 <bcoca> its just costly/error prone
+15:35:52 <sivel> alright, well I think as mentioned elsewhere, we aren't going to come to an answer today
+15:36:45 <bcoca> well, we have open issues, we need to respond something, even if it is just documenting 'undefined/defined' only work on true undefined vars, not dependencies
+15:37:15 <agaffney> documenting it at least seems like a good first step solution, even though that's really a jinja thing
+15:38:09 <shertel> https://github.com/ansible/ansible/issues/23675 and https://github.com/ansible/ansible/issues/27268 are two of the issues
+15:44:34 <shertel> I can add to my queue to document the current behavior if that’s what we want to do for now and revisit this later. We could move on to jtyr’s.
+15:45:54 <bcoca> possibly, looking at parser .. current 'handling' is very optimistic and only handles some cases via regex matching .... leaves out many making it more inconsistent not less ...
+15:46:03 <bcoca> tempted to remove it and go back to pure jinja2 handling
+15:47:49 <shertel> are you looking at the regex and handling in conditional?
+15:48:55 <bcoca> yep
+15:49:06 <bcoca> also at the jinaj2 ast tree ... but that scares me
+15:49:31 <bcoca> we can make the regexes better .. but almost imposisble to handle all cases
+15:49:56 <bcoca> (hostvars\[.+\]|[\w_]+) <= there are many other ways to ref a var indirectly
+15:50:26 <bcoca> vars[] hostvars[' '] lookup('vars' ... {{ {{varname}} }}
+15:56:10 <bcoca> sorry, many fixes i see now in 'conditional.py' that are tangetial to this
+15:56:25 <bcoca> part of me just wants to delete all this 'capture' and just expose the 'plain jinaj2 way'
+15:58:34 * abadger1999 notes that the hour is mostly gone and we've only discussed one topic.
+15:58:48 <bcoca> its big topic
+15:58:50 <abadger1999> Perhaps we should move on and try to get to one of jtyr's issues.
+15:58:53 <bcoca> but eyah, think at impass
+15:59:10 <bcoca> #topic  revoke args deprecation
+15:59:41 <bcoca> as i posted in tickets, no_log was not part of why we deprecated this, so not sure why it is used as argument to undeprecate
+15:59:45 <abadger1999> jimi|ansible, sivel: Was there some progress on either an alternative to this or addressing the security concerns?
+16:00:12 <abadger1999> I know we talked at length about it but I don't remember the outcome.
+16:00:33 <bcoca> i think we agreed to not remove yet, until we could figure out a solution
+16:00:41 <abadger1999> Or was it the thing that (agaffney?) added to make default params?
+16:00:42 <bcoca> module_defaults seems to have taken part of the use case
+16:00:51 <sivel> The only outcome I specifically remember, was instructing people to use default and omit
+16:00:52 <abadger1999> <nod> Yeah.
+16:01:02 <bcoca> kidnof, its not the full cases for args: '{{mydict}}'
+16:01:15 <abadger1999> jtyr: ^ What use cases does module_defaults address and what does it still leave out?
+16:01:21 <jtyr> hu
+16:01:25 <jtyr> I'm here
+16:01:50 <jtyr> what's the question about?
+16:01:56 <abadger1999> jtyr: Have you seen the new module_defaults keyword?
+16:02:14 <jtyr> nop, what's that?
+16:02:31 <jtyr> is there some doc?
+16:02:47 <abadger1999> agaffney: ?
+16:03:06 <bcoca> there is, need to find it
+16:03:16 <abadger1999> ./docsite/rst/user_guide/playbooks_module_defaults.rst:
+16:03:26 * abadger1999 finds the url that corresponds to that
+16:03:32 <jtyr> https://docs.ansible.com/ansible/devel/user_guide/playbooks_module_defaults.html
+16:03:44 <abadger1999> cool
+16:04:11 <sivel> btw, I haven't found a case where I couldn't use default+omit to implement use of `args: '{{ mydict }}'`
+16:04:59 <jtyr> hm ... let me think about it ... see it for the first time now ...
+16:05:28 <abadger1999> K.  I'll post the url for that in your PR so that other people who might be following it can think about it as well.
+16:05:36 <bcoca> sivel: agreed, even module_defaults is not needed, but some people just want the convinience and not use omit
+16:06:00 <bcoca> #topic https://github.com/ansible/ansible/pull/41288
+16:06:50 <bcoca> lgtm, seems its just waiting for docs person to review
+16:07:02 <bcoca> sadly we are lacking resources there
+16:08:03 <jtyr> can I use module_defaults on the module level (without any previously defined module_defaults) to define the module args as dict? ... I see the example with "file: {}" to reset any previously defined defaults ... but can I use it to define new once?
+16:08:37 <bcoca> if you could, it would be a bug that would requrie same solution as args:
+16:09:16 <jtyr> bcoca: this is what I was afraid of you will answer ;o)
+16:09:17 <bcoca> so if no comments on doc PR, going to next issue
+16:09:33 <bcoca> #topic https://github.com/ansible/ansible/pull/39589
+16:10:48 <bcoca> jtyr: what is issue here?
+16:11:03 <jtyr> just long pending PR ...
+16:11:17 <jtyr> I have implemented all your comments ... waiting for review/merge ...
+16:11:42 <jtyr> oh ... that's the next one actually
+16:11:50 <jtyr> this one is waiting for review
+16:12:20 <bcoca> i'll put it on my list,  ... i  was hoping to have mount2 by now
+16:12:48 <bcoca> #topic https://github.com/ansible/ansible/pull/32856
+16:13:23 <bcoca> jtyr: are you going to reformat metadata on every module? just futile as we rewrite it in automated fashion
+16:13:23 <jtyr> this one the one where I have implemented your comments and waiting for review
+16:13:47 <jtyr> well, you should fix your formatting then ;oP
+16:13:48 <bcoca> he, this is already on my list .. but long list ...
+16:13:54 <bcoca> jtyr: not mine
+16:14:42 <jtyr> please move it on the top of your list ... ;o)
+16:15:00 <bcoca> there are several hundred issues with that request ...
+16:15:12 <maxamillion> jtyr: also, please note that I think your PR qualifies for a changelog entry as per https://groups.google.com/forum/#!topic/ansible-devel/uYuIADYa5vs
+16:15:18 <maxamillion> jtyr: thanks! :D
+16:15:45 <bcoca> maxamillion: that is going to be very irksome for people having had PRs open for soo long
+16:16:04 <abadger1999> bcoca: it's necessary before merge.
+16:16:16 <jtyr> I can add changelog note if that's the only missing bit ... ;o)
+16:16:16 <bcoca> since when?
+16:16:32 <bcoca> now all PRs require changelog?
+16:16:33 <abadger1999> the merger can do it if the submitter does not, though.
+16:16:48 <abadger1999> bcoca: yes... I sent an email a few weeks ago.
+16:17:06 <abadger1999> mattclay, nitzmahone, and I have been discussing how to get a CI test for it.
+16:17:16 <bcoca> i must have missed it, cause ive been merging plenty of them w/o it, and i've seen others do same
+16:17:29 <abadger1999> bcoca: bad bcoca! ;-)
+16:17:30 <bcoca> i know you guys were discussing about requriing it, but thoguht it was only for stable
+16:17:35 <abadger1999> yeah, that's why I want a test.
+16:17:41 <bcoca> im not alone, tons of merges w/o one in last week alone
+16:17:58 <abadger1999> The other day, I looked in history and only 1 of the last ten merges that needed a changelog had one.
+16:18:04 <abadger1999> So I know you're not alone.
+16:18:13 <abadger1999> But that's why we need a test to stop them from being merged.
+16:18:28 <bcoca> we just ogt a merge now w/o one ...
+16:18:36 <abadger1999> I don't doubt it.
+16:19:09 <bcoca> last 10 to devel or just last 10? cause i most of what i did yesterday was against stable
+16:19:11 <abadger1999> It's hard for people to review for "thing that's missing".  Much easier for people to review "is this thing that is added satisfactory"
+16:19:26 <abadger1999> bcoca: last 10 to devel... I think it was 2 days ago.
+16:19:29 <bcoca> also, it seem sthe rule is not that well known
+16:19:53 * bcoca is looking for email
+16:19:59 <abadger1999> I announced it in ansible-devel list, #ansible-devel channel and #core_internal on slack.
+16:20:04 <maxamillion> bcoca: yeah, I know but I'm trying to be consistent
+16:20:15 <abadger1999> anyhow... this is a tangent to jtyr's PR...
+16:20:49 <bcoca> #topic https://github.com/ansible/community/issues/247#issuecomment-398553610
+16:20:49 <maxamillion> bcoca: I linked the email :)
+16:20:50 <jtyr> it would be nice automate it to certain extend ... lie identify if module options are changing and then require record in the changelog ...
+16:21:06 <maxamillion> jtyr: +1
+16:22:01 <bcoca> cannot find it in ansible-devel ... did i delete?
+16:22:30 <bcoca> @caphrim007_ ^ want to discuss?
+16:22:43 <caphrim007_> bcoca: oh is it that time?
+16:22:57 <caphrim007_> i guess i'm on pacific time. my bad
+16:23:00 <abadger1999> How many files is the ipaddress backport?
+16:23:02 <bcoca> vendoring ipaddress.py
+16:23:04 <caphrim007_> 1
+16:23:06 <abadger1999> Is it python-26 compatible?
+16:23:51 <caphrim007_> abadger1999: yes
+16:23:54 <caphrim007_> https://github.com/phihag/ipaddress/
+16:23:55 <abadger1999> Cool.
+16:24:03 <caphrim007_> Python 3.3+'s ipaddress for Python 2.6, 2.7, 3.2.
+16:24:07 <caphrim007_> sys the repo
+16:24:09 <caphrim007_> says*
+16:24:19 <bcoca> well, we dont suppor 3.0-4
+16:24:22 <abadger1999> I begin to feel like we need a directory in module_utils for the backports/vendored things
+16:24:31 <bcoca> but 2.6/2.7 would benefit
+16:24:37 <abadger1999> But otherwise I'm fine with it.
+16:24:44 <bcoca> not opposed either
+16:24:54 <caphrim007_> are you two ok with my other notes about it?
+16:25:01 <caphrim007_> specifically the future removal of it?
+16:25:01 <abadger1999> Where are those at?
+16:25:07 <caphrim007_> one sec
+16:25:19 <bcoca> link in ntopic
+16:25:20 <caphrim007_> https://github.com/ansible/community/issues/247#issuecomment-398553610
+16:25:30 * abadger1999 reads
+16:25:52 <bcoca> unsure about it not being in network/common
+16:26:02 <abadger1999> oh... one other question maybe... is this the same as the ipaddress backport on pypi or different?
+16:26:10 <bcoca> i would put it there and if you need f5 speciric, import/override from there
+16:26:29 <caphrim007_> i think its one of the backports?
+16:26:42 <caphrim007_> i included it as f5 specific only because i heard noone else asking for it
+16:26:45 <abadger1999> caphrim007_: Yeah, not okay with the removal cases.
+16:26:58 <jtyr> bcoca: I feel very unsatisfied with the outcome of this meeting regarding my PRs ... basically no progress was made in any of the 4 PRs I brought up ... :o(
+16:27:33 <caphrim007_> abadger1999: i'm not opposed to changing the removal stuff. again, i only included it there because i was thinking f5 specific for this case
+16:27:49 <bcoca> jtyr: not sure what i can do, they are all stuck for a reason, that reason has not changed
+16:27:51 <caphrim007_> if it's put in a general area and never removed, then eventually i'll transition my stuff to what comes in py3
+16:27:54 <jtyr> bcoca: the doc PR (41288) is very simple and requires 30 secs to review ...
+16:28:07 <bcoca> jtyr: so do my other 300 things our of 1000
+16:28:24 <bcoca> i could be reviewing instead of doing this meeting, i have limited time
+16:28:35 <bcoca> also, we are on another topic
+16:28:57 <abadger1999> caphrim007_: <nod> Yeah, I think that's probably fine.
+16:29:07 <jtyr> bcoca: args thing the same ... it should be removed in 2.6 which is just around the corner and the topic wasn;t discussed properly ... just pointing on another solution which is no suitable as a replacement for args + dict ...
+16:29:11 <bcoca> caphrim007: i asked peopel from netowrking to weigh in, as i believe they woudl also benefit/care about ipaddress
+16:29:22 <caphrim007> bcoca: ok
+16:29:30 <maxamillion> abadger1999: +1 to directory specific to backports and vendored stuff
+16:29:58 <maxamillion> (sorry, reading backscroll)
+16:30:21 <abadger1999> caphrim007: We'd probably end up using this in other places (I believe there's a filter plugin or lookup plugin that also uses ipaddress... and there might be some bespoke ipv6 validation code somewhere that could be replaced by this as well)
+16:30:34 <caphrim007> what about Qalthos' mention in the networking meeting the other day about BSD licenses for mod utils? is that a default requirement with case-by-case overrides (cases determined in this meeting)?
+16:30:49 <abadger1999> jtyr: For args..... I need a use case.
+16:31:05 <bcoca> a use case not covered by other methods
+16:31:05 <abadger1999> docs I can see what acozine's blocker with reviewing it is.
+16:31:18 <jtyr> abadger1999: it's all described in the PR ...
+16:31:22 <abadger1999> but docs is not the core team so I can't jump things up her priority list.
+16:31:48 <abadger1999> jtyr: I do not see one.
+16:32:02 <abadger1999> From my best guess as to use cases, module_defaults seems suitable.
+16:32:13 <jtyr> abadger1999: https://github.com/ansible/ansible/pull/41295
+16:32:23 <abadger1999> Yes, that's the pr I read.
+16:32:31 <abadger1999> And I don't see the use case.
+16:32:40 <bcoca> usage example and use case are diff things
+16:33:05 <jtyr> module_defaults is not a solutions ... it's for another purpose ...
+16:33:19 <abadger1999> caphrim007: Correct.  We have determined in the past that PSF is okay for vendored stuff because  the compatibility is about the same as for BSD.
+16:33:34 <caphrim007> abadger1999: ok thanks for clarifying
+16:33:40 <acozine1> what's the PR I'm not reviewing?
+16:33:51 <jtyr> if I could use module_defaults: "{{ mydict }}" on the module level without prev definition of module_defaults ... that would work ...
+16:33:52 <acozine1> I was on PTO last week, so things got a bit behind
+16:34:00 <abadger1999> jtyr: which I underatand hat you think is true... but I need you to give a use case so I can see how it doesn't work for that use case.
+16:34:10 <abadger1999> acozine1: no worries.
+16:34:27 <abadger1999> acozine1: jtyr was wondering what needed to be done for https://github.com/ansible/ansible/pull/41288
+16:34:52 <bcoca> its was in your queue already
+16:35:07 <jtyr> abadger1999: I want to use it for a single task in whole role ... that's not how module_defaults is intended to be used ...
+16:35:49 <bcoca> can we discuss 1 topic at time, this is getting all jumbled
+16:35:59 <bcoca> please, lets finish with @caphrim007 issue then i'll open floor
+16:36:06 <jtyr> ok
+16:36:37 <bcoca> @caphrim007 to sumarize if i didnt miss anything: a) license is ok b) location, we need feedback from neworking but leaning to common/ c) would vendor whole thing, not partial
+16:36:43 <bcoca> ^ abadger1999 did i miss anything?
+16:37:11 <caphrim007> bcoca: i concur with your summarizing
+16:37:17 <abadger1999> bcoca: (b)  actually... we shold decide that here/now.
+16:37:45 <abadger1999> because this will be used outsie of networking
+16:37:46 <bcoca> i feel like we need networking input as they are also affected
+16:38:04 <abadger1999> sivel: Do you think we should have a compat directory inside of module_utils/common?
+16:38:16 <bcoca> so you want common area
+16:38:21 <abadger1999> module_utils/common/compat/ipaddress.py ?
+16:38:27 <abadger1999> Yep.
+16:38:34 <bcoca> s/common/ just have /compat/ ?
+16:38:40 <abadger1999> Right now we tend to throw our backports just into module_utils.
+16:38:45 <abadger1999> Yeah we could do that too.
+16:38:52 <abadger1999> module_utils/compat/ipaddress.py
+16:39:01 <bcoca> othewise people wre not going to see it , subdirs are easily missed
+16:39:12 <abadger1999> Or...
+16:39:13 <bcoca> +1
+16:39:18 <abadger1999> we might want to call it bundled
+16:39:21 <abadger1999> Or vendored
+16:39:24 <abadger1999> instead of compat.
+16:39:42 <bcoca> bikeshed away in name, i jsut think putting it in common hides it too much
+16:40:00 <abadger1999> That actually might be better for distributions which want to unbundle stuff.
+16:40:02 <bcoca> but im fine with it in common also, would not oppose, just advising it to be top level
+16:40:07 <abadger1999> <nod>
+16:40:32 <bcoca> so b) must go into compat/ (provisional name) for now, not waiting on networking input
+16:40:36 <sivel> I think module_utils/compat is what I would chose
+16:40:44 <sivel> sorry for late response, I got distracted fixing a bug
+16:41:15 <abadger1999> sivel: k.  If we bundle something else that's not part of python, would we put that in compat as well or have a second hierarchy?
+16:41:16 <bcoca> we can have another meeting to bikeshed on name, but i think now we have enough to close the topic, once PR is open name of subdir bikeshed can be done on ticket
+16:41:31 <sivel> abadger1999: it is bundled in more recent versions of python isn't it?
+16:41:35 <bcoca> so im going to close topic and open floor
+16:41:42 <bcoca> #topic open floor
+16:41:52 <jtyr> so
+16:41:53 <caphrim007> sivel: yes, this is a backport of the 3.x module in python
+16:42:03 <jtyr> args + dict vs module_defaults
+16:42:09 <abadger1999> (six would technically be that sort of module, for instance... although six could go in compat due to it's subject matter)
+16:42:55 <sivel> I think compat is the right place.  That is where we have selectors2 (ansible/compat)
+16:43:15 <abadger1999> caphrim007: Go forward with your stuff, sivel and I have until 2.7 freeze to decide whether to move it or not.
+16:43:22 <sivel> since it's a backport/compat available in newer py versions
+16:43:26 <bcoca> so if no one is proposing topics and just doing side discussions i'll close meeting
+16:43:36 <caphrim007> abadger1999: ok
+16:43:37 <abadger1999> bcoca: jtyr is proposing more discussion on args
+16:43:45 <bcoca> ok, so lets stay on that
+16:43:50 <bcoca> #topic rehash args dict
+16:43:51 <jtyr> thanks
+16:43:52 <abadger1999> jtyr: do you have a use case?
+16:44:01 * bcoca starts loop
+16:44:15 <jtyr> it's described in the PR but I can type it here again
+16:44:56 <bcoca> jtyr: dont know how to ask again, a use case, not a usage example
+16:45:04 <bcoca> a use case that is NOT met by existing facilities
+16:45:19 <bcoca> syntax convinience is a consideration, but not a use case
+16:46:21 <jtyr> I want the user of my role is able to add module options without me having to define variables for them ... simply some modules (e.g. yum_repository) has tens of options and such task would be very long and would need a lot of variables to paramtrize and I would have to keep that list of options in sync with all changes of the module ... which is a bit pain ...
+16:47:30 <jtyr> does that qualify like a reasonable use case?
+16:47:43 <bcoca> it sounds like a convinience method to me
+16:47:53 <bcoca> but i'll let others answer that
+16:48:17 <abadger1999> Wouldn't that look like this:
+16:48:34 <abadger1999> module_defaults:
+16:48:36 <abadger1999> yumrepository:
+16:48:37 <abadger1999> param1: foo
+16:48:39 <abadger1999> roles:
+16:48:40 <abadger1999> - yum_repo_role
+16:48:42 <abadger1999> ?
+16:49:22 <jtyr> what if I use more roles in that play and I want to pass specific parameters only to one of the roles?
+16:49:33 <bcoca> then set defaults for the role
+16:50:31 <maxamillion> note: 10 minutes until Ansible Testing Working Group meeting (which I think uses this channel)
+16:50:55 <jtyr> bcoca: that makes the playbook unnecessarily bulky by defining  module_defaults on per role ...
+16:51:16 <bcoca> how is that diff than adding args per role?
+16:51:25 <jtyr> bcoca: what's the problem with args + dict if it respects no_log option setting?
+16:51:40 <jtyr> why to remove something what works and is safe?
+16:52:39 <bcoca> you've discussed that with jimi|ansible too many times for me to even want to restate those
+16:52:42 <jtyr> bcoca: the difference is that you don't have to add args per role ... which makes the playbook clean ... all logic is in the role ... this is how it should be ...
+16:53:05 <bcoca> unsure what you mean, you want args per role but dont add them?
+16:53:56 <jtyr> bcoca: the deprecation of args + dict was made because it wasn't safe ... now it seems to be safe (it respects no_log) so why to keep the deprecation there?
+16:53:58 <abadger1999> The user has to set the args somewhere outside of the task.
+16:54:07 <abadger1999> no_log is not the safety problem.
+16:54:08 <bcoca> it was always safe refering no_log
+16:54:18 <bcoca> no_log was NOT the reason, i've told you many times
+16:54:35 <bcoca> no_log was the reason for params, DIFF ISSUE
+16:54:57 <jtyr> I see .. I thought that args suffered by the same issue ...
+16:55:06 <abadger1999> according to jimi|ansible it is about taking input from an untrusted host and blindly passing it to a command to be executed.
+16:55:10 <bcoca> i posted to the ticket and told you many times tha tis not the case
+16:55:17 <jtyr> so what's the security risk mentined in the deprecation message?
+16:55:39 <bcoca> mostly has to do with facts
+16:55:49 <bcoca> we've discussed this before .. many times
+16:56:56 <jtyr> well ... what's the difference if I could achieve the same thing in other way ... like with module_defaults ...
+16:57:26 <bcoca> and again, if `if module_args: '{{mydict}}' ` is allowed, it suffers same security issue and would be removed
+16:57:33 * bcoca needs to check that
+16:57:37 <jtyr> if the user uses this feature then he probably knows why he is using it
+16:57:53 <bcoca> sadly, security CVEs always consider the user not knowing
+16:58:08 <bcoca> and its too easy to blunder into this
+16:59:17 <bcoca> both james and i have gone over this with you several times, not sure how to express it in a way that sticks
+16:59:45 <jtyr> we discussed it over params before ... not over args
+17:00:16 <bcoca> abadger1999 and i discussed params, after that you found args and james and i discussed that with you, you keep conflating both issues, they are separate
+17:00:18 <jtyr> I was told that args will be rediscussed
+17:00:33 <bcoca> yes, once facts are always namespaced
+17:00:45 <bcoca> right now there is a toggle, but it will be slow transition
+17:00:59 <bcoca> once they are namespaced ONLY things are much safer to glob that way
+17:01:39 <agaffney> is the core meeting still going on after 2 hours?
+17:01:54 <abadger1999> Yes but we should stop
+17:01:54 <bcoca> at this point i dont see it relevant to the logs, we just keep rehashing
+17:01:58 <bcoca> #endmeeting

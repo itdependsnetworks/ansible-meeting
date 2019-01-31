@@ -1,0 +1,63 @@
+14:01:18 <bcoca> #startmeeting ansible core public irc meeting
+14:01:19 <zodbot> Meeting started Thu Jul 26 14:01:18 2018 UTC.
+14:01:19 <zodbot> This meeting is logged and archived in a public location.
+14:01:19 <zodbot> The chair is bcoca. Information about MeetBot at http://wiki.debian.org/MeetBot.
+14:01:19 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+14:01:19 <zodbot> The meeting name has been set to 'ansible_core_public_irc_meeting'
+14:01:35 <bcoca> #topic https://github.com/ansible/ansible/issues/38808
+14:02:16 <bcoca> @sylr ??
+14:02:39 <bcoca> sylvain?
+14:03:01 <bcoca> @akasurde ?
+14:03:23 <akasurde> hi @bcoca
+14:03:34 <bcoca> ^ you suggested it being added to agenda, im not sure he realizes he needs to show up as an advocate
+14:03:41 <akasurde> yes
+14:03:48 <bcoca> was discussing this same thing in devel earlier
+14:04:18 <akasurde> sylr opened to two issues for adding encrypt_yaml in ansible-vault
+14:04:45 <akasurde> I thinking this as a good idea and wanted to discuss in IRC meeting
+14:05:03 <akasurde> What is general consensus for this idea ?
+14:05:05 <bcoca> in devel we were discussing closer to an 'editor'
+14:05:41 <bcoca> personally i think that creating examples of vim functions that can 'vault/devault' the current entry would be better, but then we need an emacs one, sublime, etc
+14:05:58 <akasurde> yes, that works for me as well
+14:08:10 <bcoca> we should actually add examples of usage in the docs
+14:08:28 <bcoca> things like 'vault hooks on your scm' to ensure people dont check in unvaulted file (when using full file vaults)
+14:08:40 <akasurde> OK
+14:09:05 <bcoca> and a vim exmaple of using `ansible-vault encrypt-string` should be easy enough to add too
+14:09:06 <akasurde> Doc example is good idea
+14:09:52 <bcoca> then also list a few 'helper tools' i.e https://github.com/521dimensions/ansible-vault-automator
+14:10:51 <bcoca> @alikins, thoughts?
+14:11:02 <akasurde> I think this is the one user wants
+14:11:06 <akasurde> bcoca++
+14:11:25 <bcoca> well, user is talking about 'inline' encrypted vars, that automator is for full files
+14:11:25 <alikins> bcoca: looking
+14:11:47 <bcoca> alikins: didnt you have example of vim + encrypt string binding?
+14:12:29 <bcoca> https://github.com/b4b4r07/vim-ansible-vault/blob/master/ftdetect/ansible-vault.vim
+14:12:35 <bcoca> ^ i might be thinking of this
+14:14:24 <alikins> the encrypt_yaml style thing was vaguely planned, but the details of trying to preserve comments and formatting and ordering across a yaml load/dumps delayed it
+14:14:58 <alikins> could be done 99% with text munging/regex though
+14:15:14 <bcoca> well, doing it in ansible-vault mostly implies you become an editor, my suggestion is to provide vim macros that do it and not get into the editor game
+14:15:52 <bcoca> since vault takes stdin/stout and encrypt_string .. that shoudl be easy to implement on 'current line'
+14:15:59 <alikins> another variation was adding a !vault-plaintext tag to indicate the bits that should get encrypted post-edit, but has some of the same yaml roundtrip issues
+14:16:19 <bcoca> yeah, that is why i wanted to avoid doing it all in ansible-vault itself
+14:19:59 <alikins> scripts for vim (or other editors) to do it seems like a reasonable idea. Probably some annoying details to figure out if it wants to be paranoid about writing out decrypted files to disk...
+14:20:06 <bcoca> not sure if we are going to resolve anything here, we dont have time/bandwith to add this to roadmap, but i'm sure we'll welcome any contributions
+14:20:23 <bcoca> alikins: it would also help with the case of the 'file owner changes'
+14:20:45 <bcoca> and you can tell vim to not write the buffer, mostly how visudo works
+14:21:21 <bcoca> it will still keep original backup, but wont allow an insecure copy of buffer
+14:21:53 <alikins> last time I looked I think I came to the conclusion of 'copy whatever hiera-eyaml does'  (or whatever the current equiv is)
+14:21:53 * bcoca might be confusing visudo with vipw .. vim has lotsamodes
+14:22:54 <alikins> bcoca: "well, doing it in ansible-vault mostly implies you become an editor"  yeah, exactly
+14:22:55 <bcoca> iirc they just implement their own yaml parser
+14:24:38 <agaffney> hiera has the benefit of being originally designed for use outside of puppet, which decouples its interface
+14:24:41 <alikins> though I think hiera-eyaml has more flexibility since it's enc is asymmetric/pki iirc
+14:24:54 <bcoca> yep, it is asym
+14:25:09 <bcoca> if we ever do vault plugins, we could do same ...
+14:25:36 <alikins> yup
+14:26:00 <agaffney> hiera is directly responsible for looking up vars from those files, where ansible-vault just does the encryption and offloads the loading of vars to ansible itself
+14:27:09 <bcoca> if we made that into 'plugins' the plugin would then be responsible, we do have a hiera lookup already
+14:29:03 <alikins> #38808 would be more straightforward if yaml stuff was done with rueyaml (sp?) since it's better at preserving formatting (not really practical to switch to ruyaml for various reasons of course...)
+14:30:44 <bcoca> agreed, but i don tthink we have time/resources to put into this right now, lets think about it for next version, for now i suggest that anyone that has time add the vim/emacs/atom/sublime/whatevs tricks they can find to the docs so users have better options
+14:32:54 <akasurde> make sense
+14:33:19 <bcoca> ok, going to open floor since i dont think we can take any other action on this at this time
+14:33:22 <bcoca> #topic open floor
+14:33:40 <bcoca> if nothing comes up, closing meeting in 1 min
+14:36:43 <bcoca> #endmeeting

@@ -1,0 +1,70 @@
+15:02:37 <bcoca> #startmeeting ansible core irc meeting
+15:02:37 <zodbot> Meeting started Thu May 17 15:02:37 2018 UTC.
+15:02:37 <zodbot> This meeting is logged and archived in a public location.
+15:02:37 <zodbot> The chair is bcoca. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:02:37 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:02:37 <zodbot> The meeting name has been set to 'ansible_core_irc_meeting'
+15:02:43 <maxamillion> sac: yes :)
+15:02:45 <maxamillion> .hello2
+15:02:45 <zodbot> maxamillion: maxamillion 'Adam Miller' <maxamillion@gmail.com>
+15:02:46 * gundalow waves
+15:02:55 <sac> :-) o/
+15:03:31 <bcoca> #topic https://github.com/ansible/ansible/pull/38280
+15:03:34 <Pilou> o/
+15:03:48 <mikedlr> o/
+15:05:02 <bcoca> tbouvet?
+15:05:19 * sdoran present
+15:05:32 <bcoca> chair sdoran
+15:05:37 <bcoca> #chair sdoran
+15:05:37 <zodbot> Current chairs: bcoca sdoran
+15:05:52 <bcoca> sdoran: fyi, peopel askign about vars_prompt changes in play
+15:05:55 <bcoca> in #ansible
+15:06:08 <bcoca> ok, since pettitioner is not present, skipping
+15:06:19 <bcoca> #topic https://github.com/ansible/ansible/pull/39753
+15:06:50 <carchi8py_> sorry to bug you guys with this again, but we are confused at what we need to do to merge this in (we have the shipit, but not way to merge)
+15:07:11 <bcoca> iirc shipit only affects modules, you have other files in same PR
+15:07:18 <sdoran> bcoca: I have a fix for that, but you didn't like it. So I talked to Jimi and he was like "just rewrite this whole thing over here". So I haven't gotten to that yet.
+15:07:20 * jtanner is here but distracted by bluejeans
+15:07:20 <sdoran> :)
+15:07:47 <carchi8py_> so what do we have to do for the other files?
+15:08:09 <bcoca> jtanner:  should  we be allowing shipit on module_utils for owners of 'non core'?
+15:08:24 <jtanner> shipit is enabled on all files now. automerge is not
+15:08:45 <bcoca> well, that is what we meant, he has shipits but no merge
+15:08:51 <jtanner> PR?
+15:08:54 <bcoca> probably cause module_utils and doc_fragments are involved
+15:09:06 <Pilou> carchi8py_: a core team member need to manually merge the PR
+15:09:08 <bcoca> https://github.com/ansible/ansible/pull/39753
+15:09:18 <jtanner> ah yeah
+15:09:22 <carchi8py_> Ya both had a netapp.py where common function where, which we made some changes to.
+15:09:25 <bcoca> ^ i dont see a problem for enabling the automerge for these cases
+15:09:45 <jtanner> mod utils and docs fragments and new module are all reasons why it won't automerge
+15:09:53 <Pilou> new module and non module updates => automerge disabled
+15:10:00 <jtanner> nitzmahone has been assigned to ushering the netapp modules in though
+15:10:01 <bcoca> ah, missed new module
+15:10:09 <bcoca> @nitzmahone_
+15:10:32 <jtanner> carchi8py_: you should expect some action from nitzmahone_ this week and next on your PRs
+15:11:27 <carchi8py_> ok were hoping to get this module (plus 32 more that require this one to be checked in) as part of 2.6, so we only have a week to make that deadline at this point
+15:11:55 <jtanner> nitzmahone_ is the release manager for 2.6, so he'll be able to coordinate that
+15:11:58 <nitzmahone_> @carchi8py_ yes, it's been assigned to me. Email is headed your way momentarily about our expectations on that
+15:12:07 <nitzmahone_> Actually @mattclay is
+15:12:14 <nitzmahone_> (2.6 RM)
+15:12:15 <jtanner> err, sorry ...
+15:12:21 <nitzmahone_> ETOOMANYMATTS
+15:12:30 <jtanner> ETOOMANYRELEASES
+15:12:49 <bcoca> ok, i'll let you guys resolve that offline
+15:12:51 <maxamillion> "There is no problem that can't be solved by adding more Matts, except for the problem of having too many Matts"
+15:12:51 <carchi8py_> ok thank @nitzmahone_
+15:12:55 <nitzmahone_> But yeah, I was asked yesterday afternoon to get the NetApp stuff ready to merge
+15:13:00 <bcoca> #topic open floor
+15:13:49 <Pilou> could we merge this one : https://github.com/ansible/ansible/pull/35551 ?
+15:14:41 <bcoca> aside from my dislike for the corporation, i see no impediment
+15:15:15 <bcoca> dont ocfs-tools require debconf settings?
+15:16:19 <jtanner> i'm glad that module is community/preview
+15:16:49 <Pilou> Ubuntu integration test doesn't seem to require debconf settings
+15:18:01 <Pilou> this integration test creates an ocfs2 filesystem
+15:19:02 <bcoca> k, going to do manual squash/push cause ... ETOOMANYAUTHORSCOMMITS
+15:19:20 <Pilou> thanks
+15:19:58 <maxamillion> bcoca++
+15:21:17 <bcoca> done
+15:23:08 <bcoca> anything else?
+15:25:06 <bcoca> #endmeeting

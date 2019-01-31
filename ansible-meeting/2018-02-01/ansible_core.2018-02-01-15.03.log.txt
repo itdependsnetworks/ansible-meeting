@@ -1,0 +1,303 @@
+15:03:54 <ryansb> #startmeeting Ansible Core
+15:03:54 <zodbot> Meeting started Thu Feb  1 15:03:54 2018 UTC.  The chair is ryansb. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:03:54 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:03:54 <zodbot> The meeting name has been set to 'ansible_core'
+15:04:01 <maxamillion> .hello2
+15:04:02 <zodbot> maxamillion: maxamillion 'Adam Miller' <maxamillion@gmail.com>
+15:04:14 <mikedlr> hi
+15:04:21 <ryansb> Hello, folks!
+15:04:27 <ryansb> #chair maxamillion
+15:04:27 <zodbot> Current chairs: maxamillion ryansb
+15:04:31 * gundalow waves, just finishing up in another meeting there I'll be in here
+15:04:38 <ryansb> #chair gundalow
+15:04:38 <zodbot> Current chairs: gundalow maxamillion ryansb
+15:04:44 <ryansb> Going to grab the agenda
+15:05:07 <ryansb> https://github.com/ansible/community/issues/291
+15:05:10 <ryansb> #link https://github.com/ansible/community/issues/291
+15:06:05 <ryansb> Ok, so nothing that we haven't discussed already on the agenda
+15:06:16 <maxamillion> Yeah, this might be a quick meeting
+15:06:18 <abadger1999> Hey, I'm awakw!
+15:06:25 <ryansb> good morning, abadger1999
+15:06:28 <ryansb> #chair abadger1999
+15:06:28 <zodbot> Current chairs: abadger1999 gundalow maxamillion ryansb
+15:06:39 <ryansb> So, I guess we'll just start with open flook
+15:06:45 <ryansb> #topic Open Floor
+15:07:05 <mikedlr> hi;  so Just want to bring core's attention to the aws_ssm fixes https://github.com/ansible/ansible/pull/35569
+15:07:32 <rvgate> o/
+15:07:46 <ryansb> great, so this is a re-respin of the SSM lookups from last week
+15:08:04 * ryansb will review
+15:08:05 <mikedlr> this is something I want to get merged before 2.5 so it's quite late;  AWS team  (and most of the poeple in this meeting) are already aware .
+15:08:09 <mikedlr> ryansb: exactly.
+15:08:37 <abadger1999> There's continuation of voting on meeting time.
+15:08:41 <mikedlr> it went from a small bugfix to a more or less complete rewrite.
+15:08:50 <ryansb> #action ryansb review and test SSM lookup
+15:09:03 <ryansb> abadger1999: ah, will do that next
+15:09:58 <mikedlr> more reviewing & more testing = fewer expected problems.  Nothing more to say on that from me;
+15:10:18 <ryansb> right on. I don't have other comments on it, will just continue on PR
+15:10:38 <ryansb> #topic Meeting Time Votes
+15:10:39 <maxamillion> +1
+15:11:20 <ryansb> alright, notes from last time: https://github.com/ansible/community/issues/291#issuecomment-360294382
+15:12:04 <ryansb> Current votes for moving to 1600 UTC Thursday are: +1:6, 0:1, -1:1.
+15:13:09 <ryansb> Concern raised was that 1600UTC is out of business hours for Europe and the west coast, so it would hurt attendance from those TZs
+15:13:54 <ryansb> does anyone have anything to add on this?
+15:14:24 <maxamillion> I do not
+15:14:29 <mikedlr> -1 - I don't tend to get to Tuesday for precisely the reason it tends to get into evening activities.  16:00 UTC is fine in summer time but sometimes just a bit late in Winter
+15:15:04 <ryansb> oh, also if you voted last meeting don't re-vote because we didn't track who voted already, and it would end up as a double vote
+15:15:05 <mikedlr> definite -1 on 17:00 UTC.
+15:15:36 <ryansb> thanks mikedlr so now +1:6, 0:1, -1:2
+15:16:39 <Pilou> +0
+15:16:58 <mikedlr> what about people like willthames where none of the meetings really fit?  I guess their vote isn't coming in at all since it's difficult for them to come in to vote?
+15:17:29 <ryansb> ... that is a good point. Would the ML be a good way to collect those votes?
+15:18:21 <ryansb> Do we think there's a group of people that read the ML that would go to meetings at a different time slot
+15:20:32 <abadger1999> I think we should solve that later.
+15:21:31 <abadger1999> Between NA, EMEA, and APAC< you can never have a meeting time that works for everyone.
+15:21:49 <abadger1999> You can just barrely get one that works for 2 out of the three.
+15:21:56 <gundalow> hence me wondering if we need everyone
+15:21:58 <ryansb> yeah, but we can have a set of meetings that do provide coverage
+15:22:17 <abadger1999> ryansb: But at the expense of making the meetings not as useful.
+15:22:44 <abadger1999> ie, you no longer have the decision makers and people who need to discuss an issue all in the same room together.
+15:26:30 <ryansb> fair enough
+15:26:46 <gundalow> all but two Principals are in the US
+15:26:46 <ryansb> anyone else have votes that hasn't voted yet?
+15:27:07 <abadger1999> I vote red hat relocates us all to Europe to solve the issue ;-)
+15:27:15 <gundalow> abadger1999: :D
+15:27:25 <mikedlr> what's the latest comfortable time for US devs?
+15:27:42 <ryansb> hey bud, I like Buffalo
+15:27:50 <gundalow> well nitzmahone and abadger1999 are west coast and work fairly late
+15:28:19 <mikedlr> ryansb: you will like Buffalo milk mozzarella better.
+15:28:24 <maxamillion> abadger1999: I support this
+15:28:37 <abadger1999> Yeah, I can attend later meetings.  But I don't know that helps entirely...
+15:29:09 <abadger1999> If we started a meeting at 11:00PM West coast, that would be 2:00AM East Coast and 7:00AM GMT I think?
+15:30:15 <ryansb> alternatively, we could have an obnoxiously early US-Eastern meeting at 7am or something, but I don't know how many folks are up that early
+15:30:34 <ryansb> which would be 4am west coast, which would likely be a nonstarter
+15:30:35 <abadger1999> ryansb:  worse for west coast... 4am.
+15:30:39 <abadger1999> Yeah
+15:30:39 <ryansb> yeah
+15:31:09 <ryansb> If the goal is Australia-support in EU business hours, we basically have no chance
+15:31:53 <maxamillion> ryansb: I'll tell you what, let's get Red Hat to relocate me and my family to Australia and I'll take the Australia shift :)
+15:31:59 <gundalow> aka the Jordan & Will show?
+15:32:34 <gundalow> hum, not to make this more of a pain, but we need to get feedback from the people not here, but who are contributors
+15:33:23 <gundalow> aka the people that are always "oh I can't make this"
+15:33:29 <gundalow> though I guess they can look at logs
+15:33:50 <maxamillion> gundalow: +1
+15:34:56 <abadger1999> We need the meetings to cater to the regulars, I think.
+15:34:58 <eikef> as a non-core feedback from Germany: the current meeting time on Thursday would work well, but it often gets cancelled. 16 UTC would still work for me, but I know of colleagues who will be gone by then. I usually can't make the Tuesday timeslot. I imagine it's a similar situation for others in this timezone.
+15:35:46 <abadger1999> The reason being that otherwise, we'll end up making decisions in the meetings but then the decision will be changed when the regulars read the logs and want to veto the decision.
+15:36:36 <gundalow> Is that covered by the (say) need vote to be 6 or more for something?
+15:36:54 <abadger1999> Yeah, Tuesday could be earlier and still okay for US West Coast I think (Although I don't know how nitzmahone and mattclay feel about that... nitzmahone has to coordinate with jborean later in the day, for instance)
+15:37:22 <abadger1999> gundalow: not really... because we discuss and redraft and vote.
+15:37:30 <abadger1999> Which I think is a good process.
+15:37:47 <abadger1999> But it doesn't work if the people who care aren't present for that process.
+15:37:54 <gundalow> I wonder if by default every reasonable change should go through two meetigns
+15:38:06 <abadger1999> I don't think so.
+15:38:22 <gundalow> oh, no that was proposals we discussed doing the 2+ meetings for
+15:38:35 <abadger1999> Because then you have changes made in one meeting, going to the other meeting, getting changes, then going back to the first and people saying I can't agree to this.
+15:39:38 <ryansb> and soon we'll have reproduced US Congress
+15:39:43 <abadger1999> yep.
+15:39:49 <abadger1999> The current US Congress.
+15:40:34 * abadger1999 notes that on Tuesday, this question of how to change what the meetings are was something I thought we should discuss in the future.
+15:42:19 <gundalow> I have another topic
+15:42:44 <gundalow> If we are done with timezones vs meetigns
+15:43:12 <ryansb> I think we are. Noted vote change
+15:43:18 <agaffney> I've also got one, after your topic. I have a PR I want to get feedback on
+15:43:19 <abadger1999> <nod>  We should count votes and give it to thaumos to decide what to do with it.
+15:43:30 <gundalow> #topic Issues and PRs for deprecated modules
+15:44:04 <gundalow> Question: At what point should we warn/close on issues and PRs for modules that are deprecated?
+15:44:31 <gundalow> This may vary if it's a feature request or a bug fix
+15:44:35 <agaffney> does "deprecated" mean nobody cares and it's no longer supported?
+15:44:50 <gundalow> good question
+15:44:51 <abadger1999> nobody on the core team at least.
+15:45:11 <gundalow> in this context is means someone has given notice that this module will be going away in 4 releases
+15:45:24 <abadger1999> Not sure what happens if someone from the community gets interested.
+15:45:43 <abadger1999> (haven't had that level yet... just PRs with no one who wanted to actually take over)
+15:45:56 <maxamillion> to me "deprecated" means "bug fixes until it's removed but no new features"
+15:46:20 <abadger1999> Core team would still fix major problems even if deprecated security and OMG, module just tracebacks and nothing else)
+15:46:23 <gundalow> We don't deprecate that much, generally because to it's easier/cleaner to do everything in a new module. Or the underlying API has changed
+15:46:24 <maxamillion> however, I think that would need to come with the added qualifier that you can't deprecate something until the replacement has feature parity
+15:47:03 <abadger1999> or we've consciously decided that the other features are not worth our while.
+15:47:27 <abadger1999> But it should all be conscious and explicit.
+15:47:32 <gundalow> Example: in Ansible 2.5 we gave notice that in 2.9 nxos_ip_interface will be removed (and replaced with docs only)
+15:48:46 <gundalow> 1) As soon as that happens should ansibulbot add a warning message stating "nxos_ip_interface is deprecated, will be removed in 2.9. Please look at nxos_l3_interface. Generally speaking only critical bug fixes will be considered"
+15:49:47 <gundalow> ^ I think is vote 1
+15:50:03 <jtanner> to me "deprecated" doesn't mean bug fixes.
+15:50:27 <gundalow> jtanner: means no bug fixes?
+15:50:33 <abadger1999> I'd be fine with (1) Just have to be careful of wording because 2.4 is still out at that time and might not contain nxos_I3_interface so the users might not be able to move to it.
+15:50:34 <jtanner> and i'm not sure how we classify critical unless it's CVE worthy
+15:51:06 <agaffney> I'd say CVE and bugs that render it mostly/completely non-functional are worthy of fixing in "deprecated" modules/features
+15:51:17 <gundalow> good points
+15:51:20 <jtanner> non-functional is subjective
+15:51:31 <gundalow> I think it's OK to use terms like "generally this means"
+15:51:43 <jtanner> being non-functional might be why it's deprecated
+15:51:47 <gundalow> hum, anyway, something to think about and we can revisit next week
+15:51:58 <gundalow> as I know agaffney has a specific question
+15:52:03 <abadger1999> CVE yes, think that has to be fixed.
+15:52:06 <jtanner> no questions for that guy!
+15:52:10 <gundalow> For people in Core I'll put a google doc in Slack
+15:52:50 <gundalow> agaffney: what's your PR?
+15:52:52 <maxamillion> gundalow: any reason to not make the doc public?
+15:52:59 <agaffney> https://github.com/ansible/ansible/pull/35411
+15:53:20 <gundalow> maxamillion: no, just that I created it in Google Doc and it can't be shared, and it's not quite proposal ready, more me dumping my thoughts
+15:53:22 <agaffney> it's a very simple feature, but I feel there will be some...opinions on its inclusion
+15:53:34 <maxamillion> gundalow: ah ok
+15:53:36 <gundalow> #agreed revisit discussion next week
+15:53:40 <abadger1999> jimi|ansible: ^
+15:53:45 <gundalow> #topic Add support for defining index var for task loops #35411
+15:53:47 <maxamillion> gundalow: why can't it be shared?
+15:53:47 <gundalow> #chair agaffney
+15:53:47 <zodbot> Current chairs: abadger1999 agaffney gundalow maxamillion ryansb
+15:53:55 <gundalow> #info https://github.com/ansible/ansible/pull/35411
+15:54:00 <abadger1999> jimi|ansible:  agaffney's PR for index_var on loop_control
+15:54:21 * jimi|ansible looks
+15:54:26 <maxamillion> wait, is that zuul bot?
+15:54:31 <abadger1999> Or sivel
+15:54:57 <abadger1999> maxamillion:  zodbot runs the meeting.  Is that what you mean?
+15:55:12 <maxamillion> abadger1999: no, in the PR ... openstack zuul bot left a comment
+15:55:24 <maxamillion> abadger1999: I didn't realize zuul was up and running and doing CI tests
+15:55:33 <abadger1999> Oh  yeah.  the zuul guys are starting to get it working for ansible.
+15:55:38 <agaffney> I also know it's probably too late to get my PR included in 2.5, but I certainly wouldn't be opposed to an exception being made ;)
+15:55:49 <abadger1999> I think it's still preliminary.
+15:55:49 <jimi|ansible> seems sane to me
+15:55:54 <abadger1999> nitzmahone: ^
+15:56:20 <abadger1999> nitzmahone might not be online yet (US West Coast...) but we can ping him about whether he wants to make an exception or not.
+15:57:04 <jimi|ansible> it's definitely too late for 2.5 though, so it'd be a 2.7 feature
+15:57:08 * nitzmahone reads back
+15:57:10 * ryansb runs to other meeting
+15:57:18 <agaffney> jimi|ansible: yeah, sivel told me as much a few days ago
+15:57:21 <gundalow> hum, I thought we already had this
+15:57:30 <gundalow> oh, or was that for `with_`?
+15:57:46 <agaffney> gundalow: are you thinking of `with_indexed_items`?
+15:58:03 * gundalow looks in his playbooks
+15:58:07 <nitzmahone> Yep, definitely not 2.5 at this point
+15:58:32 <agaffney> damn...I guess I can update the "versionadded" tag to 2.7 now :)
+15:58:59 <agaffney> I'd also appreciate a slightly better docs example than counting fruit
+15:59:54 <jimi|ansible> agaffney: how does enumerate work with dicts? will item_idx be the key?
+15:59:57 <gundalow> I was thinking of loop_control's loop_var
+16:01:12 <agaffney> jimi|ansible: in the case of with_dict, you still get a list of items. the items just happen to be another dict with 'key' and 'value' params. loops always end up getting a simple list
+16:01:39 <agaffney> you can't do `loop: "{{ some_dict }}"`, afaik
+16:02:42 <agaffney> hmm, and it seems somebody added some more loop tests to devel in the last few days, which has caused a conflict on my PR
+16:02:45 <agaffney> easy enough to fix
+16:03:10 <abadger1999> agaffney: yeah sorry... that was me
+16:03:23 <agaffney> I guess I can't be angry about more tests :)
+16:03:30 <gundalow> abadger1999: no appologies for more tests!
+16:03:36 * nitzmahone smacks abadger1999 for apologizing for writing tests ;)
+16:03:40 <abadger1999> :-)
+16:03:53 <gundalow> ok, so agreed not for 2.5
+16:03:56 <gundalow> ?
+16:04:00 <agaffney> sounds that way
+16:04:03 <maxamillion> abadger1999++
+16:04:08 <maxamillion> always need more tests
+16:04:22 <agaffney> I'll update the PR to resolve the conflict and the "versionadded" tag, as well as add another test using a dict
+16:05:28 <gundalow> #agreed Past Core feature freeze for #35411 for 2.5
+16:09:08 <abadger1999> rvgate:  Did you have something for open floor as well?
+16:11:18 <gundalow> I pinged rvgate earlier, might have finished work already
+16:11:22 <gundalow> #topic Open Floor
+16:11:28 <gundalow> Anyone got anything else?
+16:11:39 <Pilou> https://github.com/ansible/ansible/pull/35571
+16:12:09 <gundalow> #chair Pilou
+16:12:09 <zodbot> Current chairs: Pilou abadger1999 agaffney gundalow maxamillion ryansb
+16:12:24 <Pilou> just want to bring attention on this one :)
+16:13:30 <agaffney> jimi|ansible: I did a quick test using `with_dict`, and it looks like: `"msg": "my_idx=0, item={'key': u'foo', 'value': u'bar'}"`, which is what I expected
+16:14:18 <gundalow> Anyone able to review Check that AnsibleUndefinedVariable doesn't occur when an unused variable references an undefined variabl
+16:14:45 <gundalow> looks sensible, though not sure if there are special things to consider in https://github.com/ansible/ansible/pull/35571/files
+16:14:46 <jimi|ansible> ok, i'd maybe add a little bit more documentation and examples showing usage with dicts?
+16:14:49 <jimi|ansible> ^ agaffney
+16:16:10 <agaffney> jimi|ansible: I can, but nothing really changes when using `index_var` with `with_dict`. you just get an extra variable that wasn't there before. dicts with `loop` are another issue entirely, and unrelated to my PR
+16:16:43 <jimi|ansible> right, i just want usage documented, it's not really an index at that point but the keys you'd get
+16:16:51 <jimi|ansible> for someone not familiar with python that might be surprising
+16:17:09 <rvgate> im here still.. sorry for the delay
+16:17:16 * gundalow needs to step away for a bit. Could someone #endmeeting once finished, thanks
+16:17:16 <rvgate> abadger1999, gundalow ^^
+16:17:28 <agaffney> jimi|ansible: it's not so much an "index" as a loop counter, but that's the same thing as far as ansible is concerned
+16:17:54 <agaffney> the concept of an "index" with a dict doesn't make sense in general, but it does when you realize that `with_dict` returns a list of dicts containing key/value pairs
+16:18:17 <abadger1999> rvgate: Cool.  Do you have an issue as well?
+16:18:18 <agaffney> the index is for the loop, not necessarily the input
+16:18:22 <abadger1999> Pilou:  I'll review your PR.
+16:18:36 <nitzmahone> agaffney: did you test with looped include_tasks?
+16:18:48 <Pilou> abadger1999: thanks! That's all for me.
+16:18:51 <abadger1999> #action abadger1999 o review Pilou's bugfix https://github.com/ansible/ansible/pull/35571
+16:19:07 <agaffney> nitzmahone: no
+16:19:26 <nitzmahone> That's a special case that might or might not require extra code
+16:19:30 <abadger1999> rvgate:  We can discuss it now if so.
+16:19:38 <nitzmahone> (but I suspect might)
+16:19:42 <rvgate> yeah, sure.. let me formulate it
+16:19:44 <agaffney> nitzmahone: can you comment in the PR with that? I can look at it later
+16:19:54 <nitzmahone> Yep
+16:20:08 <agaffney> thanks
+16:21:15 <rvgate> I was wondering if it would be possible to introduce a configuration flag that allows you to suppress remote warnings... for example, when using allow_world_readable_tmpfiles, the playbook log/results becomes full with warnings for every single task that might be using the world readable tmp files... if people knowingly use these, you probably want to disable those warnings as well (which is our case)
+16:22:02 <abadger1999> for world_readable_tmpfiles in particular we coded it to never be silent... Maybe we could change that.
+16:22:10 <abadger1999> (Also.. that warning is local, not remote)
+16:22:52 <nitzmahone> If we added a numeric value or string code to the warnings, we could allow individual warnings to be suppressed ala compiler warnings...
+16:23:17 <nitzmahone> (at least any warning that bothered to include a code)
+16:24:53 <abadger1999> codes are hard to extend.
+16:25:04 <rvgate> another alternative would be to only show the warning once, then ignore them for every same warning after
+16:25:15 <abadger1999> (thinking third party modules, for instance), but maybe we can ignore remote stuff?
+16:25:30 <abadger1999> rvgate: <nod>  That could be done.
+16:25:42 <abadger1999> I think we do that for deprecations right now?
+16:26:14 <nitzmahone> We do that for all warnings, but doesn't work for things generated post-fork
+16:26:29 * nitzmahone shakes fist at forked workers again
+16:27:04 <abadger1999> ah yep.
+16:27:22 <nitzmahone> Unless we were to change display to a true singleton and have workers push back to main controller process, no sane way to dedupe those today.
+16:27:32 <abadger1999> nitzmahone: if we did it with threads, then we might need locking which can become a pain :-/
+16:28:03 <nitzmahone> Yeah, but display contention should be pretty minimal.
+16:28:30 <nitzmahone> (but yes, additions to the dedupe collection would have to be locked)
+16:28:32 <abadger1999> sivel had some code to make it a singleton but I don't recallthat it handled the pre/post fork divide specially so probably doesn't help.
+16:28:46 <nitzmahone> Yeah, two separate problems
+16:29:15 <nitzmahone> One other possible solution would be to roundtrip the warning through the module
+16:29:48 <nitzmahone> I think the post-result warnings are handled back in the controller (or could be, if they're not)
+16:29:57 <maxamillion> I feel like this is a classic case of "and now we have two problems"
+16:30:40 <nitzmahone> RTing through the module would lose the warning on a catastrophic (or clumsy) module failure
+16:30:55 <nitzmahone> Though we could guard against that in the worker if we wanted.
+16:31:10 <nitzmahone> (eg, if we didn't see it come back, go ahead and warn from the worker)
+16:32:05 <nitzmahone> I think coded warning suppression would be pretty low-hanging fruit in comparison (and useful for other things)
+16:32:13 <abadger1999> Perhaps an easier question: should we change readable tmpfiles so that it does not warn?  (It errors if the setting is not on.)
+16:32:23 <agaffney> nitzmahone: good call on `include_tasks`. it seems my code doesn't get hit for that :(
+16:32:30 <abadger1999> That's like removing one line of code I think.
+16:32:47 <nitzmahone> @agaffney: I spent some time in there recently, so it was relatively fresh on my mind as a potential trip-hazard ;)
+16:33:05 <agaffney> nitzmahone: can you offer a pointer to where in the code I need to poke around?
+16:33:26 * nitzmahone glares at agaffney for testing his memory
+16:33:29 <nitzmahone> JAS
+16:34:38 <agaffney> it seems that `loop_var` does work there, so this is specific to my new feature
+16:34:54 <abadger1999> rvgate: ^ Would that help enough?  @Others: does that seem like it's still "secure enough"?
+16:35:12 <nitzmahone> @agaffney: Yeah- you have to squirrel the index var away in the vars collection that gets passed to task_executor._run_loop
+16:35:17 <nitzmahone> (looking where)
+16:35:30 <rvgate> abadger1999, i think its useful to have a warning.. so completely ignoring it might not be a good way...
+16:35:45 <abadger1999> k
+16:35:52 <rvgate> abadger1999, so either show the warning once, or a flag to completely ignore it
+16:36:24 <rvgate> to give an example of the current output: https://gist.github.com/rvgate/382d1c045dea9beba022be570998f75b
+16:36:26 <agaffney> nitzmahone: perhaps in lib/ansible/playbook/included_file.py, as that seems to duplicate some of the `loop_var` logic
+16:36:48 <nitzmahone> Yeah, I think it might have moved around a bit with the introduction of loop_var
+16:36:53 <nitzmahone> (slash loop)
+16:37:40 <agaffney> it also looks like `pause` and `label` don't work for included tasks files, either. although, `label` wouldn't really be relevant
+16:38:24 <nitzmahone> Pause is probably a bug; feel free to file an issue on that if you have a little repro
+16:39:42 <nitzmahone> @agaffney: yeah, the rest of the code I was thinking about appears to have moved to included_file
+16:39:58 <abadger1999> rvgate: I think I could make the config setting something like allow_world_readable_tmpfiles: (empty|False),  (True|string)   if string, then if == 'nowarnings' disable the warnings.
+16:40:00 <nitzmahone> (process_include_results)
+16:40:12 <abadger1999> But I'd have to check... I'm not usre how flexible the new config system is.
+16:40:46 <rvgate> abadger1999, works for me
+16:41:08 <abadger1999> K.  I'll see if I cn do that otherwise look into adding a second setting to disable the warning.
+16:41:21 <nitzmahone> @abadger1999 depending on how many consumers of that config value there are, that might work, but turning it into a tristate might introduce new trip hazards if it's > 1
+16:41:30 <abadger1999> Okay, anyone else havesomething for open floor?  Otherwise I'll close in 60s
+16:41:40 <abadger1999> nitzmahone: It's only used one place.
+16:41:49 <abadger1999> in fixup_perms
+16:42:21 <abadger1999> Not sure how that would work out in 2.7 if we figure out how to move that to shell plugins, though.
+16:42:41 <nitzmahone> could get worse
+16:43:02 <nitzmahone> I think a coded warning disable config would be more generally useful and require not much more code to implement
+16:43:24 <nitzmahone> (definitely don't make a separate config entry for disabling warnings on just that)
+16:44:50 <abadger1999> Codd warning disable I don't think could make it into 2.5, though?
+16:44:55 <abadger1999> Seems new-featurey
+16:45:17 <abadger1999> Whereas disabling this one warning seems like it is minimally invadive.
+16:45:36 <nitzmahone> Meh, either way probably shouldn't be in 2.5
+16:45:40 <abadger1999> Heh.
+16:46:05 <nitzmahone> It's been this way for 2 releases at least IIRC
+16:46:14 <abadger1999> it does touch fixup_perms which everything uses but a code path in here that is hardly used.
+16:46:24 <abadger1999> Okay...
+16:46:28 <abadger1999> 2.7 then?
+16:46:46 <nitzmahone> Or possibly 2.6, depending on the "feature bar" decided
+16:47:19 <abadger1999> <nod>
+16:47:22 <abadger1999> Okay.
+16:47:41 <nitzmahone> I'm just thinking if you introduce new config for this, we have to keep it forever even if we have a more general warning disable come in right behind it
+16:47:54 <nitzmahone> (same with the tristate)
+16:48:10 <abadger1999> yeah, true
+16:48:37 <nitzmahone> It's good to be responsive to issues like this, but especially since it's not new behavior, if we can fix it more generally, that's a win
+16:49:14 <abadger1999> Okay, anyone have anything else?
+16:50:00 <abadger1999> #endmeeting

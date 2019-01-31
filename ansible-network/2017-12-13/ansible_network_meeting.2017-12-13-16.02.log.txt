@@ -1,0 +1,77 @@
+16:02:03 <gundalow> #startmeeting Ansible Network Meeting
+16:02:03 <zodbot> Meeting started Wed Dec 13 16:02:03 2017 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:02:03 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:02:03 <zodbot> The meeting name has been set to 'ansible_network_meeting'
+16:02:11 * Qalthos 🌊🌊
+16:02:22 <gundalow> #info Agenda https://github.com/ansible/community/labels/network
+16:02:31 <gundalow> #chair Qalthos jmcgill298 Anil privateip
+16:02:31 <zodbot> Current chairs: Anil Qalthos gundalow jmcgill298 privateip
+16:02:50 <trishnag> o/
+16:04:38 * kedarX waves
+16:05:59 <gundalow> #chair trishnag kedarX
+16:05:59 <zodbot> Current chairs: Anil Qalthos gundalow jmcgill298 kedarX privateip trishnag
+16:07:20 <caphrim007> o/
+16:10:00 <gundalow> Sorry, I'm in two meetings at once
+16:10:04 <gundalow> #topic Open Floor
+16:10:10 <gundalow> #chair caphrim007
+16:10:10 <zodbot> Current chairs: Anil Qalthos caphrim007 gundalow jmcgill298 kedarX privateip trishnag
+16:10:42 <gundalow> Agenda just has one PR to review and merge, which will we look at offline
+16:11:16 <Anil> Thats fine.
+16:11:29 <gundalow> #info the "cast_type" filter (new in 2.5) has been renamed to rekey_on_member see https://github.com/ansible/ansible/pull/33836
+16:11:57 <gundalow> #info Partners webinar on Monday, if you don't have an invite please ping gundalow
+16:14:08 <funzo> o/
+16:15:13 <gundalow> #info 2.5 Cut off dates on https://github.com/ansible/ansible/blob/devel/docs/docsite/rst/roadmap/ROADMAP_2_5.rst
+16:15:51 <gundalow> #info Core Engine Freeze and Module Freeze: 15 January 2018
+16:18:23 <kedarX> #chair samerd ogenstad
+16:18:23 <zodbot> Current chairs: Anil Qalthos caphrim007 gundalow jmcgill298 kedarX ogenstad privateip samerd trishnag
+16:19:17 <gundalow> Anyone got anything?
+16:19:56 <samerd> Hi gundalow
+16:21:30 <gundalow> Hi
+16:21:43 <gundalow> Nothing on the agenda, so if anyone has anything feel free to speak up
+16:21:50 <gundalow> samerd: How you getting on?
+16:22:40 <samerd> gundalow: every thing is going fine, I had a break last week, and got back this week
+16:22:56 <samerd> I pushed another module yesterday
+16:23:19 <samerd> after merge I will push the rest of the modules
+16:23:36 <samerd> I just need to write some unit-tests
+16:24:32 <Anil> Can i discuss some thing related to ansible command and its usage with lenovo enos device ?
+16:24:40 <gundalow> Anil: Sure
+16:25:20 <Anil> When I tried this command
+16:25:22 <Anil> root@SSRB-Ansible:/home/ansible/sheru/ansible# ansible enos -m raw -a "show sys-info" 10.241.105.24 | FAILED | rc=-1 >>  Lenovo RackSwitch G8272
+16:25:37 <Anil> ansible enos -m raw -a "show sys-info"
+16:26:02 <Anil> I get result as 10.241.105.24 | FAILED | rc=-1 >>
+16:26:11 <Anil> While i tried like
+16:26:47 <Anil> inventory file looks like this
+16:26:56 <Anil> [enos] 10.241.105.24    ansible_connection=paramiko ansible_ssh_user=admin ansible_ssh_pass=admin
+16:27:29 <Anil> when I put connection = paramiko it succeeds
+16:27:34 * ganeshrn waves
+16:27:40 <Anil> I mean it fetches data
+16:28:22 <Anil> but when I put raw or network_cli or local. It fails
+16:28:50 <gundalow> Anil: Have you updated the modules to support network_cli?
+16:29:15 <Anil> yes.. Its working now as network _cli only
+16:29:32 <gundalow> Generally you should get a message when you use a connection other than local or network_cli telling you to use the correct connection type
+16:30:11 <Anil> yes. But network_cli is not in list for ansible command
+16:30:25 <Anil> not even local
+16:30:45 <Anil> only raw, shell and paramiko are supported
+16:31:25 <Anil> Any one tried to configure a one liner CLI using ansible command ?
+16:32:22 <gundalow> ansible -m vyos_command -a 'commands=?' -u vyos -i vyos-1-1-0, -e 'ansible_host=ec2-34-232-64-116.compute-1.amazonaws.com ansible_port=22 ansible_connection=local ansible_ssh_private_key_file=test/cache/id_rsa' vyos-1-1-0
+16:32:26 <gundalow> I've done things like that before
+16:33:32 <Anil> yes..thats not working now, may be only for lenovo switches
+16:33:44 <Anil> I just wanted to know correct usage
+16:35:00 <ganeshrn> Anil: is there a action plugin for enos modules
+16:35:17 <Anil> yes.. its there..
+16:35:25 <ganeshrn> generally connection=local for network modules is handled in action plugin
+16:36:18 <ganeshrn> ok
+16:36:54 <Anil> ok.. I will try that way.
+16:36:58 <gundalow> Anil: I'd ignore raw, not sure if that would be the right thing anyway
+16:38:09 <Anil> so this concept of action plugin etc works for not only for ansible-playbook command but also for ansible command too.. right
+16:38:25 <bcoca> yes
+16:38:44 <Anil> I will put debug logs and try then..Thanks for giving me pointers
+16:38:44 <bcoca> it works for 'tasks' does not matter if you run from ansible/ansible-playbook/ansible-console
+16:39:15 <Anil> when u make a one liner command with ansible.. there is no tasks there
+16:41:39 <Anil> In case u guys can try out one "show run" command and post it to me.. it will be realy helpful
+16:48:28 <Anil> Ok.. Thats all. You can continue with other topics
+16:49:52 <gundalow> Don't think there is anything else
+16:50:08 <gundalow> Anil: Could you please ping me an email and I'll reply with details later
+16:50:13 <gundalow> so I don't forget
+16:50:17 <gundalow> Thanks everyone
+16:50:18 <gundalow> #endmeeting

@@ -1,0 +1,63 @@
+16:07:23 <gundalow> #startmeeting Ansible Network Working Group
+16:07:23 <zodbot> Meeting started Wed Aug 22 16:07:23 2018 UTC.
+16:07:23 <zodbot> This meeting is logged and archived in a public location.
+16:07:23 <zodbot> The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:07:23 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:07:23 <zodbot> The meeting name has been set to 'ansible_network_working_group'
+16:07:40 <gundalow> #chair Anil_Lenovo bcoca Qalthos
+16:07:40 <zodbot> Current chairs: Anil_Lenovo Qalthos bcoca gundalow
+16:07:48 <gundalow> #topic Lenovo
+16:07:51 <gundalow> Anil_Lenovo: Sure, over to you
+16:08:25 <Anil_Lenovo> I will start placing the Integration Tests for cnos and enos in targets folder from tomorrow with unsupported tag in the aliases file
+16:08:47 <gundalow> Anil_Lenovo: Excellent
+16:09:28 <Anil_Lenovo> They are all working in my lab enviroment
+16:10:12 <Anil_Lenovo> In due cource of time I will make the set up done to work them with equipment in Lenovo lab
+16:10:34 <Anil_Lenovo> then we can put them in The CI framework
+16:11:03 <Anil_Lenovo> I have done a PR already , but no one looked into them and later somehow I messed it up
+16:11:22 <gundalow> Anil_Lenovo: Sounds good, work is progressing with Zuul. We are working through where to place some configuration then we can get it live on ansible/ansible
+16:12:22 <Anil_Lenovo> There already few Integration test suits with aliases as unsupported
+16:12:28 <Anil_Lenovo> I am following the same
+16:12:52 <gundalow> https://docs.ansible.com/ansible/devel/dev_guide/testing/sanity/integration-aliases.html
+16:12:58 <gundalow> Yup, that should be fine
+16:13:07 <Anil_Lenovo> yeah I read it.
+16:13:24 <gundalow> Once we have Zuul setup we can update the `aliases` file to instruct Zuul to "do the right thing"
+16:13:43 <Anil_Lenovo> Just wanted to give u a heads up so that the review and merging can be taken up by someone
+16:13:56 <Anil_Lenovo> oh ok
+16:14:48 <gundalow> Anil_Lenovo: Sure, ping the PR link in here and we will look at them
+16:15:22 <Anil_Lenovo> One more thing, regarding that licesnse issues, I have send a mail to the legal team member to issue a "no objection" mail of refactoring the code
+16:15:36 <gundalow> Anil_Lenovo: Thank you :)
+16:15:48 <gundalow> I know it's a pain, though it's to protect you as much as us
+16:15:57 <Anil_Lenovo> So I will forward his mail to you, will that be OK
+16:16:01 <Anil_Lenovo> ?
+16:16:07 <gundalow> Yup, that will be great, thank you
+16:16:22 <Anil_Lenovo> ok.. deal..
+16:16:28 <gundalow> :)
+16:16:33 <gundalow> Anything else?
+16:17:00 <Anil_Lenovo> Then I will wait for Ganesh's PR to complete before I put PR on image download
+16:17:21 <Anil_Lenovo> Yeah I need one more suggetion from you
+16:18:23 <Anil_Lenovo> Currently if u see cnos_interface etc, they are coded to cover all CLI scenarios of the device
+16:18:24 <gundalow> Sure
+16:19:24 <Anil_Lenovo> But say the case of ios or nxos etc, it offers only few well chosen configuration attributes only
+16:20:13 <Anil_Lenovo> So I feel my way of implementation is too complex and as every one else is implementing in a simplified manner, acceptibility will be more
+16:21:01 <Anil_Lenovo> I would like to follow the same paradigm for my modules on vlan. vlag, interface, portchannel and BGP
+16:22:14 <Anil_Lenovo> I have one suggetion here, like cnos_interface module there will be a cnos_interface_lite module which will take care of the simplified version of interface configuration
+16:23:40 <gundalow> Anil_Lenovo: hum, best answered by ganeshrn or Qalthos
+16:23:43 <Anil_Lenovo> I need your opinion on this, as for same interface configuration I will have 2 types, one which covers all possible CLI scenario and other which has the same usability pattern of Ansible
+16:24:16 <Anil_Lenovo> Or should i keep only one, - Complex one or simple ones
+16:24:55 <Anil_Lenovo> whate ever your suggetions are welcome,
+16:25:17 <Anil_Lenovo> as I want to follow the trend of other vendors too
+16:25:33 <Anil_Lenovo> Usability will be uniform in that case
+16:26:12 <Anil_Lenovo> Qalthos is aware of the concept and code as he has been reviewing it often
+16:26:59 <Anil_Lenovo> Ok, they can mail me as well on their thoughts and suggetions
+16:28:13 <Anil_Lenovo> Ganesh may be busy in working on a PR for me to have multiple prompts and multiple answers
+16:28:49 <gundalow> Cool
+16:28:52 <Anil_Lenovo> He is too is aware of implementation of cnos modules
+16:29:28 <Anil_Lenovo> So I will wait for their inputs then
+16:29:55 <Anil_Lenovo> They can mail me at amuraleedhar@lenovo.com
+16:31:40 <Anil_Lenovo> Thats all from me
+16:34:27 <gundalow> Thanks
+16:34:48 <gundalow> bcoca: did you have something? Though you want to wait till there are people around?
+16:36:29 <bcoca> nah, was joking before
+16:36:58 <gundalow> :)
+16:37:08 <gundalow> Anil_Lenovo: Thanks for your time
+16:37:10 <gundalow> #endmeeting

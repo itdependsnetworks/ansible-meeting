@@ -1,0 +1,87 @@
+18:59:37 <gundalow> #startmeeting Ansible Core
+18:59:37 <zodbot> Meeting started Tue Feb 27 18:59:37 2018 UTC.  The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+18:59:37 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+18:59:37 <zodbot> The meeting name has been set to 'ansible_core'
+19:00:29 * mattclay waves
+19:00:44 <abadger1999> Olá
+19:01:36 <gundalow> #chair mattclay
+19:01:36 <zodbot> Current chairs: gundalow mattclay
+19:01:41 <gundalow> #topic Open Floor
+19:02:09 <gundalow> #info Agenda seems to be empty https://github.com/ansible/community/labels/core
+19:02:22 <simondodsley> Hi - not sure of the protocol here. First meeting. I have 2 PRs I'd like looking at. One is an extention to a module, the other is a new fact
+19:02:40 <gundalow> #chair simondodsley
+19:02:40 <zodbot> Current chairs: gundalow mattclay simondodsley
+19:02:53 <gundalow> simondodsley: #topic subject
+19:02:59 <gundalow> Then it's all yours :)
+19:03:11 <simondodsley> #topic review PRs
+19:03:50 <sivel> .hello2
+19:03:50 <zodbot> sivel: sivel 'Matt Martz' <matt@sivel.net>
+19:03:54 <simondodsley> Can I have a coupe of PRs looked at please: https://github.com/ansible/ansible/pull/32505 and https://github.com/ansible/ansible/pull/36761
+19:04:05 * shertel waves
+19:04:10 <simondodsley> second one is a new fact to discover iscsi IQNs
+19:04:26 <gundalow> #chair sivel caphrim007 shertel
+19:04:26 <zodbot> Current chairs: caphrim007 gundalow mattclay shertel simondodsley sivel
+19:06:24 <gundalow> simondodsley: Thanks
+19:06:41 <gundalow> Well given you work at Pure Storage, I'm going to trust that side of the PR :)
+19:07:05 <simondodsley> gundalow: thank you :)
+19:07:52 <gundalow> Module looks fine to me, I'll merge it later on unless anyone objects
+19:08:04 <gundalow> so on to https://github.com/ansible/ansible/pull/36761 Add fact to obtain iSCSI initiator IQN
+19:08:30 <simondodsley> i'm going to be adding one for FC WWNs as well soon
+19:08:33 <gundalow> which touches lib/ansible/module_utils/facts/compat.py and adds a new facts module: lib/ansible/module_utils/facts/system/iscsi.py
+19:08:37 <alikins> I'd like to see at least example content/output from the commands and config files the facts code is parsing
+19:09:00 <gundalow> #chair alikins
+19:09:00 <zodbot> Current chairs: alikins caphrim007 gundalow mattclay shertel simondodsley sivel
+19:09:01 <bcoca> module_utils/facts is core
+19:09:04 <gundalow> alikins: That's a good point
+19:09:15 <alikins> ideally, with the parsing code seperated to it's own method with test cases
+19:10:44 <alikins> very hard to update/change/maintain a module without access to the tools whose output they are parsing.  (Most existing fact collection code has the same problems, but if we are starting from scratch...)
+19:10:56 <gundalow> bcoca: Change there looks OK, I think this is OK for 2.6
+19:11:53 <abadger1999> gundalow: Not sure.. It's adding something new to default fact generation.. Is ther echance for timeouts?  For tracebacks if tools on different systems return differently formatted output?
+19:11:59 <gundalow> #chair bcoca abadger1999
+19:11:59 <zodbot> Current chairs: abadger1999 alikins bcoca caphrim007 gundalow mattclay shertel simondodsley sivel
+19:12:27 <gundalow> abadger1999: hum, that's a fair question
+19:12:30 <abadger1999> Do we have any guidance as to when something belongs in default facts versus in its own module that returns ansible_facts?
+19:12:43 <gundalow> abadger1999: not that I'm aware of
+19:13:00 <gundalow> I need to step away for a bit, can someone continue running the meeting. Thanks
+19:13:15 <simondodsley> abadger1999: there is no generation on the linux side. It's a flat file being read that has a format defined by the iSCSI RFQ
+19:13:39 <bcoca> abadger1999: i would make the rule that 'generic system' belongs in setup.py, while specialty stuff should be it's own
+19:13:42 <simondodsley> for the AIX and Windows there is a call to an executable
+19:13:46 <bcoca> iscsi itself seems 'generic'
+19:14:08 <bcoca> though i suspect the implementatins are highly specialized
+19:14:43 <simondodsley> iscsi is about as generic as it comes. It's more prevalent than IPv6 :)
+19:15:00 <bcoca> agreed
+19:15:16 <simondodsley> would you consider fbre channel to be generic as well?
+19:15:16 <bcoca> im talking about the tools used to get information
+19:15:39 <simondodsley> windows uses powershell and the aix call uses a standard aix executable.
+19:15:45 <bcoca> the linux kernel does expose it in generic way, but many 'vendors' can hide a lot of the data from the kernel and require special tools
+19:15:48 <simondodsley> i can remove the aix if needed
+19:16:10 <bcoca> no, we prefer having it, as long as it is 'standard platform tools'
+19:16:26 <bcoca> i.e nvidia-smi to get video card info vs cat /proc/video0
+19:16:31 <bcoca> or lspci
+19:17:16 <bcoca> ^ trying to set a rule, not judging your specific PR as i have not reviewed  it
+19:17:28 <simondodsley> bcoca: fair enough
+19:17:55 <bcoca> does my distinction make sense to all?
+19:19:10 <abadger1999> bcoca:  yep, it does.  We should write it down... and over time we'll have to hammer out the limits of "generic"
+19:19:17 <bcoca> https://github.com/ansible/ansible/pull/32505/files#diff-f3dfdb24096cd9975b8bd443c8552dabR205 <= just s 'style' comment, not a blocker, its more readable (to me) to have embeded conditionals vs chaining elif on mostly same conditions
+19:19:42 <bcoca> if present: \n\t if fs: ...
+19:20:29 <bcoca> elif state == 'present' and fs and fs.destroyed:  elif state == 'present' and not fs:  seems misleading to me to do same action
+19:20:49 <bcoca> again, not a blocker, just having a hard time parsing the options the way they exist now
+19:22:11 <bcoca> https://github.com/ansible/ansible/pull/36761 <= i would not add iscsi to minimal, put in hardware
+19:22:24 <bcoca> even network
+19:23:33 <simondodsley> bcoca: they are different. Its to d owit hthe way filesystems are created, destroyed  eradicated and in recoverable states in the FlashBlade
+19:23:42 <alikins> there is also a mechanism for choosing which FactCollector to use for a platform based on platform.system()  (subclass and set _platform class attribute )
+19:24:19 <bcoca> simondodsley: its really present and (not fs or fs.destroyed)
+19:24:28 <bcoca> ^ both conditions resolve into same action
+19:24:32 <simondodsley> bcoca: I wondered about the network/hardware facts but couldn't decide which iscsi was...
+19:24:49 <simondodsley> bcoca: got you
+19:24:59 <bcoca> i would say network, but its really both, its 'disk over network'
+19:25:28 <bcoca> networking people will say hardware, either works for me ... not a flame war i have intrest in, but minimal is clearly not the place
+19:25:59 <simondodsley> i'll change it to network  and will put my upcoming fibre channel fact in there as well
+19:27:36 <bcoca> he, same boat
+19:27:54 <bcoca> networkhardware?
+19:28:08 <bcoca> ^ net category for 'devices over specialized networks'
+19:31:43 <simondodsley> ok. I'll take on your change requests for https://github.com/ansible/ansible/pull/36761. I'm finished if someone else has stuff
+19:33:25 <abadger1999> #topic Open Floor
+19:33:32 <abadger1999> Anyone have something they want discussed?
+19:33:42 <abadger1999> If not, I can close in 60s
+19:39:29 <abadger1999> #endmeeting

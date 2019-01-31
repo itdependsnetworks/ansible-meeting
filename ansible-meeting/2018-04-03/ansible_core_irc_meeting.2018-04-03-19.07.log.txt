@@ -1,0 +1,212 @@
+19:07:35 <bcoca> #startmeeting ansible core irc meeting
+19:07:35 <zodbot> Meeting started Tue Apr  3 19:07:35 2018 UTC.  The chair is bcoca. Information about MeetBot at http://wiki.debian.org/MeetBot.
+19:07:35 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+19:07:35 <zodbot> The meeting name has been set to 'ansible_core_irc_meeting'
+19:07:58 <bcoca> @Pilou ?
+19:08:13 <Pilou> yes ?
+19:08:40 <bcoca> #topic https://github.com/ansible/ansible/issues/38100
+19:08:52 <bcoca> mostly you seem to have questions about exact formatting of the feature?
+19:09:00 <Pilou> yes
+19:09:12 <bcoca> fyi, i would use -t as we already use that for <plugin type> .. though im fine to add also the long form
+19:09:35 <Pilou> plugin name will be optional ?
+19:09:56 <bcoca> i would display the names 'as defined', the base config uses upper case constants but we also have a 'name/label' we are looking to use instead
+19:10:10 <bcoca> i would say 'all plugins' if name is not defined
+19:10:14 <bcoca> all plugins of that type
+19:10:23 <Pilou> fine
+19:10:47 * shertel waves
+19:10:54 <bcoca> #chair Pilou  shertel
+19:10:54 <zodbot> Current chairs: Pilou bcoca shertel
+19:11:03 * mattclay waves
+19:11:05 <abadger1999> Olá
+19:11:06 <Pilou> should plugin type and name be added foreach parameter ?
+19:11:12 <maxamillion> .hello2
+19:11:13 <zodbot> maxamillion: maxamillion 'Adam Miller' <maxamillion@gmail.com>
+19:11:17 <bcoca> #chair abadger1999 maxamillion
+19:11:17 <zodbot> Current chairs: Pilou abadger1999 bcoca maxamillion shertel
+19:11:25 <nitzmahone> mang
+19:11:31 <bcoca> Pilou: unsure, i think a header/separator is better
+19:11:37 <bcoca> #chair nitzmahone
+19:11:37 <zodbot> Current chairs: Pilou abadger1999 bcoca maxamillion nitzmahone shertel
+19:11:51 <snowjet> hi
+19:12:17 <Pilou> something like a YAML comment ?
+19:12:44 <bcoca> possibly, do we want the dump to always be 'yaml reusable'?
+19:13:01 <alikins> https://github.com/ansible/ansible/pull/37137  is somewhat related to 38100
+19:13:01 <bcoca> current display was 'least effort', i had thought about prettying it up a bit
+19:13:31 <abadger1999> #chair snowjet alikins
+19:13:31 <zodbot> Current chairs: Pilou abadger1999 alikins bcoca maxamillion nitzmahone shertel snowjet
+19:13:50 <bcoca> anyone have any strong feelings about ansible-config output?
+19:14:02 <maxamillion> not really, no
+19:14:37 <maxamillion> I'm pretty impartial
+19:14:48 * funzo waves
+19:14:50 <Pilou> ansible-config output should be reusable and ansible-doc output could be not reusable ?
+19:14:52 <bcoca> Pilou:  then comments sound fine for now .. tempted to tie this into callbacks and just add new events to allow people to customize output
+19:14:55 <bcoca> #chair funzo
+19:14:55 <zodbot> Current chairs: Pilou abadger1999 alikins bcoca funzo maxamillion nitzmahone shertel snowjet
+19:15:18 <maxamillion> bcoca: that could be an interesting option
+19:15:28 <bcoca> Pilou: unsure, both are done as information to user, not sure why you would need them to be reusable data formats
+19:15:31 <maxamillion> I do like the idea of enabling user modification in a maintainable way
+19:16:10 <bcoca> both use yaml as source for the data, so 'dumping it' tends to produce yaml/yamllike output
+19:17:00 <bcoca> i can see someone trying to create a automated front end wanting the format to be reusable, but they could also just tap the source directly to do same, i really dont have strong opinions on that, just that it be 'user readable'
+19:17:03 <abadger1999> It doesn't really seem like an event.
+19:17:31 <bcoca> abadger1999: event in this case would work like xml's xlst parsing
+19:17:55 <bcoca> 'data atom encountered'
+19:18:04 <abadger1999> I think that would be mixing two different ideas together.
+19:18:38 <abadger1999> Look, a man fell off a building!  And he was wearing red socks inside of tennis shoes !
+19:18:56 * bcoca steps back from ledge
+19:19:11 <Pilou> #info related to https://github.com/ansible/ansible/pull/37137
+19:19:11 <alikins> I would like the ansible-config option we document in issue templates to produce output in a directly consumable fashion
+19:19:36 <bcoca> alikins: ?
+19:19:44 <bcoca> for example?
+19:20:38 <alikins> issue template suggests using 'ansible-config dump --only-changed' to cut and paste config
+19:20:53 <bcoca> well, to show 'what is changed and where'
+19:21:00 <alikins> but that is a format you have to hand tweak to a usable format if you want to reproduce
+19:21:09 <bcoca> ah, i see
+19:21:47 <bcoca> you want to copy from issue and have 'reproducable env'
+19:22:37 <alikins> yup
+19:23:15 <bcoca> i always meant to add a way for ansible-config to edit/update/generate configs
+19:23:27 <bcoca> had not thought about env vars
+19:23:43 <shertel> that would be nice
+19:24:18 <maxamillion> +1
+19:24:23 <bcoca> but that would probably be alternate output vs the informational one that we now have
+19:24:38 <bcoca> cause it would not give us the 'where this was set'
+19:24:43 <bcoca> just 'current value'
+19:24:52 <bcoca> or use the current output as input?
+19:25:01 * bcoca files under 'things to think about'
+19:25:31 <bcoca> @alikins in any case the issue is adding plugin type to current dump/format, we can discuss config generation later
+19:25:59 <Pilou> yep :)
+19:26:00 <bcoca> ^ i do agree, it would be great feature for reproducing issues
+19:26:35 <bcoca> `ansilbe-config dump  ` currently shows all optoins, set or unset, what we ask people to paste in issues is --only-changed
+19:26:46 <alikins> yup, just answering 'anyone have any strong feelings about ansible-config output?'
+19:27:28 <bcoca> understood, dump_config or dump_env would be good options for that .. or just callback that does 'ini/yaml config output' or k=v output for envvars?
+19:28:52 <bcoca> to not stop Pilou with feature creap, should he just try to approximate current output for plugins ? then we can discuss and add other features output on top?
+19:30:13 <bcoca> i'll assume silence == Yes
+19:30:34 <bcoca> Pilou anything else you need from us before you proceed? btw, thanks for taking this off 'my list'
+19:31:06 <Pilou> that's all
+19:31:55 <bcoca> feel free to poke us at any point in #ansible-devel if you hit a wall or have more questions, you might just get several diff answers. ....
+19:32:04 <bcoca> #topic https://github.com/ansible/ansible/pull/37390
+19:32:07 <bcoca> snowjet ?
+19:32:10 <snowjet> yep
+19:32:25 <bcoca> did you try pinging the openstack maintainers?
+19:32:37 <snowjet> No.
+19:32:49 <snowjet> I figured to use this forum
+19:33:01 <snowjet> but I can go via that route if that is the best way forward
+19:33:02 <bcoca> well, you need 2 shipit post from them to get it approved, most of us here are no experts on openstack
+19:33:24 <snowjet> rgr. No problem. I had them merge the shade part of the pull
+19:33:30 <bcoca> normally it is, since there are plenty of mainainers on this category
+19:33:51 <bcoca> if they are unresponsive, come back and we can look at it again
+19:34:01 <abadger1999> mordred: ^
+19:34:18 <snowjet> okay.
+19:34:33 <bcoca> snowjet: fyi, you might want to add  a 'version check' for the feature if it requires a specific version of a library
+19:34:59 <abadger1999> snowjet: mordred and shrews are present in #ansible-devel, you can try to ping them there as well.
+19:35:07 <snowjet> I shall thanks
+19:35:29 <bcoca> ^ mordred == emonty on github
+19:35:47 <bcoca> shrews  == Shrews ... no mistery there
+19:36:15 <bcoca> #topic https://github.com/ansible/ansible/issues/38200
+19:36:42 <bcoca> -1, i dont think we should adopt/merge with a specific framework, i think we should easily work with all/most of them
+19:37:49 <abadger1999> Hmm..
+19:38:04 <bcoca> i do like the project, i just don't think we should tie in at the Ansible level ...  maybe as part of a bigger product that includes ansible
+19:38:04 <abadger1999> This does seem like a meeting topic but are any of the submitter/commenters here?
+19:38:18 <bcoca> ^ yes, maxamillion
+19:38:41 <bcoca> ah, from original ticket, no @resmo?
+19:38:49 <alikins> might be something useful to work towards in galaxy
+19:38:59 <bcoca> ^ that i could see
+19:39:52 <abadger1999> I'm not really sure what they're asking for.
+19:40:18 <abadger1999> I think molecule and ansible work well together but that doesn't mean they should ship i nthe same tarball.
+19:40:20 <bcoca> ticket proposes we 'include' molecule in ansible
+19:40:34 <bcoca> agreed, that is my postiion as well
+19:40:34 <abadger1999> And if thta's not what they're asking for, then I'm not sure what it would be.
+19:41:09 <abadger1999> " I would like to propose we bring it under the Ansible umbrella,"  .... which could also mean, make it part of the ansible project... but I'm not sure what that is either...
+19:41:27 <alikins> I read that issue as a nice version of 'hey ansible, please stop pretending molecule doesnt exist'
+19:41:39 <bcoca> that is how i read it, not sure what else they would want us to do
+19:41:58 <bcoca> alikins: not sure what that means either, we dont do anything to 'ignore' kitchensync either ....
+19:41:59 <abadger1999> retr0h looks like the main author of molecule, though?
+19:42:05 <bcoca> yep
+19:42:21 <maxamillion> yeah, I didn't really understand what the end goal there was but I figured I'd bring it up to the group
+19:42:38 <abadger1999> So he probably has some idea of what he wants to do and how both tools would benefit... but I'm not sure what is entailed.
+19:42:42 <maxamillion> I almost thought it would be a better topic for the testing WG to talk about but didn't want to punt without discussing here first
+19:42:48 <bcoca> since he seems like main colaborator, i thought he was asking for us to merge the project into ansible
+19:43:09 <bcoca> at least that is what the wording suggests to me
+19:44:20 <bcoca> 15:43] <bcoca> retr0h: hi, discussing your issue https://github.com/ansible/ansible/issues/38200 in ansible-meeting, can you pop in? <= in #molecule-users
+19:44:46 <maxamillion> +1
+19:44:51 <maxamillion> I probably should have done that
+19:45:27 <bcoca> since we seem to read diff things, if he doesn't pop in next 5 mins we can table this to another day and get a better feel of what he is asking for
+19:45:58 <maxamillion> +
+19:46:00 <maxamillion> +1 even
+19:46:58 <bcoca> just to get a preliminary count: vote in favor of option a) integrating molecule project into ansible b) moving our testing to molecule c) point at molecule in our docs as a 3rd party tool
+19:47:18 <bcoca> a-1, b0, c+1
+19:47:45 <jhawkesworth_> a/ -1, b/ -1, c/ +1 (hello, btw)
+19:47:59 <bcoca> #chair jhawkesworth_
+19:47:59 <zodbot> Current chairs: Pilou abadger1999 alikins bcoca funzo jhawkesworth_ maxamillion nitzmahone shertel snowjet
+19:48:01 * bcoca waves
+19:48:08 <mattclay> +1 for c
+19:48:09 <maxamillion> a) -1 b) +0 c) +1
+19:48:18 <abadger1999> I don't know.
+19:48:24 <agaffney> +1 for c, at least as a first step
+19:48:38 <abadger1999> I need to know what retr0h is thinking and why.
+19:48:46 <agaffney> no reason not to point at some other third party testing tools, as well
+19:48:48 <bcoca> abadger1999: agreed, this was just a 'taking the temp'
+19:48:50 <abadger1999> Also could be good to get someone like thaumos involved.
+19:49:06 <abadger1999> I could see myself supporting ansible becoming part of the ansible project.
+19:49:06 <bcoca> also agreed
+19:49:06 <alikins> making some/more use of molecule seems like a reasonable goal in general.
+19:49:18 <abadger1999> I don't think putting them in the same tarball is necessary, though.
+19:49:43 <abadger1999> (c) I think I'm for but who does that work and who coordinates it?
+19:49:45 <bcoca> can you rephrase that? cannot parse 'supporting ansible becoming part of the ansible project'
+19:49:59 <abadger1999> There's too many open questions for me to pass judgement.
+19:50:08 <bcoca> fair
+19:50:18 <alikins> I wouldn't dive into any more details than that without some clarification
+19:50:33 <abadger1999> I can't rephrase really because I don't know what is being asked for.
+19:50:37 <bcoca> was just making time to see if retr0h could join and clarify, taking temp of room on generic options
+19:51:33 <bcoca> dont we have a 3rd party tools page already? if i can find it, i'll add molecule myself, i think that is something we can all agree on
+19:51:48 <abadger1999> <nod> definitely
+19:52:02 <Pilou> +1
+19:52:27 <bcoca> ok, closing topic for now, will try to reschedule once we get pong from retr0h
+19:52:32 <bcoca> #topic open floor
+19:52:53 <jhawkesworth_> i sneaky snuck this on the agenda https://github.com/ansible/ansible/pull/37291 if anyone has time
+19:53:23 <bcoca> #topic https://github.com/ansible/ansible/pull/37291
+19:53:47 <bcoca> windows line endings
+19:53:54 <jhawkesworth_> purpose is to allow *custom* i.e. not core ansible windows modules to have windows line endings.
+19:54:06 <jhawkesworth_> which happens when you start editing module code on a windows box
+19:54:15 <bcoca> jhawkesworth_:  its probably very infrequent, but we should not do that always, there MIGHt be a case for people using \r
+19:54:25 <bcoca> er \r\n on purpose on unix side
+19:54:49 <bcoca> should we check platform first?
+19:55:05 <abadger1999> jhawkesworth_: Hmm... I'm reading code... how do line endings get into the list of module names?
+19:55:10 <bcoca> or we are assuming ps modules always run on windows side?
+19:56:53 <jhawkesworth_> I have been assuming the psm1 (powershell module code) runs on the windows side.
+19:57:30 <abadger1999> jhawkesworth_: You probably should get nitzmahone or jborean93 to review, but for me, I'd move both the to_text() and the strip() up around https://github.com/ansible/ansible/pull/37291/files#diff-321e6923b14b571aad803d04b3308a35L808
+19:57:33 <bcoca> abadger1999: the line endings are from the powershell modules themselves, this is 'requires' parsing
+19:57:38 <jborean93> For now, there would be some work required to run powershell on linux, it would probably require a separate shell plugin due to the differences between powershell and pwsh
+19:57:38 <abadger1999> (So when adding to the set, rather than on use)
+19:57:51 <jborean93> sorry jhawkesworth_ I was meant to get onto to this sooner
+19:57:55 <jhawkesworth_> the powershell core stuff (that you can run on linux) is still pretty new and not I think something that ansible handles at all.
+19:58:17 <abadger1999> I'm also not sure why we make a new set on line 828
+19:58:23 <bcoca> ok, so we are ok on hardcoding this for ps since we need to redo a lot of things to get it to work on 'non-windows' anyways
+19:58:45 <jhawkesworth_> no worries I thought worth asking here as you can see from PR 1 line code change and then loads of other changes to let this exception through the code smell checks
+19:58:52 <abadger1999> jhawkesworth_: It might also make sense to build the stripping into the regex instead of a separate step but I'm not sure.
+19:59:35 <abadger1999> jhawkesworth_: also... from the looks of it, I think we could just call strip()/rstrip() on that without limiting it to \r\n.
+19:59:37 <jhawkesworth_> thanks for the feedback abadger1999
+19:59:52 <abadger1999> I think any whitespace my cause issues elsewhere.
+20:00:05 <bcoca> rstrip should be safe solution here
+20:00:36 <jhawkesworth_> yes I think rstrip makes sense here
+20:00:45 <jhawkesworth_> I'll change that
+20:00:53 <bcoca> jborean93, abadger1999 you guys will follow up ?
+20:01:26 <jborean93> yep
+20:01:39 <abadger1999> yeah, feel free to ping me with any questions... I just shouldn't be the final reviewer since I don't use the powershell stuff at all.
+20:01:52 <bcoca> #topic Open Floor
+20:01:53 <jhawkesworth_> if no fundamental objections to handling it then I'll pursue it further
+20:01:55 <jhawkesworth_> thanks
+20:02:18 <bcoca> alikins: do you have more details on how you would want the ansible-config usage to work ?
+20:04:51 <bcoca> if nothing else, closing in 1min
+20:05:45 <alikins> bcoca: first thought is dump ini/yaml of result, possibly with comments added for clarification
+20:06:59 <bcoca> instead of current format or in addition?
+20:08:24 <alikins> for whichever cmd we suggest in the issue template. could be new
+20:08:40 <alikins> https://github.com/ansible/ansible/pull/22461  was kind of in that vain
+20:09:55 <alikins> s/vain/vein
+20:10:14 <bcoca> should not be hard to implement
+20:10:37 <bcoca> but i would prefer env vars myself
+20:11:40 <bcoca> mostly cause existing envvars would override your generated config
+20:15:24 <bcoca> alikins: we can continue discussion in the config proposal, we are a bit over time right now and i need time to mull it over a bit
+20:15:30 <alikins> tis true existing env would override, but that seems ok to me. I'd prefer not to have to eval something from user in shell
+20:16:02 <bcoca> good point
+20:18:32 <bcoca> im going to close meeting, we can continue this in #ansible-devel or the proposal, just need to give it more thought
+20:18:43 <bcoca> #endmeeting

@@ -1,0 +1,102 @@
+15:17:15 <gundalow> #startmeeting ansible core public irc meeting
+15:17:15 <zodbot> Meeting started Thu Nov  1 15:17:15 2018 UTC.
+15:17:15 <zodbot> This meeting is logged and archived in a public location.
+15:17:15 <zodbot> The chair is gundalow. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:17:15 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:17:15 <zodbot> The meeting name has been set to 'ansible_core_public_irc_meeting'
+15:17:15 <sdoran> I'm just wondering if it needs a warning or something. Will it break playbooks that currently don't use an FQDN that are Walrus?
+15:17:21 <gundalow> chair bcoca
+15:17:30 <gundalow> #topic https://github.com/ansible/ansible/pull/46745
+15:17:46 <gundalow> bcoca: leading space confused the bot
+15:17:47 <bcoca> gundalow: why are you restarting meeting?
+15:17:54 <gundalow> bcoca: because it never started
+15:18:04 <bcoca> ah, didnt see that
+15:18:15 <gundalow> Only noticed as the bot didn't respond
+15:18:20 <gundalow> anyways, carry on :)
+15:18:34 * bcoca should 'unignore bot'
+15:18:59 <Pilou> sdoran: I guess it will break these playbooks
+15:19:07 <bcoca> Pilou: my only concern, wont this break existing playbooks for walrus users?
+15:19:16 <bcoca> he, jinx
+15:20:40 <Pilou> yeah but the current code prevents to use other providers
+15:22:22 <bcoca> is there a way to generalize it so it is provider neutral?
+15:22:38 <bcoca> or at least use a mapping? walrus: walrusendpoint, default: aws, etc?
+15:23:42 <Pilou> is there a way to detect that an endpoint is a walrus one ?
+15:24:38 <bcoca> isn't that the whole point of is_walrus function?
+15:24:55 <shertel> I don't think this will break walrus unless walrus actually doesn't work as a drop-in (which it claims to be).  Are there any walrus users around? Aws_s3 has already made the change Pilou is proposing.
+15:24:58 <bcoca> it just does by exclusion `return not o.hostname.endswith('amazonaws.com')` it should be 'inclusion' instead
+15:25:22 <gundalow> #chair bcoca nitzmahone sdoran maxamillion
+15:25:22 <zodbot> Current chairs: bcoca gundalow maxamillion nitzmahone sdoran
+15:25:43 * bcoca quickly reads about walrus
+15:26:02 <bcoca> ok, so its not an 'alternative' service, its more like eucalyptus a 'self hosted' aws?
+15:26:27 <shertel> yep, along the lines of fakes3 or minio
+15:26:48 <Pilou> bcoca: yes
+15:27:05 <maxamillion> TIL about walrus, flakes3, and minio
+15:27:07 <shertel> I also think that check in s3_bucket was just a copy-pasta from the aws_s3 module
+15:27:32 <bcoca> k, so is_walrus is really incorrect function
+15:27:54 <shertel> yeah, that's my opinion
+15:28:11 <shertel> unnecessarily restrictive
+15:28:56 <bcoca> endpoint=s3_url|walrus ... this is something boto3 handles, how does that work for other providers?
+15:30:37 <shertel> endpoint can be used to specify any replacement service
+15:31:47 <bcoca> why not expose that to user vs trying to 'divine it' with things like is_walrus function?
+15:31:54 <bcoca> or should we just force all to use a fqdn?
+15:32:17 <bcoca> endpoint_type=walrus|etc default aws?
+15:32:23 <shertel> the module still may not work with an arbitrary service; e.g. replacement might not allow setting ACLs or other things and will probably raise their own exceptions (minio does that, for example)
+15:33:26 <shertel> I'm not sure what you mean bcoca. Would the module then have to create the endpoint? I think all AWS modules allow a custom endpoint.
+15:33:54 <bcoca> but not explicitly, from what i gather it is due to fqdn usage
+15:34:21 <bcoca> which might be fine, i just dont know how users normally have this in their plays
+15:35:17 <bcoca> at this point i agree that is_walrus is totally wrong, the PR seems fine, im just asking if we need to add anything else to make it easier for users
+15:35:49 <bcoca> also i have no clue what boto3 does with endpoint=<not s3_url>
+15:36:14 <bcoca> does it 'know' the capabilities of each service type? does it 'not do acl' if minio?
+15:36:45 <bcoca> endpoint=auto option with ability to specify any choice boto3 understands?
+15:36:57 <shertel> It doesn't know the services limitations. It's under the boto3 hood, we just pass in the kwargs. All AWS modules take ec2_url (or the environment var)
+15:37:23 <bcoca> endpoint=s3_url <- in this case
+15:38:06 <shertel> It connects as expected
+15:38:14 <bcoca> i would make specific note in changelog/porting guide on this, fine with merging PR as is, just food for thought on how to handle endpoint= in general for aws modules
+15:39:56 <bcoca> s3_url seems to be the parameter for this, but it confuses me that is_walrus was ever added or seen as 'needed'
+15:40:14 <shertel> Pretty sure it was a copy-pasta.
+15:40:21 <bcoca> he
+15:40:43 <bcoca> k, vote time then
+15:40:44 <sdoran> +1 to merge
+15:40:45 <bcoca> +1
+15:40:45 <shertel> When s3 was ported to boto3, it was unclear if the function was still relevant,
+15:40:55 <shertel> (I left it because I was afraid)
+15:41:00 <sdoran> The changelog has good info
+15:41:12 <sdoran> Would be nice to have a porting guide entry, though.
+15:41:12 <bcoca> sdoran: wont make it into general release
+15:41:48 <Pilou> ok, I will update porting guide then
+15:41:49 <bcoca> maxamillion: can you make note to add this to 2.8.0 changelog? i think its important enough
+15:41:57 <bcoca> Pilou: can be in follow up
+15:42:09 <bcoca> if no one opses im adding rebuild_merge
+15:42:57 <sdoran> bcoca: I thought the changelog entries were aggregated and put into a document.
+15:43:09 <maxamillion> bcoca: catching up on backscroll ... just a sec
+15:43:19 <bcoca> sdoran: bugfixes are for minor releases, but not major
+15:43:28 <bcoca> at least currently
+15:43:47 <sdoran> Good to know.
+15:45:48 <bcoca> #topic https://github.com/ansible/ansible/pull/46746
+15:45:59 <bcoca> this is bigger change, but looks a lot more straight forward
+15:46:09 <maxamillion> bcoca: so am I writing a changelog or just making sure the PR has one?
+15:46:28 <bcoca> maxamillion: adding note about this Pr in changelog once it is generated
+15:46:42 <bcoca> unless im wrong about generation and its already included
+15:46:46 <Pilou> for this one the change should not impact existing playbooks
+15:46:57 <maxamillion> bcoca: yeah, I don't follow ... sorry, I feel like I'm lacking context
+15:48:28 <bcoca> maxamillion: script that generates changelog for .0 releases doesnt currently include bugfix fragments, we only do that for .x where x> 0
+15:48:35 <bcoca> z.y.x
+15:48:55 <bcoca> z.y.0 gets changelog file generated when stable branch is created
+15:48:55 <maxamillion> oh
+15:49:07 <maxamillion> TIL
+15:51:31 <maxamillion> alright
+15:52:18 <bcoca> #topic open floor
+15:57:51 <abadger1999> I think it does include bugfix fragments.
+15:58:28 <abadger1999> We (RMs) need to talk about a changelog category that doesn't get included in the .0
+15:58:35 <abadger1999> I don't think we have that right now.
+15:58:57 <bcoca> ah, i sit corrected, last time i saw it discussed it didnt, but i know you guys were considering requireing fragments for all Prs, not just backports
+15:59:45 <maxamillion> abadger1999: +1 - we can chat off-meeting about it, I just want to make sure I don't lose site of it
+15:59:49 * maxamillion adds to his TODO list
+16:00:35 <bcoca> ah, 2.7.0 changelog does seem to include all fragments, but <=2.6 dont, so that has changed
+16:01:10 <maxamillion> woo! progress :)
+16:01:31 <bcoca> https://github.com/ansible/ansible/blob/stable-2.7/changelogs/CHANGELOG-v2.7.rst#id3
+16:05:17 <maxamillion> it's so pretty
+16:05:31 <maxamillion> I'm a sucker for good docs and a good changelog
+16:06:03 <maxamillion> which is why the new world of phone apps "Update: bug fixes" changelog entries raise my blood pressure
+16:06:15 <maxamillion> buuuuuuut none of this is relevant for the meeting, I'm just rambling ... srry
+16:06:17 <bcoca> #endmeeting

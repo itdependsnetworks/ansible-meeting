@@ -1,0 +1,131 @@
+16:59:58 <mattclay> #startmeeting Testing Working Group
+16:59:58 <zodbot> Meeting started Thu Nov 16 16:59:58 2017 UTC.  The chair is mattclay. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:59:58 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:59:58 <zodbot> The meeting name has been set to 'testing_working_group'
+17:00:10 <mattclay> #info Agenda: https://github.com/ansible/community/issues/248
+17:00:36 <sivel> Hello
+17:00:40 <mattclay> #chair sivel
+17:00:40 <zodbot> Current chairs: mattclay sivel
+17:01:03 <aalexmonteiro> Hi
+17:01:21 <mattclay> #chair aalexmonteiro
+17:01:22 <zodbot> Current chairs: aalexmonteiro mattclay sivel
+17:02:13 * mattclay waits a few minutes for others to show up
+17:02:37 <gundalow> Hi
+17:02:47 <gundalow> Builder is here, so only half in IRC at the moment
+17:02:51 <gundalow> Pilou: You around?
+17:03:08 <mattclay> #chair gundalow
+17:03:08 <zodbot> Current chairs: aalexmonteiro gundalow mattclay sivel
+17:05:12 <mattclay> There is only one item on agenda, but we'll wait for Pilou to discuss.
+17:05:37 <mattclay> In the meantime, is there anything else to discuss?
+17:06:28 <sivel> I think there are 2 things in regards to the PR that Pilou wants to discuss
+17:06:31 <sivel> one we can discuss now
+17:06:50 <sivel> that is around no longer accepting new tests using unittest, and requiring pytest style tests
+17:07:00 <sivel> that is not yet documented, but we have been enforcing it in reviews and such
+17:07:22 <sivel> My initial assumption was that we were going to have Pilou document that, but I believe his understnading and desire was otherwise
+17:07:33 <sivel> But that does impact the scope of his PR
+17:07:34 * Pilou waves
+17:07:39 <mattclay> #chair Pilou
+17:07:39 <zodbot> Current chairs: Pilou aalexmonteiro gundalow mattclay sivel
+17:08:15 <Pilou> sivel: using pytest hasn't been enforced for network unit tests
+17:08:33 <sivel> it should be though, so if we aren't we are failing at enforcing that
+17:08:42 <sivel> all new tests should be pytest per our last decision
+17:08:50 <sivel> but yes, it isn't documented
+17:09:10 <sivel> so I think we need to re-solidify that, and get it out there
+17:09:35 <Pilou> by the way I didn't add any new test, i updated existing tests
+17:10:30 <sivel> yes, it was more around the documentation, which I undertand you removed.  Although we are putting a lot into code that we plan on having to rewrite anyway later to use pytest style
+17:11:04 <Pilou> then should I consider this PR rejected ?
+17:11:52 <sivel> I'd like mattclay and gundalow to weigh in here
+17:12:56 <mattclay> Pilou: I think your PR does add value as it's reducing redundant code within the tests.
+17:14:54 <mattclay> I don't expect we're going to have anyone volunteer to go through and re-write all of our existing unit tests to switch everything over to pytest. So it seems reasonable to clean up code duplication within the existing unit tests, even if we'd like to see them converted to pytest style eventually.
+17:15:24 <mattclay> Even if someone does convert them, I think the cleanup work that Pilou has done will still be useful.
+17:15:34 <sivel> I am +1 to that
+17:15:52 <sivel> I don't know where my priorities will get shifted, but I do plan on spending some time in tests
+17:16:02 <sivel> though potentially increasing coverage at first
+17:18:09 <sivel> I haven;'t specifically reviewed the PR, so I can't speak on anything past what mattclay has stated
+17:18:56 <mattclay> When creating new unit test files it makes sense to use pytest style. When adding tests to an existing file (or just fixing those tests) I can understand wanting to stick to the style that is already present. I don't think we should insist on converting to pytest style whenever an existing test file is touched.
+17:19:32 <sivel> Yes, I may not have been clear about "new tests", but I was indicating effectively new files or large portions of tests
+17:20:57 <gundalow> Hi
+17:21:21 <mattclay> I think of the conversion to pytest as similar to PEP 8 changes. Don't make changes to the style of existing tests in the same PR as non-style changes are being made. The two should be done separately.
+17:22:00 <gundalow> Regarding the network unit tests (which will be growing) I'm happy to
+17:22:12 <gundalow> 1) Tell people, including partners to do it a different way
+17:22:30 <gundalow> 2) work through the backlog and update the existing tests - IF there is a benefit
+17:23:21 <mattclay> Pilou: At this point, what questions do you have on where things should be going with your PR?
+17:23:35 <gundalow> For brand new tests MUST they be done as pytest (ie hard requirement?)
+17:24:14 <abadger1999> <nod> Although in many cases switching to pytest would allow simplifying the code so I wouldn't be against people deciding they want to port just beause.
+17:24:24 <gundalow> #chair abadger1999
+17:24:24 <zodbot> Current chairs: Pilou aalexmonteiro abadger1999 gundalow mattclay sivel
+17:24:25 <Pilou> mattclay: the "policy" is clear to me now :)
+17:24:30 <gundalow> abadger1999: Good info, thanks
+17:24:48 <abadger1999> So I would allow someone to change the test and convert at the same time.
+17:24:50 <sivel> gundalow: I believe yes, "new tests" must be pytest
+17:26:22 <mattclay> abadger1999: In cases like that it would probably be easier to review if the conversion of the existing tests was at least done in a separate commit in the same PR.
+17:27:19 <mattclay> Pilou: Did you see the comment on your PR from mikedlr? https://github.com/ansible/ansible/pull/31456/files#r143680842
+17:27:27 <gundalow> OK, so
+17:27:34 <abadger1999> mattclay: yeah... probably.  But the only reason is that the existing test is probably harder to read than the pytest version.
+17:27:55 <gundalow> 1) Docs need updating to make it clear that all *new* unit tests should be pytest
+17:28:22 <abadger1999> mattclay: so i'm not sure i'd make a hard and fast rule around that.
+17:28:22 <Pilou> mattclay: i can make this change
+17:28:23 <gundalow> 2) Docs: PRs welcome to update existing tests to use pytest, though that should be the only change in the PR otherwise it's too difficult to read
+17:28:44 <abadger1999> better rule is maybe "Change less functions/tsts in each commit"
+17:28:58 <gundalow> Do we have an example PR of a port to pytest, how much of a change is it?
+17:29:08 * gundalow has to step away again
+17:29:46 <abadger1999> gundalow: some things are very simple other things are more in-depth.  the more in-depth ones are where pytest proves its worth, though.
+17:30:04 <mattclay> Yeah. The idea of splitting conversion from actual test changes is all about making it easier to review. I consider it more of a recommendation than a hard rule. Of course if the PR is more difficult to review it's likely going to take longer to get reviewed.
+17:30:22 <abadger1999> I might be able to dig up some conversion of module_utils tests that shows the complex-but-more-readable-after things.
+17:31:08 <sivel> abadger1999: I think that would be helpful for a number of people. I personally don't have a huge amount of experience with pytest
+17:31:09 <mattclay> gundalow: For #1 we need to be clear on what is considered "new tests".
+17:31:55 <abadger1999> sivel: the two things that pytest does much better than unittest are fixtures and parameterization.
+17:31:57 <Pilou> gundalow: AFAIK there isn't an example of a port to pytest. There are some cloud/amazon tests using pytest.
+17:31:59 <sivel> I would consider new tests, new files containing tests, or a large number of tests contributed to an existing file.  Although defining "large number" is semi subjective
+17:32:12 <sivel> like 12 :)
+17:32:39 <abadger1999> unittests fixtures are very naive compared to pytest and unitest parametrerization isn't builtin.
+17:34:03 <abadger1999> sivel, gundalow: https://github.com/ansible/ansible/commit/47f26ee11c84b28e3eac0379c9c3e3112de1b32d
+17:34:23 <sivel> abadger1999: I tried to switch my current $work tests to pytest once, and we have a guy on the team who hates "frameworks" and other simialr things, and wanted something that didn't force him into using a test running outside of what was available in the stdlib ¯\_(ツ)_/¯
+17:34:23 <mattclay> sivel: I tend to think of "significant percentage" instead of "large number". So if new tests in an existing file end up being something like 80% percent of the lines in the file, it's probably time to convert the rest.
+17:35:03 <abadger1999> sivel: <nod>  unittest is more frameworky than pytest but it does have the advantage of being shipped in the stdlib.
+17:35:24 <sivel> I was more saying, if you are adding a bunch, don't make them part of the existing, write them as pytest, leaving the previous as is unless you care to rewrite them
+17:35:42 <sivel> we just need to clarify which direction to go
+17:35:49 <abadger1999> mattclay: note that a lot of times with the stuff I'm working on I also end up moving the pytest code to a new file.
+17:36:23 <sivel> abadger1999: that is preobably a good idea, although what are you doing as far as naming is concerned (of the new file)?
+17:36:32 <mattclay> abadger1999: Is that because the existing test file is incorrectly named for what it is testing?
+17:36:45 <abadger1999> pytest lets you easily test a lot more cases so my tests go from a test file per lib/ansible file to a test file per lib/ansible "function"  (really functionality)
+17:37:26 <abadger1999> sivel: for module_utils/basic.py I went from units/module_utils/test_basic.py  to units/module_utils/basic/test_$FUNCTION.py
+17:37:45 <sivel> ok, that make sense I suppose, I've never broken tests out that far before
+17:37:57 <mattclay> abadger1999: Yeah, that makes a lot of sense.
+17:37:57 <abadger1999> You can look at the commit I linked to to see what I'm doing.
+17:37:59 <sivel> but I suppose ti also keeps your files from being thousands of lines long
+17:38:27 <mattclay> Just as long as we're following a consistent pattern so it's easy to match up unit tests to what they're testing.
+17:38:34 <abadger1999> sivel: yep.  Easier to see.  Also, because you can get very declarative via parametrization, it keeps the data and the test code close together.
+17:40:01 <abadger1999> I have used classes in pytest just to organize as well.  That works okay for seveal small functions which are related but I wouldn't recommned it for stuff that's more unrelated.
+17:40:37 <abadger1999> (AnsibleModule, for instance would be monstrous to test that way.  But module_utils/_text might be a good candidate)
+17:40:56 <mattclay> So back to Pilou's PR. Is there anything that needs to be changed or added there?
+17:42:24 <Pilou> i noted s/TestAnsibleModule/ModuleTestCase/
+17:42:27 <sivel> From a high level I don't think so, but we just need some other docs around pytest, but that isn't something Pilou needs to do
+17:45:02 <mattclay> Does anyone want to volunteer to work on those docs updates?
+17:45:10 <Pilou> gundalow: ./test/units/modules/cloud/openstack/test_os_server.py seems a good sample of pytest based
+17:45:41 <sivel> I don't feel comfortable taking that doc work on, with my limited exposure to pytest
+17:47:11 <Pilou> mattclay: I propose that i update some unittest based tests I wrote using pytest. Once reviewved and merged then i would be able to update documentation
+17:47:51 <mattclay> +1
+17:48:04 <sivel> but a minium, at least what gundalow mentioned, should be added sooner rather than later
+17:48:20 <sivel> just my opinion
+17:48:34 <sivel> effectively that new tests should use pytest
+17:48:52 <Pilou> #info all *new* unit tests should be pytest
+17:48:53 <mattclay> sivel: Yeah, we can do something quick now and then come back and update docs with actual examples later.
+17:49:01 <sivel> I don't know if gundalow was going to add that or just communicate it to partners
+17:49:27 <Pilou> #info PRs welcome to update existing tests to use pytest
+17:51:45 <Pilou> #action Pilou update an existing test, replacing unittest with pytest. Once merged, update the documentation.
+17:52:11 <mattclay> Pilou: Once you update your PR with the `ModuleTestCase` name change I'll re-review and merge.
+17:53:11 <mattclay> Pilou: We'll want to get sign-off on the docs changes though before merging.
+17:53:33 <mattclay> The docs changes are minor so they should be reviewed quickly.
+17:54:44 <Pilou> i removed the doc changes
+17:54:46 <gundalow> back
+17:55:55 <mattclay> Pilou: I still see minor docs changes in the PR: docs/docsite/rst/dev_guide/testing_units_modules.rst
+17:56:16 <Pilou> oh you're right
+17:56:59 <gundalow> For policy stuff, I've found it works best if we document in dev_guide first. I'm going to be doing an email to Network Partners next week, so I can include a link in that
+17:57:00 <Pilou> they are unrelated to pytest/unittest, I will move them in another PR
+17:59:17 <mattclay> OK, we're almost to the end of our scheduled meeting. Is there anything else we need to discuss?
+17:59:47 <gundalow> Do we know how we are progressing this?
+18:01:15 <gundalow> ah, missed te #action above
+18:01:19 <gundalow> Thanks mattclay :)
+18:01:35 <gundalow> #info NO MEETING NEXT WEEK
+18:04:28 <mattclay> #endmeeting

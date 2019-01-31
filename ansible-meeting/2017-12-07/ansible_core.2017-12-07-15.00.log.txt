@@ -1,0 +1,327 @@
+15:00:25 <thaumos> #startmeeting ansible core
+15:00:25 <zodbot> Meeting started Thu Dec  7 15:00:25 2017 UTC.  The chair is thaumos. Information about MeetBot at http://wiki.debian.org/MeetBot.
+15:00:25 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+15:00:25 <zodbot> The meeting name has been set to 'ansible_core'
+15:00:29 * gundalow waves
+15:00:30 <sivel> hello
+15:00:37 <sdoran> Howdy
+15:00:45 * Qalthos 🌊🌊
+15:01:23 <thaumos> #chair sivel sdoran gundalow Qalthos
+15:01:23 <zodbot> Current chairs: Qalthos gundalow sdoran sivel thaumos
+15:01:27 <thaumos> gm folks
+15:01:41 * ryansb 🌊🌊
+15:02:52 <shertel> \o
+15:03:06 <abadger1999> Olá
+15:03:18 <gundalow> #chair akasurde ryansb shertel abadger1999
+15:03:18 <zodbot> Current chairs: Qalthos abadger1999 akasurde gundalow ryansb sdoran shertel sivel thaumos
+15:03:32 <akasurde> \o
+15:04:03 <gundalow> Right, lets start with a vote
+15:04:13 <gundalow> #topic Bulk code tidyups (autopep8)
+15:04:40 <gundalow> #info As you all know we have a pep8 standard enforced by `ansible-test sanity --test pep8`
+15:05:11 <mkrizek> \o
+15:05:12 <gundalow> #info There are a number of files that are not compliant, which are listed in test/sanity/pep8/legacy-files.txt
+15:05:16 <gundalow> #chair mkrizek
+15:05:16 <zodbot> Current chairs: Qalthos abadger1999 akasurde gundalow mkrizek ryansb sdoran shertel sivel thaumos
+15:05:31 <gundalow> akasurde: mkrizek need to get you Ops on the various IRC channels, see the newstarts guide in Google Docs
+15:06:05 <akasurde> ok
+15:06:10 * mkrizek keeps forgetting about that :/
+15:06:32 <gundalow> #info There is a slow trickle of PRs to address pep8. Generally done by hand, and as is the way when humans are involved, then sometimes contains mistakes that are not spotted during review (such as missing `,` in lists)
+15:07:03 <gundalow> #info I propose that we run `autopep8 -r  --max-line-length 160 --in-place --ignore E305,E402,E722,E741 .` against the codebase
+15:07:15 <gundalow> #info PR1: autopep8 for modules
+15:07:28 <sivel> As a 1 time thing, and hand adjusting any places that autopep8 didn't handle I assume?
+15:07:43 <gundalow> #info PR2: hand crafted fixes for issues that autopep8 doesn't fix modules
+15:07:47 <sivel> :)
+15:07:49 <akasurde> gundalow, what about git history in that case
+15:07:53 <gundalow> #info pr3 & pr4 same for non-modules
+15:08:11 <sivel> akasurde: we "lose" it anyway with all the small PRs
+15:08:33 <sivel> this is basically to resolve the problem with having to do the reviews, and people putting too many other chnages in at the same time
+15:08:34 <akasurde> Then it is Ok
+15:08:43 <gundalow> akasurde: Will just be two entries in Git history, rather than slow trickle of PRs. Also depending how use you Gith history/blame I believe there are options to ignore whitespace
+15:09:45 <gundalow> From raising PR to mergeing will be done fairly quickly for each PR
+15:10:22 <gundalow> So before we vote, does that make sense, any questions?
+15:10:50 <ryansb> You can diff without whitespace, but I don't think you can blame without it
+15:11:25 <akasurde> I am OK as long it is going to solve problem once and for all
+15:11:25 <gundalow> ah, OK, thanks ryansb
+15:11:30 <sdoran> s/blame/praise 😉
+15:11:38 <gundalow> Yup, that's the main driver for this. JUST GET IT DONE
+15:11:41 <gundalow> #chair sdoran
+15:11:41 <zodbot> Current chairs: Qalthos abadger1999 akasurde gundalow mkrizek ryansb sdoran shertel sivel thaumos
+15:11:56 <sdoran> I hate reviewing pep8 changes. I'm in favor of `autopep8`.
+15:12:09 <gundalow> OK, voting for doing this against `devel`
+15:12:10 <gundalow> +1
+15:12:12 <sivel> I am +1, overall. I'm not a huge fan of the decisions that autopep8 makes some times, but they are likely to happen similarly with individuals doing it too
+15:12:13 <abadger1999> +1
+15:12:15 <shertel> +1
+15:12:18 <mkrizek> +1
+15:12:18 <Qalthos> +1
+15:12:26 <sdoran> +1
+15:12:39 <akasurde> +1
+15:13:02 <abadger1999> For the record, jimi|ansible was +1 yesterday and bcoca was -1.
+15:13:17 <sivel> was just about to say we seem to be 100% ;)
+15:13:24 <gundalow> Dag is also +1
+15:13:26 <akasurde> abadger1999, any specific reason for bcoca -1
+15:13:32 <sivel> attribution
+15:13:48 <abadger1999> attribution and he doesn't like some of the pep8 style.
+15:13:58 <jimi|ansible> that is the only downside, bisect, but i'd rather have one point of inflection for bisect than 100
+15:14:06 <sivel> jimi|ansible: ++
+15:14:08 <gundalow> jimi|ansible: That's my thought as well
+15:14:38 <abadger1999> in the past he mentioned old PRs need rebasing afterwards but... I'd rather have a one time event than a trickle of style changes.
+15:14:47 <thaumos> +1
+15:14:57 <mattclay> +1
+15:15:02 <gundalow> #chair bcoca mattclay
+15:15:02 <zodbot> Current chairs: Qalthos abadger1999 akasurde bcoca gundalow mattclay mkrizek ryansb sdoran shertel sivel thaumos
+15:15:23 <sivel> sweet, I think we are good to go
+15:15:36 <gundalow> +1: 10 (core) + 1 (commiter, but not core)
+15:15:43 <gundalow> -1: 1 (core)
+15:15:59 <ryansb> +1 (make that a 11 core)
+15:16:02 <ryansb> rip off the bandaid
+15:16:05 <sivel> I think that far exceeds my voting expectations
+15:16:06 <gundalow> woot
+15:16:34 <jimi|ansible> i think that's the closest this team has ever come to 100% on a yes vote, including when we had only 3 people :)
+15:16:45 <bcoca> 01
+15:16:49 <gundalow> #agreed 11 (core) and 1 (comiter, but not core) people agreed to do this. Only -1 was from bcoca
+15:16:52 <gundalow> jimi|ansible: I think so
+15:16:56 <gundalow> #halp
+15:17:01 <gundalow> #help
+15:17:11 <gundalow> ah, yes it is agreed
+15:17:20 <jimi|ansible> so let it be written, so let it be merged
+15:17:20 <gundalow> Excellent, thanks all
+15:17:22 <bcoca> i just think we have other things we should focus on
+15:17:38 <gundalow> bcoca: sure, though think how much time we will save
+15:17:54 <bcoca> no, i think its mostly a waste of time
+15:18:01 <jimi|ansible> doing this in one shot will save time, and we can turn on full pep8 checking again to make sure we never have to do it again
+15:18:14 <bcoca> none of our code is 'unmaintainble' from not following style (facts.py kind of was .. but now for other reasons)
+15:18:30 <bcoca> jimi|ansible: we never had 'full pep8 checking' .. it would be a new thing
+15:18:49 <jimi|ansible> bcoca: sure we did, 4 years ago i would always run "make pep8" before merging anything
+15:19:03 <sdoran> My hope is doing this _once_ will reduce the PEP8 PR noise.
+15:19:23 <sdoran> I agree we have more important things to work on. Hoping this will cut down on noise and let us focus on those things.
+15:19:27 <bcoca> jimi|ansible: YOU had full pep8 checking, since other stuff got merged ... it wasn't 'all full pep8'
+15:19:29 <gundalow> I don't want to cut anyone off, so please let me know when you are ready to move on
+15:20:03 <bcoca> move on, i know im in minority here
+15:20:04 <jimi|ansible> well i would run it and clean up things that others merged in at the time
+15:20:19 <jimi|ansible> we didn't have any automated testing at the time, it was all done manually
+15:20:42 <sivel> gundalow: how are we handling the open pep8 issues?
+15:20:50 <bcoca> i know, MPD also did lots of it and i know he didn't use pep8
+15:21:32 <jimi|ansible> he was pragmatic about it, he disabled a lot of the pep8 checks that he disagreed with but he also didn't want a constant stream of pep8 fixes/complaining about non-compliance
+15:21:45 <sivel> gundalow: I suppose you will update/close them all?
+15:22:15 <gundalow> sivel: I will review them post merge and see if the authors want to do anything else. Some of the label:pep8 PRs are a mix of pep8+other things. I've already spoken to Dag (as a creator of a lot of those) about this
+15:22:28 <sivel> gundalow: ++
+15:22:33 <bcoca> jimi|ansible: position which i agree with, i think all of this was mostly a waste of time/resources better used for bugfixing/feature adding ... but i know im alone in that
+15:23:04 <jimi|ansible> if we get it fixed and reenable the test for the whole codebase, we can go back to ignoring it
+15:23:18 <gundalow> Anything left on this topic?
+15:23:23 <sivel> I don't believe so
+15:23:27 <jimi|ansible> and i'd much rather do that in one shot rather than piecemeal as we've been doing
+15:24:15 <gundalow> jimi|ansible: bcoca Happy to move on to next topic?
+15:24:34 <jimi|ansible> yep
+15:24:43 <bcoca> lesser evil
+15:24:50 <gundalow> Cool
+15:25:02 <bcoca> can we also say again 'no style only PRs' ?
+15:25:12 <bcoca> ^ we have a few people 'refactoring' modules just for style
+15:25:31 <gundalow> #topic Bulk code tidyups (non-pep8 related)
+15:25:32 <abadger1999> -1
+15:25:44 <abadger1999> (that was -1 to a rule on no style PRs.)
+15:25:57 <gundalow> bcoca: Good point, let's agreed on this now, since we have a good set of people here and it's related
+15:26:09 <gundalow> There are from time to time PRs that do things like
+15:26:12 <gundalow> 1) remove required: false
+15:26:17 <gundalow> 1) remove default: null
+15:26:18 <jimi|ansible> how many of those do we actually get? and is it mostly modules?
+15:26:20 <gundalow> 2) remove default: null
+15:26:27 <sivel> -1
+15:26:29 <abadger1999> If someone is the module/plugin owner and they want to change the style in the module, I'm okay with that.  If they're a drive-by then I'd refuse the change.
+15:26:32 <gundalow> ah, context, I'm talkng about modules here
+15:26:56 <gundalow> 3) change `author:` to be a list of well formatted FIRST LAST (@GITHUB)
+15:26:58 <gundalow> etc
+15:27:19 <gundalow> The docs for 1&2 says it's not needed, though it's a guide at most
+15:27:21 <bcoca> gundalow: not even talking about those .. but will include them, there is nothing lost/gained really on those
+15:27:22 <gundalow> No docs for 3
+15:27:33 <Pilou> 3 is documented in the dev_guide
+15:27:33 <abadger1999> I'm okay with fixing style in docuentation.... Our documentation grammar has a lot less room for differences in opinion than python code.
+15:27:52 <bcoca> abadger1999: this is not incorrect, just redundant
+15:27:55 <gundalow> I wonder if we should agree if they need fixing, or if we just don't care, and formally state it's a wast of time fixing it
+15:28:06 <gundalow> in the "there are betterthings to do"
+15:28:39 <abadger1999> I'm okay with someone else doing that work as long as it isn't something that someone else will want to change back later.
+15:28:45 <gundalow> we *could* bulk fix this, bulk deletion of any `required: false` `default: null` can be done, and enforced by CI
+15:28:49 <bcoca> author is not required to be a list, like description it can be a signle string (will be assumed to be list of 1 item)
+15:28:49 <jimi|ansible> i am neutral on this. While they are certainly not high priority things, little style fixes for consistency are the kind of things newbies to our codebase might submit, and I don't want to smack those down outright
+15:29:12 <gundalow> I personally don't like us changing things that CI doesn't enforce, it's just fighting against the tide
+15:29:17 <abadger1999> jimi|ansible: +1
+15:29:29 <mattclay> gundalow: +1
+15:29:39 <akasurde> jimi|ansible, +1
+15:29:56 <Qalthos> gundalow: +1
+15:30:13 <Pilou> gundalow: +1
+15:30:30 <abadger1999> I appreciate the CI sentiment but don't 100% share it.
+15:30:40 <gundalow> So I'd like to know if we care enough about these things to fix it
+15:30:49 <abadger1999> that said, those documentation points should be easy to write a CI check for.
+15:31:03 <gundalow> One of the issues at the moment is we are giving mixed review comments
+15:31:04 <abadger1999> But may be costly in terms of CPU time.
+15:31:12 <sivel> I'm -1 on bulk, I'm +0 on them in general
+15:31:31 <abadger1999> Make it part of ansible-validate so that it works on PR submission maybe?
+15:31:39 <mattclay> The module validator can probably handle those doc checks easily.
+15:31:46 <gundalow> abadger1999: test/sanity/validate-modules/schema.py could easily only accept `required: true`
+15:32:02 <gundalow> and fail if `default: null`
+15:32:14 <jimi|ansible> gundalow: i don't care about them enough to fix them, but if someone else wants to i'm not going to reject them either
+15:32:37 <gundalow> jimi|ansible: And maybe that statement is all we need
+15:33:32 <dag> I basically did those changes as I was doing PEP8 anyway. It's not just cleaning up doc and argspec, but also ensuring short_description has no trailing dot, while other descriptions do. Descriptions are sentences and start with a capital character, etc...
+15:33:35 <gundalow> And if at somepoint if someone wants to update schema.py to be stricter for new modules that's fine
+15:33:45 <gundalow> #chair dag
+15:33:45 <zodbot> Current chairs: Qalthos abadger1999 akasurde bcoca dag gundalow mattclay mkrizek ryansb sdoran shertel sivel thaumos
+15:33:50 <gundalow> Afternoon sir
+15:34:02 <dag> I am sure most people wouldn't care, but since I was going over it, it's easy to fix as well.
+15:34:13 <dag> A lot of argument descriptions are crap
+15:34:13 <gundalow> Yup, totally understand why you did it
+15:34:22 <bcoca> i would argue, docs that have those entries are NOT wrong, just redundant
+15:34:23 <dag> and it's up to the author(s) to accept or not
+15:34:28 <bcoca> so ci check seems overkill
+15:34:48 <dag> if an author doesn't accept I just fix to their liking or drop the PR
+15:34:50 <bcoca> ^ i care more about good descriptions than extra default: null
+15:35:01 <dag> yo ucannot do something like that with autopep8 :)
+15:35:21 <dag> bcoca: sure, it's non-essential, but it's easy to fix if you're going over the module anyhow
+15:35:36 <dag> and it makes the documentation easier to parse
+15:35:40 <bcoca> dag: issue is 'only fix' not 'additional fix'
+15:35:57 <bcoca> dag: not really, just less to parse, but more explicit vs implicit, which i have no problems with
+15:36:04 <dag> bcoca: if the module author agrees, why would you care ?
+15:36:25 <bcoca> style only PRs take time that is better spent elsewhere
+15:36:35 <dag> bcoca: it is not your time
+15:36:42 <bcoca> yet it is
+15:36:51 <dag> why ?
+15:36:55 <dag> ok, leave it
+15:37:28 <sivel> So we are going with "i don't care about them enough to fix them, but if someone else wants to i'm not going to reject them either" ?
+15:37:42 <bcoca> cause if author is not repsponsive we get pinged for those, cause we still need to do triage, cause it is still PR in our queue to examine down the line to evaluate if we need to intervene
+15:38:20 <dag> bcoca: it's clearly marked PEP8, easy to ignore if you don't care
+15:38:23 <bcoca> sivel: my point was not over defaul: null fixes, but style changes to modules, there are a few PRs that just rearrange the code (in non PEP8 ways) to better suit other peoples aesthetics
+15:38:37 <bcoca> dag: pep8 is not part of this discussion
+15:38:38 <abadger1999> sivel: +1 to that
+15:39:14 <sivel> So I think that comment was in regards to doc fixes.
+15:40:05 <gundalow> ) Although `required: false` and `default: null` are redundent (as they are the default), removing them isn't required as they are just "redundent" rather than "incorrect". If while working on a modules and making improvements to the DOCUMENTATION, such as improveing the `descriptions` you wish to remove these lines, that is fine, though not required.
+15:40:08 <sivel> I don't think anyone wants to see arbitrary code changes. But there is a time when we might, when the changes makes what the code is doing more clear. but I wouldn't be happy with mass changes
+15:40:10 <gundalow> A ^
+15:40:20 <gundalow> B) Understand that PRs that improve the module for a users point of view (improved docs, bug fixes, error handling) are much more welcome that style only PRs. Generally speaking we do not welcome style only PRs, there is still overhead in triaging PRs.
+15:40:28 <gundalow> C) PRs that improve the quality of module documentation, including propper use of C(..), I(...), M(...), U(...) are welcome
+15:40:52 <bcoca> sivel: that is my point, since we started accepting 'style changes' .. we do get 'arbitriary code style' .. non pep8 related PRs, i would like to stop accepting those
+15:41:14 <gundalow> bcoca: does A &B address that for you
+15:41:17 <bcoca> gundalow is the one that sidetracked it to module docs, which is not what i meant, nor dag to pep8
+15:41:31 <sivel> bcoca: yes, I agree, which I do think was more related to being in the code doing pep8. I'd have to wait and see if people do it without having pep8 to fix
+15:41:47 <dag> sivel: I doubt it
+15:41:56 <bcoca> we have those in queue already
+15:42:08 <abadger1999> gundalow: I'm +1 to your ABC.
+15:42:19 <sivel> gundalow: +1 from me too
+15:42:25 <bcoca> +1
+15:42:26 <akasurde> gundalow +1
+15:42:27 <shertel> +1 also
+15:42:37 <jimi|ansible> +1 also also
+15:42:39 <mkrizek> +1
+15:42:46 <dag> +1
+15:43:02 <bcoca> so aside from site and docs, no more style PRs
+15:43:11 <gundalow> Is the wording clear enough in ABC? I'll raise a PR to update dev_guide (as well as mention pep8 changes)
+15:43:25 <gundalow> bcoca: what's "site" mean in that context?
+15:43:30 <bcoca> docsite
+15:43:31 <gundalow> docsite?
+15:43:32 <gundalow> cool
+15:43:36 <gundalow> yup
+15:43:39 <bcoca> not sure we have any other 'site'
+15:43:53 <mattclay> +1
+15:44:00 <gundalow> just wasn't familiar with that term
+15:44:02 <gundalow> cool
+15:44:04 <bcoca> docsite style changes 'make sense' as it si a presentation layer
+15:44:04 <abadger1999> bcoca: For other code I fall back to module maintainer vs driveby.  I'll accept style changes from a module maintainer... they have to deal with that code day-in, day-out.  No sense making their life harder by preventing them from making it feel intuitive to themselves.
+15:44:28 <gundalow> #info agreed A) Although `required: false` and `default: null` are redundent (as they are the default), removing them isn't required as they are just "redundent" rather than "incorrect". If while working on a modules and making improvements to the DOCUMENTATION, such as improveing the `descriptions` you wish to remove these lines, that is fine, though not required.
+15:44:35 <abadger1999> So I am -1 to a blanket ban on style changes.
+15:44:46 <bcoca> abadger1999:  i was mostly talking about 'core maintained', module maintainers are already free to do what they want, but we can set the general tone
+15:44:51 <gundalow> #info agreed B) Understand that PRs that improve the module for a users point of view (improved docs, bug fixes, error handling) are much more welcome that style only PRs. Generally speaking we do not welcome style only PRs, there is still overhead in triaging PRs.
+15:45:05 <gundalow> #info agreed C) PRs that improve the quality of module documentation, including propper use of C(..), I(...), M(...), U(...) are welcome
+15:45:17 <kedarX> +1
+15:45:24 <gundalow> #action Gundalow to document ABC + update docs for pep8 (given autopep8)
+15:45:27 <gundalow> #chair kedarX
+15:45:27 <zodbot> Current chairs: Qalthos abadger1999 akasurde bcoca dag gundalow kedarX mattclay mkrizek ryansb sdoran shertel sivel thaumos
+15:45:35 <bcoca> gundalow: C) i dont consider 'style' as they are 'fixing presentation'
+15:45:53 <bcoca> style in this context is mostly 'code format' or 'stuff devs and computer reads, but not users'
+15:46:06 <gundalow> meh, turns out I can't bot
+15:46:17 <gundalow> #agreed A) Although `required: false` and `default: null` are redundent (as they are the default), removing them isn't required as they are just "redundent" rather than "incorrect". If while working on a modules and making improvements to the DOCUMENTATION, such as improveing the `descriptions` you wish to remove these lines, that is fine, though not required.
+15:46:17 <bcoca> doc/ui/presentation style is always important
+15:46:24 <gundalow> #agreed B) Understand that PRs that improve the module for a users point of view (improved docs, bug fixes, error handling) are much more welcome that style only PRs. Generally speaking we do not welcome style only PRs, there is still overhead in triaging PRs.
+15:46:31 <ryansb> Maybe change the last sentence of B to "style PRs do still have triage and review overhead, so be mindful that a style change should be aimed to make code more understandable, not just reformat it"
+15:46:56 <ryansb> so it's not that we don't want them, but we want them to be about *understandability* not PEP8ing
+15:47:01 <bcoca> ryansb: the problem is 'more understandalbe' .. is very subjective
+15:47:13 <ryansb> er.... that's fair
+15:47:16 <bcoca> ^ java programmer vs perl one .. create 2 diff worlds of 'understandable python'
+15:47:34 <gundalow> #agreed C) PRs that improve the quality of module documentation, including propper use of C(..), I(...), M(...), U(...) are welcome. Changes that improve docs/docsite/ are always welcome - In this context doc/ui/presentation/formatting IS important
+15:47:38 <Pilou> abadger1999: module maintainer should be able to merge their style changes PR without taking time from the core team (thanks to automerge workflow)
+15:47:39 <ryansb> I'm cool with rewording it to be a more objective metric
+15:47:44 <dag> without concrete examples this discussion is moot IMO
+15:47:46 <ryansb> but the idea there
+15:48:25 <gundalow> #chair Pilou
+15:48:25 <zodbot> Current chairs: Pilou Qalthos abadger1999 akasurde bcoca dag gundalow kedarX mattclay mkrizek ryansb sdoran shertel sivel thaumos
+15:48:39 <gundalow> dag: How can we address that?
+15:48:40 <dag> some authors don't like lines longer than 72 characters, even though our PEP8 supports it and it improves readability
+15:48:49 <dag> but readability also affects what you're used to read
+15:49:07 <dag> what you expect something to look like
+15:49:10 <bcoca> ^ why i dislike subjective terms like 'understandable'
+15:49:15 <bcoca> people understand diff things
+15:49:15 <gundalow> A line that's under 72char is under 160chars, therefore still OK
+15:49:43 <dag> so if I fixed PEP8 issues by making the line longer, rather than indenting and putting operations in the correct location, that's a point of discussion
+15:50:18 <bcoca> dag: i will say it one last time, pep8 changes are not part of this discussion, it was already agreed in previous topic to do bulk pep8 refactor so no more pep8 PRs will be needed
+15:50:20 <gundalow> well after bulk pep8 there will not be any "fixing of pep8", only writing new code that's pep8 compliant
+15:50:21 <dag> gundalow: I don't think you can address it, and I am sure some people will complain about the autopep8 result
+15:50:35 <dag> but I guess they're free to fix it (which would be a style PR ;-))
+15:50:57 <dag> bcoca: PEP8 changes result in style changes
+15:51:10 <dag> there's more than one way to fix a PEP8 issue
+15:51:24 <bcoca> not if it doesnt exist anymore
+15:51:31 <gundalow> THAT IS THE KEY
+15:51:33 <bcoca> rest is 'variations on pep8'
+15:51:34 <dag> but I am fine to close this topic, I'd rather do PEP8 changes then to continue this discussion :)
+15:51:42 <gundalow> haha
+15:51:43 <gundalow> ok
+15:51:48 <bcoca> which i really want to avoid going back and forth between 2 people interpreatation of pep8
+15:51:48 <gundalow> #topic Open Floor
+15:51:51 <abadger1999> dag: <nod>  I would let module authors fix that as they see fit.... Hell, I even let someone merge jtyr's change to ANSIBLE_METADATA as part of another change even though it'll just get changed back next time we bump metadata information (and it wasn't in his modules)
+15:51:55 <gundalow> =========================================================
+15:51:56 <gundalow> =========================================================
+15:52:04 <gundalow> Amyone got anything else
+15:52:10 <bcoca> abadger1999: yeah .. like that crap
+15:52:18 <eikef> Is it appropriate to do bot_broken when automerge does not happen, or should a specific person be pinged?
+15:52:31 <bcoca> really dont want to waste time between diff versions of a pep8 style change ... already wasted too much time on those
+15:52:42 <gundalow> #chair eikef
+15:52:42 <zodbot> Current chairs: Pilou Qalthos abadger1999 akasurde bcoca dag eikef gundalow kedarX mattclay mkrizek ryansb sdoran shertel sivel thaumos
+15:52:49 <bcoca> eikef: bot_broken is correct
+15:52:51 <gundalow> OK /topic on pep8
+15:53:00 <Pilou> eikef: which PR ?
+15:53:19 <jtanner> what's broken?
+15:53:21 <eikef> Pilou: https://github.com/ansible/ansible/pull/33435
+15:53:33 <eikef> it has 2 shipits, bot set shipit and automerge, but did not automerge
+15:53:37 <bcoca> eikef: jsut take into account that new commit and other factors can make a 'shipit' not count
+15:54:16 <bcoca> eikef: 2h is not long to wait, bot runs across whole repo, does not do things immediatly
+15:54:50 <Pilou> related: is http://ansibullbot.eng.ansible.com/cgi-bin/ansibot_status.cgi not available anymore ?
+15:54:57 <sivel> eikef: it wasn't auto merged because github lists 2 different authors in commits
+15:54:58 <eikef> bcoca: ok. I had thought it would do the merge at the same time it sets the flag (as happened on other PRs recently). Maybe I was just impatient. It does say waiting_on: maintainer in bot_status, though.
+15:55:10 <sivel> eikef: the first commit is from a different git user than the rest
+15:55:33 <sivel> eikef: because of squashing, it can lose proper attribution
+15:56:01 <sivel> so we don't auto merge, as we need to decide how that should be handled
+15:56:11 <sivel> eikef: are all the commits from you? just 2 different git users?
+15:56:28 <eikef> none of them are from me, I am just a module maintainer for that module
+15:57:12 <eikef> but I'll have a lookout for that case in the future; I did not know the bot would block on that :)
+15:57:41 <bcoca> more than 2 commiters, more than 10 commits
+15:57:52 <bcoca> ah, no 9
+15:59:02 <sdoran> Pilou: Fixed
+15:59:15 <Pilou> sdoran: thanks :)
+15:59:35 <Pilou> the bot should not add 'automerge' if the PR can not be 'automerged'
+16:00:15 <eikef> Should I ask the original submitter(s) (I suspect it's the same person) to squash the commits in the PR themselves?
+16:00:21 <jtanner> https://github.com/ansible/ansibullbot/blob/master/ansibullbot/wrappers/defaultwrapper.py#L1141-L1148
+16:00:30 <jtanner> that's the reason the PR in question was not merged
+16:02:29 <jtanner> i bot -should- add automerge to PRs that it can't automerge ... because the merge function is not tuned to every situation and needs further development
+16:03:03 <jtanner> when i run a report like "show me everything with automerge that wasn't merged by ansibot", then i get a clear picture of where the merge function needs to be worked on
+16:04:44 <Pilou> should not these tests moved in "automergeable" method ?
+16:04:51 <bcoca> issues is:open lable:automerge
+16:06:38 <Pilou> #action pilou add doc for https://github.com/ansible/ansibullbot/blob/master/ansibullbot/wrappers/defaultwrapper.py#L1141-L1148
+16:13:51 <Pilou> so what is the advice of the core team on that ?
+16:18:03 <abadger1999> jtanner: ^
+16:18:15 <jtanner> for the doc?
+16:18:44 <Pilou> about eikef question
+16:19:26 <jtanner> if it's the same person, then yes the maintainer can ask the submitter to squash it
+16:19:47 <jtanner> or if the submitter confirms it's his email, then the core team can squash/merge
+16:20:16 <jtanner> either way, what we need is clarification on who that weird commit came from
+16:20:34 <jtanner> the rest is easy
+16:20:37 <eikef> alright, will ask that in the PR. Thanks :)
+16:20:46 <jtanner> np
+16:23:31 <gundalow> Cool, anyone got anything else?
+16:26:30 <gundalow> Thanks eveybody!
+16:26:32 <gundalow> #endmeeting

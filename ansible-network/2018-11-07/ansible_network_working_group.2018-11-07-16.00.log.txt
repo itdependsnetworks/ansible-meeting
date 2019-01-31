@@ -1,0 +1,76 @@
+16:00:34 <andriusb> #startmeeting Ansible Network Working Group
+16:00:34 <zodbot> Meeting started Wed Nov  7 16:00:34 2018 UTC.
+16:00:34 <zodbot> This meeting is logged and archived in a public location.
+16:00:34 <zodbot> The chair is andriusb. Information about MeetBot at http://wiki.debian.org/MeetBot.
+16:00:34 <zodbot> Useful Commands: #action #agreed #halp #info #idea #link #topic.
+16:00:34 <zodbot> The meeting name has been set to 'ansible_network_working_group'
+16:01:31 <alex_ak> pffs: ok, good to know it is working, I will try to figure it out. come back perhaps :)
+16:01:33 <andriusb> hey all, you're in for a treat - I'm running the meeting LOL
+16:01:35 <andriusb> #topic Core Team Updates
+16:01:52 <pffs> alex_ak: if you set up multiplexing you should be able to see the control socket appear when you try to use it :)
+16:02:07 <andriusb> #info Ansible 2.8 devel is in full swing
+16:02:19 <andriusb> #link https://github.com/ansible/ansible/blob/devel/docs/docsite/rst/roadmap/ROADMAP_2_8.rst
+16:02:33 <andriusb> keep an eye on this page as it gets populated in the next week weeks
+16:03:01 <andriusb> there are no agenda items so we will go to open floor
+16:03:12 <andriusb> #topic Open Floor
+16:05:26 <samccann> minor tidbit on networking docs - we did some batch backports to 2.7 but in general, can't keep up with all the devel PRs that have a docs impact. So recommendation is that if you have a doc PR, please backport if applicable to 2.7 at least.
+16:05:49 <samccann> #info PR creators should be encouraged to backport to stable release when their PR is merged for PRs that improve/ are useful
+16:06:33 <andriusb> yey thanks @samccann
+16:07:19 <Anil_Lenovo> Qalthos: Yeah I would like to discuss regarding my PR #48154 which is a backport PR.
+16:08:11 <Anil_Lenovo> Qalthos:You will be able to merge it for 2.7.2, right ?
+16:09:13 <andriusb> #topic PR #48154
+16:09:37 <Qalthos> Anil_Lenovo: I can't do a thing. The release manager for 2.7 will deal with it when they start merging PRs for the next point release
+16:09:55 <andriusb> #link https://github.com/ansible/ansible/pull/48154
+16:10:28 <Anil_Lenovo> Qalthos: Now some how its green, thanks for the great help
+16:10:40 <andriusb> #action Ansible 2.7 Release Manager will pick it up during the next z-release devel window
+16:10:55 <Anil_Lenovo> cool thanks !
+16:11:00 <andriusb> #action @Qalthos Ansible 2.7 Release Manager will pick it up during the next z-release devel window
+16:11:19 <andriusb> #topic Open Floor
+16:11:28 <Anil_Lenovo> In 2.8 Lenovo would like to change the following modules in tune with the existing modules pertaining to cnos_interface, cnos_vlan, cnos_portchannel
+16:11:53 <Anil_Lenovo> I suppose the design of these modules is stable and will prevail right ?
+16:11:58 <andriusb> #topic In 2.8 Lenovo would like to change the following modules in tune with the existing modules pertaining to cnos_interface, cnos_vlan, cnos_portchannel
+16:12:21 <Anil_Lenovo> i mean xyz_vlan, interface and linkagg
+16:13:44 <Anil_Lenovo> I may need an expert with whom i can clear doubts in case i need help. Qalthos will u be able to help me?
+16:14:13 <andriusb> @Anil_Lenovo are you writing modules or roles
+16:14:41 <Anil_Lenovo> modules only, I am changing my legacy modules to the same style of that of ios, eos etc
+16:14:51 <andriusb> perfect, assuming as much just wanted to make sure
+16:15:22 <andriusb> @Anil_Lenovo there are a lot of people out today (holiday) so we may not be able to pin you down the right person but we can make sure we get you someone who can help
+16:16:30 <andriusb> #action @ikhan Assign appropriate expert to Anil_Lenovo for legacy module refactoring advice
+16:16:37 <Anil_Lenovo> Thats ok. I will ping in this forum in case I need help. That time who ever is available can respond
+16:16:50 <andriusb> I'll just make it an action item so it doesn't get lost
+16:17:47 <andriusb> #topic Open Floor
+16:18:02 <Anil_Lenovo> In addition to this , i have plans to add these roles, cnos-ospf, cnos_aaa, cnos-ntp, cnos_barebones
+16:18:46 <Anil_Lenovo> So I asked in one previous meeting regarding process pertaining to add roles in the network segment
+16:19:39 <andriusb> @Anil_Lenovo by "add roles" you mean to the distro? to galaxy?
+16:19:56 <andriusb> do you have a namespace on Galaxy?
+16:20:06 <Anil_Lenovo> to galaxy I think
+16:21:01 <Anil_Lenovo> yes, we have already posted 6 roles there long back. But I came to know that for networking, there is going to be a separate section.
+16:21:20 <andriusb> so you want to make a new namespace?
+16:21:41 <andriusb> I see https://galaxy.ansible.com/lenovo
+16:21:53 <Anil_Lenovo> No I want to get my roles included in the same network namespace
+16:21:53 <andriusb> with roles for CNOS
+16:22:10 <andriusb> unfortunately we won't be able to do that
+16:22:27 <andriusb> unless you are saying adding a lenovo provider?
+16:22:40 <andriusb> to https://galaxy.ansible.com/ansible-network
+16:22:54 <Anil_Lenovo> yes. same location
+16:23:00 <Anil_Lenovo> I want to add there
+16:23:15 <andriusb> we can work with you on the provider piece for sure
+16:23:39 <Anil_Lenovo> Great!
+16:24:02 <andriusb> as for networking roles / activities you'll notice more generic Roles there
+16:24:11 <andriusb> see config_manager
+16:24:38 <andriusb> #topic Lenovo would like to add a CNOS provider to ansible-network Galaxy
+16:25:29 <andriusb> #action @ikhan @andriusb rocess for partner submissions
+16:25:53 <andriusb> #action @ikhan @andriusb Provide process for partner provider submissions to ansible-network Galaxy
+16:26:12 <Anil_Lenovo> As network CLIs are more or less vendor specific, the scope of generic solution, how are u addressing inter operability?
+16:26:57 <andriusb> true, as you can see the current providers are leveraging cli_command and cli_config
+16:28:08 <Anil_Lenovo> So in Roles, they provide vendor speecific CLI template and depending on vendor u choose template ?
+16:28:35 <andriusb> you can take a look at the current working examples of the providers there: arista_eos, cisco_ios, cisco_iosxr, cisco_nxos, juniper_junos, vyos
+16:28:47 <Anil_Lenovo> sure, I will do..
+16:30:14 <samccann> also, as you find ..ahem... weaknesses in the documentation about roles, please do open a doc issue or doc pr to help us fill those voids
+16:31:53 <Anil_Lenovo> yes, sure
+16:32:52 <andriusb> good stuff
+16:33:00 <andriusb> any other items?
+16:33:10 <andriusb> #topic Open Floor
+16:34:24 <andriusb> Going once
+16:35:26 <andriusb> Going twice
+16:37:06 <andriusb> #endmeeting https://github.com/ansible/community/labels/network
